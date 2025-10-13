@@ -14,6 +14,12 @@ export interface ExampleNotificationTaskData {
    * If this value is defined, the task handler will return whatever value is present here.
    */
   readonly result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>;
+  /**
+   * If true, the "result" value will be merged with the default result.
+   *
+   * The "result" values will take priority over the default results.
+   */
+  readonly mergeResultWithDefaultResult?: boolean;
 }
 
 export const EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE = 100;

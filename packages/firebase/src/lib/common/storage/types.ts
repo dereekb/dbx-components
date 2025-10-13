@@ -1,4 +1,5 @@
-import { type ISO8601DateString } from '@dereekb/util';
+import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 
 // MARK: Storage
 // These types are provided to avoid us from using the "any".
@@ -25,7 +26,55 @@ export type GoogleCloudLikeStorage = {
 export type FirebaseStorage = FirebaseStorageLikeStorage | GoogleCloudLikeStorage;
 
 // MARK: Types
+/**
+ * The public storage url link.
+ */
 export type StorageDownloadUrl = string;
+
+/**
+ * A signed download link.
+ */
+export type StorageSignedDownloadUrl = string;
+
+/**
+ * Configuration for a signed download url.
+ *
+ * Type is based on the @google-cloud/storage signerGetSignedUrlConfig type.
+ */
+export interface StorageSignedDownloadUrlConfig {
+  /**
+   * Signed url action.
+   *
+   * Defaults to read.
+   */
+  readonly action?: 'read' | 'write' | 'delete' | 'resumable';
+  /**
+   * The time in milliseconds from now the url will expire.
+   *
+   * Ignored if expiresAt is specified.
+   */
+  readonly expiresIn?: Milliseconds;
+  /**
+   * The expiration time.
+   *
+   * Defaults to one hour if not specified.
+   */
+  readonly expiresAt?: string | DateOrUnixDateTimeNumber;
+  /**
+   * The time the url will become accessible.
+   */
+  readonly accessibleAt?: string | DateOrUnixDateTimeNumber;
+  readonly version?: 'v2' | 'v4';
+  readonly virtualHostedStyle?: boolean;
+  readonly cname?: string;
+  readonly contentMd5?: string;
+  readonly contentType?: string;
+  readonly extensionHeaders?: Record<string, ArrayOrValue<string>>;
+  readonly promptSaveAs?: string;
+  readonly responseDisposition?: string;
+  readonly responseType?: string;
+  readonly queryParams?: Record<string, string>;
+}
 
 /**
  * Example:
@@ -115,7 +164,11 @@ export type StorageServerUploadInput = StorageServerUploadBytesInput | StorageDa
 
 export type StorageUploadInput = StorageClientUploadInput | StorageServerUploadInput;
 
-export type StorageUploadTask = {
+export interface StorageUploadTask<R = unknown> {
+  /**
+   * Exposes the internal reference type.
+   */
+  readonly taskRef: R;
   /**
    * Cancels a running task. Has no effect on a complete or failed task.
    * @returns True if the cancel had an effect.
@@ -131,12 +184,63 @@ export type StorageUploadTask = {
    * @returns True if the operation took effect, false if ignored.
    */
   resume(): boolean;
-};
+  /**
+   * Returns the current task snapshot.
+   */
+  getSnapshot(): StorageUploadTaskSnapshot<R>;
+  /**
+   * Creates a new observable that streams the snapshot events.
+   */
+  streamSnapshotEvents(): Observable<StorageUploadTaskSnapshot>;
+}
+
+export type StorageUploadTaskState = 'running' | 'paused' | 'success' | 'canceled' | 'error';
+
+export interface StorageUploadTaskSnapshot<R = unknown> {
+  /**
+   * The number of bytes that have been successfully uploaded so far.
+   */
+  readonly bytesTransferred: FileSize;
+  /**
+   * The total number of bytes to be uploaded.
+   */
+  readonly totalBytes: FileSize;
+  /**
+   * Before the upload completes, contains the metadata sent to the server.
+   * After the upload completes, contains the metadata sent back from the server.
+   */
+  readonly metadata: StorageMetadata;
+  /**
+   * The current state of the task.
+   */
+  readonly state: StorageUploadTaskState;
+  /**
+   * The upload task this snapshot is associated with
+   */
+  readonly uploadTask: StorageUploadTask<R>;
+}
 
 export type StorageClientUploadResult = unknown;
 export type StorageUploadResult = StorageClientUploadResult | unknown;
 
+export interface StoragePreconditionOptions {
+  ifGenerationMatch?: number | string;
+  ifGenerationNotMatch?: number | string;
+  ifMetagenerationMatch?: number | string;
+  ifMetagenerationNotMatch?: number | string;
+}
+
+export interface StorageMoveOptions {
+  userProject?: string;
+  preconditionOpts?: StoragePreconditionOptions;
+}
+
 export interface StorageUploadOptions {
+  /**
+   * If true, the upload will be resumable.
+   *
+   * Defaults to false.
+   */
   readonly resumable?: boolean;
   /**
    * String format to handle the upload as. Required if the input is a string.
@@ -144,12 +248,48 @@ export interface StorageUploadOptions {
   readonly stringFormat?: StorageDataStringType;
   /**
    * ContentType for the upload.
+   *
+   * Content types are not automatically detected, so setting the correct type is important, otherwise a default type may be used.
    */
-  readonly contentType?: string;
+  readonly contentType?: MimeTypeWithoutParameters;
   /**
-   * other metadata to attach to the file.
+   * Custom metadata to attach to the file.
    */
-  readonly metadata?: StorageMetadata;
+  readonly customMetadata?: StorageCustomMetadata;
+  /**
+   * Configurable metadata options to attach to the file.
+   */
+  readonly metadata?: ConfigurableStorageMetadata;
+}
+
+/**
+ * Metadata options that can be configured when uploading a file.
+ */
+export interface ConfigurableStorageMetadata {
+  /**
+   * Served as the 'Cache-Control' header on object download.
+   */
+  readonly cacheControl?: string | undefined;
+  /**
+   * Served as the 'Content-Disposition' header on object download.
+   */
+  readonly contentDisposition?: string | undefined;
+  /**
+   * Served as the 'Content-Encoding' header on object download.
+   */
+  readonly contentEncoding?: string | undefined;
+  /**
+   * Served as the 'Content-Language' header on object download.
+   */
+  readonly contentLanguage?: string | undefined;
+  /**
+   * Served as the 'Content-Type' header on object download.
+   */
+  readonly contentType?: string | undefined;
+  /**
+   * Any user-specified custom metdata.
+   */
+  readonly customMetadata?: StorageCustomMetadata | undefined;
 }
 
 /**
@@ -157,7 +297,7 @@ export interface StorageUploadOptions {
  *
  * This interface follows the Firebase Cloud Storage pattern more than the @google-cloud/storage pattern.
  */
-export interface StorageMetadata {
+export interface StorageMetadata extends ConfigurableStorageMetadata {
   /**
    * The bucket this object is contained in.
    */
@@ -199,37 +339,13 @@ export interface StorageMetadata {
    * A Base64-encoded MD5 hash of the object being uploaded.
    */
   readonly md5Hash?: string | undefined;
-  /**
-   * Served as the 'Cache-Control' header on object download.
-   */
-  readonly cacheControl?: string | undefined;
-  /**
-   * Served as the 'Content-Disposition' header on object download.
-   */
-  readonly contentDisposition?: string | undefined;
-  /**
-   * Served as the 'Content-Encoding' header on object download.
-   */
-  readonly contentEncoding?: string | undefined;
-  /**
-   * Served as the 'Content-Language' header on object download.
-   */
-  readonly contentLanguage?: string | undefined;
-  /**
-   * Served as the 'Content-Type' header on object download.
-   */
-  readonly contentType?: string | undefined;
-  /**
-   * Any user-specified custom metdata.
-   */
-  readonly customMetadata?: StorageCustomMetadata | undefined;
 }
 
 /**
  * Additional user-defined custom metadata.
  */
 export type StorageCustomMetadata = {
-  readonly [key: string]: string;
+  readonly [key: string]: string | null;
 };
 
 export interface StorageDeleteFileOptions {

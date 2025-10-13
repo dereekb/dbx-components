@@ -31,6 +31,7 @@ import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from
 import { DocExtensionStructureComponent } from './container/structure.component';
 import { DocExtensionTableGroupHeaderExampleComponent } from './component/table.group.header.example.component';
 import { DocExtensionTableGroupFooterExampleComponent } from './component/table.group.footer.example.component';
+import { DocExtensionStorageFileComponent } from './container/storagefile.component';
 
 @NgModule({
   imports: [
@@ -69,7 +70,8 @@ import { DocExtensionTableGroupFooterExampleComponent } from './component/table.
     DocExtensionWidgetComponent,
     DocExtensionMapboxComponent,
     DocExtensionStructureComponent,
-    DocExtensionDownloadComponent
+    DocExtensionDownloadComponent,
+    DocExtensionStorageFileComponent
   ]
 })
 export class DocExtensionModule {

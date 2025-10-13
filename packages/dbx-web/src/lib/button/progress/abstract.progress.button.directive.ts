@@ -1,9 +1,10 @@
 import { OnDestroy, Directive, HostListener, inject, computed, input, Signal, output } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { Configurable, CssClass, type Maybe } from '@dereekb/util';
+import { AbstractSubscriptionDirective, dbxActionWorkProgress, type DbxActionWorkProgress, type DbxButtonWorking } from '@dereekb/dbx-core';
+import { Configurable, CssClass, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonConfig, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxButtonType } from '../button.component';
+import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 @Directive()
 export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnDestroy {
@@ -12,8 +13,9 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
   readonly btnClick = output<MouseEvent>();
 
   readonly config = input.required<Maybe<DbxProgressButtonConfig>>();
+
   readonly buttonId = input<Maybe<string>>();
-  readonly working = input<Maybe<boolean>>();
+  readonly working = input<Maybe<DbxButtonWorking>>();
   readonly disabled = input<Maybe<boolean>>();
 
   readonly globalOptionsSignal: Signal<Maybe<DbxProgressButtonConfig>> = computed(() => {
@@ -90,20 +92,74 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
 
   readonly baseCssClasses$ = toObservable(this.baseCssClassSignal);
 
-  readonly workingSignal = computed(() => (this.working() || this.configSignal()?.working) ?? false);
-  readonly disabledSignal = computed(() => (this.disabled() || this.configSignal()?.disabled) ?? false);
+  readonly workingProgressSignal: Signal<DbxButtonWorking> = computed(() => {
+    const working = this.working();
+    const config = this.configSignal();
+    const configWorking = config?.working;
+
+    const workingProgress = dbxActionWorkProgress([working, configWorking], config?.value);
+    return workingProgress;
+  });
+
+  readonly isWorkingSignal = computed(() => isDefinedAndNotFalse(this.workingProgressSignal()));
+
+  readonly workingValueSignal: Signal<Maybe<DbxActionWorkProgress>> = computed(() => {
+    const working = this.workingProgressSignal();
+    let result: Maybe<DbxActionWorkProgress>;
+
+    if (typeof working === 'number') {
+      result = working;
+    }
+
+    return result;
+  });
+
+  readonly modeSignal: Signal<ProgressSpinnerMode> = computed(() => {
+    const config = this.configSignal();
+    const workingValue = this.workingValueSignal();
+
+    const mode = config?.mode;
+    let result: ProgressSpinnerMode;
+
+    if (!mode) {
+      if (workingValue != null) {
+        result = 'determinate';
+      } else {
+        result = 'indeterminate';
+      }
+    } else {
+      result = mode;
+    }
+
+    return result;
+  });
+
+  readonly disabledSignal = computed(() => {
+    const disabled = this.disabled();
+    const configDisabled = this.configSignal()?.disabled;
+    return disabled || configDisabled;
+  });
 
   readonly buttonTypeAttributeSignal = computed(() => {
     const options = this.configSignal();
     return options?.buttonTypeAttribute ?? options?.type;
   });
 
-  readonly buttonDisabledSignal = computed(() => this.workingSignal() || this.disabledSignal());
-  readonly showProgressSignal = computed(() => this.workingSignal() && !this.disabledSignal());
+  readonly buttonDisabledSignal = computed(() => {
+    const working = this.isWorkingSignal();
+    const disabled = this.disabledSignal();
+    return working || disabled;
+  });
+
+  readonly showProgressSignal = computed(() => {
+    const working = this.isWorkingSignal();
+    const disabled = this.disabledSignal();
+    return working && !disabled;
+  });
 
   @HostListener('click', ['$event'])
   public handleClick(event: MouseEvent): void {
-    const working = this.workingSignal();
+    const working = this.isWorkingSignal();
     const disabled = this.disabledSignal();
 
     if (!working && !disabled) {

@@ -30,16 +30,16 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
 
   readonly dbxActionConfirm = input<Maybe<DbxActionConfirmConfig<T>>, Maybe<DbxActionConfirmConfig<T> | ''>>(undefined, { transform: transformEmptyStringInputToUndefined });
 
-  private readonly _sourceSubscription = new SubscriptionObject();
+  private readonly _sourceSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    this._sourceSubscription.subscription = this.source.triggered$.subscribe(() => {
+    this._sourceSub.subscription = this.source.triggered$.subscribe(() => {
       this.showDialog();
     });
   }
 
   ngOnDestroy(): void {
-    this._sourceSubscription.destroy();
+    this._sourceSub.destroy();
   }
 
   protected getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig> {

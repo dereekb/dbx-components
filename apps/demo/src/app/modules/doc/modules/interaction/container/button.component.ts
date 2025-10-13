@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
@@ -7,6 +7,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MatIcon } from '@angular/material/icon';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatButtonModule } from '@angular/material/button';
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
@@ -16,6 +18,10 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
   imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
 })
 export class DocInteractionButtonComponent {
+  private readonly _workingIncreaseSub = new SubscriptionObject();
+
+  readonly workingPercentSignal = signal(0);
+
   testClicked = '';
 
   onTestClick() {
@@ -253,4 +259,8 @@ export class DocInteractionButtonComponent {
   clickBar3 = this.activateAndDeactivate('barButtonConfig2');
   clickBar4 = this.activateAndDeactivate('barButtonConfig3');
   clickBar5 = this.activateAndDeactivate('barButtonConfig4');
+
+  constructor() {
+    this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));
+  }
 }

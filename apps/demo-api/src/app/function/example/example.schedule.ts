@@ -16,12 +16,4 @@ export const exampleUsageOfSchedule: DemoScheduleFunction = async (request) => {
 
 export const hourlySchedule: DemoScheduleFunction = async (request) => {
   const { nest } = request;
-
-  console.log('Initializing notification boxes and summaries...');
-  await nest.notificationInitActions.initializeAllApplicableNotificationBoxes({}).then((x) => x());
-  await nest.notificationInitActions.initializeAllApplicableNotificationSummaries({}).then((x) => x());
-
-  console.log('Sending queued notifications...');
-  const sendQueuedNotificationsResult = await nest.notificationActions.sendQueuedNotifications({}).then((x) => x());
-  console.log({ sendQueuedNotificationsResult });
 };

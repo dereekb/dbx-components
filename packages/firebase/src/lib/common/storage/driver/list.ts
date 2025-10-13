@@ -1,10 +1,11 @@
-import { cachedGetter } from '@dereekb/util';
-import { type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFileResult, type StorageListFilesOptions, type StorageListFilesResult, type StorageListFolderResult, type StorageListItemResult } from './accessor';
+import { cachedGetter, Maybe } from '@dereekb/util';
+import { StorageListFilesPageToken, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFileResult, type StorageListFilesOptions, type StorageListFilesResult, type StorageListFolderResult, type StorageListItemResult } from './accessor';
 
 export interface StorageListFilesResultFactoryDelegate<S, R> {
   hasItems(result: R): boolean;
   hasNext(result: R): boolean;
-  next(storage: S, folder: FirebaseStorageAccessorFolder, result: R): Promise<StorageListFilesResult>;
+  nextPageTokenFromResult(result: R): Maybe<StorageListFilesPageToken>;
+  next(storage: S, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: R): Promise<StorageListFilesResult>;
   file(storage: S, fileResult: StorageListItemResult): FirebaseStorageAccessorFile;
   folder(storage: S, folderResult: StorageListItemResult): FirebaseStorageAccessorFolder;
   filesFromResult(result: R, folder: FirebaseStorageAccessorFolder): StorageListItemResult[];
@@ -32,10 +33,12 @@ export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesRe
         throw storageListFilesResultHasNoNextError();
       }
 
-      return delegate.next(storage, folder, result);
+      return delegate.next(storage, options, folder, result);
     });
+
     const files: () => StorageListFileResult[] = cachedGetter(() => delegate.filesFromResult(result, folder).map(fileResult));
     const folders: () => StorageListFolderResult[] = cachedGetter(() => delegate.foldersFromResult(result, folder).map(folderResult));
+    const nextPageToken: () => Maybe<StorageListFilesPageToken> = cachedGetter(() => delegate.nextPageTokenFromResult(result));
 
     const filesResult: StorageListFilesResult = {
       raw: result,
@@ -44,7 +47,8 @@ export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesRe
       hasItems: () => delegate.hasItems(result),
       next,
       files,
-      folders
+      folders,
+      nextPageToken
     };
 
     return filesResult;

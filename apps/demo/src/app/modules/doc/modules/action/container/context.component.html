@@ -62,7 +62,7 @@
         <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
         <!-- Loading State -->
         <h4>Loading State</h4>
-        <p>A loading state is available that represents the action.</p>
+        <p>A loading state is available that represents the action's current working state and progress.</p>
         <ng-container *ngTemplateOutlet="beginWorkingTemplate"></ng-container>
         <p>Loading State: {{ action.sourceInstance.loadingState$ | async | json }}</p>
         <p>Loading State Type: {{ action.sourceInstance.loadingStateType$ | async }}</p>

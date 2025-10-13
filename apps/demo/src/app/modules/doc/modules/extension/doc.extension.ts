@@ -34,6 +34,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Download',
     detail: 'download',
     ref: 'doc.extension.download'
+  },
+  {
+    icon: 'upload',
+    title: 'StorageFile',
+    detail: 'storagefile',
+    ref: 'doc.extension.storagefile'
   }
 ];
 

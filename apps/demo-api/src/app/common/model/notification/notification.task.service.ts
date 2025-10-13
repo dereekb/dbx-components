@@ -1,9 +1,24 @@
-import { NotificationTaskService, NotificationTaskServiceTaskHandlerConfig, notificationTaskService } from '@dereekb/firebase-server/model';
+import { NotificationTaskService, NotificationTaskServiceTaskHandlerConfig, StorageFileProcessingPurposeSubtaskProcessorConfig, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE, EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, EXAMPLE_NOTIFICATION_TASK_TYPE, EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE, ExampleNotificationTaskCheckpoint, ExampleNotificationTaskData, ExampleUniqueNotificationTaskCheckpoint, ExampleUniqueNotificationTaskData } from 'demo-firebase';
-import { Maybe } from '@dereekb/util';
+import {
+  ALL_NOTIFICATION_TASK_TYPES,
+  EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE,
+  EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE,
+  EXAMPLE_NOTIFICATION_TASK_TYPE,
+  EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE,
+  ExampleNotificationTaskCheckpoint,
+  ExampleNotificationTaskData,
+  ExampleUniqueNotificationTaskCheckpoint,
+  ExampleUniqueNotificationTaskData,
+  USER_TEST_FILE_PURPOSE,
+  USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,
+  USER_TEST_FILE_PURPOSE_PART_B_SUBTASK,
+  UserTestFileProcessingSubtask,
+  UserTestFileProcessingSubtaskMetadata
+} from 'demo-firebase';
+import { filterUndefinedValues, Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
-import { NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
 export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationTaskService {
   /**
@@ -12,14 +27,30 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
    * @param result
    * @returns
    */
-  function parseResult(result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>) {
+  function _parseResult(result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>) {
     return result != null
-      ? {
+      ? filterUndefinedValues({
           completion: result?.completion,
           updateMetadata: result?.updateMetadata,
-          delayUntil: result?.delayUntil ? toJsDate(result?.delayUntil) : undefined
-        }
+          delayUntil: result?.delayUntil ? toJsDate(result?.delayUntil) : undefined,
+          canRunNextCheckpoint: result?.canRunNextCheckpoint
+        })
       : undefined;
+  }
+
+  function buildResult(taskData: Maybe<ExampleNotificationTaskData>, defaultResult: NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>): NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData> {
+    let result: NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>;
+
+    if (taskData?.mergeResultWithDefaultResult) {
+      result = {
+        ...defaultResult,
+        ..._parseResult(taskData?.result)
+      };
+    } else {
+      result = _parseResult(taskData?.result) ?? defaultResult;
+    }
+
+    return result;
   }
 
   const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
@@ -30,14 +61,12 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
         fn: async (notificationTask) => {
           // Do something...
 
-          return (
-            parseResult(notificationTask.data?.result) ?? {
-              completion: 'part_a',
-              updateMetadata: {
-                value: EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE
-              }
+          return buildResult(notificationTask.data, {
+            completion: 'part_a',
+            updateMetadata: {
+              value: EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE
             }
-          );
+          });
         }
       },
       {
@@ -45,14 +74,12 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
         fn: async (notificationTask) => {
           // Do something else...
 
-          return (
-            parseResult(notificationTask.data?.result) ?? {
-              completion: 'part_b',
-              updateMetadata: {
-                value: EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE
-              }
+          return buildResult(notificationTask.data, {
+            completion: 'part_b',
+            updateMetadata: {
+              value: EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE
             }
-          );
+          });
         }
       },
       {
@@ -60,11 +87,9 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
         fn: async (notificationTask) => {
           // Do final step...
 
-          return (
-            parseResult(notificationTask.data?.result) ?? {
-              completion: true
-            }
-          );
+          return buildResult(notificationTask.data, {
+            completion: true
+          });
         }
       }
     ]
@@ -96,12 +121,58 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
     ]
   };
 
-  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler];
+  const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext);
+
+  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler];
 
   const notificationSendService: NotificationTaskService = notificationTaskService({
-    validate: ALL_NOTIFICATION_TASK_TYPES,
+    validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES],
     handlers
   });
 
   return notificationSendService;
+}
+
+export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext) {
+  const testFileProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask> = {
+    purpose: USER_TEST_FILE_PURPOSE,
+    flow: [
+      {
+        subtask: USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,
+        fn: async (input) => {
+          // TODO: pull from the file or something
+
+          return {
+            completion: USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,
+            updateMetadata: {
+              numberValue: 1,
+              stringValue: 'a'
+            }
+          };
+        }
+      },
+      {
+        subtask: USER_TEST_FILE_PURPOSE_PART_B_SUBTASK,
+        fn: async (input) => {
+          // TODO: pull from the file or something
+
+          return {
+            completion: USER_TEST_FILE_PURPOSE_PART_B_SUBTASK,
+            updateMetadata: {
+              numberValue: 2,
+              stringValue: 'b'
+            }
+          };
+        }
+      }
+    ]
+  };
+
+  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig];
+
+  return storageFileProcessingNotificationTaskHandler({
+    processors,
+    storageFileFirestoreCollections: demoFirebaseServerActionsContext,
+    storageAccessor: demoFirebaseServerActionsContext.storageService
+  });
 }

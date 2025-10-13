@@ -12,18 +12,18 @@ export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageA
 
   // The default bucket is only used if another bucket is not input.
   const defaultBucket =
-    (!driver.defaultBucket && useTestDefaultBucket !== false) || useTestDefaultBucket === true
+    (!driver.getDefaultBucket && useTestDefaultBucket !== false) || useTestDefaultBucket === true
       ? cachedGetter(() => {
           const time = new Date().getTime();
           const random = Math.ceil(Math.random() * 999999) % 999999;
           const testBucketName = `test-bucket-${time}-${random}-${(bucketTestNameKey += 1)}`;
           return testBucketName;
         })
-      : driver.defaultBucket;
+      : driver.getDefaultBucket;
 
   const injectedDriver: TestingFirebaseStorageAccessorDriver = {
     ...driver,
-    defaultBucket
+    getDefaultBucket: defaultBucket
   };
 
   return injectedDriver;

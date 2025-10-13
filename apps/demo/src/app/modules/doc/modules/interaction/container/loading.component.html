@@ -8,52 +8,80 @@
       <p>The diameter can be customized on the component.</p>
       <dbx-label-block>
         <dbx-loading [diameter]="diameter" [loading]="true"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=accent">
         <dbx-loading [diameter]="diameter" [loading]="true" color="accent"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="accent"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=warn">
         <dbx-loading [diameter]="diameter" [loading]="true" color="warn"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="warn"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=notice">
         <dbx-loading [diameter]="diameter" [loading]="true" color="notice"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="notice"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=ok">
         <dbx-loading [diameter]="diameter" [loading]="true" color="ok"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="ok"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=success">
         <dbx-loading [diameter]="diameter" [loading]="true" color="success"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="success"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=grey">
         <dbx-loading [diameter]="diameter" [loading]="true" color="grey"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="grey"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=disabled">
         <dbx-loading [diameter]="diameter" [loading]="true" color="disabled"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [diameter]="diameter" [loading]="workingPercentSignal()" color="disabled"></dbx-loading>
       </dbx-label-block>
       <h3>Linear</h3>
+      <p>Linear presentation, with the indeterminate and determinate variants for each color.</p>
       <dbx-label-block>
         <dbx-loading [loading]="true" [linear]="true"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=accent">
         <dbx-loading [loading]="true" [linear]="true" color="accent"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true" color="accent"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=warn">
         <dbx-loading [loading]="true" [linear]="true" color="warn"></dbx-loading>
-      </dbx-label-block>
-      <dbx-label-block header="color=notice">
-        <dbx-loading [loading]="true" [linear]="true" color="notice"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true" color="warn"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=ok">
         <dbx-loading [loading]="true" [linear]="true" color="ok"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true" color="ok"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=success">
         <dbx-loading [loading]="true" [linear]="true" color="success"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true" color="success"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=grey">
         <dbx-loading [loading]="true" [linear]="true" color="grey"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true" color="grey"></dbx-loading>
       </dbx-label-block>
       <dbx-label-block header="color=disabled">
         <dbx-loading [loading]="true" [linear]="true" color="disabled"></dbx-loading>
+        <span class="dbx-button-spacer"></span>
+        <dbx-loading [loading]="workingPercentSignal()" [linear]="true" color="disabled"></dbx-loading>
       </dbx-label-block>
       <h3>Text</h3>
       <p>Both presentations can have custom text to show while loading.</p>

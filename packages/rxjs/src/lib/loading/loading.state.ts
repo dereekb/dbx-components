@@ -1,4 +1,5 @@
 import { type Maybe, type ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, type ReadableDataError, type Page, type FilteredPage, type PageNumber, objectHasKey, type MapFunction, type ErrorInput, toReadableError, mergeObjects, filterMaybeArrayValues, valuesAreBothNullishOrEquivalent } from '@dereekb/util';
+import { type LoadingProgress } from './loading';
 
 /**
  * A value/error pair used in loading situations.
@@ -11,9 +12,24 @@ export interface LoadingErrorPair {
    */
   readonly loading?: Maybe<boolean>;
   /**
+   * Optional loading progress value.
+   */
+  readonly loadingProgress?: Maybe<LoadingProgress>;
+  /**
    * A Readable server error.
    */
   readonly error?: Maybe<ReadableError>;
+}
+
+/**
+ * Returns true if the two LoadingStates are considered equal, by comparing the loading, loadingProgress, error, and value properties.
+ *
+ * @param a LoadingState a
+ * @param b LoadingState b
+ * @returns Returns true if the input LoadingStates are considered equal.
+ */
+export function isLoadingStateEqual<T extends LoadingState>(a: T, b: T): boolean {
+  return a.loading === b.loading && a.loadingProgress === b.loadingProgress && a.error === b.error && a.value === b.value;
 }
 
 /**
@@ -24,7 +40,7 @@ export interface LoadingErrorPair {
  * @returns Returns true if the input's metadata is considered equivalent.
  */
 export function isLoadingStateMetadataEqual(a: Partial<LoadingErrorPair>, b: Partial<LoadingErrorPair>): boolean {
-  return a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
+  return a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.loadingProgress, b.loadingProgress) && valuesAreBothNullishOrEquivalent(a.error, b.error);
 }
 
 /**
@@ -358,6 +374,8 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
     const currentLoadings: Maybe<boolean>[] = loadingStates.map((x) => (x?.error ? x.loading : false));
     const nonMaybeLoadings = currentLoadings.filter((x) => x != null) as boolean[];
     const loading = nonMaybeLoadings.length > 0 ? reduceBooleansWithOr(nonMaybeLoadings) : undefined;
+
+    // TODO: Merge loadingProgress values, probably only if they're all defined though, otherwise undefined
 
     result = {
       // Evaluate both for the loading state.

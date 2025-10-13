@@ -1,5 +1,5 @@
 import { type FirestoreDocument, firestoreDocumentAccessorContextExtension, type LimitedFirestoreDocumentAccessorFactoryConfig, limitedFirestoreDocumentAccessorFactory, type LimitedFirestoreDocumentAccessorFactoryFunction } from '../accessor/document';
-import { type FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
+import { firestoreFixedItemPageIterationFactory, FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
 import { type FirestoreContextReference } from '../reference';
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
@@ -59,17 +59,18 @@ export interface FirestoreCollectionGroup<T, D extends FirestoreDocument<T> = Fi
 export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D> {
   const { modelIdentity, queryLike, firestoreContext, firestoreAccessorDriver } = config;
 
-  // Create the iteration factory for pagination support
-  const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
-
   // Create the document accessor for loading documents
   const documentAccessor: LimitedFirestoreDocumentAccessorFactoryFunction<T, D> = limitedFirestoreDocumentAccessorFactory(config);
 
-  // Create the query factory for building Firestore queries
-  const queryFactory: FirestoreQueryFactory<T> = firestoreQueryFactory(config);
-
   // Create the document accessor extension with context
   const documentAccessorExtension = firestoreDocumentAccessorContextExtension({ documentAccessor, firestoreAccessorDriver });
+
+  // Create the iteration factory for pagination support
+  const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
+  const firestoreFixedIteration: FirestoreFixedItemPageIterationFactoryFunction<T> = firestoreFixedItemPageIterationFactory(config, documentAccessorExtension.documentAccessor());
+
+  // Create the query factory for building Firestore queries
+  const queryFactory: FirestoreQueryFactory<T> = firestoreQueryFactory(config);
 
   // Create the document-aware query factory
   const { queryDocument } = firestoreCollectionQueryFactory(queryFactory, documentAccessorExtension);
@@ -83,6 +84,7 @@ export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(
     firestoreContext,
     ...documentAccessorExtension,
     firestoreIteration,
+    firestoreFixedIteration,
     query,
     queryDocument
   };

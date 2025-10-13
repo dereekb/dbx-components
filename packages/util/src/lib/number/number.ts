@@ -10,9 +10,16 @@ export type NumberString = string;
 /**
  * Number that represents a percent.
  *
- *  e.g. 5 = 0.05 = 5%
+ *  e.g. PercentNumber of 5 = 0.05 = 5%
  */
 export type PercentNumber = number;
+
+/**
+ * A percent decimal value.
+ *
+ * e.g. PercentDecimal of 0.05 = 5%
+ */
+export type PercentDecimal = number;
 
 /**
  * Converts the percent number to a decimal value.

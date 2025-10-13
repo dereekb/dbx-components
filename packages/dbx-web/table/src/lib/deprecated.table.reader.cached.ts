@@ -1,7 +1,7 @@
 import { combineLatest, exhaustMap, filter, map, Observable, of, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
 import { DbxTableColumn, DbxTableStore, DbxTableContextData } from '@dereekb/dbx-web/table';
 import { Maybe, arrayToObject, SetDeltaChange, SetDeltaChangePair, setDeltaFunction, SetValueIsModifiedFunction, filterMaybeArrayValues } from '@dereekb/util';
-import { filterMaybeArray, tapLog } from '@dereekb/rxjs';
+import { filterMaybeArray } from '@dereekb/rxjs';
 import { DbxTableReaderColumnTrackByFunction, DbxTableReaderItemTrackByFunction, DbxTableReaderCellDataPair, DEFAULT_DBX_TABLE_READER_COLUMN_TRACK_BY, DbxTableReaderItemKey, DbxTableReaderColumnKey } from './table.reader';
 
 export interface CachedDbxTableReaderDelegate<C, T, O> {
@@ -276,7 +276,7 @@ export function cachedDbxTableReader<C, T, O>(config: CachedDbxTableReaderConfig
           observables.push(observable);
         });
 
-        return combineLatest(observables).pipe(tapLog('combined latest'), filterMaybeArray(), startWith([]));
+        return combineLatest(observables).pipe(filterMaybeArray(), startWith([]));
       }),
       tap((cellData) => {
         if (column.columnName === '2025-06-23') {

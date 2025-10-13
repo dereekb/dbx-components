@@ -4,7 +4,7 @@ import { ProvideDbxFirebaseStorageConfig, providedDbxFirebaseStorage } from './f
 export type DbxFirebaseStorageModuleConfig = ProvideDbxFirebaseStorageConfig;
 
 /**
- * @deprecated use providedDbxFirebaseStorageContext() instead.
+ * @deprecated use providedDbxFirebaseStorage() instead.
  */
 @NgModule({})
 export class DbxFirebaseStorageModule {

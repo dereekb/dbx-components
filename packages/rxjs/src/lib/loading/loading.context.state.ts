@@ -3,7 +3,7 @@ import { map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isO
 import { timeoutStartWith } from '../rxjs/timeout';
 import { filterMaybe } from '../rxjs/value';
 import { type LoadingStateContextEvent, type LoadingContext, type LoadingContextEvent } from './loading.context';
-import { beginLoading, isLoadingStateLoading, type LoadingState } from './loading.state';
+import { beginLoading, isLoadingStateEqual, isLoadingStateLoading, type LoadingState } from './loading.state';
 import { valueFromFinishedLoadingState, currentValueFromLoadingState } from './loading.state.rxjs';
 
 // MARK: New
@@ -100,7 +100,7 @@ export type LoadingEventForLoadingPairConfigInput = Pick<LoadingStateContextConf
 
 export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(state: S, input: LoadingEventForLoadingPairConfigInput): LoadingStateContextEvent<T> => {
   const { showLoadingOnUndefinedValue } = input;
-  const { error, value } = state;
+  const { error, value, loadingProgress } = state;
   let loading: boolean = false;
 
   if (!hasNonNullValue(error)) {
@@ -113,6 +113,7 @@ export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S e
 
   return {
     loading,
+    loadingProgress: loading ? loadingProgress : undefined,
     error,
     value
   };
@@ -155,7 +156,7 @@ export function loadingStateContext<T = unknown, S extends LoadingState<T> = Loa
 
       return result;
     }),
-    distinctUntilChanged((a: E, b: E) => a.loading === b.loading && a.error === b.error && a?.value === b?.value),
+    distinctUntilChanged(isLoadingStateEqual),
     shareReplay(1)
   );
 

@@ -35,7 +35,7 @@ export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean |
   const input = valueOrFunction ?? defaultIfUndefined;
 
   if (typeof input === 'boolean') {
-    return () => input;
+    return decisionFunction(input);
   } else {
     return input;
   }

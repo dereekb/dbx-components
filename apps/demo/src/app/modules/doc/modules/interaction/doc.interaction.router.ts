@@ -10,6 +10,7 @@ import { DocInteractionButtonComponent } from './container/button.component';
 import { DocInteractionErrorComponent } from './container/error.component';
 import { DocInteractionLoadingComponent } from './container/loading.component';
 import { DocInteractionIframeComponent } from './container/iframe.component';
+import { DocInteractionUploadComponent } from './container/upload.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/interaction',
@@ -78,6 +79,12 @@ export const docInteractionPopoverState: Ng2StateDeclaration = {
   component: DocInteractionPopoverComponent
 };
 
+export const docInteractionUploadState: Ng2StateDeclaration = {
+  url: '/upload',
+  name: 'doc.interaction.upload',
+  component: DocInteractionUploadComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -90,5 +97,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docInteractionPromptState,
   docInteractionPopupState,
   docInteractionPopoverState,
-  docInteractionIframeState
+  docInteractionIframeState,
+  docInteractionUploadState
 ];

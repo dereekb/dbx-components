@@ -4,9 +4,10 @@ import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '../../layout/style/style';
 import { DbxButtonType } from '../button.component';
+import { DbxButtonWorking, DbxButtonWorkingProgress } from '@dereekb/dbx-core';
 
 export interface DbxProgressButtonConfig {
-  readonly working?: Maybe<boolean>;
+  readonly working?: Maybe<DbxButtonWorking>;
   readonly text?: Maybe<string>;
   readonly spinnerText?: Maybe<string>;
   readonly buttonColor?: Maybe<ThemePalette | DbxThemeColor>;
@@ -19,7 +20,10 @@ export interface DbxProgressButtonConfig {
   readonly spinnerSize?: Maybe<number>;
   readonly spinnerRatio?: Maybe<number>;
   readonly mode?: Maybe<ProgressSpinnerMode>;
-  readonly value?: Maybe<number>;
+  /**
+   * @deprecated use working instead
+   */
+  readonly value?: Maybe<DbxButtonWorkingProgress>;
   readonly fullWidth?: Maybe<boolean>;
   readonly disabled?: Maybe<boolean>;
   readonly customStyle?: Maybe<{ [key: string]: string }>;
@@ -30,7 +34,6 @@ export interface DbxProgressButtonConfig {
   readonly customSpinnerColor?: Maybe<string>;
   readonly buttonIcon?: Maybe<DbxProgressButtonIcon>;
   readonly id?: Maybe<string>;
-
   /**
    * The type of button to render.
    */

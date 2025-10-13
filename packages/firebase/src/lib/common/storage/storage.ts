@@ -39,6 +39,19 @@ export interface StorageSlashPathRef {
 export interface StoragePath extends StorageBucketIdRef, StorageSlashPathRef {}
 
 /**
+ * Creates a new StoragePath object with the same bucketId and pathString as the input.
+ *
+ * @param path The StoragePath to copy.
+ * @returns A new StoragePath object.
+ */
+export function copyStoragePath(path: StoragePath): StoragePath {
+  return {
+    bucketId: path.bucketId,
+    pathString: path.pathString
+  };
+}
+
+/**
  * Storage-Path related input.
  */
 export type StoragePathInput = StorageSlashPath | StoragePath | StorageSlashPathRef;

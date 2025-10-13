@@ -1,5 +1,6 @@
 export * from './model.store.module';
 export * from './store.collection';
+export * from './store.collection.crud';
 export * from './store.collection.change.directive';
 export * from './store.collection.change.if.directive';
 export * from './store.collection.directive';

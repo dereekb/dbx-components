@@ -1,5 +1,45 @@
 import { LoadingStateType } from '@dereekb/rxjs';
-import { type Maybe } from '@dereekb/util';
+import { type PercentNumber, type Maybe } from '@dereekb/util';
+
+/**
+ * Used to denote the percent progress of a working action.
+ *
+ * This is a PercentNumber, a number between 0 and 100.
+ */
+export type DbxActionWorkProgress = PercentNumber;
+
+/**
+ * Used for denoting working state or progress.
+ *
+ * True is working, but no progress level.
+ */
+export type DbxActionWorkOrWorkProgress = boolean | DbxActionWorkProgress;
+
+/**
+ * Creates a working progress value from an array of working progress values.
+ *
+ * @param workOrWorkProgress The array of working progress values to use.
+ * @param progressPercent An optional progress percent value to use if the working progress is a boolean.
+ * @returns The working progress value.
+ */
+export function dbxActionWorkProgress(workOrWorkProgress: Maybe<DbxActionWorkOrWorkProgress>[], progressPercent?: Maybe<DbxActionWorkProgress>) {
+  const workingValue = workOrWorkProgress.reduce((acc, val) => acc ?? val);
+  const isWorking = workingValue != null && workingValue !== false;
+
+  let workingProgress: DbxActionWorkOrWorkProgress;
+
+  if (isWorking) {
+    if (typeof workingValue === 'number') {
+      workingProgress = workingValue;
+    } else {
+      workingProgress = progressPercent ?? true;
+    }
+  } else {
+    workingProgress = false;
+  }
+
+  return workingProgress;
+}
 
 /**
  * Used by ActionContextState to denote what state the action is in.

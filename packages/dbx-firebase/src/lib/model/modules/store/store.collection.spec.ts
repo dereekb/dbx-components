@@ -22,10 +22,33 @@ describe('AbstractDbxFirebaseCollectionStore', () => {
     });
 
     describe('loader$', () => {
-      it('should return the loader.', (done) => {
-        store.loader$.pipe(first()).subscribe((loader) => {
-          expect(loader).toBeDefined();
-          done();
+      describe('collectionMode', () => {
+        describe('query', () => {
+          it('should return the loader.', (done) => {
+            store.loader$.pipe(first()).subscribe((loader) => {
+              expect(loader).toBeDefined();
+
+              loader.collectionMode$.pipe(first()).subscribe((mode) => {
+                expect(mode).toBe('query');
+                done();
+              });
+            });
+          });
+        });
+
+        describe('references', () => {
+          it('should return the loader.', (done) => {
+            store.setCollectionMode('references');
+
+            store.loader$.pipe(first()).subscribe((loader) => {
+              expect(loader).toBeDefined();
+
+              loader.collectionMode$.pipe(first()).subscribe((mode) => {
+                expect(mode).toBe('references');
+                done();
+              });
+            });
+          });
         });
       });
     });

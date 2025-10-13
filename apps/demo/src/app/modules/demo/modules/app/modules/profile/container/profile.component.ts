@@ -1,26 +1,46 @@
 import { OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
-import { DbxActionErrorDirective, DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';
+import { userAvatarUploadsFilePath } from 'demo-firebase';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],
-  imports: [DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, AsyncPipe, DbxLoadingComponent, DbxContentBoxDirective, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxLoadingProgressComponent],
+  imports: [DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, AsyncPipe, DbxLoadingComponent, DbxContentBoxDirective, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxFirebaseStorageFileUploadModule, DbxLabelBlockComponent, DbxAvatarComponent, DbxLoadingProgressComponent],
   standalone: true
 })
 export class DemoProfileViewComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
 
   readonly auth = inject(DbxFirebaseAuthService);
-  readonly storage = inject(DbxFirebaseStorageService);
+  readonly userIdentifier$ = this.auth.userIdentifier$;
+  readonly userIdentifierSignal = toSignal(this.userIdentifier$, { requireSync: true });
+
+  readonly storageService = inject(DbxFirebaseStorageService);
+
+  readonly avatarUploadHandler: StorageFileUploadHandler = storageFileUploadHandler({
+    storageService: this.storageService,
+    storageFileUploadConfigFactory: (file: File): StorageFileUploadConfig => {
+      const uid = this.userIdentifierSignal();
+      const storagePath = userAvatarUploadsFilePath(uid);
+
+      return {
+        storagePath
+      };
+    }
+  });
 
   readonly profileData$ = this.profileDocumentStore.data$;
+  readonly avatarUrl$ = this.profileData$.pipe(map((x) => x.avatar));
   readonly username$ = this.profileData$.pipe(map((x) => x.username));
+
+  readonly avatarUrlSignal = toSignal(this.avatarUrl$);
 
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 
