@@ -4,7 +4,7 @@ import { timeoutStartWith } from '../rxjs/timeout';
 import { filterMaybe } from '../rxjs/value';
 import { type LoadingStateContextEvent, type LoadingContext, type LoadingContextEvent } from './loading.context';
 import { beginLoading, isLoadingStateEqual, isLoadingStateLoading, type LoadingState } from './loading.state';
-import { valueFromFinishedLoadingState, currentValueFromLoadingState, distinctLoadingState } from './loading.state.rxjs';
+import { valueFromFinishedLoadingState, currentValueFromLoadingState } from './loading.state.rxjs';
 
 // MARK: New
 /**

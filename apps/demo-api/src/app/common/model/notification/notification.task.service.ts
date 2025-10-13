@@ -1,4 +1,4 @@
-import { NotificationTaskService, NotificationTaskServiceTaskHandlerConfig, StorageFileProcessingPurposeSubtaskProcessorConfig, StorageFileProcessingPurposeSubtaskResult, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
+import { NotificationTaskService, NotificationTaskServiceTaskHandlerConfig, StorageFileProcessingPurposeSubtaskProcessorConfig, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import {
   ALL_NOTIFICATION_TASK_TYPES,

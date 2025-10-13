@@ -6,7 +6,7 @@ import { FirebaseStorageAccessorFile } from '../../common/storage/driver/accesso
 /**
  * Details from the input.
  */
-export interface StoredFileReaderInput extends StoragePath {}
+export type StoredFileReaderInput = StoragePath;
 
 /**
  * Factory function that creates a StoredFileReader from the input details.

@@ -13,7 +13,6 @@ import {
   StorageFile,
   notificationTaskPartiallyComplete,
   delayCompletion,
-  StorageFileState,
   StorageFileProcessingState,
   DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS,
   DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY,
@@ -25,7 +24,7 @@ import {
   copyStoragePath
 } from '@dereekb/firebase';
 import { NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { asArray, cachedGetter, dateFromDateOrTimeNumber, Maybe, Milliseconds, PromiseOrValue, separateValues, unique } from '@dereekb/util';
+import { asArray, cachedGetter, Maybe, Milliseconds, PromiseOrValue, separateValues, unique } from '@dereekb/util';
 import { BaseError } from 'make-error';
 import { removeFromCompletionsArrayWithTaskResult } from '../notification/notification.task.service.util';
 import { markStorageFileForDeleteTemplate, StorageFileQueueForDeleteTime } from './storagefile.util';

@@ -1,5 +1,5 @@
-import { ArrayOrValue, asArray, decisionFunction, DecisionFunction, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathDetails, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathPathMatcher, SlashPathPathMatcherConfig, SlashPathPathMatcherConfigInput, SlashPathPathMatcherPath, slashPathSubPathMatcher, SlashPathSubPathMatcherConfig, sortByNumberFunction, unique } from '@dereekb/util';
-import { UploadedFileTypeIdentifier, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME, ALL_USER_UPLOADS_FOLDER_PATH } from './storagefile.upload';
+import { ArrayOrValue, asArray, decisionFunction, DecisionFunction, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathPathMatcher, SlashPathPathMatcherConfigInput, slashPathSubPathMatcher, SlashPathSubPathMatcherConfig, unique } from '@dereekb/util';
+import { UploadedFileTypeIdentifier, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME } from './storagefile.upload';
 import { FirebaseAuthUserId, StorageBucketId } from '../../common';
 import { StoredFileReader } from './storagefile.file';
 
@@ -138,7 +138,7 @@ export function determineByFileName(config: DetermineByFileNameConfig): Uploaded
       const pathDetails = input.getPathDetails();
 
       if (pathDetails.file) {
-        let matchLevel = testFileName(pathDetails.file);
+        const matchLevel = testFileName(pathDetails.file);
 
         if (matchLevel != null) {
           result = {

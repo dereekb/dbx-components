@@ -1,4 +1,4 @@
-import { FirestoreQueryConstraint, iterateFirestoreDocumentSnapshotPairs, StorageFile, StorageFileFirestoreCollection, StorageFileKey, StorageFileProcessingState, StorageFileState } from '@dereekb/firebase';
+import { FirestoreQueryConstraint, iterateFirestoreDocumentSnapshotPairs, StorageFile, StorageFileFirestoreCollection, StorageFileKey, StorageFileState } from '@dereekb/firebase';
 import { dateFromDateOrTimeNumber, Maybe, Milliseconds, ArrayOrValue, asArray } from '@dereekb/util';
 
 /**

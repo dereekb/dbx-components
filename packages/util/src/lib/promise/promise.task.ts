@@ -1,6 +1,6 @@
 import { AsyncFactory } from '../getter/getter';
 import { Maybe } from '../value';
-import { PerformAsyncTaskConfig, runAsyncTasksForValues, RunAsyncTasksForValuesConfig } from './promise';
+import { runAsyncTasksForValues, RunAsyncTasksForValuesConfig } from './promise';
 
 /**
  * A function that returns a Promise, typically returning void/no value.
@@ -80,8 +80,8 @@ export function runNamedAsyncTasksFunction<T = void>(config?: RunNamedAsyncTasks
       });
     }
 
-    let successfulTasks: NamedAsyncTask<T>[] = [];
-    let failedTasks: NamedAsyncTask<T>[] = [];
+    const successfulTasks: NamedAsyncTask<T>[] = [];
+    const failedTasks: NamedAsyncTask<T>[] = [];
 
     await runAsyncTasksForValues(
       tasks,

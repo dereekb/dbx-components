@@ -331,9 +331,9 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
   const upload = new Observable<StorageFileUploadFilesEvent>((subscriber) => {
     const overallStartTime = new Date();
 
-    let incompleteFileFileIndexes = new Set<IndexNumber>(allFiles.map((_, index) => index));
-    let activeFileIndexes = new Set<IndexNumber>();
-    let doneFileIndexes = new Set<IndexNumber>();
+    const incompleteFileFileIndexes = new Set<IndexNumber>(allFiles.map((_, index) => index));
+    const activeFileIndexes = new Set<IndexNumber>();
+    const doneFileIndexes = new Set<IndexNumber>();
     let latestOverallProgress: PercentNumber = 0;
 
     function onStartFileUpload(index: IndexNumber, uploadInstance: StorageFileUploadHandlerInstance) {
@@ -368,7 +368,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       const { index: fileIndex, nextProgress, fileUploadTaskDone, error } = input;
 
       let nextOverallProgress = latestOverallProgress;
-      let nextProgressPercent = fileUploadTaskDone ? 100 : (nextProgress?.progress ?? 0) * 100;
+      const nextProgressPercent = fileUploadTaskDone ? 100 : (nextProgress?.progress ?? 0) * 100;
 
       // update the overall progress percentage
       if (nextProgressPercent) {

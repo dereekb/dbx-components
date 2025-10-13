@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, InjectionToken, Injector, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, Injector, input } from '@angular/core';
 import { DBX_AVATAR_CONTEXT_DATA_TOKEN, DbxAvatarContext, DbxAvatarKey, DbxAvatarSelector, DbxAvatarSize, DbxAvatarStyle } from './avatar';
 import { DbxAvatarViewService } from './avatar.service';
 import { AuthUserIdentifier, DbxInjectionComponent, DbxInjectionComponentConfig, mergeStaticProviders } from '@dereekb/dbx-core';

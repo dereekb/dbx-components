@@ -1,4 +1,4 @@
-import { Directive, effect, inject, input, OnInit } from '@angular/core';
+import { Directive, effect, inject, input, OnInit, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseStorageFileUploadStore } from '../store/storagefile.upload.store';
 import { storageFileUploadFiles, StorageFileUploadFilesFinalResult, StorageFileUploadHandler } from './storagefile.upload.handler';
@@ -15,7 +15,7 @@ import { StorageFileUploadFilesError } from './storagefile.upload.error';
   selector: '[dbxFirebaseStorageFileUploadActionHandler]',
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnInit {
+export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnInit, OnDestroy {
   private readonly _triggerSub = new SubscriptionObject();
   private readonly _readySub = new SubscriptionObject();
   private readonly _isWorkingSub = new SubscriptionObject();

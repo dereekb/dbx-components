@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails, slashPathSubPathMatcher, slashPathFolderFactory, slashPathPathMatcher, DEFAULT_SLASH_PATH_PATH_MATCHER_NON_MATCHING_FILL_VALUE } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails, slashPathSubPathMatcher, slashPathFolderFactory, slashPathPathMatcher } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {

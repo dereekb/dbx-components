@@ -1,7 +1,7 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injection';
-import { Initialized, Destroyable, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
+import { Initialized, Destroyable, Maybe } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SubscriptionObject, filterMaybe, maybeValueFromObservableOrValueGetter, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { mergeStaticProviders } from './injection.util';
 

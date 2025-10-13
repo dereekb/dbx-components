@@ -1,5 +1,4 @@
 import { FactoryWithInput, type Factory, type FactoryWithRequiredInput } from '../getter';
-import { PrimativeValue } from '../type';
 import { Maybe } from '../value';
 import { transformStringFunction, TransformStringFunctionConfig } from './transform';
 

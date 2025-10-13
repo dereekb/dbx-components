@@ -1,6 +1,6 @@
 import { Directive, inject, input, OnDestroy } from '@angular/core';
 import { skipAllInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { DbxFirebaseStorageFileUploadStore, DbxFirebaseStorageFileUploadStoreAllowedTypes } from '../store';
+import { DbxFirebaseStorageFileUploadStore } from '../store';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';

@@ -2,9 +2,9 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { FirebaseStorageAccessorFile, StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { ArrayOrValue, asArray, Maybe, MimeTypeWithoutParameters, PercentDecimal, PercentNumber, SlashPathTypedFileSuffix } from '@dereekb/util';
+import { ArrayOrValue, asArray, Maybe, PercentDecimal } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { distinctUntilChanged, filter, map, shareReplay } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { StorageFileUploadFilesEvent, StorageFileUploadFilesFinalResult } from '../container';
 
 /**

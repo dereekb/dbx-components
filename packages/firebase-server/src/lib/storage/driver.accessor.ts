@@ -19,7 +19,7 @@ import {
   StorageListFilesPageToken,
   ConfigurableStorageMetadata
 } from '@dereekb/firebase';
-import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasKey, objectHasNoKeys } from '@dereekb/util';
+import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
 import { addHours, addMilliseconds } from 'date-fns';
 import { isArrayBuffer, isUint8Array } from 'util/types';
@@ -206,7 +206,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     uploadStream: (options) => file.createWriteStream(makeUploadOptions(options)),
     move: async (newPath: StorageSlashPath | StoragePath, options: StorageMoveOptions) => {
       const newStoragePath = makeStoragePathForPath(newPath);
-      let newFile: GoogleCloudStorageAccessorFile = googleCloudStorageAccessorFile(storage, newStoragePath);
+      const newFile: GoogleCloudStorageAccessorFile = googleCloudStorageAccessorFile(storage, newStoragePath);
 
       const moveOptions: MoveFileAtomicOptions = {
         ...options

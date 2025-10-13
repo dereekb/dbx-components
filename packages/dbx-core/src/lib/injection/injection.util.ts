@@ -1,6 +1,5 @@
-import { Provider, StaticProvider } from '@angular/core';
-import { ArrayOrValue, flattenArrayOrValueArray } from '@dereekb/util';
-import { Maybe } from '@dereekb/util';
+import { StaticProvider } from '@angular/core';
+import { ArrayOrValue, flattenArrayOrValueArray, Maybe } from '@dereekb/util';
 
 /**
  * Merges the input providers into a single array.

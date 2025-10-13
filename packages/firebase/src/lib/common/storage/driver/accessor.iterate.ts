@@ -1,12 +1,12 @@
-import { Maybe, Milliseconds, PromiseOrValue } from '@dereekb/util';
-import { FirebaseStorageAccessorFolder, StorageListFilesOptions, StorageListFilesPageToken, StorageListFilesResult } from './accessor';
-import { FetchPageFactory, fetchPageFactory, FetchPageFactoryInputOptions, FetchPageResult, iterateFetchPages, iterateFetchPagesByEachItem, IterateFetchPagesByEachItemConfig, IterateFetchPagesByEachItemFunction, IterateFetchPagesConfigWithFactoryAndInput, ReadFetchPageResultInfo } from '@dereekb/util/fetch';
+import { Maybe, PromiseOrValue } from '@dereekb/util';
+import { FirebaseStorageAccessorFolder, StorageListFilesOptions, StorageListFilesResult } from './accessor';
+import { FetchPageFactory, fetchPageFactory, FetchPageFactoryInputOptions, FetchPageResult, iterateFetchPages, iterateFetchPagesByEachItem, IterateFetchPagesByEachItemConfig, IterateFetchPagesConfigWithFactoryAndInput, ReadFetchPageResultInfo } from '@dereekb/util/fetch';
 
 // MARK: IterateStorageListFilesFactory
 /**
  * Configuration for iterateStorageListFilesFactory()
  */
-export interface IterateStorageListFilesFactoryConfig extends Omit<StorageListFilesOptions, 'pageToken'> {}
+export type IterateStorageListFilesFactoryConfig = Omit<StorageListFilesOptions, 'pageToken'>;
 
 export interface IterateStorageListFilesInput extends StorageListFilesOptions {
   /**

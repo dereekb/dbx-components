@@ -138,13 +138,13 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
       throw new Error('createStorageFileDocumentPair() failed as neither an accessor nor a context was provided.');
     }
 
-    let storagePath: Maybe<StoragePath> = input.file?.storagePath ?? input.storagePathRef?.storagePath ?? input.storagePath;
+    const storagePath: Maybe<StoragePath> = input.file?.storagePath ?? input.storagePathRef?.storagePath ?? input.storagePath;
 
     if (!storagePath) {
       throw new Error('createStorageFileDocumentPair() failed as neither a file, storagePathRef, or storagePath was provided.');
     }
 
-    let storageFileDocument = accessor.newDocument();
+    const storageFileDocument = accessor.newDocument();
 
     const template: StorageFile<M> = {
       ...inputTemplate,

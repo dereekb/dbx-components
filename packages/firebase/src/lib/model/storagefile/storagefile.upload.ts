@@ -1,6 +1,6 @@
-import { cachedGetter, Factory, FactoryWithRequiredInput, Maybe, mergeSlashPaths, SlashPath, slashPathDetails, SlashPathDetails, toAbsoluteSlashPathStartType } from '@dereekb/util';
+import { FactoryWithRequiredInput, Maybe, SlashPath, toAbsoluteSlashPathStartType } from '@dereekb/util';
 import { StoragePath } from '../../common/storage/storage';
-import { FirebaseAuthUserId, FirebaseStorageAccessorFile, StorageCustomMetadata } from '../../common';
+import { FirebaseAuthUserId } from '../../common';
 
 /**
  * The base path for all uploaded files.

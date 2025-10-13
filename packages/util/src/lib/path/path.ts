@@ -755,7 +755,7 @@ export type SlashPathPathMatcherPath = ArrayOrValue<SlashPathPathMatcherPart>;
  */
 export function expandSlashPathPathMatcherPartToDecisionFunctions(path: SlashPathPathMatcherPath): SlashPathPathMatcherFunction[] {
   const targetPathPartsInput = asArray(path);
-  let indexMatchingDecisionFunctions: SlashPathPathMatcherFunction[] = [];
+  const indexMatchingDecisionFunctions: SlashPathPathMatcherFunction[] = [];
 
   targetPathPartsInput.forEach((part, index) => {
     switch (typeof part) {

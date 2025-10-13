@@ -143,7 +143,7 @@ demoApiFunctionContextFactory((f) => {
                     const uploadedFilePath = await uploadAvatarForUser('avatar.png', 'image/png')();
 
                     const uploadedFile = f.storageContext.file(uploadedFilePath);
-                    let uploadedFileExists = await uploadedFile.exists();
+                    const uploadedFileExists = await uploadedFile.exists();
 
                     expect(uploadedFileExists).toBe(true);
 

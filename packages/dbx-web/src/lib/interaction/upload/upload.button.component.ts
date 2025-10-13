@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, input, model, output, viewChild } from '@angular/core';
-import { fileAcceptString, FileArrayAcceptMatchConfig, fileArrayAcceptMatchFunction, FileArrayAcceptMatchResult } from './upload.accept';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import { fileAcceptString, fileArrayAcceptMatchFunction } from './upload.accept';
 import { DbxButtonComponent, DbxButtonStyle } from '../../button/button.component';
 import { Maybe } from '@dereekb/util';
 import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';

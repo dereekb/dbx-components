@@ -1,5 +1,5 @@
 import { type Unsubscribable } from 'rxjs';
-import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe, unique } from '@dereekb/util';
+import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe } from '@dereekb/util';
 
 /**
  * Destroyable object that wraps an Unsubscribable.

@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { LOREM } from '../../shared';
 import { DbxContentContainerDirective, DbxAvatarComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

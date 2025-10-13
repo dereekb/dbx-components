@@ -1,7 +1,7 @@
 import { type MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
-import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFilesResult, StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
+import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
 import { Readable } from 'stream';
 import { createReadStream } from 'fs';
 
@@ -271,7 +271,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       describe('copy()', () => {
         it('should copy the file to a new location in the same bucket.', async () => {
           if (existsFile.copy != null) {
-            let exists = await doesNotExistFile.exists();
+            const exists = await doesNotExistFile.exists();
             expect(exists).toBe(false);
 
             const targetPath = doesNotExistFile.storagePath;
@@ -296,7 +296,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
             const targetFile = f.storageContext.file(secondBucket);
 
-            let exists = await targetFile.exists();
+            const exists = await targetFile.exists();
             expect(exists).toBe(false);
 
             const targetPath = targetFile.storagePath;
@@ -319,7 +319,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       describe('move()', () => {
         it('should move the file to a new location in the same bucket.', async () => {
           if (existsFile.move != null) {
-            let exists = await doesNotExistFile.exists();
+            const exists = await doesNotExistFile.exists();
             expect(exists).toBe(false);
 
             const targetPath = doesNotExistFile.storagePath;
@@ -344,7 +344,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
             const targetFile = f.storageContext.file(secondBucket);
 
-            let exists = await targetFile.exists();
+            const exists = await targetFile.exists();
             expect(exists).toBe(false);
 
             const targetPath = targetFile.storagePath;
@@ -794,7 +794,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         describe('utilities', () => {
           describe('iterateStorageListFilesByEachFile()', () => {
             it('should iterate through all the files in the current folder one at a time', async () => {
-              let visitedFiles: StorageListFileResult[] = [];
+              const visitedFiles: StorageListFileResult[] = [];
 
               const result = await iterateStorageListFilesByEachFile({
                 folder: existsFolder,
@@ -817,7 +817,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
             describe('includeNestedResults=true', () => {
               it('should iterate through all the files and nested files under the current folder one at a time', async () => {
-                let visitedFiles: StorageListFileResult[] = [];
+                const visitedFiles: StorageListFileResult[] = [];
 
                 const result = await iterateStorageListFilesByEachFile({
                   folder: existsFolder,

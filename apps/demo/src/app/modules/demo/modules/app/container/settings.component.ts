@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFileUploadComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService, DbxFirebaseStorageFileDocumentStoreDirective, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { AsyncPipe, JsonPipe } from '@angular/common';

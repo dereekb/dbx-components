@@ -5,8 +5,8 @@ import { from, type Observable, of, exhaustMap } from 'rxjs';
 import { type FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, type FirestoreQueryConstraint, limit, startAfter } from './constraint';
 import { type QueryLikeReferenceRef } from '../reference';
-import { FirestoreDocument, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorFactoryFunction } from '../accessor/document';
-import { firestoreDocumentLoader, getDocumentSnapshotDataPairsWithData, getDocumentSnapshots, loadDocumentsForDocumentReferences } from '../accessor/document.utility';
+import { LimitedFirestoreDocumentAccessor } from '../accessor/document';
+import { getDocumentSnapshots, loadDocumentsForDocumentReferences } from '../accessor/document.utility';
 
 /**
  * Filter configuration for Firestore query pagination.

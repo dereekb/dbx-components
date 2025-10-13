@@ -4,8 +4,7 @@ import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core'
 import { Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonConfig } from './progress/button.progress.config';
 import { type DbxThemeColor } from '../layout/style/style';
-import { DbxProgressSpinnerButtonComponent } from './progress';
-import { DbxProgressBarButtonComponent } from './progress';
+import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { NgTemplateOutlet } from '@angular/common';
 

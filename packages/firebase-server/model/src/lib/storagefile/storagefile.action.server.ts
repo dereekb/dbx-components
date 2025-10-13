@@ -12,14 +12,12 @@ import {
   NotificationFirestoreCollections,
   UPLOADS_FOLDER_PATH,
   iterateStorageListFilesByEachFile,
-  StorageListFileResult,
   FirebaseStorageAccessorFile,
   InitializeAllStorageFilesFromUploadsResult,
   InitializeAllStorageFilesFromUploadsParams,
   StorageFileKey,
   StorageFileProcessingState,
   StorageFileState,
-  createNotificationDocumentPair,
   storageFileProcessingNotificationTaskTemplate,
   createNotificationDocument,
   ProcessAllQueuedStorageFilesParams,
@@ -41,9 +39,8 @@ import { type InjectionToken } from '@nestjs/common';
 import { NotificationExpediteServiceRef } from '../notification';
 import { StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
 import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError, storageFileNotFlaggedForDeletionError, storageFileCannotBeDeletedYetError } from './storagefile.error';
-import { isPast, isThrottled, Maybe, mergeSlashPaths, MS_IN_HOUR } from '@dereekb/util';
+import { isPast, isThrottled, Maybe, mergeSlashPaths } from '@dereekb/util';
 import { HttpsError } from 'firebase-functions/https';
-import { storage } from 'firebase-admin';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -110,7 +107,7 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
     return async () => {
       const folder = storageService.folder(fullPath);
 
-      let modelKeys: StorageFileKey[] = [];
+      const modelKeys: StorageFileKey[] = [];
 
       let filesVisited = 0;
       let initializationsSuccessCount = 0;
@@ -276,7 +273,7 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
     const { sdat } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
-      let updateTemplate: Partial<StorageFile> = {
+      const updateTemplate: Partial<StorageFile> = {
         sdat
       };
 

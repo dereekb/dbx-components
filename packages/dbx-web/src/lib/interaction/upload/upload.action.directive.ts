@@ -1,4 +1,4 @@
-import { Directive, OnInit, OnDestroy, inject, Type } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject } from '@angular/core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { DbxFileUploadActionCompatable } from './upload.action';

@@ -1,8 +1,8 @@
-import { computed, Directive, input, signal, Type } from '@angular/core';
+import { computed, Directive, input, signal } from '@angular/core';
 import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
 import { FileArrayAcceptMatchConfig, FileArrayAcceptMatchResult } from './upload.accept';
 import { DbxFileUploadActionCompatable } from './upload.action';
-import { DbxActionWorkOrWorkProgress, DbxButtonWorking } from '@dereekb/dbx-core';
+import { DbxButtonWorking } from '@dereekb/dbx-core';
 
 // MARK: Abstract
 export interface DbxFileUploadFilesChangedEvent {

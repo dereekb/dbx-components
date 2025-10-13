@@ -1,4 +1,4 @@
-import { inject, Inject, Injectable, Injector, Optional } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAvatarViewComponent } from './avatar.view.component';
 import { DbxAvatarContext } from './avatar';
