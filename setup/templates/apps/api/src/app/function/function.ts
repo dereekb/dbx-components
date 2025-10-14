@@ -3,7 +3,8 @@ import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIXFirebaseModelS
 import { onCallHandlerWithNestApplicationFactory, onCallHandlerWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleHandlerWithNestApplicationFactory, onScheduleHandlerWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, ProfileServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
-import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { runNamedAsyncTasksFunction } from '@dereekb/util';
 
 export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIXFirebaseModelServices> {
 
@@ -29,6 +30,10 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
 
   get notificationActions(): NotificationServerActions {
     return this.nest.get(NotificationServerActions);
+  }
+
+  get storageFileServerActions(): StorageFileServerActions {
+    return this.nest.get(StorageFileServerActions);
   }
 
   get profileActions(): ProfileServerActions {
@@ -75,6 +80,20 @@ export type APP_CODE_PREFIXOnCallDeleteModelMap = OnCallDeleteModelMap<APP_CODE_
 
 // MARK: Schedule Functions
 export type APP_CODE_PREFIXScheduleFunction = OnScheduleWithNestContext<APP_CODE_PREFIXApiNestContext>;
+
+export const runAPP_CODE_PREFIXScheduledTasks = runNamedAsyncTasksFunction<object>({
+  onTaskSuccess: (task, value) => {
+    if (value) {
+      console.log(value);
+    }
+  },
+  onTaskFailure: (task, error) => {
+    console.error(`Task ${task.name} failed with error:`, error);
+  },
+  defaultOptions: {
+    sequential: true // tasks should be run sequentially
+  }
+});
 
 // MARK: Development Functions
 export type APP_CODE_PREFIXDevelopmentFunction<I = unknown, O = void> = OnCallDevelopmentFunction<APP_CODE_PREFIXApiNestContext, I, O>;

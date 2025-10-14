@@ -6,9 +6,9 @@ import { APP_CODE_PREFIXNotificationTemplateServiceConfigsArrayFactory } from '.
 import { APP_CODE_PREFIXApiActionModule } from '../../firebase/action.module';
 import { APP_CODE_PREFIXNotificationSendServiceFactory } from './notification.send.service';
 import { APP_CODE_PREFIXNotificationInitServerActionsContextConfig } from './notification.init';
-import { APP_CODE_PREFIXNotificationTaskServiceFactory } from './notification.task.service';
+import { APP_CODE_PREFIX_CAMELNotificationTaskServiceFactory } from './notification.task.service';
 
-export const APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServicesFactory = (context: APP_CODE_PREFIXFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService) => ({ ...context, notificationTemplateService });
+export const APP_CODE_PREFIX_CAMELFirebaseServerActionsContextWithNotificationServicesFactory = (context: APP_CODE_PREFIXFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService) => ({ ...context, notificationTemplateService });
 
 /**
  * Dependencies for the NotificationModule
@@ -23,7 +23,7 @@ export const APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices
     },
     {
       provide: NotificationTaskService,
-      useFactory: APP_CODE_PREFIXNotificationTaskServiceFactory,
+      useFactory: APP_CODE_PREFIX_CAMELNotificationTaskServiceFactory,
       inject: [APP_CODE_PREFIXFirebaseServerActionsContext]
     },
     {
@@ -54,7 +54,7 @@ export class NotificationDependencyModule { }
     providers: [
       {
         provide: APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices,
-        useFactory: APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServicesFactory,
+        useFactory: APP_CODE_PREFIX_CAMELFirebaseServerActionsContextWithNotificationServicesFactory,
         inject: [APP_CODE_PREFIXFirebaseServerActionsContext, NotificationTemplateService]
       }
     ],

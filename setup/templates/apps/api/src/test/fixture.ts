@@ -46,12 +46,18 @@ import {
   NotificationUserFirestoreCollection,
   CreateNotificationTemplate,
   createNotificationDocument,
-  UpdateNotificationUserParams
+  UpdateNotificationUserParams,
+  FirebaseStorageContext,
+  ProcessStorageFileParams,
+  StorageFile,
+  StorageFileDocument,
+  StorageFileFirestoreCollection,
+  StoragePath
 } from '@dereekb/firebase';
-import {  APP_CODE_PREFIXFirestoreCollections, ProfileDocument, Profile, ProfileFirestoreCollection,  } from 'FIREBASE_COMPONENTS_NAME';
+import { APP_CODE_PREFIXFirestoreCollections, ProfileDocument, Profile, ProfileFirestoreCollection, } from 'FIREBASE_COMPONENTS_NAME';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter } from '@dereekb/util';
-import { NotificationInitServerActions, NotificationSendService, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter, AsyncFactory } from '@dereekb/util';
+import { NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { APP_CODE_PREFIXApiAuthService, APP_CODE_PREFIXFirebaseServerActionsContext, APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 
@@ -59,7 +65,7 @@ import { MailgunService } from '@dereekb/nestjs/mailgun';
 @Module({
   imports: [APP_CODE_PREFIXApiAppModule]
 })
-export class TestAPP_CODE_PREFIXApiAppModule {}
+export class TestAPP_CODE_PREFIXApiAppModule { }
 
 export function initAPP_CODE_PREFIXApiTestEnvironment() {
   initFirebaseAdminTestEnvironment({
@@ -76,9 +82,12 @@ export interface APP_CODE_PREFIXApiContext {
   get APP_CODE_PREFIX_CAMELFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections;
   get authService(): APP_CODE_PREFIXApiAuthService;
   get mailgunService(): MailgunService;
+  get storageContext(): FirebaseStorageContext;
   get notificationServerActions(): NotificationServerActions;
   get notificationInitServerActions(): NotificationInitServerActions;
   get notificationSendService(): NotificationSendService;
+  get notificationTaskService(): NotificationTaskService;
+  get storageFileServerActions(): StorageFileServerActions;
 }
 
 // MARK: Admin
@@ -103,6 +112,10 @@ export class APP_CODE_PREFIXApiContextFixture<F extends FirebaseAdminTestContext
     return this.instance.authService;
   }
 
+  get storageContext() {
+    return this.instance.storageContext;
+  }
+
   get notificationServerActions() {
     return this.instance.notificationServerActions;
   }
@@ -113,6 +126,14 @@ export class APP_CODE_PREFIXApiContextFixture<F extends FirebaseAdminTestContext
 
   get notificationSendService() {
     return this.instance.notificationSendService;
+  }
+
+  get notificationTaskService() {
+    return this.instance.notificationTaskService;
+  }
+
+  get storageFileServerActions() {
+    return this.instance.storageFileServerActions;
   }
 
   get profileServerActions() {
@@ -158,6 +179,14 @@ export class APP_CODE_PREFIXApiContextFixtureInstance<F extends FirebaseAdminTes
     return this.get(NotificationSendService);
   }
 
+  get notificationTaskService() {
+    return this.get(NotificationTaskService);
+  }
+
+  get storageFileServerActions() {
+    return this.get(StorageFileServerActions);
+  }
+
   get profileServerActions() {
     return this.get(ProfileServerActions);
   }
@@ -198,16 +227,28 @@ export class APP_CODE_PREFIXApiFunctionContextFixture<F extends FirebaseAdminFun
     return this.instance.authService;
   }
 
+  get storageContext() {
+    return this.instance.storageContext;
+  }
+
   get notificationServerActions() {
     return this.instance.notificationServerActions;
+  }
+
+  get notificationInitServerActions() {
+    return this.instance.notificationInitServerActions;
   }
 
   get notificationSendService() {
     return this.instance.notificationSendService;
   }
 
-  get notificationInitServerActions() {
-    return this.instance.notificationInitServerActions;
+  get notificationTaskService() {
+    return this.instance.notificationTaskService;
+  }
+
+  get storageFileServerActions() {
+    return this.instance.storageFileServerActions;
   }
 
   get profileServerActions() {
@@ -253,6 +294,14 @@ export class APP_CODE_PREFIXApiFunctionContextFixtureInstance<F extends Firebase
     return this.get(NotificationSendService);
   }
 
+  get notificationTaskService() {
+    return this.get(NotificationTaskService);
+  }
+
+  get storageFileServerActions() {
+    return this.get(StorageFileServerActions);
+  }
+
   get profileServerActions() {
     return this.get(ProfileServerActions);
   }
@@ -272,7 +321,7 @@ export const APP_CODE_PREFIX_CAMELApiFunctionContextFactory = (buildTests: JestB
 };
 
 // MARK: With Users
-export class APP_CODE_PREFIXApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiAuthorizedUserTestContextInstance<F>> {}
+export class APP_CODE_PREFIXApiAuthorizedUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextFixture<APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiAuthorizedUserTestContextInstance<F>> { }
 
 export class APP_CODE_PREFIXApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends AuthorizedUserTestContextInstance<APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> {
   get APP_CODE_PREFIX_CAMELApiContext(): APP_CODE_PREFIXApiFunctionContextFixtureInstance<F> {
@@ -320,9 +369,9 @@ export interface APP_CODE_PREFIXApiProfileTestContextParams {
   u: APP_CODE_PREFIXApiAuthorizedUserTestContextFixture;
 }
 
-export class APP_CODE_PREFIXApiProfileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Profile, ProfileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiProfileTestContextInstance<F>> {}
+export class APP_CODE_PREFIXApiProfileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Profile, ProfileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiProfileTestContextInstance<F>> { }
 
-export class APP_CODE_PREFIXApiProfileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Profile, ProfileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> {}
+export class APP_CODE_PREFIXApiProfileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Profile, ProfileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> { }
 
 export const APP_CODE_PREFIX_CAMELProfileContextFactory = () =>
   modelTestContextFactory<Profile, ProfileDocument, APP_CODE_PREFIXApiProfileTestContextParams, APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, ProfileFirestoreCollection>({
@@ -407,9 +456,9 @@ export interface APP_CODE_PREFIXApiNotificationSummaryTestContextParams {
   initIfNeeded?: boolean;
 }
 
-export class APP_CODE_PREFIXApiNotificationSummaryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationSummary, NotificationSummaryDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiNotificationSummaryTestContextInstance<F>> {}
+export class APP_CODE_PREFIXApiNotificationSummaryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationSummary, NotificationSummaryDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiNotificationSummaryTestContextInstance<F>> { }
 
-export class APP_CODE_PREFIXApiNotificationSummaryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationSummary, NotificationSummaryDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> {}
+export class APP_CODE_PREFIXApiNotificationSummaryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationSummary, NotificationSummaryDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> { }
 
 export const APP_CODE_PREFIX_CAMELNotificationSummaryContextFactory = () =>
   modelTestContextFactory<NotificationSummary, NotificationSummaryDocument, APP_CODE_PREFIXApiNotificationSummaryTestContextParams, APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiNotificationSummaryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiNotificationSummaryTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationSummaryFirestoreCollection>({
@@ -666,9 +715,9 @@ export interface APP_CODE_PREFIXApiNotificationWeekTestContextParams {
   init?: boolean;
 }
 
-export class APP_CODE_PREFIXApiNotificationWeekTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationWeek, NotificationWeekDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiNotificationWeekTestContextInstance<F>> {}
+export class APP_CODE_PREFIXApiNotificationWeekTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationWeek, NotificationWeekDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiNotificationWeekTestContextInstance<F>> { }
 
-export class APP_CODE_PREFIXApiNotificationWeekTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationWeek, NotificationWeekDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> {}
+export class APP_CODE_PREFIXApiNotificationWeekTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationWeek, NotificationWeekDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> { }
 
 export const APP_CODE_PREFIX_CAMELNotificationWeekContextFactory = () =>
   modelTestContextFactory<NotificationWeek, NotificationWeekDocument, APP_CODE_PREFIXApiNotificationWeekTestContextParams, APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiNotificationWeekTestContextInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiNotificationWeekTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
@@ -695,3 +744,82 @@ export const APP_CODE_PREFIX_CAMELNotificationWeekContextFactory = () =>
   });
 
 export const APP_CODE_PREFIX_CAMELNotificationWeekContext = APP_CODE_PREFIX_CAMELNotificationWeekContextFactory();
+
+// MARK: StorageFile
+export interface APP_CODE_PREFIXApiStorageFileTestContextParams {
+  /**
+   * Creates an uploaded file and returns the path.
+   *
+   * This should go into the uploaded folder, or the folder where the system is expecting it to be for initializing a StorageFile from an uploaded file.
+   */
+  readonly createUploadedFile?: Maybe<AsyncFactory<StoragePath>>;
+  /**
+   * If true, will run processStorageFile() on the StorageFile.
+   *
+   * Defaults to false.
+   */
+  readonly processStorageFile?: Maybe<boolean | ProcessStorageFileParams>;
+}
+
+export class APP_CODE_PREFIXApiStorageFileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFile, StorageFileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiStorageFileTestContextInstance<F>> {
+  async process(params?: Omit<ProcessStorageFileParams, 'key'>) {
+    return this.instance.process(params);
+  }
+
+  async loadProcessingTaskDocument(): Promise<NotificationDocument> {
+    return this.instance.loadProcessingTaskDocument();
+  }
+}
+
+export class APP_CODE_PREFIXApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> {
+  async process(params?: Omit<ProcessStorageFileParams, 'key'>) {
+    const processStorageFileParams: ProcessStorageFileParams = {
+      key: this.documentKey,
+      ...params
+    };
+
+    const process = await this.testContext.storageFileServerActions.processStorageFile(processStorageFileParams);
+    return process(this.document);
+  }
+
+  async loadProcessingTaskDocument(): Promise<NotificationDocument> {
+    const storageFile = await this.document.snapshotData();
+
+    if (!storageFile?.pn) {
+      throw new Error('StorageFile not found or does not have a processing task key associated.');
+    }
+
+    const notificationTaskKey = storageFile.pn;
+    const notificationTaskDocument = this.testContext.APP_CODE_PREFIX_CAMELFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey);
+    return notificationTaskDocument;
+  }
+}
+
+export const APP_CODE_PREFIX_CAMELStorageFileContextFactory = () =>
+  modelTestContextFactory<StorageFile, StorageFileDocument, APP_CODE_PREFIXApiStorageFileTestContextParams, APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileFirestoreCollection>({
+    makeFixture: (f) => new APP_CODE_PREFIXApiStorageFileTestContextFixture(f),
+    getCollection: (fi) => fi.APP_CODE_PREFIX_CAMELFirestoreCollections.storageFileCollection,
+    makeInstance: (delegate, ref, testInstance) => new APP_CODE_PREFIXApiStorageFileTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      let ref: StorageFileDocument;
+
+      if (params.createUploadedFile) {
+        const { bucketId, pathString } = await getValueFromGetter(params.createUploadedFile);
+        const initializeInstance = await p.storageFileServerActions.initializeStorageFileFromUpload({ bucketId, pathString });
+        ref = await initializeInstance();
+      } else {
+        throw new Error('Must use createUploadedFile() to initialize a StorageFile, or use the "doc" parameter.');
+      }
+
+      return ref.documentRef;
+    },
+    initDocument: async (instance, params) => {
+      const p = instance.testContext;
+
+      if (params.processStorageFile) {
+        await instance.process(typeof params.processStorageFile === 'boolean' ? {} : params.processStorageFile);
+      }
+    }
+  });
+
+export const APP_CODE_PREFIX_CAMELStorageFileContext = APP_CODE_PREFIX_CAMELStorageFileContextFactory();

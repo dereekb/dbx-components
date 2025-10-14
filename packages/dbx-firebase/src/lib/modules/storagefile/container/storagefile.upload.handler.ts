@@ -284,11 +284,15 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
      */
     readonly nextProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>;
     /**
-     * An error that occured, if applicable.
+     * An error that occured outside of the nextProgress, if applicable.
+     *
+     * These are typically "uncaught" errors.
      */
-    readonly error?: Maybe<unknown>;
+    readonly nonProgressError?: Maybe<unknown>;
     /**
      * Passed as true when the upload task is done.
+     *
+     * This is also inferred as true when a progress error occurs for an upload.
      *
      * Does not specify whether or not success was achieved or not.
      */
@@ -353,55 +357,64 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       _emitEvent();
     }
 
-    function _markFileUploadDone(fileIndex: IndexNumber, error?: Maybe<unknown>) {
+    function _markFileUploadDone(fileIndex: IndexNumber, finalError?: Maybe<unknown>) {
       doneFileIndexes.add(fileIndex); // add to done file indexes
       activeFileIndexes.delete(fileIndex); // remove from active file indexes if it exists
       incompleteFileFileIndexes.delete(fileIndex); // remove from incomplete file indexes
 
       // update details
       allFilesAndDetails[fileIndex].endTime = new Date();
+
+      const error = finalError ?? allFilesAndDetails[fileIndex].error;
       allFilesAndDetails[fileIndex].success = !error;
       allFilesAndDetails[fileIndex].error = error;
     }
 
     function updateUploadProgress(input: UpdateUploadProgressInput) {
-      const { index: fileIndex, nextProgress, fileUploadTaskDone, error } = input;
+      const { index: fileIndex, nextProgress, fileUploadTaskDone: inputFileUploadTaskDone, nonProgressError } = input;
+      const error = nonProgressError ?? nextProgress?.error;
+      const fileUploadTaskDone = inputFileUploadTaskDone ?? Boolean(error);
 
-      let nextOverallProgress = latestOverallProgress;
-      const nextProgressPercent = fileUploadTaskDone ? 100 : (nextProgress?.progress ?? 0) * 100;
+      // the task may already be done, as after a progress-related error the complete task can get called.
+      const isTaskAlreadyDone = allFilesAndDetails[fileIndex].endTime != null;
 
-      // update the overall progress percentage
-      if (nextProgressPercent) {
-        // update the overall percentage
-        const previousProgress = allFilesAndLatestProgress[fileIndex];
-        const previousProgressPercent = previousProgress?.progress != null ? previousProgress.progress * 100 : 0;
-        const progressPercentChange = nextProgressPercent - previousProgressPercent;
+      if (!isTaskAlreadyDone) {
+        let nextOverallProgress = latestOverallProgress;
+        const nextProgressPercent = fileUploadTaskDone ? 100 : (nextProgress?.progress ?? 0) * 100;
 
-        // increase overall progress by the change
-        nextOverallProgress += progressPercentChange * overallProgressPerCompletedFile;
-      }
+        // update the overall progress percentage
+        if (nextProgressPercent) {
+          // update the overall percentage
+          const previousProgress = allFilesAndLatestProgress[fileIndex];
+          const previousProgressPercent = previousProgress?.progress != null ? previousProgress.progress * 100 : 0;
+          const progressPercentChange = nextProgressPercent - previousProgressPercent;
 
-      // update the file progress
-      if (nextProgress) {
-        // update the latest FileProgress
-        allFilesAndLatestProgress[fileIndex] = nextProgress;
-
-        // only set fileRef once
-        if (!allFilesAndDetails[fileIndex].fileRef) {
-          allFilesAndDetails[fileIndex].fileRef = nextProgress.fileRef;
+          // increase overall progress by the change
+          nextOverallProgress += progressPercentChange * overallProgressPerCompletedFile;
         }
+
+        // update the file progress
+        if (nextProgress) {
+          // update the latest FileProgress
+          allFilesAndLatestProgress[fileIndex] = nextProgress;
+
+          // only set fileRef once
+          if (!allFilesAndDetails[fileIndex].fileRef) {
+            allFilesAndDetails[fileIndex].fileRef = nextProgress.fileRef;
+          }
+        }
+
+        // if complete, update the indexes and details
+        if (fileUploadTaskDone) {
+          _markFileUploadDone(fileIndex, error);
+        }
+
+        // update the overall progress
+        latestOverallProgress = nextOverallProgress;
+
+        // emit the event to send it
+        _emitEvent(nextProgress);
       }
-
-      // if complete, update the indexes and details
-      if (fileUploadTaskDone) {
-        _markFileUploadDone(fileIndex, error);
-      }
-
-      // update the overall progress
-      latestOverallProgress = nextOverallProgress;
-
-      // emit the event to send it
-      _emitEvent(nextProgress);
     }
 
     function _emitEvent(nextProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>) {
@@ -472,7 +485,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
           // error occurred, update the progress with the error
           updateUploadProgress({
             index,
-            error,
+            nonProgressError: error,
             fileUploadTaskDone: true
           });
 
@@ -520,7 +533,6 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       retriesAllowed: 0 // no retries allowed
     }).then(() => {
       // all tasks are finished. Complete the subscriber.
-      console.log('complete');
       subscriber.complete();
     });
   }).pipe(shareReplay(1));

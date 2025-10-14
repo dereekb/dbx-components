@@ -1,10 +1,10 @@
-import { UpdateStorageFileParams } from '@dereekb/firebase';
+import { ProcessStorageFileParams, UpdateStorageFileParams } from '@dereekb/firebase';
 import { DemoUpdateModelFunction } from '../function';
 
 export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams> = async (request) => {
   const { nest, data } = request;
 
-  const updateStorageFile = await nest.storageFileActions.updateStorageFile(data);
+  const updateStorageFile = await nest.storageFileServerActions.updateStorageFile(data);
   const storageFileDocument = await nest.useModel('storageFile', {
     request,
     key: data.key,
@@ -15,10 +15,10 @@ export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams>
   await updateStorageFile(storageFileDocument);
 };
 
-export const storageFileProcess: DemoUpdateModelFunction<UpdateStorageFileParams> = async (request) => {
+export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParams> = async (request) => {
   const { nest, data } = request;
 
-  const processStorageFile = await nest.storageFileActions.processStorageFile(data);
+  const processStorageFile = await nest.storageFileServerActions.processStorageFile(data);
   const storageFileDocument = await nest.useModel('storageFile', {
     request,
     key: data.key,

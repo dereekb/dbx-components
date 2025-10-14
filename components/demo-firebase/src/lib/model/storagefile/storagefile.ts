@@ -2,6 +2,11 @@ import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessing
 import { Maybe, mergeSlashPaths, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 
 // MARK: User File Types
+export const USERS_ROOT_FOLDER_PATH: SlashPathFolder = '/u/';
+
+export function userStorageFolderPath(userId: FirebaseAuthUserId, ...subPath: Maybe<SlashPath>[]): SlashPathFolder {
+  return mergeSlashPaths([USERS_ROOT_FOLDER_PATH, userId, '/', ...subPath]) as SlashPathFolder;
+}
 
 // === User Test File ===
 /**
@@ -31,12 +36,6 @@ export type UserTestFileProcessingSubtask = typeof USER_TEST_FILE_PURPOSE_PART_A
 export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProcessingSubtaskMetadata {
   numberValue?: Maybe<number>;
   stringValue?: Maybe<string>;
-}
-
-export const USERS_ROOT_FOLDER_PATH: SlashPathFolder = '/u/';
-
-export function userStorageFolderPath(userId: FirebaseAuthUserId, ...subPath: Maybe<SlashPath>[]): SlashPathFolder {
-  return mergeSlashPaths([USERS_ROOT_FOLDER_PATH, userId, '/', ...subPath]) as SlashPathFolder;
 }
 
 export const USER_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/';

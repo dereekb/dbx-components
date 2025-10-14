@@ -7,7 +7,7 @@ export const storageFileCreate: DemoCreateModelFunction<CreateStorageFileParams>
 
   await assertIsAdminInRequest(request);
 
-  const createStorageFile = await nest.storageFileActions.createStorageFile(data);
+  const createStorageFile = await nest.storageFileServerActions.createStorageFile(data);
   const result = await createStorageFile();
 
   return onCallCreateModelResultWithDocs(result);
@@ -19,7 +19,7 @@ export const storageFileInitializeFromUpload: DemoCreateModelFunction<Initialize
   // anyone is allowed to initialize a storage file from an upload, as they may be the ones who uploaded it
   // await assertIsAdminInRequest(request);
 
-  const initializeStorageFileFromUpload = await nest.storageFileActions.initializeStorageFileFromUpload(data);
+  const initializeStorageFileFromUpload = await nest.storageFileServerActions.initializeStorageFileFromUpload(data);
   const result = await initializeStorageFileFromUpload();
 
   return onCallCreateModelResultWithDocs(result);
@@ -30,7 +30,7 @@ export const storageFileInitializeAllFromUploads: DemoCreateModelFunction<Initia
 
   await assertIsAdminInRequest(request);
 
-  const initializeAllStorageFilesFromUploads = await nest.storageFileActions.initializeAllStorageFilesFromUploads(data);
+  const initializeAllStorageFilesFromUploads = await nest.storageFileServerActions.initializeAllStorageFilesFromUploads(data);
   const result = await initializeAllStorageFilesFromUploads();
 
   return result;

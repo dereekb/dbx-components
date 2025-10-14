@@ -205,6 +205,9 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 npm install -D @nx/nest@$NX_VERSION
 npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
+echo "Installing app-server dependencies"
+npm install --force sharp@^0.34.4
+
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
@@ -546,7 +549,8 @@ sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e
 rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 
 # add settings to tsconfig.base.json
-npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true }";
+npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true, target: 'es2022', module: 'ES2022', noUnusedLocals: false, esModuleInterop: false, noImplicitOverride: true }";
+npx --yes json -I -f $API_APP_FOLDER/tsconfig.json -e "this.compilerOptions={ ...this.compilerOptions, esModuleInterop: false }"; # disable esModuleInterop for API app
 
 git add --all
 git commit --no-verify -m "checkpoint: added project configurations"
@@ -657,6 +661,10 @@ download_firebase_components_file "src/lib/model/example/index.ts"
 mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/notification
 download_firebase_components_file "src/lib/model/notification/notification.ts"
 download_firebase_components_file "src/lib/model/notification/index.ts"
+
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/storagefile
+download_firebase_components_file "src/lib/model/storagefile/storagefile.ts"
+download_firebase_components_file "src/lib/model/storagefile/index.ts"
 
 mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/profile
 download_firebase_components_file "src/lib/model/profile/profile.action.ts"
@@ -831,6 +839,11 @@ download_api_ts_file "src/app/common/model/notification/notification.task.servic
 download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/index.ts"
 
+mkdir $API_APP_FOLDER/src/app/common/model/storagefile
+download_api_ts_file "src/app/common/model/storagefile/storagefile.module.ts"
+download_api_ts_file "src/app/common/model/storagefile/storagefile.upload.service.ts"
+download_api_ts_file "src/app/common/model/storagefile/index.ts"
+
 # wait for potential download throttling
 sleep 2
 
@@ -870,6 +883,12 @@ download_api_ts_file "src/app/function/notification/notification.scenario.spec.t
 download_api_ts_file "src/app/function/notification/notification.schedule.ts"
 download_api_ts_file "src/app/function/notification/notificationbox.update.ts"
 download_api_ts_file "src/app/function/notification/notificationuser.update.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/storagefile
+download_api_ts_file "src/app/function/storagefile/storagefile.create.ts"
+download_api_ts_file "src/app/function/storagefile/storagefile.scenario.spec.ts"
+download_api_ts_file "src/app/function/storagefile/storagefile.schedule.ts"
+download_api_ts_file "src/app/function/storagefile/storagefile.update.ts"
 
 # environment folder
 mkdir -p $API_APP_FOLDER/src/environments

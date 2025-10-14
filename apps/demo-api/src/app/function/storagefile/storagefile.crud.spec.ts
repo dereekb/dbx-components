@@ -368,7 +368,7 @@ demoApiFunctionContextFactory((f) => {
             describe('user', () => {
               describe('non-existant file', () => {
                 itShouldFail('to initialize', async () => {
-                  const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                  const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
                     pathString: 'non-existant.txt'
                   });
 
@@ -392,7 +392,7 @@ demoApiFunctionContextFactory((f) => {
                 });
 
                 itShouldFail('to initialize', async () => {
-                  const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                  const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
                     pathString: unknownFileStoragePath.pathString
                   });
 
@@ -421,7 +421,7 @@ demoApiFunctionContextFactory((f) => {
                   let testfileExists = await testFile.exists();
                   expect(testfileExists).toBe(true);
 
-                  const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                  const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
                     pathString: testFileStoragePath.pathString // only provide the path string for the default bucket
                   });
 
@@ -468,7 +468,7 @@ demoApiFunctionContextFactory((f) => {
                     let fileExists = await testFile.exists();
                     expect(fileExists).toBe(true);
 
-                    const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                    const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
                       pathString: testFileStoragePath.pathString // only provide the path string for the default bucket
                     });
 

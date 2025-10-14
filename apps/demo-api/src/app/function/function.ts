@@ -56,7 +56,7 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
     return this.nest.get(GuestbookServerActions);
   }
 
-  get storageFileActions(): StorageFileServerActions {
+  get storageFileServerActions(): StorageFileServerActions {
     return this.nest.get(StorageFileServerActions);
   }
 
