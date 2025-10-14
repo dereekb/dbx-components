@@ -1,9 +1,17 @@
 import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
 import { APP_CODE_PREFIXOnCallCreateModelMap, APP_CODE_PREFIXOnCallReadModelMap, APP_CODE_PREFIXOnCallUpdateModelMap, APP_CODE_PREFIXOnCallDeleteModelMap, onCallWithAPP_CODE_PREFIXNestContext } from '../function';
 import { updateProfile, updateProfleOnboarding } from '../profile/profile.update';
+import { storageFileUpdate, storageFileProcess } from '../storagefile/storagefile.update';
+import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
 
 // MARK: Create
-export const APP_CODE_PREFIX_CAMELCreateModelMap: APP_CODE_PREFIXOnCallCreateModelMap = {};
+export const APP_CODE_PREFIX_CAMELCreateModelMap: APP_CODE_PREFIXOnCallCreateModelMap = {
+  storageFile: onCallSpecifierHandler({
+    _: storageFileCreate,
+    fromUpload: storageFileInitializeFromUpload,
+    allFromUpload: storageFileInitializeAllFromUploads
+  })
+};
 
 // MARK: Read
 export const APP_CODE_PREFIX_CAMELReadModelMap: APP_CODE_PREFIXOnCallReadModelMap = {};
@@ -13,6 +21,10 @@ export const APP_CODE_PREFIX_CAMELUpdateModelMap: APP_CODE_PREFIXOnCallUpdateMod
   profile: onCallSpecifierHandler({
     _: updateProfile,
     onboard: updateProfleOnboarding,
+  }),
+  storageFile: onCallSpecifierHandler({
+    _: storageFileUpdate,
+    process: storageFileProcess
   })
 };
 

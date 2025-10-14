@@ -1,9 +1,9 @@
-import { DemoScheduleFunction, runDemoScheduledTasks } from '../function';
+import { APP_CODE_PREFIXScheduleFunction, runAPP_CODE_PREFIXScheduledTasks } from '../function';
 
-export const storageFileHourlyUpdateSchedule: DemoScheduleFunction = async (request) => {
+export const storageFileHourlyUpdateSchedule: APP_CODE_PREFIXScheduleFunction = async (request) => {
   console.log('storageFileHourlyUpdateSchedule - running');
 
-  await runDemoScheduledTasks({
+  await runAPP_CODE_PREFIXScheduledTasks({
     initializeAllStorageFilesFromUploads: async () => {
       const initializeAllStorageFilesFromUploads = await request.nest.storageFileServerActions.initializeAllStorageFilesFromUploads({});
       const initializeAllStorageFilesFromUploadsResult = await initializeAllStorageFilesFromUploads();

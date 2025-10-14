@@ -7,12 +7,12 @@ import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, Guest
  * FirebaseFunctionsMap type for Demo
  */
 export type DemoFirebaseFunctionsMap = {
-  guestbookFunctions: GuestbookFunctionTypeMap;
-  profileFunctions: ProfileFunctionTypeMap;
-  notificationFunctions: NotificationFunctionTypeMap;
-  storageFileFunctions: StorageFileFunctionTypeMap;
-  systemStateFunctions: SystemStateFunctionTypeMap;
-  [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
+  readonly guestbookFunctions: GuestbookFunctionTypeMap;
+  readonly profileFunctions: ProfileFunctionTypeMap;
+  readonly notificationFunctions: NotificationFunctionTypeMap;
+  readonly storageFileFunctions: StorageFileFunctionTypeMap;
+  readonly systemStateFunctions: SystemStateFunctionTypeMap;
+  readonly [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
 };
 
 /**

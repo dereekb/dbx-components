@@ -174,7 +174,8 @@ export const appConfig: ApplicationConfig = {
         appCollectionClass: APP_CODE_PREFIXFirestoreCollections,
         collectionFactory: (firestoreContext: FirestoreContext) => makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext),
         provideSystemStateFirestoreCollections: true,
-        provideNotificationFirestoreCollections: true
+        provideNotificationFirestoreCollections: true,
+        provideStorageFileFirestoreCollections: true
       },
       modelContextService: {
         dbxFirebaseModelContextServiceClass: APP_CODE_PREFIXFirebaseContextService

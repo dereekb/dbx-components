@@ -8,45 +8,9 @@ export function userStorageFolderPath(userId: FirebaseAuthUserId, ...subPath: Ma
   return mergeSlashPaths([USERS_ROOT_FOLDER_PATH, userId, '/', ...subPath]) as SlashPathFolder;
 }
 
-// === User Test File ===
-/**
- * A test file that is uploaded by a user into their own uploads folder.
- *
- * The file has no specific name, but must be uploaded to the "test" folder.
- */
-export const USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_test_file';
-
-export const USER_TEST_FILE_UPLOADS_FOLDER_NAME: string = 'test';
-
-export function userTestFileUploadsFolderPath(userId: FirebaseAuthUserId): SlashPathFolder {
-  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_TEST_FILE_UPLOADS_FOLDER_NAME}/`;
-}
-
-export function userTestFileUploadsFilePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
-  return `${userTestFileUploadsFolderPath(userId)}${name}`;
-}
-
-export const USER_TEST_FILE_PURPOSE: StorageFilePurpose = 'test';
-
-export const USER_TEST_FILE_PURPOSE_PART_A_SUBTASK: StorageFileProcessingSubtask = 'part_a';
-export const USER_TEST_FILE_PURPOSE_PART_B_SUBTASK: StorageFileProcessingSubtask = 'part_b';
-
-export type UserTestFileProcessingSubtask = typeof USER_TEST_FILE_PURPOSE_PART_A_SUBTASK | typeof USER_TEST_FILE_PURPOSE_PART_B_SUBTASK;
-
-export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProcessingSubtaskMetadata {
-  numberValue?: Maybe<number>;
-  stringValue?: Maybe<string>;
-}
-
-export const USER_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/';
-
-export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
-  return userStorageFolderPath(userId, USER_STORAGE_FOLDER_PATH, name);
-}
-
 // === User Avatar ===
 /**
- * A test file that is uploaded by a user into their own uploads folder.
+ * An avatar that is uploaded by a user into their own uploads folder.
  *
  * It does not have any processing.
  */
@@ -84,5 +48,3 @@ export function makeUserAvatarFileStoragePath(userId: FirebaseAuthUserId): Slash
 
 export const USER_AVATAR_IMAGE_WIDTH = 512;
 export const USER_AVATAR_IMAGE_HEIGHT = USER_AVATAR_IMAGE_WIDTH;
-
-// MARK: System File Types

@@ -46,7 +46,7 @@ demoApiFunctionContextFactory((f) => {
 
               expect(uploadedFileExists).toBe(true);
 
-              const instance = await f.storageFileActions.initializeAllStorageFilesFromUploads({});
+              const instance = await f.storageFileServerActions.initializeAllStorageFilesFromUploads({});
               const result = await instance();
 
               expect(result.initializationsSuccessCount).toBe(1);
@@ -94,7 +94,7 @@ demoApiFunctionContextFactory((f) => {
 
                 expect(uploadedFileExists).toBe(true);
 
-                const instance = await f.storageFileActions.initializeAllStorageFilesFromUploads({});
+                const instance = await f.storageFileServerActions.initializeAllStorageFilesFromUploads({});
                 const result = await instance();
 
                 expect(result.initializationsSuccessCount).toBe(1);
@@ -169,7 +169,7 @@ demoApiFunctionContextFactory((f) => {
                     expect(newStorageFile.sdat).not.toBeDefined(); // should not have been queued for delete
 
                     // process deleting the queued storage files
-                    const deleteInstance = await f.storageFileActions.deleteAllQueuedStorageFiles({});
+                    const deleteInstance = await f.storageFileServerActions.deleteAllQueuedStorageFiles({});
                     const deleteResult = await deleteInstance();
 
                     expect(deleteResult.storageFilesVisited).toBeGreaterThanOrEqual(1);

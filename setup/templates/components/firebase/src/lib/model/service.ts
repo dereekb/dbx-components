@@ -48,7 +48,14 @@ import {
   NotificationSummary,
   NotificationSummaryDocument,
   NotificationSummaryRoles,
-  NotificationTypes
+  NotificationTypes,
+  StorageFileFirestoreCollections,
+  StorageFileFirestoreCollection,
+  storageFileFirestoreCollection,
+  StorageFile,
+  StorageFileDocument,
+  StorageFileRoles,
+  StorageFileTypes
 } from '@dereekb/firebase';
 import { noAccessRoleMap, fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
@@ -56,7 +63,7 @@ import { Example, ExampleDocument, ExampleRoles, ExampleTypes, exampleFirestoreC
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
 import { APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap } from './system';
 
-export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreContextReference, ExampleFirestoreCollections, SystemStateFirestoreCollections {
+export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreContextReference, ExampleFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly exampleCollection: ExampleFirestoreCollection;
@@ -70,6 +77,7 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreCo
   abstract readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
   abstract readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
+  abstract readonly storageFileCollection: StorageFileFirestoreCollection;
 }
 
 export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: FirestoreContext): APP_CODE_PREFIXFirestoreCollections {
@@ -86,7 +94,8 @@ export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: Firest
     notificationCollectionFactory: notificationFirestoreCollectionFactory(firestoreContext),
     notificationCollectionGroup: notificationFirestoreCollectionGroup(firestoreContext),
     notificationWeekCollectionFactory: notificationWeekFirestoreCollectionFactory(firestoreContext),
-    notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext)
+    notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext),
+    storageFileCollection: storageFileFirestoreCollection(firestoreContext)
   };
 }
 
@@ -170,8 +179,15 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.notificationWeekCollectionGroup
 });
 
+export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: APP_CODE_PREFIXFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.storageFileCollection
+});
+
 // MARK: Services
-export type APP_CODE_PREFIXFirebaseModelTypes = SystemStateTypes | ExampleTypes | ProfileTypes | NotificationTypes;
+export type APP_CODE_PREFIXFirebaseModelTypes = SystemStateTypes | ExampleTypes | ProfileTypes | NotificationTypes | StorageFileTypes;
 
 export type APP_CODE_PREFIXFirebaseContextAppContext = APP_CODE_PREFIXFirestoreCollections;
 
@@ -186,7 +202,8 @@ export const APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationSummary: notificationSummaryFirebaseModelServiceFactory,
   notificationBox: notificationBoxFirebaseModelServiceFactory,
   notification: notificationFirebaseModelServiceFactory,
-  notificationWeek: notificationWeekFirebaseModelServiceFactory
+  notificationWeek: notificationWeekFirebaseModelServiceFactory,
+  storageFile: storageFileFirebaseModelServiceFactory
 };
 
 export const APP_CODE_PREFIXFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES);
