@@ -205,6 +205,9 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 npm install -D @nx/nest@$NX_VERSION
 npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
+echo "Installing app-server dependencies"
+npm install --force sharp@^0.34.4
+
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
@@ -231,7 +234,7 @@ npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --dire
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
 
-npm install -D firebase-tools@$FIREBASE_TOOLS_VERSION sharp@^0.34.4
+npm install -D firebase-tools@$FIREBASE_TOOLS_VERSION
 
 # Init Firebase
 if [[ "$MANUAL_SETUP" =~ ^([yY][eE][sS]|[yY])$ ]] 
@@ -546,7 +549,8 @@ sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e
 rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 
 # add settings to tsconfig.base.json
-npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true }";
+npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true, target: 'es2022', module: 'ES2022', noUnusedLocals: false, esModuleInterop: false, noImplicitOverride: true }";
+npx --yes json -I -f $API_APP_FOLDER/tsconfig.json -e "this.compilerOptions={ ...this.compilerOptions, esModuleInterop: false }"; # disable esModuleInterop for API app
 
 git add --all
 git commit --no-verify -m "checkpoint: added project configurations"
