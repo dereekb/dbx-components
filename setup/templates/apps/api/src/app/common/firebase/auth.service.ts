@@ -45,7 +45,7 @@ export class APP_CODE_PREFIXApiAuthService extends AbstractFirebaseServerAuthSer
     return APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE.toClaims(roles);
   }
 
-  newUser(): FirebaseServerNewUserService {
+  override newUser(): FirebaseServerNewUserService {
     return new APP_CODE_PREFIXApiFirebaseServerNewUserService(this, this.mailgunService);
   }
 
