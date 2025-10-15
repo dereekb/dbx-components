@@ -1,6 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { TextFieldConfig, textField } from '../field/value/text';
-import { Maybe } from '@dereekb/util';
 import { validatorsForFieldConfig } from '../field/field';
 import { ValidatorFn } from '@angular/forms';
 import { isWebsiteUrlValidator, IsWebsiteUrlValidatorConfig } from '../../validator/website';

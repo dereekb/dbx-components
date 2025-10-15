@@ -54,7 +54,7 @@ export class DbxAvatarViewComponent {
     const directUrl = this.avatarUrl();
     const contextUrl = this.defaultContext?.url;
 
-    let url: Maybe<WebsiteUrlWithPrefix | WebsitePath> = directUrl ?? contextUrl ?? this.defaultAvatarUrl ?? undefined;
+    const url: Maybe<WebsiteUrlWithPrefix | WebsitePath> = directUrl ?? contextUrl ?? this.defaultAvatarUrl ?? undefined;
     return url;
   });
 
