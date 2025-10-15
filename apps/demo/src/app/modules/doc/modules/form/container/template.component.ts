@@ -1,4 +1,4 @@
-import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
@@ -23,6 +23,25 @@ export class DocFormTemplateComponent {
   });
 
   readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
+
+  readonly websiteUrlFields: FormlyFieldConfig[] = [
+    websiteUrlField({
+      label: 'Custom Label',
+      key: 'websiteWithPrefix',
+      requirePrefix: true
+    }),
+    websiteUrlField({
+      key: 'websiteWithoutPrefix',
+      label: 'Custom Label (Prefix Not Required)',
+      requirePrefix: false
+    }),
+    websiteUrlField({
+      key: 'websiteWithRequiredDomain',
+      label: 'Custom Label For Specific Domain (www.google.com)',
+      validDomains: ['www.google.com'],
+      requirePrefix: false
+    })
+  ];
 
   readonly invalidVerifyContent = { username: 'test@test.com', password: 'verify', verifyPassword: 'other' };
 }
