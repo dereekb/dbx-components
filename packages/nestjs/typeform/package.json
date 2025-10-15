@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs/typeform",
-  "version": "12.5.1",
+  "version": "12.5.2",
   "type": "commonjs",
   "peerDependencies": {},
   "dependencies": {}
