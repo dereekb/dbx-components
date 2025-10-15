@@ -52,6 +52,10 @@ export interface DbxAvatarContext {
    * Icon name to use for the fallback avatar when no image is provided.
    */
   readonly icon?: Maybe<string>;
+  /**
+   * If true, when the image cannot be loaded then the entire avatar view should be hidden.
+   */
+  readonly hideOnError?: Maybe<boolean>;
 }
 
 // MARK: Injection Token

@@ -23,6 +23,10 @@ $icon-to-avatar-size-ratio: 0.65;
     }
   }
 
+  .dbx-avatar-view-hide-avatar {
+    display: none;
+  }
+
   .dbx-avatar-small .dbx-avatar-view {
     width: var(#{theming.$dbx-avatar-small-size-var}, 32px);
     height: var(#{theming.$dbx-avatar-small-size-var}, 32px);

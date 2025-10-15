@@ -32,6 +32,7 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
 
 /**
  * Configured verify field for a password.
+ *
  * @param config
  * @returns
  */

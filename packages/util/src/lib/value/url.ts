@@ -1,5 +1,5 @@
 /**
- * Removes any query parameters and hashbang parameters from the input url.
+ * Removes any query parameters and hashbang parameters from the input string.
  *
  * @param url
  * @returns

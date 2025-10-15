@@ -179,11 +179,56 @@ export type WebsiteUrl = string;
  * Checks that it has the http/https prefix, has a domain, and the path is a slash path. The query parameters are ignored.
  */
 export function isWebsiteUrl(input: string): input is WebsiteUrl {
+  return websiteUrlDetails(input).isWebsiteUrl;
+}
+
+/**
+ * Details about an input string.
+ *
+ * Is tested if it is a website url.
+ */
+export interface WebsiteUrlDetails {
+  readonly input: string;
+  readonly isWebsiteUrl: boolean;
+  readonly hasHttpPrefix: boolean;
+  readonly hasWebsiteDomain: boolean;
+  readonly splitPair: WebsiteDomainAndPathPair;
+  readonly domain: WebsiteDomain;
+  readonly websitePath: WebsitePath;
+  readonly path: string;
+  readonly query: string | undefined;
+}
+
+/**
+ * Returns details about the input string, considering it a WebsiteUrl and returning details.
+ *
+ * @param input string to test
+ * @returns WebsiteUrlDetails
+ */
+export function websiteUrlDetails(input: string): WebsiteUrlDetails {
   const noHttp = removeHttpFromUrl(input);
   const splitPair = websiteDomainAndPathPairFromWebsiteUrl(noHttp);
+  const { domain, path: websitePath } = splitPair;
+
+  const pathHasWebsiteDomain = hasWebsiteDomain(domain);
+
   const [path, query] = splitStringAtFirstCharacterOccurence(splitPair.path, '?'); // everything after the query is ignored
-  const isWebsiteUrl = hasWebsiteDomain(splitPair.domain) && isSlashPathFolder(path + '/');
-  return isWebsiteUrl;
+  const isWebsiteUrl = pathHasWebsiteDomain && isSlashPathFolder(path + '/');
+  const inputHasHttpPrefix = hasHttpPrefix(input);
+
+  const result: WebsiteUrlDetails = {
+    input,
+    isWebsiteUrl,
+    hasWebsiteDomain: pathHasWebsiteDomain,
+    hasHttpPrefix: inputHasHttpPrefix,
+    splitPair,
+    domain,
+    websitePath,
+    path,
+    query
+  };
+
+  return result;
 }
 
 /**
@@ -197,15 +242,8 @@ export type WebsiteUrlWithPrefix = string;
  * Checks that it has the http/https prefix, has a domain, and the path is a slash path. The query parameters are ignored.
  */
 export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrl {
-  let isWebsiteUrlWithPrefix = false;
-
-  const hasPrefix = hasHttpPrefix(input);
-
-  if (hasPrefix) {
-    isWebsiteUrlWithPrefix = isWebsiteUrl(input);
-  }
-
-  return isWebsiteUrlWithPrefix;
+  const details = websiteUrlDetails(input);
+  return details.hasHttpPrefix && details.isWebsiteUrl;
 }
 
 /**
@@ -283,26 +321,26 @@ export interface IsolateWebsitePathFunctionConfig {
   /**
    * Optional range of paths to isolate.
    */
-  isolatePathComponents?: IndexRangeInput;
+  readonly isolatePathComponents?: IndexRangeInput;
   /**
    * Base path to remove/ignore when isolating a path from the input.
    *
    * For example:
    * - For Reddit it could ignore /u or /u
    */
-  ignoredBasePath?: string;
+  readonly ignoredBasePath?: string;
   /**
    * Whether or not to remove any query parameters if they exist.
    *
    * False by default.
    */
-  removeQueryParameters?: boolean;
+  readonly removeQueryParameters?: boolean;
   /**
    * Whether or not to remove any trailing slash from the path.
    *
    * False by default.
    */
-  removeTrailingSlash?: boolean;
+  readonly removeTrailingSlash?: boolean;
 }
 
 /**
