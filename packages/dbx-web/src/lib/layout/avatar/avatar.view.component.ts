@@ -20,10 +20,12 @@ import { DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, DbxAvatarStyle } from 
   `,
   host: {
     class: 'dbx-avatar-view',
+    '[class.dbx-avatar-view-error]': 'hasAvatarErrorSignal()',
     '[class.dbx-avatar-view-circle]': 'avatarStyleClassSignal() === "circle"',
     '[class.dbx-avatar-view-square]': 'avatarStyleClassSignal() === "square"',
     '[class.dbx-avatar-view-with-avatar]': 'hasAvatarSignal()',
-    '[class.dbx-avatar-view-no-avatar]': 'missingAvatarSignal()'
+    '[class.dbx-avatar-view-no-avatar]': 'missingAvatarSignal()',
+    '[class.dbx-avatar-view-hide-avatar]': 'hideAvatarSignal()'
   },
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,17 +43,32 @@ export class DbxAvatarViewComponent {
 
   readonly avatarStyle = input<Maybe<DbxAvatarStyle>>();
   readonly avatarIcon = input<Maybe<string>>();
+  readonly avatarHideOnError = input<Maybe<boolean>>();
 
-  readonly avatarUrlSignal = computed<Maybe<WebsiteUrlWithPrefix | WebsitePath>>(() => {
+  readonly avatarHideOnErrorSignal = computed(() => {
+    const hideOnError = this.avatarHideOnError() ?? this.defaultContext?.hideOnError ?? false;
+    return hideOnError;
+  });
+
+  readonly currentAvatarUrlSignal = computed<Maybe<WebsiteUrlWithPrefix | WebsitePath>>(() => {
     const directUrl = this.avatarUrl();
     const contextUrl = this.defaultContext?.url;
 
-    let url = directUrl ?? contextUrl ?? this.defaultAvatarUrl ?? null;
+    let url: Maybe<WebsiteUrlWithPrefix | WebsitePath> = directUrl ?? contextUrl ?? this.defaultAvatarUrl ?? undefined;
+    return url;
+  });
 
-    // if the error url is true or matches the url, then the url is invalid.
+  readonly hasAvatarErrorSignal = computed(() => {
     const errorUrl = this.avatarErrorUrlSignal();
+    const currentUrl = this.currentAvatarUrlSignal();
+    return errorUrl === currentUrl;
+  });
 
-    if (errorUrl === true || errorUrl === url) {
+  readonly avatarUrlSignal = computed<Maybe<WebsiteUrlWithPrefix | WebsitePath>>(() => {
+    let url = this.currentAvatarUrlSignal();
+    const hasError = this.hasAvatarErrorSignal();
+
+    if (hasError) {
       url = null;
     }
 
@@ -59,17 +76,22 @@ export class DbxAvatarViewComponent {
   });
 
   readonly hasAvatarSignal = computed(() => !!this.avatarUrlSignal());
-
   readonly missingAvatarSignal = computed(() => !this.hasAvatarSignal());
 
   readonly avatarStyleClassSignal = computed<'circle' | 'square'>(() => {
     return this.avatarStyle() ?? this.defaultContext?.style ?? 'circle';
   });
 
+  readonly hideAvatarSignal = computed(() => {
+    const hideOnError = this.avatarHideOnErrorSignal();
+    const hasError = this.hasAvatarErrorSignal();
+    return hideOnError && hasError;
+  });
+
   readonly avatarIconSignal = computed(() => {
     let icon = this.avatarIcon() ?? this.defaultContext?.icon;
 
-    if (!icon && this.avatarErrorUrlSignal()) {
+    if (!icon && this.hasAvatarErrorSignal()) {
       icon = this.avatarService.defaultAvatarErrorIcon;
     } else {
       icon = icon ?? this.avatarService.defaultAvatarIcon;

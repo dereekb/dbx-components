@@ -33,6 +33,7 @@ export class DbxAvatarComponent {
   readonly avatarIcon = input<Maybe<string>>();
   readonly avatarStyle = input<Maybe<DbxAvatarStyle>>();
   readonly avatarSize = input<Maybe<DbxAvatarSize>>(undefined);
+  readonly avatarHideOnError = input<Maybe<boolean>>();
 
   readonly contextSignal = computed(() => {
     const inputContext = this.context();
@@ -43,6 +44,7 @@ export class DbxAvatarComponent {
     const key = this.avatarKey() ?? inputContext?.key;
     const icon = this.avatarIcon() ?? inputContext?.icon;
     const style = this.avatarStyle() ?? inputContext?.style;
+    const hideOnError = this.avatarHideOnError() ?? inputContext?.hideOnError;
 
     const context = {
       selector,
@@ -50,7 +52,8 @@ export class DbxAvatarComponent {
       url,
       key,
       icon,
-      style
+      style,
+      hideOnError
     };
 
     return context;
