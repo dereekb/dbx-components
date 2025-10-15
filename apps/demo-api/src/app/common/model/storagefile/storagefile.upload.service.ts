@@ -35,19 +35,18 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
 
       // move the file to /test/u/{userId}/{filename}
       const newPath = userTestFileStoragePath(userId, file as string);
-      const movedFile = await input.fileDetailsAccessor.copy(newPath);
+      const createdFile = await input.fileDetailsAccessor.copy(newPath);
 
       // create the StorageFileDocument and reference the new file
       const { storageFileDocument } = await createStorageFileDocumentPair({
         accessor: storageFileDocumentAccessor,
-        file: movedFile,
-        storagePathRef: movedFile,
+        file: createdFile,
         user: userId,
         purpose: USER_TEST_FILE_PURPOSE,
         shouldBeProcessed: true
       });
 
-      return { storageFileDocument };
+      return { createdFile, storageFileDocument };
     },
     determiner: userTestFileDeterminer
   };
@@ -95,15 +94,14 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
 
       // create the new file at /avatar/u/{userId}/avatar
       const newPath = makeUserAvatarFileStoragePath(userId);
-      const newFile = storageService.file(newPath);
+      const createdFile = storageService.file(newPath);
 
-      await newFile.upload(newImageBytes, { contentType: fileMimeType });
+      await createdFile.upload(newImageBytes, { contentType: fileMimeType });
 
       // create the StorageFileDocument and reference the new file
       const createStorageFileResult = await createStorageFileDocumentPair({
         accessor: storageFileDocumentAccessor,
-        file: newFile,
-        storagePathRef: newFile,
+        file: createdFile,
         user: userId,
         purpose: USER_AVATAR_PURPOSE,
         shouldBeProcessed: false // no processing
@@ -113,7 +111,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       const profileExists = await profileDocument.exists();
 
       if (profileExists) {
-        const avatarDownloadUrl = await newFile.getDownloadUrl();
+        const avatarDownloadUrl = await createdFile.getDownloadUrl();
 
         await profileDocument.update({
           avatar: avatarDownloadUrl
@@ -139,6 +137,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   // MARK: Configuration
   const storageFileUploadServiceConfig: StorageFileInitializeFromUploadServiceConfig = {
     validate: true,
+    storageService,
     initializer: [...userFileInitializers, ...systemFileInitializers],
     storageFileCollection
   };

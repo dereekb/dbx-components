@@ -95,6 +95,7 @@ export function APP_CODE_PREFIX_CAMELStorageFileUploadServiceFactory(APP_CODE_PR
   // MARK: Configuration
   const storageFileUploadServiceConfig: StorageFileInitializeFromUploadServiceConfig = {
     validate: true,
+    storageService,
     initializer: [...userFileInitializers, ...systemFileInitializers],
     storageFileCollection
   };
