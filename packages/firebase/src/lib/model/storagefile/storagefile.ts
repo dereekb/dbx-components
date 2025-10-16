@@ -1,7 +1,7 @@
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, FirebaseAuthUserId, FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
-import { StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
+import { StorageFileId, StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
 import { NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
@@ -12,6 +12,21 @@ export type StorageFileTypes = typeof storageFileIdentity;
 
 // MARK: StorageFile
 export const storageFileIdentity = firestoreModelIdentity('storageFile', 'sf');
+
+/**
+ * This key is used in the CustomStorageMetadata of a Firebase Storage file that is associated with a StorageFile to link the file to the StorageFile.
+ */
+export const STORAGEFILE_RELATED_FILE_METADATA_KEY = '__sf__';
+
+/**
+ * CustomStorageMetadata interface that is assigned to files that are associated with a StorageFile.
+ */
+export interface StorageFileRelatedFileMetadata {
+  /**
+   * The StorageFile id that this file is associated with.
+   */
+  readonly [STORAGEFILE_RELATED_FILE_METADATA_KEY]?: Maybe<StorageFileId>;
+}
 
 /**
  * The current file state.

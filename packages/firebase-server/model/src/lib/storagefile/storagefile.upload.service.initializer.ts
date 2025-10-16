@@ -1,14 +1,18 @@
 import {
   CombineUploadFileTypeDeterminerConfig,
   combineUploadFileTypeDeterminers,
+  copyStoragePath,
   CreateStorageFileDocumentPairResult,
   FirebaseStorageAccessorFile,
   limitUploadFileTypeDeterminer,
+  STORAGEFILE_RELATED_FILE_METADATA_KEY,
   StorageFileDocument,
   StorageFileFirestoreCollection,
   StorageFileInitializeFromUploadResultType,
   storageFilePurposeAndUserQuery,
   StorageFilePurposeAndUserQueryInput,
+  StoragePath,
+  StoragePathRef,
   StoredFileReader,
   storedFileReaderFactory,
   UploadedFileTypeDeterminer,
@@ -17,7 +21,8 @@ import {
 } from '@dereekb/firebase';
 import { ArrayOrValue, asArray, asDecisionFunction, AsyncDecisionFunction, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { StorageFileInitializeFromUploadInput, StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadService } from './storagefile.upload.service';
-import { queryAndFlagStorageFilesForDelete } from './storagefile.util';
+import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from './storagefile.util';
+import { FirebaseServerStorageService } from '@dereekb/firebase-server';
 
 export interface StorageFileInitializeFromUploadServiceInitializerInput {
   /**
@@ -61,6 +66,10 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
    * The StorageFileDocument, if it was initialized.
    */
   readonly storageFileDocument: StorageFileDocument;
+  /**
+   * The StoragePathRef of the created file.
+   */
+  readonly createdFile: StoragePathRef;
   /**
    * If set, the initializer will query existing StorageFiles for the user and purpose and flag them for deletion.
    *
@@ -111,6 +120,10 @@ export interface StorageFileInitializeFromUploadServiceConfig {
    */
   readonly determiner?: Maybe<ArrayOrValue<UploadedFileTypeDeterminer>>;
   /**
+   * The FirebaseStorageService to use for retrieving/updating files.
+   */
+  readonly storageService: FirebaseServerStorageService;
+  /**
    * StorageFilleFirestoreCollection used for retrieving existing StorageFiles for marking them as deleted.
    */
   readonly storageFileCollection: StorageFileFirestoreCollection;
@@ -126,6 +139,10 @@ export interface StorageFileInitializeFromUploadServiceConfig {
    */
   readonly checkFileIsAllowedToBeInitialized?: Maybe<AsyncDecisionFunction<FirebaseStorageAccessorFile>>;
   /**
+   * If true, throws an error if the created file cannot be updated to link to a StorageFileRelatedFileMetadata.
+   */
+  readonly requireStorageFileRelatedFileMetadataBeSet?: Maybe<boolean>;
+  /**
    * List of handlers for NotificationTaskTypes.
    */
   readonly initializer: StorageFileInitializeFromUploadServiceInitializer[];
@@ -135,7 +152,7 @@ export interface StorageFileInitializeFromUploadServiceConfig {
  * A basic StorageFileInitializeFromUploadService implementation.
  */
 export function storageFileInitializeFromUploadService(config: StorageFileInitializeFromUploadServiceConfig): StorageFileInitializeFromUploadService {
-  const { storageFileCollection, initializer: inputInitializers, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized } = config;
+  const { storageService, storageFileCollection, initializer: inputInitializers, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized, requireStorageFileRelatedFileMetadataBeSet } = config;
 
   const allDeterminers: UploadedFileTypeDeterminer[] = [];
   const initializers: Record<UploadedFileTypeIdentifier, StorageFileInitializeFromUploadServiceInitializer> = {};
@@ -194,6 +211,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
       const determinerResult = await determineUploadFileType(input);
 
       let resultType: StorageFileInitializeFromUploadResultType;
+      let createdFilePath: StoragePath;
       let storageFileDocument: Maybe<StorageFileDocument>;
       let processorError: Maybe<unknown>;
       let previousStorageFilesFlaggedForDeletion: Maybe<number>;
@@ -222,6 +240,8 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
               if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult).createStorageFileResult) {
                 const { createStorageFileResult, flagPreviousForDelete: flagPreviousForDeleteResult } = initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult;
+
+                createdFilePath = copyStoragePath(createStorageFileResult.storageFile);
                 storageFileDocument = createStorageFileResult.storageFileDocument;
 
                 if (flagPreviousForDeleteResult) {
@@ -241,8 +261,31 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
                   }
                 }
               } else {
+                createdFilePath = copyStoragePath((initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult).createdFile.storagePath);
                 storageFileDocument = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult).storageFileDocument;
                 flagPreviousForDelete = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult).flagPreviousForDelete;
+              }
+
+              // set the metadata on the associated file
+              try {
+                const createdFile = storageService.file(createdFilePath);
+                const fileMetadata = await createdFile.getMetadata();
+
+                await createdFile.setMetadata({
+                  customMetadata: {
+                    ...fileMetadata.customMetadata,
+                    [STORAGEFILE_RELATED_FILE_METADATA_KEY]: storageFileDocument.id
+                  }
+                });
+              } catch (e) {
+                // failed to set the metadata. It isn't strictly necessary, so don't throw an error unless configured to always throw an error
+                if (requireStorageFileRelatedFileMetadataBeSet) {
+                  // mark the created item for delete
+                  await storageFileDocument.update(markStorageFileForDeleteTemplate());
+
+                  // throw the exception
+                  throw e;
+                }
               }
 
               // if flagPreviousForDelete is set, flag the previous storage files for deletion

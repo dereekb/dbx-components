@@ -1,4 +1,4 @@
-import { FirebaseStorageAccessorFile, StorageFileDocument, StorageFileInitializeFromUploadResultType, UploadedFileTypeDeterminerResult } from '@dereekb/firebase';
+import { FirebaseStorageAccessorFile, StorageFileDocument, StorageFileInitializeFromUploadResultType, StoragePath, UploadedFileTypeDeterminerResult } from '@dereekb/firebase';
 import { Maybe, PromiseOrValue } from '@dereekb/util';
 
 /**
@@ -22,6 +22,10 @@ export interface StorageFileInitializeFromUploadResult {
    * Whether or not the initialization was successful.
    */
   readonly resultType: StorageFileInitializeFromUploadResultType;
+  /**
+   * Path of the created file.
+   */
+  readonly createdFilePath?: Maybe<StoragePath>;
   /**
    * The initialized StorageFile value, if applicable.
    */
