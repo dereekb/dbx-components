@@ -17,7 +17,8 @@ import {
   StorageSlashPath,
   StorageMoveOptions,
   StorageListFilesPageToken,
-  ConfigurableStorageMetadata
+  ConfigurableStorageMetadata,
+  StorageAccessControlObject
 } from '@dereekb/firebase';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
@@ -150,11 +151,19 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     return newFile;
   }
 
+  /**
+   * Configuration for the public ACL.
+   */
+  const PUBLIC_ACL: StorageAccessControlObject = {
+    entity: 'allUsers',
+    role: 'READER'
+  };
+
   const accessorFile: GoogleCloudStorageAccessorFile = {
     reference: file,
     storagePath,
-    exists: async () => file.exists().then((x) => x[0]),
-    getDownloadUrl: async () => file.getMetadata().then((x) => file.publicUrl()),
+    exists: () => file.exists().then((x) => x[0]),
+    getDownloadUrl: async () => file.publicUrl(),
     getSignedUrl: async (input) => {
       const expires = input?.expiresAt ?? (input?.expiresIn != null ? addMilliseconds(new Date(), input.expiresIn) : addHours(new Date(), 1));
 
@@ -228,7 +237,11 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
       return newFile;
     },
     copy,
-    delete: (options: StorageDeleteFileOptions) => file.delete(options).then((x) => undefined)
+    delete: (options: StorageDeleteFileOptions) => file.delete(options).then((x) => undefined),
+    isPublic: () => file.isPublic().then((x) => x[0]),
+    makePublic: (setPublic) => (setPublic !== false ? file.acl.add(PUBLIC_ACL) : file.acl.delete({ entity: PUBLIC_ACL.entity })).then(() => undefined),
+    makePrivate: (options) => file.makePrivate(options).then(() => undefined),
+    getAcls: (options) => file.acl.get(options).then((x) => ({ acls: x[0], metadata: x[1] }))
   };
 
   return accessorFile;

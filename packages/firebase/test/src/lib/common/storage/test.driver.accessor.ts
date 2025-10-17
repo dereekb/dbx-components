@@ -3,7 +3,7 @@ import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
 import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
 import { Readable } from 'stream';
-import { createReadStream } from 'fs';
+import { createReadStream, exists } from 'fs';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -519,6 +519,39 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
       });
       */
+
+      describe('makePublic()', () => {
+        beforeEach(async () => {
+          await existsFile.delete();
+          await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType }); // re-upload for each test
+        });
+
+        it('should make the file public.', async () => {
+          if (existsFile.makePublic && existsFile.isPublic && existsFile.getAcls) {
+            // TODO: firestore emulator files seem to always be public and ACLs do not change?
+            // let isPublic = await existsFile.isPublic();
+            // expect(isPublic).toBe(false);
+
+            // TODO: Not implemented in the emulator properly either
+            // const acls = await existsFile.getAcls();
+            // console.log({ acls });
+
+            await existsFile.makePublic(true);
+
+            // TODO: doesn't really test it properly since true is always returned by the emulator...
+            let isPublic = await existsFile.isPublic();
+            expect(isPublic).toBe(true);
+
+            // TODO: Not implemented in the emulator
+            // await existsFile.makePublic(false);
+
+            // isPublic = await existsFile.isPublic();
+            // expect(isPublic).toBe(false);
+          }
+        });
+      });
+
+      // TODO: getAcls() and related functions cannot be tested in the emulator currently
 
       describe('delete()', () => {
         itShouldFail('if the file does not exist.', async () => {
