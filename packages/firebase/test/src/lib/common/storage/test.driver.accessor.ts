@@ -3,7 +3,7 @@ import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
 import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
 import { Readable } from 'stream';
-import { createReadStream, exists } from 'fs';
+import { createReadStream } from 'fs';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -495,6 +495,9 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
       describe('getDownloadUrl()', () => {
         itShouldFail('if the file does not exist.', async () => {
+          const doesNotExistFileExists = await doesNotExistFile.exists();
+          expect(doesNotExistFileExists).toBe(false);
+
           await expectFail(() => doesNotExistFile.getDownloadUrl());
         });
 
@@ -539,7 +542,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
             await existsFile.makePublic(true);
 
             // TODO: doesn't really test it properly since true is always returned by the emulator...
-            let isPublic = await existsFile.isPublic();
+            const isPublic = await existsFile.isPublic();
             expect(isPublic).toBe(true);
 
             // TODO: Not implemented in the emulator

@@ -32,6 +32,10 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
   exists(): Promise<boolean>;
   /**
    * Returns the download URL for the file.
+   *
+   * If the file does not exist, an error will be thrown.
+   *
+   * This is consistent between the client and server implementations.
    */
   getDownloadUrl(): Promise<StorageDownloadUrl>;
   /**
