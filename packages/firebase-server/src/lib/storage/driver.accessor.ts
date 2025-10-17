@@ -23,7 +23,6 @@ import {
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
 import { addHours, addMilliseconds } from 'date-fns';
-import { getDownloadURL } from 'firebase/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
