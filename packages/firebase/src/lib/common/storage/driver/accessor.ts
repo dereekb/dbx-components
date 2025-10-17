@@ -1,6 +1,6 @@
 import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, StorageSlashPath } from '../storage';
-import { ConfigurableStorageMetadata, StorageMoveOptions, StorageSignedDownloadUrl, StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
-import { type Maybe } from '@dereekb/util';
+import { ConfigurableStorageMetadata, StorageAccessControlObject, StorageAclMetadata, StorageMakePrivateOptions, StorageMoveOptions, StorageSignedDownloadUrl, StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
+import { ArrayOrValue, type Maybe } from '@dereekb/util';
 
 /**
  * Used for accessing files and folders in the storage.
@@ -32,6 +32,10 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
   exists(): Promise<boolean>;
   /**
    * Returns the download URL for the file.
+   *
+   * If the file does not exist, an error will be thrown.
+   *
+   * This is consistent between the client and server implementations.
    */
   getDownloadUrl(): Promise<StorageDownloadUrl>;
   /**
@@ -102,6 +106,41 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    * Throws an error if the file does not exist.
    */
   delete(options?: StorageDeleteFileOptions): Promise<void>;
+  /**
+   * Returns true if the file is public.
+   *
+   * Generally a server-only implementation.
+   */
+  isPublic?(): Promise<boolean>;
+  /**
+   * Makes the file public.
+   *
+   * Generally a server-only implementation.
+   */
+  makePublic?(setPublic?: boolean): Promise<void>;
+  /**
+   * Makes the file private.
+   *
+   * Generally a server-only implementation.
+   */
+  makePrivate?(options?: StorageMakePrivateOptions): Promise<void>;
+  /**
+   * Returns the ACLs for the file.
+   *
+   * Generally a server-only implementation.
+   */
+  getAcls?(options?: StorageGetAclsOptions): Promise<StorageGetAclsResult>;
+}
+
+export interface StorageGetAclsOptions {
+  readonly entity: string;
+  readonly generation?: number;
+  readonly userProject?: string;
+}
+
+export interface StorageGetAclsResult {
+  readonly acls: ArrayOrValue<StorageAccessControlObject>;
+  readonly metadata: StorageAclMetadata;
 }
 
 /**

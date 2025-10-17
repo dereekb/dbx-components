@@ -495,6 +495,9 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
       describe('getDownloadUrl()', () => {
         itShouldFail('if the file does not exist.', async () => {
+          const doesNotExistFileExists = await doesNotExistFile.exists();
+          expect(doesNotExistFileExists).toBe(false);
+
           await expectFail(() => doesNotExistFile.getDownloadUrl());
         });
 
@@ -519,6 +522,39 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
       });
       */
+
+      describe('makePublic()', () => {
+        beforeEach(async () => {
+          await existsFile.delete();
+          await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType }); // re-upload for each test
+        });
+
+        it('should make the file public.', async () => {
+          if (existsFile.makePublic && existsFile.isPublic && existsFile.getAcls) {
+            // TODO: firestore emulator files seem to always be public and ACLs do not change?
+            // let isPublic = await existsFile.isPublic();
+            // expect(isPublic).toBe(false);
+
+            // TODO: Not implemented in the emulator properly either
+            // const acls = await existsFile.getAcls();
+            // console.log({ acls });
+
+            await existsFile.makePublic(true);
+
+            // TODO: doesn't really test it properly since true is always returned by the emulator...
+            const isPublic = await existsFile.isPublic();
+            expect(isPublic).toBe(true);
+
+            // TODO: Not implemented in the emulator
+            // await existsFile.makePublic(false);
+
+            // isPublic = await existsFile.isPublic();
+            // expect(isPublic).toBe(false);
+          }
+        });
+      });
+
+      // TODO: getAcls() and related functions cannot be tested in the emulator currently
 
       describe('delete()', () => {
         itShouldFail('if the file does not exist.', async () => {

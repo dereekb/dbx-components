@@ -1,4 +1,4 @@
-import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString } from '@dereekb/util';
+import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
 // MARK: Storage
@@ -251,7 +251,7 @@ export interface StorageUploadOptions {
    *
    * Content types are not automatically detected, so setting the correct type is important, otherwise a default type may be used.
    */
-  readonly contentType?: MimeTypeWithoutParameters;
+  readonly contentType?: Maybe<MimeTypeWithoutParameters>;
   /**
    * Custom metadata to attach to the file.
    */
@@ -353,4 +353,35 @@ export interface StorageDeleteFileOptions {
    * Ignores errors related to the file not existing.
    */
   readonly ignoreNotFound?: boolean;
+}
+
+export interface StorageMakePrivateOptions {
+  readonly strict?: boolean;
+}
+
+export interface StorageAccessControlObject {
+  readonly entity: string;
+  readonly role: string;
+  readonly projectTeam?: string;
+}
+
+export interface StorageAclMetadata {
+  // base metadata
+  readonly id?: string;
+  readonly kind?: string;
+  readonly etag?: string;
+  readonly selfLink?: string;
+  // acl metadata
+  readonly bucket?: string;
+  readonly domain?: string;
+  readonly entity?: string;
+  readonly entityId?: string;
+  readonly generation?: string;
+  readonly object?: string;
+  readonly projectTeam?: {
+    readonly projectNumber?: string;
+    readonly team?: 'editors' | 'owners' | 'viewers';
+  };
+  readonly role?: 'OWNER' | 'READER' | 'WRITER' | 'FULL_CONTROL';
+  readonly [key: string]: unknown;
 }
