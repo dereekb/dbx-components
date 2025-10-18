@@ -1,6 +1,6 @@
-import { ContentTypeMimeType, Maybe, MimeTypeWithoutParameters } from '@dereekb/util';
+import { type ContentTypeMimeType, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { safeParse as parseContentType } from 'fast-content-type-parse';
-import { FetchMethod } from './fetch.type';
+import { type FetchMethod } from './fetch.type';
 
 // MARK: Post
 /**

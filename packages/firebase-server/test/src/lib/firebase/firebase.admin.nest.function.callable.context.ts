@@ -1,7 +1,7 @@
 import { useJestFunctionFixture, useJestFunctionMapFixture } from '@dereekb/util/test';
-import { FirebaseAdminFunctionNestTestContext, wrapCallableRequestForNestTestsGetter, WrapCallableRequestForNestTestsInput } from './firebase.admin.nest.function';
+import { type FirebaseAdminFunctionNestTestContext, wrapCallableRequestForNestTestsGetter, type WrapCallableRequestForNestTestsInput } from './firebase.admin.nest.function';
 import { mapObjectMap } from '@dereekb/util';
-import { WrappedCallableRequest } from './firebase.function';
+import { type WrappedCallableRequest } from './firebase.function';
 
 // MARK: V1
 export interface CallableRequestTestBaseConfig {

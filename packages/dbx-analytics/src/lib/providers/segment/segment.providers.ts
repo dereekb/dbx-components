@@ -1,4 +1,4 @@
-import { EnvironmentProviders, Injector, makeEnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, Injector, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig, PRELOAD_SEGMENT_TOKEN } from './segment.service';
 
 export type DbxAnalyticsSegmentApiServiceConfigFactory = (injector: Injector) => DbxAnalyticsSegmentApiServiceConfig;

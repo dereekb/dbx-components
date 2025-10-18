@@ -1,9 +1,9 @@
-import { map, Observable } from 'rxjs';
-import { AllowedSet, isAllowed, maybeSet, ArrayOrValue, type Maybe } from '@dereekb/util';
-import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
-import { AuthUserState } from '../../../auth.user';
-import { DbxAuthService } from '../../../service/auth.service';
-import { AuthTransitionDecision, AuthTransitionHookOptions, AuthTransitionStateData, makeAuthTransitionHook } from './hook';
+import { map, type Observable } from 'rxjs';
+import { type AllowedSet, isAllowed, maybeSet, type ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type TransitionService, type TransitionHookFn, type Transition, type HookMatchCriteria } from '@uirouter/core';
+import { type AuthUserState } from '../../../auth.user';
+import { type DbxAuthService } from '../../../service/auth.service';
+import { type AuthTransitionDecision, type AuthTransitionHookOptions, type AuthTransitionStateData, makeAuthTransitionHook } from './hook';
 
 export interface HasAuthStateHookConfig {
   options: AuthTransitionHookOptions;

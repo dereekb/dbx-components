@@ -1,5 +1,5 @@
-import { SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
-import { DemoUpdateModelFunction } from '../function';
+import { type SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
+import { type DemoUpdateModelFunction } from '../function';
 import { hasAuthRolesInRequest } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 

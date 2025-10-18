@@ -1,7 +1,7 @@
-import { FactoryWithInput, FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
-import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
-import { ZoomAuthClientIdAndSecretPair, ZoomAccountIdRef, ZoomRefreshToken } from '../zoom.config';
-import { ZoomAccessTokenCache, ZoomAccessTokenFactory } from './oauth';
+import { type FactoryWithInput, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
+import { type ZoomAuthClientIdAndSecretPair, type ZoomAccountIdRef, type ZoomRefreshToken } from '../zoom.config';
+import { type ZoomAccessTokenCache, type ZoomAccessTokenFactory } from './oauth';
 
 /**
  * The Zoom OAuth API URL for the US datacenter.

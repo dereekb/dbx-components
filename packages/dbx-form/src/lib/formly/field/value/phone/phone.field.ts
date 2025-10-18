@@ -1,10 +1,10 @@
-import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
+import { type DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { sectionWrapper, flexLayoutWrapper } from '../../wrapper/wrapper';
-import { textField, TextFieldConfig } from '../text/text.field';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
-import { InternationalPhoneFormlyFieldProps } from './phone.field.component';
-import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
+import { textField, type TextFieldConfig } from '../text/text.field';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
+import { type InternationalPhoneFormlyFieldProps } from './phone.field.component';
+import { repeatArrayField, type RepeatArrayFieldConfig } from '../array/array.field';
 import { isE164PhoneNumber } from '../../../../validator/phone';
 
 export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, InternationalPhoneFormlyFieldProps {}

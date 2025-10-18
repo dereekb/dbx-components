@@ -1,5 +1,5 @@
-import { ResyncNotificationUserParams, ResyncNotificationUserResult, UpdateNotificationUserParams } from '@dereekb/firebase';
-import { DemoUpdateModelFunction } from '../function';
+import { type ResyncNotificationUserParams, type ResyncNotificationUserResult, type UpdateNotificationUserParams } from '@dereekb/firebase';
+import { type DemoUpdateModelFunction } from '../function';
 
 export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationUserParams> = async (request) => {
   const { nest, auth, data } = request;

@@ -1,4 +1,4 @@
-import { HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
+import { type HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
 
 export const demoAppStateData: HasAuthStateData = {
   authStates: 'user', // Onboarded users only.

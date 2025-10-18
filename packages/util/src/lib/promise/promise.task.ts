@@ -1,6 +1,6 @@
-import { AsyncFactory } from '../getter/getter';
-import { Maybe } from '../value';
-import { runAsyncTasksForValues, RunAsyncTasksForValuesConfig } from './promise';
+import { type AsyncFactory } from '../getter/getter';
+import { type Maybe } from '../value';
+import { runAsyncTasksForValues, type RunAsyncTasksForValuesConfig } from './promise';
 
 /**
  * A function that returns a Promise, typically returning void/no value.

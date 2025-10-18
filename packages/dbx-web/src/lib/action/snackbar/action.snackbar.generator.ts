@@ -1,6 +1,6 @@
-import { DbxActionContextSourceReference } from '@dereekb/dbx-core';
-import { Milliseconds, Maybe, GetterOrValue, getValueFromGetter, Getter } from '@dereekb/util';
-import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from './action.snackbar';
+import { type DbxActionContextSourceReference } from '@dereekb/dbx-core';
+import { type Milliseconds, type Maybe, type GetterOrValue, getValueFromGetter, type Getter } from '@dereekb/util';
+import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarEvent } from './action.snackbar';
 
 export interface DbxActionSnackbarGeneratorInput<T = unknown, O = unknown> {
   readonly event: DbxActionSnackbarEvent<O>;

@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { MaterialFormFieldConfig, textField } from '../field';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type MaterialFormFieldConfig, textField } from '../field';
 
 export interface DbxFormSearchFormFieldsValue {
   readonly search: string;

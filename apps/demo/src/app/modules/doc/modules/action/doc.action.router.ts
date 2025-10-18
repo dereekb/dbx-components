@@ -1,5 +1,5 @@
 import { DocActionInteractionComponent } from './container/interaction.component';
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocActionContextComponent } from './container/context.component';
 import { DocActionDirectivesComponent } from './container/directives.component';
 import { DocActionFormComponent } from './container/form.component';

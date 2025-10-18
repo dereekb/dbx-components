@@ -1,8 +1,8 @@
 import { demoCallModel } from './../model/crud.functions';
-import { CreateGuestbookParams, guestbookIdentity } from 'demo-firebase';
-import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
+import { type CreateGuestbookParams, guestbookIdentity } from 'demo-firebase';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { OnCallCreateModelResult, onCallCreateModelParams } from '@dereekb/firebase';
+import { type OnCallCreateModelResult, onCallCreateModelParams } from '@dereekb/firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCallableRequestTest('createGuestbook', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {

@@ -1,8 +1,8 @@
-import { APP_INITIALIZER, EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
+import { APP_INITIALIZER, type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxFirebaseDevelopmentWidgetService, DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN } from './development.widget.service';
 import { DbxFirebaseDevelopmentService, DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN } from './development.service';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
-import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
+import { type DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 import { developmentFirebaseServerSchedulerWidgetEntry } from './development.scheduler.widget.component';
 
 /**

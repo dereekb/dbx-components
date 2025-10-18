@@ -1,7 +1,7 @@
 import { safeFormatToISO8601DateString } from '@dereekb/date';
-import { FirebaseAuthToken } from '@dereekb/firebase';
-import { ISO8601DateString, type Maybe } from '@dereekb/util';
-import { User, UserInfo } from 'firebase/auth';
+import { type FirebaseAuthToken } from '@dereekb/firebase';
+import { type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type User, type UserInfo } from 'firebase/auth';
 
 export type AuthUserInfo = Omit<UserInfo, 'providerId'> & {
   /**

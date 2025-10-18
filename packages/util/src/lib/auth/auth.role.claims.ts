@@ -3,7 +3,7 @@ import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { type ArrayOrValue, asArray } from '../array/array';
-import { addToSet, setContainsAllValues, setIncludesFunction, SetIncludesMode } from '../set';
+import { addToSet, setContainsAllValues, setIncludesFunction, type SetIncludesMode } from '../set';
 import { type Maybe } from '../value/maybe.type';
 
 /**

@@ -1,7 +1,7 @@
-import { Injector } from '@angular/core';
-import { SegueRef } from '@dereekb/dbx-core';
-import { Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
-import { ModelViewContext } from './model.tracker';
+import { type Injector } from '@angular/core';
+import { type SegueRef } from '@dereekb/dbx-core';
+import { type Maybe, type ModelKey, type ModelTypeString } from '@dereekb/util';
+import { type ModelViewContext } from './model.tracker';
 
 /**
  * Generates a SegueRef based on the input model's key and optional view context, or returns null/undefined if no ref is available.

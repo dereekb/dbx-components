@@ -1,5 +1,5 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, Maybe } from '@dereekb/util';
-import { AssistantRequestPayload, EndOfCallReportPayload, FunctionCallPayload, HangPayload, SpeechUpdatePayload, StatusUpdatePayload, TranscriptPayload, VapiPayload, VapiPayloadType, VapiResponse } from './webhook.vapiai.types';
+import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, type Maybe } from '@dereekb/util';
+import { type AssistantRequestPayload, type EndOfCallReportPayload, type FunctionCallPayload, type HangPayload, type SpeechUpdatePayload, type StatusUpdatePayload, type TranscriptPayload, type VapiPayload, type VapiPayloadType, type VapiResponse } from './webhook.vapiai.types';
 
 export type VapiAiWebhookEventType = VapiPayloadType | string;
 

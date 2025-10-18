@@ -1,4 +1,4 @@
-import { FirestoreModelId, FirestoreModelKey } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey } from '../../common';
 
 export type StorageFileId = FirestoreModelId;
 export type StorageFileKey = FirestoreModelKey;

@@ -1,8 +1,8 @@
 import { of } from 'rxjs';
-import { LabeledFieldConfig } from '../../field';
-import { SearchableValueFieldValue } from './searchable';
+import { type LabeledFieldConfig } from '../../field';
+import { type SearchableValueFieldValue } from './searchable';
 import { searchableChipField } from './searchable.field';
-import { StringValueFieldsFieldProps } from './searchable.field.directive';
+import { type StringValueFieldsFieldProps } from './searchable.field.directive';
 
 export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFieldsFieldProps {
   caseSensitive?: boolean;

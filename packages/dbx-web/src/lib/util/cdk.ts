@@ -1,4 +1,4 @@
-import { DestroyFunction } from '@dereekb/util';
+import { type DestroyFunction } from '@dereekb/util';
 
 /**
  * Disables the "contextmenu" from popping up in the cdk-overlay-container.

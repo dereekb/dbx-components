@@ -1,18 +1,18 @@
-import { Injector, EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
+import { type Injector, type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { FirebaseApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideStorage, getStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { provideFunctions, getFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
-import { provideFirestore, connectFirestoreEmulator, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, FirestoreSettings, persistentSingleTabManager } from '@angular/fire/firestore';
+import { provideFirestore, connectFirestoreEmulator, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, type FirestoreSettings, persistentSingleTabManager } from '@angular/fire/firestore';
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
-import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
+import { type AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
-import { DbxFirebaseAppOptions, DBX_FIREBASE_APP_OPTIONS_TOKEN } from './firebase.options';
+import { type DbxFirebaseAppOptions, DBX_FIREBASE_APP_OPTIONS_TOKEN } from './firebase.options';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck/appcheck';
 import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.interceptor';
-import { Maybe, pushArrayItemsIntoArray } from '@dereekb/util';
+import { type Maybe, pushArrayItemsIntoArray } from '@dereekb/util';
 
 /**
  * Configuration for provideDbxFirebaseApp().

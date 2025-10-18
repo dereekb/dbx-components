@@ -1,10 +1,10 @@
-import { AppNotificationTemplateTypeInfoRecordService, AppNotificationTemplateTypeInfoRecordServiceRef } from '@dereekb/firebase';
-import { DemoApiAuthService } from './auth.service';
+import { type AppNotificationTemplateTypeInfoRecordService, type AppNotificationTemplateTypeInfoRecordServiceRef } from '@dereekb/firebase';
+import { type DemoApiAuthService } from './auth.service';
 import { DemoFirestoreCollections } from 'demo-firebase';
-import { FirebaseServerActionsContext, FirebaseServerAuthServiceRef, FirebaseServerStorageService, FirebaseServerStorageServiceRef } from '@dereekb/firebase-server';
-import { TransformAndValidateFunctionResultFactory, TransformAndValidateObjectFactory } from '@dereekb/model';
-import { MailgunService, MailgunServiceRef } from '@dereekb/nestjs/mailgun';
-import { NotificationExpediteService, NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
+import { type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, type FirebaseServerStorageService, type FirebaseServerStorageServiceRef } from '@dereekb/firebase-server';
+import { type TransformAndValidateFunctionResultFactory, type TransformAndValidateObjectFactory } from '@dereekb/model';
+import { type MailgunService, type MailgunServiceRef } from '@dereekb/nestjs/mailgun';
+import { type NotificationExpediteService, type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 
 export abstract class DemoFirebaseServerActionsContext extends DemoFirestoreCollections implements FirebaseServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef<DemoApiAuthService>, FirebaseServerStorageServiceRef, MailgunServiceRef, NotificationExpediteServiceRef {
   abstract readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;

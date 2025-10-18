@@ -1,7 +1,7 @@
-import { asGetter, GetterOrValue, type Maybe } from '@dereekb/util';
+import { asGetter, type GetterOrValue, type Maybe } from '@dereekb/util';
 import { switchMapObject } from '@dereekb/rxjs';
-import { DbxInjectionComponentConfig } from './injection';
-import { Type } from '@angular/core';
+import { type DbxInjectionComponentConfig } from './injection';
+import { type Type } from '@angular/core';
 
 /**
  * Provides a switchMap that passes configuration from the observable, unless the value is null/undefined/true in which case it passes the default configuration.

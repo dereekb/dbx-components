@@ -1,4 +1,4 @@
-import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
+import { type Maybe, type ModelKeyTypeNamePair } from '@dereekb/util';
 import { createAction, props } from '@ngrx/store';
 
 export interface DbxModelObjectViewedParams {

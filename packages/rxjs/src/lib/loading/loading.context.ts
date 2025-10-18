@@ -1,7 +1,7 @@
 import { type Observable } from 'rxjs';
 import { type LoadingState, type LoadingErrorPair } from './loading.state';
-import { LoadingProgress } from './loading';
-import { Maybe } from '@dereekb/util';
+import { type LoadingProgress } from './loading';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * A LoadingErrorPair that always defines a loading value.

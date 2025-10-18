@@ -1,6 +1,6 @@
-import { ObservableOrValueGetter } from '@dereekb/rxjs';
-import { ModelKeyRef } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from './injection';
+import { type ObservableOrValueGetter } from '@dereekb/rxjs';
+import { type ModelKeyRef } from '@dereekb/util';
+import { type DbxInjectionComponentConfig } from './injection';
 
 /**
  * A keyed configuration entry

@@ -1,7 +1,7 @@
-import { Request } from 'express';
-import { TypeformWebhookSecretToken } from '../typeform.type';
+import { type Request } from 'express';
+import { type TypeformWebhookSecretToken } from '../typeform.type';
 import { createHmac } from 'crypto';
-import { RawTypeformWebhookEvent } from './webhook.typeform';
+import { type RawTypeformWebhookEvent } from './webhook.typeform';
 
 export interface TypeformWebhookEventVerificationConfig {
   /**

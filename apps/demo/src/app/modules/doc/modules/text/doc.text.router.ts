@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocTextLayoutComponent } from './container/layout.component';
 import { DocTextHomeComponent } from './container/home.component';
 import { DocTextPipesComponent } from './container/pipes.component';

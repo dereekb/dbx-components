@@ -1,5 +1,5 @@
 import { type MapFunction } from './map';
-import { Maybe } from './maybe.type';
+import { type Maybe } from './maybe.type';
 import { type MappedUseFunction, mappedUseFunction, mappedUseAsyncFunction, type MappedUseAsyncFunction, wrapUseFunction, wrapUseAsyncFunction } from './use';
 
 describe('mappedUseFunction()', () => {

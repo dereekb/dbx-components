@@ -1,7 +1,7 @@
-import { NO_AUTH_USER_IDENTIFIER, AuthUserIdentifier, AuthUserState } from '../../auth.user';
+import { NO_AUTH_USER_IDENTIFIER, type AuthUserIdentifier, type AuthUserState } from '../../auth.user';
 import { createReducer, on } from '@ngrx/store';
 import { DbxAppAuthActions, DbxAppAuthUserActions } from '../action';
-import { AuthRole } from '@dereekb/util';
+import { type AuthRole } from '@dereekb/util';
 
 export const dbxAppAuthUserFeatureKey = 'user';
 

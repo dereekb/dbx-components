@@ -1,5 +1,5 @@
-import { makeEnvironmentProviders, EnvironmentProviders, Provider } from '@angular/core';
-import { DbxFirebaseEmulatorConfig, DbxFirebaseEmulatorsConfig, DbxFirebaseParsedEmulatorsConfig } from './emulators';
+import { makeEnvironmentProviders, type EnvironmentProviders, type Provider } from '@angular/core';
+import { type DbxFirebaseEmulatorConfig, type DbxFirebaseEmulatorsConfig, DbxFirebaseParsedEmulatorsConfig } from './emulators';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseEmulatorService } from './firebase.emulator.service';
 

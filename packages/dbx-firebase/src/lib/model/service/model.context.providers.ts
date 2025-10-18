@@ -1,6 +1,6 @@
-import { EnvironmentProviders, Injector, makeEnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, Injector, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { DbxFirebaseModelContextService } from './model.context.service';
-import { ClassType } from '@dereekb/util';
+import { type ClassType } from '@dereekb/util';
 
 /**
  * Factory function for creating a DbxFirebaseModelContextService instance.

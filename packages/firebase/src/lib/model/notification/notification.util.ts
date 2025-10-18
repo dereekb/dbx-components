@@ -1,9 +1,9 @@
-import { ArrayOrValue, asArray, Configurable, filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
-import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, NotificationUser } from './notification';
+import { type ArrayOrValue, asArray, type Configurable, filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
+import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, type NotificationUser } from './notification';
 import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
 import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
-import { NotificationBoxId, notificationBoxIdForModel, NotificationId, NotificationBoxSendExclusionList, NotificationBoxSendExclusion } from './notification.id';
+import { type NotificationBoxId, notificationBoxIdForModel, type NotificationId, type NotificationBoxSendExclusionList, type NotificationBoxSendExclusion } from './notification.id';
 
 // MARK: NotificationUser
 export interface EffectiveNotificationBoxRecipientConfigInput {

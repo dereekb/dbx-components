@@ -1,4 +1,4 @@
-import { CommaSeparatedString, EmailAddress, ISO8601DateString, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
+import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
 // MARK: Data Types
 /**

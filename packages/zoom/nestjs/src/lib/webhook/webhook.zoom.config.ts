@@ -1,4 +1,4 @@
-import { ZoomSecretToken } from '@dereekb/zoom';
+import { type ZoomSecretToken } from '@dereekb/zoom';
 
 export const ZOOM_SECRET_TOKEN_ENV_VAR = 'ZOOM_SECRET_TOKEN';
 

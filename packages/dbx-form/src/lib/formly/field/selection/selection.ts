@@ -1,4 +1,4 @@
-import { PrimativeKey, Maybe, MapFunction, LabelRef } from '@dereekb/util';
+import { type PrimativeKey, type Maybe, type MapFunction, type LabelRef } from '@dereekb/util';
 
 export interface SelectionValue<T, M = unknown> {
   /**

@@ -1,6 +1,6 @@
-import { AuthRole, AuthRoleSet, type Maybe } from '@dereekb/util';
+import { type AuthRole, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { onFalseToTrue, onTrueToFalse, setContainsAllValuesFrom, setContainsNoValueFrom } from '@dereekb/rxjs';
-import { map, Observable, OperatorFunction } from 'rxjs';
+import { map, type Observable, type OperatorFunction } from 'rxjs';
 
 /**
  * Convenience operator that emits events when the input observable goes from false to true.

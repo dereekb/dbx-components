@@ -1,5 +1,5 @@
-import { DbxWidgetEntry, DbxWidgetType } from '@dereekb/dbx-web';
-import { NotificationTemplateType, NotificationTemplateTypeInfo } from '@dereekb/firebase';
+import { type DbxWidgetEntry, type DbxWidgetType } from '@dereekb/dbx-web';
+import { type NotificationTemplateType, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
 
 /**
  * Prefix used by all widgets.

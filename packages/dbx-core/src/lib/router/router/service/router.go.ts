@@ -1,7 +1,7 @@
-import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { firstValueFrom } from 'rxjs';
-import { SegueRef, SegueRefOrSegueRefRouterLink } from '../../segue';
-import { DbxRouterService } from './router.service';
+import { type SegueRef, type SegueRefOrSegueRefRouterLink } from '../../segue';
+import { type DbxRouterService } from './router.service';
 
 /**
  * Function that will perform navigation with the input route.

@@ -1,5 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
-import { DbxAppContextState, DBX_INIT_APP_CONTEXT_STATE } from '../../context';
+import { type DbxAppContextState, DBX_INIT_APP_CONTEXT_STATE } from '../../context';
 import { DbxAppContextActions } from '../action';
 
 /**

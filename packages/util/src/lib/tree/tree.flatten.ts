@@ -1,7 +1,7 @@
-import { ArrayOrValue } from '../array/array';
+import { type ArrayOrValue } from '../array/array';
 import { type Maybe } from '../value/maybe.type';
 import { type TreeNode } from './tree';
-import { exploreTreeFunction, ExploreTreeFunctionConfig, ExploreTreeVisitNodeDecision, type ExploreTreeVisitNodeDecisionFunction } from './tree.explore';
+import { exploreTreeFunction, type ExploreTreeFunctionConfig, ExploreTreeVisitNodeDecision, type ExploreTreeVisitNodeDecisionFunction } from './tree.explore';
 
 // MARK: Flatten
 /**

@@ -1,10 +1,10 @@
-import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { enUS } from 'date-fns/locale';
-import { DateTimePresetConfiguration, DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from './formly';
-import { Maybe } from '@dereekb/util';
+import { type DateTimePresetConfiguration, DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from './formly';
+import { type Maybe } from '@dereekb/util';
 
 export interface ProvideDbxFormConfigurationConfig {
   readonly provideDateAdapter?: boolean;

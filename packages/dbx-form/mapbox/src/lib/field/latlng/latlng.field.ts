@@ -1,7 +1,7 @@
-import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '@dereekb/dbx-form';
+import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledFieldConfig, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '@dereekb/dbx-form';
 import { LAT_LNG_PATTERN } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
 
 export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime' | 'setCenterOnLocationSet' | 'showCenterButton' | 'selectLocationOnMapDrag' | 'selectLocationOnMapClick' | 'markerConfig'> {}
 

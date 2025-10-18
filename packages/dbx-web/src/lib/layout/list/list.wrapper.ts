@@ -1,8 +1,8 @@
-import { Observable } from 'rxjs';
-import { ListLoadingState, MaybeObservableOrValue } from '@dereekb/rxjs';
-import { forwardRef, OutputRef, Provider, Type } from '@angular/core';
+import { type Observable } from 'rxjs';
+import { type ListLoadingState, type MaybeObservableOrValue } from '@dereekb/rxjs';
+import { forwardRef, type OutputRef, type Provider, type Type } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DbxListSelectionMode } from './list.view';
+import { type DbxListSelectionMode } from './list.view';
 
 /**
  * Common interface for views that may wrap a DbxListView, and pass values through to it.

@@ -1,4 +1,4 @@
-import { TypeformClientOptions } from './typeform.type';
+import { type TypeformClientOptions } from './typeform.type';
 
 /**
  * Default environment variable for the Typeform API key.

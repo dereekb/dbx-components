@@ -1,4 +1,4 @@
-import { PercentNumber } from '@dereekb/util';
+import { type PercentNumber } from '@dereekb/util';
 
 /**
  * Used to denote the percent progress of loading.

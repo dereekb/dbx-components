@@ -1,4 +1,4 @@
-import { NotificationTaskCheckpointString, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { type NotificationTaskCheckpointString, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 import { asArray } from '@dereekb/util';
 
 /**

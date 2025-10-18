@@ -1,8 +1,8 @@
-import { ZohoRecruitContext } from './recruit.config';
-import { ArrayOrValue, asArray, separateValues } from '@dereekb/util';
-import { ZohoRecruitJobOpeningId, ZohoRecruitCandidateId, ZOHO_RECRUIT_CANDIDATES_MODULE, ZohoRecruitCandidateStatus, ZohoRecruitJobOpeningPostingTitle, ZohoRecruitModuleNameRef, ZohoRecruitRecord, ZOHO_RECRUIT_JOB_OPENINGS_MODULE } from './recruit';
-import { zohoRecruitApiFetchJsonInput, ZohoRecruitChangeObjectLikeResponse, ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, ZohoRecruitChangeObjectResponseErrorEntry, ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResultEntry, ZohoRecruitSearchRecordsResponse, zohoRecruitUrlSearchParamsMinusIdAndModule } from './recruit.api';
-import { ZOHO_FAILURE_ERROR_CODE, ZohoServerErrorDataWithDetails } from '../zoho.error.api';
+import { type ZohoRecruitContext } from './recruit.config';
+import { type ArrayOrValue, asArray, separateValues } from '@dereekb/util';
+import { type ZohoRecruitJobOpeningId, type ZohoRecruitCandidateId, ZOHO_RECRUIT_CANDIDATES_MODULE, type ZohoRecruitCandidateStatus, type ZohoRecruitJobOpeningPostingTitle, type ZohoRecruitModuleNameRef, type ZohoRecruitRecord, ZOHO_RECRUIT_JOB_OPENINGS_MODULE } from './recruit';
+import { zohoRecruitApiFetchJsonInput, type ZohoRecruitChangeObjectLikeResponse, type ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, type ZohoRecruitChangeObjectResponseErrorEntry, type ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, type ZohoRecruitMultiRecordResult, type ZohoRecruitMultiRecordResultEntry, type ZohoRecruitSearchRecordsResponse, zohoRecruitUrlSearchParamsMinusIdAndModule } from './recruit.api';
+import { ZOHO_FAILURE_ERROR_CODE, type ZohoServerErrorDataWithDetails } from '../zoho.error.api';
 import { ZOHO_RECRUIT_ALREADY_ASSOCIATED_ERROR_CODE } from './recruit.error.api';
 import { emptyZohoPageResult, zohoFetchPageFactory } from '../zoho.api.page';
 
@@ -89,7 +89,7 @@ export interface ZohoRecruitSearchAssociatedRecordsInput extends ZohoRecruitModu
   readonly candidate_statuses?: ZohoRecruitCandidateStatus;
 }
 
-export type ZohoRecruitSearchAssociatedRecordsResponse<T = ZohoRecruitRecord> = ZohoRecruitSearchRecordsResponse<T>
+export type ZohoRecruitSearchAssociatedRecordsResponse<T = ZohoRecruitRecord> = ZohoRecruitSearchRecordsResponse<T>;
 export type ZohoRecruitSearchAssociatedRecordsFunction<R extends ZohoRecruitSearchAssociatedRecordsResponse> = (input: ZohoRecruitSearchAssociatedRecordsInput) => Promise<R>;
 export function searchAssociatedRecords<R extends ZohoRecruitSearchAssociatedRecordsResponse>(context: ZohoRecruitContext): ZohoRecruitSearchAssociatedRecordsFunction<R> {
   return (input: ZohoRecruitSearchAssociatedRecordsInput) => {

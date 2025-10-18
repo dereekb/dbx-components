@@ -1,12 +1,12 @@
-import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { ZoomServerContext, ZoomServerContextRef, ZoomFetchFactory, ZoomFetchFactoryInput, ZoomUserContext, ZoomUserContextFactory, ZoomUserContextFactoryInput } from './zoom.config';
-import { LogZoomServerErrorFunction } from '../zoom.error.api';
+import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryInput, type ZoomUserContext, type ZoomUserContextFactory, type ZoomUserContextFactoryInput } from './zoom.config';
+import { type LogZoomServerErrorFunction } from '../zoom.error.api';
 import { handleZoomErrorFetch } from './zoom.error.api';
-import { ZoomOAuthContextRef } from '../oauth/oauth.config';
+import { type ZoomOAuthContextRef } from '../oauth/oauth.config';
 import { zoomAccessTokenStringFactory } from '../oauth/oauth';
-import { ZoomRateLimitedFetchHandlerConfig, zoomRateLimitedFetchHandler } from '../zoom.limit';
+import { type ZoomRateLimitedFetchHandlerConfig, zoomRateLimitedFetchHandler } from '../zoom.limit';
 import { type Maybe } from '@dereekb/util';
-import { ZOOM_API_URL, ZoomConfig } from '../zoom.config';
+import { ZOOM_API_URL, type ZoomConfig } from '../zoom.config';
 
 export type Zoom = ZoomServerContextRef;
 

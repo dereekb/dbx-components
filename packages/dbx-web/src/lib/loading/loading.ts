@@ -1,4 +1,4 @@
-import { DbxActionWorkOrWorkProgress, DbxActionWorkProgress } from '@dereekb/dbx-core';
+import { type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress } from '@dereekb/dbx-core';
 
 export type DbxLoadingProgress = DbxActionWorkProgress;
 

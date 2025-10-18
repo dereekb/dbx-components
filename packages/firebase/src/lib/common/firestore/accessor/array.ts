@@ -1,6 +1,6 @@
 import { filterFalsyAndEmptyValues, objectHasNoKeys } from '@dereekb/util';
 import { type WriteResult } from '../types';
-import { FirestoreAccessorArrayUpdate, type FirestoreDocumentDataAccessor } from './accessor';
+import { type FirestoreAccessorArrayUpdate, type FirestoreDocumentDataAccessor } from './accessor';
 
 export type ArrayFieldUpdateWithAccessorFunction<T> = (data: FirestoreAccessorArrayUpdate<T>) => Promise<WriteResult | void>;
 

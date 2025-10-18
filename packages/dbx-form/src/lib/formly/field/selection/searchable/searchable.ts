@@ -1,7 +1,7 @@
-import { MapFunction, PrimativeKey } from '@dereekb/util';
-import { DbxInjectionComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
-import { Observable } from 'rxjs';
-import { SelectionDisplayValue, SelectionValue, SelectionValueHashFunction } from '../selection';
+import { type MapFunction, type PrimativeKey } from '@dereekb/util';
+import { type DbxInjectionComponentConfig, type ClickableAnchor } from '@dereekb/dbx-core';
+import { type Observable } from 'rxjs';
+import { type SelectionDisplayValue, type SelectionValue, type SelectionValueHashFunction } from '../selection';
 
 export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValue<T, M> {
   /**

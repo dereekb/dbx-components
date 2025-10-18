@@ -1,4 +1,4 @@
-import { EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxAppAuthRoutes } from './auth.router';
 
 /**

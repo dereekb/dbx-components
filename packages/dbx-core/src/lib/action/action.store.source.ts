@@ -1,8 +1,8 @@
-import { first, switchMap, Observable, Subscription } from 'rxjs';
-import { LockSet, filterMaybe, LoadingState, LoadingStateType, MaybeObservableOrValue } from '@dereekb/rxjs';
-import { Destroyable, Maybe, ReadableError } from '@dereekb/util';
-import { ActionContextState, ActionContextStore } from './action.store';
-import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkOrWorkProgress, DbxActionWorkProgress } from './action';
+import { first, switchMap, type Observable, type Subscription } from 'rxjs';
+import { LockSet, filterMaybe, type LoadingState, type LoadingStateType, type MaybeObservableOrValue } from '@dereekb/rxjs';
+import { type Destroyable, type Maybe, type ReadableError } from '@dereekb/util';
+import { type ActionContextState, type ActionContextStore } from './action.store';
+import { type DbxActionDisabledKey, type DbxActionRejectedPair, type DbxActionState, type DbxActionSuccessPair, type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress } from './action';
 
 /**
  * Source that provides a ActionContextStore observable.

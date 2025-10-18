@@ -1,7 +1,7 @@
-import { cachedGetter, Factory, FactoryWithRequiredInput, Maybe, slashPathDetails, SlashPathDetails } from '@dereekb/util';
-import { StoragePath } from '../../common/storage/storage';
-import { StorageCustomMetadata } from '../../common/storage/types';
-import { FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
+import { cachedGetter, type Factory, type FactoryWithRequiredInput, type Maybe, slashPathDetails, type SlashPathDetails } from '@dereekb/util';
+import { type StoragePath } from '../../common/storage/storage';
+import { type StorageCustomMetadata } from '../../common/storage/types';
+import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 
 /**
  * Details from the input.

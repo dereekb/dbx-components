@@ -1,8 +1,8 @@
 import { DbxAuthService } from '../../../auth/service/auth.service';
-import { TransitionService, TransitionHookFn, Transition, HookResult, StateService, HookMatchCriteria } from '@uirouter/core';
-import { Maybe, ModelKey } from '@dereekb/util';
-import { map, first, switchMap, firstValueFrom, Observable, of } from 'rxjs';
-import { Injector } from '@angular/core';
+import { type TransitionService, type TransitionHookFn, type Transition, type HookResult, type StateService, type HookMatchCriteria } from '@uirouter/core';
+import { type Maybe, type ModelKey } from '@dereekb/util';
+import { map, first, switchMap, firstValueFrom, type Observable, of } from 'rxjs';
+import { type Injector } from '@angular/core';
 
 export const DEFAULT_REDIRECT_FOR_IDENTIFIER_PARAM_VALUE = '0';
 export const DEFAULT_REDIRECT_FOR_IDENTIFIER_PARAM_KEY = 'id';

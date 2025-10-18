@@ -1,7 +1,7 @@
 import { type FirestoreQueryConstraint, where } from '../../common/firestore';
 import { type NotificationSummary, type Notification, type NotificationBox, type NotificationUser } from './notification';
 import { toISODateString } from '@dereekb/date';
-import { NotificationBoxSendExclusion } from './notification.id';
+import { type NotificationBoxSendExclusion } from './notification.id';
 import { type ArrayOrValue } from '@dereekb/util';
 
 // MARK: NotificationUser

@@ -1,7 +1,7 @@
 import { BehaviorSubject, EMPTY, switchMap, of } from 'rxjs';
-import { DbxRouteParamReaderInstance } from './route.reader';
-import { Destroyable, Initialized, Maybe, DefaultForwardFunctionFactory, defaultForwardFunctionFactory } from '@dereekb/util';
-import { SubscriptionObject, switchMapToDefault, SwitchMapToDefaultFilterFunction, filterMaybe } from '@dereekb/rxjs';
+import { type DbxRouteParamReaderInstance } from './route.reader';
+import { type Destroyable, type Initialized, type Maybe, type DefaultForwardFunctionFactory, defaultForwardFunctionFactory } from '@dereekb/util';
+import { SubscriptionObject, switchMapToDefault, type SwitchMapToDefaultFilterFunction, filterMaybe } from '@dereekb/rxjs';
 
 const DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY = defaultForwardFunctionFactory<SwitchMapToDefaultFilterFunction<unknown>>((value) => of(value == null));
 

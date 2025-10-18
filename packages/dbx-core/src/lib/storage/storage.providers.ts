@@ -1,5 +1,5 @@
-import { EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
-import { FullStorageObject } from '@dereekb/util';
+import { type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
+import { type FullStorageObject } from '@dereekb/util';
 import { SimpleStorageAccessorFactory } from './storage.accessor.simple.factory';
 import { DEFAULT_STORAGE_OBJECT_TOKEN, DEFAULT_STORAGE_ACCESSOR_FACTORY_TOKEN } from './storage.di';
 import { FullLocalStorageObject } from './storage.object.localstorage';

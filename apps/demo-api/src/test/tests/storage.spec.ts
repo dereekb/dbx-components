@@ -1,4 +1,4 @@
-import { demoApiFunctionContextFactory, DemoApiFunctionContextFixture } from '../fixture';
+import { demoApiFunctionContextFactory, type DemoApiFunctionContextFixture } from '../fixture';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('firebase firestore in tests', () => {

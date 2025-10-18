@@ -1,10 +1,10 @@
-import { Maybe, MS_IN_HOUR } from '@dereekb/util';
-import { NotificationItemMetadata, NotificationTaskCheckpointString } from '../notification';
-import { createNotificationTaskTemplate, CreateNotificationTaskTemplate } from '../notification/notification.create.task';
-import { NotificationTaskType } from '../notification/notification.id';
-import { StorageFileDocument } from './storagefile';
-import { StorageFileId, StorageFilePurpose } from './storagefile.id';
-import { StoragePath } from '../../common';
+import { type Maybe, MS_IN_HOUR } from '@dereekb/util';
+import { type NotificationItemMetadata, type NotificationTaskCheckpointString } from '../notification';
+import { createNotificationTaskTemplate, type CreateNotificationTaskTemplate } from '../notification/notification.create.task';
+import { type NotificationTaskType } from '../notification/notification.id';
+import { type StorageFileDocument } from './storagefile';
+import { type StorageFileId, type StorageFilePurpose } from './storagefile.id';
+import { type StoragePath } from '../../common';
 
 // MARK: Storage File Processing Notification
 export const STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'SFP';

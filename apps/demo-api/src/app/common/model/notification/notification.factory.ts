@@ -1,7 +1,7 @@
-import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from 'demo-firebase'; // TODO: rename to demo-firebase
-import { NotificationMessageFunctionFactoryConfig, NotificationMessageInputContext, NotificationMessageContent, NotificationMessage, firestoreModelId, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
-import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, type ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from 'demo-firebase'; // TODO: rename to demo-firebase
+import { type NotificationMessageFunctionFactoryConfig, type NotificationMessageInputContext, type NotificationMessageContent, type NotificationMessage, firestoreModelId, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
+import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
+import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
 
 // MARK: Test
 export function demoNotificationTestFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {

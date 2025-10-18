@@ -1,6 +1,6 @@
-import { MatSnackBarConfig } from '@angular/material/snack-bar';
-import { DbxActionContextSourceReference } from '@dereekb/dbx-core';
-import { LoadingState, LoadingStateType } from '@dereekb/rxjs';
+import { type MatSnackBarConfig } from '@angular/material/snack-bar';
+import { type DbxActionContextSourceReference } from '@dereekb/dbx-core';
+import { type LoadingState, type LoadingStateType } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
 export type DbxActionSnackbarType = string;

@@ -1,8 +1,8 @@
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, FirebaseAuthUserId, FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
-import { StorageFileId, StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
-import { NotificationKey } from '../notification';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, type FirebaseAuthUserId, type FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, type StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
+import { type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;

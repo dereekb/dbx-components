@@ -1,5 +1,5 @@
-import { SyncEntity, SyncEntityCommonType, SyncEntityCommonTypeIdPair, SyncEntityCommonTypeIdPairFactoryInput } from './sync.entity';
-import { Maybe } from '@dereekb/util';
+import { type SyncEntity, type SyncEntityCommonType, type SyncEntityCommonTypeIdPair, type SyncEntityCommonTypeIdPairFactoryInput } from './sync.entity';
+import { type Maybe } from '@dereekb/util';
 import { UnregisteredSyncEntityCommonTypeError } from './sync.error';
 
 /**

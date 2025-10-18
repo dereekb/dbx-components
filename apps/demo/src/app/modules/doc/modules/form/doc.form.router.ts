@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocFormHomeComponent } from './container/home.component';
 import { DocFormLayoutComponent } from './container/layout.component';
 import { DocFormValueComponent } from './container/value.component';

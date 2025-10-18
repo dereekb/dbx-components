@@ -1,10 +1,10 @@
 import { distinctUntilKeysChange } from '@dereekb/rxjs';
-import { ArrayOrValue, asArray, filterMaybeArrayValues, IndexRef } from '@dereekb/util';
-import { filter, map, MonoTypeOperatorFunction, Observable, distinctUntilChanged, shareReplay, startWith } from 'rxjs';
-import { SegueRefOrSegueRefRouterLink } from '../../segue';
-import { DbxRouterService } from '../service/router.service';
-import { DbxRouterTransitionService } from '../service/router.transition.service';
-import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from './transition';
+import { type ArrayOrValue, asArray, filterMaybeArrayValues, type IndexRef } from '@dereekb/util';
+import { filter, map, type MonoTypeOperatorFunction, type Observable, distinctUntilChanged, shareReplay, startWith } from 'rxjs';
+import { type SegueRefOrSegueRefRouterLink } from '../../segue';
+import { type DbxRouterService } from '../service/router.service';
+import { type DbxRouterTransitionService } from '../service/router.transition.service';
+import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from './transition';
 
 /**
  * Convenience function for filtering success from the input observable.

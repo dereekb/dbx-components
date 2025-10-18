@@ -1,4 +1,4 @@
-import { Milliseconds, MS_IN_SECOND, Seconds } from './date';
+import { type Milliseconds, MS_IN_SECOND, type Seconds } from './date';
 
 /**
  * A pair of minutes and seconds.

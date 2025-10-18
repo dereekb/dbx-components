@@ -1,8 +1,8 @@
-import { combineLatest, exhaustMap, filter, map, Observable, of, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
-import { DbxTableColumn, DbxTableStore, DbxTableContextData } from '@dereekb/dbx-web/table';
-import { Maybe, arrayToObject, SetDeltaChange, SetDeltaChangePair, setDeltaFunction, SetValueIsModifiedFunction, filterMaybeArrayValues } from '@dereekb/util';
+import { combineLatest, exhaustMap, filter, map, type Observable, of, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
+import { type DbxTableColumn, type DbxTableStore, type DbxTableContextData } from '@dereekb/dbx-web/table';
+import { type Maybe, arrayToObject, SetDeltaChange, type SetDeltaChangePair, setDeltaFunction, type SetValueIsModifiedFunction, filterMaybeArrayValues } from '@dereekb/util';
 import { filterMaybeArray } from '@dereekb/rxjs';
-import { DbxTableReaderColumnTrackByFunction, DbxTableReaderItemTrackByFunction, DbxTableReaderCellDataPair, DEFAULT_DBX_TABLE_READER_COLUMN_TRACK_BY, DbxTableReaderItemKey, DbxTableReaderColumnKey } from './table.reader';
+import { type DbxTableReaderColumnTrackByFunction, type DbxTableReaderItemTrackByFunction, type DbxTableReaderCellDataPair, DEFAULT_DBX_TABLE_READER_COLUMN_TRACK_BY, type DbxTableReaderItemKey, type DbxTableReaderColumnKey } from './table.reader';
 
 export interface CachedDbxTableReaderDelegate<C, T, O> {
   /**

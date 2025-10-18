@@ -1,9 +1,9 @@
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
-import { CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, FirebaseServerAuthNewUserSetupDetails, FirebaseServerNewUserService } from '@dereekb/firebase-server';
-import { AuthClaims, AuthClaimsUpdate, AuthRoleSet } from '@dereekb/util';
-import { MailgunService } from '@dereekb/nestjs/mailgun';
-import * as admin from 'firebase-admin';
-import { AbstractMailgunContentFirebaseServerNewUserService, NewUserMailgunContentRequest } from '@dereekb/firebase-server/mailgun';
+import { type CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, type FirebaseServerAuthNewUserSetupDetails, type FirebaseServerNewUserService } from '@dereekb/firebase-server';
+import { type AuthClaims, type AuthClaimsUpdate, type AuthRoleSet } from '@dereekb/util';
+import { type MailgunService } from '@dereekb/nestjs/mailgun';
+import type * as admin from 'firebase-admin';
+import { AbstractMailgunContentFirebaseServerNewUserService, type NewUserMailgunContentRequest } from '@dereekb/firebase-server/mailgun';
 
 export class DemoApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<DemoApiAuthService> {}
 

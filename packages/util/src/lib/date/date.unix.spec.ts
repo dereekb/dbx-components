@@ -1,4 +1,4 @@
-import { unixTimeNumberFromDateOrTimeNumber, UnixDateTimeNumber, unixTimeNumberForNow, unixTimeNumberFromDate, dateFromDateOrTimeNumber, unixTimeNumberToDate } from '@dereekb/util';
+import { unixTimeNumberFromDateOrTimeNumber, type UnixDateTimeNumber, unixTimeNumberForNow, unixTimeNumberFromDate, dateFromDateOrTimeNumber, unixTimeNumberToDate } from '@dereekb/util';
 
 describe('unixTimeNumberFromDateOrTimeNumber()', () => {
   const date = new Date('2023-01-01T00:00:05.500Z'); // 5.5 seconds into 2023-01-01 UTC

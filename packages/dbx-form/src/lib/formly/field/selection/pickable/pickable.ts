@@ -1,6 +1,6 @@
-import { Maybe, PrimativeKey } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { SelectionDisplayValue, SelectionValue, SelectionValueHashFunction } from '../selection';
+import { type Maybe, type PrimativeKey } from '@dereekb/util';
+import { type Observable } from 'rxjs';
+import { type SelectionDisplayValue, type SelectionValue, type SelectionValueHashFunction } from '../selection';
 
 export type PickableValueFieldValue<T, M = unknown> = SelectionValue<T, M>;
 export type PickableValueFieldDisplayValue<T, M = unknown> = SelectionDisplayValue<T, M>;

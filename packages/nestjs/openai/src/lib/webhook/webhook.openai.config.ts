@@ -1,4 +1,4 @@
-import { OpenAIWebhookSecret } from '../openai.type';
+import { type OpenAIWebhookSecret } from '../openai.type';
 
 export const OPENAI_WEBHOOK_SECRET_TOKEN_ENV_VAR = 'OPENAI_WEBHOOK_SECRET_TOKEN';
 

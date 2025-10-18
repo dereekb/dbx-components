@@ -3,9 +3,9 @@ import { StorageFileCreationType, StorageFileProcessingState, StorageFileState, 
 import { type Transaction } from '../../common/firestore/types';
 import { type FirestoreDocumentAccessor } from '../../common/firestore/accessor/document';
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
-import { StoragePathRef, type StoragePath } from '../../common/storage/storage';
-import { FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
-import { StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
+import { type StoragePathRef, type StoragePath } from '../../common/storage/storage';
+import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
+import { type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 
 // MARK: Create Document
 export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadata = StorageFileMetadata> {

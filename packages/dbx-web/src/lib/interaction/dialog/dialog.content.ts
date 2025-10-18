@@ -1,5 +1,5 @@
-import { MatDialogConfig } from '@angular/material/dialog';
-import { Maybe, cssClassesSet } from '@dereekb/util';
+import { type MatDialogConfig } from '@angular/material/dialog';
+import { type Maybe, cssClassesSet } from '@dereekb/util';
 
 export type DbxDialogContentConfig = Omit<MatDialogConfig, 'viewContainerRef' | 'injector' | 'id' | 'data'>;
 

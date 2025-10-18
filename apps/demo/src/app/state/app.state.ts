@@ -1,4 +1,4 @@
-import { ActionReducer, createReducer, MetaReducer } from '@ngrx/store';
+import { type ActionReducer, createReducer, type MetaReducer } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 
 // tslint:disable-next-line: no-empty-interface

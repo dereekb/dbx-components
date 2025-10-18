@@ -1,5 +1,5 @@
-import { SendNotificationParams, SendNotificationResult } from '@dereekb/firebase';
-import { DemoUpdateModelFunction } from '../function';
+import { type SendNotificationParams, type SendNotificationResult } from '@dereekb/firebase';
+import { type DemoUpdateModelFunction } from '../function';
 
 export const notificationSend: DemoUpdateModelFunction<SendNotificationParams, SendNotificationResult> = async (request) => {
   const { nest, data } = request;

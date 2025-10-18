@@ -1,4 +1,4 @@
-import { DbxValueAsListItem } from '@dereekb/dbx-web';
+import { type DbxValueAsListItem } from '@dereekb/dbx-web';
 import { range } from '@dereekb/util';
 
 export interface DocValue {

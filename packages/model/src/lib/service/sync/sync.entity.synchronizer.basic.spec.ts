@@ -1,7 +1,7 @@
-import { SyncEntity, SyncEntityCommonTypeIdPair, syncEntityFactory } from './sync.entity';
-import { SyncEntityCommonTypeSynchronizationEntityResult, SyncEntityCommonTypeSynchronizationEntityResultType } from './sync.entity.synchronizer';
-import { BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult, basicSyncEntityCommonTypeSynchronizerInstanceFactory, BasicSyncEntityCommonTypeSynchronizerSource, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction } from './sync.entity.synchronizer.basic';
-import { SyncSourceInfo } from './sync.source';
+import { type SyncEntity, type SyncEntityCommonTypeIdPair, syncEntityFactory } from './sync.entity';
+import { type SyncEntityCommonTypeSynchronizationEntityResult, type SyncEntityCommonTypeSynchronizationEntityResultType } from './sync.entity.synchronizer';
+import { type BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult, basicSyncEntityCommonTypeSynchronizerInstanceFactory, type BasicSyncEntityCommonTypeSynchronizerSource, type BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput, type BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance, type BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction } from './sync.entity.synchronizer.basic';
+import { type SyncSourceInfo } from './sync.source';
 
 const SYSTEM_SOURCE_ID = 'system';
 const SYSTEM_SOURCE_NAME = 'System';

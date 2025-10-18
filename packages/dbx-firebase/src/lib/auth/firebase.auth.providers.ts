@@ -1,4 +1,4 @@
-import { EnvironmentProviders, Injector, Provider, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, Injector, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxAuthService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate } from './service/firebase.auth.service';
 

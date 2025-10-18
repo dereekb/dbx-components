@@ -1,7 +1,7 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoHomeComponent } from './container/home.component';
 import { DemoLayoutComponent } from './container/layout.component';
-import { HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
+import { type HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
 import { demoAppStateData } from './modules/app/demo.app.router.auth';
 
 export const layoutState: Ng2StateDeclaration = {

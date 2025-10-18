@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A simple mime type string with just the type/subtype and no parameters.

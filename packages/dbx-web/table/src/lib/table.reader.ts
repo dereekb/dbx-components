@@ -1,7 +1,7 @@
-import { combineLatest, map, Observable, of, shareReplay, startWith, switchMap } from 'rxjs';
-import { PrimativeKey, Maybe, filterMaybeArrayValues, ReadRequiredKeyFunction } from '@dereekb/util';
-import { DbxTableColumn } from './table';
-import { DbxTableStore } from './table.store';
+import { combineLatest, map, type Observable, of, shareReplay, startWith, switchMap } from 'rxjs';
+import { type PrimativeKey, type Maybe, filterMaybeArrayValues, type ReadRequiredKeyFunction } from '@dereekb/util';
+import { type DbxTableColumn } from './table';
+import { type DbxTableStore } from './table.store';
 
 export interface DbxTableReaderCellPair<C, T> {
   readonly column: DbxTableColumn<C>;

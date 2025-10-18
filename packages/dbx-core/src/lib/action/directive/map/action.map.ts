@@ -1,6 +1,6 @@
-import { BehaviorSubject, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
-import { Destroyable } from '@dereekb/util';
+import { BehaviorSubject, distinctUntilChanged, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { type ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
+import { type Destroyable } from '@dereekb/util';
 
 /**
  * Arbitrary string used to identify an action.

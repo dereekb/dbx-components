@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray, flattenArray } from './array';
+import { type ArrayOrValue, asArray, flattenArray } from './array';
 import { unique, filterUniqueValues } from './array.unique';
 import { type ReadKeyFunction } from '../key';
 import { caseInsensitiveString } from '../string/string';

@@ -1,4 +1,4 @@
-import { forwardRef, Provider, Type } from '@angular/core';
+import { forwardRef, type Provider, type Type } from '@angular/core';
 import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { DbxActionContextMachineAsService } from './action.machine';
 

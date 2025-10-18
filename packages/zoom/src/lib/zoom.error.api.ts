@@ -1,5 +1,5 @@
-import { ArrayOrValue, MS_IN_SECOND, Maybe, UnixDateTimeNumber, asArray } from '@dereekb/util';
-import { ConfiguredFetch, FetchRequestFactoryError, FetchResponseError, MakeUrlSearchParamsOptions, mergeMakeUrlSearchParamsOptions } from '@dereekb/util/fetch';
+import { type ArrayOrValue, MS_IN_SECOND, type Maybe, type UnixDateTimeNumber, asArray } from '@dereekb/util';
+import { type ConfiguredFetch, type FetchRequestFactoryError, FetchResponseError, type MakeUrlSearchParamsOptions, mergeMakeUrlSearchParamsOptions } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
 /**

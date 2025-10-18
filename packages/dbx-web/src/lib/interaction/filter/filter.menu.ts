@@ -1,6 +1,6 @@
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { type ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { combineLatest, distinctUntilChanged, map, Observable, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
 
 /**
  * Configuration for the preset filter menus

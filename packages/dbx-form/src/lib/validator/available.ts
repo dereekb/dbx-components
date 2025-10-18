@@ -1,5 +1,5 @@
-import { first, switchMap, map, Observable, of, catchError } from 'rxjs';
-import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
+import { first, switchMap, map, type Observable, of, catchError } from 'rxjs';
+import { type AbstractControl, type AsyncValidatorFn } from '@angular/forms';
 import { asyncPusherCache } from '@dereekb/rxjs';
 
 export const FIELD_VALUE_IS_AVAILABLE_VALIDATION_KEY = 'fieldValueIsAvailable';

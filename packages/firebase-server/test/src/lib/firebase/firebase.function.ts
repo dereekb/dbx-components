@@ -1,10 +1,10 @@
-import { BlockingFunction, CloudFunction as CloudFunctionV1Input } from 'firebase-functions/v1';
-import { CloudFunction as CloudFunctionV2, CloudEvent } from 'firebase-functions/v2';
-import { CallableContextOptions, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
-import { Getter, PromiseOrValue } from '@dereekb/util';
-import { FeaturesList } from 'firebase-functions-test/lib/features';
-import { BlockingFunctionMaybeWithHandler, CallableHttpFunction } from '@dereekb/firebase-server';
-import { CallableRequest } from 'firebase-functions/https';
+import { type BlockingFunction, type CloudFunction as CloudFunctionV1Input } from 'firebase-functions/v1';
+import { type CloudFunction as CloudFunctionV2, type CloudEvent } from 'firebase-functions/v2';
+import { type CallableContextOptions, type WrappedFunction, type WrappedScheduledFunction, type WrappedV2Function } from 'firebase-functions-test/lib/main';
+import { type Getter, type PromiseOrValue } from '@dereekb/util';
+import { type FeaturesList } from 'firebase-functions-test/lib/features';
+import { type BlockingFunctionMaybeWithHandler, type CallableHttpFunction } from '@dereekb/firebase-server';
+import { type CallableRequest } from 'firebase-functions/https';
 
 /**
  * Type fix used for compatability with firebase-functions/v2 the CloudFunction types in unions.

@@ -1,9 +1,9 @@
-import { FetchJsonBody, FetchJsonInput } from '@dereekb/util/fetch';
-import { ZohoAccountsContext } from './accounts.config';
-import { ZohoAuthClientIdAndSecretPair, ZohoRefreshToken } from '../zoho.config';
-import { ZohoAccessTokenApiDomain, ZohoAccessTokenScopesString, ZohoAccessTokenString } from './accounts';
-import { Maybe, Seconds } from '@dereekb/util';
-import { ZohoAccountsAccessTokenErrorCode } from './accounts.error.api';
+import { type FetchJsonBody, type FetchJsonInput } from '@dereekb/util/fetch';
+import { type ZohoAccountsContext } from './accounts.config';
+import { type ZohoAuthClientIdAndSecretPair, type ZohoRefreshToken } from '../zoho.config';
+import { type ZohoAccessTokenApiDomain, type ZohoAccessTokenScopesString, type ZohoAccessTokenString } from './accounts';
+import { type Maybe, type Seconds } from '@dereekb/util';
+import { type ZohoAccountsAccessTokenErrorCode } from './accounts.error.api';
 
 export interface ZohoAccountsAccessTokenInput {
   readonly client?: Maybe<ZohoAuthClientIdAndSecretPair>;

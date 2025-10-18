@@ -1,8 +1,8 @@
 import { map, shareReplay, switchMap, tap, BehaviorSubject, combineLatest } from 'rxjs';
-import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { type DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionWorkInstanceDelegate } from '../../action.handler';
-import { Maybe, Destroyable, Initialized, GetterOrValue, asGetter, FactoryWithInput } from '@dereekb/util';
-import { filterMaybe, SubscriptionObject, Work, workFactory } from '@dereekb/rxjs';
+import { type Maybe, type Destroyable, type Initialized, type GetterOrValue, asGetter, type FactoryWithInput } from '@dereekb/util';
+import { filterMaybe, SubscriptionObject, type Work, workFactory } from '@dereekb/rxjs';
 
 export const DBX_ACTION_HANDLER_LOCK_KEY = 'dbxActionHandler';
 

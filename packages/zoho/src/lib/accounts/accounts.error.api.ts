@@ -1,5 +1,5 @@
-import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData, ParsedZohoServerError } from '../zoho.error.api';
+import { FetchRequestFactoryError, type FetchResponseError } from '@dereekb/util/fetch';
+import { type ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData, type ParsedZohoServerError } from '../zoho.error.api';
 
 /**
  * Error in the following cases:

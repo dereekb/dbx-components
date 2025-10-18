@@ -1,4 +1,4 @@
-import { DateTimePresetConfiguration } from './datetime';
+import { type DateTimePresetConfiguration } from './datetime';
 
 export const DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS: DateTimePresetConfiguration[] = [
   {

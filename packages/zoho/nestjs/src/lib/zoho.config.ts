@@ -1,5 +1,5 @@
-import { ZohoConfig, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { ConfigService } from '@nestjs/config';
+import { type ZohoConfig, type ZohoServiceAccessTokenKey } from '@dereekb/zoho';
+import { type ConfigService } from '@nestjs/config';
 
 export const ZOHO_API_URL_CONFIG_KEY = 'API_URL';
 

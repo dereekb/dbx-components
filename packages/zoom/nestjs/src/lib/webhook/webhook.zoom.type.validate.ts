@@ -1,4 +1,4 @@
-import { ZoomWebhookEvent } from './webhook.zoom.type.common';
+import { type ZoomWebhookEvent } from './webhook.zoom.type.common';
 
 export const ZOOM_WEBHOOK_URL_VALIDATION_EVENT_TYPE = 'endpoint.url_validation';
 

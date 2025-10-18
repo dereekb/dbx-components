@@ -1,7 +1,7 @@
-import { DocumentDataWithIdAndKey, FirestoreModelKey, DocumentReference, FirestoreDocument, FirestoreModelId, DocumentSnapshot } from '@dereekb/firebase';
-import { ObservableOrValue, PageListLoadingState } from '@dereekb/rxjs';
-import { Maybe, ArrayOrValue } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { type DocumentDataWithIdAndKey, type FirestoreModelKey, type DocumentReference, type FirestoreDocument, type FirestoreModelId, type DocumentSnapshot } from '@dereekb/firebase';
+import { type ObservableOrValue, type PageListLoadingState } from '@dereekb/rxjs';
+import { type Maybe, type ArrayOrValue } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 
 /**
  * Abstract type that loads document snapshots from keys, refs, or documents.

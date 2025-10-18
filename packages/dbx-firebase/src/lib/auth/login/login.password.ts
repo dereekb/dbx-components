@@ -1,4 +1,4 @@
-import { TextPasswordFieldPasswordParameters } from '@dereekb/dbx-form';
+import { type TextPasswordFieldPasswordParameters } from '@dereekb/dbx-form';
 
 export type DbxFirebaseAuthLoginPasswordConfig = TextPasswordFieldPasswordParameters;
 

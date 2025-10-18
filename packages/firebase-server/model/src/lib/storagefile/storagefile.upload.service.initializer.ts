@@ -1,28 +1,28 @@
 import {
-  CombineUploadFileTypeDeterminerConfig,
+  type CombineUploadFileTypeDeterminerConfig,
   combineUploadFileTypeDeterminers,
   copyStoragePath,
-  CreateStorageFileDocumentPairResult,
-  FirebaseStorageAccessorFile,
+  type CreateStorageFileDocumentPairResult,
+  type FirebaseStorageAccessorFile,
   limitUploadFileTypeDeterminer,
   STORAGEFILE_RELATED_FILE_METADATA_KEY,
-  StorageFileDocument,
-  StorageFileFirestoreCollection,
-  StorageFileInitializeFromUploadResultType,
+  type StorageFileDocument,
+  type StorageFileFirestoreCollection,
+  type StorageFileInitializeFromUploadResultType,
   storageFilePurposeAndUserQuery,
-  StorageFilePurposeAndUserQueryInput,
-  StoragePath,
-  StoragePathRef,
-  StoredFileReader,
+  type StorageFilePurposeAndUserQueryInput,
+  type StoragePath,
+  type StoragePathRef,
+  type StoredFileReader,
   storedFileReaderFactory,
-  UploadedFileTypeDeterminer,
-  UploadedFileTypeDeterminerResult,
-  UploadedFileTypeIdentifier
+  type UploadedFileTypeDeterminer,
+  type UploadedFileTypeDeterminerResult,
+  type UploadedFileTypeIdentifier
 } from '@dereekb/firebase';
-import { ArrayOrValue, asArray, asDecisionFunction, AsyncDecisionFunction, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
-import { StorageFileInitializeFromUploadInput, StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadService } from './storagefile.upload.service';
+import { type ArrayOrValue, asArray, asDecisionFunction, type AsyncDecisionFunction, type Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
+import { type StorageFileInitializeFromUploadInput, type StorageFileInitializeFromUploadResult, type StorageFileInitializeFromUploadService } from './storagefile.upload.service';
 import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from './storagefile.util';
-import { FirebaseServerStorageService } from '@dereekb/firebase-server';
+import { type FirebaseServerStorageService } from '@dereekb/firebase-server';
 
 export interface StorageFileInitializeFromUploadServiceInitializerInput {
   /**

@@ -1,5 +1,5 @@
-import { Maybe } from '@dereekb/util';
-import { StorageFileInitializeFromUploadResultType } from './storagefile.upload';
+import { type Maybe } from '@dereekb/util';
+import { type StorageFileInitializeFromUploadResultType } from './storagefile.upload';
 
 /**
  * Thrown if the target uploaded file does not exist.

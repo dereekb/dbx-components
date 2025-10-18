@@ -1,10 +1,10 @@
-import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { ZohoRecruitConfig, ZohoRecruitContext, ZohoRecruitContextRef, ZohoRecruitFetchFactory, ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
-import { LogZohoServerErrorFunction, ZohoInvalidTokenError } from '../zoho.error.api';
+import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { type ZohoRecruitConfig, type ZohoRecruitContext, type ZohoRecruitContextRef, type ZohoRecruitFetchFactory, type ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
+import { type LogZohoServerErrorFunction, ZohoInvalidTokenError } from '../zoho.error.api';
 import { handleZohoRecruitErrorFetch, interceptZohoRecruit200StatusWithErrorResponse } from './recruit.error.api';
-import { ZohoAccountsContextRef } from '../accounts/accounts.config';
+import { type ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
-import { ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
+import { type ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
 import { type Maybe } from '@dereekb/util';
 
 export type ZohoRecruit = ZohoRecruitContextRef;

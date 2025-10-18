@@ -1,10 +1,10 @@
-import { ZohoPageResult, zohoFetchPageFactory } from '../zoho.api.page';
-import { FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
-import { ZohoRecruitContext } from './recruit.config';
-import { ZOHO_RECRUIT_NOTES_MODULE, ZohoRecruitModuleNameRef, ZohoRecruitRecordId } from './recruit';
-import { ArrayOrValue, asArray } from '@dereekb/util';
-import { ZohoRecruitMultiRecordResult, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry, ZohoRecruitChangeObjectResponse, zohoRecruitApiFetchJsonInput, zohoRecruitMultiRecordResult, ZohoRecruitGetRelatedRecordsRequest, getRelatedRecordsFunctionFactory } from './recruit.api';
-import { NewZohoRecruitNoteData, ZohoRecruitNoteId, ZohoRecruitRecordNote } from './recruit.notes';
+import { type ZohoPageResult, zohoFetchPageFactory } from '../zoho.api.page';
+import { type FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
+import { type ZohoRecruitContext } from './recruit.config';
+import { ZOHO_RECRUIT_NOTES_MODULE, type ZohoRecruitModuleNameRef, type ZohoRecruitRecordId } from './recruit';
+import { type ArrayOrValue, asArray } from '@dereekb/util';
+import { type ZohoRecruitMultiRecordResult, type ZohoRecruitChangeObjectResponseSuccessEntry, type ZohoRecruitChangeObjectResponseErrorEntry, type ZohoRecruitChangeObjectResponse, zohoRecruitApiFetchJsonInput, zohoRecruitMultiRecordResult, type ZohoRecruitGetRelatedRecordsRequest, getRelatedRecordsFunctionFactory } from './recruit.api';
+import { type NewZohoRecruitNoteData, type ZohoRecruitNoteId, type ZohoRecruitRecordNote } from './recruit.notes';
 
 // MARK: Notes
 export interface ZohoRecruitCreateNotesRequest {

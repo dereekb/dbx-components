@@ -1,5 +1,5 @@
-import { AsyncFirebaseFunctionCreateAction, AsyncFirebaseFunctionUpdateAction, FirebaseFunctionUpdateAction } from '@dereekb/firebase';
-import { GuestbookDocument, GuestbookEntryDocument } from './guestbook';
+import { type AsyncFirebaseFunctionCreateAction, type AsyncFirebaseFunctionUpdateAction, type FirebaseFunctionUpdateAction } from '@dereekb/firebase';
+import { type GuestbookDocument, type GuestbookEntryDocument } from './guestbook';
 
 export type AsyncGuestbookCreateAction<P extends object> = AsyncFirebaseFunctionCreateAction<P, GuestbookDocument>;
 export type AsyncGuestbookUpdateAction<P extends object> = AsyncFirebaseFunctionUpdateAction<P, GuestbookDocument>;

@@ -1,10 +1,10 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { textField, TextFieldConfig } from './text.field';
-import { cityField, CityFieldConfig, countryField, CountryFieldConfig, stateField, StateFieldConfig, zipCodeField, ZipCodeFieldConfig } from './text.additional.field';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { textField, type TextFieldConfig } from './text.field';
+import { cityField, type CityFieldConfig, countryField, type CountryFieldConfig, stateField, type StateFieldConfig, zipCodeField, type ZipCodeFieldConfig } from './text.additional.field';
 import { flexLayoutWrapper, sectionWrapper } from '../../wrapper/wrapper';
-import { FieldConfig } from '../../field';
+import { type FieldConfig } from '../../field';
 import { repeatArrayField } from '../array/array.field';
-import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
+import { type DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 
 // MARK: Address Config

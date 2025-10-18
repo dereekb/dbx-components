@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoNotificationLayoutComponent } from './container/layout.component';
 import { DemoNotificationListPageComponent } from './container/list.component';
 import { DemoNotificationListPageRightComponent } from './container/list.right.component';

@@ -1,5 +1,5 @@
-import { NotificationTaskType, NotificationTask, NotificationItemMetadata, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type NotificationTaskType, type NotificationTask, type NotificationItemMetadata, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Provides a reference to a NotificationTaskService instance.

@@ -1,7 +1,7 @@
-import { Maybe, ReadableError } from '@dereekb/util';
-import { DbxActionContextStoreSourceInstance } from './action.store.source';
-import { WorkInstanceDelegate } from '@dereekb/rxjs';
-import { Observable } from 'rxjs';
+import { type Maybe, type ReadableError } from '@dereekb/util';
+import { type DbxActionContextStoreSourceInstance } from './action.store.source';
+import { type WorkInstanceDelegate } from '@dereekb/rxjs';
+import { type Observable } from 'rxjs';
 
 /**
  * WorkInstanceDelegate implementation using an DbxActionContextStoreSourceInstance.

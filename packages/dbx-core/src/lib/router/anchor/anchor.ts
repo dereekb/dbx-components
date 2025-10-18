@@ -1,10 +1,10 @@
-import { MousableFunction } from './mousable';
-import { ClickableFunction, ClickableUrl } from './clickable';
-import { SegueRef } from '../segue';
-import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, FlattenTreeFunction, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
-import { Type, Provider, forwardRef } from '@angular/core';
-import { Observable } from 'rxjs';
-import { DbxInjectionComponentConfig } from '../../injection/injection';
+import { type MousableFunction } from './mousable';
+import { type ClickableFunction, type ClickableUrl } from './clickable';
+import { type SegueRef } from '../segue';
+import { expandFlattenTreeFunction, expandTreeFunction, type ExpandTreeFunction, type FlattenTreeFunction, flattenTreeToArrayFunction, type Maybe, type TreeNode } from '@dereekb/util';
+import { type Type, type Provider, forwardRef } from '@angular/core';
+import { type Observable } from 'rxjs';
+import { type DbxInjectionComponentConfig } from '../../injection/injection';
 
 export interface ClickableAnchor extends ClickableFunction, MousableFunction, ClickableUrl, Partial<SegueRef> {
   readonly disabled?: boolean;

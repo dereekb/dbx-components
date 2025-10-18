@@ -1,8 +1,8 @@
-import { SelectionDisplayValue } from './../selection';
-import { LoadingState } from '@dereekb/rxjs';
-import { Factory, FactoryWithRequiredInput, MapFunction, Maybe, PrimativeKey } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { ElementRef } from '@angular/core';
+import { type SelectionDisplayValue } from './../selection';
+import { type LoadingState } from '@dereekb/rxjs';
+import { type Factory, type FactoryWithRequiredInput, type MapFunction, type Maybe, type PrimativeKey } from '@dereekb/util';
+import { type Observable } from 'rxjs';
+import { type ElementRef } from '@angular/core';
 
 export interface SourceSelectValue<T extends PrimativeKey = PrimativeKey, M = unknown> {
   value: T;

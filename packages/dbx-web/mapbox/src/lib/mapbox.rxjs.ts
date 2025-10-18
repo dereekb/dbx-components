@@ -1,8 +1,8 @@
-import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
-import { LAT_LONG_10M_PRECISION, LatLngPointInput, LatLngBound, LatLngBoundCheckFunction, latLngPointFunction, roundNumberToStepFunction, RoundNumberToStepFunctionInput, LatLngPrecision, type Maybe } from '@dereekb/util';
-import { combineLatestWith, map, Observable, OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
-import { MapboxZoomLevel } from './mapbox';
-import { MapboxViewportBoundFunction } from './mapbox.util';
+import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { LAT_LONG_10M_PRECISION, type LatLngPointInput, type LatLngBound, type LatLngBoundCheckFunction, latLngPointFunction, roundNumberToStepFunction, type RoundNumberToStepFunctionInput, type LatLngPrecision, type Maybe } from '@dereekb/util';
+import { combineLatestWith, map, type Observable, type OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
+import { type MapboxZoomLevel } from './mapbox';
+import { type MapboxViewportBoundFunction } from './mapbox.util';
 
 export type FilterMapboxBoundReadItemValueFunction<T> = (value: T) => MapboxViewportBoundFunctionItemValue;
 

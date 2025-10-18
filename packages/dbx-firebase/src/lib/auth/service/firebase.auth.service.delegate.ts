@@ -1,7 +1,7 @@
-import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, filterMaybeArrayValues } from '@dereekb/util';
-import { map, Observable, switchMap } from 'rxjs';
-import { authUserStateFromFirebaseAuthServiceFunction, stateFromTokenForLoggedInUserFunction, StateFromTokenFunction } from './firebase.auth.rxjs';
-import { AuthUserStateObsFunction, DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
+import { addToSetCopy, type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, filterMaybeArrayValues } from '@dereekb/util';
+import { map, type Observable, switchMap } from 'rxjs';
+import { authUserStateFromFirebaseAuthServiceFunction, stateFromTokenForLoggedInUserFunction, type StateFromTokenFunction } from './firebase.auth.rxjs';
+import { type AuthUserStateObsFunction, type DbxFirebaseAuthService, type DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
 
 export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject> extends Partial<Pick<DbxFirebaseAuthServiceDelegate, 'isAdminInAuthRoleSet' | 'authUserStateObs'>> {
   /**

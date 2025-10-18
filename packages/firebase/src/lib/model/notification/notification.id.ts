@@ -1,5 +1,5 @@
 import { type FactoryWithRequiredInput } from '@dereekb/util';
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, FirestoreModelIdInput, firestoreModelId, FirestoreCollectionName } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, type FirestoreModelIdInput, firestoreModelId, type FirestoreCollectionName } from '../../common';
 
 /**
  * The NotificationBox's id is the two way flat firestore model key of the object that it represents.

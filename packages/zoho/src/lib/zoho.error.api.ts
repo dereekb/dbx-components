@@ -1,5 +1,5 @@
-import { MS_IN_MINUTE, Maybe, UnixDateTimeNumber } from '@dereekb/util';
-import { ConfiguredFetch, FetchJsonInterceptJsonResponseFunction, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
+import { MS_IN_MINUTE, type Maybe, type UnixDateTimeNumber } from '@dereekb/util';
+import { type ConfiguredFetch, type FetchJsonInterceptJsonResponseFunction, type FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
 export type ZohoServerErrorResponseDataError = ZohoServerErrorData | ZohoServerErrorCode;

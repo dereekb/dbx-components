@@ -1,9 +1,9 @@
-import { OnRunEffects, Actions, EffectNotification, ofType } from '@ngrx/effects';
+import { type OnRunEffects, Actions, type EffectNotification, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { Observable, exhaustMap, filter, takeUntil } from 'rxjs';
-import { DbxAppContextState } from '../../context';
+import { type Observable, exhaustMap, filter, takeUntil } from 'rxjs';
+import { type DbxAppContextState } from '../../context';
 import { onDbxAppContext } from '../';
-import { IterableOrValue, iterableToSet } from '@dereekb/util';
+import { type IterableOrValue, iterableToSet } from '@dereekb/util';
 import { inject } from '@angular/core';
 
 // MARK: Abstract Context Effects

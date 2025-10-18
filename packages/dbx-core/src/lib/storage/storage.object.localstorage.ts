@@ -1,4 +1,4 @@
-import { FullStorageObject, Maybe, StorageObject, StorageObjectUtility, StoredDataStorageKey } from '@dereekb/util';
+import { type FullStorageObject, type Maybe, type StorageObject, StorageObjectUtility, type StoredDataStorageKey } from '@dereekb/util';
 
 /**
  * StorageObject using LocalStorage.

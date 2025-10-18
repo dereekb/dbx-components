@@ -1,5 +1,5 @@
-import { GuestbookEntry, guestbookEntryIdentity, InsertGuestbookEntryParams } from 'demo-firebase';
-import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
+import { type GuestbookEntry, guestbookEntryIdentity, type InsertGuestbookEntryParams } from 'demo-firebase';
+import { demoGuestbookEntryContext, type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { onCallUpdateModelParams } from '@dereekb/firebase';

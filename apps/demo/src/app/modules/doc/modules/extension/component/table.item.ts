@@ -1,4 +1,4 @@
-import { ModelKeyRef } from '@dereekb/util';
+import { type ModelKeyRef } from '@dereekb/util';
 
 export interface ExampleTableData extends ModelKeyRef {
   readonly name: string;

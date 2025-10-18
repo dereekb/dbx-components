@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
-import { AuthRole } from '@dereekb/util';
-import { AuthUserIdentifier, AuthUserState } from '../../auth.user';
+import { type AuthRole } from '@dereekb/util';
+import { type AuthUserIdentifier, type AuthUserState } from '../../auth.user';
 
 /**
  * Sets the user's identifier in the auth.

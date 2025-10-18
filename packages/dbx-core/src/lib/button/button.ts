@@ -1,6 +1,6 @@
-import { Type, Provider, forwardRef } from '@angular/core';
+import { type Type, type Provider, forwardRef } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { type DbxActionWorkProgress, type DbxActionWorkOrWorkProgress } from '../action/action';
 
 export type DbxButtonWorkingProgress = DbxActionWorkProgress;

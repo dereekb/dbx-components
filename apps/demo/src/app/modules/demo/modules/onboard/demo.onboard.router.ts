@@ -1,6 +1,6 @@
 import { DemoOnboardLayoutComponent } from './container/layout.component';
 import { DemoOnboardTosComponent } from './container/tos.component';
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoOnboardUserComponent } from './container/user.component';
 
 export const onboardState: Ng2StateDeclaration = {

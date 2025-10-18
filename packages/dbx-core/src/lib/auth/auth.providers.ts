@@ -1,7 +1,7 @@
-import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { provideDbxAppAuthState } from './auth.state.providers';
-import { provideDbxAppAuthRouter, ProvideDbxAppAuthRouterConfig } from './router/auth.router.providers';
-import { provideDbxAppAuthRouterState, ProvideDbxAppAuthRouterStateConfig } from './router/state/auth.router.state.providers';
+import { provideDbxAppAuthRouter, type ProvideDbxAppAuthRouterConfig } from './router/auth.router.providers';
+import { provideDbxAppAuthRouterState, type ProvideDbxAppAuthRouterStateConfig } from './router/state/auth.router.state.providers';
 
 export interface ProvideDbxAppAuthConfig extends ProvideDbxAppAuthRouterConfig, ProvideDbxAppAuthRouterStateConfig {}
 

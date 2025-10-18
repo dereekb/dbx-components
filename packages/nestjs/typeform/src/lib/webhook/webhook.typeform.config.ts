@@ -1,4 +1,4 @@
-import { TypeformWebhookSecretToken } from '../typeform.type';
+import { type TypeformWebhookSecretToken } from '../typeform.type';
 
 export const TYPEFORM_WEBHOOK_SECRET_TOKEN_ENV_VAR = 'TYPEFORM_WEBHOOK_SECRET_TOKEN';
 

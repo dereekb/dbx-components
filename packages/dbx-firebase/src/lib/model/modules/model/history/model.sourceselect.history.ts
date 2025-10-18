@@ -1,11 +1,11 @@
-import { FirestoreDocument, FirestoreModelIdentity } from '@dereekb/firebase';
-import { SourceSelectLoadSource } from '@dereekb/dbx-form';
-import { LoadingState, loadingStateFromObs, mapEachAsync } from '@dereekb/rxjs';
-import { Observable } from 'rxjs';
-import { GrantedRole } from '@dereekb/model';
-import { MapFunction } from '@dereekb/util';
-import { DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
-import { DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from './model.tracker.service';
+import { type FirestoreDocument, type FirestoreModelIdentity } from '@dereekb/firebase';
+import { type SourceSelectLoadSource } from '@dereekb/dbx-form';
+import { type LoadingState, loadingStateFromObs, mapEachAsync } from '@dereekb/rxjs';
+import { type Observable } from 'rxjs';
+import { type GrantedRole } from '@dereekb/model';
+import { type MapFunction } from '@dereekb/util';
+import { type DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
+import { type DbxFirebaseModelTrackerHistoryFilter, type DbxFirebaseModelTrackerService } from './model.tracker.service';
 
 export interface DbxFirebaseSourceSelectLoadSourceConfig<M, D extends FirestoreDocument<any> = any, R extends GrantedRole = GrantedRole> extends Pick<DbxFirebaseModelTrackerHistoryFilter, 'filterItem'> {
   /**

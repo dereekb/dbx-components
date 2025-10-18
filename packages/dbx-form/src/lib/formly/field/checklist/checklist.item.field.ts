@@ -1,6 +1,6 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../field';
-import { DbxChecklistItemFieldProps } from './checklist.item.field.component';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../field';
+import { type DbxChecklistItemFieldProps } from './checklist.item.field.component';
 
 export interface ChecklistItemFieldConfig<T = unknown> extends LabeledFieldConfig, DbxChecklistItemFieldProps<T> {}
 export type ChecklistItemFieldBuilderInput<T = unknown> = Partial<ChecklistItemFieldConfig<T>> & Pick<ChecklistItemFieldConfig<T>, 'key' | 'displayContent'>;

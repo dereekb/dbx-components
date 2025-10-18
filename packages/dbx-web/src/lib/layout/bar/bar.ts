@@ -1,3 +1,3 @@
-import { DbxThemeColor } from '../style/style';
+import { type DbxThemeColor } from '../style/style';
 
 export type DbxBarColor = DbxThemeColor;

@@ -1,4 +1,4 @@
-import { FirebaseAuthUserId } from '@dereekb/firebase';
+import { type FirebaseAuthUserId } from '@dereekb/firebase';
 
 export type GuestbookId = string;
 export type GuestbookKey = string;

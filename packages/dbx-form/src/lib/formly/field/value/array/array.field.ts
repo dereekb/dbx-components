@@ -1,7 +1,7 @@
-import { ArrayOrValue, asArray } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField, propsAndConfigForFieldConfig } from '../../field';
-import { DbxFormRepeatArrayConfig } from './array.field.component';
+import { type ArrayOrValue, asArray } from '@dereekb/util';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type FieldConfig, formlyField, propsAndConfigForFieldConfig } from '../../field';
+import { type DbxFormRepeatArrayConfig } from './array.field.component';
 
 export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayConfig<T>, FieldConfig {
   repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;

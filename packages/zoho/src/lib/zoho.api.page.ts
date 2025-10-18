@@ -1,5 +1,5 @@
-import { Maybe, PageNumber, PromiseOrValue, getNextPageNumber } from '@dereekb/util';
-import { fetchPageFactory, ReadFetchPageResultInfo, FetchPageResult, FetchPageFactoryInputOptions, FetchPageFactoryConfigDefaults } from '@dereekb/util/fetch';
+import { type Maybe, type PageNumber, type PromiseOrValue, getNextPageNumber } from '@dereekb/util';
+import { fetchPageFactory, type ReadFetchPageResultInfo, type FetchPageResult, type FetchPageFactoryInputOptions, type FetchPageFactoryConfigDefaults } from '@dereekb/util/fetch';
 
 /**
  * Base page filter

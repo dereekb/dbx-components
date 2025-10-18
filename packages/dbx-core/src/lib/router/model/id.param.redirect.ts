@@ -1,8 +1,8 @@
-import { Observable, BehaviorSubject, map, shareReplay, of, switchMap } from 'rxjs';
-import { Destroyable, Initialized, Maybe, ModelKey } from '@dereekb/util';
-import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
-import { DbxRouterService } from '../router/service';
-import { DbxRouteParamReader, dbxRouteParamReaderInstance, DbxRouteParamDefaultRedirectInstance } from '../router/util';
+import { type Observable, BehaviorSubject, map, shareReplay, of, switchMap } from 'rxjs';
+import { type Destroyable, type Initialized, type Maybe, type ModelKey } from '@dereekb/util';
+import { type MaybeObservableOrValueGetter, type SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
+import { type DbxRouterService } from '../router/service';
+import { type DbxRouteParamReader, dbxRouteParamReaderInstance, DbxRouteParamDefaultRedirectInstance } from '../router/util';
 
 /**
  * Default identifier used by dbxRouteModelIdParamRedirect() that corresponds to the id param of the model in the current route.

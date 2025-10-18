@@ -1,6 +1,6 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, MaterialFormFieldConfig } from '../../field';
-import { PickableItemFieldItem, PickableValueFieldsFieldProps } from './pickable.field.directive';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type MaterialFormFieldConfig } from '../../field';
+import { PickableItemFieldItem, type PickableValueFieldsFieldProps } from './pickable.field.directive';
 export { PickableItemFieldItem };
 
 export interface PickableItemFieldConfig<T = unknown, M = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldProps<T, M>, MaterialFormFieldConfig {}

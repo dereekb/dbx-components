@@ -1,8 +1,8 @@
-import { asObservable, combineLatestFromMapValuesObsFn, IsCheckFunction, ObservableOrValue } from '@dereekb/rxjs';
-import { map, Observable, switchMap } from 'rxjs';
-import { ActionContextStore } from '../../action.store';
-import { ActionContextStoreSourceMap, ActionKey } from './action.map';
-import { ActionContextStoreSource } from '../../action.store.source';
+import { asObservable, combineLatestFromMapValuesObsFn, type IsCheckFunction, type ObservableOrValue } from '@dereekb/rxjs';
+import { map, type Observable, switchMap } from 'rxjs';
+import { type ActionContextStore } from '../../action.store';
+import { type ActionContextStoreSourceMap, type ActionKey } from './action.map';
+import { type ActionContextStoreSource } from '../../action.store.source';
 import { reduceBooleansWithOrFn } from '@dereekb/util';
 
 /**

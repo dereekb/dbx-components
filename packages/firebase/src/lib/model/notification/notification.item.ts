@@ -1,6 +1,6 @@
 import { separateValues, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, type SavedToFirestoreIfTrue } from '../../common';
-import { NotificationTaskType, type NotificationId, type NotificationTemplateType } from './notification.id';
+import { type NotificationTaskType, type NotificationId, type NotificationTemplateType } from './notification.id';
 import { isAfter } from 'date-fns';
 import { sortByDateFunction } from '@dereekb/date';
 

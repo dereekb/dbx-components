@@ -1,7 +1,7 @@
 import { type MapFunction } from '../value/map';
 import { type ArrayOrValue } from '../array/array';
 import { type PrimativeKey } from '../key';
-import { HandleResult, InternalHandlerFunction, type Handler, type HandlerAccessor, type HandlerFunction, type HandlerSetAccessor } from './handler';
+import { type HandleResult, type InternalHandlerFunction, type Handler, type HandlerAccessor, type HandlerFunction, type HandlerSetAccessor } from './handler';
 
 /**
  * Wraps a HandlerAccessor and the item it is bound to in order to be a HandlerSetAccessor.

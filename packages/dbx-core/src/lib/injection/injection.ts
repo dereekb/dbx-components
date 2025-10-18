@@ -1,5 +1,5 @@
-import { InjectionToken, Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from '@angular/core';
-import { Configurable, FactoryWithRequiredInput, filterMaybeArrayValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
+import { InjectionToken, type Injector, type NgModuleRef, type StaticProvider, type TemplateRef, type Type, type ViewRef } from '@angular/core';
+import { type Configurable, type FactoryWithRequiredInput, filterMaybeArrayValues, type Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
 
 export const DBX_INJECTION_COMPONENT_DATA = new InjectionToken('DbxInjectionComponentConfigData');
 

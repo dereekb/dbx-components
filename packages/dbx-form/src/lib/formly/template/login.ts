@@ -1,7 +1,7 @@
-import { TextFieldConfig, textField } from '../field/value/text/text.field';
-import { EmailFieldConfig, emailField } from '../field/value/text/text.additional.field';
+import { type TextFieldConfig, textField } from '../field/value/text/text.field';
+import { type EmailFieldConfig, emailField } from '../field/value/text/text.additional.field';
 import { fieldValuesAreEqualValidator } from '../../validator/field';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
 
 /**

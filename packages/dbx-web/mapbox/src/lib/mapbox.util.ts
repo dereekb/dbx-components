@@ -1,6 +1,6 @@
-import { LatLngBound, LatLngPoint, Vector, VectorTuple } from '@dereekb/util';
+import { type LatLngBound, type LatLngPoint, type Vector, type VectorTuple } from '@dereekb/util';
 import { bounds } from '@placemarkio/geo-viewport';
-import { MapboxTileSize, MapboxZoomLevel } from './mapbox';
+import { type MapboxTileSize, type MapboxZoomLevel } from './mapbox';
 
 export interface MapboxViewportBoundFunctionConfig {
   readonly mapCanvasSize: Vector;

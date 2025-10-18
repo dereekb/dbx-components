@@ -1,4 +1,4 @@
-import { MockItemFirestoreCollection, mockItemFirestoreCollection, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase/test';
+import { type MockItemFirestoreCollection, mockItemFirestoreCollection, type TestFirestoreContextFixture, type TestFirestoreInstance } from '@dereekb/firebase/test';
 import { initFirebaseAdminTestEnvironment } from './firebase';
 
 export function initFirebaseServerAdminTestEnvironment() {

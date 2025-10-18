@@ -1,16 +1,16 @@
-import { ArrayOrValue, asArray, Maybe } from '@dereekb/util';
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
-import { FirebaseFunctionsMap } from '@dereekb/firebase';
-import { provideDbxFirebaseAuth, ProvideDbxFirebaseAuthConfig } from './auth//firebase.auth.providers';
-import { provideDbxFirebaseEmulator, ProvideDbxFirebaseEmulatorsConfig } from './firebase/firebase.emulator.providers';
-import { provideDbxFirebaseApp, ProvideDbxFirebaseAppConfig } from './firebase/firebase.providers';
-import { ProvideDbxFirebaseFirestoreCollectionConfig, provideDbxFirestoreCollection } from './firestore/firebase.firestore.providers';
-import { provideDbxFirebaseFunctions, ProvideDbxFirebaseFunctionsConfig } from './function/firebase.function.providers';
-import { ProvideDbxFirebaseStorageConfig, providedDbxFirebaseStorage } from './storage/firebase.storage.providers';
-import { provideDbxFirebaseDevelopment, ProvideDbxFirebaseDevelopmentConfig } from './development/development.providers';
-import { provideDbxFirebaseNotifications, ProvideDbxFirebaseNotificationsConfig } from './modules/notification/notification.providers';
-import { provideDbxFirebaseModelContextService, ProvideDbxFirebaseModelContextServiceConfig } from './model/service/model.context.providers';
-import { provideDbxFirebaseModelTypesService, ProvideDbxFirebaseModelTypesServiceConfig } from './model/modules/model/model.types.providers';
+import { type ArrayOrValue, asArray, type Maybe } from '@dereekb/util';
+import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { type FirebaseFunctionsMap } from '@dereekb/firebase';
+import { provideDbxFirebaseAuth, type ProvideDbxFirebaseAuthConfig } from './auth//firebase.auth.providers';
+import { provideDbxFirebaseEmulator, type ProvideDbxFirebaseEmulatorsConfig } from './firebase/firebase.emulator.providers';
+import { provideDbxFirebaseApp, type ProvideDbxFirebaseAppConfig } from './firebase/firebase.providers';
+import { type ProvideDbxFirebaseFirestoreCollectionConfig, provideDbxFirestoreCollection } from './firestore/firebase.firestore.providers';
+import { provideDbxFirebaseFunctions, type ProvideDbxFirebaseFunctionsConfig } from './function/firebase.function.providers';
+import { type ProvideDbxFirebaseStorageConfig, providedDbxFirebaseStorage } from './storage/firebase.storage.providers';
+import { provideDbxFirebaseDevelopment, type ProvideDbxFirebaseDevelopmentConfig } from './development/development.providers';
+import { provideDbxFirebaseNotifications, type ProvideDbxFirebaseNotificationsConfig } from './modules/notification/notification.providers';
+import { provideDbxFirebaseModelContextService, type ProvideDbxFirebaseModelContextServiceConfig } from './model/service/model.context.providers';
+import { provideDbxFirebaseModelTypesService, type ProvideDbxFirebaseModelTypesServiceConfig } from './model/modules/model/model.types.providers';
 import { provideDbxFirebaseAnalyticsUserEventsListenerService } from './analytics';
 
 export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {

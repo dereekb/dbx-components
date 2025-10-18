@@ -1,6 +1,6 @@
-import { Type, Provider, forwardRef } from '@angular/core';
-import { TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { Observable } from 'rxjs';
+import { type Type, type Provider, forwardRef } from '@angular/core';
+import { type TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { type Observable } from 'rxjs';
 
 export abstract class DbxFirebaseDocumentStoreTwoWayKeyProvider {
   abstract readonly twoWayFlatKey$: Observable<TwoWayFlatFirestoreModelKey>;

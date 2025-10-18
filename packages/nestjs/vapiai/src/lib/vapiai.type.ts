@@ -1,4 +1,4 @@
-import { Vapi } from '@vapi-ai/server-sdk';
+import { type Vapi } from '@vapi-ai/server-sdk';
 
 /**
  * Secret token used by Vapi.ai for making requests.

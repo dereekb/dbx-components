@@ -1,6 +1,6 @@
 import { assertIsAdminInRequest } from '@dereekb/firebase-server';
-import { DemoCreateModelFunction } from '../function';
-import { CreateStorageFileParams, InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult, InitializeStorageFileFromUploadParams, onCallCreateModelResultWithDocs } from '@dereekb/firebase';
+import { type DemoCreateModelFunction } from '../function';
+import { type CreateStorageFileParams, type InitializeAllStorageFilesFromUploadsParams, type InitializeAllStorageFilesFromUploadsResult, type InitializeStorageFileFromUploadParams, onCallCreateModelResultWithDocs } from '@dereekb/firebase';
 
 export const storageFileCreate: DemoCreateModelFunction<CreateStorageFileParams> = async (request) => {
   const { nest, data } = request;

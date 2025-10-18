@@ -1,8 +1,8 @@
 import { type Maybe } from '@dereekb/util';
-import { filter, map, Observable, of, OperatorFunction, switchMap, startWith } from 'rxjs';
-import { SegueRefOrSegueRefRouterLink } from '../../segue';
-import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../transition';
-import { isSegueRefActiveFunction, IsSegueRefActiveFunctionConfig } from './router.service.util';
+import { filter, map, type Observable, of, type OperatorFunction, switchMap, startWith } from 'rxjs';
+import { type SegueRefOrSegueRefRouterLink } from '../../segue';
+import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../transition';
+import { isSegueRefActiveFunction, type IsSegueRefActiveFunctionConfig } from './router.service.util';
 
 // MARK: Transition Events
 export function onRouterTransitionEventType(events$: Observable<DbxRouterTransitionEvent>, type: DbxRouterTransitionEventType): Observable<DbxRouterTransitionEvent> {

@@ -1,6 +1,22 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
+import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
 import '../openai.type';
-import { BatchCancelledWebhookEvent, BatchCompletedWebhookEvent, BatchExpiredWebhookEvent, BatchFailedWebhookEvent, EvalRunCanceledWebhookEvent, EvalRunFailedWebhookEvent, EvalRunSucceededWebhookEvent, FineTuningJobCancelledWebhookEvent, FineTuningJobFailedWebhookEvent, FineTuningJobSucceededWebhookEvent, ResponseCancelledWebhookEvent, ResponseCompletedWebhookEvent, ResponseFailedWebhookEvent, ResponseIncompleteWebhookEvent, UnwrapWebhookEvent } from 'openai/resources/webhooks';
+import {
+  type BatchCancelledWebhookEvent,
+  type BatchCompletedWebhookEvent,
+  type BatchExpiredWebhookEvent,
+  type BatchFailedWebhookEvent,
+  type EvalRunCanceledWebhookEvent,
+  type EvalRunFailedWebhookEvent,
+  type EvalRunSucceededWebhookEvent,
+  type FineTuningJobCancelledWebhookEvent,
+  type FineTuningJobFailedWebhookEvent,
+  type FineTuningJobSucceededWebhookEvent,
+  type ResponseCancelledWebhookEvent,
+  type ResponseCompletedWebhookEvent,
+  type ResponseFailedWebhookEvent,
+  type ResponseIncompleteWebhookEvent,
+  type UnwrapWebhookEvent
+} from 'openai/resources/webhooks';
 
 export type OpenAIWebhookEventType = UnwrapWebhookEvent['type'];
 

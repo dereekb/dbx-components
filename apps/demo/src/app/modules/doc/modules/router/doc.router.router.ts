@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocRouterAnchorComponent } from './container/anchor.component';
 import { DocRouterAnchorListComponent } from './container/anchorlist.component';
 import { DocRouterHomeComponent } from './container/home.component';

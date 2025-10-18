@@ -1,6 +1,6 @@
-import { Maybe, filterMaybeArrayValues, joinStringsWithCommas } from '@dereekb/util';
-import { TypeformFormResponseAnswer, TypeformFormResponseDefinitionField, TypeformFormResponseDefinitionFieldId } from '../typeform.type';
-import { TypeformWebhookFormResponse } from './webhook.typeform.type';
+import { type Maybe, filterMaybeArrayValues, joinStringsWithCommas } from '@dereekb/util';
+import { type TypeformFormResponseAnswer, type TypeformFormResponseDefinitionField, type TypeformFormResponseDefinitionFieldId } from '../typeform.type';
+import { type TypeformWebhookFormResponse } from './webhook.typeform.type';
 import { findTypeformTemplateRefsInString } from '../typeform.util';
 
 export interface TypeformFormResponseAnswerValuePair<T = unknown> {

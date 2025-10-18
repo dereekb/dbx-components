@@ -1,6 +1,6 @@
 import { type PageNumber } from '@dereekb/util';
 import { map, type Observable, type OperatorFunction } from 'rxjs';
-import { LoadingStateValue, type ListLoadingState, type PageLoadingState } from './loading.state';
+import { type LoadingStateValue, type ListLoadingState, type PageLoadingState } from './loading.state';
 import { loadingStateFromObs, valueFromFinishedLoadingState } from './loading.state.rxjs';
 
 /**

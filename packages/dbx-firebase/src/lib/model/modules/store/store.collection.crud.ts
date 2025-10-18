@@ -1,8 +1,8 @@
-import { ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, OnCallCreateModelResult } from '@dereekb/firebase';
-import { LoadingState, loadingStateFromObs, lazyFrom } from '@dereekb/rxjs';
+import { type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type OnCallCreateModelResult } from '@dereekb/firebase';
+import { type LoadingState, loadingStateFromObs, lazyFrom } from '@dereekb/rxjs';
 import { asArray } from '@dereekb/util';
-import { Observable, from, shareReplay } from 'rxjs';
-import { DbxFirebaseCollectionStore } from './store.collection';
+import { type Observable, from, shareReplay } from 'rxjs';
+import { type DbxFirebaseCollectionStore } from './store.collection';
 
 // MARK: Create
 export type DbxFirebaseCollectionStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (params: I) => Observable<LoadingState<O>>;

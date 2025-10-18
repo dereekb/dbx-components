@@ -1,4 +1,4 @@
-import { DemoScheduleFunction } from '../function';
+import { type DemoScheduleFunction } from '../function';
 
 export const notificationHourlyUpdateSchedule: DemoScheduleFunction = async (request) => {
   // init all new notification boxes

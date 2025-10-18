@@ -1,4 +1,4 @@
-import { EnvironmentProviders, Injector, Provider, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, Injector, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxAnalyticsServiceConfiguration, DbxAnalyticsService } from './analytics.service';
 
 export type DbxAnalyticsServiceConfigurationFactory = (injector: Injector) => DbxAnalyticsServiceConfiguration;

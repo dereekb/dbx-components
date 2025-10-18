@@ -1,7 +1,7 @@
-import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, asObservableFromGetter } from '@dereekb/rxjs';
-import { Destroyable, type Maybe } from '@dereekb/util';
-import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, Observable, shareReplay } from 'rxjs';
-import { DbxRouterService } from '../service/router.service';
+import { type ObservableOrValueGetter, type MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, asObservableFromGetter } from '@dereekb/rxjs';
+import { type Destroyable, type Maybe } from '@dereekb/util';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, type Observable, shareReplay } from 'rxjs';
+import { type DbxRouterService } from '../service/router.service';
 
 /**
  * Interface used for reading a single value from the DbxRouterService. Supports a default value.

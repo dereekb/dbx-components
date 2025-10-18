@@ -1,7 +1,7 @@
-import { Type, Provider, forwardRef } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { FileArrayAcceptMatchConfig } from './upload.accept';
-import { DbxButtonWorking } from '@dereekb/dbx-core';
+import { type Type, type Provider, forwardRef } from '@angular/core';
+import { type Maybe } from '@dereekb/util';
+import { type FileArrayAcceptMatchConfig } from './upload.accept';
+import { type DbxButtonWorking } from '@dereekb/dbx-core';
 
 /**
  * Compatable interface for DbxUploadActionDirective.

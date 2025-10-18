@@ -1,8 +1,8 @@
-import { SubscriptionObject, ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { SubscriptionObject, type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { BehaviorSubject, filter, switchMap, exhaustMap, EMPTY } from 'rxjs';
-import { Destroyable, Maybe, Initialized } from '@dereekb/util';
-import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher } from './collection.change.watcher';
-import { DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
+import { type Destroyable, type Maybe, type Initialized } from '@dereekb/util';
+import { type DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher } from './collection.change.watcher';
+import { type DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
 
 export type DbxFirebaseCollectionChangeTriggerFunction<S extends DbxFirebaseCollectionLoaderAccessor<any>> = (instance: DbxFirebaseCollectionChangeTriggerInstance<S>) => ObservableOrValue<void>;
 

@@ -1,7 +1,7 @@
-import { FirebaseAdminTestContext, firebaseAdminTestContextFactory, FirebaseAdminTestContextFixture } from './firebase.admin';
+import { type FirebaseAdminTestContext, firebaseAdminTestContextFactory, type FirebaseAdminTestContextFixture } from './firebase.admin';
 import { initFirebaseServerAdminTestEnvironment } from './firebase.admin.test.server';
 import { authorizedUserContext, authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance } from './firebase.admin.auth';
-import { EmailAddress, randomNumberFactory } from '@dereekb/util';
+import { type EmailAddress, randomNumberFactory } from '@dereekb/util';
 
 export class ExampleFixture extends AuthorizedUserTestContextFixture<FirebaseAdminTestContext, FirebaseAdminTestContextFixture> {}
 

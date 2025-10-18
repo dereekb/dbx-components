@@ -1,4 +1,4 @@
-import { ModelTypeDataPair, MapFunction } from '@dereekb/util';
+import { type ModelTypeDataPair, type MapFunction } from '@dereekb/util';
 
 /**
  * Widget type identifier

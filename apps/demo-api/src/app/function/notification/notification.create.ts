@@ -1,5 +1,5 @@
-import { DemoCreateModelFunction } from '../function';
-import { OnCallCreateModelResult } from '@dereekb/firebase';
+import { type DemoCreateModelFunction } from '../function';
+import { type OnCallCreateModelResult } from '@dereekb/firebase';
 import { optionalAuthContext } from '@dereekb/firebase-server';
 
 export const createNotification: DemoCreateModelFunction<{}> = optionalAuthContext(async (request) => {

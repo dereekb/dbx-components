@@ -2,9 +2,9 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
-import { DbxFirebaseEnvironmentOptions } from '@dereekb/dbx-firebase';
-import { DbxMapboxEnvironmentOptions } from '@dereekb/dbx-web/mapbox';
-import { DbxAppEnviroment } from '@dereekb/dbx-core';
+import { type DbxFirebaseEnvironmentOptions } from '@dereekb/dbx-firebase';
+import { type DbxMapboxEnvironmentOptions } from '@dereekb/dbx-web/mapbox';
+import { type DbxAppEnviroment } from '@dereekb/dbx-core';
 import firebaseInfo from '../../../../firebase.json';
 
 export interface DemoEnvironment extends DbxAppEnviroment {

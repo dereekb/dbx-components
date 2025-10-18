@@ -1,6 +1,6 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
-import { ZoomWebhookEventType } from './webhook.zoom.type';
-import { ZoomWebhookEvent, UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
+import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
+import { type ZoomWebhookEventType } from './webhook.zoom.type';
+import { type ZoomWebhookEvent, type UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
 import {
   ZOOM_WEBHOOK_MEETING_CREATED_EVENT_TYPE,
   ZOOM_WEBHOOK_MEETING_DELETED_EVENT_TYPE,
@@ -8,12 +8,12 @@ import {
   ZOOM_WEBHOOK_MEETING_PERMANENTLY_DELETED_EVENT_TYPE,
   ZOOM_WEBHOOK_MEETING_STARTED_EVENT_TYPE,
   ZOOM_WEBHOOK_MEETING_UPDATED_EVENT_TYPE,
-  ZoomWebhookMeetingCreatedEventPayload,
-  ZoomWebhookMeetingDeletedEventPayload,
-  ZoomWebhookMeetingEndedEventPayload,
-  ZoomWebhookMeetingPermanentlyDeletedEventPayload,
-  ZoomWebhookMeetingStartedEventPayload,
-  ZoomWebhookMeetingUpdatedEventPayload
+  type ZoomWebhookMeetingCreatedEventPayload,
+  type ZoomWebhookMeetingDeletedEventPayload,
+  type ZoomWebhookMeetingEndedEventPayload,
+  type ZoomWebhookMeetingPermanentlyDeletedEventPayload,
+  type ZoomWebhookMeetingStartedEventPayload,
+  type ZoomWebhookMeetingUpdatedEventPayload
 } from './webhook.zoom.type.meeting';
 
 /**

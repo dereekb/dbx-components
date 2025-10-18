@@ -1,7 +1,7 @@
-import { toReadableError, Destroyable, Initialized, Maybe, ReadableError } from '@dereekb/util';
-import { switchMap, map, catchError, of, BehaviorSubject, Observable, shareReplay, combineLatestWith } from 'rxjs';
-import { ObservableOrValue, SubscriptionObject, IsModifiedFunction, asObservable, returnIfIs, filterMaybe, IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
-import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { toReadableError, type Destroyable, type Initialized, type Maybe, type ReadableError } from '@dereekb/util';
+import { switchMap, map, catchError, of, BehaviorSubject, type Observable, shareReplay, combineLatestWith } from 'rxjs';
+import { type ObservableOrValue, SubscriptionObject, type IsModifiedFunction, asObservable, returnIfIs, filterMaybe, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
+import { type DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * DbxActionValueGetterInstance function. Returns an ObervableGetter that returns a value.

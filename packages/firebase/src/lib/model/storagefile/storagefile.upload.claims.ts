@@ -1,4 +1,4 @@
-import { AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AuthRoleClaimsFactoryConfigEntrySimpleOptions } from '@dereekb/util';
+import { type AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, type AuthRoleClaimsFactoryConfigEntrySimpleOptions } from '@dereekb/util';
 
 /**
  * Used as a flag to disable uploads for a user.

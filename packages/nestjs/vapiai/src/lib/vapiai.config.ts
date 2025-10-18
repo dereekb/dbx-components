@@ -1,4 +1,4 @@
-import { VapiClient } from '@vapi-ai/server-sdk';
+import { type VapiClient } from '@vapi-ai/server-sdk';
 
 export const VAPI_AI_SECRET_TOKEN_ENV_VAR = 'VAPI_AI_SECRET_TOKEN';
 

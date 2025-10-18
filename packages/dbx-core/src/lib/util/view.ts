@@ -1,5 +1,5 @@
-import { MonoTypeOperatorFunction, tap } from 'rxjs';
-import { ChangeDetectorRef, ViewRef, ElementRef } from '@angular/core';
+import { type MonoTypeOperatorFunction, tap } from 'rxjs';
+import { type ChangeDetectorRef, type ViewRef, type ElementRef } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**

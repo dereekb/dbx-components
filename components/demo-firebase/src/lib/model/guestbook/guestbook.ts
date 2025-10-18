@@ -1,29 +1,29 @@
 import {
-  CollectionReference,
+  type CollectionReference,
   AbstractFirestoreDocument,
   snapshotConverterFunctions,
   firestoreString,
   firestoreDate,
-  FirestoreCollection,
-  UserRelatedById,
-  FirestoreContext,
-  FirestoreCollectionWithParent,
+  type FirestoreCollection,
+  type UserRelatedById,
+  type FirestoreContext,
+  type FirestoreCollectionWithParent,
   firestoreBoolean,
-  DocumentDataWithIdAndKey,
+  type DocumentDataWithIdAndKey,
   AbstractFirestoreDocumentWithParent,
   optionalFirestoreDate,
-  FirestoreCollectionGroup,
-  CollectionGroup,
+  type FirestoreCollectionGroup,
+  type CollectionGroup,
   firestoreModelIdentity,
-  UserRelated,
+  type UserRelated,
   copyUserRelatedDataAccessorFactoryFunction,
   firestoreUID,
   firestoreNumber,
   optionalFirestoreString
 } from '@dereekb/firebase';
-import { GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
+import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
-import { ProfileId } from '../profile/profile.id';
+import { type ProfileId } from '../profile/profile.id';
 
 export interface GuestbookFirestoreCollections {
   guestbookCollection: GuestbookFirestoreCollection;

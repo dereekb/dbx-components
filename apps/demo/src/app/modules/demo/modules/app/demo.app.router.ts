@@ -1,5 +1,5 @@
 import { DemoAppSettingsComponent } from './container/settings.component';
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoAppHistoryComponent } from './container/history.component';
 import { DemoAppHomeComponent } from './container/home.component';
 import { DemoAppLayoutComponent } from './container/layout.component';

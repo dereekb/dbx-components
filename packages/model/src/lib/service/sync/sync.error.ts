@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { SyncEntityCommonType, SyncEntityCommonTypeIdPair } from './sync.entity';
+import { type SyncEntityCommonType, type SyncEntityCommonTypeIdPair } from './sync.entity';
 
 /**
  * Error thrown when the common type is not known/registered.

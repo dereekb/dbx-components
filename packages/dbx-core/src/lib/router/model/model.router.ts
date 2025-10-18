@@ -1,6 +1,6 @@
-import { Type, Provider, forwardRef } from '@angular/core';
-import { Maybe, ModelKey } from '@dereekb/util';
-import { Observable, Subscription } from 'rxjs';
+import { type Type, type Provider, forwardRef } from '@angular/core';
+import { type Maybe, type ModelKey } from '@dereekb/util';
+import { type Observable, type Subscription } from 'rxjs';
 
 // MARK: Id
 /**

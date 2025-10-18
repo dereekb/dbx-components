@@ -1,7 +1,7 @@
-import { Action, combineReducers, createFeatureSelector, createSelector } from '@ngrx/store';
+import { type Action, combineReducers, createFeatureSelector, createSelector } from '@ngrx/store';
 
 import * as fromObjectModuleConfig from './model.module.config';
-import { DbxModelModuleStateConfiguration } from './model.module.config';
+import { type DbxModelModuleStateConfiguration } from './model.module.config';
 
 export const featureKey = 'app.model';
 

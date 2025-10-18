@@ -1,4 +1,4 @@
-import { ZoomConfig, ZoomFactoryConfig } from '@dereekb/zoom';
+import { type ZoomConfig, type ZoomFactoryConfig } from '@dereekb/zoom';
 
 export type ZoomServiceApiConfig = ZoomConfig & {};
 

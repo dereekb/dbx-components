@@ -1,6 +1,6 @@
 import { onSnapshot, type DocumentReference, type DocumentSnapshot, type UpdateData, type WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { type Observable } from 'rxjs';
-import { assertFirestoreUpdateHasData, type DocumentData, FirestoreAccessorArrayUpdate, type FirestoreAccessorIncrementUpdate, type FirestoreDataConverter, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, streamFromOnSnapshot, type WriteResult } from '../../common/firestore';
+import { assertFirestoreUpdateHasData, type DocumentData, type FirestoreAccessorArrayUpdate, type FirestoreAccessorIncrementUpdate, type FirestoreDataConverter, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, streamFromOnSnapshot, type WriteResult } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 import { firestoreClientIncrementUpdateToUpdateData } from './increment';
 import { firestoreClientArrayUpdateToUpdateData } from './array';
