@@ -1,4 +1,4 @@
-import { ClientWebAppUrl } from './client';
+import { type ClientWebAppUrl } from './client';
 
 export interface ClientAppConfig {
   readonly clientWebAppUrl: ClientWebAppUrl;

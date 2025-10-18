@@ -1,6 +1,6 @@
-import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
-import { GrantedReadRole } from '@dereekb/model';
-import { WebsiteUrl, type Maybe } from '@dereekb/util';
+import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, optionalFirestoreString, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
+import { type GrantedReadRole } from '@dereekb/model';
+import { type WebsiteUrl, type Maybe } from '@dereekb/util';
 
 export interface ProfileFirestoreCollections {
   profileCollection: ProfileFirestoreCollection;

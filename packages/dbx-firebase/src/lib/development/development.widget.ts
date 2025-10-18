@@ -1,5 +1,5 @@
-import { DbxWidgetEntry } from '@dereekb/dbx-web';
-import { LabelRef } from '@dereekb/util';
+import { type DbxWidgetEntry } from '@dereekb/dbx-web';
+import { type LabelRef } from '@dereekb/util';
 
 export interface DbxFirebaseDevelopmentWidgetEntry extends Readonly<LabelRef> {
   /**

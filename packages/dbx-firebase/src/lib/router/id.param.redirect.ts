@@ -1,7 +1,7 @@
-import { Observable, BehaviorSubject, map, shareReplay, of, switchMap } from 'rxjs';
-import { DbxRouterService, DbxRouteParamDefaultRedirectInstance, DbxRouteParamReader, dbxRouteParamReaderInstance } from '@dereekb/dbx-core';
-import { Destroyable, Initialized, Maybe, ModelKey } from '@dereekb/util';
-import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
+import { type Observable, BehaviorSubject, map, shareReplay, of, switchMap } from 'rxjs';
+import { type DbxRouterService, DbxRouteParamDefaultRedirectInstance, type DbxRouteParamReader, dbxRouteParamReaderInstance } from '@dereekb/dbx-core';
+import { type Destroyable, type Initialized, type Maybe, type ModelKey } from '@dereekb/util';
+import { type MaybeObservableOrValueGetter, type SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 
 export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY = 'id';
 export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_KEY_PARAM_KEY = 'key';

@@ -1,8 +1,8 @@
-import { map, Observable, OperatorFunction } from 'rxjs';
-import { AuthRole, SetIncludesMode, ArrayOrValue, Maybe, setIncludes, asArray, AuthRoleSet } from '@dereekb/util';
-import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
-import { DbxAuthService } from '../../../service/auth.service';
-import { AuthTransitionDecision, AuthTransitionHookOptions, AuthTransitionStateData, makeAuthTransitionHook } from './hook';
+import { map, type Observable, type OperatorFunction } from 'rxjs';
+import { type AuthRole, type SetIncludesMode, type ArrayOrValue, type Maybe, setIncludes, asArray, type AuthRoleSet } from '@dereekb/util';
+import { type TransitionService, type TransitionHookFn, type Transition, type HookMatchCriteria } from '@uirouter/core';
+import { type DbxAuthService } from '../../../service/auth.service';
+import { type AuthTransitionDecision, type AuthTransitionHookOptions, type AuthTransitionStateData, makeAuthTransitionHook } from './hook';
 
 export interface HasAuthRoleHookConfig {
   readonly options: AuthTransitionHookOptions;

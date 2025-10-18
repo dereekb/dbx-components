@@ -1,5 +1,5 @@
-import { Observable } from 'rxjs';
-import { DbxRouterTransitionEvent } from '../transition/transition';
+import { type Observable } from 'rxjs';
+import { type DbxRouterTransitionEvent } from '../transition/transition';
 
 /**
  * Router service definition that provides high level information about router transitions.

@@ -1,6 +1,6 @@
 import { isSameDateDay } from '@dereekb/date';
-import { ClickableFilterPreset, ClickableFilterPresetOrPartialPreset, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
-import { FilterWithPreset } from '@dereekb/rxjs';
+import { type ClickableFilterPreset, type ClickableFilterPresetOrPartialPreset, type ClickablePartialFilterPreset } from '@dereekb/dbx-core';
+import { type FilterWithPreset } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
 

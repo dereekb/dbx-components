@@ -1,10 +1,10 @@
 import { InjectionToken } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
-import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { type ThemePalette } from '@angular/material/core';
+import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
-import { DbxThemeColor } from '../../layout/style/style';
-import { DbxButtonType } from '../button.component';
-import { DbxButtonWorking, DbxButtonWorkingProgress } from '@dereekb/dbx-core';
+import { type DbxThemeColor } from '../../layout/style/style';
+import { type DbxButtonType } from '../button.component';
+import { type DbxButtonWorking, type DbxButtonWorkingProgress } from '@dereekb/dbx-core';
 
 export interface DbxProgressButtonConfig {
   readonly working?: Maybe<DbxButtonWorking>;

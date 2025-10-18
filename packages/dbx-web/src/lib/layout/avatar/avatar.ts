@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
-import { AuthUserIdentifier } from '@dereekb/dbx-core';
-import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type AuthUserIdentifier } from '@dereekb/dbx-core';
+import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * Arbitrary string selector used to differentiate avatars.

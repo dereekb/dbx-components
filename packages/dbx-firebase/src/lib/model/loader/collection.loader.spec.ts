@@ -4,9 +4,9 @@
 // use the node environment, as the jsdom environment breaks for tests that use the firestore.
 
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument } from '@dereekb/firebase/test';
+import { authorizedTestWithMockItemCollection, type MockItem, type MockItemDocument } from '@dereekb/firebase/test';
 import { first, map, of, timeout } from 'rxjs';
-import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstanceWithCollection } from './collection.loader.instance';
+import { type DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstanceWithCollection } from './collection.loader.instance';
 
 describe('DbxFirebaseCollectionLoaderInstance', () => {
   authorizedTestWithMockItemCollection((f) => {

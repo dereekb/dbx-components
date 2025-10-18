@@ -1,5 +1,5 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, propsAndConfigForFieldConfig, MaterialFormFieldConfig } from '../../field';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type LabeledFieldConfig, formlyField, type DefaultValueFieldConfig, type DescriptionFieldConfig, propsAndConfigForFieldConfig, type MaterialFormFieldConfig } from '../../field';
 import { AUTO_TOUCH_WRAPPER_KEY, STYLE_WRAPPER_KEY } from '../../wrapper/wrapper.key';
 
 export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig, MaterialFormFieldConfig {}

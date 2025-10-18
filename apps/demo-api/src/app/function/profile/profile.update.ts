@@ -1,5 +1,5 @@
-import { FinishOnboardingProfileParams, ProfileCreateTestNotificationParams, ProfileDocument, SetProfileUsernameParams, UpdateProfileParams, profileIdentity } from 'demo-firebase';
-import { DemoUpdateModelFunction } from '../function';
+import { type FinishOnboardingProfileParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type SetProfileUsernameParams, type UpdateProfileParams, profileIdentity } from 'demo-firebase';
+import { type DemoUpdateModelFunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';

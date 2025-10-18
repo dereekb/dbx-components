@@ -1,10 +1,10 @@
 import { provideDbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { TestBed } from '@angular/core/testing';
-import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsUserSource, AbstractDbxAnalyticsServiceListener } from './analytics.service';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { DbxAnalyticsUser } from './analytics';
-import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
-import { Injector } from '@angular/core';
+import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, type DbxAnalyticsUserSource, AbstractDbxAnalyticsServiceListener } from './analytics.service';
+import { BehaviorSubject, Subject, type Subscription } from 'rxjs';
+import { type DbxAnalyticsUser } from './analytics';
+import { type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
+import { type Injector } from '@angular/core';
 
 class TestAnalyticsServiceListener extends AbstractDbxAnalyticsServiceListener {
   readonly events = new Subject<DbxAnalyticsStreamEvent>();

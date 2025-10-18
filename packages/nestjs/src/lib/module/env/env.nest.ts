@@ -1,5 +1,5 @@
-import { InjectionToken, Provider } from '@nestjs/common';
-import { ServerEnvironmentConfig } from './env.config';
+import { type InjectionToken, type Provider } from '@nestjs/common';
+import { type ServerEnvironmentConfig } from './env.config';
 
 // MARK: Tokens
 /**

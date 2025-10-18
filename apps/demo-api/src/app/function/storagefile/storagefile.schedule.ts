@@ -1,4 +1,4 @@
-import { DemoScheduleFunction, runDemoScheduledTasks } from '../function';
+import { type DemoScheduleFunction, runDemoScheduledTasks } from '../function';
 
 export const storageFileHourlyUpdateSchedule: DemoScheduleFunction = async (request) => {
   console.log('storageFileHourlyUpdateSchedule - running');

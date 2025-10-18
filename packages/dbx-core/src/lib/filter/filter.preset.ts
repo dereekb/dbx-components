@@ -1,6 +1,6 @@
-import { FilterPresetStringRef, FilterWithPreset, FilterWithPresetOptional } from '@dereekb/rxjs';
-import { EmptyObject, GetterOrValue, Maybe, objectHasKey, objectHasKeys } from '@dereekb/util';
-import { ClickableAnchorLink } from '../router/anchor/anchor';
+import { type FilterPresetStringRef, type FilterWithPreset, type FilterWithPresetOptional } from '@dereekb/rxjs';
+import { type EmptyObject, type GetterOrValue, type Maybe, objectHasKey, objectHasKeys } from '@dereekb/util';
+import { type ClickableAnchorLink } from '../router/anchor/anchor';
 
 export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends string = string> extends Pick<ClickableAnchorLink, 'title' | 'icon' | 'disabled'>, FilterPresetStringRef<P> {
   /**

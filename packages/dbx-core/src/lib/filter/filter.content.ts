@@ -1,5 +1,5 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { forwardRef, Provider, Type } from '@angular/core';
+import { forwardRef, type Provider, type Type } from '@angular/core';
 
 /**
  * Angular provider convenience function for a FilterSource.

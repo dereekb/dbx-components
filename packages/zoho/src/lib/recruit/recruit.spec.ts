@@ -1,5 +1,5 @@
-import { ZohoRecruitRecordFieldsData } from './recruit';
-import { ZohoRecruitSearchRecordsCriteriaEntryArray, ZohoRecruitSearchRecordsCriteriaTree, zohoRecruitSearchRecordsCriteriaString } from './recruit.criteria';
+import { type ZohoRecruitRecordFieldsData } from './recruit';
+import { type ZohoRecruitSearchRecordsCriteriaEntryArray, type ZohoRecruitSearchRecordsCriteriaTree, zohoRecruitSearchRecordsCriteriaString } from './recruit.criteria';
 
 export interface TestEntryType extends ZohoRecruitRecordFieldsData {
   testA: string;

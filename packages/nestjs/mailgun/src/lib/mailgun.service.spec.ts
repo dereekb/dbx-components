@@ -1,7 +1,7 @@
-import { ServerEnvironmentService } from '@dereekb/nestjs';
-import { MailgunFileAttachment } from './mailgun';
+import { type ServerEnvironmentService } from '@dereekb/nestjs';
+import { type MailgunFileAttachment } from './mailgun';
 import { MailgunApi } from './mailgun.api';
-import { MailgunServiceConfig } from './mailgun.config';
+import { type MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
 
 const testEmail = 'test.components@dereekb.com';

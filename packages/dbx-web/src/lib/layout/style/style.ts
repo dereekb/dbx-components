@@ -1,4 +1,4 @@
-import { CharacterPrefixSuffixCleanString, CssClass, DASH_CHARACTER_PREFIX_INSTANCE, DashPrefixString, type Maybe } from '@dereekb/util';
+import { type CharacterPrefixSuffixCleanString, type CssClass, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, type Maybe } from '@dereekb/util';
 
 // MARK: App Styling
 /**

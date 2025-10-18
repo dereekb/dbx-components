@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { LandingLayoutComponent } from './container/layout.component';
 
 export const layoutState: Ng2StateDeclaration = {

@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { DbxAnalyticsUser, DbxUserAnalyticsEvent, DbxAnalyticsUserId } from './analytics';
+import { type DbxAnalyticsUser, type DbxUserAnalyticsEvent, type DbxAnalyticsUserId } from './analytics';
 
 export enum DbxAnalyticsStreamEventType {
   PageView,

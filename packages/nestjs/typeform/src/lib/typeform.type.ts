@@ -1,5 +1,5 @@
-import { DollarAmount, EmailAddress, ISO8601DayString, Maybe, MaybeSo, PhoneNumber, WebsiteUrl, WebsiteUrlWithPrefix } from '@dereekb/util';
-import { createClient } from '@typeform/api-client';
+import { type DollarAmount, type EmailAddress, type ISO8601DayString, type Maybe, type MaybeSo, type PhoneNumber, type WebsiteUrl, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type createClient } from '@typeform/api-client';
 
 /**
  * Client created by createClient

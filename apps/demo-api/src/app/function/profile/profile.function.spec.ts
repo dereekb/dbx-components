@@ -1,7 +1,7 @@
 import { demoCallModel } from '../model/crud.functions';
 import { profileSetUsername } from './profile.set.username';
-import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from 'demo-firebase';
-import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
+import { profileIdentity, type SetProfileUsernameParams, type UpdateProfileParams } from 'demo-firebase';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { firestoreModelKey, onCallUpdateModelParams } from '@dereekb/firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';

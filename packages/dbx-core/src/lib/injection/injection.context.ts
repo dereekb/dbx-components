@@ -1,5 +1,5 @@
-import { Provider, Type } from '@angular/core';
-import { DbxInjectionComponentConfig } from './injection';
+import { type Provider, type Type } from '@angular/core';
+import { type DbxInjectionComponentConfig } from './injection';
 
 /**
  * DbxInjectedViewContext showContext() configuration.

@@ -1,8 +1,8 @@
-import { Observable, combineLatest, map, shareReplay } from 'rxjs';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ChecklistItemDisplayContent } from './checklist.item';
-import { Configurable, KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
-import { checklistItemField, ChecklistItemFieldBuilderInput } from './checklist.item.field';
+import { type Observable, combineLatest, map, shareReplay } from 'rxjs';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type ChecklistItemDisplayContent } from './checklist.item';
+import { type Configurable, type KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
+import { checklistItemField, type ChecklistItemFieldBuilderInput } from './checklist.item.field';
 
 export type ChecklistItemFieldDataSetFieldKey<D> = keyof D & string;
 export type ChecklistItemFieldDataSetFieldValueForKey<D, K extends keyof D = keyof D> = D[K];

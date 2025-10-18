@@ -1,6 +1,6 @@
-import { Type } from '@angular/core';
-import { PrimativeKey, SortCompareFunction, CssClassesArray } from '@dereekb/util';
-import { DbxValueListItem, DbxValueListItemConfig } from '../list.view.value';
+import { type Type } from '@angular/core';
+import { type PrimativeKey, type SortCompareFunction, type CssClassesArray } from '@dereekb/util';
+import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
 
 export interface DbxListTitleGroupData<O extends PrimativeKey> {
   /**

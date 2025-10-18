@@ -1,4 +1,4 @@
-import { Maybe, type ClassType } from '@dereekb/util';
+import { type Maybe, type ClassType } from '@dereekb/util';
 import { type ClassTransformOptions, plainToInstance } from 'class-transformer';
 import { validate, type ValidationError, type ValidatorOptions } from 'class-validator';
 

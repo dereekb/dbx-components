@@ -1,4 +1,4 @@
-import { UnixDateTimeNumber } from '@dereekb/util';
+import { type UnixDateTimeNumber } from '@dereekb/util';
 
 /**
  * An identifier in Zoom.

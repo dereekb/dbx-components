@@ -1,5 +1,5 @@
-import { InsertGuestbookEntryParams } from 'demo-firebase';
-import { DemoUpdateModelFunction } from '../function';
+import { type InsertGuestbookEntryParams } from 'demo-firebase';
+import { type DemoUpdateModelFunction } from '../function';
 import { guestbookEntryForUser } from './guestbook.util';
 
 export const insertGuestbookEntry: DemoUpdateModelFunction<InsertGuestbookEntryParams> = async (request) => {

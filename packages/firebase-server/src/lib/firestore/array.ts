@@ -1,4 +1,4 @@
-import { mapObjectMap, Maybe } from '@dereekb/util';
+import { mapObjectMap, type Maybe } from '@dereekb/util';
 import { FieldValue } from '@google-cloud/firestore';
 import { type UpdateData, type FirestoreAccessorArrayUpdate } from '@dereekb/firebase';
 

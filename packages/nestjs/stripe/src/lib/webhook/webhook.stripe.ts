@@ -1,5 +1,5 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
-import Stripe from 'stripe';
+import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
+import type Stripe from 'stripe';
 import '../stripe.type';
 
 export enum StripeWebhookEventType {

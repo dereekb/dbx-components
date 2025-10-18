@@ -1,5 +1,5 @@
-import { FirebaseStorageAccessorFile, StorageFileDocument, StorageFileInitializeFromUploadResultType, StoragePath, UploadedFileTypeDeterminerResult } from '@dereekb/firebase';
-import { Maybe, PromiseOrValue } from '@dereekb/util';
+import { type FirebaseStorageAccessorFile, type StorageFileDocument, type StorageFileInitializeFromUploadResultType, type StoragePath, type UploadedFileTypeDeterminerResult } from '@dereekb/firebase';
+import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 
 /**
  * Provides a reference to a StorageFileInitializeFromUploadService instance.

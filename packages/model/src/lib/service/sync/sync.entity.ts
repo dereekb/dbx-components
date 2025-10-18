@@ -1,5 +1,5 @@
-import { FactoryWithRequiredInput, MAP_IDENTITY, Maybe, UniqueModel } from '@dereekb/util';
-import { SyncSourceInfo } from './sync.source';
+import { type FactoryWithRequiredInput, MAP_IDENTITY, type Maybe, type UniqueModel } from '@dereekb/util';
+import { type SyncSourceInfo } from './sync.source';
 
 /**
  * A unique identifier for an entity on a specific server.

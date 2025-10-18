@@ -1,5 +1,5 @@
-import { Destroyable } from '@dereekb/util';
-import { DbxActionContextStoreSourceInstance } from './action.store.source';
+import { type Destroyable } from '@dereekb/util';
+import { type DbxActionContextStoreSourceInstance } from './action.store.source';
 
 /**
  * Acts as a reference to a DbxActionContextStoreSourceInstance that can be destroyed.

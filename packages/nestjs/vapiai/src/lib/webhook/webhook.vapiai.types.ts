@@ -1,6 +1,6 @@
-import { DollarAmount, ISO8601DateStringUTCFull, JSONEncodedString, UnixDateTimeNumber, WebsiteUrlWithPrefix } from '@dereekb/util';
-import { VapiAssistantId, VapiCostsItem, VapiTranscriptRef } from '../vapiai.type';
-import { Vapi } from '@vapi-ai/server-sdk';
+import { type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type VapiAssistantId, type VapiCostsItem, type VapiTranscriptRef } from '../vapiai.type';
+import { type Vapi } from '@vapi-ai/server-sdk';
 
 export type BaseVapiPayloadCall = Required<Pick<Vapi.Call, 'id' | 'orgId' | 'createdAt' | 'updatedAt' | 'type' | 'monitor' | 'transport' | 'status' | 'assistantId' | 'assistantOverrides'>>;
 

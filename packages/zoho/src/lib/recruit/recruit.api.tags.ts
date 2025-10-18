@@ -1,11 +1,11 @@
-import { ZohoRecruitContext } from './recruit.config';
-import { ArrayOrValue, asArray, Maybe, separateValues } from '@dereekb/util';
-import { ZOHO_RECRUIT_CANDIDATES_MODULE, ZohoRecruitModuleNameRef, ZohoRecruitRecordId } from './recruit';
-import { zohoRecruitApiFetchJsonInput, ZohoRecruitChangeObjectLikeResponse, ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, ZohoRecruitChangeObjectResponse, ZohoRecruitChangeObjectResponseErrorEntry, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResultEntry } from './recruit.api';
+import { type ZohoRecruitContext } from './recruit.config';
+import { type ArrayOrValue, asArray, type Maybe, separateValues } from '@dereekb/util';
+import { ZOHO_RECRUIT_CANDIDATES_MODULE, type ZohoRecruitModuleNameRef, type ZohoRecruitRecordId } from './recruit';
+import { zohoRecruitApiFetchJsonInput, type ZohoRecruitChangeObjectLikeResponse, type ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, type ZohoRecruitChangeObjectResponse, type ZohoRecruitChangeObjectResponseErrorEntry, type ZohoRecruitChangeObjectResponseSuccessEntry, type ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, type ZohoRecruitMultiRecordResult, type ZohoRecruitMultiRecordResultEntry } from './recruit.api';
 import { ZOHO_DUPLICATE_DATA_ERROR_CODE } from '../zoho.error.api';
-import { ZohoRecruitTagData, ZohoRecruitTagName, ZohoRecruitTagWithObjectDetails } from './recruit.tags';
-import { FetchPage, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
-import { zohoFetchPageFactory, ZohoPageResult } from '../zoho.api.page';
+import { type ZohoRecruitTagData, type ZohoRecruitTagName, type ZohoRecruitTagWithObjectDetails } from './recruit.tags';
+import { type FetchPage, type FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
+import { zohoFetchPageFactory, type ZohoPageResult } from '../zoho.api.page';
 
 // MARK: Create Tag
 export type ZohoRecruitCreateTagData = Pick<ZohoRecruitTagData, 'name'> & Partial<Pick<ZohoRecruitTagData, 'color_code'>>;

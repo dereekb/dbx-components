@@ -1,9 +1,9 @@
 import { catchError, map, Observable, of, shareReplay } from 'rxjs';
-import { DbxFirebaseStorageFileUploadStoreFileProgress } from '../store';
-import { DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
-import { IndexNumber, Maybe, PercentDecimal, PercentNumber, PromiseOrValue, runAsyncTasksForValues, separateValues } from '@dereekb/util';
+import { type DbxFirebaseStorageFileUploadStoreFileProgress } from '../store';
+import { type DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
+import { type IndexNumber, type Maybe, type PercentDecimal, type PercentNumber, type PromiseOrValue, runAsyncTasksForValues, separateValues } from '@dereekb/util';
 import { MultiSubscriptionObject } from '@dereekb/rxjs';
-import { FirebaseStorageAccessorFile, StorageCustomMetadata, StoragePathInput, StorageUploadOptions, StorageUploadTask } from '@dereekb/firebase';
+import { type FirebaseStorageAccessorFile, type StorageCustomMetadata, type StoragePathInput, type StorageUploadOptions, type StorageUploadTask } from '@dereekb/firebase';
 
 /**
  * Creates a new observable for uploading a file.

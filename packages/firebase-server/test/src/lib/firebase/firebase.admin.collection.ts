@@ -1,7 +1,7 @@
-import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FlatFirestoreModelKey, flatFirestoreModelKey, TwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { AsyncGetterOrValue, getValueFromGetter, PromiseOrValue } from '@dereekb/util';
-import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
-import { FirebaseAdminTestContext } from './firebase.admin';
+import { type FirestoreCollection, type FirestoreDocument, type DocumentReference, type FirestoreModelId, type FirestoreModelKey, type FirestoreCollectionLike, type FlatFirestoreModelKey, flatFirestoreModelKey, type TwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { type AsyncGetterOrValue, getValueFromGetter, type PromiseOrValue } from '@dereekb/util';
+import { type JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
+import { type FirebaseAdminTestContext } from './firebase.admin';
 
 /**
  * Testing context for a single model.
@@ -43,7 +43,11 @@ export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = Firesto
 }
 
 export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements ModelTestContext<T, D> {
-  constructor(readonly collection: FirestoreCollectionLike<T, D>, readonly ref: DocumentReference<T>, readonly testContext: PI) {}
+  constructor(
+    readonly collection: FirestoreCollectionLike<T, D>,
+    readonly ref: DocumentReference<T>,
+    readonly testContext: PI
+  ) {}
 
   get documentId(): FirestoreModelId {
     return this.ref.id;

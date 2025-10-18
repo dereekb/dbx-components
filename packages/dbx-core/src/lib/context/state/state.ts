@@ -1,4 +1,4 @@
-import * as fromDbxAppContext from './reducer';
+import type * as fromDbxAppContext from './reducer';
 
 /**
  * Type that contains the dbx-core contextual ngrx state information about an app's context.

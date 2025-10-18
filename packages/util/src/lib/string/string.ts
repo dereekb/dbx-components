@@ -1,6 +1,6 @@
-import { ArrayOrValue, asArray } from '../array';
+import { type ArrayOrValue, asArray } from '../array';
 import { type MapFunction } from '../value/map';
-import { MaybeNot, type Maybe } from '../value/maybe.type';
+import { type MaybeNot, type Maybe } from '../value/maybe.type';
 
 /**
  * Converts a string to a value.

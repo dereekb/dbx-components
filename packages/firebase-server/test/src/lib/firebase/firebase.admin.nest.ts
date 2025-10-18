@@ -1,11 +1,11 @@
-import { AbstractChildJestTestContextFixture, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
-import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, FirebaseAdminTestContextInstance } from './firebase.admin';
-import { Abstract, DynamicModule, FactoryProvider, INestApplicationContext, Provider, Type } from '@nestjs/common';
-import { StorageBucketId } from '@dereekb/firebase';
-import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvService, firebaseServerStorageDefaultBucketIdTokenProvider, NestAppPromiseGetter } from '@dereekb/firebase-server';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ArrayOrValue, asArray, asGetter, ClassType, Getter } from '@dereekb/util';
-import { ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { AbstractChildJestTestContextFixture, type JestBuildTestsWithContextFunction, type JestTestContextFactory, type JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
+import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, type FirebaseAdminTestContextInstance } from './firebase.admin';
+import { type Abstract, type DynamicModule, type FactoryProvider, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
+import { type StorageBucketId } from '@dereekb/firebase';
+import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvService, firebaseServerStorageDefaultBucketIdTokenProvider, type NestAppPromiseGetter } from '@dereekb/firebase-server';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { type ArrayOrValue, asArray, asGetter, type ClassType, type Getter } from '@dereekb/util';
+import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 // MARK: FirebaseAdminNestTestBuilder
 export interface FirebaseAdminNestTestContext {
@@ -39,7 +39,10 @@ export class FirebaseAdminNestTestContextFixture<PI extends FirebaseAdminTestCon
 export class FirebaseAdminNestTestContextInstance<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends AbstractFirebaseAdminTestContextInstanceChild<PI> implements FirebaseAdminNestTestContext {
   readonly nestAppPromiseGetter: Getter<Promise<INestApplicationContext>> = () => Promise.resolve(this.nest);
 
-  constructor(parent: PI, readonly nest: TestingModule) {
+  constructor(
+    parent: PI,
+    readonly nest: TestingModule
+  ) {
     super(parent);
   }
 

@@ -1,7 +1,7 @@
-import { Request } from 'express';
-import { VapiAiWebhookSecretToken, VapiApiWebhookEventVerificationType } from '../vapiai.type';
-import { RawVapiAiWebhookEvent, UntypedVapiAiWebhookEvent } from './webhook.vapiai';
-import { Maybe } from '@dereekb/util';
+import { type Request } from 'express';
+import { type VapiAiWebhookSecretToken, type VapiApiWebhookEventVerificationType } from '../vapiai.type';
+import { type RawVapiAiWebhookEvent, type UntypedVapiAiWebhookEvent } from './webhook.vapiai';
+import { type Maybe } from '@dereekb/util';
 import { createHmac } from 'crypto';
 
 export interface VapiApiWebhookEventVerificationConfig {

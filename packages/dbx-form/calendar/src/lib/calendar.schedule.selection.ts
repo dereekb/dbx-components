@@ -1,6 +1,6 @@
-import { DateCellIndex, DateRange, DateCellScheduleDateRange } from '@dereekb/date';
-import { FactoryWithRequiredInput } from '@dereekb/util';
-import { CalendarMonthViewDay } from 'angular-calendar';
+import { type DateCellIndex, type DateRange, type DateCellScheduleDateRange } from '@dereekb/date';
+import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type CalendarMonthViewDay } from 'angular-calendar';
 
 export interface CalendarScheduleSelectionValue {
   /**

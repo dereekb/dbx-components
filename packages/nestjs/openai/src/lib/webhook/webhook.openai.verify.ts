@@ -1,8 +1,8 @@
-import { Request } from 'express';
-import { InvalidWebhookSignatureError, OpenAI } from 'openai';
-import { OpenAIWebhookSecret } from '../openai.type';
-import { Maybe } from '@dereekb/util';
-import { UnwrapWebhookEvent } from 'openai/resources/webhooks';
+import { type Request } from 'express';
+import { InvalidWebhookSignatureError, type OpenAI } from 'openai';
+import { type OpenAIWebhookSecret } from '../openai.type';
+import { type Maybe } from '@dereekb/util';
+import { type UnwrapWebhookEvent } from 'openai/resources/webhooks';
 
 export interface OpenAIWebhookEventVerificationConfig {
   /**

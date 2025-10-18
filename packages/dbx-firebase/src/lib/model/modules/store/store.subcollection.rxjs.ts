@@ -1,10 +1,10 @@
-import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { FirestoreCollectionLike, FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
-import { cleanup, ObservableOrValue } from '@dereekb/rxjs';
+import { type LockSetComponentStore } from '@dereekb/dbx-core';
+import { type FirestoreCollectionLike, type FirestoreCollectionWithParentFactory, type FirestoreDocument } from '@dereekb/firebase';
+import { cleanup, type ObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { ComponentStore } from '@ngrx/component-store';
-import { map, Observable, Subscription } from 'rxjs';
-import { DbxFirebaseDocumentStore } from './store.document';
+import { type ComponentStore } from '@ngrx/component-store';
+import { map, type Observable, type Subscription } from 'rxjs';
+import { type DbxFirebaseDocumentStore } from './store.document';
 
 export interface DbxFirebaseComponentStoreWithParentContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> {
   readonly parent?: Maybe<PD>;

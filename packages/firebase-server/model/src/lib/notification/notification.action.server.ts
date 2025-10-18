@@ -72,10 +72,10 @@ import {
   type NotificationMessage,
   type NotificationBoxDocumentReferencePair,
   loadNotificationBoxDocumentForReferencePair,
-  NotificationTask,
-  NotificationTaskServiceTaskHandlerCompletionType,
-  SendNotificationResultOnSendCompleteResult,
-  NotificationMessageFunctionExtrasCallbackDetails,
+  type NotificationTask,
+  type NotificationTaskServiceTaskHandlerCompletionType,
+  type SendNotificationResultOnSendCompleteResult,
+  type NotificationMessageFunctionExtrasCallbackDetails,
   updateNotificationUserNotificationSendExclusions,
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
@@ -91,7 +91,7 @@ import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
-import { NotificationTaskServiceRef, NotificationTaskServiceTaskHandler } from './notification.task.service';
+import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 
 /**

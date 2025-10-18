@@ -1,4 +1,4 @@
-import { DbxMapboxConfig } from './mapbox.service';
+import { type DbxMapboxConfig } from './mapbox.service';
 
 /**
  * Convenience type used in .environment.ts files for building configuration.

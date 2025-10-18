@@ -1,5 +1,5 @@
-import { TrackByFunction } from '@angular/core';
-import { ModelKeyRef, UniqueModel } from '@dereekb/util';
+import { type TrackByFunction } from '@angular/core';
+import { type ModelKeyRef, type UniqueModel } from '@dereekb/util';
 
 export const TRACK_BY_MODEL_ID: TrackByFunction<UniqueModel> = (index, model) => model.id;
 

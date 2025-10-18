@@ -1,6 +1,6 @@
-import { AbstractControl } from '@angular/forms';
+import { type AbstractControl } from '@angular/forms';
 import { type Maybe } from '@dereekb/util';
-import { Observable, startWith } from 'rxjs';
+import { type Observable, startWith } from 'rxjs';
 
 /**
  * A FormGroup/AbstractControl path to a specific control.

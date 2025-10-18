@@ -1,6 +1,6 @@
-import { EmailParticipantString, WebsiteUrl } from '@dereekb/util';
-import { MailgunSenderDomainString } from './mailgun';
-import { MailgunOptions } from './mailgun.type';
+import { type EmailParticipantString, type WebsiteUrl } from '@dereekb/util';
+import { type MailgunSenderDomainString } from './mailgun';
+import { type MailgunOptions } from './mailgun.type';
 
 export abstract class MailgunServiceConfig {
   // Mailgun Config

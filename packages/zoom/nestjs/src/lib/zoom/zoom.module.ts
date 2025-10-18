@@ -1,4 +1,4 @@
-import { ModuleMetadata } from '@nestjs/common';
+import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ZoomApi } from './zoom.api';
 import { ZoomServiceConfig } from './zoom.config';

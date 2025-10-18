@@ -1,6 +1,6 @@
-import { FlexibleConnectedPositionStrategy, HorizontalConnectionPos, Overlay, VerticalConnectionPos } from '@angular/cdk/overlay';
-import { ElementRef } from '@angular/core';
-import { NgOverlayContainerConfiguration } from 'ng-overlay-container';
+import { type FlexibleConnectedPositionStrategy, type HorizontalConnectionPos, type Overlay, type VerticalConnectionPos } from '@angular/cdk/overlay';
+import { type ElementRef } from '@angular/core';
+import { type NgOverlayContainerConfiguration } from 'ng-overlay-container';
 
 export interface PopoverPositionStrategyConfig {
   overlay: Overlay;

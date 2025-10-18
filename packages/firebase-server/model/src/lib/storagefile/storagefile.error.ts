@@ -9,7 +9,7 @@ import {
   UPLOADED_FILE_INITIALIZATION_DISCARDED_ERROR_CODE,
   UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE,
   UPLOADED_FILE_NOT_ALLOWED_TO_BE_INITIALIZED_ERROR_CODE,
-  UploadedFileInitializationFailedErrorData
+  type UploadedFileInitializationFailedErrorData
 } from '@dereekb/firebase';
 import { internalServerError, preconditionConflictError } from '@dereekb/firebase-server';
 

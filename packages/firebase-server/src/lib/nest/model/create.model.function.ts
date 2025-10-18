@@ -2,7 +2,7 @@ import { type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallCreateModelParams, type OnCallCreateModelResult, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
-import { NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
+import { type NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { _onCallWithCallTypeFunction } from './call.model.function';
 

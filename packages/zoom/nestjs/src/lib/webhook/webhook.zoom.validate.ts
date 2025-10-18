@@ -1,5 +1,5 @@
-import { ZoomSecretToken } from '@dereekb/zoom';
-import { ZoomWebhookUrlValidationEvent, ZoomWebhookUrlValidationPlainTokenString, ZoomWebhookUrlValidationEncryptedTokenString } from './webhook.zoom.type.validate';
+import { type ZoomSecretToken } from '@dereekb/zoom';
+import { type ZoomWebhookUrlValidationEvent, type ZoomWebhookUrlValidationPlainTokenString, type ZoomWebhookUrlValidationEncryptedTokenString } from './webhook.zoom.type.validate';
 import { createHmac } from 'crypto';
 
 export interface ZoomWebhookValidationResponse {

@@ -1,6 +1,6 @@
 import { characterPrefixSuffixInstance } from '@dereekb/util';
-import { ZoomOAuthConfig, ZoomOAuthFactoryConfig } from '@dereekb/zoom';
-import { ConfigService } from '@nestjs/config';
+import { type ZoomOAuthConfig, type ZoomOAuthFactoryConfig } from '@dereekb/zoom';
+import { type ConfigService } from '@nestjs/config';
 
 export interface ZoomOAuthServiceApiConfig extends Omit<ZoomOAuthConfig, 'userRefreshToken' | 'type'> {
   readonly authEntityType: 'account';

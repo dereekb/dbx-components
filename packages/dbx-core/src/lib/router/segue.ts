@@ -1,5 +1,5 @@
-import { ArrayOrValue, hasValueOrNotEmpty, type Maybe } from '@dereekb/util';
-import { map, Observable } from 'rxjs';
+import { type ArrayOrValue, hasValueOrNotEmpty, type Maybe } from '@dereekb/util';
+import { map, type Observable } from 'rxjs';
 
 export type SegueRefRouterLink = string | ArrayOrValue<object>;
 

@@ -1,6 +1,6 @@
-import { NotificationTaskType, NotificationTask, NotificationTaskCheckpointString, NotificationItemMetadata, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
-import { NotificationTaskService, NotificationTaskServiceTaskHandler, NotificationTaskServiceTaskHandlerFunction } from './notification.task.service';
-import { Configurable, separateValues } from '@dereekb/util';
+import { type NotificationTaskType, type NotificationTask, type NotificationTaskCheckpointString, type NotificationItemMetadata, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { type NotificationTaskService, type NotificationTaskServiceTaskHandler, type NotificationTaskServiceTaskHandlerFunction } from './notification.task.service';
+import { type Configurable, separateValues } from '@dereekb/util';
 
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.

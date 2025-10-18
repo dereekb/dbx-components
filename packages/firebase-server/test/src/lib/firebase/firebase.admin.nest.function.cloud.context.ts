@@ -1,6 +1,6 @@
 import { useJestFunctionFixture, useJestFunctionMapFixture } from '@dereekb/util/test';
-import { FirebaseAdminFunctionNestTestContext, wrapCloudFunctionForNestTestsGetter, WrapCloudFunctionForNestTestsInput } from './firebase.admin.nest.function';
-import { WrappedCloudFunction } from './firebase.function';
+import { type FirebaseAdminFunctionNestTestContext, wrapCloudFunctionForNestTestsGetter, type WrapCloudFunctionForNestTestsInput } from './firebase.admin.nest.function';
+import { type WrappedCloudFunction } from './firebase.function';
 import { mapObjectMap } from '@dereekb/util';
 
 export type CloudFunctionTestWrappedCloudFunction<I extends object> = WrappedCloudFunction<I>;

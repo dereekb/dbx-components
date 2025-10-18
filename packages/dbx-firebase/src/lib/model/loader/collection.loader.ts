@@ -1,7 +1,7 @@
-import { DocumentDataWithIdAndKey, FirebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
-import { ItemAccumulatorNextPageUntilResultsCountResult, PageListLoadingState } from '@dereekb/rxjs';
-import { Maybe, ArrayOrValue, PageNumber } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { type DocumentDataWithIdAndKey, type FirebaseQueryItemAccumulator, type FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, type FirebaseQuerySnapshotAccumulator, type FirestoreItemPageIterationInstance, type FirestoreQueryConstraint, type IterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { type ItemAccumulatorNextPageUntilResultsCountResult, type PageListLoadingState } from '@dereekb/rxjs';
+import { type Maybe, type ArrayOrValue, type PageNumber } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 
 export interface DbxFirebaseCollectionLoaderAccessor<T = unknown> {
   readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>;

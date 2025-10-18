@@ -1,8 +1,8 @@
-import { Observable } from 'rxjs';
-import { LoadingState, ObservableOrValue, PageListLoadingState } from '@dereekb/rxjs';
-import { CssClassesArray, type Maybe } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { TrackByFunction } from '@angular/core';
+import { type Observable } from 'rxjs';
+import { type LoadingState, type ObservableOrValue, type PageListLoadingState } from '@dereekb/rxjs';
+import { type CssClassesArray, type Maybe } from '@dereekb/util';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type TrackByFunction } from '@angular/core';
 
 /**
  * Delegate used for retrieving data for a table.

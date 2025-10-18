@@ -1,4 +1,4 @@
-import { convertMailgunTemplateEmailRequestToMailgunMessageData, MailgunTemplateEmailRequest, MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY } from './mailgun';
+import { convertMailgunTemplateEmailRequestToMailgunMessageData, type MailgunTemplateEmailRequest, MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY } from './mailgun';
 
 const replyToEmail = 'test.support@dereekb.com';
 const testEmail = 'test.components@dereekb.com';

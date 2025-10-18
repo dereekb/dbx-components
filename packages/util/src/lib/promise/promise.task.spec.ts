@@ -1,4 +1,4 @@
-import { runNamedAsyncTasks, runNamedAsyncTasksFunction, RunNamedAsyncTasksInput, NamedAsyncTask } from './promise.task';
+import { runNamedAsyncTasks, runNamedAsyncTasksFunction, type RunNamedAsyncTasksInput, type NamedAsyncTask } from './promise.task';
 
 describe('runNamedAsyncTasksFunction()', () => {
   describe('function', () => {

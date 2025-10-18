@@ -1,8 +1,8 @@
-import { IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
+import { type IterationQueryDocChangeWatcherChangeType, type IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Destroyable } from '@dereekb/util';
-import { filter, take, map, BehaviorSubject, distinctUntilChanged, Observable, switchMap, startWith, shareReplay, combineLatest } from 'rxjs';
-import { DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
+import { type Destroyable } from '@dereekb/util';
+import { filter, take, map, BehaviorSubject, distinctUntilChanged, type Observable, switchMap, startWith, shareReplay, combineLatest } from 'rxjs';
+import { type DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
 
 /**
  * DbxFirebaseCollectionChangeWatcher trigger modes

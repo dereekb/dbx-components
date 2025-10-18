@@ -8,7 +8,7 @@
 import { groupValues, type Building, build, calculateExpirationDate } from '@dereekb/util';
 import { map, type Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { type DocumentChange, type QuerySnapshot } from '../types';
-import { FirestoreItemPageIteration, type FirestoreItemPageQueryResult } from './iterator';
+import { type FirestoreItemPageIteration, type FirestoreItemPageQueryResult } from './iterator';
 import { type ItemPageIteratorResult } from '@dereekb/rxjs';
 
 /**

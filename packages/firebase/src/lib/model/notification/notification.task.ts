@@ -1,7 +1,7 @@
-import { NotificationItem, NotificationItemMetadata } from './notification.item';
-import { NotificationTaskType } from './notification.id';
-import { NotificationDocument, NotificationTaskCheckpointString } from './notification';
-import { ArrayOrValue, Maybe, Milliseconds } from '@dereekb/util';
+import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
+import { type NotificationTaskType } from './notification.id';
+import { type NotificationDocument, type NotificationTaskCheckpointString } from './notification';
+import { type ArrayOrValue, type Maybe, type Milliseconds } from '@dereekb/util';
 
 /**
  * A NotificationTask is the final result of the expanded notification with a task type.

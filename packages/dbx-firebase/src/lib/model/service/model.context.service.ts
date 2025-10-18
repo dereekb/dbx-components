@@ -1,9 +1,9 @@
-import { FirestoreModelType, buildFirebaseCollectionTypeModelTypeMap, FirebasePermissionErrorContext, FirestoreDocument, FirestoreModelIdentityTypeMap, FirestoreModelKey, InContextFirebaseModelsService, firestoreModelKeyCollectionTypePair } from '@dereekb/firebase';
-import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { GrantedRole } from '@dereekb/model';
-import { shareReplay, map, Observable, OperatorFunction, first, switchMap } from 'rxjs';
-import { DbxFirebaseInContextFirebaseModelInfoServiceInstance } from './model.context';
-import { DbxFirebaseInContextFirebaseModelServiceInstanceFactory } from './model.context.instance';
+import { type FirestoreModelType, buildFirebaseCollectionTypeModelTypeMap, type FirebasePermissionErrorContext, type FirestoreDocument, type FirestoreModelIdentityTypeMap, type FirestoreModelKey, type InContextFirebaseModelsService, firestoreModelKeyCollectionTypePair } from '@dereekb/firebase';
+import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
+import { type GrantedRole } from '@dereekb/model';
+import { shareReplay, map, type Observable, type OperatorFunction, first, switchMap } from 'rxjs';
+import { type DbxFirebaseInContextFirebaseModelInfoServiceInstance } from './model.context';
+import { type DbxFirebaseInContextFirebaseModelServiceInstanceFactory } from './model.context.instance';
 
 /**
  * Used for retrieving contexts for a specific model type/identity.

@@ -1,5 +1,5 @@
 import { expandTypeformWebhookFormResponse } from './webhook.typeform.form';
-import { TypeformWebhookFormResponse } from './webhook.typeform.type';
+import { type TypeformWebhookFormResponse } from './webhook.typeform.type';
 
 describe('expandTypeformWebhookFormResponse', () => {
   it('should expand the form response and build the expected question titles', () => {

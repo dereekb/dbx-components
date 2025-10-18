@@ -1,6 +1,6 @@
 import { StorageObject, StorageObjectUtility } from './storage.object';
 import { type Maybe } from '../value/maybe.type';
-import { StoredDataStorageKey } from './storage';
+import { type StoredDataStorageKey } from './storage';
 
 // Mock StorageObject implementation for testing
 class MockStorageObject extends StorageObject {

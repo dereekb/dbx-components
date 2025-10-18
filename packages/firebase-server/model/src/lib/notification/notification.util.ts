@@ -29,7 +29,7 @@ import {
   firestoreDummyKey,
   type NotificationSummary,
   notificationSendExclusionCanSendFunction,
-  DocumentDataWithIdAndKey,
+  type DocumentDataWithIdAndKey,
   applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';

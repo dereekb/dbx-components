@@ -1,5 +1,5 @@
 import { AUTH_ADMIN_ROLE, authRoleClaimsService, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
-import { StorageFileUploadUserClaims, storageFileUploadUserSimpleClaimsConfiguration } from '@dereekb/firebase';
+import { type StorageFileUploadUserClaims, storageFileUploadUserSimpleClaimsConfiguration } from '@dereekb/firebase';
 
 export const DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN = 'o';
 

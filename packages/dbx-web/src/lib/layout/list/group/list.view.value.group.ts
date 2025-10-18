@@ -1,8 +1,8 @@
-import { CssClassesArray, Maybe, UniqueModel } from '@dereekb/util';
-import { DbxValueListItem, DbxValueListItemConfig } from '../list.view.value';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Provider, Type, forwardRef } from '@angular/core';
-import { ObservableOrValue } from '@dereekb/rxjs';
+import { type CssClassesArray, type Maybe, type UniqueModel } from '@dereekb/util';
+import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type Provider, type Type, forwardRef } from '@angular/core';
+import { type ObservableOrValue } from '@dereekb/rxjs';
 
 /**
  * A group of DbxValueListItem values, grouped by common data, name, and id.

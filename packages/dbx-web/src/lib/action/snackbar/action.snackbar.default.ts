@@ -1,4 +1,4 @@
-import { DbxActionSnackbarEventMakeConfig } from './action.snackbar.service';
+import { type DbxActionSnackbarEventMakeConfig } from './action.snackbar.service';
 
 export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
   create: {

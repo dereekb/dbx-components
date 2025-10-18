@@ -1,6 +1,6 @@
-import { forwardRef, Provider, Type } from '@angular/core';
+import { forwardRef, type Provider, type Type } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 
 export abstract class DbxPromptConfirm {
   abstract showDialog(): Observable<Maybe<boolean>>;

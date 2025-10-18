@@ -1,7 +1,7 @@
-import { forwardRef, Provider, Type } from '@angular/core';
-import { ArrayOrValue, modifier, Modifier, ModifierFunction, ModifierMap } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { DbxValueListItem } from './list.view.value';
+import { forwardRef, type Provider, type Type } from '@angular/core';
+import { type ArrayOrValue, modifier, type Modifier, type ModifierFunction, type ModifierMap } from '@dereekb/util';
+import { type Observable } from 'rxjs';
+import { type DbxValueListItem } from './list.view.value';
 
 // MARK: ValueListView
 export abstract class DbxValueListItemModifier<T = unknown, I extends DbxValueListItem<T> = DbxValueListItem<T>> {

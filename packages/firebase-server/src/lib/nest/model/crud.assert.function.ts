@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { NestContextCallableRequest } from '../function/nest';
+import { type NestContextCallableRequest } from '../function/nest';
 import { type OnCallFunctionType } from '@dereekb/firebase';
 
 export type AssertModelCrudRequestFunctionContextCrudType = 'call' | 'create' | 'read' | 'update' | 'delete';

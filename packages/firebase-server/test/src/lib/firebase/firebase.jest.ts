@@ -1,5 +1,5 @@
-import { ClassLikeType, ServerError } from '@dereekb/util';
-import { JestExpectFailAssertionFunction, JestExpectedErrorOfSpecificTypeError } from '@dereekb/util/test';
+import { type ClassLikeType, type ServerError } from '@dereekb/util';
+import { type JestExpectFailAssertionFunction, JestExpectedErrorOfSpecificTypeError } from '@dereekb/util/test';
 import { HttpsError } from 'firebase-functions/v1/https';
 import { BaseError } from 'make-error';
 

@@ -1,10 +1,10 @@
-import { Observable, of } from 'rxjs';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig } from '../../field';
-import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DbxDateTimePickerConfiguration } from './datetime.field.component';
+import { type Observable, of } from 'rxjs';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type MaterialFormFieldConfig } from '../../field';
+import { type DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration } from './datetime.field.component';
 import { flexLayoutWrapper } from '../../wrapper/wrapper';
 import { type Maybe } from '@dereekb/util';
-import { DbxFixedDateRangeFieldProps } from './fixeddaterange.field.component';
+import { type DbxFixedDateRangeFieldProps } from './fixeddaterange.field.component';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldProps, MaterialFormFieldConfig {}
 export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate' | 'timeOnly'>;

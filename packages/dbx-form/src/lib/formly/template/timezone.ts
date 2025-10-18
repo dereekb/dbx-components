@@ -1,9 +1,9 @@
 import { type TimezoneString } from '@dereekb/util';
-import { allTimezoneInfos, searchTimezoneInfos, TimezoneInfo, timezoneInfoForSystem } from '@dereekb/date';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Observable, of } from 'rxjs';
-import { SearchableValueFieldStringSearchFn, SearchableValueFieldValue, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue } from '../field/selection/searchable';
-import { searchableTextField, SearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
+import { allTimezoneInfos, searchTimezoneInfos, type TimezoneInfo, timezoneInfoForSystem } from '@dereekb/date';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type Observable, of } from 'rxjs';
+import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue } from '../field/selection/searchable';
+import { searchableTextField, type SearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
 
 export type TestStringSearchFunction = (text: string) => string[];
 

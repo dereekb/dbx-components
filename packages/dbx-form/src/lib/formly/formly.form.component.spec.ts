@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { FORM_TEST_PROVIDERS } from '../../test/test.formly';
 import { DbxTestDbxFormComponent } from '../../test/test.formly.component';
 

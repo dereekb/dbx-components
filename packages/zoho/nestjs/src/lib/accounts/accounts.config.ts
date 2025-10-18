@@ -1,5 +1,5 @@
-import { ZohoAccountsConfig, ZohoAccountsFactoryConfig, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { ZohoConfigServiceReaderConfig, zohoConfigServiceReaderFunction } from '../zoho.config';
+import { type ZohoAccountsConfig, type ZohoAccountsFactoryConfig, type ZohoServiceAccessTokenKey } from '@dereekb/zoho';
+import { type ZohoConfigServiceReaderConfig, zohoConfigServiceReaderFunction } from '../zoho.config';
 
 export interface ZohoAccountsServiceApiConfig extends ZohoAccountsConfig {
   readonly serviceAccessTokenKey: ZohoServiceAccessTokenKey;
@@ -31,7 +31,7 @@ export abstract class ZohoAccountsServiceConfig {
   }
 }
 
-export type ZohoAccountsServiceConfigFromConfigServiceInput = ZohoConfigServiceReaderConfig
+export type ZohoAccountsServiceConfigFromConfigServiceInput = ZohoConfigServiceReaderConfig;
 
 export function zohoAccountsServiceConfigFromConfigService(input: ZohoAccountsServiceConfigFromConfigServiceInput): ZohoAccountsServiceConfig {
   const { serviceAccessTokenKey } = input;

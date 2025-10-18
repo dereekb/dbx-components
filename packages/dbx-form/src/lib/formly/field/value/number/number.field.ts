@@ -1,8 +1,8 @@
-import { ValidatorFn } from '@angular/forms';
-import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction, DOLLAR_AMOUNT_PRECISION } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type ValidatorFn } from '@angular/forms';
+import { concatArrays, type TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction, DOLLAR_AMOUNT_PRECISION } from '@dereekb/util';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser, MaterialFormFieldConfig } from '../../field';
+import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig, type FieldConfigParsersRef, type FormlyValueParser, type MaterialFormFieldConfig } from '../../field';
 
 // MARK: Number Field
 export interface NumberFieldNumberConfig {

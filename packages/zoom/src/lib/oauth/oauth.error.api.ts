@@ -1,5 +1,5 @@
-import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFunction, parseZoomServerErrorData, ParsedZoomServerError } from '../zoom.error.api';
+import { FetchRequestFactoryError, type FetchResponseError } from '@dereekb/util/fetch';
+import { type ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFunction, parseZoomServerErrorData, type ParsedZoomServerError } from '../zoom.error.api';
 
 /**
  * Error in the following cases:

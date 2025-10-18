@@ -1,4 +1,4 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 
 export interface ChecklistItemDisplayContent<T = unknown> {

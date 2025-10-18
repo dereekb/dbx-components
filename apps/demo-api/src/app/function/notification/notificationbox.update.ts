@@ -1,5 +1,5 @@
-import { UpdateNotificationBoxParams, UpdateNotificationBoxRecipientParams } from '@dereekb/firebase';
-import { DemoUpdateModelFunction } from '../function';
+import { type UpdateNotificationBoxParams, type UpdateNotificationBoxRecipientParams } from '@dereekb/firebase';
+import { type DemoUpdateModelFunction } from '../function';
 
 export const updateNotificationBox: DemoUpdateModelFunction<UpdateNotificationBoxParams> = async (request) => {
   const { nest, auth, data } = request;

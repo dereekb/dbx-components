@@ -1,5 +1,5 @@
 import { first, firstValueFrom, of } from 'rxjs';
-import { hasAuthRoleDecisionPipe, HasAuthRoleStateData } from './role.hook';
+import { hasAuthRoleDecisionPipe, type HasAuthRoleStateData } from './role.hook';
 
 describe('hasAuthRoleDecisionPipe()', () => {
   const authRoleA = 'a';

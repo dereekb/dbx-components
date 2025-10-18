@@ -1,7 +1,7 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Validators, AbstractControl } from '@angular/forms';
-import { TextFieldConfig, textField } from './text.field';
-import { LabeledFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { Validators, type AbstractControl } from '@angular/forms';
+import { type TextFieldConfig, textField } from './text.field';
+import { type LabeledFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 

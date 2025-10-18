@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoGuestbookLayoutComponent } from './container/layout.component';
 import { DemoGuestbookListPageComponent } from './container/list.component';
 import { DemoGuestbookListPageRightComponent } from './container/list.right.component';

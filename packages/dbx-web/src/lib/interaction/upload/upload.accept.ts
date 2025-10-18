@@ -1,4 +1,4 @@
-import { asDecisionFunction, DecisionFunction, MimeTypeWithSubtypeWildcardWithoutParameters, MimeTypeWithoutParameters, separateValues, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathTypedFileSuffix, splitFront, MimeTypeWildcard } from '@dereekb/util';
+import { asDecisionFunction, type DecisionFunction, type MimeTypeWithSubtypeWildcardWithoutParameters, type MimeTypeWithoutParameters, separateValues, SLASH_PATH_FILE_TYPE_SEPARATOR, type SlashPathTypedFileSuffix, splitFront, type MimeTypeWildcard } from '@dereekb/util';
 
 /**
  * String used as input for the "accept" attribute of a file input element.

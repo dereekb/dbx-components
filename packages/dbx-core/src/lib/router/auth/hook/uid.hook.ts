@@ -1,9 +1,9 @@
-import { AuthUserIdentifier } from '../../../auth/auth.user';
-import { DbxAuthService } from '../../../auth/service/auth.service';
-import { TransitionService, HookMatchCriteria } from '@uirouter/core';
+import { type AuthUserIdentifier } from '../../../auth/auth.user';
+import { type DbxAuthService } from '../../../auth/service/auth.service';
+import { type TransitionService, type HookMatchCriteria } from '@uirouter/core';
 import { type Maybe } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { Injector } from '@angular/core';
+import { type Observable } from 'rxjs';
+import { type Injector } from '@angular/core';
 import { redirectForIdentifierParamHook } from './id.hook';
 
 export const DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_VALUE = '0';

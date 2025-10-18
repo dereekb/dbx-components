@@ -1,6 +1,6 @@
-import { DemoApiAuthClaims } from 'demo-firebase';
+import { type DemoApiAuthClaims } from 'demo-firebase';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext } from './../../../test/fixture';
-import { DemoApiFirebaseServerAuthUserContext } from './auth.service';
+import { type DemoApiFirebaseServerAuthUserContext } from './auth.service';
 
 demoApiFunctionContextFactory((f) => {
   demoAuthorizedUserContext({ f }, (u) => {

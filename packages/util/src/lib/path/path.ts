@@ -1,13 +1,13 @@
 import { chainMapFunction, chainMapSameFunctions, mapIdentityFunction, type MapSameFunction } from '../value/map';
-import { decisionFunction, DecisionFunction } from '../value/decision';
+import { decisionFunction, type DecisionFunction } from '../value/decision';
 import { asArray, type ArrayOrValue, pushItemOrArrayItemsIntoArray, lastValue } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from '../string/char';
 import { type FactoryWithRequiredInput } from '../getter/getter';
 import { sliceIndexRangeFunction } from '../array/array.index';
 import { replaceStringsFunction } from '../string/replace';
 import { type PrimativeValue } from '../type';
-import { Maybe } from '../value/maybe.type';
-import { indexRange, IndexRangeInput } from '../value/indexed';
+import { type Maybe } from '../value/maybe.type';
+import { indexRange, type IndexRangeInput } from '../value/indexed';
 import { splitJoinRemainder } from '../string';
 
 export const SLASH_PATH_SEPARATOR = '/';

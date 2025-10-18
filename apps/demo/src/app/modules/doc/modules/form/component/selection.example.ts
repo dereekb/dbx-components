@@ -1,7 +1,7 @@
-import { makeMetaFilterSearchableFieldValueDisplayFn, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { makeMetaFilterSearchableFieldValueDisplayFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
-import { randomArrayFactory, randomNumberFactory, pickOneRandomly, Configurable } from '@dereekb/util';
-import { map, Observable, of } from 'rxjs';
+import { randomArrayFactory, randomNumberFactory, pickOneRandomly, type Configurable } from '@dereekb/util';
+import { map, type Observable, of } from 'rxjs';
 import { DocFormExampleAccentSearchableFieldDisplayComponent, DocFormExamplePrimarySearchableFieldDisplayComponent, DocFormExampleWarnSearchableFieldDisplayComponent } from './selection.example.view';
 
 export type DocFormExampleSelectionValueId = string;

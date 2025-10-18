@@ -1,5 +1,5 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
-import { TypeformWebhookFormResponse } from './webhook.typeform.type';
+import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
+import { type TypeformWebhookFormResponse } from './webhook.typeform.type';
 
 export type TypeformWebhookEventType = 'form_response';
 

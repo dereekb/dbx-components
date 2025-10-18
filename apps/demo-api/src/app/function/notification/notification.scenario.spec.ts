@@ -2,8 +2,8 @@ import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCo
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { Notification, DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
-import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, guestbookIdentity, SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
+import { type Notification, type DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
+import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, guestbookIdentity, type SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {

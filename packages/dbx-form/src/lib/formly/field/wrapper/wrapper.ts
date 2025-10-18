@@ -1,13 +1,13 @@
-import { DbxFormStyleWrapperConfig } from './style.wrapper.component';
-import { DbxFlexWrapperConfig } from './flex.wrapper.component';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbxFormToggleWrapperConfig } from './toggle.wrapper.component';
-import { DbxFormSectionConfig } from './section.wrapper.component';
-import { DbxFormSubsectionConfig } from './subsection.wrapper.component';
-import { DbxFormInfoConfig } from './info.wrapper.component';
-import { DbxFormExpandWrapperConfig } from './expand.wrapper.component';
-import { DbxFlexSize } from '@dereekb/dbx-web';
-import { DbxFormWorkingWrapperConfig } from './working.wrapper.component';
+import { type DbxFormStyleWrapperConfig } from './style.wrapper.component';
+import { type DbxFlexWrapperConfig } from './flex.wrapper.component';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type DbxFormToggleWrapperConfig } from './toggle.wrapper.component';
+import { type DbxFormSectionConfig } from './section.wrapper.component';
+import { type DbxFormSubsectionConfig } from './subsection.wrapper.component';
+import { type DbxFormInfoConfig } from './info.wrapper.component';
+import { type DbxFormExpandWrapperConfig } from './expand.wrapper.component';
+import { type DbxFlexSize } from '@dereekb/dbx-web';
+import { type DbxFormWorkingWrapperConfig } from './working.wrapper.component';
 import { AUTO_TOUCH_WRAPPER_KEY, EXPAND_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, SECTION_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, INFO_WRAPPER_KEY, STYLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
 
 export type WrapperFormlyFieldConfig<P, C extends FormlyFieldConfig> = FormlyFieldConfig<P> & {

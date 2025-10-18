@@ -1,8 +1,8 @@
-import { APP_INITIALIZER, EnvironmentProviders, Provider, Type, makeEnvironmentProviders } from '@angular/core';
-import { FirebaseLoginMethodType } from './login';
-import { DbxFirebaseAuthLoginPasswordConfig } from './login.password';
+import { APP_INITIALIZER, type EnvironmentProviders, type Provider, type Type, makeEnvironmentProviders } from '@angular/core';
+import { type FirebaseLoginMethodType } from './login';
+import { type DbxFirebaseAuthLoginPasswordConfig } from './login.password';
 import { DbxFirebaseAuthLoginService, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN } from './login.service';
-import { DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG, DbxFirebaseLoginTermsOfServiceUrlsConfig } from './login.terms';
+import { DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG, type DbxFirebaseLoginTermsOfServiceUrlsConfig } from './login.terms';
 import { defaultFirebaseAuthLoginProvidersFactory } from './firebase.login.providers.default';
 
 /**

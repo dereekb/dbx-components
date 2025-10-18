@@ -1,9 +1,9 @@
-import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, TransitionOptions, RawParams } from '@uirouter/core';
-import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
-import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink } from './../../../../router/segue';
+import { type TransitionHookFn, type Transition, type HookResult, type StateService, type UIInjector, type TransitionOptions, type RawParams } from '@uirouter/core';
+import { catchError, map, first, firstValueFrom, type Observable, of, switchMap } from 'rxjs';
+import { asSegueRef, asSegueRefString, type SegueRefOrSegueRefRouterLink } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
-import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe, Milliseconds } from '@dereekb/util';
-import { Injector } from '@angular/core';
+import { type FactoryWithRequiredInput, getValueFromGetter, isGetter, type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Injector } from '@angular/core';
 import { timeoutStartWith } from '@dereekb/rxjs';
 
 /**

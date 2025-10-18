@@ -1,33 +1,33 @@
-import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
-import { FetchFileResponse, FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams, parseFetchFileResponse } from '@dereekb/util/fetch';
-import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
+import { type ZohoDataArrayResultRef, type ZohoPageFilter, type ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
+import { type FetchFileResponse, type FetchJsonBody, type FetchJsonInput, type FetchPage, type FetchPageFactory, type FetchPageFactoryOptions, makeUrlSearchParams, parseFetchFileResponse } from '@dereekb/util/fetch';
+import { type ZohoRecruitConfigApiUrlInput, type ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
 import {
-  ZohoRecruitCommaSeparateFieldNames,
-  ZohoRecruitCustomViewId,
-  ZohoRecruitDraftOrSaveState,
-  ZohoRecruitFieldName,
-  ZohoRecruitModuleNameRef,
-  ZohoRecruitChangeObjectDetails,
-  ZohoRecruitRecord,
-  ZohoRecruitRecordId,
-  ZohoRecruitTerritoryId,
-  ZohoRecruitTrueFalseBoth,
-  ZohoRecruitRestFunctionApiName,
-  ZohoRecruitUserId,
-  ZohoRecruitModuleName,
+  type ZohoRecruitCommaSeparateFieldNames,
+  type ZohoRecruitCustomViewId,
+  type ZohoRecruitDraftOrSaveState,
+  type ZohoRecruitFieldName,
+  type ZohoRecruitModuleNameRef,
+  type ZohoRecruitChangeObjectDetails,
+  type ZohoRecruitRecord,
+  type ZohoRecruitRecordId,
+  type ZohoRecruitTerritoryId,
+  type ZohoRecruitTrueFalseBoth,
+  type ZohoRecruitRestFunctionApiName,
+  type ZohoRecruitUserId,
+  type ZohoRecruitModuleName,
   ZOHO_RECRUIT_EMAILS_MODULE,
-  ZohoRecruitRecordEmailMetadata,
+  type ZohoRecruitRecordEmailMetadata,
   ZOHO_RECRUIT_ATTACHMENTS_MODULE,
-  ZohoRecruitRecordAttachmentMetadata,
-  ZohoRecruitAttachmentRecordId,
-  ZohoRecruitAttachmentCategoryId,
-  KnownZohoRecruitAttachmentCategoryName
+  type ZohoRecruitRecordAttachmentMetadata,
+  type ZohoRecruitAttachmentRecordId,
+  type ZohoRecruitAttachmentCategoryId,
+  type KnownZohoRecruitAttachmentCategoryName
 } from './recruit';
-import { zohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
-import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
+import { zohoRecruitSearchRecordsCriteriaString, type ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
+import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, type WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
-import { ZOHO_SUCCESS_STATUS, ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
-import { ZohoDateTimeString } from '../zoho.type';
+import { ZOHO_SUCCESS_STATUS, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
+import { type ZohoDateTimeString } from '../zoho.type';
 import { BaseError } from 'make-error';
 
 // MARK: Insert/Update/Upsert Response

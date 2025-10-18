@@ -1,6 +1,6 @@
-import { concatArrays, mapMaybeFunction, transformStringFunction, TransformStringFunctionConfig, TransformStringFunctionConfigRef } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, FormlyValueParser, FieldConfigParsersRef, MaterialFormFieldConfig } from '../../field';
+import { concatArrays, mapMaybeFunction, transformStringFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type FormlyValueParser, type FieldConfigParsersRef, type MaterialFormFieldConfig } from '../../field';
 
 export interface TextFieldLengthConfig {
   minLength?: number;

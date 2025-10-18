@@ -1,7 +1,7 @@
-import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { Functions } from '@angular/fire/functions';
-import { FirebaseDevelopmentFunctions, FirebaseFunctionsConfigMap, FirebaseFunctionsMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, LazyFirebaseFunctions } from '@dereekb/firebase';
-import { ClassLikeType, forEachKeyValue } from '@dereekb/util';
+import { FirebaseDevelopmentFunctions, type FirebaseFunctionsConfigMap, type FirebaseFunctionsMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, type LazyFirebaseFunctions } from '@dereekb/firebase';
+import { type ClassLikeType, forEachKeyValue } from '@dereekb/util';
 
 /**
  * Configuration for provideDbxFirebaseFunctions().

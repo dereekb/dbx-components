@@ -1,5 +1,5 @@
 import { type Factory } from './getter/getter';
-import { Maybe, MaybeNot } from './value/maybe.type';
+import { type Maybe, type MaybeNot } from './value/maybe.type';
 
 // MARK: Types
 /**

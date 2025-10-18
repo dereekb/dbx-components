@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoProfileLayoutComponent } from './container/layout.component';
 import { DemoProfileViewComponent } from './container/profile.component';
 

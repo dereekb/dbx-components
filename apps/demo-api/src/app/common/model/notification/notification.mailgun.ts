@@ -1,4 +1,4 @@
-import { WebsiteUrl } from '@dereekb/util';
+import { type WebsiteUrl } from '@dereekb/util';
 
 /**
  * Basic example template data that corresponds with a corresponding template on Mailgun.

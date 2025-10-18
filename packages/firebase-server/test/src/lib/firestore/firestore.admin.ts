@@ -1,5 +1,5 @@
-import { JestTestContextFactory } from '@dereekb/util/test';
-import { GoogleCloudTestFirestoreContextFixture, googleCloudTestFirestoreBuilder } from './firestore';
+import { type JestTestContextFactory } from '@dereekb/util/test';
+import { type GoogleCloudTestFirestoreContextFixture, googleCloudTestFirestoreBuilder } from './firestore';
 import { testWithMockItemCollectionFixture } from '@dereekb/firebase/test';
 
 export type GoogleFirebaseFirestoreTestContextFactory = JestTestContextFactory<GoogleCloudTestFirestoreContextFixture>;

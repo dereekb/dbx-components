@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoAuthAuthorizeComponent } from './container/authorize.component';
 import { DemoAuthErrorComponent } from './container/error.component';
 import { DemoAuthLayoutComponent } from './container/layout.component';

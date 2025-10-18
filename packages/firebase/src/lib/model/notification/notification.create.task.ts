@@ -1,6 +1,6 @@
-import { Maybe } from '@dereekb/util';
-import { NotificationSendType, NotificationTaskCheckpointString } from './notification';
-import { CreateNotificationTemplate, createNotificationTemplate, CreateNotificationTemplateInput } from './notification.create';
+import { type Maybe } from '@dereekb/util';
+import { NotificationSendType, type NotificationTaskCheckpointString } from './notification';
+import { type CreateNotificationTemplate, createNotificationTemplate, type CreateNotificationTemplateInput } from './notification.create';
 import { DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY } from './notification.id';
 
 /**

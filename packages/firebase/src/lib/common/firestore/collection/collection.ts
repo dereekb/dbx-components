@@ -14,7 +14,7 @@ import {
   type LimitedFirestoreDocumentAccessor,
   type FirestoreDocumentAccessor
 } from '../accessor/document';
-import { firestoreFixedItemPageIterationFactory, FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
+import { firestoreFixedItemPageIterationFactory, type FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
 import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';

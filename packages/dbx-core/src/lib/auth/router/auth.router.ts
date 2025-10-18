@@ -1,4 +1,4 @@
-import { SegueRefOrSegueRefRouterLink } from '../../router/segue';
+import { type SegueRefOrSegueRefRouterLink } from '../../router/segue';
 
 /**
  * Auth routes configurations for an app.

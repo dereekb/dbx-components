@@ -1,5 +1,5 @@
-import { MaybeSo } from '@dereekb/util';
-import { OpenAI } from 'openai';
+import { type MaybeSo } from '@dereekb/util';
+import { type OpenAI } from 'openai';
 
 /**
  * Api key used by OpenAI for making requests.

@@ -1,5 +1,5 @@
-import { EmailAddress } from '@dereekb/util';
-import { ZoomAccountId, ZoomUserId, ZoomWebhookEventTypeString, ZoomWebhookTimestamp } from '@dereekb/zoom';
+import { type EmailAddress } from '@dereekb/util';
+import { type ZoomAccountId, type ZoomUserId, type ZoomWebhookEventTypeString, type ZoomWebhookTimestamp } from '@dereekb/zoom';
 
 /**
  * A parsed RawZoomWebhookEvent that contains the relevant data and the original event.

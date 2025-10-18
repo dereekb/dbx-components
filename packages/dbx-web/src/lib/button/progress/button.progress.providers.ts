@@ -1,5 +1,5 @@
-import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
-import { DbxProgressButtonGlobalConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
+import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
+import { type DbxProgressButtonGlobalConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 
 /**
  * Provides the global configuration for DbxProgressButtonComponent.

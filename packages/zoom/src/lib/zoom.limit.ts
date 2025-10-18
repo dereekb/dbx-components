@@ -1,6 +1,6 @@
-import { MS_IN_SECOND, Maybe, Milliseconds, PromiseOrValue, ResetPeriodPromiseRateLimiter, ResetPeriodPromiseRateLimiterConfig, resetPeriodPromiseRateLimiter } from '@dereekb/util';
-import { FetchResponseError, RateLimitedFetchHandler, rateLimitedFetchHandler } from '@dereekb/util/fetch';
-import { DEFAULT_ZOOM_API_RATE_LIMIT, DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD, ZOOM_RATE_LIMIT_REMAINING_HEADER, ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, ZoomRateLimitHeaderDetails, zoomRateLimitHeaderDetails } from './zoom.error.api';
+import { MS_IN_SECOND, type Maybe, type Milliseconds, type PromiseOrValue, type ResetPeriodPromiseRateLimiter, type ResetPeriodPromiseRateLimiterConfig, resetPeriodPromiseRateLimiter } from '@dereekb/util';
+import { type FetchResponseError, type RateLimitedFetchHandler, rateLimitedFetchHandler } from '@dereekb/util/fetch';
+import { DEFAULT_ZOOM_API_RATE_LIMIT, DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD, ZOOM_RATE_LIMIT_REMAINING_HEADER, ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, type ZoomRateLimitHeaderDetails, zoomRateLimitHeaderDetails } from './zoom.error.api';
 
 export interface ZoomRateLimiterRef {
   readonly zoomRateLimiter: ResetPeriodPromiseRateLimiter;

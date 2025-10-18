@@ -1,5 +1,5 @@
-import { ISO8601DateString } from '@dereekb/util';
-import { TypeformFormHiddenMetadata, TypeformFormId, TypeformFormResponseAnswer, TypeformFormResponseDefinition, TypeformFormResponseToken } from '../typeform.type';
+import { type ISO8601DateString } from '@dereekb/util';
+import { type TypeformFormHiddenMetadata, type TypeformFormId, type TypeformFormResponseAnswer, type TypeformFormResponseDefinition, type TypeformFormResponseToken } from '../typeform.type';
 
 export interface TypeformWebhookFormResponse {
   readonly form_id: TypeformFormId;

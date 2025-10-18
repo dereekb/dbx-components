@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, type MonoTypeOperatorFunction, type Observable, of, type OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues, MaybeSoStrict } from '@dereekb/util';
+import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues, type MaybeSoStrict } from '@dereekb/util';
 import { asObservable, asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter, type MaybeObservableOrValue } from './getter';
 import { type ObservableDecisionFunction } from './decision';
 

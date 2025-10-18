@@ -1,6 +1,6 @@
 import { testWithMockItemStorageFixture } from '@dereekb/firebase/test';
-import { JestTestContextFactory } from '@dereekb/util/test';
-import { GoogleCloudTestFirebaseStorageContextFixture, googleCloudTestFirebaseStorageBuilder } from './storage';
+import { type JestTestContextFactory } from '@dereekb/util/test';
+import { type GoogleCloudTestFirebaseStorageContextFixture, googleCloudTestFirebaseStorageBuilder } from './storage';
 
 export type GoogleFirebaseStorageTestContextFactory = JestTestContextFactory<GoogleCloudTestFirebaseStorageContextFixture>;
 

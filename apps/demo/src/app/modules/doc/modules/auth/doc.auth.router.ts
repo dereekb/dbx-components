@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocAuthFirebaseComponent } from './container/firebase.component';
 import { DocAuthHomeComponent } from './container/home.component';
 import { DocAuthLayoutComponent } from './container/layout.component';

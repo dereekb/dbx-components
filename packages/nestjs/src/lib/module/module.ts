@@ -1,5 +1,5 @@
-import { mergeArrays, ArrayOrValue, asArray } from '@dereekb/util';
-import { ModuleMetadata, Provider, InjectionToken } from '@nestjs/common';
+import { mergeArrays, type ArrayOrValue, asArray } from '@dereekb/util';
+import { type ModuleMetadata, type Provider, type InjectionToken } from '@nestjs/common';
 
 export type AdditionalModuleMetadata = Partial<ModuleMetadata>;
 

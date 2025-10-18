@@ -1,4 +1,4 @@
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 /**
  * Provider that describes to the app how to handle anchors.

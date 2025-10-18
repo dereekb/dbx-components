@@ -1,6 +1,6 @@
-import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';
+import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';
 
 export interface DateScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateCellScheduleRangeFieldProps {}
 

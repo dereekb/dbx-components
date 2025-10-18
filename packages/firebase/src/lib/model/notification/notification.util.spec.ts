@@ -1,6 +1,6 @@
 import { NotificationBoxRecipientFlag } from './notification.config';
-import { NotificationBoxId, NotificationBoxSendExclusionList } from './notification.id';
-import { mergeNotificationUserNotificationBoxRecipientConfigs, updateNotificationUserNotificationSendExclusions , notificationSendExclusionCanSendFunction } from './notification.util';
+import { type NotificationBoxId, type NotificationBoxSendExclusionList } from './notification.id';
+import { mergeNotificationUserNotificationBoxRecipientConfigs, updateNotificationUserNotificationSendExclusions, notificationSendExclusionCanSendFunction } from './notification.util';
 
 describe('updateNotificationUserNotificationSendExclusions()', () => {
   it('should not add any exclusions that do not match any associated notification boxes', () => {

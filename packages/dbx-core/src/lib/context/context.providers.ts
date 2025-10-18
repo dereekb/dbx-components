@@ -1,4 +1,4 @@
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { provideState } from '@ngrx/store';
 import { fromDbxAppContext } from './state';
 

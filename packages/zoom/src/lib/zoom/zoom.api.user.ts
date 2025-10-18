@@ -1,8 +1,8 @@
-import { FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
-import { mapToZoomPageResult, zoomFetchPageFactory, ZoomPageFilter, ZoomPageResult } from '../zoom.api.page';
-import { ZoomUser, ZoomUserRoleId, ZoomUserStatus } from './zoom.api.user.type';
-import { ZoomContext } from './zoom.config';
-import { ZoomUserId } from '../zoom.type';
+import { type FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
+import { mapToZoomPageResult, zoomFetchPageFactory, type ZoomPageFilter, type ZoomPageResult } from '../zoom.api.page';
+import { type ZoomUser, type ZoomUserRoleId, type ZoomUserStatus } from './zoom.api.user.type';
+import { type ZoomContext } from './zoom.config';
+import { type ZoomUserId } from '../zoom.type';
 
 // MARK: Get User
 export interface GetUserInput {

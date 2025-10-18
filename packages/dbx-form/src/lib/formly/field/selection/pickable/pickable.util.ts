@@ -1,7 +1,7 @@
-import { caseInsensitiveFilterByIndexOfDecisionFactory, LabeledValue, Maybe, SearchStringFilterFunction, searchStringFilterFunction, sortByStringFunction } from '@dereekb/util';
-import { Observable, of } from 'rxjs';
-import { PickableValueFieldDisplayValue, PickableValueFieldValue } from './pickable';
-import { PickableItemFieldItem, PickableValueFieldsFieldProps } from './pickable.field.directive';
+import { caseInsensitiveFilterByIndexOfDecisionFactory, type LabeledValue, type Maybe, type SearchStringFilterFunction, searchStringFilterFunction, sortByStringFunction } from '@dereekb/util';
+import { type Observable, of } from 'rxjs';
+import { type PickableValueFieldDisplayValue, type PickableValueFieldValue } from './pickable';
+import { type PickableItemFieldItem, type PickableValueFieldsFieldProps } from './pickable.field.directive';
 
 export const filterPickableItemFieldValuesByLabelFilterFunction: SearchStringFilterFunction<PickableValueFieldDisplayValue<any>> = searchStringFilterFunction({
   readStrings: (x) => [x.label],

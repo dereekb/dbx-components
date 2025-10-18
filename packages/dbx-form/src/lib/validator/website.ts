@@ -1,5 +1,5 @@
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { ArrayOrValue, Maybe, WebsiteDomain, WebsiteUrlDetails, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
+import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
+import { type ArrayOrValue, type Maybe, type WebsiteDomain, type WebsiteUrlDetails, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
 
 export const IS_NOT_WEBSITE_URL_VALIDATION_KEY = 'isNotWebsiteUrl';
 export const IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY = 'isNotWebsiteUrlWithPrefix';

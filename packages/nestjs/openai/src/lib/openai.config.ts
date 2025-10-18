@@ -1,4 +1,4 @@
-import { ClientOptions } from 'openai';
+import { type ClientOptions } from 'openai';
 
 /**
  * Default environment variable for the OpenAI API key.

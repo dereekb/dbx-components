@@ -1,8 +1,8 @@
-import { AuthUserState } from '@dereekb/dbx-core';
-import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { IdTokenResult } from 'firebase/auth';
-import { Observable, of, shareReplay, switchMap } from 'rxjs';
-import { AuthUserStateObsFunction, DbxFirebaseAuthService } from './firebase.auth.service';
+import { type AuthUserState } from '@dereekb/dbx-core';
+import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
+import { type IdTokenResult } from 'firebase/auth';
+import { type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { type AuthUserStateObsFunction, type DbxFirebaseAuthService } from './firebase.auth.service';
 
 /**
  * Creates a AuthUserStateObsFunction that derives a user state from the input firebase auth service, and the optional stateForLoggedInUser input

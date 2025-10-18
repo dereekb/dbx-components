@@ -1,6 +1,6 @@
-import { EnvironmentProviders, Injector, makeEnvironmentProviders, Provider } from '@angular/core';
+import { type EnvironmentProviders, Injector, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { FirebaseApp } from '@angular/fire/app';
-import { FirebaseStorageContextFactoryConfig, clientFirebaseStorageContextFactory } from '@dereekb/firebase';
+import { type FirebaseStorageContextFactoryConfig, clientFirebaseStorageContextFactory } from '@dereekb/firebase';
 import { DBX_FIREBASE_STORAGE_CONTEXT_CONFIG_TOKEN, DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
 import { DbxFirebaseStorageService } from './firebase.storage.service';
 import { Storage } from '@angular/fire/storage';

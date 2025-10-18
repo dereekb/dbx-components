@@ -1,9 +1,9 @@
-import { Type } from '@angular/core';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { FilterSource, PresetFilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { DbxPopoverConfigSizing } from '../popover/popover.service';
+import { type Type } from '@angular/core';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type FilterSource, type PresetFilterSource, type FilterSourceConnector } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
+import { type Observable } from 'rxjs';
+import { type DbxPopoverConfigSizing } from '../popover/popover.service';
 
 export interface DbxFilterComponentConfig<F extends object = object, P extends string = string, CF extends FilterSource<F> = FilterSource<F>, PF extends PresetFilterSource<F, P> = PresetFilterSource<F, P>> extends DbxPopoverConfigSizing {
   /**

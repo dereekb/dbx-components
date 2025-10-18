@@ -1,4 +1,4 @@
-import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { type AbstractControl, type ValidationErrors, type ValidatorFn, Validators } from '@angular/forms';
 import { isNumberDivisibleBy, nearestDivisibleValues } from '@dereekb/util';
 
 /**

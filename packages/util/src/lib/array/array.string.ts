@@ -1,4 +1,4 @@
-import { flattenArray } from './array';
+import { type ArrayOrValue, asArray, flattenArray } from './array';
 import { unique, filterUniqueValues } from './array.unique';
 import { type ReadKeyFunction } from '../key';
 import { caseInsensitiveString } from '../string/string';
@@ -66,7 +66,11 @@ export interface FilterUniqueStringsTransformConfig extends TransformStringFunct
    *
    * Ignored if toLowercase or toUppercase is used for transforming.
    */
-  caseInsensitive?: boolean;
+  readonly caseInsensitive?: boolean;
+  /**
+   * Will exclude these values from the result.
+   */
+  readonly exclude?: ArrayOrValue<string>;
 }
 
 /**
@@ -75,14 +79,17 @@ export interface FilterUniqueStringsTransformConfig extends TransformStringFunct
 export type FilterUniqueTransform = TransformStringsFunction;
 
 export function filterUniqueTransform(config: FilterUniqueStringsTransformConfig): FilterUniqueTransform {
+  const { exclude: excludeInput } = config;
+  const exclude = excludeInput ? asArray(excludeInput) : undefined;
+
   const transform: TransformStringsFunction = transformStrings(config);
   const caseInsensitiveCompare = config.caseInsensitive && !config.toLowercase && !config.toUppercase;
 
   if (caseInsensitiveCompare) {
     // transform after finding unique values
-    return (input: string[]) => transform(filterUniqueCaseInsensitiveStrings(input, (x) => x));
+    return (input: string[]) => transform(filterUniqueCaseInsensitiveStrings(input, (x) => x, exclude));
   } else {
     // transform before, and then use a set to find unique values
-    return (input: string[]) => Array.from(new Set(transform(input)));
+    return (input: string[]) => unique(transform(input), exclude);
   }
 }

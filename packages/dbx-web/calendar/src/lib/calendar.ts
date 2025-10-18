@@ -1,5 +1,5 @@
 import { formatToTimeAndDurationString, sortDateRangeStartAscendingCompareFunction } from '@dereekb/date';
-import { CalendarEvent } from 'angular-calendar';
+import { type CalendarEvent } from 'angular-calendar';
 
 export interface DbxCalendarEvent<T> {
   event: CalendarEvent<T>;

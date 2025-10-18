@@ -1,6 +1,6 @@
-import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, StorageSlashPath } from '../storage';
-import { ConfigurableStorageMetadata, StorageAccessControlObject, StorageAclMetadata, StorageMakePrivateOptions, StorageMoveOptions, StorageSignedDownloadUrl, StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
-import { ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, type StorageSlashPath } from '../storage';
+import { type ConfigurableStorageMetadata, type StorageAccessControlObject, type StorageAclMetadata, type StorageMakePrivateOptions, type StorageMoveOptions, type StorageSignedDownloadUrl, type StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 
 /**
  * Used for accessing files and folders in the storage.

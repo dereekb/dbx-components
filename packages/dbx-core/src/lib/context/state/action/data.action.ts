@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { DbxAppContextState } from '../../context';
+import { type DbxAppContextState } from '../../context';
 
 /**
  * Action to set the current DbxAppContextState value.

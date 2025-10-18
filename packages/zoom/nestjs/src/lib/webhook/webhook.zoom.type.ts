@@ -1,3 +1,3 @@
-import { ZoomWebhookMeetingEventType } from './webhook.zoom.type.meeting';
+import { type ZoomWebhookMeetingEventType } from './webhook.zoom.type.meeting';
 
 export type ZoomWebhookEventType = ZoomWebhookMeetingEventType | string;

@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { AuthRoleSet } from '@dereekb/util';
-import { AuthUserIdentifier, AuthUserState } from '../auth.user';
+import { type Observable } from 'rxjs';
+import { type AuthRoleSet } from '@dereekb/util';
+import { type AuthUserIdentifier, type AuthUserState } from '../auth.user';
 
 /**
  * Client auth service used to retrieve info about the current state of client authentication and client roles they may have.

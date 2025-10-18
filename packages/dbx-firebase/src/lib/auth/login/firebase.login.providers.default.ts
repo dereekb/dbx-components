@@ -1,10 +1,10 @@
-import { DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY, KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
+import { DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY, type KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
 import { DbxFirebaseLoginAnonymousComponent } from './login.anonymous.component';
 import { DbxFirebaseLoginEmailComponent } from './login.email.component';
 import { DbxFirebaseLoginFacebookComponent } from './login.facebook.component';
 import { DbxFirebaseLoginGitHubComponent } from './login.github.component';
 import { DbxFirebaseLoginGoogleComponent } from './login.google.component';
-import { DbxFirebaseAuthLoginProvider } from './login.service';
+import { type DbxFirebaseAuthLoginProvider } from './login.service';
 import { DbxFirebaseLoginTwitterComponent } from './login.twitter.component';
 import { DbxFirebaseRegisterEmailComponent } from './register.email.component';
 

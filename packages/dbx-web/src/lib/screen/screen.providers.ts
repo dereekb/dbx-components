@@ -1,4 +1,4 @@
-import { EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxScreenMediaService, DbxScreenMediaServiceConfig, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG } from './screen.service';
 
 /**

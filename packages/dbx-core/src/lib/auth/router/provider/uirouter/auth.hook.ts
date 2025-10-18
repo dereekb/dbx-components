@@ -1,8 +1,8 @@
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
-import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
-import { DbxAuthService } from '../../../service/auth.service';
-import { AuthTransitionDecision, AuthTransitionHookOptions, makeAuthTransitionHook } from './hook';
+import { type TransitionService, type TransitionHookFn, type Transition, type HookMatchCriteria } from '@uirouter/core';
+import { type DbxAuthService } from '../../../service/auth.service';
+import { type AuthTransitionDecision, type AuthTransitionHookOptions, makeAuthTransitionHook } from './hook';
 
 export interface IsLoggedInHookConfig {
   options: AuthTransitionHookOptions;

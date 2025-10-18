@@ -1,7 +1,7 @@
-import { EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
-import { ArrayOrValue } from '@dereekb/util';
+import { type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
+import { type ArrayOrValue } from '@dereekb/util';
 import { provideEffects } from '@ngrx/effects';
-import { DbxAppContextState } from '../../../context';
+import { type DbxAppContextState } from '../../../context';
 import { DbxAppAuthRouterEffects, DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN } from './effect/auth.router.state.effect';
 
 /**

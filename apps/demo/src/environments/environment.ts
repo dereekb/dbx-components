@@ -1,4 +1,4 @@
-import { base, DemoEnvironment } from './base';
+import { base, type DemoEnvironment } from './base';
 
 export const environment: DemoEnvironment = {
   ...base,

@@ -1,7 +1,7 @@
-import { GuestbookEntryDocument } from 'demo-firebase';
-import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { ModelKey } from '@dereekb/util';
-import { DemoApiNestContext } from '../function';
+import { type GuestbookEntryDocument } from 'demo-firebase';
+import { type FirebaseAuthUserId } from '@dereekb/firebase';
+import { type ModelKey } from '@dereekb/util';
+import { type DemoApiNestContext } from '../function';
 
 export function guestbookEntryForUser(nest: DemoApiNestContext, guestbookId: ModelKey, uid: FirebaseAuthUserId): GuestbookEntryDocument {
   const guestbookFirestoreCollection = nest.demoFirestoreCollections.guestbookCollection;

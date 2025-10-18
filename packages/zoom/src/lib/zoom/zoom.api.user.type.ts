@@ -1,5 +1,5 @@
-import { EmailAddress, ISO8601DateStringUTCFull, TimezoneString } from '@dereekb/util';
-import { ZoomClientVersion, ZoomUserId } from '../zoom.type';
+import { type EmailAddress, type ISO8601DateStringUTCFull, type TimezoneString } from '@dereekb/util';
+import { type ZoomClientVersion, type ZoomUserId } from '../zoom.type';
 
 /**
  * Represents a Zoom user, as returned by the Zoom API.

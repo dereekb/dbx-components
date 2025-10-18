@@ -1,5 +1,5 @@
-import { PastZoomMeeting, ZoomMeeting, ZoomMeetingIssue } from '@dereekb/zoom';
-import { ZoomWebhookAccountIdAndObjectPayloadData, ZoomWebhookEvent, ZoomWebhookOldObjectRef, ZoomWebhookOperationAndObjectPayloadData, ZoomWebhookTimestampRef } from './webhook.zoom.type.common';
+import { type PastZoomMeeting, type ZoomMeeting, type ZoomMeetingIssue } from '@dereekb/zoom';
+import { type ZoomWebhookAccountIdAndObjectPayloadData, type ZoomWebhookEvent, type ZoomWebhookOldObjectRef, type ZoomWebhookOperationAndObjectPayloadData, type ZoomWebhookTimestampRef } from './webhook.zoom.type.common';
 
 export type ZoomWebhookMeetingEventType = ZoomWebhookMeetingAlertEventType | ZoomWebhookMeetingCreatedEventType | ZoomWebhookMeetingUpdatedEventType | ZoomWebhookMeetingDeletedEventType | ZoomWebhookMeetingStartedEventType | ZoomWebhookMeetingEndedEventType | ZoomWebhookMeetingPermanentlyDeletedEventType;
 

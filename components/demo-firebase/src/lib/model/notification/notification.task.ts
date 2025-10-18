@@ -1,6 +1,6 @@
-import { CreateNotificationTaskTemplate, createNotificationTaskTemplate, FirebaseAuthUserId, NotificationTaskServiceHandleNotificationTaskResult, NotificationTaskType } from '@dereekb/firebase';
-import { ProfileDocument } from '../profile';
-import { Maybe } from '@dereekb/util';
+import { type CreateNotificationTaskTemplate, createNotificationTaskTemplate, type FirebaseAuthUserId, type NotificationTaskServiceHandleNotificationTaskResult, type NotificationTaskType } from '@dereekb/firebase';
+import { type ProfileDocument } from '../profile';
+import { type Maybe } from '@dereekb/util';
 
 // MARK: Example Notification
 export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';

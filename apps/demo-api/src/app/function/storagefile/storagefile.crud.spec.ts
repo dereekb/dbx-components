@@ -1,7 +1,7 @@
 import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationContext, demoStorageFileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, UserTestFileProcessingSubtask, UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
+import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
 import {
   combineUploadFileTypeDeterminers,
   determineByFileName,
@@ -9,26 +9,26 @@ import {
   determineByFilePath,
   EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL,
   HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL,
-  StoragePath,
-  StorageRawDataString,
-  StoredFileReader,
+  type StoragePath,
+  type StorageRawDataString,
+  type StoredFileReader,
   storedFileReaderFactory,
-  UploadedFileTypeDeterminer,
+  type UploadedFileTypeDeterminer,
   determineUserByFolderWrapperFunction,
   ALL_USER_UPLOADS_FOLDER_PATH,
-  FirebaseStorageAccessorFile,
+  type FirebaseStorageAccessorFile,
   StorageFileState,
   UPLOADED_FILE_DOES_NOT_EXIST_ERROR_CODE,
   UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE,
-  ProcessStorageFileParams,
+  type ProcessStorageFileParams,
   onCallUpdateModelParams,
   storageFileIdentity,
   StorageFileProcessingState,
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
-  StorageFileProcessingNotificationTaskData,
+  type StorageFileProcessingNotificationTaskData,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS
 } from '@dereekb/firebase';
-import { addMilliseconds, slashPathDetails, SlashPathFolder, SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';

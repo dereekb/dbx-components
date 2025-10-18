@@ -1,15 +1,15 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions-test';
-import { Firestore } from '@google-cloud/firestore';
-import { Auth } from 'firebase-admin/lib/auth/auth';
-import { FeaturesList } from 'firebase-functions-test/lib/features';
-import { TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase/test';
-import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture } from '@dereekb/util/test';
+import { type Firestore } from '@google-cloud/firestore';
+import { type Auth } from 'firebase-admin/lib/auth/auth';
+import { type FeaturesList } from 'firebase-functions-test/lib/features';
+import { type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type TestFirestoreContext, type TestFirestoreInstance } from '@dereekb/firebase/test';
+import { AbstractJestTestContextFixture, jestTestContextBuilder, type JestTestContextFactory, type JestTestContextFixture } from '@dereekb/util/test';
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
-import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
-import { Maybe, cachedGetter } from '@dereekb/util';
+import { type FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
+import { type Maybe, cachedGetter } from '@dereekb/util';
 import { firebaseAdminCloudFunctionWrapper } from './firebase.function';
-import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
+import { type Storage as GoogleCloudStorage } from '@google-cloud/storage';
 
 // MARK: FirebaseAdminFunctionTestBuilder
 let functionsInitialized = false;

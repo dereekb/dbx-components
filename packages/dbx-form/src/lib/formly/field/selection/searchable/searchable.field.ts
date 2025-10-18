@@ -1,10 +1,10 @@
-import { arrayToMap, Maybe, PrimativeKey, separateValues } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Observable, of, switchMap, map } from 'rxjs';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig } from '../../field';
-import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
-import { SearchableChipValueFieldsFieldProps } from './searchable.chip.field.component';
-import { SearchableTextValueFieldsFieldProps } from './searchable.text.field.component';
+import { arrayToMap, type Maybe, type PrimativeKey, separateValues } from '@dereekb/util';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type Observable, of, switchMap, map } from 'rxjs';
+import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type MaterialFormFieldConfig } from '../../field';
+import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue } from './searchable';
+import { type SearchableChipValueFieldsFieldProps } from './searchable.chip.field.component';
+import { type SearchableTextValueFieldsFieldProps } from './searchable.text.field.component';
 
 /**
  * Used to create a SearchableValueFieldDisplayFn function that will retrieve the metadata for items that are missing their metadata so they can be displayed properly.

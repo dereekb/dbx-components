@@ -1,4 +1,4 @@
-import { Ng2StateDeclaration } from '@uirouter/angular';
+import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocInteractionHomeComponent } from './container/home.component';
 import { DocInteractionLayoutComponent } from './container/layout.component';
 import { DocInteractionDialogComponent } from './container/dialog.component';

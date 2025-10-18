@@ -1,5 +1,5 @@
 import { type FirestoreDocument, firestoreDocumentAccessorContextExtension, type LimitedFirestoreDocumentAccessorFactoryConfig, limitedFirestoreDocumentAccessorFactory, type LimitedFirestoreDocumentAccessorFactoryFunction } from '../accessor/document';
-import { firestoreFixedItemPageIterationFactory, FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
+import { firestoreFixedItemPageIterationFactory, type FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
 import { type FirestoreContextReference } from '../reference';
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';

@@ -1,6 +1,6 @@
-import { ObservableOrValue } from '@dereekb/rxjs';
-import { Observable } from 'rxjs';
-import { SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../segue';
+import { type ObservableOrValue } from '@dereekb/rxjs';
+import { type Observable } from 'rxjs';
+import { type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../segue';
 import { DbxRouterTransitionService } from './router.transition.service';
 
 /**

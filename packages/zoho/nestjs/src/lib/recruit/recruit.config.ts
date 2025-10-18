@@ -1,4 +1,4 @@
-import { ZohoRecruitConfig, ZohoRecruitFactoryConfig } from '@dereekb/zoho';
+import { type ZohoRecruitConfig, type ZohoRecruitFactoryConfig } from '@dereekb/zoho';
 import { assertValidZohoConfig } from '../zoho.config';
 
 export type ZohoRecruitServiceApiConfig = ZohoRecruitConfig & {};

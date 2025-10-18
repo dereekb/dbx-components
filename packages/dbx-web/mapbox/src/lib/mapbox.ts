@@ -1,5 +1,5 @@
-import { LatLngPointInput, LatLngBoundInput, ZoomLevel, ZoomLevelRange, ExtendLatLngBoundInput } from '@dereekb/util';
-import * as MapboxGl from 'mapbox-gl';
+import { type LatLngPointInput, type LatLngBoundInput, type ZoomLevel, type ZoomLevelRange, type ExtendLatLngBoundInput } from '@dereekb/util';
+import type * as MapboxGl from 'mapbox-gl';
 
 /**
  * List of styles that are defined here:

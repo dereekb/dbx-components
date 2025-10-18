@@ -1,4 +1,4 @@
-import { DestroyRef, ElementRef, inject, Signal, signal } from '@angular/core';
+import { DestroyRef, ElementRef, inject, type Signal, signal } from '@angular/core';
 
 /**
  * Resize event used by resizeSignal.

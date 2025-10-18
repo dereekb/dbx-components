@@ -1,8 +1,8 @@
-import { ModuleMetadata } from '@nestjs/common';
+import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { readZoomOAuthServiceConfigFromConfigService, ZoomOAuthServiceConfig } from './oauth.config';
 import { ZoomOAuthApi } from './oauth.api';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type ZoomOAuthServiceConfigFactory = (configService: ConfigService) => ZoomOAuthServiceConfig;
 

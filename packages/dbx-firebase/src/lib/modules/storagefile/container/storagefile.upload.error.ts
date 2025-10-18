@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { StorageFileUploadFilesFinalResult } from './storagefile.upload.handler';
+import { type StorageFileUploadFilesFinalResult } from './storagefile.upload.handler';
 
 /**
  * Error that is thrown when a single file fails to upload.

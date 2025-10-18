@@ -1,4 +1,4 @@
-import { EnvironmentProviders, Injector, Provider, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, type Injector, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceConfig } from './model.types.service';
 
 /**

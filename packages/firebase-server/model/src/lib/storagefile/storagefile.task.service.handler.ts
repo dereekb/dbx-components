@@ -1,33 +1,33 @@
 import {
-  StorageFileProcessingNotificationTaskData,
-  StorageFileProcessingNotificationTaskCheckpoint,
-  StorageFilePurpose,
+  type StorageFileProcessingNotificationTaskData,
+  type StorageFileProcessingNotificationTaskCheckpoint,
+  type StorageFilePurpose,
   STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
-  NotificationTask,
+  type NotificationTask,
   notificationTaskDelayRetry,
-  StorageFileProcessingSubtaskMetadata,
-  NotificationTaskServiceHandleNotificationTaskResult,
-  StorageFileProcessingSubtask,
+  type StorageFileProcessingSubtaskMetadata,
+  type NotificationTaskServiceHandleNotificationTaskResult,
+  type StorageFileProcessingSubtask,
   notificationTaskComplete,
-  StorageFileDocument,
-  StorageFile,
+  type StorageFileDocument,
+  type StorageFile,
   notificationTaskPartiallyComplete,
   delayCompletion,
   StorageFileProcessingState,
   DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS,
   DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY,
-  StorageFileFirestoreCollections,
-  StoredFileReader,
+  type StorageFileFirestoreCollections,
+  type StoredFileReader,
   storedFileReaderFactory,
-  StoragePath,
-  FirebaseStorageAccessor,
+  type StoragePath,
+  type FirebaseStorageAccessor,
   copyStoragePath
 } from '@dereekb/firebase';
-import { NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { asArray, cachedGetter, Maybe, Milliseconds, PromiseOrValue, separateValues, unique } from '@dereekb/util';
+import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
+import { asArray, cachedGetter, type Maybe, type Milliseconds, type PromiseOrValue, separateValues, unique } from '@dereekb/util';
 import { BaseError } from 'make-error';
 import { removeFromCompletionsArrayWithTaskResult } from '../notification/notification.task.service.util';
-import { markStorageFileForDeleteTemplate, StorageFileQueueForDeleteTime } from './storagefile.util';
+import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.

@@ -1,7 +1,7 @@
-import { FirestoreDocument, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, FirestoreModelKey, FirestoreModelType } from '@dereekb/firebase';
-import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
-import { SetIncludesMode, IterableOrValue, Maybe } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { type FirestoreDocument, type FirestoreDocumentData, type DocumentSnapshot, type FirestoreAccessorStreamMode, type SnapshotOptions, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
+import { type GrantedRole, type GrantedRoleMap, type GrantedRoleMapReader, type GrantedRoleTruthMap, type GrantedRoleTruthMapObject } from '@dereekb/model';
+import { type SetIncludesMode, type IterableOrValue, type Maybe } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 
 /**
  * Service instance that exposes roles for a specific model.

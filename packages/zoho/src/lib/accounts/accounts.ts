@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { ZohoAccountsAuthFailureError } from './accounts.error.api';
-import { ZohoApiServiceName } from '../zoho.config';
+import { type ZohoApiServiceName } from '../zoho.config';
 
 /**
  * Arbitrary key used to identify a specific service's access token. Typically coincides with the ZohoApiServiceName.

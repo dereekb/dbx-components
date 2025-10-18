@@ -1,6 +1,6 @@
-import { FactoryWithInput, type Factory, type FactoryWithRequiredInput } from '../getter';
-import { Maybe } from '../value';
-import { transformStringFunction, TransformStringFunctionConfig } from './transform';
+import { type FactoryWithInput, type Factory, type FactoryWithRequiredInput } from '../getter';
+import { type Maybe } from '../value';
+import { transformStringFunction, type TransformStringFunctionConfig } from './transform';
 
 export type StringFactory<K extends string = string> = Factory<K>;
 

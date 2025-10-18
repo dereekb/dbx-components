@@ -1,8 +1,8 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { TextFieldConfig, textField } from '../field/value/text';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type TextFieldConfig, textField } from '../field/value/text';
 import { validatorsForFieldConfig } from '../field/field';
-import { ValidatorFn } from '@angular/forms';
-import { isWebsiteUrlValidator, IsWebsiteUrlValidatorConfig } from '../../validator/website';
+import { type ValidatorFn } from '@angular/forms';
+import { isWebsiteUrlValidator, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
 
 /**
  * websiteUrlField() configuration.

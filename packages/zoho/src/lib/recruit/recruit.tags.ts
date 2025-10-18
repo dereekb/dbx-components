@@ -1,5 +1,5 @@
-import { HexColorCode } from '@dereekb/util';
-import { ZohoRecruitChangeObjectDetails } from './recruit';
+import { type HexColorCode } from '@dereekb/util';
+import { type ZohoRecruitChangeObjectDetails } from './recruit';
 
 export type ZohoRecruitTagId = string;
 

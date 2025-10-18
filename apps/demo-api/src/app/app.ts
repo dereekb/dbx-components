@@ -1,6 +1,6 @@
 import { demoCallModel } from './function/model/crud.functions';
 import { profileSetUsernameKey } from 'demo-firebase';
-import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
+import { type NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
 import { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';

@@ -1,5 +1,5 @@
-import { ExampleReadParams, ExampleReadResponse } from 'demo-firebase';
-import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
+import { type ExampleReadParams, type ExampleReadResponse } from 'demo-firebase';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { onCallReadModelParams, systemStateIdentity } from '@dereekb/firebase';
 import { demoCallModel } from '../model/crud.functions';

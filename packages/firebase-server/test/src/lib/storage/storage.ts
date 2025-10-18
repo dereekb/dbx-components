@@ -1,8 +1,8 @@
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
-import { TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirebaseStorageContextFixture, TestingFirebaseStorageDrivers, makeTestingFirebaseStorageDrivers } from '@dereekb/firebase/test';
+import { type TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirebaseStorageContextFixture, type TestingFirebaseStorageDrivers, makeTestingFirebaseStorageDrivers } from '@dereekb/firebase/test';
 import { jestTestContextBuilder } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers } from '@dereekb/firebase-server';
-import { FirebaseStorage, firebaseStorageContextFactory } from '@dereekb/firebase';
+import { type FirebaseStorage, firebaseStorageContextFactory } from '@dereekb/firebase';
 
 export interface GoogleCloudTestFirebaseStorageConfig {
   host: string;

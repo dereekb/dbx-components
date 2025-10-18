@@ -1,5 +1,5 @@
-import { ISO8601DateString, UniqueModelWithId } from '@dereekb/util';
-import { ZohoRecruitReferenceData, ZohoRecruitParentReferenceData, ZohoRecruitTypeId, ZohoRecruitModuleName, ZohoRecruitCreatedByData, ZohoRecruitModifiedByData, ZohoRecruitId } from './recruit';
+import { type ISO8601DateString, type UniqueModelWithId } from '@dereekb/util';
+import { type ZohoRecruitReferenceData, type ZohoRecruitParentReferenceData, type ZohoRecruitTypeId, type ZohoRecruitModuleName, type ZohoRecruitCreatedByData, type ZohoRecruitModifiedByData, type ZohoRecruitId } from './recruit';
 
 // MARK: Notes
 export type ZohoRecruitNoteId = string;

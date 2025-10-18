@@ -1,9 +1,9 @@
-import { FetchJsonInput } from '@dereekb/util/fetch';
-import { ZoomOAuthContext } from './oauth.config';
-import { ZoomAccountId, ZoomAuthClientIdAndSecretPair, ZoomRefreshToken } from '../zoom.config';
-import { ZoomAccessTokenApiDomain, ZoomAccessTokenScopesString, ZoomAccessTokenString } from './oauth';
-import { Maybe, Seconds } from '@dereekb/util';
-import { ZoomOAuthAccessTokenErrorCode } from './oauth.error.api';
+import { type FetchJsonInput } from '@dereekb/util/fetch';
+import { type ZoomOAuthContext } from './oauth.config';
+import { type ZoomAccountId, type ZoomAuthClientIdAndSecretPair, type ZoomRefreshToken } from '../zoom.config';
+import { type ZoomAccessTokenApiDomain, type ZoomAccessTokenScopesString, type ZoomAccessTokenString } from './oauth';
+import { type Maybe, type Seconds } from '@dereekb/util';
+import { type ZoomOAuthAccessTokenErrorCode } from './oauth.error.api';
 
 export interface ZoomOAuthServerAccessTokenInput {
   readonly client?: Maybe<ZoomAuthClientIdAndSecretPair>;

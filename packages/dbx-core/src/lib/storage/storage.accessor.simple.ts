@@ -1,6 +1,6 @@
-import { Observable, map } from 'rxjs';
-import { isThrottled, unixTimeNumberForNow, DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
-import { StorageAccessor } from './storage.accessor';
+import { type Observable, map } from 'rxjs';
+import { isThrottled, unixTimeNumberForNow, DataDoesNotExistError, DataIsExpiredError, type ReadStoredData, type StoredData, type StoredDataStorageKey, type StoredDataString, type Maybe, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
+import { type StorageAccessor } from './storage.accessor';
 
 // MARK: SimpleStorageAccessor
 export interface SimpleStorageAccessorConverter<T> {

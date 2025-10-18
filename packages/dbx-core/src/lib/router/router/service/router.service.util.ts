@@ -1,6 +1,6 @@
-import { Building } from '@dereekb/util';
-import { SegueRefOrSegueRefRouterLink } from '../../segue';
-import { DbxRouterService } from './router.service';
+import { type Building } from '@dereekb/util';
+import { type SegueRefOrSegueRefRouterLink } from '../../segue';
+import { type DbxRouterService } from './router.service';
 
 /**
  * Function that returns true when the configured segueRef is active.

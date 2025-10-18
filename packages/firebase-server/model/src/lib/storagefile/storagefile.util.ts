@@ -1,5 +1,5 @@
-import { FirestoreQueryConstraint, iterateFirestoreDocumentSnapshotPairs, StorageFile, StorageFileFirestoreCollection, StorageFileKey, StorageFileState } from '@dereekb/firebase';
-import { dateFromDateOrTimeNumber, Maybe, Milliseconds, ArrayOrValue, asArray } from '@dereekb/util';
+import { type FirestoreQueryConstraint, iterateFirestoreDocumentSnapshotPairs, type StorageFile, type StorageFileFirestoreCollection, type StorageFileKey, StorageFileState } from '@dereekb/firebase';
+import { dateFromDateOrTimeNumber, type Maybe, type Milliseconds, type ArrayOrValue, asArray } from '@dereekb/util';
 
 /**
  * Describes when a StorageFile should be queued for deletion.

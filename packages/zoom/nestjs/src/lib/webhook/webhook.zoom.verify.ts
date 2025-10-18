@@ -1,7 +1,7 @@
-import { Request } from 'express';
+import { type Request } from 'express';
 import { createHmac } from 'crypto';
-import { ZoomSecretToken } from '@dereekb/zoom';
-import { UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
+import { type ZoomSecretToken } from '@dereekb/zoom';
+import { type UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
 
 export interface ZoomWebhookEventVerificationResult {
   readonly valid: boolean;
