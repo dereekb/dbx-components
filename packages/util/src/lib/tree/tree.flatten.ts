@@ -1,5 +1,4 @@
 import { ArrayOrValue } from '../array/array';
-import { MAP_IDENTITY } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 import { type TreeNode } from './tree';
 import { exploreTreeFunction, ExploreTreeFunctionConfig, ExploreTreeVisitNodeDecision, type ExploreTreeVisitNodeDecisionFunction } from './tree.explore';
