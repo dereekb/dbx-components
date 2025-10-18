@@ -1,5 +1,6 @@
 import { type TreeNode } from './tree';
 import { FlattenTreeAddNodeDecision, flattenTree, flattenTreeToArray, flattenTreeToArrayFunction, flattenTrees } from './tree.flatten';
+import { breadthFirstExploreTreeTraversalFactoryFunction } from './tree.explore';
 
 interface TestNodeValue {
   id: string;
@@ -248,6 +249,71 @@ describe('flattenTreeToArrayFunction()', () => {
       // root1 (100): ADD_CHILDREN_ONLY, child1/2/3 (<10 with children): ADD_CHILDREN_ONLY, leaf1/2/3 (>=10): ADD_ALL
       const expectedIds = ['leaf1-10', 'leaf2-20', 'leaf3-30'];
       expect(result).toEqual(expectedIds);
+    });
+  });
+
+  describe('with config object', () => {
+    it('should create flatten function with config object.', () => {
+      const flattenFn = flattenTreeToArrayFunction<TestNode, string>({
+        mapNodeFunction: (node) => node.value.id
+      });
+      const result = flattenFn(root1);
+      const expectedIds = ['root1', 'child1', 'leaf1', 'leaf2', 'child2', 'leaf3', 'child3'];
+      expect(result).toEqual(expectedIds);
+    });
+
+    it('should use shouldAddNodeFunction from config.', () => {
+      const flattenFn = flattenTreeToArrayFunction<TestNode, string>({
+        mapNodeFunction: (node) => node.value.id,
+        shouldAddNodeFunction: (node, mappedValue) => (mappedValue.startsWith('child') ? FlattenTreeAddNodeDecision.ADD_CHILDREN_ONLY : FlattenTreeAddNodeDecision.ADD_ALL)
+      });
+      const result = flattenFn(root1);
+      // Should skip child nodes but include root and leaf nodes
+      const expectedIds = ['root1', 'leaf1', 'leaf2', 'leaf3'];
+      expect(result).toEqual(expectedIds);
+    });
+
+    it('should support traverseFunctionFactory in config.', () => {
+      const flattenFn = flattenTreeToArrayFunction<TestNode, string>({
+        mapNodeFunction: (node) => node.value.id,
+        traverseFunctionFactory: breadthFirstExploreTreeTraversalFactoryFunction()
+      });
+      const result = flattenFn(root1);
+      // Breadth-first order
+      const expectedIds = ['root1', 'child1', 'child2', 'child3', 'leaf1', 'leaf2', 'leaf3'];
+      expect(result).toEqual(expectedIds);
+    });
+
+    it('should combine config options.', () => {
+      const flattenFn = flattenTreeToArrayFunction<TestNode, number>({
+        mapNodeFunction: (node) => node.value.value ?? 0,
+        shouldAddNodeFunction: (node, mappedValue) => (mappedValue >= 10 ? FlattenTreeAddNodeDecision.ADD_ALL : FlattenTreeAddNodeDecision.SKIP_ALL),
+        traverseFunctionFactory: breadthFirstExploreTreeTraversalFactoryFunction()
+      });
+      const result = flattenFn(root1);
+      // Breadth-first with filtering: root1 (100) passes, children fail (< 10)
+      const expectedValues = [100];
+      expect(result).toEqual(expectedValues);
+    });
+
+    it('should allow runtime override of config.', () => {
+      const flattenFn = flattenTreeToArrayFunction<TestNode, string>({
+        mapNodeFunction: (node) => node.value.id,
+        shouldAddNodeFunction: (node, mappedValue) => FlattenTreeAddNodeDecision.ADD_ALL
+      });
+      const runtimeAddNodeFn = (node: TestNode, mappedValue: string) => (mappedValue.startsWith('leaf') ? FlattenTreeAddNodeDecision.ADD_ALL : FlattenTreeAddNodeDecision.ADD_CHILDREN_ONLY);
+      const result = flattenFn(root1, [], runtimeAddNodeFn);
+      // Runtime override: skip non-leaf nodes
+      const expectedIds = ['leaf1', 'leaf2', 'leaf3'];
+      expect(result).toEqual(expectedIds);
+    });
+
+    it('should work with empty config.', () => {
+      const flattenFn = flattenTreeToArrayFunction<TestNode, TestNode>({});
+      const result = flattenFn(root1);
+      // Should use identity mapping and visit all nodes
+      const expectedNodes = [root1, child1, leaf1, leaf2, child2, leaf3, child3];
+      expect(result).toEqual(expectedNodes);
     });
   });
 });

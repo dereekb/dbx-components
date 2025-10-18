@@ -1,6 +1,8 @@
+import { ArrayOrValue } from '../array/array';
 import { MAP_IDENTITY } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 import { type TreeNode } from './tree';
+import { exploreTreeFunction, ExploreTreeFunctionConfig, ExploreTreeVisitNodeDecision, type ExploreTreeVisitNodeDecisionFunction } from './tree.explore';
 
 // MARK: Flatten
 /**
@@ -13,36 +15,38 @@ import { type TreeNode } from './tree';
  * @param addNodeFn Optional. A function to determine if a node should be visited. If not provided, all nodes are visited.
  * @returns An array containing the flattened values from the tree.
  */
-export type FlattenTreeFunction<N extends TreeNode<unknown>, V> = (tree: N, array?: V[], addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>) => V[];
+export type FlattenTreeFunction<N extends TreeNode<unknown>, V> = (trees: ArrayOrValue<N>, array?: V[], addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>) => V[];
 
 /**
  * Decides how to add a node to the flattened array during flattening.
  */
-export enum FlattenTreeAddNodeDecision {
+export const FlattenTreeAddNodeDecision = {
   /**
    * Add all nodes and children
    */
-  ADD_ALL = 0,
+  ADD_ALL: ExploreTreeVisitNodeDecision.VISIT_ALL,
   /**
    * Add the node only
    */
-  ADD_NODE_ONLY = 1,
+  ADD_NODE_ONLY: ExploreTreeVisitNodeDecision.VISIT_NODE_ONLY,
   /**
    * Add the node and its children
    */
-  ADD_CHILDREN_ONLY = 2,
+  ADD_CHILDREN_ONLY: ExploreTreeVisitNodeDecision.VISIT_CHILDREN_ONLY,
   /**
    * No value will be added
    */
-  SKIP_ALL = 3
-}
+  SKIP_ALL: ExploreTreeVisitNodeDecision.SKIP_ALL
+} as const;
+
+export type FlattenTreeAddNodeDecision = ExploreTreeVisitNodeDecision;
 
 /**
  * A function that determines if a node should be visited.
  *
  * The mapped value is also present.
  */
-export type FlattenTreeAddNodeDecisionFunction<N extends TreeNode<unknown>, V = N> = (node: N, nodeMappedValue: V) => FlattenTreeAddNodeDecision;
+export type FlattenTreeAddNodeDecisionFunction<N extends TreeNode<unknown>, V = N> = ExploreTreeVisitNodeDecisionFunction<N, V>;
 
 /**
  * Traverses the tree and flattens it into all tree nodes.
@@ -62,6 +66,10 @@ export function flattenTreeToArray<N extends TreeNode<unknown> = TreeNode<unknow
   return flattenTreeToArrayFunction<N>()(tree, array, addNodeFn);
 }
 
+export interface FlattenTreeToArrayFunctionConfig<N extends TreeNode<unknown>, V> extends Omit<ExploreTreeFunctionConfig<N, V>, 'shouldVisitNodeFunction'> {
+  readonly shouldAddNodeFunction?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>;
+}
+
 /**
  * Creates a FlattenTreeFunction that flattens tree nodes themselves into an array.
  *
@@ -69,6 +77,13 @@ export function flattenTreeToArray<N extends TreeNode<unknown> = TreeNode<unknow
  * @returns A FlattenTreeFunction that collects nodes of type N.
  */
 export function flattenTreeToArrayFunction<N extends TreeNode<unknown>>(): FlattenTreeFunction<N, N>;
+/**
+ * Creates a FlattenTreeFunction that flattens tree nodes themselves into an array.
+ *
+ * @template N The type of the tree node.
+ * @returns A FlattenTreeFunction that collects nodes of type N.
+ */
+export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(config: FlattenTreeToArrayFunctionConfig<N, V>): FlattenTreeFunction<N, V>;
 /**
  * Creates a FlattenTreeFunction that flattens tree nodes into an array of mapped values.
  *
@@ -88,50 +103,34 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(ma
  * @template N The type of the tree node, must extend TreeNode.
  * @template V The type of the values to be collected in the output array.
  * @param mapNodeFn An optional function to transform each node N to a value V. If omitted, nodes are cast to V (effectively N if V is N).
- * @param defaultAddNodeFn An optional function to determine if a node should be visited. If omitted, all nodes are visited.
+ * @param defaultAddNodeFn An optional function to determine if a node should be visited. If omitted, all nodes are visited. Ignored if the input config is an object with a shouldAddNodeFunction.
  * @returns A FlattenTreeFunction<N, V> that performs the tree flattening.
  */
-export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFn?: (node: N) => V, defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V> {
-  const mapNode: (node: N) => V = mapNodeFn ?? (MAP_IDENTITY as typeof mapNode);
-  const defaultAddNode = defaultAddNodeFn ?? (() => true);
+export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFnOrConfig?: FlattenTreeToArrayFunctionConfig<N, V> | ((node: N) => V), defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V> {
+  const config: FlattenTreeToArrayFunctionConfig<N, V> = typeof mapNodeFnOrConfig === 'function' ? ({ mapNodeFunction: mapNodeFnOrConfig } as FlattenTreeToArrayFunctionConfig<N, V>) : (mapNodeFnOrConfig ?? {});
 
-  return (tree: N, array: V[] = [], inputAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>) => {
-    const addNodeFn = inputAddNodeFn ?? defaultAddNode;
+  const exploreFn = exploreTreeFunction<N, V>({
+    ...config,
+    shouldVisitNodeFunction: config.shouldAddNodeFunction ?? defaultAddNodeFn
+  });
 
-    const flattenFn = (tree: N, array: V[] = []) => {
-      const mappedValue = mapNode(tree);
-
-      const visitResult = addNodeFn(tree, mappedValue);
-
-      // if addNode returns false, skip this node and its children
-      if (visitResult === FlattenTreeAddNodeDecision.SKIP_ALL) {
-        return array;
-      }
-
-      if (visitResult !== FlattenTreeAddNodeDecision.ADD_CHILDREN_ONLY) {
-        array.push(mappedValue);
-      }
-
-      if (tree.children && visitResult !== FlattenTreeAddNodeDecision.ADD_NODE_ONLY) {
-        tree.children.forEach((x) => flattenFn(x, array));
-      }
-
-      return array;
-    };
-
-    return flattenFn(tree, array);
+  return (trees: ArrayOrValue<N>, array: V[] = [], inputAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>) => {
+    exploreFn(trees, (value) => array.push(value), inputAddNodeFn ? { shouldVisitNodeFunction: inputAddNodeFn } : undefined);
+    return array;
   };
 }
 
 /**
- * Convenience function for flattening multiple trees with a flatten function.
+ * Convenience function for flattening multiple trees with a single configured flatten function.
+ *
+ * @deprecated FlattenTreeFunction now supports an array of trees.
  *
  * @param trees
  * @param flattenFn
  * @returns
  */
-export function flattenTrees<N extends TreeNode<unknown, N>, V>(trees: N[], flattenFn: FlattenTreeFunction<N, V>, addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): V[] {
+export function flattenTrees<N extends TreeNode<unknown, N>, V>(trees: ArrayOrValue<N>, flattenFn: FlattenTreeFunction<N, V>, addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): V[] {
   const array: V[] = [];
-  trees.forEach((x) => flattenFn(x, array, addNodeFn));
+  flattenFn(trees, array, addNodeFn);
   return array;
 }
