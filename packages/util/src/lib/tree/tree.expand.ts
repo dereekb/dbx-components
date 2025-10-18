@@ -17,9 +17,10 @@ export interface ExpandTree<T> {
    * These child values will be recursively processed to form child nodes.
    *
    * @param value The current value of type T to retrieve children for.
+   * @param depth The depth of the current node.
    * @returns An array of child values of type T, or undefined/null if no children exist.
    */
-  getChildren(value: T): Maybe<T[]>;
+  getChildren(value: T, depth: number): Maybe<T[]>;
 }
 
 /**
@@ -95,7 +96,7 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
     // Use Omit<N, 'children'> here as makeNodeFromConfig returns the node without children initially.
     // The children are attached in the next step.
     const node: N = makeNodeFromConfig(treeNodeWithoutChildren) as N; // Cast is necessary because children are added after
-    const childrenValues: Maybe<T[]> = config.getChildren(value);
+    const childrenValues: Maybe<T[]> = config.getChildren(value, depth);
     node.children = childrenValues ? childrenValues.map((x) => expandFn(x, node)) : undefined;
     return node;
   };
