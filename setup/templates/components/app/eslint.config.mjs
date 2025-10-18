@@ -1,5 +1,7 @@
 import nx from '@nx/eslint-plugin';
 import baseConfig from '../../eslint.config.mjs';
+import typescriptParser from '@typescript-eslint/parser';
+import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   ...baseConfig,
@@ -20,13 +22,18 @@ export default [
   ...nx.configs['flat/angular'],
   ...nx.configs['flat/angular-template'],
   {
-    files: ['*.ts', '*.tsx'],
-    rules: {
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }],
-      '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }]
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        project: ["./ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json", "./ANGULAR_COMPONENTS_FOLDER/tsconfig.spec.json"]
+      }
     },
-    parserOptions: {
-      project: ["./ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json", "./ANGULAR_COMPONENTS_FOLDER/tsconfig.spec.json"]
+    plugins: {
+      '@typescript-eslint': typescriptPlugin
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }]
     }
   },
   {
