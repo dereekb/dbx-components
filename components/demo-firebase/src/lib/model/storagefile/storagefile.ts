@@ -55,7 +55,7 @@ export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifi
 /**
  * Allowed mime types.
  */
-export const USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+export const USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png'];
 
 /**
  * The file is named "avatar.img" and can be any of the allowed file types.
