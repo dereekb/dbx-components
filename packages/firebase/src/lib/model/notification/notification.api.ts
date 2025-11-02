@@ -616,9 +616,29 @@ export interface SendNotificationResult {
 /**
  * Used for sending queued notifications in the system.
  */
-export class SendQueuedNotificationsParams {}
+export class SendQueuedNotificationsParams {
+  /**
+   * The max number of send loops to run.
+   *
+   * No limit by default.
+   */
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  readonly maxSendNotificationLoops?: Maybe<number>;
+
+  /**
+   * The threshold to use when to log a warning for an excessive of notification loops.
+   */
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  readonly sendNotificationLoopsTaskExcessThreshold?: Maybe<number>;
+}
 
 export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+  readonly excessLoopsDetected: boolean;
+  readonly notificationLoopCount: number;
   readonly notificationBoxesCreated: number;
   readonly notificationsVisited: number;
   readonly notificationTasksVisited: number;

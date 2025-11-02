@@ -1,4 +1,4 @@
-import { isSameDate, yearWeekCode } from '@dereekb/date';
+import { findMaxDate, isSameDate, yearWeekCode } from '@dereekb/date';
 import {
   type AsyncNotificationSummaryCreateAction,
   type AsyncNotificationUserCreateAction,
@@ -85,7 +85,7 @@ import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseSer
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
-import { addHours, addMinutes, hoursToMilliseconds, isFuture } from 'date-fns';
+import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
@@ -93,6 +93,7 @@ import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
+import { maxDate } from 'class-validator';
 
 /**
  * Injection token for the BaseNotificationServerActionsContext
@@ -893,6 +894,11 @@ export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETR
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
+/**
+ * Minimum time in minutes that a notification task can be attempted again
+ */
+export const NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES = 1;
+
 export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
@@ -909,7 +915,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       // Load the notification document outside of any potential context (transaction, etc.)
       const notificationDocument = notificationCollectionGroup.documentAccessor().loadDocumentFrom(inputNotificationDocument);
 
-      const { throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
+      const { nextSat, throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 
@@ -969,6 +975,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
                 console.warn(`Configured notification task of type "${t}" has reached the delete threshhold after being attempted ${notification.a} times. Deleting notification task.`);
                 await deleteNotification();
+              } else {
+                nextSat = addMinutes(new Date(), NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES); // can try to run the task again in 1 minute
               }
             } else {
               tryRun = false;
@@ -1053,11 +1061,15 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           }
 
           if (!deletedNotification) {
-            await notificationDocumentInTransaction.update({ sat: nextSat, a: notification.a + 1 });
+            const a = isNotificationTask && tryRun ? notification.a : notification.a + 1; // do not update a notification task's attempt count here, unless tryRun fails
+
+            // NOTE: It is important to update sat so the notification task queue running doesn't get stuck in a query loop by notifications/tasks that have a sat value that is in the past, but was just run.
+            await notificationDocumentInTransaction.update({ sat: nextSat, a });
           }
         }
 
         return {
+          nextSat,
           throttled,
           isNotificationTask,
           deletedNotification,
@@ -1201,7 +1213,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
           // do not update sat if the task is complete
           if (completion !== true && delayUntil != null) {
-            notificationTemplate.sat = dateOrMillisecondsToDate(delayUntil);
+            // must be at least the nextSat time to avoid
+            notificationTemplate.sat = findMaxDate([dateOrMillisecondsToDate(delayUntil), nextSat]) as Date;
           }
 
           partNotificationMarkedDone = notificationTemplate.d === true;
@@ -1607,12 +1620,19 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
   });
 }
 
+export const SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD = 5000;
+
 export function sendQueuedNotificationsFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationCollectionGroup } = context;
   const sendNotification = sendNotificationFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(SendQueuedNotificationsParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(SendQueuedNotificationsParams, async (params) => {
+    const { maxSendNotificationLoops } = params;
+    const maxLoops = maxSendNotificationLoops ?? Number.MAX_SAFE_INTEGER;
+    const sendNotificationLoopsTaskExcessThreshold = params.sendNotificationLoopsTaskExcessThreshold ?? SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD;
+
     return async () => {
+      let notificationLoopCount: number = 0;
       let notificationBoxesCreated: number = 0;
       let notificationsDeleted: number = 0;
       let notificationTasksVisited: number = 0;
@@ -1628,9 +1648,29 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       const sendNotificationParams: SendNotificationParams = { key: firestoreDummyKey(), throwErrorIfSent: false };
       const sendNotificationInstance = await sendNotification(sendNotificationParams);
 
+      let excessLoopsDetected = false;
+
+      const sendQueuedNotifications = async () => {
+        const query = notificationCollectionGroup.queryDocument(notificationsPastSendAtTimeQuery());
+        const notificationDocuments = await query.getDocs();
+
+        const result = await performAsyncTasks(
+          notificationDocuments,
+          async (notificationDocument) => {
+            const result = await sendNotificationInstance(notificationDocument);
+            return result;
+          },
+          {
+            maxParallelTasks: 10
+          }
+        );
+
+        return result;
+      };
+
       // iterate through all notification items that need to be synced
       // eslint-disable-next-line no-constant-condition
-      while (true) {
+      while (notificationLoopCount < maxLoops) {
         const sendQueuedNotificationsResults = await sendQueuedNotifications();
 
         sendQueuedNotificationsResults.results.forEach((x) => {
@@ -1639,7 +1679,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
           if (result.success) {
             notificationsSucceeded += 1;
           } else if (result.createdBox || result.notificationBoxNeedsInitialization) {
-            notificationsDelayed = 1;
+            notificationsDelayed += 1;
           } else {
             notificationsFailed += 1;
           }
@@ -1663,31 +1703,20 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
 
         const found = sendQueuedNotificationsResults.results.length;
         notificationsVisited += found;
+        notificationLoopCount += 1;
 
         if (!found) {
           break;
+        } else if (!excessLoopsDetected && sendNotificationLoopsTaskExcessThreshold > notificationLoopCount) {
+          excessLoopsDetected = true;
+          console.error(`sendQueuedNotifications(EXCESS_LOOPS_DETECTED): Exceeded send notification loops task excess threshold of ${sendNotificationLoopsTaskExcessThreshold}.`);
+          // continue the loops
         }
       }
 
-      async function sendQueuedNotifications() {
-        const query = notificationCollectionGroup.queryDocument(notificationsPastSendAtTimeQuery());
-        const notificationDocuments = await query.getDocs();
-
-        const result = await performAsyncTasks(
-          notificationDocuments,
-          async (notificationDocument) => {
-            const result = await sendNotificationInstance(notificationDocument);
-            return result;
-          },
-          {
-            maxParallelTasks: 10
-          }
-        );
-
-        return result;
-      }
-
       const result: SendQueuedNotificationsResult = {
+        excessLoopsDetected,
+        notificationLoopCount,
         notificationBoxesCreated,
         notificationsDeleted,
         notificationTasksVisited,
