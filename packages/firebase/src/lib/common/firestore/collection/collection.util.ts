@@ -1,5 +1,5 @@
-import { EmailAddress } from '@dereekb/util';
-import { FirestoreModelId } from './collection';
+import { type EmailAddress } from '@dereekb/util';
+import { type FirestoreModelId } from './collection';
 
 /**
  * Creates a valid FirestoreModelId from an email address.
