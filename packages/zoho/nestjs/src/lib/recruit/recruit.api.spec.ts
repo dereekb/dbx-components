@@ -21,7 +21,8 @@ import {
   ZohoRecruitUpdateRecordData,
   ZohoRecruitUpsertRecordData,
   ZOHO_ERROR_STATUS,
-  ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH
+  ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH,
+  ZohoRecruitTag
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
@@ -1090,7 +1091,7 @@ describe('recruit.api', () => {
                 });
 
                 expect((record as any).Associated_Tags).toBeDefined();
-                expect((record as any).Associated_Tags).toHaveLength(0);
+                expect(((record as any).Associated_Tags as ZohoRecruitTag[]).filter((x) => x.name === TEST_TAG_NAME)).toHaveLength(0);
               });
             });
           });

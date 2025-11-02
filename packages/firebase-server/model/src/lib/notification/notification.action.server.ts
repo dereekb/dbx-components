@@ -911,6 +911,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
     const { ignoreSendAtThrottle } = params;
 
     return async (inputNotificationDocument: NotificationDocument) => {
+      const now = new Date();
+
       // Load the notification document outside of any potential context (transaction, etc.)
       const notificationDocument = notificationCollectionGroup.documentAccessor().loadDocumentFrom(inputNotificationDocument);
 
@@ -933,9 +935,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           tryRun = !isFuture(notification.sat);
 
           if (tryRun) {
-            if (!isNotificationTask) {
+            if (isNotificationTask) {
+              // can try to run the task again in 1 minute
+              nextSat = addMinutes(now, NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES);
+            } else {
               // update the next send type of non-tasks to try being sent again in 10 minutes, if they fail
-              nextSat = addMinutes(new Date(), 10);
+              nextSat = addMinutes(now, 10);
             }
           } else {
             throttled = true;
@@ -974,8 +979,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
                 console.warn(`Configured notification task of type "${t}" has reached the delete threshhold after being attempted ${notification.a} times. Deleting notification task.`);
                 await deleteNotification();
-              } else {
-                nextSat = addMinutes(new Date(), NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES); // can try to run the task again in 1 minute
               }
             } else {
               tryRun = false;
@@ -983,7 +986,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
               if (notification.a < UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS) {
                 console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being delayed by ${delay} hours.`);
-                nextSat = addHours(new Date(), delay);
+                nextSat = addHours(now, delay);
               } else {
                 console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being deleted.`);
 
@@ -1014,7 +1017,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 }
 
                 // delay send for 12 hours, for a max of 24 hours incase it is an issue.
-                nextSat = addHours(new Date(), delay);
+                nextSat = addHours(now, delay);
                 tryRun = false;
               } else {
                 console.warn(`Unconfigured template type of "${t}" was found in a Notification. The Notification has reached the delete threshhold after failing to send due to misconfiguration multiple times and is being deleted.`);
@@ -1046,7 +1049,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             if (tryRun && notificationBox && notificationBox.s) {
               notificationBoxNeedsInitialization = true;
               tryRun = false;
-              nextSat = addMinutes(new Date(), NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
+              nextSat = addMinutes(now, NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
             }
           }
         }
