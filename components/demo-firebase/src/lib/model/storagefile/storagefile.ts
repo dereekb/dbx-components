@@ -34,6 +34,12 @@ export const USER_TEST_FILE_PURPOSE_PART_B_SUBTASK: StorageFileProcessingSubtask
 export type UserTestFileProcessingSubtask = typeof USER_TEST_FILE_PURPOSE_PART_A_SUBTASK | typeof USER_TEST_FILE_PURPOSE_PART_B_SUBTASK;
 
 export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProcessingSubtaskMetadata {
+  /**
+   * Passed to the result of the task.
+   *
+   * Used for testing.
+   */
+  canRunNextCheckpoint?: Maybe<boolean>;
   numberValue?: Maybe<number>;
   stringValue?: Maybe<string>;
 }
@@ -55,7 +61,7 @@ export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifi
 /**
  * Allowed mime types.
  */
-export const USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+export const USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png'];
 
 /**
  * The file is named "avatar.img" and can be any of the allowed file types.

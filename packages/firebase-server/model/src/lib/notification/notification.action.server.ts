@@ -1,4 +1,4 @@
-import { isSameDate, yearWeekCode } from '@dereekb/date';
+import { findMaxDate, isSameDate, yearWeekCode } from '@dereekb/date';
 import {
   type AsyncNotificationSummaryCreateAction,
   type AsyncNotificationUserCreateAction,
@@ -893,6 +893,11 @@ export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETR
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
+/**
+ * Minimum time in minutes that a notification task can be attempted again
+ */
+export const NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES = 1;
+
 export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
@@ -906,10 +911,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
     const { ignoreSendAtThrottle } = params;
 
     return async (inputNotificationDocument: NotificationDocument) => {
+      const now = new Date();
+
       // Load the notification document outside of any potential context (transaction, etc.)
       const notificationDocument = notificationCollectionGroup.documentAccessor().loadDocumentFrom(inputNotificationDocument);
 
-      const { throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
+      const { nextSat, throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 
@@ -928,9 +935,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           tryRun = !isFuture(notification.sat);
 
           if (tryRun) {
-            if (!isNotificationTask) {
+            if (isNotificationTask) {
+              // can try to run the task again in 1 minute
+              nextSat = addMinutes(now, NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES);
+            } else {
               // update the next send type of non-tasks to try being sent again in 10 minutes, if they fail
-              nextSat = addMinutes(new Date(), 10);
+              nextSat = addMinutes(now, 10);
             }
           } else {
             throttled = true;
@@ -976,7 +986,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
               if (notification.a < UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS) {
                 console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being delayed by ${delay} hours.`);
-                nextSat = addHours(new Date(), delay);
+                nextSat = addHours(now, delay);
               } else {
                 console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being deleted.`);
 
@@ -1007,7 +1017,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 }
 
                 // delay send for 12 hours, for a max of 24 hours incase it is an issue.
-                nextSat = addHours(new Date(), delay);
+                nextSat = addHours(now, delay);
                 tryRun = false;
               } else {
                 console.warn(`Unconfigured template type of "${t}" was found in a Notification. The Notification has reached the delete threshhold after failing to send due to misconfiguration multiple times and is being deleted.`);
@@ -1039,7 +1049,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             if (tryRun && notificationBox && notificationBox.s) {
               notificationBoxNeedsInitialization = true;
               tryRun = false;
-              nextSat = addMinutes(new Date(), NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
+              nextSat = addMinutes(now, NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
             }
           }
         }
@@ -1053,11 +1063,15 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           }
 
           if (!deletedNotification) {
-            await notificationDocumentInTransaction.update({ sat: nextSat, a: notification.a + 1 });
+            const a = isNotificationTask && tryRun ? notification.a : notification.a + 1; // do not update a notification task's attempt count here, unless tryRun fails
+
+            // NOTE: It is important to update sat so the notification task queue running doesn't get stuck in a query loop by notifications/tasks that have a sat value that is in the past, but was just run.
+            await notificationDocumentInTransaction.update({ sat: nextSat, a });
           }
         }
 
         return {
+          nextSat,
           throttled,
           isNotificationTask,
           deletedNotification,
@@ -1101,6 +1115,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         await handleNormalNotification();
       }
 
+      interface RunNotificationTaskNextPartInput {
+        readonly notification: DocumentDataWithIdAndKey<Notification>;
+        readonly notificationTaskHandler: NotificationTaskServiceTaskHandler;
+        readonly previouslyCompleteSubTasks: string[];
+      }
+
       interface RunNotificationTaskNextPartResult {
         /**
          * Set if the result comes back as a partial completion, with canRunNextCheckpoint as true, and there is no delay.
@@ -1114,10 +1134,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
          * This is used as a check to prevent infinite loops.
          */
         readonly partTprReversal: boolean;
+        readonly nextCompleteSubTasks: Maybe<string[]>;
         readonly partSuccess: boolean;
       }
 
-      async function _runNotificationTaskNextPart(notification: DocumentDataWithIdAndKey<Notification>, notificationTaskHandler: NotificationTaskServiceTaskHandler): Promise<RunNotificationTaskNextPartResult> {
+      async function _runNotificationTaskNextPart(input: RunNotificationTaskNextPartInput): Promise<RunNotificationTaskNextPartResult> {
+        const { notification, notificationTaskHandler, previouslyCompleteSubTasks } = input;
         const { n: item, cat, ut } = notification;
 
         let tryRunNextPart = false;
@@ -1125,6 +1147,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         let partNotificationMarkedDone = false;
         let partTprReversal = false;
         let partSuccess = false;
+        let nextCompleteSubTasks: Maybe<string[]>;
 
         const unique = ut ?? false;
         const notificationTask: NotificationTask = {
@@ -1145,7 +1168,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         // perform the task
         try {
           const handleTaskResult = await notificationTaskHandler.handleNotificationTask(notificationTask);
-          const { completion, updateMetadata, delayUntil, canRunNextCheckpoint } = handleTaskResult;
+          const { completion, updateMetadata, delayUntil, canRunNextCheckpoint, allCompletedSubTasks } = handleTaskResult;
 
           partNotificationTaskCompletionType = completion;
           partSuccess = true;
@@ -1169,6 +1192,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               // update the checkpoint attempts count
               if (Array.isArray(completion) && completion.length === 0) {
                 notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempt/delays count
+                tryRunNextPart = canRunNextCheckpoint === true && allCompletedSubTasks != null; // can only run the next part if subtasks were returned
               } else {
                 tryRunNextPart = canRunNextCheckpoint === true && delayUntil == null; // can try the next part if there is no delayUntil and canRunNextCheckpoint is true
                 notificationTemplate.at = 0; // reset checkpoint attempt/delay count
@@ -1194,6 +1218,22 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               if (tryRunNextPart) {
                 const tprChanged = !iterablesAreSetEquivalent(notification.tpr, notificationTemplate.tpr);
                 partTprReversal = !tprChanged || (tprChanged && notificationTemplate.tpr.length <= notification.tpr.length);
+
+                if (allCompletedSubTasks != null) {
+                  switch (allCompletedSubTasks) {
+                    case true:
+                    case false:
+                      // only run if there is no tpr reversal flagged
+                      tryRunNextPart = !partTprReversal;
+                      break;
+                    default:
+                      // check subtask tpr changes
+                      nextCompleteSubTasks = asArray(allCompletedSubTasks);
+                      const subtaskTprChanged = !iterablesAreSetEquivalent(previouslyCompleteSubTasks, nextCompleteSubTasks);
+                      partTprReversal = !subtaskTprChanged || (subtaskTprChanged && nextCompleteSubTasks.length <= previouslyCompleteSubTasks.length);
+                      break;
+                  }
+                }
               }
 
               break;
@@ -1201,7 +1241,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
           // do not update sat if the task is complete
           if (completion !== true && delayUntil != null) {
-            notificationTemplate.sat = dateOrMillisecondsToDate(delayUntil);
+            // must be at least the nextSat time to avoid
+            notificationTemplate.sat = findMaxDate([dateOrMillisecondsToDate(delayUntil), nextSat]) as Date;
           }
 
           partNotificationMarkedDone = notificationTemplate.d === true;
@@ -1234,6 +1275,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           partNotificationMarkedDone,
           partNotificationTaskCompletionType,
           partTprReversal,
+          nextCompleteSubTasks,
           partSuccess
         };
       }
@@ -1251,6 +1293,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
         if (tryRun && notification != null && notificationTaskHandler) {
           let currentNotification = notification;
+          let previouslyCompleteSubTasks: string[] = [];
+
           notificationTaskLoopingProtectionTriggered = false;
 
           notificationTaskPartsRunCount = 0;
@@ -1258,9 +1302,14 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           while (notificationTaskPartsRunCount < MAX_NOTIFICATION_TASK_PARTS_RUN_ALLOWED) {
             notificationTaskPartsRunCount += 1;
 
-            const result = await _runNotificationTaskNextPart(currentNotification, notificationTaskHandler);
+            const result = await _runNotificationTaskNextPart({
+              notification: currentNotification,
+              notificationTaskHandler,
+              previouslyCompleteSubTasks
+            });
 
             notificationTaskCompletionType = result.partNotificationTaskCompletionType;
+            previouslyCompleteSubTasks = result.nextCompleteSubTasks ?? [];
             success = result.partSuccess;
 
             const tryRunNextPart = result.partSuccess && result.tryRunNextPart && !notificationTaskLoopingProtectionTriggered;
@@ -1607,12 +1656,19 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
   });
 }
 
+export const SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD = 5000;
+
 export function sendQueuedNotificationsFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationCollectionGroup } = context;
   const sendNotification = sendNotificationFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(SendQueuedNotificationsParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(SendQueuedNotificationsParams, async (params) => {
+    const { maxSendNotificationLoops } = params;
+    const maxLoops = maxSendNotificationLoops ?? Number.MAX_SAFE_INTEGER;
+    const sendNotificationLoopsTaskExcessThreshold = params.sendNotificationLoopsTaskExcessThreshold ?? SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD;
+
     return async () => {
+      let notificationLoopCount: number = 0;
       let notificationBoxesCreated: number = 0;
       let notificationsDeleted: number = 0;
       let notificationTasksVisited: number = 0;
@@ -1628,9 +1684,29 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       const sendNotificationParams: SendNotificationParams = { key: firestoreDummyKey(), throwErrorIfSent: false };
       const sendNotificationInstance = await sendNotification(sendNotificationParams);
 
+      let excessLoopsDetected = false;
+
+      const sendQueuedNotifications = async () => {
+        const query = notificationCollectionGroup.queryDocument(notificationsPastSendAtTimeQuery());
+        const notificationDocuments = await query.getDocs();
+
+        const result = await performAsyncTasks(
+          notificationDocuments,
+          async (notificationDocument) => {
+            const result = await sendNotificationInstance(notificationDocument);
+            return result;
+          },
+          {
+            maxParallelTasks: 10
+          }
+        );
+
+        return result;
+      };
+
       // iterate through all notification items that need to be synced
       // eslint-disable-next-line no-constant-condition
-      while (true) {
+      while (notificationLoopCount < maxLoops) {
         const sendQueuedNotificationsResults = await sendQueuedNotifications();
 
         sendQueuedNotificationsResults.results.forEach((x) => {
@@ -1639,7 +1715,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
           if (result.success) {
             notificationsSucceeded += 1;
           } else if (result.createdBox || result.notificationBoxNeedsInitialization) {
-            notificationsDelayed = 1;
+            notificationsDelayed += 1;
           } else {
             notificationsFailed += 1;
           }
@@ -1663,31 +1739,20 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
 
         const found = sendQueuedNotificationsResults.results.length;
         notificationsVisited += found;
+        notificationLoopCount += 1;
 
         if (!found) {
           break;
+        } else if (!excessLoopsDetected && notificationLoopCount > sendNotificationLoopsTaskExcessThreshold) {
+          excessLoopsDetected = true;
+          console.error(`sendQueuedNotifications(EXCESS_LOOPS_DETECTED): Exceeded send notification loops task excess threshold of ${sendNotificationLoopsTaskExcessThreshold}.`);
+          // continue the loops
         }
       }
 
-      async function sendQueuedNotifications() {
-        const query = notificationCollectionGroup.queryDocument(notificationsPastSendAtTimeQuery());
-        const notificationDocuments = await query.getDocs();
-
-        const result = await performAsyncTasks(
-          notificationDocuments,
-          async (notificationDocument) => {
-            const result = await sendNotificationInstance(notificationDocument);
-            return result;
-          },
-          {
-            maxParallelTasks: 10
-          }
-        );
-
-        return result;
-      }
-
       const result: SendQueuedNotificationsResult = {
+        excessLoopsDetected,
+        notificationLoopCount,
         notificationBoxesCreated,
         notificationsDeleted,
         notificationTasksVisited,

@@ -123,6 +123,7 @@ demoApiFunctionContextFactory((f) => {
                         describe('handle task', () => {
                           it('should have handled the notification task', async () => {
                             let notification = await assertSnapshotData(nbn.document);
+                            const initialSendAtTime = notification.sat;
                             expect((notification.n.d as any)?.value).not.toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
 
                             const result = await nbn.sendNotification();
@@ -137,6 +138,8 @@ demoApiFunctionContextFactory((f) => {
                             expect(result.notificationTaskCompletionType).toBe('part_b'); // part_b should be completed now
 
                             notification = await assertSnapshotData(nbn.document);
+                            expect(notification.sat).not.toBe(initialSendAtTime); // sat should always get updated
+                            expect(notification.sat).toBeAfter(initialSendAtTime);
                             expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
                           });
 
