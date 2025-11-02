@@ -140,11 +140,15 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
       {
         subtask: USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,
         fn: async (input) => {
+          const canRunNextCheckpoint = input.subtaskData?.canRunNextCheckpoint ?? false;
+
           // TODO: pull from the file or something
 
           return {
             completion: USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,
+            canRunNextCheckpoint,
             updateMetadata: {
+              canRunNextCheckpoint: input.subtaskData?.canRunNextCheckpoint ?? null,
               numberValue: 1,
               stringValue: 'a'
             }
@@ -156,9 +160,13 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
         fn: async (input) => {
           // TODO: pull from the file or something
 
+          const canRunNextCheckpoint = input.subtaskData?.canRunNextCheckpoint ?? false;
+
           return {
             completion: USER_TEST_FILE_PURPOSE_PART_B_SUBTASK,
+            canRunNextCheckpoint,
             updateMetadata: {
+              canRunNextCheckpoint: input.subtaskData?.canRunNextCheckpoint ?? null,
               numberValue: 2,
               stringValue: 'b'
             }

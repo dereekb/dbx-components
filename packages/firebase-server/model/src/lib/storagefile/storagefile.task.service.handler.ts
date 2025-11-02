@@ -21,7 +21,9 @@ import {
   storedFileReaderFactory,
   type StoragePath,
   type FirebaseStorageAccessor,
-  copyStoragePath
+  copyStoragePath,
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
 import { asArray, cachedGetter, type Maybe, type Milliseconds, type PromiseOrValue, separateValues, unique } from '@dereekb/util';
@@ -315,10 +317,13 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
             } as M
           };
 
+          const nextCanRunNextCheckpoint = canRunNextCheckpoint ?? allowRunMultipleParts;
+
           result = {
             completion: allSubtasksDone ? ['processing'] : delayCompletion(), // return processing until all subtasks are complete.
             updateMetadata,
-            canRunNextCheckpoint: canRunNextCheckpoint ?? allowRunMultipleParts,
+            canRunNextCheckpoint: nextCanRunNextCheckpoint,
+            allCompletedSubTasks: sfps,
             delayUntil // delay is passed through
           };
         } else {
@@ -375,7 +380,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     type: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
     flow: [
       {
-        checkpoint: 'processing',
+        checkpoint: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
         fn: async (notificationTask: NotificationTask<StorageFileProcessingNotificationTaskData>) => {
           const { data } = notificationTask;
 
@@ -430,7 +435,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
         }
       },
       {
-        checkpoint: 'cleanup',
+        checkpoint: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP,
         fn: async (notificationTask: NotificationTask<StorageFileProcessingNotificationTaskData>) => {
           const { data } = notificationTask;
 

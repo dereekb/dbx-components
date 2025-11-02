@@ -26,7 +26,9 @@ import {
   StorageFileProcessingState,
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
   type StorageFileProcessingNotificationTaskData,
-  STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS
+  STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
+  StorageFileProcessingSubtaskMetadata,
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING
 } from '@dereekb/firebase';
 import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
@@ -774,7 +776,7 @@ demoApiFunctionContextFactory((f) => {
                       expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]);
 
                       // run subtask B
-                      const runSubtaskB = await nc.sendNotification();
+                      const runSubtaskB = await nc.sendNotification({ ignoreSendAtThrottle: true }); // ignore send throttle
                       expect(runSubtaskB).toBeDefined();
                       expect(runSubtaskB.throttled).toBe(false);
                       expect(runSubtaskB.isNotificationTask).toBe(true);
@@ -787,7 +789,7 @@ demoApiFunctionContextFactory((f) => {
                       expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]);
 
                       // run cleanup
-                      const runCleanup = await nc.sendNotification();
+                      const runCleanup = await nc.sendNotification({ ignoreSendAtThrottle: true }); // ignore send throttle
                       expect(runCleanup).toBeDefined();
                       expect(runCleanup.throttled).toBe(false);
                       expect(runCleanup.isNotificationTask).toBe(true);
@@ -799,6 +801,49 @@ demoApiFunctionContextFactory((f) => {
                       expect(storageFile.pn).toBeUndefined(); // notification task reference is removed
                       expect(storageFile.pat).toBeDefined(); // does not change
                       expect(storageFile.pcat).toBeDefined();
+                    });
+
+                    describe('canRunNextCheckpoint=true', () => {
+                      beforeEach(async () => {
+                        const notificationItem = await assertSnapshotData(nc.document);
+
+                        await nc.document.update({
+                          n: {
+                            ...notificationItem.n,
+                            d: {
+                              ...notificationItem.n.d,
+                              sd: {
+                                ...((notificationItem.n.d as any)?.sd ?? {}),
+                                canRunNextCheckpoint: true
+                              }
+                            } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
+                          }
+                        });
+                      });
+
+                      it('should run the entire task and run cleanup successfully.', async () => {
+                        let storageFile = await assertSnapshotData(sf.document);
+                        expect(storageFile.p).toBeDefined();
+                        expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                        expect(storageFile.pn).toBeDefined();
+                        expect(storageFile.pat).toBeDefined();
+
+                        // run subtask A
+                        const runSubtask = await nc.sendNotification();
+                        expect(runSubtask).toBeDefined();
+                        expect(runSubtask.notificationTaskCompletionType).toBe(true); // should have completed all steps, including cleanup
+                        expect(runSubtask.throttled).toBe(false);
+                        expect(runSubtask.isNotificationTask).toBe(true);
+                        expect(runSubtask.success).toBe(true);
+
+                        let notification = await assertSnapshotData(nc.document);
+                        let metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+
+                        expect(metadata).toBeDefined();
+                        expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
+                        expect(notification.tpr).toEqual([STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING]);
+                        expect(notification.d).toBe(true); // marked as done now
+                      });
                     });
                   });
                 });

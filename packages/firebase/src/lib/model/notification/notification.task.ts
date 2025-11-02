@@ -179,4 +179,10 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
    * Ignored if delayUntil is set or if the completion is true/false/empty array.
    */
   readonly canRunNextCheckpoint?: Maybe<boolean>;
+  /**
+   * This value is only returned by tasks that have "subtasks", and this is the result of a subtask being run.
+   *
+   * These subtasks are used in place of the completion value when making decisions about continuing the loop or not.
+   */
+  readonly allCompletedSubTasks?: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
 }

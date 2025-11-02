@@ -17,6 +17,9 @@ export const STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE: NotificationTaskTyp
  */
 export type StorageFileProcessingNotificationTaskCheckpoint = 'processing' | 'cleanup';
 
+export const STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING: StorageFileProcessingNotificationTaskCheckpoint = 'processing';
+export const STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP: StorageFileProcessingNotificationTaskCheckpoint = 'cleanup';
+
 /**
  * A subtask checkpoint.
  *

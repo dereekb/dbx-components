@@ -1115,6 +1115,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         await handleNormalNotification();
       }
 
+      interface RunNotificationTaskNextPartInput {
+        readonly notification: DocumentDataWithIdAndKey<Notification>;
+        readonly notificationTaskHandler: NotificationTaskServiceTaskHandler;
+        readonly previouslyCompleteSubTasks: string[];
+      }
+
       interface RunNotificationTaskNextPartResult {
         /**
          * Set if the result comes back as a partial completion, with canRunNextCheckpoint as true, and there is no delay.
@@ -1128,10 +1134,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
          * This is used as a check to prevent infinite loops.
          */
         readonly partTprReversal: boolean;
+        readonly nextCompleteSubTasks: Maybe<string[]>;
         readonly partSuccess: boolean;
       }
 
-      async function _runNotificationTaskNextPart(notification: DocumentDataWithIdAndKey<Notification>, notificationTaskHandler: NotificationTaskServiceTaskHandler): Promise<RunNotificationTaskNextPartResult> {
+      async function _runNotificationTaskNextPart(input: RunNotificationTaskNextPartInput): Promise<RunNotificationTaskNextPartResult> {
+        const { notification, notificationTaskHandler, previouslyCompleteSubTasks } = input;
         const { n: item, cat, ut } = notification;
 
         let tryRunNextPart = false;
@@ -1139,6 +1147,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         let partNotificationMarkedDone = false;
         let partTprReversal = false;
         let partSuccess = false;
+        let nextCompleteSubTasks: Maybe<string[]>;
 
         const unique = ut ?? false;
         const notificationTask: NotificationTask = {
@@ -1159,7 +1168,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         // perform the task
         try {
           const handleTaskResult = await notificationTaskHandler.handleNotificationTask(notificationTask);
-          const { completion, updateMetadata, delayUntil, canRunNextCheckpoint } = handleTaskResult;
+          const { completion, updateMetadata, delayUntil, canRunNextCheckpoint, allCompletedSubTasks } = handleTaskResult;
 
           partNotificationTaskCompletionType = completion;
           partSuccess = true;
@@ -1183,6 +1192,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               // update the checkpoint attempts count
               if (Array.isArray(completion) && completion.length === 0) {
                 notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempt/delays count
+                tryRunNextPart = canRunNextCheckpoint === true && allCompletedSubTasks != null; // can only run the next part if subtasks were returned
               } else {
                 tryRunNextPart = canRunNextCheckpoint === true && delayUntil == null; // can try the next part if there is no delayUntil and canRunNextCheckpoint is true
                 notificationTemplate.at = 0; // reset checkpoint attempt/delay count
@@ -1208,6 +1218,22 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               if (tryRunNextPart) {
                 const tprChanged = !iterablesAreSetEquivalent(notification.tpr, notificationTemplate.tpr);
                 partTprReversal = !tprChanged || (tprChanged && notificationTemplate.tpr.length <= notification.tpr.length);
+
+                if (allCompletedSubTasks != null) {
+                  switch (allCompletedSubTasks) {
+                    case true:
+                    case false:
+                      // only run if there is no tpr reversal flagged
+                      tryRunNextPart = !partTprReversal;
+                      break;
+                    default:
+                      // check subtask tpr changes
+                      nextCompleteSubTasks = asArray(allCompletedSubTasks);
+                      const subtaskTprChanged = !iterablesAreSetEquivalent(previouslyCompleteSubTasks, nextCompleteSubTasks);
+                      partTprReversal = !subtaskTprChanged || (subtaskTprChanged && nextCompleteSubTasks.length <= previouslyCompleteSubTasks.length);
+                      break;
+                  }
+                }
               }
 
               break;
@@ -1249,6 +1275,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           partNotificationMarkedDone,
           partNotificationTaskCompletionType,
           partTprReversal,
+          nextCompleteSubTasks,
           partSuccess
         };
       }
@@ -1266,6 +1293,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
         if (tryRun && notification != null && notificationTaskHandler) {
           let currentNotification = notification;
+          let previouslyCompleteSubTasks: string[] = [];
+
           notificationTaskLoopingProtectionTriggered = false;
 
           notificationTaskPartsRunCount = 0;
@@ -1273,9 +1302,14 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           while (notificationTaskPartsRunCount < MAX_NOTIFICATION_TASK_PARTS_RUN_ALLOWED) {
             notificationTaskPartsRunCount += 1;
 
-            const result = await _runNotificationTaskNextPart(currentNotification, notificationTaskHandler);
+            const result = await _runNotificationTaskNextPart({
+              notification: currentNotification,
+              notificationTaskHandler,
+              previouslyCompleteSubTasks
+            });
 
             notificationTaskCompletionType = result.partNotificationTaskCompletionType;
+            previouslyCompleteSubTasks = result.nextCompleteSubTasks ?? [];
             success = result.partSuccess;
 
             const tryRunNextPart = result.partSuccess && result.tryRunNextPart && !notificationTaskLoopingProtectionTriggered;
@@ -1709,7 +1743,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
 
         if (!found) {
           break;
-        } else if (!excessLoopsDetected && sendNotificationLoopsTaskExcessThreshold > notificationLoopCount) {
+        } else if (!excessLoopsDetected && notificationLoopCount > sendNotificationLoopsTaskExcessThreshold) {
           excessLoopsDetected = true;
           console.error(`sendQueuedNotifications(EXCESS_LOOPS_DETECTED): Exceeded send notification loops task excess threshold of ${sendNotificationLoopsTaskExcessThreshold}.`);
           // continue the loops
