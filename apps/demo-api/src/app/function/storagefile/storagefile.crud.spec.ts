@@ -27,7 +27,6 @@ import {
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
   type StorageFileProcessingNotificationTaskData,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
-  StorageFileProcessingSubtaskMetadata,
   STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING
 } from '@dereekb/firebase';
 import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
@@ -822,7 +821,7 @@ demoApiFunctionContextFactory((f) => {
                       });
 
                       it('should run the entire task and run cleanup successfully.', async () => {
-                        let storageFile = await assertSnapshotData(sf.document);
+                        const storageFile = await assertSnapshotData(sf.document);
                         expect(storageFile.p).toBeDefined();
                         expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                         expect(storageFile.pn).toBeDefined();
@@ -836,8 +835,8 @@ demoApiFunctionContextFactory((f) => {
                         expect(runSubtask.isNotificationTask).toBe(true);
                         expect(runSubtask.success).toBe(true);
 
-                        let notification = await assertSnapshotData(nc.document);
-                        let metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+                        const notification = await assertSnapshotData(nc.document);
+                        const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
 
                         expect(metadata).toBeDefined();
                         expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
