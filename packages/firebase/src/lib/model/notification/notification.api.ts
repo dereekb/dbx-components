@@ -628,6 +628,16 @@ export class SendQueuedNotificationsParams {
   readonly maxSendNotificationLoops?: Maybe<number>;
 
   /**
+   * The max number of parallel send tasks to run.
+   *
+   * Defaults to 5.
+   */
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  readonly maxParellelSendTasks?: Maybe<number>;
+
+  /**
    * The threshold to use when to log a warning for an excessive of notification loops.
    */
   @Expose()
