@@ -27,6 +27,11 @@ export type OpenAIWebhookSecret = string;
 export type OpenAIAssistantId = string;
 
 /**
+ * Prompt id used by OpenAI.
+ */
+export type OpenAIPromptId = string;
+
+/**
  * OpenAI response
  */
 export type OpenAIResponse = OpenAI.Responses.Response;
