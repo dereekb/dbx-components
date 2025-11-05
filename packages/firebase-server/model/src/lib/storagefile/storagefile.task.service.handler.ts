@@ -11,6 +11,7 @@ import {
   notificationTaskComplete,
   type StorageFileDocument,
   type StorageFile,
+  type DocumentDataWithIdAndKey,
   notificationTaskPartiallyComplete,
   delayCompletion,
   StorageFileProcessingState,
@@ -23,7 +24,8 @@ import {
   type FirebaseStorageAccessor,
   copyStoragePath,
   STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP,
+  getDocumentSnapshotData
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
 import { asArray, cachedGetter, type Maybe, type Milliseconds, type PromiseOrValue, separateValues, unique } from '@dereekb/util';
@@ -58,7 +60,7 @@ export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileP
    *
    * If the document no longer exists, an error is thrown that immediately terminates the subtask and marks the task as complete.
    */
-  readonly loadStorageFile: () => Promise<StorageFile>;
+  readonly loadStorageFile: () => Promise<DocumentDataWithIdAndKey<StorageFile>>;
   /**
    * The accessor for the uploaded file details.
    */
@@ -341,7 +343,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     const storageFileDocument = await storageFileDocumentAccessor.loadDocumentForId(data.storageFile);
 
     const loadStorageFile = cachedGetter(async () => {
-      const storageFile = await storageFileDocument.snapshotData();
+      const storageFile = await getDocumentSnapshotData(storageFileDocument, true);
 
       if (!storageFile) {
         throw new StorageFileDocumentNoLongerAvailable();

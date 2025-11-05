@@ -83,7 +83,7 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -1658,6 +1658,11 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
 export const SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD = 5000;
 
+export interface SendQueuedNotificationsInput {
+  readonly maxParellelSendTasks?: Maybe<number>;
+  readonly onSendNotificationResult?: (result: SendNotificationResult, document: NotificationDocument) => void;
+}
+
 export function sendQueuedNotificationsFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationCollectionGroup } = context;
   const sendNotification = sendNotificationFactory(context);
@@ -1667,7 +1672,10 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
     const maxLoops = maxSendNotificationLoops ?? Number.MAX_SAFE_INTEGER;
     const sendNotificationLoopsTaskExcessThreshold = params.sendNotificationLoopsTaskExcessThreshold ?? SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD;
 
-    return async () => {
+    return async (input?: Maybe<SendQueuedNotificationsInput>) => {
+      const maxParallelTasks = input?.maxParellelSendTasks ?? params.maxParellelSendTasks ?? 5;
+      const onSendNotificationResult = input?.onSendNotificationResult ?? mapIdentityFunction();
+
       let notificationLoopCount: number = 0;
       let notificationBoxesCreated: number = 0;
       let notificationsDeleted: number = 0;
@@ -1694,10 +1702,11 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
           notificationDocuments,
           async (notificationDocument) => {
             const result = await sendNotificationInstance(notificationDocument);
+            onSendNotificationResult(result, notificationDocument);
             return result;
           },
           {
-            maxParallelTasks: 10
+            maxParallelTasks
           }
         );
 
