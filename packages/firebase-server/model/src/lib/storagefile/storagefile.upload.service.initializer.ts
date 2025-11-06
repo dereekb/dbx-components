@@ -46,6 +46,12 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileErr
    * If true, the initializer failed permanently and the file should be deleted.
    */
   readonly permanentFailure?: boolean;
+  /**
+   * The StoragePathRef of the created file if it was created before the error was thrown.
+   *
+   * It will be deleted.
+   */
+  readonly createdFile?: Maybe<StoragePathRef>;
 }
 
 export interface StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult {
@@ -78,10 +84,11 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
   readonly flagPreviousForDelete?: Maybe<StorageFilePurposeAndUserQueryInput>;
 }
 
-export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown): StorageFileInitializeFromUploadServiceInitializerResult {
+export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown, createdFile?: Maybe<StoragePathRef>): StorageFileInitializeFromUploadServiceInitializerResult {
   return {
     error,
-    permanentFailure: true
+    permanentFailure: true,
+    createdFile
   };
 }
 
@@ -228,12 +235,22 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
             const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });
 
             if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult).error) {
-              processorError = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult).error;
+              const { error, permanentFailure, createdFile } = initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult;
 
-              if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult).permanentFailure) {
+              processorError = error;
+
+              if (permanentFailure) {
                 resultType = 'permanent_initializer_failure';
               } else {
                 resultType = 'initializer_error';
+              }
+
+              // delete the created file
+              if (createdFile != null) {
+                await storageService
+                  .file(createdFile.storagePath)
+                  .delete()
+                  .catch(() => 0);
               }
             } else {
               let flagPreviousForDelete: Maybe<StorageFilePurposeAndUserQueryInput>;

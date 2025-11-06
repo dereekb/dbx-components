@@ -171,6 +171,8 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
   readonly updateMetadata?: Maybe<Partial<D>>;
   /**
    * Delays the next run of the task by the specified amount of time or until the given date.
+   *
+   * If milliseconds are provided, it is the amount of time relative from when the notification started this run, not from "now".
    */
   readonly delayUntil?: Maybe<Date | Milliseconds>;
   /**
