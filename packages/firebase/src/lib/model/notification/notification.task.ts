@@ -166,11 +166,15 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
   /**
    * Updates the metadata for the notification item if the task is successful but not yet marked done.
    *
+   * Is merged with the existing metadata.
+   *
    * Does not update the metadata if the completion type is true or false.
    */
   readonly updateMetadata?: Maybe<Partial<D>>;
   /**
    * Delays the next run of the task by the specified amount of time or until the given date.
+   *
+   * If milliseconds are provided, it is the amount of time relative from when the notification started this run, not from "now".
    */
   readonly delayUntil?: Maybe<Date | Milliseconds>;
   /**

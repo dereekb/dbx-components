@@ -27,7 +27,8 @@ import {
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
   type StorageFileProcessingNotificationTaskData,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
+  delayCompletion
 } from '@dereekb/firebase';
 import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
@@ -842,6 +843,52 @@ demoApiFunctionContextFactory((f) => {
                         expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
                         expect(notification.tpr).toEqual([STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING]);
                         expect(notification.d).toBe(true); // marked as done now
+                      });
+
+                      describe('delayUntil is passed', () => {
+                        beforeEach(async () => {
+                          const notificationItem = await assertSnapshotData(nc.document);
+
+                          await nc.document.update({
+                            n: {
+                              ...notificationItem.n,
+                              d: {
+                                ...notificationItem.n.d,
+                                sd: {
+                                  ...((notificationItem.n.d as any)?.sd ?? {}),
+                                  delayUntil: 100,
+                                  canRunNextCheckpoint: true
+                                }
+                              } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
+                            }
+                          });
+                        });
+
+                        it('should run the task up until the first delayUntil is reached', async () => {
+                          const storageFile = await assertSnapshotData(sf.document);
+                          expect(storageFile.p).toBeDefined();
+                          expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                          expect(storageFile.pn).toBeDefined();
+                          expect(storageFile.pat).toBeDefined();
+
+                          // run subtask A
+                          const runSubtask = await nc.sendNotification();
+                          expect(runSubtask).toBeDefined();
+                          expect(runSubtask.notificationTaskCompletionType).toEqual(delayCompletion()); // should have completed all steps, including cleanup
+                          expect(runSubtask.throttled).toBe(false);
+                          expect(runSubtask.isNotificationTask).toBe(true);
+                          expect(runSubtask.success).toBe(true);
+
+                          const notification = await assertSnapshotData(nc.document);
+                          const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+
+                          expect(metadata).toBeDefined();
+                          expect(metadata.sd?.canRunNextCheckpoint).toBe(true);
+                          expect(metadata.sd?.delayUntil).toBe(100); // check metadata was merged
+                          expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]); // all subtasks completed
+                          expect(notification.tpr).toEqual([]); // no tasks completed yet, just sub tasks
+                          expect(notification.d).toBe(false); // not marked as done
+                        });
                       });
                     });
                   });

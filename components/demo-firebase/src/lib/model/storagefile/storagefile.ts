@@ -1,5 +1,5 @@
 import { ALL_USER_UPLOADS_FOLDER_PATH, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
-import { type Maybe, mergeSlashPaths, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
+import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 
 // MARK: User File Types
 export const USERS_ROOT_FOLDER_PATH: SlashPathFolder = '/u/';
@@ -40,6 +40,12 @@ export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProces
    * Used for testing.
    */
   canRunNextCheckpoint?: Maybe<boolean>;
+  /**
+   * Passed to the result of the task.
+   *
+   * Used for testing.
+   */
+  delayUntil?: Maybe<Date | Milliseconds>;
   numberValue?: Maybe<number>;
   stringValue?: Maybe<string>;
 }
