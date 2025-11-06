@@ -166,6 +166,8 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
   /**
    * Updates the metadata for the notification item if the task is successful but not yet marked done.
    *
+   * Is merged with the existing metadata.
+   *
    * Does not update the metadata if the completion type is true or false.
    */
   readonly updateMetadata?: Maybe<Partial<D>>;

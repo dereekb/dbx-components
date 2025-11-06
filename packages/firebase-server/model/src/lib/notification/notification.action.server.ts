@@ -85,7 +85,7 @@ import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseSer
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
-import { addHours, addMinutes, hoursToMilliseconds, isFuture } from 'date-fns';
+import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
@@ -118,7 +118,7 @@ export abstract class NotificationServerActions {
   abstract updateNotificationBox(params: UpdateNotificationBoxParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxParams>;
   abstract updateNotificationBoxRecipient(params: UpdateNotificationBoxRecipientParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxRecipientParams>;
   abstract sendNotification(params: SendNotificationParams): Promise<TransformAndValidateFunctionResult<SendNotificationParams, (notificationDocument: NotificationDocument) => Promise<SendNotificationResult>>>;
-  abstract sendQueuedNotifications(params: SendQueuedNotificationsParams): Promise<TransformAndValidateFunctionResult<SendQueuedNotificationsParams, () => Promise<SendQueuedNotificationsResult>>>;
+  abstract sendQueuedNotifications(params: SendQueuedNotificationsParams): Promise<TransformAndValidateFunctionResult<SendQueuedNotificationsParams, (sendQueuedNotificationsInput?: Maybe<SendQueuedNotificationsInput>) => Promise<SendQueuedNotificationsResult>>>;
   abstract cleanupSentNotifications(params: CleanupSentNotificationsParams): Promise<TransformAndValidateFunctionResult<CleanupSentNotificationsParams, () => Promise<CleanupSentNotificationsResult>>>;
 }
 
@@ -934,16 +934,19 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         } else if (!ignoreSendAtThrottle) {
           tryRun = !isFuture(notification.sat);
 
-          if (tryRun) {
-            if (isNotificationTask) {
-              // can try to run the task again in 1 minute
-              nextSat = addMinutes(now, NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES);
-            } else {
-              // update the next send type of non-tasks to try being sent again in 10 minutes, if they fail
-              nextSat = addMinutes(now, 10);
-            }
-          } else {
+          if (!tryRun) {
             throttled = true;
+          }
+        }
+
+        // always set nextSat if tryRun is true
+        if (tryRun) {
+          if (isNotificationTask) {
+            // can try to run the task again in 1 minute
+            nextSat = addMinutes(now, NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES);
+          } else {
+            // update the next send type of non-tasks to try being sent again in 10 minutes, if they fail
+            nextSat = addMinutes(now, 10);
           }
         }
 
@@ -1062,6 +1065,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             await deleteNotification(); // just delete the notification if the box still hasn't been initialized successfully at this point.
           }
 
+          // check if it was just deleted
           if (!deletedNotification) {
             const a = isNotificationTask && tryRun ? notification.a : notification.a + 1; // do not update a notification task's attempt count here, unless tryRun fails
 
@@ -1192,7 +1196,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               // update the checkpoint attempts count
               if (Array.isArray(completion) && completion.length === 0) {
                 notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempt/delays count
-                tryRunNextPart = canRunNextCheckpoint === true && allCompletedSubTasks != null; // can only run the next part if subtasks were returned
+                tryRunNextPart = canRunNextCheckpoint === true && allCompletedSubTasks != null && delayUntil == null; // can only run the next part if subtasks were returned and there is no delay
               } else {
                 tryRunNextPart = canRunNextCheckpoint === true && delayUntil == null; // can try the next part if there is no delayUntil and canRunNextCheckpoint is true
                 notificationTemplate.at = 0; // reset checkpoint attempt/delay count
@@ -1241,15 +1245,16 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
           // do not update sat if the task is complete
           if (completion !== true && delayUntil != null) {
-            // must be at least the nextSat time to avoid
-            notificationTemplate.sat = findMaxDate([dateOrMillisecondsToDate(delayUntil), nextSat]) as Date;
+            // must be at least 20 seconds into the future from now, and/or the nextSat time to avoid parallel runs
+            const minimumNextSatTime = addSeconds(new Date(), 20);
+            notificationTemplate.sat = findMaxDate([dateOrMillisecondsToDate(delayUntil, now), nextSat, minimumNextSatTime]) ?? minimumNextSatTime;
           }
 
           partNotificationMarkedDone = notificationTemplate.d === true;
         } catch (e) {
           console.error(`Failed handling task for notification "${notification.key}" with type "${notificationTask.taskType}": `, e);
           notificationTemplate.a = notification.a + 1; // increase attempts count
-          notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS);
+          notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS, now);
           partSuccess = false;
         }
 
