@@ -1,24 +1,9 @@
-import { type MapStringFunction, type Maybe, splitCommaSeparatedString } from '@dereekb/util';
+import { type MapStringFunction, type Maybe, splitCommaSeparatedString, stringToBoolean } from '@dereekb/util';
 import { type TransformFnParams } from 'class-transformer';
 
 // MARK: String
 export function transformStringToBoolean(defaultValue?: boolean | undefined): (params: TransformFnParams) => Maybe<boolean> {
-  return (params: TransformFnParams) => {
-    if (params.value) {
-      switch (params.value.toLowerCase()) {
-        case 't':
-        case 'true':
-          return true;
-        case 'f':
-        case 'false':
-          return false;
-        default:
-          return defaultValue;
-      }
-    } else {
-      return defaultValue;
-    }
-  };
+  return (params: TransformFnParams) => stringToBoolean(params.value, defaultValue);
 }
 
 // MARK: Comma Separated Values
