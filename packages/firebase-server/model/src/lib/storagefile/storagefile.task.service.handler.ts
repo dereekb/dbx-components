@@ -1,10 +1,6 @@
 import {
   type StorageFileProcessingNotificationTaskData,
-  type StorageFileProcessingNotificationTaskCheckpoint,
   type StorageFilePurpose,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
-  type NotificationTask,
-  notificationTaskDelayRetry,
   type StorageFileProcessingSubtaskMetadata,
   type NotificationTaskServiceHandleNotificationTaskResult,
   type StorageFileProcessingSubtask,
@@ -12,45 +8,31 @@ import {
   type StorageFileDocument,
   type StorageFile,
   type DocumentDataWithIdAndKey,
-  notificationTaskPartiallyComplete,
-  delayCompletion,
   StorageFileProcessingState,
-  DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS,
-  DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY,
   type StorageFileFirestoreCollections,
   type StoredFileReader,
   storedFileReaderFactory,
   type StoragePath,
   type FirebaseStorageAccessor,
   copyStoragePath,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP,
-  getDocumentSnapshotData
+  getDocumentSnapshotData,
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { asArray, cachedGetter, type Maybe, type Milliseconds, type PromiseOrValue, separateValues, unique } from '@dereekb/util';
-import { BaseError } from 'make-error';
-import { removeFromCompletionsArrayWithTaskResult } from '../notification/notification.task.service.util';
+import { cachedGetter, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
+import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.
  */
-export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> {
-  /**
-   * The root NotificationTask.
-   *
-   * The data is always guranteed.
-   */
-  readonly notificationTask: Omit<NotificationTask<StorageFileProcessingNotificationTaskData<M>>, 'data'> & Required<Pick<NotificationTask<StorageFileProcessingNotificationTaskData<M>>, 'data'>>;
+export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> extends NotificationTaskSubtaskInput<StorageFileProcessingNotificationTaskData<M, S>, M, S> {
   /**
    * The retrieved purpose.
+   *
+   * @deprecated use target instead.
    */
   readonly purpose: StorageFilePurpose;
-  /**
-   * List of completed subtasks.
-   */
-  readonly completedSubtasks: S[];
   /**
    * The associated StorageFileDocument.
    */
@@ -65,10 +47,6 @@ export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileP
    * The accessor for the uploaded file details.
    */
   readonly fileDetailsAccessor: StoredFileReader;
-  /**
-   * The current metadata for the subtask.
-   */
-  readonly subtaskData?: Maybe<M>;
 }
 
 /**
@@ -84,33 +62,12 @@ export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingS
 /**
  * Similar to NotificationTaskServiceTaskHandlerFlowEntry, but used in StorageFileProcessingPurposeTaskProcessorConfig as part of the flow.
  */
-export interface StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> {
-  /**
-   * The subtask this flow entry represents.
-   */
-  readonly subtask: S;
-  /**
-   * The subtask function
-   */
-  readonly fn: StorageFileProcessingPurposeSubtask<M, S>;
-}
+export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>
 
 /**
  * The output cleanup configuration.
  */
-export interface StorageFileProcessingPurposeSubtaskCleanupOutput {
-  /**
-   * Whether or not the cleanup was successful. If false, the task will be delayed until the cleanup can be retried.
-   *
-   * Defaults to true.
-   */
-  readonly cleanupSuccess?: boolean;
-  /**
-   * How long to delay the retry of the cleanup after cleanup fails.
-   *
-   * Ignored if cleanupSuccess is not false.
-   */
-  readonly delayRetryUntil?: NotificationTaskServiceHandleNotificationTaskResult['delayUntil'];
+export interface StorageFileProcessingPurposeSubtaskCleanupOutput extends NotificationTaskSubtaskCleanupInstructions {
   /**
    * The next processing state for the StorageFile.
    *
@@ -128,48 +85,24 @@ export interface StorageFileProcessingPurposeSubtaskCleanupOutput {
 }
 
 /**
- * Cleanup function for a StorageFileProcessingPurposeSubtask.
- *
- * This is called during the cleanup step.
- */
-export type StorageFileProcessingPurposeSubtaskCleanupFunction<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = (input: StorageFileProcessingPurposeSubtaskInput<M, S>) => PromiseOrValue<StorageFileProcessingPurposeSubtaskCleanupOutput>;
-
-/**
  * Similar to NotificationTaskServiceTaskHandlerConfig, but instead targets a specific StorageFilePurpose.
  *
  * The flows behave the same way.
  */
-export interface StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> {
-  readonly purpose: StorageFilePurpose;
-  /**
-   * The order/flow of checkpoints and handler functions.
-   *
-   * When handling a notification task, if the checkpoint has already been completed then the entry will be skipped.
-   */
-  readonly flow: StorageFileProcessingPurposeSubtaskFlowEntry<M, S>[];
-  /**
-   * Optional cleanup function for the subtask.
-   *
-   * If not provided, the default cleanup actions will take place, which is:
-   * - Set the StorageFileProcessingState to SUCCESS
-   * - Flag the StorageFile for deletion
-   */
-  readonly cleanup?: StorageFileProcessingPurposeSubtaskCleanupFunction<M, S>;
-  /**
-   * If true, then results returned by this processor will set "canRunNextCheckpoint" to true if it is undefined.
-   */
-  readonly allowRunMultipleParts?: Maybe<boolean>;
-}
+export type StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> =
+  | NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>
+  | (Omit<NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>, 'target'> & {
+      /**
+       * @deprecated use target instead.
+       */
+      readonly purpose?: Maybe<StorageFilePurpose>;
+    });
 
-export interface StorageFileProcessingNotificationTaskHandlerConfig {
+export interface StorageFileProcessingNotificationTaskHandlerConfig extends Omit<NotificationTaskSubtaskNotificationTaskHandlerConfig<StorageFileProcessingPurposeSubtaskInput, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData>, 'processors'> {
   /**
-   * List of processable StorageFilePurpose values for the app. Used for verifying that all StorageFilePurpose values are handled.
+   * The input processors.
    */
-  readonly validate?: StorageFilePurpose[];
-  /**
-   * List of handlers for StorageFilePurpose values.
-   */
-  readonly processors: StorageFileProcessingPurposeSubtaskProcessorConfig<any, any>[];
+  readonly processors: StorageFileProcessingPurposeSubtaskProcessorConfig[];
   /**
    * FirebaseStorageAccessor
    */
@@ -178,52 +111,28 @@ export interface StorageFileProcessingNotificationTaskHandlerConfig {
    * Accessor for StorageFileDocument.
    */
   readonly storageFileFirestoreCollections: StorageFileFirestoreCollections;
-  /**
-   * The maximum number of times to delay the cleanup step of a StorageFileProcessingNotificationTask.
-   *
-   * Defaults to DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS.
-   */
-  readonly maxCleanupRetryAttempts?: Maybe<number>;
-  /**
-   * The amount of time to delay the cleanup step of a StorageFileProcessingNotificationTask.
-   *
-   * Defaults to DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY.
-   */
-  readonly cleanupRetryDelay?: Maybe<Milliseconds>;
-  /**
-   * The default value to use for allowRunMultipleParts if it is not specified, for each processor.
-   */
-  readonly defaultAllowRunMultipleParts?: Maybe<boolean>;
 }
 
 /**
  * Creates a NotificationTaskServiceTaskHandlerConfig that handles the StorageFileProcessingNotificationTask.
  */
-export function storageFileProcessingNotificationTaskHandler(config: StorageFileProcessingNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData, StorageFileProcessingNotificationTaskCheckpoint> {
-  const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, maxCleanupRetryAttempts: inputMaxCleanupRetryAttempts, cleanupRetryDelay: inputCleanupRetryDelay, defaultAllowRunMultipleParts } = config;
+export function storageFileProcessingNotificationTaskHandler(config: StorageFileProcessingNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData> {
+  const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections } = config;
   const storageFileDocumentAccessor = storageFileFirestoreCollections.storageFileCollection.documentAccessor();
-  const maxCleanupRetryAttempts = inputMaxCleanupRetryAttempts ?? DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS;
-  const cleanupRetryDelay = inputCleanupRetryDelay ?? DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY;
   const makeFileDetailsAccessor = storedFileReaderFactory();
 
-  const processors: Record<StorageFilePurpose, StorageFileProcessingPurposeSubtaskProcessor> = {};
-
-  type StorageFileProcessingPurposeSubtaskProcessorProcessFunction<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = (input: StorageFileProcessingPurposeSubtaskInput<M, S>) => Promise<NotificationTaskServiceHandleNotificationTaskResult<StorageFileProcessingNotificationTaskData<M, S>, StorageFileProcessingNotificationTaskCheckpoint>>;
-  interface StorageFileProcessingPurposeSubtaskProcessor<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> {
-    readonly process: StorageFileProcessingPurposeSubtaskProcessorProcessFunction<M, S>;
-    readonly cleanup?: StorageFileProcessingPurposeSubtaskCleanupFunction<M, S>;
-  }
-
-  inputProcessors.forEach((processorConfig) => {
-    const { purpose } = processorConfig;
-    processors[purpose] = processorFunctionForConfig(processorConfig);
+  // COMPAT: Sets target if unset and purpose is set. Use until purpose is removed.
+  inputProcessors.forEach((x) => {
+    if (!(x as any).target) {
+      if ((x as any).purpose) {
+        (x as any).target = (x as any).purpose;
+      } else {
+        throw new Error('StorageFileProcessingPurposeSubtaskProcessorConfig must have a target or purpose.');
+      }
+    }
   });
 
-  function completeProcessingAndScheduleCleanup(): NotificationTaskServiceHandleNotificationTaskResult<StorageFileProcessingNotificationTaskData<any, any>, StorageFileProcessingNotificationTaskCheckpoint> {
-    return notificationTaskPartiallyComplete(['processing']);
-  }
-
-  function defaultCleanupOutput(): StorageFileProcessingPurposeSubtaskCleanupOutput {
+  function defaultCleanup(): StorageFileProcessingPurposeSubtaskCleanupOutput {
     return {
       cleanupSuccess: true,
       nextProcessingState: StorageFileProcessingState.SUCCESS,
@@ -231,291 +140,80 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     };
   }
 
-  /**
-   * Structure is similar to notificationTaskService(), but contained to handle the subtasks.
-   */
-  function processorFunctionForConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask>(processorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<M, S>): StorageFileProcessingPurposeSubtaskProcessor<M, S> {
-    const { flow: inputFlows, cleanup, allowRunMultipleParts: processorAllowRunMultipleParts } = processorConfig;
-    const { included: subtaskFlows, excluded: nonSubtaskFlows } = separateValues(inputFlows, (x) => x.subtask != null);
-    const allowRunMultipleParts = processorAllowRunMultipleParts ?? defaultAllowRunMultipleParts;
+  return notificationTaskSubtaskNotificationTaskHandlerFactory<StorageFileProcessingPurposeSubtaskInput, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData, StorageFileProcessingSubtaskMetadata, StorageFileProcessingSubtask>({
+    taskType: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
+    subtaskHandlerFunctionName: 'storageFileProcessingNotificationTaskHandler',
+    inputFunction: async (data: StorageFileProcessingNotificationTaskData) => {
+      const storageFileDocument = await storageFileDocumentAccessor.loadDocumentForId(data.storageFile);
 
-    if (inputFlows.length === 0) {
-      throw new Error('storageFileProcessingNotificationTaskHandler(): StorageFileProcessingPurposeSubtaskProcessorConfig must have at least one flow entry.');
-    } else if (nonSubtaskFlows.length > 1) {
-      throw new Error('storageFileProcessingNotificationTaskHandler(): StorageFileProcessingPurposeSubtaskProcessorConfig must not have more than one non-subtask flow.');
-    }
+      const loadStorageFile = cachedGetter(async () => {
+        const storageFile = await getDocumentSnapshotData(storageFileDocument, true);
 
-    const allKnownSubtasks = unique(inputFlows.map((x) => x.subtask));
-
-    return {
-      process: async (input: StorageFileProcessingPurposeSubtaskInput<M, S>) => {
-        const { notificationTask, completedSubtasks, subtaskData, purpose } = input;
-
-        let fn: Maybe<StorageFileProcessingPurposeSubtask<M, S>>;
-
-        switch (completedSubtasks.length) {
-          case 0:
-            fn = (nonSubtaskFlows[0] ?? subtaskFlows[0])?.fn as Maybe<StorageFileProcessingPurposeSubtask<M, S>>;
-            break;
-          default:
-            const completedSubtasksSet = new Set(completedSubtasks);
-            /**
-             * Find the next flow function that hasn't had its checkpoint completed yet.
-             */
-            const nextSubtask = subtaskFlows.find((x) => !completedSubtasksSet.has(x.subtask));
-            fn = nextSubtask?.fn as Maybe<StorageFileProcessingPurposeSubtask<M, S>>;
-            break;
+        if (!storageFile) {
+          throw notificationTaskSubTaskMissingRequiredDataTermination();
         }
 
-        let result: NotificationTaskServiceHandleNotificationTaskResult<StorageFileProcessingNotificationTaskData<M, S>, StorageFileProcessingNotificationTaskCheckpoint>;
+        return storageFile;
+      });
 
-        if (fn) {
-          /*
-           * This section is similar to handleNotificationTask() in notification.action.server.ts,
-           * but is modified to handle the subtasks. The main difference is the attempt count is maintained,
-           * and instead is available via the normal NotificationTask attempts details.
-           */
+      let purpose = data?.p;
 
-          const subtaskResult: NotificationTaskServiceHandleNotificationTaskResult<M, S> = await fn(input);
-          const { completion: subtaskCompletion, updateMetadata: subtaskUpdateMetadata, delayUntil, canRunNextCheckpoint } = subtaskResult;
-
-          let allSubtasksDone = false;
-          let sfps: S[] = completedSubtasks;
-
-          // update the task metadata to reflect the changes
-          switch (subtaskCompletion) {
-            case true:
-              allSubtasksDone = true;
-              break;
-            case false:
-              // remove any completions, if applicable
-              sfps = removeFromCompletionsArrayWithTaskResult(sfps, subtaskResult);
-              break;
-            default:
-              sfps = unique([
-                ...removeFromCompletionsArrayWithTaskResult(sfps, subtaskResult), // remove any completions, if applicable
-                ...asArray(subtaskCompletion)
-              ]);
-
-              const completedSubtasksSet = new Set(sfps);
-              const incompleteSubtasks = allKnownSubtasks.filter((x) => !completedSubtasksSet.has(x));
-
-              allSubtasksDone = incompleteSubtasks.length === 0;
-              break;
-          }
-
-          /**
-           * This is updating the metadata for the NotificationTask, which has a nested data
-           */
-          const updateMetadata: StorageFileProcessingNotificationTaskData<M, S> = {
-            ...(notificationTask.data as StorageFileProcessingNotificationTaskData<M, S>),
-            // always re-copy the purpose/storagePath for the next run so StorageFile does not have to be reloaded
-            p: purpose,
-            storagePath: copyStoragePath(input.fileDetailsAccessor.input),
-            sfps,
-            sd: {
-              ...subtaskData,
-              ...subtaskUpdateMetadata
-            } as M
-          };
-
-          const nextCanRunNextCheckpoint = canRunNextCheckpoint ?? allowRunMultipleParts;
-
-          result = {
-            completion: allSubtasksDone ? ['processing'] : delayCompletion(), // return processing until all subtasks are complete.
-            updateMetadata,
-            canRunNextCheckpoint: nextCanRunNextCheckpoint,
-            allCompletedSubTasks: sfps,
-            delayUntil // delay is passed through
-          };
-        } else {
-          // no more subtasks to process, and no metadata changes. Mark as processing complete and continue.
-          result = completeProcessingAndScheduleCleanup();
-        }
-
-        return result;
-      },
-      cleanup
-    };
-  }
-
-  async function _initializeWithTaskData(data: StorageFileProcessingNotificationTaskData) {
-    const storageFileDocument = await storageFileDocumentAccessor.loadDocumentForId(data.storageFile);
-
-    const loadStorageFile = cachedGetter(async () => {
-      const storageFile = await getDocumentSnapshotData(storageFileDocument, true);
-
-      if (!storageFile) {
-        throw new StorageFileDocumentNoLongerAvailable();
+      if (!purpose) {
+        // attempt to load the purpose from the storage file, if it exists.
+        purpose = await loadStorageFile().then((x) => x.p);
       }
 
-      return storageFile;
-    });
+      let storagePath: StoragePath;
 
-    let purpose = data?.p;
-
-    if (!purpose) {
-      // attempt to load the purpose from the storage file, if it exists.
-      purpose = await loadStorageFile().then((x) => x.p);
-    }
-
-    let storagePath: StoragePath;
-
-    if (data.storagePath) {
-      storagePath = data.storagePath;
-    } else {
-      storagePath = await loadStorageFile().then((x) => ({ bucketId: x.bucketId, pathString: x.pathString }));
-    }
-
-    const file = storageAccessor.file(storagePath);
-    const fileDetailsAccessor = makeFileDetailsAccessor(file);
-
-    return {
-      purpose,
-      loadStorageFile,
-      fileDetailsAccessor,
-      storageFileDocument
-    };
-  }
-
-  const result: NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData, StorageFileProcessingNotificationTaskCheckpoint> = {
-    type: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
-    flow: [
-      {
-        checkpoint: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
-        fn: async (notificationTask: NotificationTask<StorageFileProcessingNotificationTaskData>) => {
-          const { data } = notificationTask;
-
-          let result: NotificationTaskServiceHandleNotificationTaskResult;
-
-          if (data) {
-            try {
-              const { purpose, storageFileDocument, loadStorageFile, fileDetailsAccessor } = await _initializeWithTaskData(data);
-
-              if (purpose) {
-                const processor = processors[purpose];
-
-                if (processor) {
-                  const { sd: subtaskData, sfps: completedSubtasks } = data;
-
-                  const input: StorageFileProcessingPurposeSubtaskInput = {
-                    notificationTask: notificationTask as StorageFileProcessingPurposeSubtaskInput['notificationTask'],
-                    completedSubtasks: completedSubtasks ?? [],
-                    purpose,
-                    subtaskData,
-                    storageFileDocument,
-                    fileDetailsAccessor,
-                    loadStorageFile
-                  };
-
-                  result = await processor.process(input);
-                } else {
-                  // processor is unknown. Complete the task.
-                  result = completeProcessingAndScheduleCleanup();
-                }
-              } else {
-                // purpose is unknown. Complete the task.
-                result = completeProcessingAndScheduleCleanup();
-              }
-            } catch (e) {
-              if (e instanceof StorageFileDocumentNoLongerAvailable) {
-                // Catch loading the StorageFileDocument's data.
-
-                // Task is complete if the document no longer exists. Nothing to cleanup.
-                result = notificationTaskComplete();
-              } else {
-                // rethrow the error
-                throw e;
-              }
-            }
-          } else {
-            // Improperly configured task. Complete immediately.
-            result = notificationTaskComplete();
-          }
-
-          return result;
-        }
-      },
-      {
-        checkpoint: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP,
-        fn: async (notificationTask: NotificationTask<StorageFileProcessingNotificationTaskData>) => {
-          const { data } = notificationTask;
-
-          let result: NotificationTaskServiceHandleNotificationTaskResult;
-
-          if (data) {
-            try {
-              const { purpose, storageFileDocument, loadStorageFile, fileDetailsAccessor } = await _initializeWithTaskData(data);
-
-              let cleanupOutput: StorageFileProcessingPurposeSubtaskCleanupOutput;
-
-              if (purpose) {
-                const processor = processors[purpose];
-
-                if (processor && processor.cleanup) {
-                  const { sd: subtaskData, sfps: completedSubtasks } = data;
-
-                  const input: StorageFileProcessingPurposeSubtaskInput = {
-                    notificationTask: notificationTask as StorageFileProcessingPurposeSubtaskInput['notificationTask'],
-                    completedSubtasks: completedSubtasks ?? [],
-                    purpose,
-                    subtaskData,
-                    storageFileDocument,
-                    fileDetailsAccessor,
-                    loadStorageFile
-                  };
-
-                  cleanupOutput = await processor.cleanup(input);
-                } else {
-                  // processor is unknown. Complete the task.
-                  cleanupOutput = defaultCleanupOutput();
-                }
-              } else {
-                // purpose is unknown. Complete the task.
-                cleanupOutput = defaultCleanupOutput();
-              }
-
-              if (cleanupOutput.cleanupSuccess === false && notificationTask.currentCheckpointSendAttempts <= maxCleanupRetryAttempts) {
-                result = notificationTaskDelayRetry(cleanupOutput.delayRetryUntil ?? cleanupRetryDelay);
-              } else {
-                let updateTemplate: Partial<StorageFile> = {
-                  ps: cleanupOutput.nextProcessingState ?? StorageFileProcessingState.SUCCESS,
-                  pcat: new Date(), // set new cleanup/completion date
-                  pn: null // clear reference
-                };
-
-                if (cleanupOutput.queueForDelete != null && cleanupOutput.queueForDelete !== false) {
-                  updateTemplate = {
-                    ...updateTemplate,
-                    ...markStorageFileForDeleteTemplate(cleanupOutput.queueForDelete)
-                  };
-                }
-
-                await storageFileDocument.update(updateTemplate);
-                result = notificationTaskComplete();
-              }
-            } catch (e) {
-              if (e instanceof StorageFileDocumentNoLongerAvailable) {
-                // Task is complete if the document no longer exists. Nothing to cleanup or act on.
-                result = notificationTaskComplete();
-              } else {
-                // rethrow the error
-                throw e;
-              }
-            }
-          } else {
-            // Improperly configured task. Complete immediately.
-            result = notificationTaskComplete();
-          }
-
-          return result;
-        }
+      if (data.storagePath) {
+        storagePath = data.storagePath;
+      } else {
+        storagePath = await loadStorageFile().then((x) => ({ bucketId: x.bucketId, pathString: x.pathString }));
       }
-    ]
-  };
 
-  return result;
+      const file = storageAccessor.file(storagePath);
+      const fileDetailsAccessor = makeFileDetailsAccessor(file);
+
+      const input = {
+        purpose: purpose!,
+        target: purpose!,
+        loadStorageFile,
+        fileDetailsAccessor,
+        storageFileDocument
+      };
+
+      return input;
+    },
+    buildUpdateMetadata: (baseUpdateMetadata, input) => {
+      const { purpose } = input;
+
+      return {
+        ...baseUpdateMetadata,
+        // always re-copy the purpose/storagePath for the next run so StorageFile does not have to be reloaded
+        p: purpose,
+        storagePath: copyStoragePath(input.fileDetailsAccessor.input)
+      };
+    },
+    defaultCleanup,
+    cleanupFunction: async function (input, cleanupInstructions: StorageFileProcessingPurposeSubtaskCleanupOutput) {
+      const { storageFileDocument } = input;
+      const { nextProcessingState, queueForDelete } = cleanupInstructions;
+
+      let updateTemplate: Partial<StorageFile> = {
+        ps: nextProcessingState ?? StorageFileProcessingState.SUCCESS,
+        pcat: new Date(), // set new cleanup/completion date
+        pn: null // clear reference
+      };
+
+      if (queueForDelete != null && queueForDelete !== false) {
+        updateTemplate = {
+          ...updateTemplate,
+          ...markStorageFileForDeleteTemplate(queueForDelete)
+        };
+      }
+
+      await storageFileDocument.update(updateTemplate);
+      return notificationTaskComplete();
+    }
+  })(config as any); // COMPAT: remove once purpose is removed from StorageFileProcessingPurposeSubtaskProcessorConfig, and the types match.
 }
-
-// MARK: Internally Handled Errors
-class StorageFileDocumentNoLongerAvailable extends BaseError {}

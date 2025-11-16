@@ -135,7 +135,7 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
 
 export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext) {
   const testFileProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask> = {
-    purpose: USER_TEST_FILE_PURPOSE,
+    target: USER_TEST_FILE_PURPOSE,
     flow: [
       {
         subtask: USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,

@@ -283,6 +283,11 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
                 flagPreviousForDelete = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult).flagPreviousForDelete;
               }
 
+              // sanitize the returned value, incase the result comes from a transaction
+              if (storageFileDocument) {
+                storageFileDocument = storageFileCollection.documentAccessor().loadDocumentFrom(storageFileDocument);
+              }
+
               // set the metadata on the associated file
               try {
                 const createdFile = storageService.file(createdFilePath);

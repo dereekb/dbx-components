@@ -137,3 +137,38 @@ export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
 export function randomBoolean(chance: BooleanTrueChance = 50): boolean {
   return booleanFactory({ chance })();
 }
+
+/**
+ * Converts the input string to a boolean.
+ *
+ * Case-insensitive matches for yes/y/t/true and no/n/f/false.
+ *
+ * @param value - The string to convert to a boolean.
+ * @param defaultValue - The default value to return if the string cannot be converted to a boolean (default: undefined).
+ * @returns The boolean value corresponding to the string, or the default value if the string cannot be converted.
+ */
+export function stringToBoolean(value: Maybe<string>): Maybe<boolean>;
+export function stringToBoolean(value: Maybe<string>, defaultValue: boolean): boolean;
+export function stringToBoolean(value: Maybe<string>, defaultValue?: Maybe<boolean>): Maybe<boolean>;
+export function stringToBoolean(value: Maybe<string>, defaultValue?: Maybe<boolean>): Maybe<boolean> {
+  let result: Maybe<boolean> = defaultValue;
+
+  if (value) {
+    switch (value.toLowerCase()) {
+      case 'y':
+      case 'yes':
+      case 't':
+      case 'true':
+        result = true;
+        break;
+      case 'n':
+      case 'no':
+      case 'f':
+      case 'false':
+        result = false;
+        break;
+    }
+  }
+
+  return result;
+}

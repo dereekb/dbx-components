@@ -90,20 +90,44 @@ export enum StorageFileProcessingState {
   PROCESSING = 2,
   /**
    * The StorageFile has encountered an error during processing.
+   *
+   * It can be queued for reprocessing.
    */
   FAILED = 3,
   /**
    * The StorageFile has been processed or required no processing and is done.
+   *
+   * It can be queued for reprocessing.
    */
   SUCCESS = 4,
   /**
-   * The StorageFile has been archived. It should not be processed.
+   * The StorageFile has been archived.
+   *
+   * It cannot be queued for reprocessing.
    */
   ARCHIVED = 5,
   /**
    * The StorageFile shouldn't be processed.
+   *
+   * It cannot be queued for reprocessing.
    */
   DO_NOT_PROCESS = 6
+}
+
+/**
+ * If true, the StorageFile can safely be re-queued for processing.
+ *
+ * Requirements:
+ * - Has a purpose
+ * - The processing state is not already queued for processing, or processing.
+ * - The processing state is not archived or marked as do not process, as these should never be re-processed.
+ *
+ * @param state
+ * @returns
+ */
+export function canQueueStorageFileForProcessing(storageFile: Pick<StorageFile, 'ps' | 'p'>): boolean {
+  const { p: purpose, ps: state } = storageFile;
+  return (Boolean(purpose) && state === StorageFileProcessingState.INIT_OR_NONE) || state === StorageFileProcessingState.FAILED || state === StorageFileProcessingState.SUCCESS;
 }
 
 /**
@@ -131,6 +155,10 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
   fs: StorageFileState;
   /**
    * Processing state of the storage file.
+   *
+   * The state is important for managing the processing of the StorageFile.
+   *
+   * Once processing is finished, the state determines whether or not the StorageFile can be processed again.
    */
   ps: StorageFileProcessingState;
   /**
@@ -165,6 +193,8 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
   o?: Maybe<FirebaseAuthOwnershipKey>;
   /**
    * Purpose of the file, if applicable.
+   *
+   * Is required for processing a StorageFile.
    */
   p?: Maybe<StorageFilePurpose>;
   /**

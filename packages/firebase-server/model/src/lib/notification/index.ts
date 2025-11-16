@@ -9,6 +9,7 @@ export * from './notification.send.service';
 export * from './notification.send';
 export * from './notification.task.service';
 export * from './notification.task.service.handler';
+export * from './notification.task.subtask.handler';
 export * from './notification.error';
 export * from './notification.expedite.service';
 export * from './notification.util';
