@@ -19,9 +19,9 @@ import {
   STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, Configurable, type Maybe } from '@dereekb/util';
+import { cachedGetter, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
-import { NotificationTaskSubtaskCleanupInstructions, NotificationTaskSubtaskFlowEntry, NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
+import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.
@@ -62,7 +62,7 @@ export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingS
 /**
  * Similar to NotificationTaskServiceTaskHandlerFlowEntry, but used in StorageFileProcessingPurposeTaskProcessorConfig as part of the flow.
  */
-export interface StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> extends NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S> {}
+export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>
 
 /**
  * The output cleanup configuration.

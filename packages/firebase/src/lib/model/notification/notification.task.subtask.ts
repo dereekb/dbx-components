@@ -1,7 +1,7 @@
-import { Maybe, MS_IN_HOUR } from '@dereekb/util';
-import { NotificationTaskCheckpointString } from './notification';
-import { NotificationItemMetadata } from './notification.item';
-import { notificationTaskPartiallyComplete, NotificationTaskServiceHandleNotificationTaskResult } from './notification.task';
+import { type Maybe, MS_IN_HOUR } from '@dereekb/util';
+import { type NotificationTaskCheckpointString } from './notification';
+import { type NotificationItemMetadata } from './notification.item';
+import { notificationTaskPartiallyComplete, type NotificationTaskServiceHandleNotificationTaskResult } from './notification.task';
 
 /**
  * Used as a descriminator to determine which processing configuration to run for the input value.

@@ -4,21 +4,20 @@ import {
   notificationTaskDelayRetry,
   type NotificationTaskServiceHandleNotificationTaskResult,
   notificationTaskComplete,
-  notificationTaskPartiallyComplete,
   delayCompletion,
-  NotificationTaskSubtaskMetadata,
-  NotificationTaskSubtaskCheckpointString,
-  NotificationTaskSubtaskData,
+  type NotificationTaskSubtaskMetadata,
+  type NotificationTaskSubtaskCheckpointString,
+  type NotificationTaskSubtaskData,
   completeSubtaskProcessingAndScheduleCleanupTaskResult,
-  NotificationTaskSubtaskCheckpoint,
+  type NotificationTaskSubtaskCheckpoint,
   NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP,
   NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING,
   DEFAULT_NOTIFICATION_TASK_SUBTASK_CLEANUP_RETRY_ATTEMPTS,
   DEFAULT_NOTIFICATION_TASK_SUBTASK_CLEANUP_RETRY_DELAY,
-  NotificationTaskType
+  type NotificationTaskType
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { asArray, cachedGetter, type Maybe, MaybeMap, MaybeSo, type Milliseconds, type PromiseOrValue, separateValues, unique } from '@dereekb/util';
+import { asArray, type Maybe, type MaybeSo, type Milliseconds, type PromiseOrValue, separateValues, unique } from '@dereekb/util';
 import { BaseError } from 'make-error';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 
