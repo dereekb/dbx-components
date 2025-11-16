@@ -251,10 +251,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
     const maxCleanupRetryAttempts = inputMaxCleanupRetryAttempts ?? DEFAULT_NOTIFICATION_TASK_SUBTASK_CLEANUP_RETRY_ATTEMPTS;
     const cleanupRetryDelay = inputCleanupRetryDelay ?? DEFAULT_NOTIFICATION_TASK_SUBTASK_CLEANUP_RETRY_DELAY;
 
-    const completeProcessingAndScheduleCleanup = completeSubtaskProcessingAndScheduleCleanupTaskResult;
     const buildUpdateMetadata = inputBuildUpdateMetadata ?? (() => undefined);
-
-    const processors: Record<NotificationTaskSubtaskTarget, NotificationTaskSubtaskProcessor<I, CUI, D, M, S>> = {};
 
     type NotificationTaskSubtaskProcessorProcessFunction<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S> = any, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: I) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>>;
 
@@ -262,6 +259,8 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
       readonly process: NotificationTaskSubtaskProcessorProcessFunction<I, D, M, S>;
       readonly cleanup?: NotificationTaskSubtaskCleanupInstructionsFunction<I, CUI, D, M, S>;
     }
+
+    const processors: Record<NotificationTaskSubtaskTarget, NotificationTaskSubtaskProcessor<I, CUI, D, M, S>> = {};
 
     inputProcessors.forEach((processorConfig) => {
       const { target } = processorConfig;
@@ -286,7 +285,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
 
       return {
         process: async (input: I) => {
-          const { notificationTask, completedSubtasks, subtaskData, target } = input;
+          const { notificationTask, completedSubtasks, subtaskData } = input;
 
           let fn: Maybe<NotificationTaskSubtask<I, D, M, S>>;
 
@@ -380,7 +379,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
             };
           } else {
             // no more subtasks to process, and no metadata changes. Mark as processing complete and continue.
-            result = completeProcessingAndScheduleCleanup() as typeof result;
+            result = completeSubtaskProcessingAndScheduleCleanupTaskResult() as typeof result;
           }
 
           return result;
@@ -389,131 +388,123 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
       };
     }
 
+    function useInputDataFactory(fn: (notificationTask: NotificationTask<D>, inputFunctionResult: NotificationTaskSubtaskNotificationTaskHandlerInputFunctionResult<I, D, M, S>, data: D) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>>) {
+      return async (notificationTask: NotificationTask<D>) => {
+        const { data } = notificationTask;
+
+        let result: NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>;
+
+        if (data) {
+          try {
+            const inputFunctionResult = await inputFunction(data, notificationTask);
+
+            result = await fn(notificationTask, inputFunctionResult, data);
+          } catch (e) {
+            if (e instanceof NotificationTaskSubTaskMissingRequiredDataTermination) {
+              // Task is complete if the required data no longer exists. Nothing to cleanup.
+              result = notificationTaskComplete();
+            } else {
+              // rethrow the error
+              throw e;
+            }
+          }
+        } else {
+          // Improperly configured task. Complete immediately.
+          result = notificationTaskComplete();
+        }
+
+        return result;
+      };
+    }
+
     const result: NotificationTaskServiceTaskHandlerConfig<D, NotificationTaskSubtaskCheckpoint> = {
       type: taskType,
       flow: [
         {
           checkpoint: NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING,
-          fn: async (notificationTask: NotificationTask<D>) => {
-            const { data } = notificationTask;
-
+          fn: useInputDataFactory(async (notificationTask, inputFunctionResult, data) => {
             let result: NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>;
 
-            if (data) {
-              try {
-                const inputFunctionResult = await inputFunction(data, notificationTask);
-                const baseInput = {
-                  ...inputFunctionResult,
-                  notificationTask
-                };
+            const baseInput = {
+              ...inputFunctionResult,
+              notificationTask
+            };
 
-                const { target } = baseInput;
+            const { target } = baseInput;
 
-                if (target) {
-                  const processor = processors[target];
+            if (target) {
+              const processor = processors[target];
 
-                  if (processor) {
-                    const { sd: subtaskData, sfps: completedSubtasks } = data;
+              if (processor) {
+                const { sd: subtaskData, sfps: completedSubtasks } = data;
 
-                    const input: I = {
-                      ...baseInput,
-                      target,
-                      completedSubtasks: completedSubtasks ?? [],
-                      subtaskData
-                    } as I;
+                const input: I = {
+                  ...baseInput,
+                  target,
+                  completedSubtasks: completedSubtasks ?? [],
+                  subtaskData
+                } as I;
 
-                    result = await processor.process(input);
-                  } else {
-                    // processor is unknown. Complete the task.
-                    result = completeProcessingAndScheduleCleanup();
-                  }
-                } else {
-                  // target is unknown. Complete the task.
-                  result = completeProcessingAndScheduleCleanup();
-                }
-              } catch (e) {
-                if (e instanceof NotificationTaskSubTaskMissingRequiredDataTermination) {
-                  // Task is complete if the required data no longer exists. Nothing to cleanup.
-                  result = notificationTaskComplete();
-                } else {
-                  // rethrow the error
-                  throw e;
-                }
+                result = await processor.process(input);
+              } else {
+                // processor is unknown. Complete the task.
+                result = completeSubtaskProcessingAndScheduleCleanupTaskResult();
               }
             } else {
-              // Improperly configured task. Complete immediately.
-              result = notificationTaskComplete();
+              // target is unknown. Complete the task.
+              result = completeSubtaskProcessingAndScheduleCleanupTaskResult();
             }
 
             return result;
-          }
+          })
         },
         {
           checkpoint: NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP,
-          fn: async (notificationTask: NotificationTask<D>) => {
-            const { data } = notificationTask;
-
+          fn: useInputDataFactory(async (notificationTask, inputFunctionResult, data) => {
             let result: NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>;
 
-            if (data) {
-              try {
-                const inputFunctionResult = await inputFunction(data, notificationTask);
+            let cleanupFunctionInput = {
+              ...inputFunctionResult,
+              notificationTask
+            } as NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>;
 
-                let cleanupFunctionInput = {
-                  ...inputFunctionResult,
-                  notificationTask
-                } as NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>;
+            const { target } = cleanupFunctionInput;
 
-                const { target } = cleanupFunctionInput;
+            let cleanupInstructions: CUI;
 
-                let cleanupInstructions: CUI;
+            if (target) {
+              const processor = processors[target];
 
-                if (target) {
-                  const processor = processors[target];
+              if (processor && processor.cleanup) {
+                const { sd: subtaskData, sfps: completedSubtasks } = data;
 
-                  if (processor && processor.cleanup) {
-                    const { sd: subtaskData, sfps: completedSubtasks } = data;
+                const input: I = {
+                  ...cleanupFunctionInput,
+                  notificationTask,
+                  completedSubtasks: completedSubtasks ?? [],
+                  target,
+                  subtaskData
+                } as I;
 
-                    const input: I = {
-                      ...cleanupFunctionInput,
-                      notificationTask,
-                      completedSubtasks: completedSubtasks ?? [],
-                      target,
-                      subtaskData
-                    } as I;
-
-                    cleanupInstructions = await processor.cleanup(input);
-                    cleanupFunctionInput = input;
-                  } else {
-                    // processor is unknown. Complete the task.
-                    cleanupInstructions = defaultCleanup(cleanupFunctionInput);
-                  }
-                } else {
-                  // target is unknown. Complete the task.
-                  cleanupInstructions = defaultCleanup(cleanupFunctionInput);
-                }
-
-                if (cleanupInstructions.cleanupSuccess === false && notificationTask.currentCheckpointSendAttempts <= maxCleanupRetryAttempts) {
-                  result = notificationTaskDelayRetry(cleanupInstructions.delayRetryUntil ?? cleanupRetryDelay);
-                } else {
-                  result = await cleanupFunction(cleanupFunctionInput, cleanupInstructions);
-                }
-              } catch (e) {
-                if (e instanceof NotificationTaskSubTaskMissingRequiredDataTermination) {
-                  // Task is complete if the document no longer exists. Nothing to cleanup or act on.
-                  result = notificationTaskComplete();
-                } else {
-                  // rethrow the error
-                  throw e;
-                }
+                cleanupInstructions = await processor.cleanup(input);
+                cleanupFunctionInput = input;
+              } else {
+                // processor is unknown. Complete the task.
+                cleanupInstructions = defaultCleanup(cleanupFunctionInput);
               }
             } else {
-              // Improperly configured task. Complete immediately.
-              result = notificationTaskComplete();
+              // target is unknown. Complete the task.
+              cleanupInstructions = defaultCleanup(cleanupFunctionInput);
+            }
+
+            if (cleanupInstructions.cleanupSuccess === false && notificationTask.currentCheckpointSendAttempts <= maxCleanupRetryAttempts) {
+              result = notificationTaskDelayRetry(cleanupInstructions.delayRetryUntil ?? cleanupRetryDelay);
+            } else {
+              result = await cleanupFunction(cleanupFunctionInput, cleanupInstructions);
             }
 
             return result;
-          }
+          })
         }
       ]
     };
@@ -532,6 +523,9 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
  */
 export class NotificationTaskSubTaskMissingRequiredDataTermination extends BaseError {}
 
+/**
+ * Creates a NotificationTaskSubTaskMissingRequiredDataTermination.
+ */
 export function notificationTaskSubTaskMissingRequiredDataTermination() {
   return new NotificationTaskSubTaskMissingRequiredDataTermination();
 }
