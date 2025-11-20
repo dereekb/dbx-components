@@ -28,7 +28,12 @@ import {
   type StorageFileProcessingNotificationTaskData,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
   STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
-  delayCompletion
+  delayCompletion,
+  onCallReadModelParams,
+  DownloadStorageFileParams,
+  StorageFile,
+  StorageFileDocument,
+  DownloadStorageFileResult
 } from '@dereekb/firebase';
 import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
@@ -445,6 +450,29 @@ demoApiFunctionContextFactory((f) => {
 
                   const newFileExists = await newFile.exists();
                   expect(newFileExists).toBe(true);
+                });
+
+                describe('test file initialized', () => {
+                  let storageFileDocument: StorageFileDocument;
+
+                  beforeEach(async () => {
+                    const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
+                      pathString: testFileStoragePath.pathString // only provide the path string for the default bucket
+                    });
+
+                    storageFileDocument = await instance();
+                  });
+
+                  it('should allow the user to create a download url for the file', async () => {
+                    const downloadFileParams: DownloadStorageFileParams = {
+                      key: storageFileDocument.key
+                    };
+
+                    const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, downloadFileParams, 'download'))) as DownloadStorageFileResult;
+
+                    expect(result).toBeDefined();
+                    expect(result.url).toBeDefined();
+                  });
                 });
               });
 

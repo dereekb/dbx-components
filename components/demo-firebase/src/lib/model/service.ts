@@ -55,9 +55,11 @@ import {
   type StorageFile,
   type StorageFileDocument,
   type StorageFileRoles,
-  type StorageFileTypes
+  type StorageFileTypes,
+  firestoreModelKeyCollectionName,
+  grantStorageFileRolesForUserAuthFunction
 } from '@dereekb/firebase';
-import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
+import { fullAccessRoleMap, grantedRoleKeysMapFromArray, grantedRoleMapReader, type GrantedRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
 import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
@@ -196,7 +198,19 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
 
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: DemoFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
-    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+    const grantStorageFileRolesForUser = grantStorageFileRolesForUserAuthFunction({ output, context, model });
+    return grantModelRolesIfAdmin(
+      context,
+      fullAccessRoleMap(),
+      grantStorageFileRolesForUser({
+        rolesForStorageFileUser: async () => {
+          // user can read any file that belongs to them
+          return {
+            read: true
+          };
+        }
+      })
+    ); // system admin only
   },
   getFirestoreCollection: (c) => c.app.storageFileCollection
 });

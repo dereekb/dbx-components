@@ -5,6 +5,7 @@ export * from './storagefile.create';
 export * from './storagefile.id';
 export * from './storagefile.query';
 export * from './storagefile.task';
+export * from './storagefile.permission';
 export * from './storagefile';
 export * from './storagefile.file';
 export * from './storagefile.upload';

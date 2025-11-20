@@ -209,7 +209,14 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
   sdat?: Maybe<Date>;
 }
 
-export type StorageFileRoles = 'process' | GrantedUpdateRole | GrantedReadRole;
+/**
+ * Granted roles for creating a download link to the StorageFile's file.
+ *
+ * The admin_download role allows specifying additional parameters and longer expiration times.
+ */
+export type StorageFileDownloadRole = 'download' | 'admin_download';
+
+export type StorageFileRoles = StorageFileDownloadRole | 'process' | GrantedUpdateRole | GrantedReadRole;
 
 export class StorageFileDocument extends AbstractFirestoreDocument<StorageFile, StorageFileDocument, typeof storageFileIdentity> {
   get modelIdentity() {

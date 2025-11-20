@@ -6,6 +6,6 @@
     "types": [],
     "target": "ES2022"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "../../firebase/src/lib/model/storagefile/storagefile.permission.ts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts"]
 }

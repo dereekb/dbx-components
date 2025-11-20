@@ -31,16 +31,21 @@ import {
   type StorageFile,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
   storageFilesQueuedForDeleteQuery,
-  firestoreDummyKey
+  firestoreDummyKey,
+  DownloadStorageFileParams,
+  DownloadStorageFileResult
 } from '@dereekb/firebase';
-import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
+import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceRef } from '../notification';
 import { type StorageFileInitializeFromUploadResult, type StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
 import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError, storageFileNotFlaggedForDeletionError, storageFileCannotBeDeletedYetError } from './storagefile.error';
-import { isPast, isThrottled, type Maybe, mergeSlashPaths } from '@dereekb/util';
+import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
+import { minDate } from 'class-validator';
+import { findMinDate } from '@dereekb/date';
+import { addDays } from 'date-fns';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -64,6 +69,7 @@ export abstract class StorageFileServerActions {
   abstract processStorageFile(params: ProcessStorageFileParams): Promise<TransformAndValidateFunctionResult<ProcessStorageFileParams, (storageFileDocument: StorageFileDocument) => Promise<ProcessStorageFileResult>>>;
   abstract deleteAllQueuedStorageFiles(params: DeleteAllQueuedStorageFilesParams): Promise<TransformAndValidateFunctionResult<DeleteAllQueuedStorageFilesParams, () => Promise<DeleteAllQueuedStorageFilesResult>>>;
   abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
+  abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument: StorageFileDocument) => Promise<DownloadStorageFileResult>>>;
 }
 
 export function storageFileServerActions(context: StorageFileServerActionsContext): StorageFileServerActions {
@@ -75,7 +81,8 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
     processAllQueuedStorageFiles: processAllQueuedStorageFilesFactory(context),
     processStorageFile: processStorageFileFactory(context),
     deleteAllQueuedStorageFiles: deleteAllQueuedStorageFilesFactory(context),
-    deleteStorageFile: deleteStorageFileFactory(context)
+    deleteStorageFile: deleteStorageFileFactory(context),
+    downloadStorageFile: downloadStorageFileFactory(context)
   };
 }
 
@@ -497,6 +504,47 @@ export function deleteStorageFileFactory(context: StorageFileServerActionsContex
 
       // delete the document
       await storageFileDocument.accessor.delete();
+    };
+  });
+}
+
+export function downloadStorageFileFactory(context: StorageFileServerActionsContext) {
+  const { storageService, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(DownloadStorageFileParams, async (params) => {
+    const { asAdmin, expiresAt, expiresIn, responseDisposition, responseContentType } = params;
+
+    return async (storageFileDocument: StorageFileDocument) => {
+      const storageFile = await assertSnapshotData(storageFileDocument);
+      const fileAccessor = storageService.file(storageFile);
+
+      let result: DownloadStorageFileResult;
+
+      if (fileAccessor.getSignedUrl) {
+        const expires = expirationDetails({ expiresAt, expiresIn });
+        let downloadUrlExpiresAt = expires.getExpirationDate();
+
+        // if they're not an admin, limit the expiration to a max of 30 days.
+        if (downloadUrlExpiresAt && !asAdmin) {
+          const maxExpirationDate = addDays(new Date(), 30);
+          downloadUrlExpiresAt = findMinDate([downloadUrlExpiresAt, maxExpirationDate]);
+        }
+
+        const downloadUrl = await fileAccessor.getSignedUrl({
+          action: 'read',
+          expiresAt: downloadUrlExpiresAt ?? undefined,
+          responseDisposition: responseDisposition ?? undefined, // can be set by anyone
+          responseType: asAdmin ? (responseContentType ?? undefined) : undefined // can only be set by admins
+        });
+
+        result = {
+          url: downloadUrl
+        };
+      } else {
+        throw internalServerError('Signed url function appears to not be avalable.');
+      }
+
+      return result;
     };
   });
 }

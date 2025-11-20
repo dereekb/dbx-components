@@ -1,10 +1,10 @@
 import { Expose, Type } from 'class-transformer';
 import { TargetModelParams, OnCallCreateModelResult } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
-import { IsString, IsBoolean, IsOptional, IsNumber, IsDate } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType } from 'class-validator';
 import { StorageFileTypes } from './storagefile';
-import { StorageBucketId, StoragePath, StorageSlashPath } from '../../common/storage';
-import { Maybe } from '@dereekb/util';
+import { type StorageBucketId, type StoragePath, type StorageSignedDownloadUrl, type StorageSlashPath } from '../../common/storage';
+import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds } from '@dereekb/util';
 
 /**
  * Used for directly create a new StorageFile.
@@ -156,6 +156,61 @@ export interface DeleteAllQueuedStorageFilesResult {
   readonly storageFilesFailedDeleting: number;
 }
 
+export class DownloadStorageFileParams extends TargetModelParams {
+  /**
+   * Date to expire the download URL.
+   */
+  @Expose()
+  @IsDate()
+  @IsOptional()
+  @Type(() => Date)
+  expiresAt?: Maybe<Date>;
+  /**
+   * Duration in milliseconds to expire the download URL from now.
+   */
+  @Expose()
+  @Min(0)
+  @IsNumber()
+  @IsOptional()
+  expiresIn?: Maybe<Milliseconds>;
+
+  /**
+   * The content disposition for the response to use.
+   */
+  @Expose()
+  @IsOptional()
+  @IsString()
+  responseDisposition?: Maybe<ContentDispositionString>;
+
+  /**
+   * The content type for the response to use.
+   *
+   * Only available to admins.
+   */
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @IsMimeType()
+  responseContentType?: Maybe<ContentTypeMimeType>;
+
+  /**
+   * Whether or not an admin is creating the link.
+   *
+   * Allows a longer expiration.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  asAdmin?: Maybe<boolean>;
+}
+
+export interface DownloadStorageFileResult {
+  /**
+   * The download URL.
+   */
+  readonly url: StorageSignedDownloadUrl;
+}
+
 // MARK: Functions
 export type StorageFileFunctionTypeMap = {};
 
@@ -172,6 +227,9 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: UpdateStorageFileParams;
       process: [ProcessStorageFileParams, ProcessStorageFileResult];
     };
+    read: {
+      download: [DownloadStorageFileParams, DownloadStorageFileResult];
+    };
     delete: {
       _: DeleteStorageFileParams;
     };
@@ -179,7 +237,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process', 'delete:_']
+  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process', 'delete:_', 'read:download']
 };
 
 export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<StorageFileFunctionTypeMap, StorageFileModelCrudFunctionsConfig> {
@@ -192,6 +250,9 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
     updateStorageFile: {
       update: ModelFirebaseCrudFunction<UpdateStorageFileParams>;
       process: ModelFirebaseCrudFunction<ProcessStorageFileParams, ProcessStorageFileResult>;
+    };
+    readStorageFile: {
+      download: ModelFirebaseCrudFunction<DownloadStorageFileParams, DownloadStorageFileResult>;
     };
     deleteStorageFile: {
       delete: ModelFirebaseCrudFunction<DeleteStorageFileParams>;
