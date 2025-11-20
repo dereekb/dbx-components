@@ -2,7 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { TargetModelParams, OnCallCreateModelResult } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
 import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType } from 'class-validator';
-import { StorageFileTypes } from './storagefile';
+import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSignedDownloadUrl, type StorageSlashPath } from '../../common/storage';
 import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds } from '@dereekb/util';
 
@@ -165,6 +165,7 @@ export class DownloadStorageFileParams extends TargetModelParams {
   @IsOptional()
   @Type(() => Date)
   expiresAt?: Maybe<Date>;
+
   /**
    * Duration in milliseconds to expire the download URL from now.
    */
@@ -208,7 +209,7 @@ export interface DownloadStorageFileResult {
   /**
    * The download URL.
    */
-  readonly url: StorageSignedDownloadUrl;
+  readonly url: StorageFileSignedDownloadUrl;
 }
 
 // MARK: Functions

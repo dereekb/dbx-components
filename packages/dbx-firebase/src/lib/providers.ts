@@ -12,6 +12,7 @@ import { provideDbxFirebaseNotifications, type ProvideDbxFirebaseNotificationsCo
 import { provideDbxFirebaseModelContextService, type ProvideDbxFirebaseModelContextServiceConfig } from './model/service/model.context.providers';
 import { provideDbxFirebaseModelTypesService, type ProvideDbxFirebaseModelTypesServiceConfig } from './model/modules/model/model.types.providers';
 import { provideDbxFirebaseAnalyticsUserEventsListenerService } from './analytics';
+import { provideDbxFirebaseStorageFileService } from './modules/storagefile/storagefile.providers';
 
 export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   // Required Configurations
@@ -48,6 +49,11 @@ export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = Fi
    * If true, provideDbxFirebaseAnalyticsUserEventsListenerService() will be provided/called.
    */
   readonly provideAnalyticsUserEventsListener?: Maybe<boolean>;
+
+  /**
+   * If true, provideDbxFirebaseStorageFileService() will be provided/called.
+   */
+  readonly provideStorageFileService?: Maybe<boolean>;
 }
 
 /**
@@ -60,7 +66,7 @@ export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = Fi
  * @returns EnvironmentProviders for the DbxFirebase configuration.
  */
 export function provideDbxFirebase<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: ProvideDbxFirebaseConfig<T, M>) {
-  const { app, emulator, storage, auth, functions, firestores, modelContextService, modelTypesService, development, notifications, provideAnalyticsUserEventsListener } = config;
+  const { app, emulator, storage, auth, functions, firestores, modelContextService, modelTypesService, development, notifications, provideAnalyticsUserEventsListener, provideStorageFileService } = config;
 
   const providers: EnvironmentProviders[] = [provideDbxFirebaseApp(app), provideDbxFirebaseEmulator(emulator), providedDbxFirebaseStorage(storage), provideDbxFirebaseAuth(auth), provideDbxFirebaseFunctions(functions), provideDbxFirebaseModelContextService(modelContextService), provideDbxFirebaseModelTypesService(modelTypesService)];
 
@@ -78,6 +84,10 @@ export function provideDbxFirebase<T, M extends FirebaseFunctionsMap = FirebaseF
 
   if (notifications != null) {
     providers.push(provideDbxFirebaseNotifications(notifications));
+  }
+
+  if (provideStorageFileService) {
+    providers.push(provideDbxFirebaseStorageFileService());
   }
 
   return makeEnvironmentProviders(providers);

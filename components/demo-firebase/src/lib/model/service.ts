@@ -204,9 +204,10 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
       fullAccessRoleMap(),
       grantStorageFileRolesForUser({
         rolesForStorageFileUser: async () => {
-          // user can read any file that belongs to them
+          // user can read and download any file that belongs to them
           return {
-            read: true
+            read: true,
+            download: true
           };
         }
       })

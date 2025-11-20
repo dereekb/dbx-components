@@ -217,7 +217,8 @@ export const appConfig: ApplicationConfig = {
       notifications: {
         appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
       },
-      provideAnalyticsUserEventsListener: true
+      provideAnalyticsUserEventsListener: true,
+      provideStorageFileService: true
     }),
     provideDbxFirebaseLogin({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,

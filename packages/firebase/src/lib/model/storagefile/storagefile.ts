@@ -1,6 +1,6 @@
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, type FirebaseAuthUserId, type FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, type StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, type FirebaseAuthUserId, type FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, type StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum, StorageSignedDownloadUrl, StorageDownloadUrl } from '../../common';
 import { type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
@@ -134,6 +134,22 @@ export function canQueueStorageFileForProcessing(storageFile: Pick<StorageFile, 
  * After 3 hours of being in the PROCESSING state, we can check for retring processing.
  */
 export const STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS = MS_IN_HOUR * 3;
+
+/**
+ * A Google Cloud public download URL for a StorageFile.
+ *
+ * This URL is not protected by authentication and is the permanent URL for the file.
+ *
+ * Consider using a StorageFileSignedDownloadUrl if the file should be protected.
+ */
+export type StorageFilePublicDownloadUrl = StorageDownloadUrl;
+
+/**
+ * A Google Cloud signed download URL for a StorageFile.
+ *
+ * It expires after a period of time.
+ */
+export type StorageFileSignedDownloadUrl = StorageSignedDownloadUrl;
 
 /**
  * A global storage file in the system.
