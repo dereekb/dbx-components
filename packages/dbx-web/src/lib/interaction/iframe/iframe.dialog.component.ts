@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { AbstractDialogDirective, DbxDialogContentDirective, DbxIframeComponent } from '@dereekb/dbx-web';
 import { WebsiteUrlWithPrefix } from '@dereekb/util';
+import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
+import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
+import { DbxIframeComponent } from './iframe.component';
 
 export interface DbxIframeDialogConfig {
   readonly contentUrl: WebsiteUrlWithPrefix;

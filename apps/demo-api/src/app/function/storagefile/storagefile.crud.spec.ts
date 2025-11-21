@@ -30,10 +30,9 @@ import {
   STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
   delayCompletion,
   onCallReadModelParams,
-  DownloadStorageFileParams,
-  StorageFile,
-  StorageFileDocument,
-  DownloadStorageFileResult
+  type DownloadStorageFileParams,
+  type StorageFileDocument,
+  type DownloadStorageFileResult
 } from '@dereekb/firebase';
 import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
