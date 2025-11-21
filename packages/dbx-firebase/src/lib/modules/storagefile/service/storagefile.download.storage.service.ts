@@ -1,12 +1,12 @@
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { StorageAccessor } from '@dereekb/dbx-core';
 import { map, mergeMap, catchError, Observable, of, switchMap, first } from 'rxjs';
-import { FirebaseAuthUserId, StorageFileKey, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
+import { FirebaseAuthUserId, firestoreModelId, FirestoreModelIdInput, StorageFileId, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { UnixTimeNumber } from '@dereekb/util';
 
 export interface DbxFirebaseStorageFileDownloadUrlPair {
-  readonly key: StorageFileKey;
+  readonly id: StorageFileId;
   readonly downloadUrl: StorageFileSignedDownloadUrl;
   /**
    * Expiration in seconds since epoch.
@@ -16,7 +16,7 @@ export interface DbxFirebaseStorageFileDownloadUrlPair {
 
 export type DbxFirebaseStorageFileDownloadUrlPairString = `${UnixTimeNumber}_${StorageFileSignedDownloadUrl}`;
 
-export type DbxFirebaseStorageFileDownloadUrlPairsRecord = Record<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPairString>;
+export type DbxFirebaseStorageFileDownloadUrlPairsRecord = Record<StorageFileId, DbxFirebaseStorageFileDownloadUrlPairString>;
 
 export interface DbxFirebaseStorageFileDownloadUserCache {
   readonly uid: FirebaseAuthUserId;
@@ -38,24 +38,21 @@ export class DbxFirebaseStorageFileDownloadStorage {
   readonly authService = inject(DbxFirebaseAuthService);
   readonly storageAccessor = inject<StorageAccessor<DbxFirebaseStorageFileDownloadUserCache>>(DBX_FIREBASE_STORAGEFILE_DOWNLOAD_STORAGE_ACCESSOR_TOKEN);
 
-  addDownloadUrl({ key, downloadUrl, expiresAt }: DbxFirebaseStorageFileDownloadUrlPair): Observable<void> {
-    return this.authService.uid$.pipe(
-      switchMap((uid) => {
+  addDownloadUrl({ id, downloadUrl, expiresAt }: DbxFirebaseStorageFileDownloadUrlPair): Observable<void> {
+    return this.getCurrentUserDownloadCache().pipe(
+      mergeMap((cache) => {
+        const { uid, pairs: currentPairs } = cache;
+
         const storageKey = this.getStorageKeyForUid(uid);
+        const pairs: DbxFirebaseStorageFileDownloadUrlPairsRecord = {
+          ...currentPairs,
+          [id]: `${expiresAt}_${downloadUrl}`
+        };
 
-        return this.storageAccessor.get(storageKey).pipe(
-          mergeMap((cache) => {
-            const pairs: DbxFirebaseStorageFileDownloadUrlPairsRecord = {
-              ...(cache?.pairs ?? {}),
-              [key]: `${expiresAt}_${downloadUrl}`
-            };
-
-            return this.storageAccessor.set(storageKey, {
-              uid: uid,
-              pairs
-            });
-          })
-        );
+        return this.storageAccessor.set(storageKey, {
+          uid,
+          pairs
+        });
       }),
       first()
     );
@@ -69,13 +66,13 @@ export class DbxFirebaseStorageFileDownloadStorage {
    * @param key
    * @returns
    */
-  getDownloadUrlPair(key: StorageFileKey): Observable<DbxFirebaseStorageFileDownloadUrlPair | undefined> {
+  getDownloadUrlPair(input: FirestoreModelIdInput): Observable<DbxFirebaseStorageFileDownloadUrlPair | undefined> {
+    const id = firestoreModelId(input);
     return this.authService.uid$.pipe(
       switchMap((uid) => {
-        const storageKey = this.getStorageKeyForUid(uid);
-        return this.storageAccessor.get(storageKey).pipe(
+        return this.getUserDownloadCache(uid).pipe(
           map((cache) => {
-            const pair = cache?.pairs[key];
+            const pair = cache?.pairs[id];
 
             let result: DbxFirebaseStorageFileDownloadUrlPair | undefined;
 
@@ -83,7 +80,7 @@ export class DbxFirebaseStorageFileDownloadStorage {
               const [expiresAt, downloadUrl] = pair.split('_', 2);
 
               result = {
-                key,
+                id,
                 downloadUrl,
                 expiresAt: Number(expiresAt)
               };
@@ -99,6 +96,10 @@ export class DbxFirebaseStorageFileDownloadStorage {
 
   getAllDownloadUrlPairsRecord(uid: FirebaseAuthUserId): Observable<DbxFirebaseStorageFileDownloadUrlPairsRecord> {
     return this.getUserDownloadCache(uid).pipe(map((x) => x.pairs));
+  }
+
+  getCurrentUserDownloadCache(): Observable<DbxFirebaseStorageFileDownloadUserCache> {
+    return this.authService.uid$.pipe(switchMap((uid) => this.getUserDownloadCache(uid)));
   }
 
   getUserDownloadCache(uid: FirebaseAuthUserId): Observable<DbxFirebaseStorageFileDownloadUserCache> {

@@ -2,12 +2,12 @@ import { type Maybe, type MaybeNot } from '../value/maybe.type';
 import { isDate } from './date';
 
 /**
- * Similar to UnixDateTimeNumber, but is in seconds instead of milliseconds.
+ * Not to be confused with UnixDateTimeNumber, this value is in seconds instead of milliseconds.
  */
 export type UnixTimeNumber = number;
 
 /**
- * Similar to DateOrUnixDateTimeNumber, but is in seconds instead of milliseconds.
+ * Not to be confused with DateOrUnixDateTimeNumber, this value is in seconds instead of milliseconds.
  */
 export type DateOrUnixTimeNumber = Date | UnixTimeNumber;
 

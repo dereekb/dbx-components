@@ -14,7 +14,7 @@ import { DbxModelObjectStateService } from './model.state.service';
  */
 export function defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory: SimpleStorageAccessorFactory): StorageAccessor<DbxModelViewTrackerEventSet> {
   const accessor = storageAccessorFactory.createStorageAccessor<DbxModelViewTrackerEventSet>({
-    prefix: 'mvts'
+    prefix: 'mtvs'
   });
 
   return accessor;

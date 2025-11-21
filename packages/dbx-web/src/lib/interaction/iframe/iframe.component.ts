@@ -1,15 +1,15 @@
-import { Component, viewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, computed, inject, SecurityContext, output , input } from '@angular/core';
+import { Component, viewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { asyncScheduler, combineLatest, delayWhen, map, Subject, switchMap, timer, startWith } from 'rxjs';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
-export const DBX_IFRAME_COMPONENT_TEMPLATE = `<iframe #iframe src="about:blank" frameborder="0" [scrolling]="scrolling()" allow="autoplay"></iframe>`;
-
 @Component({
   selector: 'dbx-iframe',
-  template: DBX_IFRAME_COMPONENT_TEMPLATE,
+  template: `
+    <iframe #iframe src="about:blank" frameborder="0" [scrolling]="scrolling()" allow="autoplay"></iframe>
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

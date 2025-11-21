@@ -1,4 +1,4 @@
-import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, optionalFirestoreString, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
+import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, optionalFirestoreString, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID, StorageFile, StorageFileKey } from '@dereekb/firebase';
 import { type GrantedReadRole } from '@dereekb/model';
 import { type WebsiteUrl, type Maybe } from '@dereekb/util';
 
@@ -18,6 +18,10 @@ export interface Profile extends UserRelated, UserRelatedById {
    * Avatar URL
    */
   avatar?: Maybe<WebsiteUrl>;
+  /**
+   * Avatar storage file
+   */
+  avatarStorageFile?: Maybe<StorageFileKey>;
   /**
    * Unique username.
    */
@@ -44,6 +48,7 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
   fields: {
     uid: firestoreUID(),
     avatar: optionalFirestoreString(),
+    avatarStorageFile: optionalFirestoreString(),
     username: firestoreString({ default: '', defaultBeforeSave: null }),
     bio: optionalFirestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })

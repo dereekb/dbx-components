@@ -42,5 +42,12 @@
         <div *dbxActionHasSuccess="3000" class="dbx-success">Saved Changes</div>
       </dbx-section>
     </dbx-content-box>
+    <dbx-content-box [wide]="true">
+      <dbx-section header="Download Files">
+        <div>
+          <dbx-firebase-storagefile-download-button [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>
+        </div>
+      </dbx-section>
+    </dbx-content-box>
   </dbx-loading>
 </dbx-section-page>

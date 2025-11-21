@@ -20,6 +20,7 @@ import {
   type ConfigurableStorageMetadata,
   type StorageAccessControlObject
 } from '@dereekb/firebase';
+import { isTestNodeEnv } from '@dereekb/nestjs';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, type Bucket, type MoveFileAtomicOptions, type CopyOptions, ApiError, GetSignedUrlConfig } from '@google-cloud/storage';
 import { addHours, addMilliseconds } from 'date-fns';
@@ -190,7 +191,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
             message: string;
           }
 
-          if (e && (e as SigningError).name === 'SigningError' && (e as SigningError).message.startsWith('Could not load the default credentials.') && process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+          if (e && (e as SigningError).name === 'SigningError' && (isTestNodeEnv() || process.env.FIREBASE_STORAGE_EMULATOR_HOST)) {
             // NOTE: Signing does not behave properly in the emulator as it is not supported.
             // https://github.com/firebase/firebase-tools/issues/3400
 

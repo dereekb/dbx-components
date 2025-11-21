@@ -14,6 +14,11 @@ $dbx-iframe-height-var: --dbx-iframe-height;
     height: 100%;
     width: 100%;
   }
+
+  dbx-embed embed {
+    height: 100%;
+    width: 100%;
+  }
 }
 
 @mixin color($theme-config) {

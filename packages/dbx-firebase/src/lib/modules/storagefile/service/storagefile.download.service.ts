@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
-import { addMilliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, unixTimeNumberForNow, unixTimeNumberFromDate } from '@dereekb/util';
-import { DbxFirebaseStorageFileDownloadStorage } from './storagefile.download.storage.service';
-import { first, firstValueFrom, from, map, Observable, of, switchMap, tap } from 'rxjs';
+import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileSignedDownloadUrl, StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
+import { addMilliseconds, Maybe, Milliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, SECONDS_IN_MINUTE, unixTimeNumberForNow, unixTimeNumberFromDate } from '@dereekb/util';
+import { DbxFirebaseStorageFileDownloadStorage, DbxFirebaseStorageFileDownloadUrlPair } from './storagefile.download.storage.service';
+import { distinctUntilChanged, filter, first, firstValueFrom, from, interval, map, Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 
 /**
  * Service used for retrieving download links for StorageFiles.
@@ -12,12 +12,12 @@ export class DbxFirebaseStorageFileDownloadService {
   /**
    * Expiration duration for cached download URLs.
    */
-  protected _expiresAfterTime = 3 * MS_IN_DAY;
+  protected _expiresAfterTime: Milliseconds = 3 * MS_IN_DAY;
 
   /**
    * When reading cached values, this buffer is added to the expiration time to prevent the URL from expiring while it is being used.
    */
-  protected _expiresAfterTimeBuffer = MS_IN_MINUTE * 10;
+  protected _expiresAfterTimeBuffer: Seconds = SECONDS_IN_MINUTE * 10;
 
   readonly storageFileFunctions = inject(StorageFileFunctions);
   readonly storageFileDownloadStorage = inject(DbxFirebaseStorageFileDownloadStorage);
@@ -41,69 +41,106 @@ export class DbxFirebaseStorageFileDownloadService {
 
   // MARK: Download
   /**
-   * Retrieves the download URL for the StorageFile using the default parameters.
+   * Returns an observable that returns the cached download URL pair for the StorageFile, and emits null once it expires.
    *
-   * These URLs are cached locally to prevent extra/redundant calls to the server.
-   *
-   * @param storageFileKey
+   * @param storageFileIdOrKey
    * @returns
    */
-  downloadUrlForStorageFile(storageFileKey: StorageFileKey): Promise<string> {
-    const obs: Observable<StorageFileSignedDownloadUrl> = this.storageFileDownloadStorage.getDownloadUrlPair(storageFileKey).pipe(
+  getCachedDownloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey): Observable<Maybe<DbxFirebaseStorageFileDownloadUrlPair>> {
+    const storageFileId = firestoreModelId(storageFileIdOrKey);
+    return this.storageFileDownloadStorage.getDownloadUrlPair(storageFileId).pipe(
       switchMap((pair) => {
-        let result: Observable<StorageFileSignedDownloadUrl>;
-
-        const downloadAndCacheResult = () => {
-          const expiresAt = addMilliseconds(new Date(), this._expiresAfterTime);
-          return from(this.createDownloadUrlForStorageFile(storageFileKey, { expiresAt })).pipe(
-            tap((downloadUrl) => {
-              // add to the cache
-              this.storageFileDownloadStorage
-                .addDownloadUrl({
-                  key: storageFileKey,
-                  downloadUrl,
-                  expiresAt: unixTimeNumberFromDate(expiresAt)
-                })
-                .pipe(first())
-                .subscribe();
-            })
-          );
-        };
+        let result: Observable<Maybe<DbxFirebaseStorageFileDownloadUrlPair>>;
 
         if (pair) {
-          const expiresAt = pair.expiresAt + this._expiresAfterTimeBuffer;
-          const now = unixTimeNumberForNow();
+          const expiresAt = pair.expiresAt - this._expiresAfterTimeBuffer;
 
-          if (expiresAt > now) {
-            result = of(pair.downloadUrl);
-          } else {
-            // if expired, then download and cache the result
-            result = downloadAndCacheResult();
-          }
+          // every minute emit the result again
+          result = interval(MS_IN_MINUTE)
+            .pipe(
+              map(() => {
+                const now = unixTimeNumberForNow();
+                const isExpired = now > expiresAt;
+                return isExpired ? null : pair; // emit null once expired
+              })
+            )
+            .pipe(
+              filter((x) => x == null),
+              first(),
+              startWith(pair),
+              distinctUntilChanged(),
+              shareReplay(1)
+            );
         } else {
-          result = downloadAndCacheResult();
+          result = of(null);
         }
 
         return result;
       })
     );
+  }
 
-    return firstValueFrom(obs);
+  /**
+   * Retrieves the download URL for the StorageFile using the default parameters.
+   *
+   * These URLs are cached locally to prevent extra/redundant calls to the server.
+   *
+   * @param storageFileIdOrKey
+   * @returns
+   */
+  downloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
+    const storageFileId = firestoreModelId(storageFileIdOrKey);
+    const obs: Observable<DbxFirebaseStorageFileDownloadUrlPair> = this.getCachedDownloadPairForStorageFile(storageFileId).pipe(
+      switchMap((cachedPair) => {
+        let result: Observable<DbxFirebaseStorageFileDownloadUrlPair>;
+
+        const downloadAndCacheResult = () => {
+          const expiresAt = addMilliseconds(new Date(), this._expiresAfterTime);
+          return from(this.createDownloadPairForStorageFile(storageFileIdOrKey, { expiresAt })).pipe(
+            tap((downloadUrlPair) => {
+              // add to the cache
+              this.storageFileDownloadStorage.addDownloadUrl(downloadUrlPair).pipe(first()).subscribe();
+            })
+          );
+        };
+
+        if (cachedPair) {
+          result = of(cachedPair);
+        } else {
+          result = downloadAndCacheResult();
+        }
+
+        return result;
+      }),
+      first(),
+      shareReplay(1)
+    );
+
+    return obs;
   }
 
   /**
    * Creates a new download URL for the StorageFile.
    *
-   * @param storageFileKey
+   * @param storageFileIdOrKey
    * @param inputParams
    * @returns
    */
-  createDownloadUrlForStorageFile(storageFileKey: StorageFileKey, inputParams?: Omit<DownloadStorageFileParams, 'key'>): Promise<StorageFileSignedDownloadUrl> {
+  createDownloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey, inputParams?: Omit<DownloadStorageFileParams, 'key'>): Promise<DbxFirebaseStorageFileDownloadUrlPair> {
+    const storageFileId = firestoreModelId(storageFileIdOrKey);
+    const expiresAt = inputParams?.expiresAt ?? addMilliseconds(new Date(), this._expiresAfterTime);
+
     const params: DownloadStorageFileParams = {
       ...inputParams,
-      key: storageFileKey
+      key: firestoreModelKey(storageFileIdentity, storageFileId)
     };
 
-    return this.storageFileFunctions.storageFile.readStorageFile.download(params).then((x) => x.url);
+    return this.storageFileFunctions.storageFile.readStorageFile.download(params).then((x) => {
+      return {
+        id: storageFileId,
+        downloadUrl: x.url,
+        expiresAt: unixTimeNumberFromDate(expiresAt)
+      };
+    });
   }
 }
