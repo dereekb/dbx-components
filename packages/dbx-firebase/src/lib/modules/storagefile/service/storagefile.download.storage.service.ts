@@ -107,6 +107,15 @@ export class DbxFirebaseStorageFileDownloadStorage {
     return this._getUserDownloadCacheForStorageKey(storageKey, uid);
   }
 
+  clearCurrentUserDownloadCache(): Observable<void> {
+    return this.authService.uid$.pipe(switchMap((uid) => this.clearUserDownloadCache(uid)));
+  }
+
+  clearUserDownloadCache(uid: FirebaseAuthUserId): Observable<void> {
+    const storageKey = this.getStorageKeyForUid(uid);
+    return this.storageAccessor.remove(storageKey);
+  }
+
   private _getUserDownloadCacheForStorageKey(storageKey: string, uid: FirebaseAuthUserId): Observable<DbxFirebaseStorageFileDownloadUserCache> {
     return this.storageAccessor.get(storageKey).pipe(
       catchError((e) => {

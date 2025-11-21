@@ -13,5 +13,11 @@
       <p>dbx-iframe can be configured to sanitize the url or not.</p>
       <dbx-iframe [contentUrl]="contentUrl" [sanitizeUrl]="true"></dbx-iframe>
     </doc-feature-example>
+    <doc-feature-example header="dbx-embed" hint="Component that displays a src value in an embed element.">
+      <p>dbx-embed handles creating an embed element then replacing the content with the content from a url or a SafeResourceUrl.</p>
+      <div style="height: 1000px">
+        <dbx-embed [srcUrl]="embedSrcUrl" [type]="embedMimeType"></dbx-embed>
+      </div>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

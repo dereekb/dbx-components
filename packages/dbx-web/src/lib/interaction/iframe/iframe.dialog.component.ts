@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective, DbxIframeComponent } from '@dereekb/dbx-web';
 import { WebsiteUrlWithPrefix } from '@dereekb/util';
@@ -13,8 +13,9 @@ export interface DbxIframeDialogConfig {
       <dbx-iframe [contentUrl]="contentUrl"></dbx-iframe>
     </dbx-dialog-content>
   `,
-  standalone: true,
-  imports: [DbxDialogContentDirective, DbxIframeComponent]
+  imports: [DbxDialogContentDirective, DbxIframeComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxIframeDialogComponent extends AbstractDialogDirective<void, DbxIframeDialogConfig> {
   get contentUrl() {

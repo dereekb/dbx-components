@@ -1,8 +1,7 @@
 import { type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { SimpleStorageAccessorFactory, type StorageAccessor } from '@dereekb/dbx-core';
-import { DBX_FIREBASE_STORAGEFILE_DOWNLOAD_STORAGE_ACCESSOR_TOKEN, DbxFirebaseStorageFileDownloadStorage } from './service/storagefile.download.storage.service';
+import { DBX_FIREBASE_STORAGEFILE_DOWNLOAD_STORAGE_ACCESSOR_TOKEN, DbxFirebaseStorageFileDownloadStorage, type DbxFirebaseStorageFileDownloadUserCache } from './service/storagefile.download.storage.service';
 import { DbxFirebaseStorageFileDownloadService } from './service/storagefile.download.service';
-import { DbxFirebaseStorageFileDownloadUserCache } from './service/storagefile.download.storage.service';
 
 /**
  * Factory function for creating a StorageAccessor for the model view tracker.

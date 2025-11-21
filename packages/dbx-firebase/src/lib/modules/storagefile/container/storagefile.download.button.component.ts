@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { DbxActionDialogDirective, DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, DbxButtonStyle, DbxEmbedDialogComponent, DbxIframeDialogComponent } from '@dereekb/dbx-web';
+import { DbxActionDialogDirective, DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, DbxButtonStyle, DbxEmbedDialogComponent } from '@dereekb/dbx-web';
 import { StorageFileKey, StorageFilePublicDownloadUrl, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
-import { ContentTypeMimeType, dateFromDateOrTimeNumber, DateOrUnixTimeNumber, isPast, Maybe, MS_IN_SECOND, UnixTimeNumber, unixTimeNumberFromDateOrTimeNumber } from '@dereekb/util';
+import { ContentTypeMimeType, dateFromDateOrTimeNumber, DateOrUnixTimeNumber, isPast, Maybe, MS_IN_SECOND } from '@dereekb/util';
 import { DbxFirebaseStorageFileDownloadService } from '../service/storagefile.download.service';
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { tapLog, WorkUsingObservable } from '@dereekb/rxjs';
+import { WorkUsingObservable } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, interval, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
@@ -85,7 +85,7 @@ export class DbxFirebaseStorageFileDownloadButton {
   readonly configSignal = computed(() => {
     const config = this.config();
 
-    let result: DbxFirebaseStorageFileDownloadButtonConfig = {
+    const result: DbxFirebaseStorageFileDownloadButtonConfig = {
       buttonStyle: config?.buttonStyle,
       previewButtonStyle: config?.previewButtonStyle,
       icon: config?.icon ?? 'cloud_download',
@@ -114,7 +114,7 @@ export class DbxFirebaseStorageFileDownloadButton {
   readonly buttonStyleSignal = computed(() => {
     const config = this.configSignal();
 
-    let result: DbxButtonStyle = {
+    const result: DbxButtonStyle = {
       type: 'raised',
       ...config.buttonStyle
     };
@@ -125,7 +125,7 @@ export class DbxFirebaseStorageFileDownloadButton {
   readonly previewButtonStyleSignal = computed(() => {
     const config = this.configSignal();
 
-    let result: DbxButtonStyle = {
+    const result: DbxButtonStyle = {
       type: 'raised',
       ...config.previewButtonStyle
     };

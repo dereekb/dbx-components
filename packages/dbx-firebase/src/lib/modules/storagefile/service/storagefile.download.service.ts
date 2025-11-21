@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileSignedDownloadUrl, StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
+import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
 import { addMilliseconds, Maybe, Milliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, SECONDS_IN_MINUTE, unixTimeNumberForNow, unixTimeNumberFromDate } from '@dereekb/util';
 import { DbxFirebaseStorageFileDownloadStorage, DbxFirebaseStorageFileDownloadUrlPair } from './storagefile.download.storage.service';
-import { distinctUntilChanged, filter, first, firstValueFrom, from, interval, map, Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
+import { distinctUntilChanged, filter, first, from, interval, map, Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 
 /**
  * Service used for retrieving download links for StorageFiles.

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective, DbxEmbedComponent } from '@dereekb/dbx-web';
 import { ContentTypeMimeType, Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
@@ -15,8 +15,9 @@ export interface DbxEmbedDialogConfig {
       <dbx-embed [srcUrl]="srcUrl" [sanitizeUrl]="sanitizeUrl" [type]="type"></dbx-embed>
     </dbx-dialog-content>
   `,
-  standalone: true,
-  imports: [DbxDialogContentDirective, DbxEmbedComponent]
+  imports: [DbxDialogContentDirective, DbxEmbedComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxEmbedDialogComponent extends AbstractDialogDirective<void, DbxEmbedDialogConfig> {
   get type() {

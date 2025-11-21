@@ -1,4 +1,4 @@
-import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, optionalFirestoreString, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID, StorageFile, StorageFileKey } from '@dereekb/firebase';
+import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, optionalFirestoreString, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID, type StorageFileKey } from '@dereekb/firebase';
 import { type GrantedReadRole } from '@dereekb/model';
 import { type WebsiteUrl, type Maybe } from '@dereekb/util';
 

@@ -1,7 +1,6 @@
-import { FirebasePermissionServiceModel, FirestoreModelKey, GrantedRolesOtherwiseFunctionResult, GrantRolesOtherwiseFunction, StorageFile, StorageFileDocument, StorageFileRoles } from '@dereekb/firebase';
-import { type FirebaseModelContext } from '@dereekb/firebase';
-import { GrantedRoleMap } from '@dereekb/model';
-import { Getter, Maybe } from '@dereekb/util';
+import { type FirebasePermissionServiceModel, type FirestoreModelKey, type GrantedRolesOtherwiseFunctionResult, type GrantRolesOtherwiseFunction, type StorageFile, type StorageFileDocument, type StorageFileRoles, type FirebaseModelContext } from '@dereekb/firebase';
+import { type GrantedRoleMap } from '@dereekb/model';
+import { type Getter, type Maybe } from '@dereekb/util';
 
 /**
  * grantStorageFileRolesForUserAuthFunction() configuration

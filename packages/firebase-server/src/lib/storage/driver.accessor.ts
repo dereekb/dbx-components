@@ -22,7 +22,7 @@ import {
 } from '@dereekb/firebase';
 import { isTestNodeEnv } from '@dereekb/nestjs';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
-import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, type Bucket, type MoveFileAtomicOptions, type CopyOptions, ApiError, GetSignedUrlConfig } from '@google-cloud/storage';
+import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, type Bucket, type MoveFileAtomicOptions, type CopyOptions, ApiError, type GetSignedUrlConfig } from '@google-cloud/storage';
 import { addHours, addMilliseconds } from 'date-fns';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 

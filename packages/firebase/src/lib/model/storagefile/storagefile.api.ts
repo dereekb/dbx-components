@@ -3,7 +3,7 @@ import { TargetModelParams, OnCallCreateModelResult } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
 import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType } from 'class-validator';
 import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
-import { type StorageBucketId, type StoragePath, type StorageSignedDownloadUrl, type StorageSlashPath } from '../../common/storage';
+import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds } from '@dereekb/util';
 
 /**
