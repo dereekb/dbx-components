@@ -1,6 +1,6 @@
 import { OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
@@ -42,6 +42,11 @@ export class DemoProfileViewComponent implements OnInit {
   readonly auth = inject(DbxFirebaseAuthService);
   readonly userIdentifier$ = this.auth.userIdentifier$;
   readonly userIdentifierSignal = toSignal(this.userIdentifier$, { requireSync: true });
+
+  readonly avatarDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
+    text: 'Start Avatar Download',
+    downloadReadyText: 'Save Avatar'
+  };
 
   readonly storageService = inject(DbxFirebaseStorageService);
 

@@ -7,5 +7,5 @@
     "types": ["node"]
   },
   "exclude": ["test/**", "mailgun/**", "zoho/**", "model/**", "**/*.spec.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "../firebase/src/lib/model/storagefile/storagefile.permission.ts"]
+  "include": ["**/*.ts"]
 }
