@@ -55,7 +55,8 @@ import {
   type StorageFile,
   type StorageFileDocument,
   type StorageFileRoles,
-  type StorageFileTypes
+  type StorageFileTypes,
+  grantStorageFileRolesForUserAuthFunction
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
@@ -196,7 +197,20 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
 
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: DemoFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
-    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+    const grantStorageFileRolesForUser = grantStorageFileRolesForUserAuthFunction({ output, context, model });
+    return grantModelRolesIfAdmin(
+      context,
+      fullAccessRoleMap(),
+      grantStorageFileRolesForUser({
+        rolesForStorageFileUser: async () => {
+          // user can read and download any file that belongs to them
+          return {
+            read: true,
+            download: true
+          };
+        }
+      })
+    ); // system admin only
   },
   getFirestoreCollection: (c) => c.app.storageFileCollection
 });

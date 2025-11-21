@@ -80,3 +80,11 @@ export function mimetypeForImageType(imageType: MimeTypeForImageTypeInputType | 
 
   return result;
 }
+
+// MARK: ContentDisposition
+/**
+ * A content disposition string, which is used to determine how the browser should show the target content.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition
+ */
+export type ContentDispositionString = 'inline' | 'attachment' | string;

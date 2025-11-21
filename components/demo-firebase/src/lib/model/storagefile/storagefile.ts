@@ -39,15 +39,15 @@ export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProces
    *
    * Used for testing.
    */
-  canRunNextCheckpoint?: Maybe<boolean>;
+  readonly canRunNextCheckpoint?: Maybe<boolean>;
   /**
    * Passed to the result of the task.
    *
    * Used for testing.
    */
-  delayUntil?: Maybe<Date | Milliseconds>;
-  numberValue?: Maybe<number>;
-  stringValue?: Maybe<string>;
+  readonly delayUntil?: Maybe<Date | Milliseconds>;
+  readonly numberValue?: Maybe<number>;
+  readonly stringValue?: Maybe<string>;
 }
 
 export const USER_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/';

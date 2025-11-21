@@ -1,4 +1,4 @@
-import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, type Maybe, type ContentDispositionString, type ContentTypeMimeType } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
 // MARK: Storage
@@ -68,11 +68,11 @@ export interface StorageSignedDownloadUrlConfig {
   readonly virtualHostedStyle?: boolean;
   readonly cname?: string;
   readonly contentMd5?: string;
-  readonly contentType?: string;
+  readonly contentType?: ContentTypeMimeType;
   readonly extensionHeaders?: Record<string, ArrayOrValue<string>>;
   readonly promptSaveAs?: string;
-  readonly responseDisposition?: string;
-  readonly responseType?: string;
+  readonly responseDisposition?: ContentDispositionString;
+  readonly responseType?: ContentTypeMimeType;
   readonly queryParams?: Record<string, string>;
 }
 

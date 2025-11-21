@@ -1,3 +1,4 @@
+export * from './storagefile.download.button.component';
 export * from './storagefile.upload.action.handler.directive';
 export * from './storagefile.upload.error';
 export * from './storagefile.upload.handler';

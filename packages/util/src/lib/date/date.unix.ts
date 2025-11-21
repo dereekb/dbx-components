@@ -1,5 +1,15 @@
 import { type Maybe, type MaybeNot } from '../value/maybe.type';
-import { type DateOrUnixDateTimeNumber, isDate, type UnixDateTimeNumber } from './date';
+import { isDate } from './date';
+
+/**
+ * Not to be confused with UnixDateTimeNumber, this value is in seconds instead of milliseconds.
+ */
+export type UnixTimeNumber = number;
+
+/**
+ * Not to be confused with DateOrUnixDateTimeNumber, this value is in seconds instead of milliseconds.
+ */
+export type DateOrUnixTimeNumber = Date | UnixTimeNumber;
 
 /**
  * Converts a Date object or unix timestamp number to a unix timestamp number.
@@ -7,13 +17,13 @@ import { type DateOrUnixDateTimeNumber, isDate, type UnixDateTimeNumber } from '
  * @param input - Date object or unix timestamp number to convert
  * @returns Unix timestamp number if input is valid, null/undefined if input is null/undefined
  */
-export function unixTimeNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<UnixDateTimeNumber> {
+export function unixTimeNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixTimeNumber>): Maybe<UnixTimeNumber> {
   if (input == null) {
     return input as null | undefined;
   } else if (isDate(input)) {
     return unixTimeNumberFromDate(input as Date);
   } else {
-    return input as UnixDateTimeNumber;
+    return input as UnixTimeNumber;
   }
 }
 
@@ -22,7 +32,7 @@ export function unixTimeNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTi
  *
  * @returns Current time as unix timestamp number
  */
-export function unixTimeNumberForNow(): UnixDateTimeNumber {
+export function unixTimeNumberForNow(): UnixTimeNumber {
   return unixTimeNumberFromDate(new Date());
 }
 
@@ -32,9 +42,9 @@ export function unixTimeNumberForNow(): UnixDateTimeNumber {
  * @param date - Date object to convert
  * @returns Unix timestamp number if date is valid, null/undefined if date is null/undefined
  */
-export function unixTimeNumberFromDate(date: Date): UnixDateTimeNumber;
+export function unixTimeNumberFromDate(date: Date): UnixTimeNumber;
 export function unixTimeNumberFromDate(date: MaybeNot): MaybeNot;
-export function unixTimeNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeNumber> {
+export function unixTimeNumberFromDate(date: Maybe<Date>): Maybe<UnixTimeNumber> {
   return date != null ? Math.ceil(date.getTime() / 1000) : (date as null | undefined);
 }
 
@@ -44,16 +54,16 @@ export function unixTimeNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeNum
  * @param input - Date object or unix timestamp number to convert
  * @returns Date object if input is valid. Returns null/undefined if input is null/undefined
  */
-export function dateFromDateOrTimeNumber(input: DateOrUnixDateTimeNumber): Date;
+export function dateFromDateOrTimeNumber(input: DateOrUnixTimeNumber): Date;
 export function dateFromDateOrTimeNumber(input: MaybeNot): MaybeNot;
-export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<Date>;
-export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<Date> {
+export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixTimeNumber>): Maybe<Date>;
+export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixTimeNumber>): Maybe<Date> {
   if (input == null) {
     return input as null | undefined;
   } else if (isDate(input)) {
     return input as Date;
   } else {
-    return unixTimeNumberToDate(input as UnixDateTimeNumber);
+    return unixTimeNumberToDate(input as UnixTimeNumber);
   }
 }
 
@@ -63,6 +73,6 @@ export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>)
  * @param dateTimeNumber - Unix timestamp number to convert
  * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined
  */
-export function unixTimeNumberToDate(dateTimeNumber: Maybe<UnixDateTimeNumber>): Maybe<Date> {
+export function unixTimeNumberToDate(dateTimeNumber: Maybe<UnixTimeNumber>): Maybe<Date> {
   return dateTimeNumber != null ? new Date(dateTimeNumber * 1000) : (dateTimeNumber as null | undefined);
 }

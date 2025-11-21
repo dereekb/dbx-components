@@ -19,7 +19,7 @@
             </div>
             <span class="dbx-spacer"></span>
             <!-- Action Space -->
-            <div dbxAction dbxActionLogger dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="avatarUploadHandler" [triggerOnFiles]="true">
+            <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="avatarUploadHandler" [triggerOnFiles]="true">
               <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Photo" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
             </div>
           </ng-content>
@@ -40,6 +40,13 @@
         <dbx-error dbxActionError></dbx-error>
         <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
         <div *dbxActionHasSuccess="3000" class="dbx-success">Saved Changes</div>
+      </dbx-section>
+    </dbx-content-box>
+    <dbx-content-box [wide]="true">
+      <dbx-section header="Download Files">
+        <div>
+          <dbx-firebase-storagefile-download-button [config]="avatarDownloadButtonConfig" [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>
+        </div>
       </dbx-section>
     </dbx-content-box>
   </dbx-loading>

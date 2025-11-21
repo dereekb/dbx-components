@@ -20,8 +20,9 @@ import {
   type ConfigurableStorageMetadata,
   type StorageAccessControlObject
 } from '@dereekb/firebase';
+import { isTestNodeEnv } from '@dereekb/nestjs';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
-import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, type Bucket, type MoveFileAtomicOptions, type CopyOptions, ApiError } from '@google-cloud/storage';
+import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, type Bucket, type MoveFileAtomicOptions, type CopyOptions, ApiError, type GetSignedUrlConfig } from '@google-cloud/storage';
 import { addHours, addMilliseconds } from 'date-fns';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
@@ -165,17 +166,44 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     exists: () => file.exists().then((x) => x[0]),
     getDownloadUrl: () => file.getMetadata().then(() => file.publicUrl()),
     getSignedUrl: async (input) => {
-      const expires = input?.expiresAt ?? (input?.expiresIn != null ? addMilliseconds(new Date(), input.expiresIn) : addHours(new Date(), 1));
+      const expires =
+        input?.expiresAt ??
+        (input?.expiresIn != null
+          ? addMilliseconds(new Date(), input.expiresIn) // use expiresIn if provided
+          : addHours(new Date(), 1)); // default expiration in 1 hour
 
-      const config = {
+      const config: GetSignedUrlConfig = {
         ...input,
         action: input?.action ?? 'read',
-        expiresIn: undefined,
-        expiresAt: undefined,
-        expires
-      };
+        expires,
+        expiresIn: undefined, // clear from input
+        expiresAt: undefined
+      } as GetSignedUrlConfig;
 
-      return file.getSignedUrl(config).then((x) => x[0]);
+      return file
+        .getSignedUrl(config)
+        .then((x) => x[0])
+        .catch((e) => {
+          let publicUrlBackup: string;
+
+          interface SigningError {
+            name: 'SigningError';
+            message: string;
+          }
+
+          if (e && (e as SigningError).name === 'SigningError' && (isTestNodeEnv() || process.env.FIREBASE_STORAGE_EMULATOR_HOST)) {
+            // NOTE: Signing does not behave properly in the emulator as it is not supported.
+            // https://github.com/firebase/firebase-tools/issues/3400
+
+            // we can return the public url instead.
+            // This is fine, as in production this file url is protected by ACLs anyways.
+            publicUrlBackup = file.publicUrl();
+          } else {
+            throw e;
+          }
+
+          return publicUrlBackup;
+        });
     },
     getMetadata: () => file.getMetadata().then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
     setMetadata: (metadata) => file.setMetadata(asFileMetadata(metadata)).then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),

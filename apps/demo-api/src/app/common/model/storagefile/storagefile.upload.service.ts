@@ -114,6 +114,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
         const avatarDownloadUrl = await createdFile.getDownloadUrl();
 
         await profileDocument.update({
+          avatarStorageFile: createStorageFileResult.storageFileDocument.key,
           avatar: avatarDownloadUrl
         });
       }

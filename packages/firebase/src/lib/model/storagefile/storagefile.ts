@@ -1,6 +1,6 @@
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, type FirebaseAuthUserId, type FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, type StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, type FirebaseAuthUserId, type FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, type StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum, type StorageSignedDownloadUrl, type StorageDownloadUrl } from '../../common';
 import { type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
@@ -136,6 +136,22 @@ export function canQueueStorageFileForProcessing(storageFile: Pick<StorageFile, 
 export const STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS = MS_IN_HOUR * 3;
 
 /**
+ * A Google Cloud public download URL for a StorageFile.
+ *
+ * This URL is not protected by authentication and is the permanent URL for the file.
+ *
+ * Consider using a StorageFileSignedDownloadUrl if the file should be protected.
+ */
+export type StorageFilePublicDownloadUrl = StorageDownloadUrl;
+
+/**
+ * A Google Cloud signed download URL for a StorageFile.
+ *
+ * It expires after a period of time.
+ */
+export type StorageFileSignedDownloadUrl = StorageSignedDownloadUrl;
+
+/**
  * A global storage file in the system.
  *
  * Contains file metadata and ownership information, along with other arbitrary metadata.
@@ -209,7 +225,14 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
   sdat?: Maybe<Date>;
 }
 
-export type StorageFileRoles = 'process' | GrantedUpdateRole | GrantedReadRole;
+/**
+ * Granted roles for creating a download link to the StorageFile's file.
+ *
+ * The admin_download role allows specifying additional parameters and longer expiration times.
+ */
+export type StorageFileDownloadRole = 'download' | 'admin_download';
+
+export type StorageFileRoles = StorageFileDownloadRole | 'process' | GrantedUpdateRole | GrantedReadRole;
 
 export class StorageFileDocument extends AbstractFirestoreDocument<StorageFile, StorageFileDocument, typeof storageFileIdentity> {
   get modelIdentity() {

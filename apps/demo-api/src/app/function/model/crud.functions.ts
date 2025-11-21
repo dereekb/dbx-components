@@ -12,6 +12,7 @@ import { createNotification } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
+import { storageFileDownload } from '../storagefile/storagefile.read';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -34,6 +35,9 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
 export const demoReadModelMap: DemoOnCallReadModelMap = {
   systemState: onCallSpecifierHandler({
     exampleread: systemStateExampleRead
+  }),
+  storageFile: onCallSpecifierHandler({
+    download: storageFileDownload
   })
 };
 
