@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DbxActionDialogDirective, DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, DbxButtonStyle, DbxEmbedDialogComponent } from '@dereekb/dbx-web';
 import { StorageFileKey, StorageFilePublicDownloadUrl, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
-import { ContentTypeMimeType, dateFromDateOrTimeNumber, DateOrUnixTimeNumber, isPast, Maybe, MS_IN_SECOND } from '@dereekb/util';
+import { ContentTypeMimeType, dateFromDateOrTimeNumber, DateOrUnixDateTimeSecondsNumber, isPast, Maybe, MS_IN_SECOND } from '@dereekb/util';
 import { DbxFirebaseStorageFileDownloadService } from '../service/storagefile.download.service';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { WorkUsingObservable } from '@dereekb/rxjs';
@@ -105,7 +105,7 @@ export class DbxFirebaseStorageFileDownloadButton {
   });
 
   readonly downloadUrlSignal = signal<Maybe<StorageFileSignedDownloadUrl>>(undefined);
-  readonly downloadUrlExpiresAtSignal = signal<Maybe<DateOrUnixTimeNumber>>(undefined);
+  readonly downloadUrlExpiresAtSignal = signal<Maybe<DateOrUnixDateTimeSecondsNumber>>(undefined);
 
   readonly storageFileKey$ = toObservable(this.storageFileKey).pipe(distinctUntilChanged(), shareReplay(1));
 

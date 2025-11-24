@@ -1,5 +1,5 @@
 import { Injectable, InjectionToken, OnDestroy, inject } from '@angular/core';
-import { unixTimeNumberForNow, encodeModelKeyTypePair, ModelRelationUtility, type Maybe } from '@dereekb/util';
+import { unixDateTimeSecondsNumberForNow, encodeModelKeyTypePair, ModelRelationUtility, type Maybe } from '@dereekb/util';
 import { StorageAccessor } from '@dereekb/dbx-core';
 import { map, mergeMap, catchError, Observable, of, Subject, tap } from 'rxjs';
 import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.tracker';
@@ -40,7 +40,7 @@ export class DbxModelViewTrackerStorage implements OnDestroy {
     return this._getEventSetForStorageKey(storageKey).pipe(
       mergeMap((set) => {
         const nextEvent: DbxModelViewTrackerEvent = {
-          d: event.d ?? unixTimeNumberForNow(),
+          d: event.d ?? unixDateTimeSecondsNumberForNow(),
           c: event.c,
           m: event.m
         };

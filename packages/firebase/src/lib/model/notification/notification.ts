@@ -48,6 +48,8 @@ export type NotificationTypes = typeof notificationUserIdentity | typeof notific
 
 /**
  * Notification-related model that is initialized asynchronously at a later time.
+ *
+ * Examples: NotificationSummary, NotificationBox
  */
 export interface InitializedNotificationModel {
   /**

@@ -1,5 +1,5 @@
 import { CreateNotificationDocumentPairResult, firestoreDummyKey, NotificationDocument, SendNotificationParams, SendNotificationResult } from '@dereekb/firebase';
-import { NotificationServerActions } from './notification.action.server';
+import { NotificationServerActions } from './notification.action.service';
 import { Abstract, Injectable, Provider } from '@nestjs/common';
 import { runAsyncTasksForValues } from '@dereekb/util';
 

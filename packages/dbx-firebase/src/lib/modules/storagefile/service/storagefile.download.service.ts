@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
-import { addMilliseconds, Maybe, Milliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, SECONDS_IN_MINUTE, unixTimeNumberForNow, unixTimeNumberFromDate } from '@dereekb/util';
+import { addMilliseconds, Maybe, Milliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, SECONDS_IN_MINUTE, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { DbxFirebaseStorageFileDownloadStorage, DbxFirebaseStorageFileDownloadUrlPair } from './storagefile.download.storage.service';
 import { distinctUntilChanged, filter, first, from, interval, map, Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 
@@ -59,7 +59,7 @@ export class DbxFirebaseStorageFileDownloadService {
           result = interval(MS_IN_MINUTE)
             .pipe(
               map(() => {
-                const now = unixTimeNumberForNow();
+                const now = unixDateTimeSecondsNumberForNow();
                 const isExpired = now > expiresAt;
                 return isExpired ? null : pair; // emit null once expired
               })
@@ -139,7 +139,7 @@ export class DbxFirebaseStorageFileDownloadService {
       return {
         id: storageFileId,
         downloadUrl: x.url,
-        expiresAt: unixTimeNumberFromDate(expiresAt)
+        expiresAt: unixDateTimeSecondsNumberFromDate(expiresAt)
       };
     });
   }

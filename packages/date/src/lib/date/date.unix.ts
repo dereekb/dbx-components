@@ -1,1 +1,1 @@
-export { unixTimeNumberFromDateOrTimeNumber, unixTimeNumberForNow, unixTimeNumberFromDate, dateFromDateOrTimeNumber, unixTimeNumberToDate } from '@dereekb/util';
+export { unixDateTimeSecondsNumberFromDateOrTimeNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberFromDate, dateFromDateOrTimeNumber, unixDateTimeSecondsNumberToDate } from '@dereekb/util';

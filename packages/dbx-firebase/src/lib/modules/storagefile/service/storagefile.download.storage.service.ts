@@ -3,7 +3,7 @@ import { StorageAccessor } from '@dereekb/dbx-core';
 import { map, mergeMap, catchError, Observable, of, switchMap, first } from 'rxjs';
 import { FirebaseAuthUserId, firestoreModelId, FirestoreModelIdInput, StorageFileId, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { UnixTimeNumber } from '@dereekb/util';
+import { UnixDateTimeSecondsNumber } from '@dereekb/util';
 
 export interface DbxFirebaseStorageFileDownloadUrlPair {
   readonly id: StorageFileId;
@@ -11,10 +11,10 @@ export interface DbxFirebaseStorageFileDownloadUrlPair {
   /**
    * Expiration in seconds since epoch.
    */
-  readonly expiresAt: UnixTimeNumber;
+  readonly expiresAt: UnixDateTimeSecondsNumber;
 }
 
-export type DbxFirebaseStorageFileDownloadUrlPairString = `${UnixTimeNumber}_${StorageFileSignedDownloadUrl}`;
+export type DbxFirebaseStorageFileDownloadUrlPairString = `${UnixDateTimeSecondsNumber}_${StorageFileSignedDownloadUrl}`;
 
 export type DbxFirebaseStorageFileDownloadUrlPairsRecord = Record<StorageFileId, DbxFirebaseStorageFileDownloadUrlPairString>;
 
