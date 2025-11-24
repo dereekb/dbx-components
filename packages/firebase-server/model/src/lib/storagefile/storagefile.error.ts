@@ -1,6 +1,7 @@
 import {
-  STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE as STORAGE_FILE_ALREADY_SUCCESSFULLY_PROCESSED_ERROR_CODE,
+  STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE,
   STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE,
+  STORAGE_FILE_MODEL_ALREADY_INITIALIZED_ERROR_CODE,
   STORAGE_FILE_NOT_FLAGGED_FOR_DELETION_ERROR_CODE,
   STORAGE_FILE_PROCESSING_NOT_ALLOWED_FOR_INVALID_STATE_ERROR_CODE,
   STORAGE_FILE_PROCESSING_NOT_AVAILABLE_FOR_TYPE_ERROR_CODE,
@@ -12,6 +13,13 @@ import {
   type UploadedFileInitializationFailedErrorData
 } from '@dereekb/firebase';
 import { internalServerError, preconditionConflictError } from '@dereekb/firebase-server';
+
+export function storageFileModelAlreadyInitializedError() {
+  return preconditionConflictError({
+    message: `This model has already been initialized.`,
+    code: STORAGE_FILE_MODEL_ALREADY_INITIALIZED_ERROR_CODE
+  });
+}
 
 export function uploadedFileDoesNotExistError() {
   return preconditionConflictError({
@@ -65,10 +73,10 @@ export function storageFileProcessingNotAvailableForTypeError() {
   });
 }
 
-export function storageFileAlreadySuccessfullyProcessedError() {
+export function storageFileAlreadyProcessedError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument has already finished processing.`,
-    code: STORAGE_FILE_ALREADY_SUCCESSFULLY_PROCESSED_ERROR_CODE
+    code: STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE
   });
 }
 

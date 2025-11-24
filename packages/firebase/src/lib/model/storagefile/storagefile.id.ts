@@ -1,4 +1,4 @@
-import { type FirestoreModelId, type FirestoreModelKey } from '../../common';
+import { FlatFirestoreModelKey, type FirestoreModelId, type FirestoreModelKey } from '../../common';
 
 export type StorageFileId = FirestoreModelId;
 export type StorageFileKey = FirestoreModelKey;
@@ -21,3 +21,16 @@ export type StorageFilePurpose = string;
  * Is serialized directly to/from Firestore, so be mindful of what is stored.
  */
 export type StorageFileMetadata = Readonly<Record<string, any>>;
+
+/**
+ * The StorgaeFileGroupId is a two way flat firestore model key of the object that it represents.
+ *
+ * This identifier is used by StorageFile's to group files together based around some other model or common identifier.
+ */
+export type StorageFileGroupId = FlatFirestoreModelKey;
+export type StorageFileGroupKey = FirestoreModelKey;
+
+/**
+ * Arbitrary string that can be used to describe the file group's purpose.
+ */
+export type StorageFileGroupPurpose = string;

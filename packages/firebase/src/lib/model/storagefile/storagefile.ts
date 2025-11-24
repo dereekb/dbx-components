@@ -1,14 +1,65 @@
-import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
+import { MS_IN_HOUR, NeedsSyncBoolean, UnixDateTimeSecondsNumber, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, type FirebaseAuthUserId, type FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, type StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum, type StorageSignedDownloadUrl, type StorageDownloadUrl } from '../../common';
-import { type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import {
+  AbstractFirestoreDocument,
+  type CollectionReference,
+  type FirestoreCollection,
+  type FirestoreContext,
+  firestoreDate,
+  firestoreModelIdentity,
+  snapshotConverterFunctions,
+  type FirebaseAuthUserId,
+  type FirebaseAuthOwnershipKey,
+  optionalFirestoreString,
+  firestorePassThroughField,
+  type StoragePath,
+  firestoreString,
+  firestoreEnum,
+  optionalFirestoreDate,
+  optionalFirestoreEnum,
+  type StorageSignedDownloadUrl,
+  type StorageDownloadUrl,
+  firestoreUniqueStringArray,
+  optionalFirestoreBoolean,
+  SavedToFirestoreIfTrue,
+  firestoreSubObject,
+  firestoreNumber,
+  firestoreUnixDateTimeSecondsNumber,
+  optionalFirestoreUID,
+  optionalFirestoreUnixDateTimeSecondsNumber,
+  firestoreObjectArray
+} from '../../common';
+import { StorageFileGroupId, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
+  abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
 }
 
-export type StorageFileTypes = typeof storageFileIdentity;
+export type StorageFileTypes = typeof storageFileIdentity | typeof storageFileGroupIdentity;
+
+/**
+ * StorageFile-related model that is initialized asynchronously at a later time.
+ *
+ * Examples: StorageFileGroup
+ */
+export interface InitializedStorageFileModel {
+  /**
+   * True if this model needs to be sync'd/initialized with the original model.
+   *
+   * Is set false if/when "fi" is set true.
+   */
+  s?: Maybe<NeedsSyncBoolean>;
+  /**
+   * True if this model has been flagged invalid.
+   *
+   * This is for cases where the model cannot be properly initiialized.
+   *
+   * Typically this results in this model and related data being deleted.
+   */
+  fi?: Maybe<SavedToFirestoreIfTrue>;
+}
 
 // MARK: StorageFile
 export const storageFileIdentity = firestoreModelIdentity('storageFile', 'sf');
@@ -152,13 +203,13 @@ export type StorageFilePublicDownloadUrl = StorageDownloadUrl;
 export type StorageFileSignedDownloadUrl = StorageSignedDownloadUrl;
 
 /**
- * A global storage file in the system.
+ * A StorageFile in the system, which references a file in Google Cloud Storage.
  *
  * Contains file metadata and ownership information, along with other arbitrary metadata.
  */
 export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata> extends StoragePath {
   /**
-   * Created at date
+   * Created at date.
    */
   cat: Date;
   /**
@@ -223,6 +274,16 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * Is the main trigger for determining a StorageFile should be deleted.
    */
   sdat?: Maybe<Date>;
+  /**
+   * StorageFileGroup id(s) that this StorageFile should be associated with.
+   *
+   * These StorageFileGroup do not need to exist, and will be created when synchronization occurs.
+   */
+  g: StorageFileGroupId[];
+  /**
+   * If true, this file should be re-synced with each StorageFileGroup(s) it references.
+   */
+  gs?: Maybe<NeedsSyncBoolean>;
 }
 
 /**
@@ -256,7 +317,9 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
     o: optionalFirestoreString(),
     p: optionalFirestoreString(),
     d: firestorePassThroughField(),
-    sdat: optionalFirestoreDate()
+    sdat: optionalFirestoreDate(),
+    g: firestoreUniqueStringArray(),
+    gs: optionalFirestoreBoolean()
   }
 });
 
@@ -272,6 +335,96 @@ export function storageFileFirestoreCollection(firestoreContext: FirestoreContex
     converter: storageFileConverter,
     collection: storageFileCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new StorageFileDocument(accessor, documentAccessor),
+    firestoreContext
+  });
+}
+
+// MARK: StorageFileGroup
+export const storageFileGroupIdentity = firestoreModelIdentity('storageFileGroup', 'sfg');
+
+/**
+ * Current embedded state
+ */
+export interface StorageFileGroupEmbeddedFile {
+  /**
+   * StorageFile id
+   */
+  id: StorageFileId;
+  /**
+   * The time number it was added to the group.
+   */
+  sat: Date;
+  /**
+   * The last time the StorageFile's file was added to the zip, if applicable.
+   */
+  zat?: Maybe<Date>;
+}
+
+export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupEmbeddedFile>({
+  objectField: {
+    fields: {
+      id: firestoreString(),
+      sat: firestoreUnixDateTimeSecondsNumber({ default: new Date() }),
+      zat: optionalFirestoreUnixDateTimeSecondsNumber()
+    }
+  }
+});
+
+/**
+ * A group of StorageFiles.
+ *
+ * Contains file metadata and ownership information, along with other arbitrary metadata.
+ */
+export interface StorageFileGroup extends InitializedStorageFileModel {
+  /**
+   * List of embedded files in this group currently.
+   */
+  f: StorageFileGroupEmbeddedFile[];
+  /**
+   * True if a zip file should be generated for this group.
+   */
+  z?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * StorageFile that contains the zip file for this group.
+   */
+  zsf: Maybe<StorageFileId>;
+  /**
+   * The last date the zip file was regenerated for this group.
+   */
+  zat?: Maybe<Date>;
+}
+
+export class StorageFileGroupDocument extends AbstractFirestoreDocument<StorageFileGroup, StorageFileGroupDocument, typeof storageFileGroupIdentity> {
+  get modelIdentity() {
+    return storageFileGroupIdentity;
+  }
+}
+
+export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileGroup>({
+  fields: {
+    f: firestoreObjectArray({
+      objectField: storageFileGroupEmbeddedFile
+    }),
+    z: optionalFirestoreBoolean({ dontStoreIf: false }),
+    zsf: optionalFirestoreString(),
+    zat: optionalFirestoreDate(),
+    s: optionalFirestoreBoolean({ dontStoreIf: false }),
+    fi: optionalFirestoreBoolean({ dontStoreIf: false })
+  }
+});
+
+export function storageFileGroupCollectionReference(context: FirestoreContext): CollectionReference<StorageFileGroup> {
+  return context.collection(storageFileGroupIdentity.collectionName);
+}
+
+export type StorageFileGroupFirestoreCollection = FirestoreCollection<StorageFileGroup, StorageFileGroupDocument>;
+
+export function storageFileGroupFirestoreCollection(firestoreContext: FirestoreContext): StorageFileGroupFirestoreCollection {
+  return firestoreContext.firestoreCollection({
+    modelIdentity: storageFileGroupIdentity,
+    converter: storageFileGroupConverter,
+    collection: storageFileGroupCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new StorageFileGroupDocument(accessor, documentAccessor),
     firestoreContext
   });
 }

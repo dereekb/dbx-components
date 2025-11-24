@@ -4,6 +4,11 @@ export const storageFileHourlyUpdateSchedule: DemoScheduleFunction = async (requ
   console.log('storageFileHourlyUpdateSchedule - running');
 
   await runDemoScheduledTasks({
+    initializeAllStorageFileGroups: async () => {
+      const initializeAllStorageFileGroups = await request.nest.storageFileInitActions.initializeAllApplicableStorageFileGroups({});
+      const initializeAllStorageFileGroupsResult = await initializeAllStorageFileGroups();
+      return { initializeAllStorageFileGroupsResult };
+    },
     initializeAllStorageFilesFromUploads: async () => {
       const initializeAllStorageFilesFromUploads = await request.nest.storageFileServerActions.initializeAllStorageFilesFromUploads({});
       const initializeAllStorageFilesFromUploadsResult = await initializeAllStorageFilesFromUploads();

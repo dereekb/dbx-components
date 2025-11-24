@@ -212,6 +212,28 @@ export interface DownloadStorageFileResult {
   readonly url: StorageFileSignedDownloadUrl;
 }
 
+/**
+ * Used for initializing an uninitialized model like NotificationBox or NotificationSummary.
+ */
+export class InitializeStorageFileModelParams extends TargetModelParams {
+  /**
+   * Whether or not to throw an error if the notification has already been sent or is being sent.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  throwErrorIfAlreadyInitialized?: boolean;
+}
+
+export class InitializeAllApplicableStorageFileGroupsParams {}
+
+export interface InitializeAllApplicableStorageFileGroupsResult {
+  readonly storageFileGroupsVisited: number;
+  readonly storageFileGroupsSucceeded: number;
+  readonly storageFileGroupsFailed: number;
+  readonly storageFileGroupsAlreadyInitialized: number;
+}
+
 // MARK: Functions
 export type StorageFileFunctionTypeMap = {};
 
@@ -235,6 +257,7 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: DeleteStorageFileParams;
     };
   };
+  readonly storageFileGroup: null;
 };
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {

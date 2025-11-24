@@ -40,7 +40,7 @@ import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceRef } from '../notification';
 import { type StorageFileInitializeFromUploadResult, type StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
-import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError, storageFileNotFlaggedForDeletionError, storageFileCannotBeDeletedYetError } from './storagefile.error';
+import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError, storageFileNotFlaggedForDeletionError, storageFileCannotBeDeletedYetError } from './storagefile.error';
 import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
@@ -416,7 +416,7 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
           case StorageFileProcessingState.DO_NOT_PROCESS:
             throw storageFileProcessingNotQueuedForProcessingError();
           case StorageFileProcessingState.SUCCESS:
-            throw storageFileAlreadySuccessfullyProcessedError();
+            throw storageFileAlreadyProcessedError();
         }
       });
 

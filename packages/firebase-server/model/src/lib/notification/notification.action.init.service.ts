@@ -210,7 +210,7 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
         return result;
       }
 
-      // iterate through all JobApplication items that need to be synced
+      // iterate through all NotificationBox items that need to be synced
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const initializeNotificationBoxesResults = await initializeNotificationBoxes();
@@ -306,7 +306,7 @@ export function initializeAllApplicableNotificationSummariesFactory(context: Not
         return result;
       }
 
-      // iterate through all JobApplication items that need to be synced
+      // iterate through all NotificationSummary items that need to be synced
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const initializeNotificationSummariesResults = await initializeNotificationSummaries();

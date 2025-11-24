@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, StorageFileInitializeFromUploadService, appStorageFileModuleMetadata } from '@dereekb/firebase-server/model';
+import { BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, StorageFileInitializeFromUploadService, appStorageFileModuleMetadata } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { DemoApiActionModule } from '../../firebase/action.module';
 import { demoStorageFileUploadServiceFactory } from './storagefile.upload.service';
+import { demoStorageFileInitServerActionsContextConfig } from './storagefile.init';
 
 /**
  * Dependencies for the NotificationModule
@@ -13,6 +14,11 @@ import { demoStorageFileUploadServiceFactory } from './storagefile.upload.servic
     {
       provide: StorageFileInitializeFromUploadService,
       useFactory: demoStorageFileUploadServiceFactory,
+      inject: [DemoFirebaseServerActionsContext]
+    },
+    {
+      provide: STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN,
+      useFactory: demoStorageFileInitServerActionsContextConfig,
       inject: [DemoFirebaseServerActionsContext]
     },
     {
