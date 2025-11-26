@@ -5,7 +5,7 @@ import { type FirestoreDocumentAccessor } from '../../common/firestore/accessor/
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 import { type StoragePathRef, type StoragePath } from '../../common/storage/storage';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
-import { type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { StorageFileGroupId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 
 // MARK: Create Document
 export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadata = StorageFileMetadata> {
@@ -45,6 +45,20 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
    * Corresponds with the "uby" value in the StorageFile template.
    */
   readonly uploadedBy?: Maybe<FirebaseAuthUserId>;
+  /**
+   * The group ids of the file.
+   *
+   * Corresponds with the "g" value in the StorageFile template.
+   */
+  readonly storageFileGroupIds?: Maybe<StorageFileGroupId[]>;
+  /**
+   * If true, will flag the file for group sync.
+   *
+   * Defaults to true if one or more values in "storageFileGroupIds" are provided.
+   *
+   * Ignored if the "storageFileGroupIds" value is empty.
+   */
+  readonly flagForStorageFileGroupsSync?: boolean;
   /**
    * The ownership key of the file.
    *
@@ -124,7 +138,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
   const defaultShouldBeProcessed = inputDefaultShouldBeProcessed ?? false;
 
   return async <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => {
-    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, metadata, shouldBeProcessed } = input;
+    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, metadata, shouldBeProcessed, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
     const now = inputNow ?? new Date();
 
     let accessor = inputAccessor;
@@ -146,8 +160,13 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
 
     const storageFileDocument = accessor.newDocument();
 
+    const g = storageFileGroupIds ?? [];
+    const gs = g.length > 0 && flagForStorageFileGroupsSync !== false;
+
     const template: StorageFile<M> = {
       ...inputTemplate,
+      g,
+      gs,
       cat: now,
       u: user ?? inputTemplate?.u,
       uby: uploadedBy ?? inputTemplate?.uby,

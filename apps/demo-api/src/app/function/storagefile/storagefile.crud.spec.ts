@@ -1,7 +1,7 @@
 import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationContext, demoStorageFileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
+import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, userProfileStorageFileGroupId, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
 import {
   combineUploadFileTypeDeterminers,
   determineByFileName,
@@ -32,17 +32,27 @@ import {
   onCallReadModelParams,
   type DownloadStorageFileParams,
   type StorageFileDocument,
-  type DownloadStorageFileResult
+  type DownloadStorageFileResult,
+  STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE,
+  SyncStorageFileWithGroupsParams,
+  SyncStorageFileWithGroupsResult,
+  loadDocumentsForIds,
+  getDocumentSnapshotDataPairs,
+  StorageFileGroup,
+  StorageFileId,
+  STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
+  StorageFileGroupZipStorageFileMetadata
 } from '@dereekb/firebase';
 import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
+import { beforeAfterSubstr } from '@uirouter/core';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
-    describe('StorageFile', () => {
-      demoAuthorizedUserAdminContext({ f }, (au) => {
+    demoAuthorizedUserAdminContext({ f }, (au) => {
+      describe('StorageFile', () => {
         describe('determiners', () => {
           const detailsAccessorFactory = storedFileReaderFactory();
 
@@ -921,6 +931,207 @@ demoApiFunctionContextFactory((f) => {
                   });
                 });
               });
+            });
+          });
+        });
+      });
+
+      describe('StorageFileGroup', () => {
+        function createTestFileForUser(content: string) {
+          return async () => {
+            const uid = au.uid;
+            const testFileContent = content;
+
+            const filePath = userTestFileUploadsFilePath(uid, 'test.any');
+            const testFile = await f.storageContext.file(filePath);
+            const testFileStoragePath = testFile.storagePath;
+
+            const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
+            await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+
+            const result: StoragePath = {
+              bucketId: testFileStoragePath.bucketId,
+              pathString: testFileStoragePath.pathString
+            };
+
+            return result;
+          };
+        }
+
+        describe('initializeStorageFileGroup()', () => {
+          demoStorageFileGroupContext(
+            {
+              f,
+              storageFileGroupId: async () => userProfileStorageFileGroupId(au.uid),
+              createIfNeeded: true, // only create
+              initIfNeeded: false
+            },
+            (sfg) => {
+              it('should initialize the storage file group', async () => {
+                let storageFileGroup = await assertSnapshotData(sfg.document);
+                expect(storageFileGroup.s).toBe(true);
+
+                await sfg.initializeStorageFileGroup();
+
+                storageFileGroup = await assertSnapshotData(sfg.document);
+                expect(storageFileGroup.s).toBeUndefined(); // initialized
+
+                expect(storageFileGroup.z).toBe(true); // should be true due to configuration declared in storagefile.init.ts
+              });
+            }
+          );
+        });
+
+        describe('file with storage file group ids', () => {
+          /**
+           * Each test file is associated with the groups declared by userTestFileGroupIds().
+           */
+          demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is a test file.') }, (sf) => {
+            describe('syncAllFlaggedStorageFilesWithGroups()', () => {
+              it('should sync all flagged storage files with groups', async () => {
+                const storageFile = await assertSnapshotData(sf.document);
+                expect(storageFile.gs).toBe(true);
+                expect(storageFile.g).toHaveLength(1);
+
+                const instance = await f.storageFileServerActions.syncAllFlaggedStorageFilesWithGroups({});
+                const result = await instance();
+
+                expect(result.storageFilesSynced).toBe(1);
+                expect(result.storageFilesGroupsCreated).toBe(1);
+                expect(result.storageFilesGroupsUpdated).toBe(0);
+              });
+
+              describe('file not flagged for sync', () => {
+                beforeEach(async () => {
+                  await sf.document.update({ gs: false });
+                });
+
+                it('should not sync unflagged files', async () => {
+                  const instance = await f.storageFileServerActions.syncAllFlaggedStorageFilesWithGroups({});
+                  const result = await instance();
+
+                  expect(result.storageFilesSynced).toBe(0);
+                  expect(result.storageFilesGroupsCreated).toBe(0);
+                  expect(result.storageFilesGroupsUpdated).toBe(0);
+                });
+              });
+            });
+
+            describe('syncStorageFileWithGroups()', () => {
+              it('should sync the given document with groups', async () => {
+                const storageFile = await assertSnapshotData(sf.document);
+                expect(storageFile.gs).toBe(true);
+                expect(storageFile.g).toHaveLength(1);
+
+                const instance = await f.storageFileServerActions.syncStorageFileWithGroups({ key: sf.documentKey });
+                const result = await instance(sf.document);
+
+                expect(result.storageFilesGroupsCreated).toBe(1);
+                expect(result.storageFilesGroupsUpdated).toBe(0);
+
+                const storageFileGroupDocumentAccessor = f.demoFirestoreCollections.storageFileGroupCollection.documentAccessor();
+                const storageFileGroupDocuments = loadDocumentsForIds(storageFileGroupDocumentAccessor, storageFile.g);
+                const storageFileGroupPairs = await getDocumentSnapshotDataPairs(storageFileGroupDocuments);
+
+                const storageFileGroup = storageFileGroupPairs[0].data as StorageFileGroup;
+
+                expect(storageFileGroup.s).toBe(true); // requires initialization/sync with the original model
+
+                expect(storageFileGroup.f).toHaveLength(1);
+                expect(storageFileGroup.f[0].s).toBe(sf.documentId);
+                expect(storageFileGroup.f[0].sat).toBeDefined();
+                expect(storageFileGroup.f[0].zat).not.toBeDefined();
+              });
+
+              describe('file already synced', () => {
+                beforeEach(async () => {
+                  await sf.syncWithStorageFileGroups();
+                });
+
+                it('should let an admin force sync the file', async () => {
+                  const syncParams: SyncStorageFileWithGroupsParams = {
+                    key: sf.documentKey,
+                    force: true
+                  };
+
+                  const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, syncParams, 'syncWithGroups'))) as SyncStorageFileWithGroupsResult;
+
+                  expect(result.storageFilesGroupsCreated).toBe(0);
+                  expect(result.storageFilesGroupsUpdated).toBe(0); // no change
+                });
+
+                itShouldFail('to sync the file if it is not flagged for sync', async () => {
+                  const storageFile = await assertSnapshotData(sf.document);
+                  expect(storageFile.gs).toBeFalsy();
+
+                  const instance = await f.storageFileServerActions.syncStorageFileWithGroups({ key: sf.documentKey });
+                  await expectFail(() => instance(sf.document), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE));
+                });
+              });
+            });
+
+            describe('regenerateStorageFileGroupContent()', () => {
+              beforeEach(async () => {
+                await sf.syncWithStorageFileGroups();
+              });
+
+              demoStorageFileGroupContext(
+                {
+                  f,
+                  storageFileGroupId: async () => assertSnapshotData(sf.document).then((x) => x.g[0]),
+                  initIfNeeded: true
+                },
+                (sfg) => {
+                  it('should queue the regeneration of the storage file group content', async () => {
+                    let storageFileGroup = await assertSnapshotData(sfg.document);
+
+                    expect(storageFileGroup.f).toHaveLength(1);
+                    expect(storageFileGroup.z).toBe(true); // should be true due to configuration declared in storagefile.init.ts
+                    expect(storageFileGroup.re).toBe(true); // flagged for resync
+                    expect(storageFileGroup.zsf).not.toBeDefined();
+
+                    const instance = await f.storageFileServerActions.regenerateStorageFileGroupContent({ key: sfg.documentKey });
+                    const result = await instance(sfg.document);
+
+                    expect(result.contentStorageFilesFlaggedForProcessing).toBe(1);
+
+                    storageFileGroup = await assertSnapshotData(sfg.document);
+                    expect(storageFileGroup.f).toHaveLength(1);
+                    expect(storageFileGroup.re).toBeFalsy();
+                    expect(storageFileGroup.zsf).toBeDefined();
+                  });
+
+                  describe('regeneration queued', () => {
+                    let zipStorageFileId: StorageFileId;
+
+                    beforeEach(async () => {
+                      await sfg.regenerateStorageFileGroupContent();
+
+                      const storageFileGroup = await assertSnapshotData(sfg.document);
+                      zipStorageFileId = storageFileGroup.zsf as StorageFileId;
+                    });
+
+                    describe('zip storage file', () => {
+                      demoStorageFileContext(
+                        {
+                          f,
+                          doc: () => f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(zipStorageFileId)
+                        },
+                        (zipStorageFile) => {
+                          it('should be flagged for processing', async () => {
+                            const storageFile = await assertSnapshotData(zipStorageFile.document);
+                            expect(storageFile.p).toBe(STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE);
+                            expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+
+                            expect(storageFile.d).toBeDefined();
+                            expect((storageFile.d as StorageFileGroupZipStorageFileMetadata).sfg).toBe(sfg.documentId);
+                          });
+                        }
+                      );
+                    });
+                  });
+                }
+              );
             });
           });
         });

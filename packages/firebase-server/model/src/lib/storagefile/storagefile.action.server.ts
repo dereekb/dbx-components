@@ -33,15 +33,60 @@ import {
   storageFilesQueuedForDeleteQuery,
   firestoreDummyKey,
   DownloadStorageFileParams,
-  type DownloadStorageFileResult
+  type DownloadStorageFileResult,
+  SyncStorageFileWithGroupsParams,
+  SyncAllFlaggedStorageFilesWithGroupsParams,
+  SyncAllFlaggedStorageFilesWithGroupsResult,
+  SyncStorageFileWithGroupsResult,
+  FirestoreDocumentSnapshotDataPairWithData,
+  RegenerateAllFlaggedStorageFileGroupsContentParams,
+  RegenerateAllFlaggedStorageFileGroupsContentResult,
+  RegenerateStorageFileGroupContentParams,
+  RegenerateStorageFileGroupContentResult,
+  StorageFileGroupDocument,
+  storageFileFlaggedForSyncWithGroupsQuery,
+  iterateFirestoreDocumentSnapshotPairBatches,
+  loadDocumentsForIds,
+  loadAllFirestoreDocumentSnapshotPairs,
+  loadDocumentsForDocumentReferencesFromValues,
+  getDocumentSnapshotDataPairs,
+  storageFileGroupsFlaggedForContentRegenerationQuery,
+  AsyncStorageFileGroupCreateAction,
+  CreateStorageFileGroupParams,
+  Transaction,
+  StorageFileGroup,
+  loadStorageFileGroupDocumentForReferencePair,
+  StorageFileGroupDocumentReferencePair,
+  calculateStorageFileGroupEmbeddedFileUpdate,
+  calculateStorageFileGroupRegeneration,
+  getDocumentSnapshotDataPair,
+  createStorageFileDocumentPairFactory,
+  StorageFileCreationType,
+  storageFileGroupZipFileStoragePath,
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
+  StorageFileGroupZipStorageFileMetadata
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
-import { type NotificationExpediteServiceRef } from '../notification';
+import { NotificationExpediteServiceInstance, type NotificationExpediteServiceRef } from '../notification';
 import { type StorageFileInitializeFromUploadResult, type StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
-import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError, storageFileNotFlaggedForDeletionError, storageFileCannotBeDeletedYetError } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths } from '@dereekb/util';
+import {
+  uploadedFileIsNotAllowedToBeInitializedError,
+  uploadedFileDoesNotExistError,
+  uploadedFileInitializationFailedError,
+  uploadedFileInitializationDiscardedError,
+  storageFileProcessingNotAvailableForTypeError,
+  storageFileAlreadyProcessedError,
+  storageFileProcessingNotAllowedForInvalidStateError,
+  storageFileProcessingNotQueuedForProcessingError,
+  storageFileNotFlaggedForDeletionError,
+  storageFileCannotBeDeletedYetError,
+  storageFileNotFlaggedForGroupsSyncError,
+  createStorageFileGroupInputError
+} from './storagefile.error';
+import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, performAsyncTasks, runAsyncTasksForValues } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -69,6 +114,11 @@ export abstract class StorageFileServerActions {
   abstract deleteAllQueuedStorageFiles(params: DeleteAllQueuedStorageFilesParams): Promise<TransformAndValidateFunctionResult<DeleteAllQueuedStorageFilesParams, () => Promise<DeleteAllQueuedStorageFilesResult>>>;
   abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
   abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument: StorageFileDocument) => Promise<DownloadStorageFileResult>>>;
+  abstract createStorageFileGroup(params: CreateStorageFileGroupParams): AsyncStorageFileGroupCreateAction<CreateStorageFileGroupParams>;
+  abstract syncStorageFileWithGroups(params: SyncStorageFileWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncStorageFileWithGroupsParams, (storageFileDocument: StorageFileDocument) => Promise<SyncStorageFileWithGroupsResult>>>;
+  abstract syncAllFlaggedStorageFilesWithGroups(params: SyncAllFlaggedStorageFilesWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncAllFlaggedStorageFilesWithGroupsParams, () => Promise<SyncAllFlaggedStorageFilesWithGroupsResult>>>;
+  abstract regenerateStorageFileGroupContent(params: RegenerateStorageFileGroupContentParams): Promise<TransformAndValidateFunctionResult<RegenerateStorageFileGroupContentParams, (storageFileGroupDocument: StorageFileGroupDocument) => Promise<RegenerateStorageFileGroupContentResult>>>;
+  abstract regenerateAllFlaggedStorageFileGroupsContent(params: RegenerateAllFlaggedStorageFileGroupsContentParams): Promise<TransformAndValidateFunctionResult<RegenerateAllFlaggedStorageFileGroupsContentParams, () => Promise<RegenerateAllFlaggedStorageFileGroupsContentResult>>>;
 }
 
 export function storageFileServerActions(context: StorageFileServerActionsContext): StorageFileServerActions {
@@ -81,7 +131,12 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
     processStorageFile: processStorageFileFactory(context),
     deleteAllQueuedStorageFiles: deleteAllQueuedStorageFilesFactory(context),
     deleteStorageFile: deleteStorageFileFactory(context),
-    downloadStorageFile: downloadStorageFileFactory(context)
+    downloadStorageFile: downloadStorageFileFactory(context),
+    createStorageFileGroup: createStorageFileGroupFactory(context),
+    syncStorageFileWithGroups: syncStorageFileWithGroupsFactory(context),
+    syncAllFlaggedStorageFilesWithGroups: syncAllFlaggedStorageFilesWithGroupsFactory(context),
+    regenerateStorageFileGroupContent: regenerateStorageFileGroupContentFactory(context),
+    regenerateAllFlaggedStorageFileGroupsContent: regenerateAllFlaggedStorageFileGroupsContentFactory(context)
   };
 }
 
@@ -332,11 +387,113 @@ export function processAllQueuedStorageFilesFactory(context: StorageFileServerAc
   });
 }
 
+export interface ProcessStorageFileInTransactionInput {
+  /**
+   * The StorageFileDocument to update.
+   */
+  readonly storageFileDocument: StorageFileDocument;
+  /**
+   * The storage file, if already loaded in this transaction.
+   */
+  readonly storageFile?: StorageFile;
+  /**
+   * Input params to use.
+   */
+  readonly params?: Maybe<Pick<ProcessStorageFileParams, 'checkRetryProcessing' | 'forceRestartProcessing'>>;
+  /**
+   * The expedite instance to enqueue a create result into, if applicable.
+   */
+  readonly expediteInstance?: Maybe<NotificationExpediteServiceInstance>;
+}
+
+export function _processStorageFileInTransactionFactory(context: StorageFileServerActionsContext) {
+  const { storageFileCollection, notificationCollectionGroup } = context;
+
+  return async (input: ProcessStorageFileInTransactionInput, transaction: Transaction) => {
+    const { storageFileDocument, storageFile: inputStorageFile, params, expediteInstance } = input;
+    const { checkRetryProcessing, forceRestartProcessing } = params ?? {};
+
+    const storageFileDocumentInTransaction = storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
+    const storageFile = inputStorageFile ?? (await assertSnapshotData(storageFileDocumentInTransaction));
+
+    async function beginProcessing(overrideExistingTask: boolean) {
+      const state = storageFile.fs;
+
+      // check the storageFile is in the OK state
+      if (state !== StorageFileState.OK) {
+        throw storageFileProcessingNotAllowedForInvalidStateError();
+      }
+
+      const createNotificationTaskResult = await createNotificationDocument({
+        context,
+        transaction,
+        template: storageFileProcessingNotificationTaskTemplate({
+          storageFileDocument,
+          overrideExistingTask
+        })
+      });
+
+      await storageFileDocumentInTransaction.update({
+        ps: StorageFileProcessingState.PROCESSING,
+        pat: new Date(), // set new processing start date
+        pcat: null, // clear processing completion date
+        pn: createNotificationTaskResult.notificationDocument.key
+      });
+
+      expediteInstance?.enqueueCreateResult(createNotificationTaskResult);
+    }
+
+    switch (storageFile.ps) {
+      case StorageFileProcessingState.INIT_OR_NONE:
+        // queue up for processing, unless it has no purpose
+        if (!storageFile.p) {
+          throw storageFileProcessingNotAvailableForTypeError();
+        } else {
+          await beginProcessing(false);
+        }
+        break;
+      case StorageFileProcessingState.QUEUED_FOR_PROCESSING:
+        // begin processing
+        await beginProcessing(false);
+        break;
+      case StorageFileProcessingState.PROCESSING:
+        // check if the processing task is still running
+        const shouldCheckProcessing = !isThrottled(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS, storageFile.pat);
+
+        if (!storageFile.pn) {
+          await beginProcessing(true); // if no processing task is set, restart processing to recover from the broken state
+        } else if (checkRetryProcessing || shouldCheckProcessing) {
+          const { pn } = storageFile;
+          const notificationDocument = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentForKey(pn);
+          const notification = await notificationDocument.snapshotData();
+
+          if (!notification) {
+            // the notification document is missing. Re-begin processing
+            await beginProcessing(true);
+          } else if (notification.d || forceRestartProcessing) {
+            // if the notification is somehow in the done state but the StorageFile never got notified in the same transaction, requeue.
+            await beginProcessing(true);
+          }
+
+          // NOTE: We could look at the state of the notification task more, but at this point the task is probably still valid and still running,
+          // so we can only wait on it. In general if the task still exists and is not yet done, then we should wait on it as the
+          // task running system should complete eventually by design.
+        }
+        break;
+      case StorageFileProcessingState.DO_NOT_PROCESS:
+        throw storageFileProcessingNotQueuedForProcessingError();
+      case StorageFileProcessingState.SUCCESS:
+        throw storageFileAlreadyProcessedError();
+    }
+  };
+}
+
 export function processStorageFileFactory(context: StorageFileServerActionsContext) {
-  const { storageFileCollection, notificationCollectionGroup, firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
+  const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(ProcessStorageFileParams, async (params) => {
-    const { runImmediately, checkRetryProcessing, forceRestartProcessing } = params;
+    const { runImmediately } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
       const result: ProcessStorageFileResult = {};
@@ -346,78 +503,14 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
       await firestoreContext.runTransaction(async (transaction) => {
         expediteInstance.initialize();
 
-        const storageFileDocumentInTransaction = await storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
-        const storageFile = await assertSnapshotData(storageFileDocumentInTransaction);
-
-        async function beginProcessing(overrideExistingTask: boolean) {
-          const state = storageFile.fs;
-
-          // check the storageFile is in the OK state
-          if (state !== StorageFileState.OK) {
-            throw storageFileProcessingNotAllowedForInvalidStateError();
-          }
-
-          const createNotificationTaskResult = await createNotificationDocument({
-            context,
-            transaction,
-            template: storageFileProcessingNotificationTaskTemplate({
-              storageFileDocument,
-              overrideExistingTask
-            })
-          });
-
-          await storageFileDocumentInTransaction.update({
-            ps: StorageFileProcessingState.PROCESSING,
-            pat: new Date(), // set new processing start date
-            pcat: null, // clear processing completion date
-            pn: createNotificationTaskResult.notificationDocument.key
-          });
-
-          expediteInstance.enqueueCreateResult(createNotificationTaskResult);
-        }
-
-        switch (storageFile.ps) {
-          case StorageFileProcessingState.INIT_OR_NONE:
-            // queue up for processing, unless it has no purpose
-            if (!storageFile.p) {
-              throw storageFileProcessingNotAvailableForTypeError();
-            } else {
-              await beginProcessing(false);
-            }
-            break;
-          case StorageFileProcessingState.QUEUED_FOR_PROCESSING:
-            // begin processing
-            await beginProcessing(false);
-            break;
-          case StorageFileProcessingState.PROCESSING:
-            // check if the processing task is still running
-            const shouldCheckProcessing = !isThrottled(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS, storageFile.pat);
-
-            if (!storageFile.pn) {
-              await beginProcessing(true); // if no processing task is set, restart processing to recover from the broken state
-            } else if (checkRetryProcessing || shouldCheckProcessing) {
-              const { pn } = storageFile;
-              const notificationDocument = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentForKey(pn);
-              const notification = await notificationDocument.snapshotData();
-
-              if (!notification) {
-                // the notification document is missing. Re-begin processing
-                await beginProcessing(true);
-              } else if (notification.d || forceRestartProcessing) {
-                // if the notification is somehow in the done state but the StorageFile never got notified in the same transaction, requeue.
-                await beginProcessing(true);
-              }
-
-              // NOTE: We could look at the state of the notification task more, but at this point the task is probably still valid and still running,
-              // so we can only wait on it. In general if the task still exists and is not yet done, then we should wait on it as the
-              // task running system should complete eventually by design.
-            }
-            break;
-          case StorageFileProcessingState.DO_NOT_PROCESS:
-            throw storageFileProcessingNotQueuedForProcessingError();
-          case StorageFileProcessingState.SUCCESS:
-            throw storageFileAlreadyProcessedError();
-        }
+        await processStorageFileInTransaction(
+          {
+            storageFileDocument,
+            params,
+            expediteInstance
+          },
+          transaction
+        );
       });
 
       // expedite the task if requested
@@ -542,6 +635,316 @@ export function downloadStorageFileFactory(context: StorageFileServerActionsCont
       } else {
         throw internalServerError('Signed url function appears to not be avalable.');
       }
+
+      return result;
+    };
+  });
+}
+
+/**
+ * Used for creating a new NotificationBox within a transaction.
+ *
+ * Used for new models.
+ */
+export interface CreateStorageFileGroupInTransactionInput extends StorageFileGroupDocumentReferencePair {
+  /**
+   * Now date to use.
+   */
+  readonly now?: Maybe<Date>;
+  /**
+   * If true, skips calling create
+   */
+  readonly skipCreate?: Maybe<boolean>;
+  /**
+   * Template values to use for the created StorageFileGroup
+   */
+  readonly template?: Maybe<Pick<StorageFileGroup, 'f' | 're'>>;
+}
+
+export function createStorageFileGroupInTransactionFactory(context: StorageFileServerActionsContext) {
+  const { storageFileGroupCollection } = context;
+
+  return async (params: CreateStorageFileGroupInTransactionInput, transaction: Transaction) => {
+    const { now: inputNow, skipCreate, template } = params;
+    const now = inputNow ?? new Date();
+
+    const storageFileGroupDocument: StorageFileGroupDocument = loadStorageFileGroupDocumentForReferencePair(params, storageFileGroupCollection.documentAccessorForTransaction(transaction));
+
+    const storageFileGroupTemplate: StorageFileGroup = {
+      o: firestoreDummyKey(), // set during initialization
+      cat: now,
+      s: true, // requires initialization
+      f: [],
+      ...template
+    };
+
+    if (!skipCreate) {
+      await storageFileGroupDocument.create(storageFileGroupTemplate);
+    }
+
+    return {
+      storageFileGroupTemplate,
+      storageFileGroupDocument
+    };
+  };
+}
+
+export function createStorageFileGroupFactory(context: StorageFileServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
+  const createStorageFileGroupInTransaction = createStorageFileGroupInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(CreateStorageFileGroupParams, async (params) => {
+    const { model, storageFileId } = params;
+
+    const storageFileGroupRelatedModelKey = model ? model : storageFileId ? inferKeyFromTwoWayFlatFirestoreModelKey(storageFileId) : undefined;
+
+    if (!storageFileGroupRelatedModelKey) {
+      throw createStorageFileGroupInputError();
+    }
+
+    return async () => {
+      const result = await firestoreContext.runTransaction(async (transaction) => {
+        const { storageFileGroupDocument } = await createStorageFileGroupInTransaction({ storageFileGroupRelatedModelKey }, transaction);
+        return storageFileGroupDocument;
+      });
+
+      return result;
+    };
+  });
+}
+
+export function syncStorageFileWithGroupsFactory(context: StorageFileServerActionsContext) {
+  const { firestoreContext, storageFileCollection, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const createStorageFileGroupInTransaction = createStorageFileGroupInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(SyncStorageFileWithGroupsParams, async (params) => {
+    const { force } = params;
+
+    return async (storageFileDocument: StorageFileDocument) => {
+      return firestoreContext.runTransaction(async (transaction) => {
+        const storageFileDocumentInTransaction = storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
+        const storageFileGroupDocumentAccessor = storageFileGroupCollection.documentAccessorForTransaction(transaction);
+
+        const storageFile = await assertSnapshotData(storageFileDocumentInTransaction);
+
+        if (!storageFile.gs && !force) {
+          throw storageFileNotFlaggedForGroupsSyncError();
+        }
+
+        const g = storageFile.g ?? [];
+        const storageFileGroupDocuments = loadDocumentsForIds(storageFileGroupDocumentAccessor, g);
+        const storageFileGroupPairs = await getDocumentSnapshotDataPairs(storageFileGroupDocuments);
+
+        let storageFilesGroupsCreated = 0;
+        let storageFilesGroupsUpdated = 0;
+
+        await performAsyncTasks(storageFileGroupPairs, async (storageFileGroupPair) => {
+          const { data: storageFileGroup, document: storageFileGroupDocument } = storageFileGroupPair;
+          const existsInStorageFileGroup = storageFileGroup?.f.some((x) => x.s === storageFileDocument.id);
+
+          // only insert if it does not currently exist
+          if (!existsInStorageFileGroup) {
+            // add it if it doesn't exist
+            const template = calculateStorageFileGroupEmbeddedFileUpdate({
+              storageFileGroup: storageFileGroup ?? { f: [] },
+              insert: [
+                {
+                  s: storageFileDocument.id
+                }
+              ],
+              recalculateRegenerateFlag: false
+            });
+
+            if (!storageFileGroup) {
+              // if the group does not exist, then create it
+              await createStorageFileGroupInTransaction({ storageFileGroupDocument, template }, transaction);
+              storageFilesGroupsCreated += 1;
+            } else {
+              // if the group exists, then update it
+              await storageFileGroupDocument.update(template);
+              storageFilesGroupsUpdated += 1;
+            }
+          }
+        });
+
+        let result: SyncStorageFileWithGroupsResult = {
+          storageFilesGroupsCreated,
+          storageFilesGroupsUpdated
+        };
+
+        // update the storage file to no longer be flagged for sync
+        await storageFileDocumentInTransaction.update({
+          gs: false
+        });
+
+        return result;
+      });
+    };
+  });
+}
+
+export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, storageFileCollection } = context;
+  const syncStorageFileWithGroups = syncStorageFileWithGroupsFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(SyncAllFlaggedStorageFilesWithGroupsParams, async (params) => {
+    return async () => {
+      const syncStorageFileWithGroupsInstance = await syncStorageFileWithGroups({
+        key: firestoreDummyKey(),
+        force: true // force anyways; they should all be flagged for sync when the query hits
+      } as SyncStorageFileWithGroupsParams);
+
+      let storageFilesSynced = 0;
+      let storageFilesGroupsCreated = 0;
+      let storageFilesGroupsUpdated = 0;
+
+      await iterateFirestoreDocumentSnapshotPairBatches({
+        documentAccessor: storageFileCollection.documentAccessor(),
+        iterateSnapshotPairsBatch: async (snapshotPairBatch: FirestoreDocumentSnapshotDataPairWithData<StorageFileDocument>[]) => {
+          // only sync StorageFiles that are flagged for sync
+          await runAsyncTasksForValues(
+            snapshotPairBatch.filter((x) => x.data.gs),
+            async (snapshotPair) => {
+              const { document: storageFileDocument } = snapshotPair;
+
+              const result = await syncStorageFileWithGroupsInstance(storageFileDocument);
+
+              storageFilesSynced += 1;
+              storageFilesGroupsCreated += result.storageFilesGroupsCreated;
+              storageFilesGroupsUpdated += result.storageFilesGroupsUpdated;
+            },
+            {
+              maxParallelTasks: 10, // can update 10 storageFiles/Groups at the same time
+              nonConcurrentTaskKeyFactory: (x) => x.data.g // do not update the same group at the same time
+            }
+          );
+        },
+        queryFactory: storageFileCollection,
+        constraintsFactory: () => storageFileFlaggedForSyncWithGroupsQuery(),
+        performTasksConfig: {
+          sequential: true // run batches sequentially to avoid contention in updating a StorageFileGroup
+        },
+        totalSnapshotsLimit: 1000,
+        limitPerCheckpoint: 100
+      });
+
+      const result: SyncAllFlaggedStorageFilesWithGroupsResult = {
+        storageFilesSynced,
+        storageFilesGroupsCreated,
+        storageFilesGroupsUpdated
+      };
+
+      return result;
+    };
+  });
+}
+
+export function regenerateStorageFileGroupContentFactory(context: StorageFileServerActionsContext) {
+  const { firestoreContext, storageService, storageFileCollection, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(RegenerateStorageFileGroupContentParams, async (params) => {
+    const { force } = params;
+
+    const createStorageFileDocumentPair = createStorageFileDocumentPairFactory({
+      defaultCreationType: StorageFileCreationType.FOR_STORAGE_FILE_GROUP
+    });
+
+    return async (storageFileGroupDocument: StorageFileGroupDocument) => {
+      return firestoreContext.runTransaction(async (transaction) => {
+        const storageFileGroupDocumentInTransaction = storageFileGroupCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileGroupDocument);
+        const storageFileGroup = await assertSnapshotData(storageFileGroupDocumentInTransaction);
+
+        const storageFileDocumentAccessor = storageFileCollection.documentAccessorForTransaction(transaction);
+
+        const { o, zsf } = storageFileGroup;
+
+        const existingZipStorageFileDocument = zsf ? storageFileDocumentAccessor.loadDocumentForId(zsf) : undefined;
+
+        const [existingZipStorageFilePair] = await Promise.all([existingZipStorageFileDocument ? getDocumentSnapshotDataPair(existingZipStorageFileDocument) : undefined]);
+
+        let contentStorageFilesFlaggedForProcessing = 0;
+
+        let updateTemplate: Partial<StorageFileGroup> = {
+          re: false // clear the regeneration flag
+        };
+
+        // For each content type, create/update/flag the StorageFile for processing that type
+        const { regenerateZip } = calculateStorageFileGroupRegeneration({ storageFileGroup, force });
+
+        if (regenerateZip) {
+          // check that the storageFile exists, and if it doesn't, create a new one
+          if (!existingZipStorageFilePair?.data) {
+            const zipStorageFile = storageService.file(storageFileGroupZipFileStoragePath(storageFileGroupDocument.id));
+
+            // create a new StorageFile
+            const { storageFileDocument } = await createStorageFileDocumentPair<StorageFileGroupZipStorageFileMetadata>({
+              storagePathRef: zipStorageFile,
+              accessor: storageFileDocumentAccessor,
+              purpose: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
+              shouldBeProcessed: true,
+              ownershipKey: o,
+              metadata: {
+                sfg: storageFileGroupDocument.id
+              }
+            });
+
+            updateTemplate.zsf = storageFileDocument.id;
+          } else {
+            // flag it for processing again
+            await processStorageFileInTransaction({ storageFileDocument: existingZipStorageFilePair.document, storageFile: existingZipStorageFilePair.data }, transaction);
+          }
+
+          contentStorageFilesFlaggedForProcessing += 1;
+        }
+
+        // update the StorageFileGroup
+        await storageFileGroupDocumentInTransaction.update(updateTemplate);
+
+        const result: RegenerateStorageFileGroupContentResult = {
+          contentStorageFilesFlaggedForProcessing
+        };
+
+        return result;
+      });
+    };
+  });
+}
+
+export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, storageFileGroupCollection } = context;
+  const regenerateStorageFileGroupContent = regenerateStorageFileGroupContentFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(RegenerateAllFlaggedStorageFileGroupsContentParams, async (params) => {
+    return async () => {
+      const regenerateStorageFileGroupContentInstance = await regenerateStorageFileGroupContent({
+        key: firestoreDummyKey()
+      } as RegenerateStorageFileGroupContentParams);
+
+      let storageFileGroupsUpdated = 0;
+      let contentStorageFilesFlaggedForProcessing = 0;
+
+      await iterateFirestoreDocumentSnapshotPairs({
+        documentAccessor: storageFileGroupCollection.documentAccessor(),
+        iterateSnapshotPair: async (snapshotPair: FirestoreDocumentSnapshotDataPairWithData<StorageFileGroupDocument>) => {
+          const result = await regenerateStorageFileGroupContentInstance(snapshotPair.document);
+
+          storageFileGroupsUpdated += 1;
+          contentStorageFilesFlaggedForProcessing += result.contentStorageFilesFlaggedForProcessing;
+        },
+        queryFactory: storageFileGroupCollection,
+        constraintsFactory: () => storageFileGroupsFlaggedForContentRegenerationQuery(),
+        performTasksConfig: {
+          maxParallelTasks: 10
+        },
+        totalSnapshotsLimit: 1000,
+        limitPerCheckpoint: 100
+      });
+
+      const result: RegenerateAllFlaggedStorageFileGroupsContentResult = {
+        storageFileGroupsUpdated,
+        contentStorageFilesFlaggedForProcessing
+      };
 
       return result;
     };

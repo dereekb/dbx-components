@@ -10,31 +10,31 @@ import * as sharp from 'sharp';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
-    describe('StorageFile', () => {
-      demoAuthorizedUserAdminContext({ f }, (au) => {
+    demoAuthorizedUserAdminContext({ f }, (au) => {
+      function createTestFileForUser(content: string) {
+        return async () => {
+          const uid = au.uid;
+          const testFileContent = content;
+
+          const filePath = userTestFileUploadsFilePath(uid, 'test.any');
+          const testFile = await f.storageContext.file(filePath);
+          const testFileStoragePath = testFile.storagePath;
+
+          const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
+          await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+
+          const result: StoragePath = {
+            bucketId: testFileStoragePath.bucketId,
+            pathString: testFileStoragePath.pathString
+          };
+
+          return result;
+        };
+      }
+
+      describe('StorageFile', () => {
         describe('uploaded files', () => {
           describe('test file', () => {
-            function createTestFileForUser(content: string) {
-              return async () => {
-                const uid = au.uid;
-                const testFileContent = content;
-
-                const filePath = userTestFileUploadsFilePath(uid, 'test.any');
-                const testFile = await f.storageContext.file(filePath);
-                const testFileStoragePath = testFile.storagePath;
-
-                const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
-                await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
-
-                const result: StoragePath = {
-                  bucketId: testFileStoragePath.bucketId,
-                  pathString: testFileStoragePath.pathString
-                };
-
-                return result;
-              };
-            }
-
             it('should initialize an uploaded test file', async () => {
               const uploadedFilePath = await createTestFileForUser('This is a test file.')();
 
@@ -179,6 +179,21 @@ demoApiFunctionContextFactory((f) => {
                     expect(previousStorageFileDeleted).toBe(false);
                   });
                 });
+              });
+            });
+          });
+        });
+      });
+
+      describe('StorageFileGroup', () => {
+        describe('storage file group initialization', () => {
+          describe('created file with group id', () => {
+            /**
+             * Each test file is associated with the groups declared by userTestFileGroupIds().
+             */
+            demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is a test file.') }, (sf) => {
+              describe('syncAllFlaggedStorageFilesWithGroups()', () => {
+                it('should sync all ', async () => {});
               });
             });
           });

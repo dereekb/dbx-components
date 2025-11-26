@@ -10,9 +10,10 @@ import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update
 import { createProfile } from '../profile/profile.create';
 import { createNotification } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
-import { storageFileUpdate, storageFileProcess } from '../storagefile/storagefile.update';
+import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
 import { storageFileDownload } from '../storagefile/storagefile.read';
+import { storageFileGroupRegenerateContent } from '../storagefile/storagefilegroup.update';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -66,7 +67,11 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   }),
   storageFile: onCallSpecifierHandler({
     _: storageFileUpdate,
-    process: storageFileProcess
+    process: storageFileProcess,
+    syncWithGroups: storageFileSyncWithGroups
+  }),
+  storageFileGroup: onCallSpecifierHandler({
+    regenerateContent: storageFileGroupRegenerateContent
   })
 };
 

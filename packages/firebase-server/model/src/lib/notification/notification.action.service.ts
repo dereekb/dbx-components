@@ -520,7 +520,7 @@ export interface CreateNotificationBoxInTransactionInput extends NotificationBox
    */
   readonly now?: Maybe<Date>;
   /**
-   * If true, skips create
+   * If true, skips calling create
    */
   readonly skipCreate?: Maybe<boolean>;
 }

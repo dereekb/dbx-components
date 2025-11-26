@@ -17,7 +17,9 @@ import {
   type FirestoreDocument,
   type FirestoreDocumentData,
   type InitializedStorageFileModel,
-  AsyncStorageFileGroupUpdateAction
+  AsyncStorageFileGroupUpdateAction,
+  calculateStorageFileGroupRegeneration,
+  StorageFileGroupContentFlagsData
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
 import { type Maybe, performAsyncTasks } from '@dereekb/util';
@@ -62,7 +64,10 @@ export type MakeTemplateForStorageFileRelatedModelInitializationFunctionResult<T
  */
 export type MakeTemplateForStorageFileRelatedModelInitializationFunction<T> = (input: MakeTemplateForStorageFileRelatedModelInitializationFunctionInput) => Promise<MakeTemplateForStorageFileRelatedModelInitializationFunctionResult<T>>;
 
-export type MakeTemplateForStorageFileGroupInitializationFunction = MakeTemplateForStorageFileRelatedModelInitializationFunction<StorageFileGroup>;
+/**
+ * Used for initializing a StorageFileGroup.
+ */
+export type MakeTemplateForStorageFileGroupInitializationFunction = MakeTemplateForStorageFileRelatedModelInitializationFunction<Pick<StorageFileGroup, 'o'> & StorageFileGroupContentFlagsData>;
 
 // MARK: Notificaiton Initialization Server Actions
 export interface StorageFileInitServerActionsContext extends FirebaseServerActionsContext, StorageFileFirestoreCollections, FirestoreContextReference, StorageFileInitServerActionsContextConfig {}
@@ -88,10 +93,10 @@ export interface InitializeStorageFileModelInTransactionInput<D extends Firestor
 }
 
 export async function initializeStorageFileModelInTransaction<D extends FirestoreDocument<InitializedStorageFileModel, any>>(input: InitializeStorageFileModelInTransactionInput<D>) {
-  const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: storageFileGroup } = input;
+  const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: storageFileModel } = input;
 
   let initialized: boolean = false;
-  const alreadyInitialized: boolean = !storageFileGroup.s;
+  const alreadyInitialized: boolean = !storageFileModel.s;
 
   if (!alreadyInitialized) {
     const flatModelKey = documentInTransaction.id;
@@ -144,7 +149,16 @@ export function initializeStorageFileGroupInTransactionFactory(context: StorageF
     const storageFileGroup = await assertSnapshotData(storageFileGroupDocumentInTransaction);
 
     return initializeStorageFileModelInTransaction({
-      makeTemplateFunction: makeTemplateForStorageFileGroupInitialization,
+      makeTemplateFunction: async (input) => {
+        const baseTemplate = (await makeTemplateForStorageFileGroupInitialization(input)) as Partial<StorageFileGroup>;
+
+        // template can only define o and any StorageFileGroupContentFlagsData properties
+        return {
+          o: baseTemplate.o,
+          z: baseTemplate.z,
+          re: true // always flag for content regeneration
+        };
+      },
       throwErrorIfAlreadyInitialized,
       transaction,
       document: storageFileGroupDocumentInTransaction,

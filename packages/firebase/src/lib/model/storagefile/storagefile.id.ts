@@ -1,4 +1,4 @@
-import { FlatFirestoreModelKey, type FirestoreModelId, type FirestoreModelKey } from '../../common';
+import { FlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey, type FirestoreModelId, type FirestoreModelKey } from '../../common';
 
 export type StorageFileId = FirestoreModelId;
 export type StorageFileKey = FirestoreModelKey;
@@ -31,6 +31,10 @@ export type StorageFileGroupId = FlatFirestoreModelKey;
 export type StorageFileGroupKey = FirestoreModelKey;
 
 /**
- * Arbitrary string that can be used to describe the file group's purpose.
+ * Creates a NotificationBoxId from the input FirestoreModelKey.
+ *
+ * @param modelKey
+ * @returns
  */
-export type StorageFileGroupPurpose = string;
+export const storageFileGroupIdForModel = twoWayFlatFirestoreModelKey;
+export const inferStorageFileGroupRelatedModelKey = inferKeyFromTwoWayFlatFirestoreModelKey;

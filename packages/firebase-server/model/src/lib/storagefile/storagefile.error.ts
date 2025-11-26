@@ -1,8 +1,10 @@
 import {
   STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE,
   STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE,
+  STORAGE_FILE_GROUP_CREATE_INPUT_ERROR_CODE,
   STORAGE_FILE_MODEL_ALREADY_INITIALIZED_ERROR_CODE,
   STORAGE_FILE_NOT_FLAGGED_FOR_DELETION_ERROR_CODE,
+  STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE,
   STORAGE_FILE_PROCESSING_NOT_ALLOWED_FOR_INVALID_STATE_ERROR_CODE,
   STORAGE_FILE_PROCESSING_NOT_AVAILABLE_FOR_TYPE_ERROR_CODE,
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
@@ -18,6 +20,13 @@ export function storageFileModelAlreadyInitializedError() {
   return preconditionConflictError({
     message: `This model has already been initialized.`,
     code: STORAGE_FILE_MODEL_ALREADY_INITIALIZED_ERROR_CODE
+  });
+}
+
+export function storageFileNotFlaggedForGroupsSyncError() {
+  return preconditionConflictError({
+    message: `This StorageFile has not been flagged for sync with its groups.`,
+    code: STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE
   });
 }
 
@@ -91,5 +100,12 @@ export function storageFileCannotBeDeletedYetError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument cannot be deleted yet.`,
     code: STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE
+  });
+}
+
+export function createStorageFileGroupInputError() {
+  return preconditionConflictError({
+    message: `The model or storageFileId is required for creating a StorageFileGroup.`,
+    code: STORAGE_FILE_GROUP_CREATE_INPUT_ERROR_CODE
   });
 }

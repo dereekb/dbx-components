@@ -1,4 +1,4 @@
-import { MS_IN_HOUR, NeedsSyncBoolean, UnixDateTimeSecondsNumber, type Maybe } from '@dereekb/util';
+import { MS_IN_HOUR, NeedsSyncBoolean, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import {
   AbstractFirestoreDocument,
@@ -23,13 +23,13 @@ import {
   optionalFirestoreBoolean,
   SavedToFirestoreIfTrue,
   firestoreSubObject,
-  firestoreNumber,
   firestoreUnixDateTimeSecondsNumber,
-  optionalFirestoreUID,
   optionalFirestoreUnixDateTimeSecondsNumber,
-  firestoreObjectArray
+  firestoreObjectArray,
+  FirestoreModelKey,
+  firestoreModelIdString
 } from '../../common';
-import { StorageFileGroupId, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { inferStorageFileGroupRelatedModelKey, StorageFileGroupId, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
@@ -94,7 +94,11 @@ export enum StorageFileCreationType {
   /**
    * The StorageFile was initialized from an uploaded file.
    */
-  INIT_FROM_UPLOAD = 2
+  INIT_FROM_UPLOAD = 2,
+  /**
+   * This StorageFile was created by/for a StorageFileGroup.
+   */
+  FOR_STORAGE_FILE_GROUP = 3
 }
 
 /**
@@ -278,10 +282,17 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * StorageFileGroup id(s) that this StorageFile should be associated with.
    *
    * These StorageFileGroup do not need to exist, and will be created when synchronization occurs.
+   *
+   * These groups by design should typically be pre-determined at the time the StorageFile is created and remain unchanged; timely removal of data from groups is not part of the design spec.
+   *
+   * When a StorageFile is updated to remove groups, the removal is eventually propogated to the StorageFileGroup(s) that it was associated with,
+   * but there is no gurantee about timeliness when this will happen.
+   *
+   * In cases where you need to have the StorageFileGroup be updated promptly, you should manually handle those cases.
    */
   g: StorageFileGroupId[];
   /**
-   * If true, this file should be re-synced with each StorageFileGroup(s) it references.
+   * If true, this file should be re-synced with each StorageFileGroup that it references.
    */
   gs?: Maybe<NeedsSyncBoolean>;
 }
@@ -293,7 +304,7 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
  */
 export type StorageFileDownloadRole = 'download' | 'admin_download';
 
-export type StorageFileRoles = StorageFileDownloadRole | 'process' | GrantedUpdateRole | GrantedReadRole;
+export type StorageFileRoles = StorageFileDownloadRole | 'forceSyncWithGroups' | 'syncWithGroups' | 'process' | GrantedUpdateRole | GrantedReadRole;
 
 export class StorageFileDocument extends AbstractFirestoreDocument<StorageFile, StorageFileDocument, typeof storageFileIdentity> {
   get modelIdentity() {
@@ -349,13 +360,13 @@ export interface StorageFileGroupEmbeddedFile {
   /**
    * StorageFile id
    */
-  id: StorageFileId;
+  s: StorageFileId;
   /**
    * The time number it was added to the group.
    */
   sat: Date;
   /**
-   * The last time the StorageFile's file was added to the zip, if applicable.
+   * The first time the StorageFile's file was added to the zip, if applicable.
    */
   zat?: Maybe<Date>;
 }
@@ -363,7 +374,7 @@ export interface StorageFileGroupEmbeddedFile {
 export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupEmbeddedFile>({
   objectField: {
     fields: {
-      id: firestoreString(),
+      s: firestoreModelIdString,
       sat: firestoreUnixDateTimeSecondsNumber({ default: new Date() }),
       zat: optionalFirestoreUnixDateTimeSecondsNumber()
     }
@@ -381,22 +392,44 @@ export interface StorageFileGroup extends InitializedStorageFileModel {
    */
   f: StorageFileGroupEmbeddedFile[];
   /**
+   * Created at date.
+   */
+  cat: Date;
+  /**
+   * Ownership key, if applicable.
+   */
+  o?: Maybe<FirebaseAuthOwnershipKey>;
+  /**
    * True if a zip file should be generated for this group.
+   *
+   * This should remain true while a zip file
    */
   z?: Maybe<SavedToFirestoreIfTrue>;
   /**
    * StorageFile that contains the zip file for this group.
    */
-  zsf: Maybe<StorageFileId>;
+  zsf?: Maybe<StorageFileId>;
   /**
    * The last date the zip file was regenerated for this group.
    */
   zat?: Maybe<Date>;
+  /**
+   * True if this StorageFileGroup should flag regeneration of output StorageFiles/content.
+   */
+  re?: Maybe<SavedToFirestoreIfTrue>;
 }
+
+export type StorageFileGroupContentFlagsData = Pick<StorageFileGroup, 'z'>;
+
+export type StorageFileGroupRoles = 'regenerate' | GrantedReadRole;
 
 export class StorageFileGroupDocument extends AbstractFirestoreDocument<StorageFileGroup, StorageFileGroupDocument, typeof storageFileGroupIdentity> {
   get modelIdentity() {
     return storageFileGroupIdentity;
+  }
+
+  get storageFileGroupRelatedModelKey() {
+    return inferStorageFileGroupRelatedModelKey(this.id);
   }
 }
 
@@ -405,11 +438,14 @@ export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileG
     f: firestoreObjectArray({
       objectField: storageFileGroupEmbeddedFile
     }),
+    cat: firestoreDate(),
+    o: optionalFirestoreString(),
     z: optionalFirestoreBoolean({ dontStoreIf: false }),
     zsf: optionalFirestoreString(),
     zat: optionalFirestoreDate(),
     s: optionalFirestoreBoolean({ dontStoreIf: false }),
-    fi: optionalFirestoreBoolean({ dontStoreIf: false })
+    fi: optionalFirestoreBoolean({ dontStoreIf: false }),
+    re: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 

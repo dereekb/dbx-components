@@ -1,4 +1,4 @@
-import { type ProcessStorageFileParams, type UpdateStorageFileParams } from '@dereekb/firebase';
+import { SyncStorageFileWithGroupsParams, SyncStorageFileWithGroupsResult, type ProcessStorageFileParams, type UpdateStorageFileParams } from '@dereekb/firebase';
 import { type DemoUpdateModelFunction } from '../function';
 
 export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams> = async (request) => {
@@ -27,4 +27,18 @@ export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParam
   });
 
   await processStorageFile(storageFileDocument);
+};
+
+export const storageFileSyncWithGroups: DemoUpdateModelFunction<SyncStorageFileWithGroupsParams, SyncStorageFileWithGroupsResult> = async (request) => {
+  const { nest, data } = request;
+
+  const syncStorageFileWithGroups = await nest.storageFileServerActions.syncStorageFileWithGroups(data);
+  const storageFileDocument = await nest.useModel('storageFile', {
+    request,
+    key: data.key,
+    roles: data.force ? 'forceSyncWithGroups' : 'syncWithGroups',
+    use: (x) => x.document
+  });
+
+  return syncStorageFileWithGroups(storageFileDocument);
 };

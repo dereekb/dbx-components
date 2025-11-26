@@ -29,6 +29,10 @@ export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQ
   return [where<StorageFile>('p', '==', input.purpose), where<StorageFile>('u', '==', input.user)];
 }
 
+export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstraint[] {
+  return [where<StorageFile>('gs', '==', true)];
+}
+
 // MARK: StorageFileGroup
 /**
  * Query for storageFileGroups that are flagged for initialization.
@@ -38,6 +42,16 @@ export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQ
  */
 export function storageFileGroupsFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('s', '==', true)];
+}
+
+/**
+ * Query for storageFileGroups that are flagged for content regeneration.
+ *
+ * @param now
+ * @returns
+ */
+export function storageFileGroupsFlaggedForContentRegenerationQuery(): FirestoreQueryConstraint[] {
+  return [where<StorageFileGroup>('re', '==', true)];
 }
 
 /**

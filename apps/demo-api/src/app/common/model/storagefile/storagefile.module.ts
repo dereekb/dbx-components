@@ -26,7 +26,7 @@ import { demoStorageFileInitServerActionsContextConfig } from './storagefile.ini
       useExisting: DemoFirebaseServerActionsContext
     }
   ],
-  exports: [DemoApiActionModule, BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, StorageFileInitializeFromUploadService]
+  exports: [DemoApiActionModule, STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, StorageFileInitializeFromUploadService]
 })
 export class StorageFileDependencyModule {}
 

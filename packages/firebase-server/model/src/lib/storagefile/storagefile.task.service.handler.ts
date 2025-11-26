@@ -16,12 +16,20 @@ import {
   type FirebaseStorageAccessor,
   copyStoragePath,
   getDocumentSnapshotData,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE
+  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
+  STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
+  STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE_CREATE_ZIP_SUBTASK,
+  StorageFileGroupZipStorageFileMetadata,
+  StorageFileGroupZipStorageFileProcessingSubtask,
+  StorageFileGroupZipStorageFileProcessingSubtaskMetadata,
+  loadDocumentsForIds,
+  getDocumentSnapshotDataPairs
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, type Maybe } from '@dereekb/util';
+import { cachedGetter, pushArrayItemsIntoArray, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
+import { BaseStorageFileServerActionsContext } from './storagefile.action.server';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.
@@ -62,7 +70,7 @@ export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingS
 /**
  * Similar to NotificationTaskServiceTaskHandlerFlowEntry, but used in StorageFileProcessingPurposeTaskProcessorConfig as part of the flow.
  */
-export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>
+export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>;
 
 /**
  * The output cleanup configuration.
@@ -84,13 +92,15 @@ export interface StorageFileProcessingPurposeSubtaskCleanupOutput extends Notifi
   readonly queueForDelete?: Maybe<false | StorageFileQueueForDeleteTime>;
 }
 
+export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>;
+
 /**
  * Similar to NotificationTaskServiceTaskHandlerConfig, but instead targets a specific StorageFilePurpose.
  *
  * The flows behave the same way.
  */
 export type StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> =
-  | NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>
+  | StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M, S>
   | (Omit<NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>, 'target'> & {
       /**
        * @deprecated use target instead.
@@ -104,20 +114,26 @@ export interface StorageFileProcessingNotificationTaskHandlerConfig extends Omit
    */
   readonly processors: StorageFileProcessingPurposeSubtaskProcessorConfig[];
   /**
-   * FirebaseStorageAccessor
+   * Configuration for the StorageFileGroup processors.
+   *
+   * If false, does not add the StorageFileGroup processors.
    */
-  readonly storageAccessor: FirebaseStorageAccessor;
+  readonly allStorageFileGroupProcessorConfig?: Maybe<Omit<AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig, 'storageFileFirestoreCollections' | 'storageAccessor'> | false>;
   /**
    * Accessor for StorageFileDocument.
    */
   readonly storageFileFirestoreCollections: StorageFileFirestoreCollections;
+  /**
+   * FirebaseStorageAccessor
+   */
+  readonly storageAccessor: FirebaseStorageAccessor;
 }
 
 /**
  * Creates a NotificationTaskServiceTaskHandlerConfig that handles the StorageFileProcessingNotificationTask.
  */
 export function storageFileProcessingNotificationTaskHandler(config: StorageFileProcessingNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData> {
-  const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections } = config;
+  const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, allStorageFileGroupProcessorConfig } = config;
   const storageFileDocumentAccessor = storageFileFirestoreCollections.storageFileCollection.documentAccessor();
   const makeFileDetailsAccessor = storedFileReaderFactory();
 
@@ -138,6 +154,17 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       nextProcessingState: StorageFileProcessingState.SUCCESS,
       queueForDelete: true
     };
+  }
+
+  const processors = [...inputProcessors] as StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileProcessingSubtaskMetadata, StorageFileProcessingSubtask>[];
+
+  if (allStorageFileGroupProcessorConfig !== false) {
+    const storageFileGroupProcessors = allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors({
+      ...allStorageFileGroupProcessorConfig,
+      storageFileFirestoreCollections,
+      storageAccessor
+    });
+    pushArrayItemsIntoArray(processors, storageFileGroupProcessors);
   }
 
   return notificationTaskSubtaskNotificationTaskHandlerFactory<StorageFileProcessingPurposeSubtaskInput, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData, StorageFileProcessingSubtaskMetadata, StorageFileProcessingSubtask>({
@@ -215,5 +242,83 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       await storageFileDocument.update(updateTemplate);
       return notificationTaskComplete();
     }
-  })(config as any); // COMPAT: remove once purpose is removed from StorageFileProcessingPurposeSubtaskProcessorConfig, and the types match.
+  })({
+    ...config,
+    processors
+  }); // COMPAT: remove once purpose is removed from StorageFileProcessingPurposeSubtaskProcessorConfig, and the types match.
+}
+
+// MARK: StorageFileGroup Processors
+export interface AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig extends StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig {
+  readonly skipZipProcessing?: boolean;
+}
+
+export function allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors(config: AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] {
+  const { skipZipProcessing } = config;
+
+  const processors: StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] = [];
+
+  if (!skipZipProcessing) {
+    processors.push(storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config));
+  }
+
+  return processors;
+}
+
+export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig {
+  readonly storageFileFirestoreCollections: StorageFileFirestoreCollections;
+  readonly storageAccessor: FirebaseStorageAccessor;
+}
+
+export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
+  const { storageFileFirestoreCollections, storageAccessor } = config;
+  const { storageFileCollection, storageFileGroupCollection } = storageFileFirestoreCollections;
+
+  const storageFileGroupZipProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> = {
+    target: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
+    flow: [
+      {
+        subtask: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE_CREATE_ZIP_SUBTASK,
+        fn: async (input) => {
+          const { storageFileDocument } = input;
+
+          const storageFile = await input.loadStorageFile();
+          const storageFileMetadata = storageFile.d as StorageFileGroupZipStorageFileMetadata;
+          const storageFileGroupId = storageFileMetadata?.sfg;
+
+          let result: NotificationTaskServiceHandleNotificationTaskResult<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask>;
+
+          async function flagStorageFileForDeletion() {
+            await storageFileDocument.update(markStorageFileForDeleteTemplate());
+            return notificationTaskComplete();
+          }
+
+          if (storageFileGroupId) {
+            const storageFileGroupDocument = storageFileGroupCollection.documentAccessor().loadDocumentForId(storageFileGroupId);
+            const storageFileGroup = await storageFileGroupDocument.snapshotData();
+
+            if (storageFileGroup) {
+              const storageFileIdsToZip = storageFileGroup.f.map((x) => x.s);
+              const storageFilesToZip = loadDocumentsForIds(storageFileCollection.documentAccessor(), storageFileIdsToZip);
+              const storageFilesToZipData = getDocumentSnapshotDataPairs(storageFilesToZip);
+
+              // TODO: Complete
+
+              result = notificationTaskComplete();
+            } else {
+              // storage file group no longer exists. Flag the StorageFile for deletion.
+              result = await flagStorageFileForDeletion();
+            }
+          } else {
+            // improperly configured StorageFile for this type. Flag the StorageFile for deletion.
+            result = await flagStorageFileForDeletion();
+          }
+
+          return result;
+        }
+      }
+    ]
+  };
+
+  return storageFileGroupZipProcessorConfig;
 }

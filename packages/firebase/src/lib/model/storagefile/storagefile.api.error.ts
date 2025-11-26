@@ -65,3 +65,13 @@ export const STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE = 'STORAGE_FILE_CANNO
  * Thrown if the target InitializedStorageFileModel has already been initialized.
  */
 export const STORAGE_FILE_MODEL_ALREADY_INITIALIZED_ERROR_CODE = 'STORAGE_FILE_MODEL_ALREADY_INITIALIZED';
+
+/**
+ * Thrown if the target StorageFileDocument is attempted to be synced with groups, but is not flagged for groups sync.
+ */
+export const STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE = 'STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC';
+
+/**
+ * Thrown if both the target model and storageFileId is not provided in CreateStorageFileGroupParams.
+ */
+export const STORAGE_FILE_GROUP_CREATE_INPUT_ERROR_CODE = 'STORAGE_FILE_GROUP_CREATE_INPUT_ERROR';
