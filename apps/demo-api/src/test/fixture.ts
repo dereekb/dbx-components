@@ -59,7 +59,9 @@ import {
   StorageFileGroup,
   StorageFileGroupDocument,
   StorageFileGroupId,
-  StorageFileGroupFirestoreCollection
+  StorageFileGroupFirestoreCollection,
+  SyncAllFlaggedStorageFilesWithGroupsResult,
+  RegenerateAllFlaggedStorageFileGroupsContentResult
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter, AsyncFactory } from '@dereekb/util';
@@ -919,6 +921,10 @@ export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctio
   async syncWithStorageFileGroups(): Promise<SyncStorageFileWithGroupsResult> {
     return this.instance.syncWithStorageFileGroups();
   }
+
+  async syncAllFlaggedStorageFilesWithGroups(): Promise<SyncAllFlaggedStorageFilesWithGroupsResult> {
+    return this.instance.syncAllFlaggedStorageFilesWithGroups();
+  }
 }
 
 export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -947,6 +953,11 @@ export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFuncti
   async syncWithStorageFileGroups(): Promise<SyncStorageFileWithGroupsResult> {
     const instance = await this.testContext.storageFileServerActions.syncStorageFileWithGroups({ key: this.documentKey });
     return instance(this.document);
+  }
+
+  async syncAllFlaggedStorageFilesWithGroups(): Promise<SyncAllFlaggedStorageFilesWithGroupsResult> {
+    const instance = await this.testContext.storageFileServerActions.syncAllFlaggedStorageFilesWithGroups({});
+    return instance();
   }
 }
 
@@ -1004,6 +1015,10 @@ export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFu
   async regenerateStorageFileGroupContent(): Promise<RegenerateStorageFileGroupContentResult> {
     return this.instance.regenerateStorageFileGroupContent();
   }
+
+  async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
+    return this.instance.regenerateAllFlaggedStorageFileGroupsContent();
+  }
 }
 
 export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -1018,6 +1033,11 @@ export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminF
   async regenerateStorageFileGroupContent(): Promise<RegenerateStorageFileGroupContentResult> {
     const instance = await this.testContext.storageFileServerActions.regenerateStorageFileGroupContent({ key: this.documentKey });
     return instance(this.document);
+  }
+
+  async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
+    const instance = await this.testContext.storageFileServerActions.regenerateAllFlaggedStorageFileGroupsContent({});
+    return instance();
   }
 }
 

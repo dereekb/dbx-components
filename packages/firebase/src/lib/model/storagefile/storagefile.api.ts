@@ -6,6 +6,7 @@ import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds } from '@dereekb/util';
 import { StorageFileId } from './storagefile.id';
+import { SendNotificationResult } from '../notification/notification.api';
 
 /**
  * Used for directly create a new StorageFile.
@@ -94,7 +95,16 @@ export class ProcessStorageFileParams extends TargetModelParams {
   forceRestartProcessing?: Maybe<boolean>;
 }
 
-export interface ProcessStorageFileResult {}
+export interface ProcessStorageFileResult {
+  /**
+   * Whether or not the StorageFile was run immediately.
+   */
+  readonly runImmediately: boolean;
+  /**
+   * The expedite result, if runImmediately returned true.
+   */
+  readonly expediteResult: Maybe<SendNotificationResult>;
+}
 
 /**
  * Processes all StorageFiles that are queued for processing.
@@ -290,7 +300,17 @@ export interface RegenerateStorageFileGroupContentResult {
 export class RegenerateAllFlaggedStorageFileGroupsContentParams {}
 
 export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
+  /**
+   * The number of StorageFileGroups that were skipped because they were not initialized or flagged for initialization.
+   */
+  readonly storageFileGroupsSkipped: number;
+  /**
+   * The number of StorageFileGroups that were updated.
+   */
   readonly storageFileGroupsUpdated: number;
+  /**
+   * The number of "content" StorageFiles that were flagged for processing again.
+   */
   readonly contentStorageFilesFlaggedForProcessing: number;
 }
 
@@ -355,7 +375,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups', 'delete:_', 'read:download'],
+  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download'],
   storageFileGroup: ['update:regenerateContent']
 };
 

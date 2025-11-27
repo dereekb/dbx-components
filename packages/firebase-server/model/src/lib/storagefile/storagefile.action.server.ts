@@ -65,7 +65,8 @@ import {
   storageFileGroupZipFileStoragePath,
   inferKeyFromTwoWayFlatFirestoreModelKey,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
-  StorageFileGroupZipStorageFileMetadata
+  StorageFileGroupZipStorageFileMetadata,
+  SendNotificationResult
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -84,7 +85,8 @@ import {
   storageFileNotFlaggedForDeletionError,
   storageFileCannotBeDeletedYetError,
   storageFileNotFlaggedForGroupsSyncError,
-  createStorageFileGroupInputError
+  createStorageFileGroupInputError,
+  storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
 import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, performAsyncTasks, runAsyncTasksForValues } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
@@ -355,12 +357,17 @@ export function processAllQueuedStorageFilesFactory(context: StorageFileServerAc
       let storageFilesProcessStarted = 0;
       let storageFilesFailedStarting = 0;
 
+      const proceessStorageFileParams: ProcessStorageFileParams = {
+        key: firestoreDummyKey()
+      };
+
+      const processStorageFileInstance = await processStorageFile(proceessStorageFileParams);
+
       await iterateFirestoreDocumentSnapshotPairs({
         documentAccessor: storageFileCollection.documentAccessor(),
         iterateSnapshotPair: async (snapshotPair) => {
           storageFilesVisited++;
-
-          const processStorageFileResult = await processStorageFile(snapshotPair.document).catch(() => null);
+          const processStorageFileResult = await processStorageFileInstance(snapshotPair.document).catch(() => null);
 
           if (processStorageFileResult) {
             storageFilesProcessStarted++;
@@ -496,8 +503,6 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
     const { runImmediately } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
-      const result: ProcessStorageFileResult = {};
-
       const expediteInstance = notificationExpediteService.expediteInstance();
 
       await firestoreContext.runTransaction(async (transaction) => {
@@ -513,10 +518,17 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
         );
       });
 
+      let expediteResult: Maybe<SendNotificationResult> = null;
+
       // expedite the task if requested
       if (runImmediately) {
-        await expediteInstance.send();
+        expediteResult = await expediteInstance.send().then((x) => x[0]);
       }
+
+      const result: ProcessStorageFileResult = {
+        runImmediately: runImmediately ?? false,
+        expediteResult
+      };
 
       return result;
     };
@@ -857,7 +869,12 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
 
         const storageFileDocumentAccessor = storageFileCollection.documentAccessorForTransaction(transaction);
 
-        const { o, zsf } = storageFileGroup;
+        const { o, zsf, s } = storageFileGroup;
+
+        // must not be queued for initialization
+        if (s) {
+          throw storageFileGroupQueuedForInitializationError();
+        }
 
         const existingZipStorageFileDocument = zsf ? storageFileDocumentAccessor.loadDocumentForId(zsf) : undefined;
 
@@ -922,15 +939,22 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
       } as RegenerateStorageFileGroupContentParams);
 
       let storageFileGroupsUpdated = 0;
+      let storageFileGroupsSkipped = 0;
       let contentStorageFilesFlaggedForProcessing = 0;
 
       await iterateFirestoreDocumentSnapshotPairs({
         documentAccessor: storageFileGroupCollection.documentAccessor(),
         iterateSnapshotPair: async (snapshotPair: FirestoreDocumentSnapshotDataPairWithData<StorageFileGroupDocument>) => {
-          const result = await regenerateStorageFileGroupContentInstance(snapshotPair.document);
+          const { data: storageFileGroup } = snapshotPair;
 
-          storageFileGroupsUpdated += 1;
-          contentStorageFilesFlaggedForProcessing += result.contentStorageFilesFlaggedForProcessing;
+          if (!storageFileGroup.s) {
+            const result = await regenerateStorageFileGroupContentInstance(snapshotPair.document);
+
+            storageFileGroupsUpdated += 1;
+            contentStorageFilesFlaggedForProcessing += result.contentStorageFilesFlaggedForProcessing;
+          } else {
+            storageFileGroupsSkipped += 1;
+          }
         },
         queryFactory: storageFileGroupCollection,
         constraintsFactory: () => storageFileGroupsFlaggedForContentRegenerationQuery(),
@@ -942,6 +966,7 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
       });
 
       const result: RegenerateAllFlaggedStorageFileGroupsContentResult = {
+        storageFileGroupsSkipped,
         storageFileGroupsUpdated,
         contentStorageFilesFlaggedForProcessing
       };

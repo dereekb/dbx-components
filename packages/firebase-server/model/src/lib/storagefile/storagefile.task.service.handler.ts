@@ -23,13 +23,17 @@ import {
   StorageFileGroupZipStorageFileProcessingSubtask,
   StorageFileGroupZipStorageFileProcessingSubtaskMetadata,
   loadDocumentsForIds,
-  getDocumentSnapshotDataPairs
+  getDocumentSnapshotDataPairs,
+  notificationTaskDelayRetry,
+  completeSubtaskProcessingAndScheduleCleanupTaskResult,
+  notificationSubtaskComplete,
+  STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, pushArrayItemsIntoArray, type Maybe } from '@dereekb/util';
+import { cachedGetter, MS_IN_HOUR, performAsyncTasks, pushArrayItemsIntoArray, slashPathDetails, useCallback, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
-import { BaseStorageFileServerActionsContext } from './storagefile.action.server';
+import * as archiver from 'archiver';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.
@@ -152,7 +156,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     return {
       cleanupSuccess: true,
       nextProcessingState: StorageFileProcessingState.SUCCESS,
-      queueForDelete: true
+      queueForDelete: false // do not queue for delete automatically
     };
   }
 
@@ -245,20 +249,25 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
   })({
     ...config,
     processors
-  }); // COMPAT: remove once purpose is removed from StorageFileProcessingPurposeSubtaskProcessorConfig, and the types match.
+  });
 }
 
 // MARK: StorageFileGroup Processors
 export interface AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig extends StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig {
-  readonly skipZipProcessing?: boolean;
+  /**
+   * Whether or not to exclude zip processing.
+   *
+   * Defaults to false.
+   */
+  readonly excludeZipProcessing?: boolean;
 }
 
 export function allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors(config: AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] {
-  const { skipZipProcessing } = config;
+  const { excludeZipProcessing } = config;
 
   const processors: StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] = [];
 
-  if (!skipZipProcessing) {
+  if (!excludeZipProcessing) {
     processors.push(storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config));
   }
 
@@ -280,7 +289,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
       {
         subtask: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE_CREATE_ZIP_SUBTASK,
         fn: async (input) => {
-          const { storageFileDocument } = input;
+          const { storageFileDocument, fileDetailsAccessor } = input;
 
           const storageFile = await input.loadStorageFile();
           const storageFileMetadata = storageFile.d as StorageFileGroupZipStorageFileMetadata;
@@ -300,11 +309,89 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
             if (storageFileGroup) {
               const storageFileIdsToZip = storageFileGroup.f.map((x) => x.s);
               const storageFilesToZip = loadDocumentsForIds(storageFileCollection.documentAccessor(), storageFileIdsToZip);
-              const storageFilesToZipData = getDocumentSnapshotDataPairs(storageFilesToZip);
+              const storageFileDataPairsToZip = await getDocumentSnapshotDataPairs(storageFilesToZip);
 
-              // TODO: Complete
+              // create a new file
+              const zipFileAccessor = storageAccessor.file(fileDetailsAccessor.input);
 
-              result = notificationTaskComplete();
+              if (zipFileAccessor.uploadStream && zipFileAccessor.getStream) {
+                const uploadStream = zipFileAccessor.uploadStream({
+                  contentType: 'application/zip'
+                });
+
+                const startedAt = new Date();
+                const newArchive = archiver('zip', { zlib: { level: 9 } });
+
+                // pipe the archive to the upload stream
+                newArchive.pipe(uploadStream, { end: true });
+
+                // upload each of the files to the archive
+                await performAsyncTasks(
+                  storageFileDataPairsToZip,
+                  async (storageFileDataPair) => {
+                    const { data: storageFile } = storageFileDataPair;
+
+                    if (storageFile) {
+                      const fileAccessor = storageAccessor.file(storageFile);
+                      const metadata = await fileAccessor.getMetadata().catch(() => null);
+
+                      if (metadata) {
+                        const name = slashPathDetails(metadata.name).fileName ?? `sf_${storageFile.id}`;
+                        const fileStream = fileAccessor.getStream!();
+
+                        await useCallback((x) => {
+                          // append the file to the archive
+                          newArchive.append(fileStream, {
+                            name
+                          });
+
+                          // if the stream errors, call back
+                          fileStream.on('error', (e) => x(e));
+
+                          // when the stream finishes, call back
+                          fileStream.on('finish', () => x());
+                        });
+                      } else {
+                        // TODO: Flag that retrieving the file failed and could not be added to the archive.
+                      }
+                    }
+                  },
+                  {
+                    maxParallelTasks: 3 // only stream three files concurrently to the archive to avoid issues with memory usage
+                  }
+                );
+
+                const finishedAt = new Date();
+
+                // create the info.json file
+                const infoJson = {
+                  sfg: storageFileGroupId,
+                  sf: storageFileIdsToZip,
+                  s: startedAt.toISOString(),
+                  f: finishedAt.toISOString()
+                };
+
+                newArchive.append(JSON.stringify(infoJson), {
+                  name: STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
+                });
+
+                // finalize the archive
+                await newArchive.finalize();
+
+                // update the StorageFileGroup
+                await storageFileGroupDocument.update({
+                  zat: finishedAt
+                });
+
+                // schedule/run the cleanup task
+                result = notificationSubtaskComplete({
+                  canRunNextCheckpoint: true
+                });
+              } else {
+                // uploadStream is not available for some reason? Should never occur.
+                console.warn('storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(): uploadStream is not available for some reason while creating a new zip.');
+                result = notificationTaskDelayRetry(MS_IN_HOUR);
+              }
             } else {
               // storage file group no longer exists. Flag the StorageFile for deletion.
               result = await flagStorageFileForDeletion();

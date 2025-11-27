@@ -1,6 +1,7 @@
 import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, type StorageSlashPath } from '../storage';
 import { type ConfigurableStorageMetadata, type StorageAccessControlObject, type StorageAclMetadata, type StorageMakePrivateOptions, type StorageMoveOptions, type StorageSignedDownloadUrl, type StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type Readable } from 'stream';
 
 /**
  * Used for accessing files and folders in the storage.
@@ -67,7 +68,7 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    *
    * Available only in NodeJS.
    */
-  getStream?(maxDownloadSizeBytes?: number): NodeJS.ReadableStream;
+  getStream?(maxDownloadSizeBytes?: number): Readable;
   /**
    * Uploads data to the file's path.
    */

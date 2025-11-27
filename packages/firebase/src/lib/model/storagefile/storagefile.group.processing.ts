@@ -1,3 +1,4 @@
+import { SlashPathTypedFile } from '@dereekb/util';
 import { StorageFileGroupId, StorageFilePurpose } from './storagefile.id';
 import { StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata } from './storagefile.task';
 
@@ -16,3 +17,5 @@ export const STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE_CREATE_ZIP_SUBTASK: Sto
 export type StorageFileGroupZipStorageFileProcessingSubtask = typeof STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE_CREATE_ZIP_SUBTASK;
 
 export type StorageFileGroupZipStorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata;
+
+export const STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME: SlashPathTypedFile = 'info.json';

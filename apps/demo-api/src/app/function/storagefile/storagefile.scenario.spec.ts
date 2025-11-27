@@ -1,8 +1,8 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
-import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
+import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
+import { firestoreDummyKey, type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
 import { type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -11,12 +11,12 @@ import * as sharp from 'sharp';
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserAdminContext({ f }, (au) => {
-      function createTestFileForUser(content: string) {
+      function createTestFileForUser(content: string, fileName = 'test.any') {
         return async () => {
           const uid = au.uid;
           const testFileContent = content;
 
-          const filePath = userTestFileUploadsFilePath(uid, 'test.any');
+          const filePath = userTestFileUploadsFilePath(uid, fileName);
           const testFile = await f.storageContext.file(filePath);
           const testFileStoragePath = testFile.storagePath;
 
@@ -186,17 +186,94 @@ demoApiFunctionContextFactory((f) => {
       });
 
       describe('StorageFileGroup', () => {
-        describe('storage file group initialization', () => {
-          describe('created file with group id', () => {
-            /**
-             * Each test file is associated with the groups declared by userTestFileGroupIds().
-             */
-            demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is a test file.') }, (sf) => {
-              describe('syncAllFlaggedStorageFilesWithGroups()', () => {
-                it('should sync all ', async () => {});
+        describe('multiple test files', () => {
+          demoStorageFileGroupContext(
+            {
+              f,
+              storageFileGroupId: async () => userProfileStorageFileGroupId(au.uid),
+              createIfNeeded: false, // do not create or init
+              initIfNeeded: false
+            },
+            (sfg) => {
+              demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is test file 1.', 'test1.any') }, (sf1) => {
+                demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is test file 2.', 'test2.any') }, (sf2) => {
+                  demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is test file 3.', 'test3.any') }, (sf3) => {
+                    it('should generate the expected zip file', async () => {
+                      // sync all flagged storage files with groups
+                      const syncFlaggedResult = await sf1.syncAllFlaggedStorageFilesWithGroups();
+                      expect(syncFlaggedResult.storageFilesGroupsCreated).toBe(1); // created once
+                      expect(syncFlaggedResult.storageFilesGroupsUpdated).toBe(2); // updated twice with the other two files
+
+                      let storageFileGroup = await assertSnapshotData(sfg.document);
+                      expect(storageFileGroup.f).toHaveLength(3);
+
+                      expect(storageFileGroup.f.map((x) => x.s)).toContain(sf1.document.id);
+                      expect(storageFileGroup.f.map((x) => x.s)).toContain(sf2.document.id);
+                      expect(storageFileGroup.f.map((x) => x.s)).toContain(sf3.document.id);
+
+                      expect(storageFileGroup.s).toBe(true); // still needs to be initialized
+
+                      // initialize it
+                      await sfg.initializeStorageFileGroup();
+                      storageFileGroup = await assertSnapshotData(sfg.document);
+
+                      expect(storageFileGroup.z).toBe(true); // should have zip files enabled
+                      expect(storageFileGroup.zsf).toBeUndefined(); // no storage file created yet
+                      expect(storageFileGroup.re).toBe(true); // flagged for regeneration
+
+                      // regenerate the zip file
+                      const regenerateResult = await sfg.regenerateStorageFileGroupContent(); //regenreate the content
+                      expect(regenerateResult.contentStorageFilesFlaggedForProcessing).toBe(1); // only the zip storage file should be flagged now
+
+                      storageFileGroup = await assertSnapshotData(sfg.document);
+                      expect(storageFileGroup.zsf).toBeDefined(); // should now be defined
+                      expect(storageFileGroup.zat).toBeUndefined(); // should not yet be set since it hasn't completed the processing
+
+                      // PROCESSING
+                      const zipStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(storageFileGroup.zsf as string);
+                      let zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+
+                      expect(zipStorageFile.fs).toBe(StorageFileState.OK); // should be ok
+                      expect(zipStorageFile.p).toBe(STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE); // should be the zip purpose
+                      expect(zipStorageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING); // should be queued for processing
+                      expect(zipStorageFile.pn).toBeUndefined(); // no processing notification task created yet
+
+                      // process the storage file immediately
+                      const processAllStorageFilesInstance = await f.storageFileServerActions.processAllQueuedStorageFiles({});
+                      const processAllStorageFilesResult = await processAllStorageFilesInstance();
+
+                      expect(processAllStorageFilesResult.storageFilesProcessStarted).toBeGreaterThan(1); // test items may also be marked as processing after this
+
+                      zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+
+                      expect(zipStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING); // should now be marked processing
+                      expect(zipStorageFile.pn).toBeDefined(); // processing notification task created/set
+
+                      // notification tasks are now queued up
+                      const sendQueuedNotificationsInstance = await f.notificationServerActions.sendQueuedNotifications({});
+                      const sendQueuedNotificationsResult = await sendQueuedNotificationsInstance();
+
+                      expect(sendQueuedNotificationsResult.notificationTasksVisited).toBeGreaterThan(1); // test items may also get run at the same time.
+
+                      zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+
+                      expect(zipStorageFile.fs).toBe(StorageFileState.OK); // should be ok and not marked for delete
+                      expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS); // should now be marked processing
+                      expect(zipStorageFile.pn).toBeUndefined(); // processing notification task cleared now that it is complete
+                      expect(zipStorageFile.sdat).not.toBeDefined(); // should not be flagged for deletion
+
+                      // check the final result
+                      storageFileGroup = await assertSnapshotData(sfg.document);
+                      expect(storageFileGroup.z).toBe(true); // zip should still be enabled
+                      expect(storageFileGroup.zat).toBeDefined(); // lasted file time is now set
+
+                      zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+                    });
+                  });
+                });
               });
-            });
-          });
+            }
+          );
         });
       });
     });

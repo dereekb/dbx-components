@@ -2,6 +2,7 @@ import {
   STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE,
   STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE,
   STORAGE_FILE_GROUP_CREATE_INPUT_ERROR_CODE,
+  STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE,
   STORAGE_FILE_MODEL_ALREADY_INITIALIZED_ERROR_CODE,
   STORAGE_FILE_NOT_FLAGGED_FOR_DELETION_ERROR_CODE,
   STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE,
@@ -100,6 +101,13 @@ export function storageFileCannotBeDeletedYetError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument cannot be deleted yet.`,
     code: STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE
+  });
+}
+
+export function storageFileGroupQueuedForInitializationError() {
+  return preconditionConflictError({
+    message: `The target StorageFileGroupDocument is queued for initialization.`,
+    code: STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE
   });
 }
 

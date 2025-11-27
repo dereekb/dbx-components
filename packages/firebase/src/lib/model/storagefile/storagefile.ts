@@ -375,7 +375,7 @@ export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupE
   objectField: {
     fields: {
       s: firestoreModelIdString,
-      sat: firestoreUnixDateTimeSecondsNumber({ default: new Date() }),
+      sat: firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true }),
       zat: optionalFirestoreUnixDateTimeSecondsNumber()
     }
   }

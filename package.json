@@ -50,6 +50,7 @@
     "@vapi-ai/server-sdk": "^0.10.0",
     "@vvo/tzdb": "^6.0.0",
     "angular-calendar": "^0.31.0",
+    "archiver": "^7.0.0",
     "change-case-all": "^2.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -84,6 +85,7 @@
     "zone.js": "0.14.10"
   },
   "devDependencies": {
+    "adm-zip": "^0.5.16",
     "@angular-devkit/build-angular": "^18.0.0",
     "@angular-devkit/core": "^18.0.0",
     "@angular-devkit/schematics": "^18.0.0",
@@ -121,6 +123,8 @@
     "@swc/cli": "~0.5.0",
     "@swc/core": "1.5.7",
     "@swc/helpers": "0.5.15",
+    "@types/adm-zip": "^0.5.7",
+    "@types/archiver": "^7.0.0",
     "@types/jest": "29.5.14",
     "@types/jsonwebtoken": "^8.5.8",
     "@types/node": "^22.13.0",

@@ -52,10 +52,10 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
 
   const removeSet = new Set(remove);
   const mergeFunction = mergeObjectsFunction<StorageFileGroupEmbeddedFile>(KeyValueTypleValueFilter.UNDEFINED);
-  const fRemoved = currentF.filter((x) => removeSet.has(x.s));
-  const oneOrMoreItemsWereRemoved = fRemoved.length < currentF.length;
+  const fWithRemovedTargetsRemoved = currentF.filter((x) => !removeSet.has(x.s));
+  const oneOrMoreItemsWereRemoved = fWithRemovedTargetsRemoved.length < currentF.length;
 
-  const f = ModelRelationUtility.insertCollection(fRemoved, (insert ?? []) as StorageFileGroupEmbeddedFile[], {
+  const f = ModelRelationUtility.insertCollection(fWithRemovedTargetsRemoved, (insert ?? []) as StorageFileGroupEmbeddedFile[], {
     readKey: (x) => x.s,
     readType: () => 'x',
     merge: (a, b) => mergeFunction([a, b]) as StorageFileGroupEmbeddedFile

@@ -41,13 +41,15 @@ import {
   StorageFileGroup,
   StorageFileId,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
-  StorageFileGroupZipStorageFileMetadata
+  StorageFileGroupZipStorageFileMetadata,
+  STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
+  STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE
 } from '@dereekb/firebase';
-import { addMilliseconds, slashPathDetails, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, slashPathDetails, slashPathFolder, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
-import { beforeAfterSubstr } from '@uirouter/core';
+import * as AdmZip from 'adm-zip';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -1075,63 +1077,138 @@ demoApiFunctionContextFactory((f) => {
                 await sf.syncWithStorageFileGroups();
               });
 
-              demoStorageFileGroupContext(
-                {
-                  f,
-                  storageFileGroupId: async () => assertSnapshotData(sf.document).then((x) => x.g[0]),
-                  initIfNeeded: true
-                },
-                (sfg) => {
-                  it('should queue the regeneration of the storage file group content', async () => {
-                    let storageFileGroup = await assertSnapshotData(sfg.document);
-
-                    expect(storageFileGroup.f).toHaveLength(1);
-                    expect(storageFileGroup.z).toBe(true); // should be true due to configuration declared in storagefile.init.ts
-                    expect(storageFileGroup.re).toBe(true); // flagged for resync
-                    expect(storageFileGroup.zsf).not.toBeDefined();
-
-                    const instance = await f.storageFileServerActions.regenerateStorageFileGroupContent({ key: sfg.documentKey });
-                    const result = await instance(sfg.document);
-
-                    expect(result.contentStorageFilesFlaggedForProcessing).toBe(1);
-
-                    storageFileGroup = await assertSnapshotData(sfg.document);
-                    expect(storageFileGroup.f).toHaveLength(1);
-                    expect(storageFileGroup.re).toBeFalsy();
-                    expect(storageFileGroup.zsf).toBeDefined();
-                  });
-
-                  describe('regeneration queued', () => {
-                    let zipStorageFileId: StorageFileId;
-
-                    beforeEach(async () => {
-                      await sfg.regenerateStorageFileGroupContent();
-
+              describe('storage file group is not initialized', () => {
+                demoStorageFileGroupContext(
+                  {
+                    f,
+                    storageFileGroupId: async () => assertSnapshotData(sf.document).then((x) => x.g[0]),
+                    initIfNeeded: false
+                  },
+                  (sfg) => {
+                    it('should fail to regenerate the storage file group content if the storage file group is not initialized', async () => {
                       const storageFileGroup = await assertSnapshotData(sfg.document);
-                      zipStorageFileId = storageFileGroup.zsf as StorageFileId;
+                      expect(storageFileGroup.s).toBe(true);
+
+                      const instance = await f.storageFileServerActions.regenerateStorageFileGroupContent({ key: sfg.documentKey });
+                      await expectFail(() => instance(sfg.document), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE));
                     });
 
-                    describe('zip storage file', () => {
-                      demoStorageFileContext(
-                        {
-                          f,
-                          doc: () => f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(zipStorageFileId)
-                        },
-                        (zipStorageFile) => {
-                          it('should be flagged for processing', async () => {
-                            const storageFile = await assertSnapshotData(zipStorageFile.document);
-                            expect(storageFile.p).toBe(STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE);
-                            expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
-
-                            expect(storageFile.d).toBeDefined();
-                            expect((storageFile.d as StorageFileGroupZipStorageFileMetadata).sfg).toBe(sfg.documentId);
-                          });
-                        }
-                      );
+                    describe('regenerateAllStorageFileGroupContent()', () => {
+                      it('should skip the storage file group if it is not initialized', async () => {
+                        const instance = await f.storageFileServerActions.regenerateAllFlaggedStorageFileGroupsContent({});
+                        const result = await instance();
+                        expect(result.storageFileGroupsSkipped).toBe(1);
+                      });
                     });
-                  });
-                }
-              );
+                  }
+                );
+              });
+
+              describe('storage file group is initialized', () => {
+                demoStorageFileGroupContext(
+                  {
+                    f,
+                    storageFileGroupId: async () => assertSnapshotData(sf.document).then((x) => x.g[0]),
+                    initIfNeeded: true
+                  },
+                  (sfg) => {
+                    it('should queue the regeneration of the storage file group content', async () => {
+                      let storageFileGroup = await assertSnapshotData(sfg.document);
+
+                      expect(storageFileGroup.f).toHaveLength(1);
+                      expect(storageFileGroup.z).toBe(true); // should be true due to configuration declared in storagefile.init.ts
+                      expect(storageFileGroup.re).toBe(true); // flagged for resync
+                      expect(storageFileGroup.zsf).not.toBeDefined();
+
+                      const instance = await f.storageFileServerActions.regenerateStorageFileGroupContent({ key: sfg.documentKey });
+                      const result = await instance(sfg.document);
+
+                      expect(result.contentStorageFilesFlaggedForProcessing).toBe(1);
+
+                      storageFileGroup = await assertSnapshotData(sfg.document);
+                      expect(storageFileGroup.f).toHaveLength(1);
+                      expect(storageFileGroup.re).toBeFalsy();
+                      expect(storageFileGroup.zsf).toBeDefined();
+                    });
+
+                    describe('regeneration queued', () => {
+                      let zipStorageFileId: StorageFileId;
+
+                      beforeEach(async () => {
+                        await sfg.regenerateStorageFileGroupContent();
+
+                        const storageFileGroup = await assertSnapshotData(sfg.document);
+                        zipStorageFileId = storageFileGroup.zsf as StorageFileId;
+                      });
+
+                      describe('zip storage file', () => {
+                        demoStorageFileContext(
+                          {
+                            f,
+                            doc: () => f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(zipStorageFileId)
+                          },
+                          (sf_zip) => {
+                            it('should be flagged for processing', async () => {
+                              const storageFile = await assertSnapshotData(sf_zip.document);
+                              expect(storageFile.p).toBe(STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE);
+                              expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+
+                              expect(storageFile.d).toBeDefined();
+                              expect((storageFile.d as StorageFileGroupZipStorageFileMetadata).sfg).toBe(sfg.documentId);
+                            });
+
+                            it('should build a new zip', async () => {
+                              let storageFileGroup = await assertSnapshotData(sfg.document);
+                              expect(storageFileGroup.zsf).toBeDefined();
+                              expect(storageFileGroup.zat).not.toBeDefined();
+
+                              let storageFile = await assertSnapshotData(sf_zip.document);
+                              let file = f.storageContext.file(storageFile);
+
+                              let fileExists = await file.exists(); // file should not yet exist
+                              expect(fileExists).toBeFalsy();
+
+                              expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+
+                              const { expediteResult } = await sf_zip.process({ runImmediately: true });
+                              expect(expediteResult?.success).toBe(true);
+                              expect(expediteResult?.notificationTaskCompletionType).toBe(true); // task entirely completed
+
+                              storageFile = await assertSnapshotData(sf_zip.document);
+                              expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+
+                              fileExists = await file.exists(); // file should exist now
+                              expect(fileExists).toBeTruthy();
+
+                              const fileMetadata = await file.getMetadata();
+                              expect(fileMetadata).toBeDefined();
+
+                              expect(fileMetadata.name).toBeDefined();
+                              expect(fileMetadata.contentType).toBe('application/zip');
+
+                              const fileBytes = await file.getBytes();
+                              const zip = new AdmZip(Buffer.from(fileBytes));
+
+                              const zipEntries = zip.getEntries();
+
+                              const testStorageFile = await assertSnapshotData(sf.document);
+                              const testStorageFileMetadata = await f.storageContext.file(testStorageFile).getMetadata();
+
+                              expect(zipEntries.length).toBe(2); // info.json and the test file
+                              expect(zipEntries[0].entryName).toBe(slashPathDetails(testStorageFileMetadata.name).fileName);
+                              expect(zipEntries[1].entryName).toBe(STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME);
+
+                              storageFileGroup = await assertSnapshotData(sfg.document);
+                              expect(storageFileGroup.zsf).toBe(sf_zip.documentId);
+                              expect(storageFileGroup.zat).toBeDefined();
+                            });
+                          }
+                        );
+                      });
+                    });
+                  }
+                );
+              });
             });
           });
         });
