@@ -65,9 +65,10 @@ import {
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter, AsyncFactory } from '@dereekb/util';
-import { NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { markStorageFileForDeleteTemplate, NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 
 // MARK: Demo Api Testing Fixture
 @Module({
@@ -925,6 +926,14 @@ export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctio
   async syncAllFlaggedStorageFilesWithGroups(): Promise<SyncAllFlaggedStorageFilesWithGroupsResult> {
     return this.instance.syncAllFlaggedStorageFilesWithGroups();
   }
+
+  async markForDeletion(): Promise<void> {
+    return this.instance.markForDeletion();
+  }
+
+  async deleteStorageFile(force?: Maybe<boolean>): Promise<void> {
+    return this.instance.deleteStorageFile(force);
+  }
 }
 
 export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -958,6 +967,15 @@ export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFuncti
   async syncAllFlaggedStorageFilesWithGroups(): Promise<SyncAllFlaggedStorageFilesWithGroupsResult> {
     const instance = await this.testContext.storageFileServerActions.syncAllFlaggedStorageFilesWithGroups({});
     return instance();
+  }
+
+  async markForDeletion(): Promise<void> {
+    await this.document.update(markStorageFileForDeleteTemplate());
+  }
+
+  async deleteStorageFile(force?: Maybe<boolean>): Promise<void> {
+    const instance = await this.testContext.storageFileServerActions.deleteStorageFile({ key: this.documentKey, force });
+    return instance(this.document);
   }
 }
 
@@ -1019,6 +1037,10 @@ export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFu
   async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
     return this.instance.regenerateAllFlaggedStorageFileGroupsContent();
   }
+
+  async processZipFileRegeneration(): Promise<StorageFileDocument> {
+    return this.instance.processZipFileRegeneration();
+  }
 }
 
 export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -1038,6 +1060,20 @@ export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminF
   async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
     const instance = await this.testContext.storageFileServerActions.regenerateAllFlaggedStorageFileGroupsContent({});
     return instance();
+  }
+
+  async processZipFileRegeneration(): Promise<StorageFileDocument> {
+    const storageFileGroup = await assertSnapshotData(this.document);
+    const zipStorageFileDocument = this.testContext.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(storageFileGroup.zsf as string);
+
+    const processStorageFileInstance = await this.testContext.storageFileServerActions.processStorageFile({
+      key: zipStorageFileDocument.key,
+      processAgainIfSuccessful: true,
+      runImmediately: true
+    });
+
+    await processStorageFileInstance(zipStorageFileDocument);
+    return zipStorageFileDocument;
   }
 }
 

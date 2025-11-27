@@ -4,11 +4,6 @@ export const storageFileHourlyUpdateSchedule: DemoScheduleFunction = async (requ
   console.log('storageFileHourlyUpdateSchedule - running');
 
   await runDemoScheduledTasks({
-    initializeAllStorageFileGroups: async () => {
-      const initializeAllStorageFileGroups = await request.nest.storageFileInitActions.initializeAllApplicableStorageFileGroups({});
-      const initializeAllStorageFileGroupsResult = await initializeAllStorageFileGroups();
-      return { initializeAllStorageFileGroupsResult };
-    },
     initializeAllStorageFilesFromUploads: async () => {
       const initializeAllStorageFilesFromUploads = await request.nest.storageFileServerActions.initializeAllStorageFilesFromUploads({});
       const initializeAllStorageFilesFromUploadsResult = await initializeAllStorageFilesFromUploads();
@@ -19,10 +14,25 @@ export const storageFileHourlyUpdateSchedule: DemoScheduleFunction = async (requ
       const processAllQueuedStorageFilesResult = await processAllQueuedStorageFiles();
       return { processAllQueuedStorageFilesResult };
     },
+    initializeAllStorageFileGroups: async () => {
+      const initializeAllStorageFileGroups = await request.nest.storageFileInitActions.initializeAllApplicableStorageFileGroups({});
+      const initializeAllStorageFileGroupsResult = await initializeAllStorageFileGroups();
+      return { initializeAllStorageFileGroupsResult };
+    },
     deleteAllQueuedStorageFiles: async () => {
       const deleteAllQueuedStorageFiles = await request.nest.storageFileServerActions.deleteAllQueuedStorageFiles({});
       const deleteAllQueuedStorageFilesResult = await deleteAllQueuedStorageFiles();
       return { deleteAllQueuedStorageFilesResult };
+    },
+    syncAllFlaggedStorageFilesWithGroups: async () => {
+      const syncAllFlaggedStorageFilesWithGroups = await request.nest.storageFileServerActions.syncAllFlaggedStorageFilesWithGroups({});
+      const syncAllFlaggedStorageFilesWithGroupsResult = await syncAllFlaggedStorageFilesWithGroups();
+      return { syncAllFlaggedStorageFilesWithGroupsResult };
+    },
+    regenerateAllFlaggedStorageFileGroupsContent: async () => {
+      const regenerateAllFlaggedStorageFileGroupsContent = await request.nest.storageFileServerActions.regenerateAllFlaggedStorageFileGroupsContent({});
+      const regenerateAllFlaggedStorageFileGroupsContentResult = await regenerateAllFlaggedStorageFileGroupsContent();
+      return { regenerateAllFlaggedStorageFileGroupsContentResult };
     }
   });
 

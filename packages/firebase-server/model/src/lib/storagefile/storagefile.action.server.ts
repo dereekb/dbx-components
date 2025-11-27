@@ -66,7 +66,8 @@ import {
   inferKeyFromTwoWayFlatFirestoreModelKey,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
   StorageFileGroupZipStorageFileMetadata,
-  SendNotificationResult
+  SendNotificationResult,
+  StorageFileGroupId
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -88,7 +89,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, performAsyncTasks, runAsyncTasksForValues } from '@dereekb/util';
+import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, performAsyncTasks, RelationChangeType, runAsyncTasksForValues } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -406,7 +407,7 @@ export interface ProcessStorageFileInTransactionInput {
   /**
    * Input params to use.
    */
-  readonly params?: Maybe<Pick<ProcessStorageFileParams, 'checkRetryProcessing' | 'forceRestartProcessing'>>;
+  readonly params?: Maybe<Pick<ProcessStorageFileParams, 'checkRetryProcessing' | 'forceRestartProcessing' | 'processAgainIfSuccessful'>>;
   /**
    * The expedite instance to enqueue a create result into, if applicable.
    */
@@ -418,7 +419,7 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
 
   return async (input: ProcessStorageFileInTransactionInput, transaction: Transaction) => {
     const { storageFileDocument, storageFile: inputStorageFile, params, expediteInstance } = input;
-    const { checkRetryProcessing, forceRestartProcessing } = params ?? {};
+    const { checkRetryProcessing, forceRestartProcessing, processAgainIfSuccessful } = params ?? {};
 
     const storageFileDocumentInTransaction = storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
     const storageFile = inputStorageFile ?? (await assertSnapshotData(storageFileDocumentInTransaction));
@@ -490,7 +491,12 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
       case StorageFileProcessingState.DO_NOT_PROCESS:
         throw storageFileProcessingNotQueuedForProcessingError();
       case StorageFileProcessingState.SUCCESS:
-        throw storageFileAlreadyProcessedError();
+        if (forceRestartProcessing || processAgainIfSuccessful) {
+          await beginProcessing(true);
+        } else {
+          throw storageFileAlreadyProcessedError();
+        }
+        break;
     }
   };
 }
@@ -585,29 +591,35 @@ export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerAct
 }
 
 export function deleteStorageFileFactory(context: StorageFileServerActionsContext) {
-  const { storageService, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, storageService, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const syncStorageFileWithGroupsInTransaction = _syncStorageFileWithGroupsInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(DeleteStorageFileParams, async (params) => {
     const { force } = params;
     return async (inputStorageFileDocument: StorageFileDocument) => {
-      const storageFileDocument = await storageFileCollection.documentAccessor().loadDocumentFrom(inputStorageFileDocument);
+      await firestoreContext.runTransaction(async (transaction) => {
+        const storageFileDocument = await storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(inputStorageFileDocument);
 
-      const storageFile = await assertSnapshotData(storageFileDocument);
-      const fileAccessor = storageService.file(storageFile);
+        const storageFile = await assertSnapshotData(storageFileDocument);
+        const fileAccessor = storageService.file(storageFile);
 
-      if (!force) {
-        if (!storageFile.sdat) {
-          throw storageFileNotFlaggedForDeletionError();
-        } else if (!isPast(storageFile.sdat)) {
-          throw storageFileCannotBeDeletedYetError();
+        if (!force) {
+          if (!storageFile.sdat) {
+            throw storageFileNotFlaggedForDeletionError();
+          } else if (!isPast(storageFile.sdat)) {
+            throw storageFileCannotBeDeletedYetError();
+          }
         }
-      }
 
-      // delete the file
-      await fileAccessor.delete().catch(() => null);
+        // remove the storage file from any groups
+        await syncStorageFileWithGroupsInTransaction({ storageFileDocument, storageFile, force: true, removeAllStorageFileGroups: true }, transaction);
 
-      // delete the document
-      await storageFileDocument.accessor.delete();
+        // delete the file
+        await fileAccessor.delete().catch(() => null);
+
+        // delete the document
+        await storageFileDocument.accessor.delete();
+      });
     };
   });
 }
@@ -725,72 +737,119 @@ export function createStorageFileGroupFactory(context: StorageFileServerActionsC
   });
 }
 
+export interface SyncStorageFileWithGroupsInTransactionInput {
+  readonly storageFileDocument: StorageFileDocument;
+  /**
+   * The loaded StorageFile. Must be loaded within the transaction.
+   */
+  readonly storageFile?: Maybe<StorageFile>;
+  /**
+   * If true, ignores the StorageFile gs flag and forces the sync to run.
+   */
+  readonly force?: Maybe<boolean>;
+  /**
+   * If true, removes all the storage file groups instead of adding them.
+   */
+  readonly removeAllStorageFileGroups?: Maybe<true | StorageFileGroupId[]>;
+  /**
+   * If true, will not update the StorageFileDocument.
+   *
+   * Defaults to false
+   */
+  readonly skipStorageFileUpdate?: Maybe<boolean>;
+}
+
+export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageFileServerActionsContext) {
+  const { storageFileCollection, storageFileGroupCollection } = context;
+  const createStorageFileGroupInTransaction = createStorageFileGroupInTransactionFactory(context);
+
+  return async (input: SyncStorageFileWithGroupsInTransactionInput, transaction: Transaction) => {
+    const { storageFileDocument, storageFile: inputStorageFile, force, removeAllStorageFileGroups, skipStorageFileUpdate } = input;
+
+    const storageFileDocumentInTransaction = storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
+    const storageFileGroupDocumentAccessor = storageFileGroupCollection.documentAccessorForTransaction(transaction);
+
+    const storageFile = inputStorageFile ?? (await assertSnapshotData(storageFileDocumentInTransaction));
+
+    if (!storageFile.gs && !force) {
+      throw storageFileNotFlaggedForGroupsSyncError();
+    }
+
+    const g = storageFile.g ?? [];
+    const storageFileGroupDocuments = loadDocumentsForIds(storageFileGroupDocumentAccessor, g);
+    const storageFileGroupPairs = await getDocumentSnapshotDataPairs(storageFileGroupDocuments);
+
+    let storageFilesGroupsCreated = 0;
+    let storageFilesGroupsUpdated = 0;
+
+    await performAsyncTasks(storageFileGroupPairs, async (storageFileGroupPair) => {
+      const { data: storageFileGroup, document: storageFileGroupDocument } = storageFileGroupPair;
+      const existsInStorageFileGroup = storageFileGroup?.f.some((x) => x.s === storageFileDocument.id);
+      const change: Maybe<'add' | 'remove'> = removeAllStorageFileGroups ? (existsInStorageFileGroup ? 'remove' : undefined) : !existsInStorageFileGroup ? 'add' : undefined;
+
+      switch (change) {
+        case 'add':
+          // add it if it doesn't exist
+          const createTemplate = calculateStorageFileGroupEmbeddedFileUpdate({
+            storageFileGroup: storageFileGroup ?? { f: [] },
+            insert: [
+              {
+                s: storageFileDocument.id
+              }
+            ],
+            allowRecalculateRegenerateFlag: false
+          });
+
+          if (!storageFileGroup) {
+            // if the group does not exist, then create it
+            await createStorageFileGroupInTransaction({ storageFileGroupDocument, template: createTemplate }, transaction);
+            storageFilesGroupsCreated += 1;
+          } else {
+            // if the group exists, then update it
+            await storageFileGroupDocument.update(createTemplate);
+            storageFilesGroupsUpdated += 1;
+          }
+
+          break;
+        case 'remove':
+          // remove it
+          const removeTemplate = calculateStorageFileGroupEmbeddedFileUpdate({
+            storageFileGroup: storageFileGroup ?? { f: [] },
+            remove: [storageFileDocument.id]
+          });
+
+          await storageFileGroupDocument.update(removeTemplate);
+          storageFilesGroupsUpdated += 1;
+
+          break;
+      }
+    });
+
+    let result: SyncStorageFileWithGroupsResult = {
+      storageFilesGroupsCreated,
+      storageFilesGroupsUpdated
+    };
+
+    // update the storage file to no longer be flagged for sync
+    if (!skipStorageFileUpdate) {
+      await storageFileDocumentInTransaction.update({
+        gs: false
+      });
+    }
+
+    return result;
+  };
+}
+
 export function syncStorageFileWithGroupsFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, storageFileCollection, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
-  const createStorageFileGroupInTransaction = createStorageFileGroupInTransactionFactory(context);
+  const syncStorageFileWithGroupsInTransaction = _syncStorageFileWithGroupsInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(SyncStorageFileWithGroupsParams, async (params) => {
     const { force } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
-      return firestoreContext.runTransaction(async (transaction) => {
-        const storageFileDocumentInTransaction = storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
-        const storageFileGroupDocumentAccessor = storageFileGroupCollection.documentAccessorForTransaction(transaction);
-
-        const storageFile = await assertSnapshotData(storageFileDocumentInTransaction);
-
-        if (!storageFile.gs && !force) {
-          throw storageFileNotFlaggedForGroupsSyncError();
-        }
-
-        const g = storageFile.g ?? [];
-        const storageFileGroupDocuments = loadDocumentsForIds(storageFileGroupDocumentAccessor, g);
-        const storageFileGroupPairs = await getDocumentSnapshotDataPairs(storageFileGroupDocuments);
-
-        let storageFilesGroupsCreated = 0;
-        let storageFilesGroupsUpdated = 0;
-
-        await performAsyncTasks(storageFileGroupPairs, async (storageFileGroupPair) => {
-          const { data: storageFileGroup, document: storageFileGroupDocument } = storageFileGroupPair;
-          const existsInStorageFileGroup = storageFileGroup?.f.some((x) => x.s === storageFileDocument.id);
-
-          // only insert if it does not currently exist
-          if (!existsInStorageFileGroup) {
-            // add it if it doesn't exist
-            const template = calculateStorageFileGroupEmbeddedFileUpdate({
-              storageFileGroup: storageFileGroup ?? { f: [] },
-              insert: [
-                {
-                  s: storageFileDocument.id
-                }
-              ],
-              recalculateRegenerateFlag: false
-            });
-
-            if (!storageFileGroup) {
-              // if the group does not exist, then create it
-              await createStorageFileGroupInTransaction({ storageFileGroupDocument, template }, transaction);
-              storageFilesGroupsCreated += 1;
-            } else {
-              // if the group exists, then update it
-              await storageFileGroupDocument.update(template);
-              storageFilesGroupsUpdated += 1;
-            }
-          }
-        });
-
-        let result: SyncStorageFileWithGroupsResult = {
-          storageFilesGroupsCreated,
-          storageFilesGroupsUpdated
-        };
-
-        // update the storage file to no longer be flagged for sync
-        await storageFileDocumentInTransaction.update({
-          gs: false
-        });
-
-        return result;
-      });
+      return firestoreContext.runTransaction(async (transaction) => syncStorageFileWithGroupsInTransaction({ storageFileDocument, force }, transaction));
     };
   });
 }

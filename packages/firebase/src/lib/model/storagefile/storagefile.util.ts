@@ -39,15 +39,17 @@ export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
   readonly insert?: Maybe<(Pick<StorageFileGroupEmbeddedFile, 's'> & Partial<Omit<StorageFileGroupEmbeddedFile, 's'>>)[]>;
   readonly remove?: Maybe<StorageFileId[]>;
   /**
-   * Whether or not to recalculate the regenerate flag, even if it is true.
+   * Whether or not to allow recalculating the regenerate flag even if the current "re" value is true.
+   *
+   * Regenerate will always be true if any files are removed.
    *
    * Defaults to false.
    */
-  readonly recalculateRegenerateFlag?: Maybe<boolean>;
+  readonly allowRecalculateRegenerateFlag?: Maybe<boolean>;
 }
 
 export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStorageFileGroupEmbeddedFileUpdateInput): Pick<StorageFileGroup, 'f' | 're'> {
-  const { storageFileGroup, insert, remove, recalculateRegenerateFlag } = input;
+  const { storageFileGroup, insert, remove, allowRecalculateRegenerateFlag } = input;
   const { f: currentF, re: currentRe, z: currentZ, zat: currentZat } = storageFileGroup;
 
   const removeSet = new Set(remove);
@@ -64,7 +66,7 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
   let re = currentRe || oneOrMoreItemsWereRemoved; // flag removed if any items were removed
 
   // recalculate re if it is false or the retain flag is false
-  if (!re || recalculateRegenerateFlag) {
+  if (!re || allowRecalculateRegenerateFlag) {
     const { flagRegenerate } = calculateStorageFileGroupRegeneration({ storageFileGroup: { f, z: currentZ, zat: currentZat } });
     re = flagRegenerate;
   }

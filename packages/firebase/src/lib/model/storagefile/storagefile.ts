@@ -286,7 +286,7 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * These groups by design should typically be pre-determined at the time the StorageFile is created and remain unchanged; timely removal of data from groups is not part of the design spec.
    *
    * When a StorageFile is updated to remove groups, the removal is eventually propogated to the StorageFileGroup(s) that it was associated with,
-   * but there is no gurantee about timeliness when this will happen.
+   * but there is no gurantee about timeliness when this will happen. StorageFiles, when deleted, are removed from StorageFileGroups immediately, which are flagged for another regeneration automatically.
    *
    * In cases where you need to have the StorageFileGroup be updated promptly, you should manually handle those cases.
    */
@@ -330,7 +330,7 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
     d: firestorePassThroughField(),
     sdat: optionalFirestoreDate(),
     g: firestoreUniqueStringArray(),
-    gs: optionalFirestoreBoolean()
+    gs: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 
@@ -417,6 +417,12 @@ export interface StorageFileGroup extends InitializedStorageFileModel {
    * True if this StorageFileGroup should flag regeneration of output StorageFiles/content.
    */
   re?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * True if this StorageFileGroup should clean up file references.
+   *
+   * This cleanup process will occur during the next regeneration.
+   */
+  c?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 export type StorageFileGroupContentFlagsData = Pick<StorageFileGroup, 'z'>;
@@ -445,7 +451,8 @@ export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileG
     zat: optionalFirestoreDate(),
     s: optionalFirestoreBoolean({ dontStoreIf: false }),
     fi: optionalFirestoreBoolean({ dontStoreIf: false }),
-    re: optionalFirestoreBoolean({ dontStoreIf: false })
+    re: optionalFirestoreBoolean({ dontStoreIf: false }),
+    c: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 

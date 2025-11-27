@@ -85,14 +85,22 @@ export class ProcessStorageFileParams extends TargetModelParams {
   checkRetryProcessing?: Maybe<boolean>;
 
   /**
-   * Used with retryProcessing.
+   * Used with checkRetryProcessing.
    *
-   * If set, will forcibly create a new processing task even if the existing processing task appears to be ok.
+   * If set, will forcibly create a new processing task even if the existing processing task appears to be ok, or if processing was already marked complete.
    */
   @Expose()
   @IsBoolean()
   @IsOptional()
   forceRestartProcessing?: Maybe<boolean>;
+
+  /**
+   * If set, will start the processing again if the StorageFile is in a successful processing state.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  processAgainIfSuccessful?: Maybe<boolean>;
 }
 
 export interface ProcessStorageFileResult {

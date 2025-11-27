@@ -311,6 +311,8 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
               const storageFilesToZip = loadDocumentsForIds(storageFileCollection.documentAccessor(), storageFileIdsToZip);
               const storageFileDataPairsToZip = await getDocumentSnapshotDataPairs(storageFilesToZip);
 
+              let flagCleanFileAssociations: Maybe<boolean> = undefined;
+
               // create a new file
               const zipFileAccessor = storageAccessor.file(fileDetailsAccessor.input);
 
@@ -332,27 +334,34 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                     const { data: storageFile } = storageFileDataPair;
 
                     if (storageFile) {
-                      const fileAccessor = storageAccessor.file(storageFile);
-                      const metadata = await fileAccessor.getMetadata().catch(() => null);
+                      // make sure it references the storage file group
+                      const referencesStorageFileGroup = storageFile.g.some((x) => x === storageFileGroupId);
 
-                      if (metadata) {
-                        const name = slashPathDetails(metadata.name).fileName ?? `sf_${storageFile.id}`;
-                        const fileStream = fileAccessor.getStream!();
+                      if (referencesStorageFileGroup) {
+                        const fileAccessor = storageAccessor.file(storageFile);
+                        const metadata = await fileAccessor.getMetadata().catch(() => null);
 
-                        await useCallback((x) => {
-                          // append the file to the archive
-                          newArchive.append(fileStream, {
-                            name
+                        if (metadata) {
+                          const name = slashPathDetails(metadata.name).fileName ?? `sf_${storageFile.id}`;
+                          const fileStream = fileAccessor.getStream!();
+
+                          await useCallback((x) => {
+                            // append the file to the archive
+                            newArchive.append(fileStream, {
+                              name
+                            });
+
+                            // if the stream errors, call back
+                            fileStream.on('error', (e) => x(e));
+
+                            // when the stream finishes, call back
+                            fileStream.on('finish', () => x());
                           });
-
-                          // if the stream errors, call back
-                          fileStream.on('error', (e) => x(e));
-
-                          // when the stream finishes, call back
-                          fileStream.on('finish', () => x());
-                        });
+                        } else {
+                          flagCleanFileAssociations = true;
+                        }
                       } else {
-                        // TODO: Flag that retrieving the file failed and could not be added to the archive.
+                        flagCleanFileAssociations = true;
                       }
                     }
                   },
@@ -380,7 +389,8 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 
                 // update the StorageFileGroup
                 await storageFileGroupDocument.update({
-                  zat: finishedAt
+                  zat: finishedAt,
+                  c: flagCleanFileAssociations
                 });
 
                 // schedule/run the cleanup task

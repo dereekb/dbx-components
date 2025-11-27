@@ -525,7 +525,52 @@ demoApiFunctionContextFactory((f) => {
           });
         });
 
-        describe('processStorageFile()', () => {
+        const testFileContent = 'This is a test file.';
+
+        function createUploadedFile(type: 'processable' | 'non-processable') {
+          switch (type) {
+            case 'processable':
+              return async () => {
+                const uid = au.uid;
+
+                const filePath = userTestFileUploadsFilePath(uid, 'test.any');
+                const testFile = await f.storageContext.file(filePath);
+                const testFileStoragePath = testFile.storagePath;
+
+                const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
+                await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+
+                const result: StoragePath = {
+                  bucketId: testFileStoragePath.bucketId,
+                  pathString: testFileStoragePath.pathString
+                };
+
+                return result;
+              };
+            case 'non-processable':
+              return async () => {
+                const uid = au.uid;
+
+                const filePath = userAvatarUploadsFilePath(uid);
+                const testFile = await f.storageContext.file(filePath);
+                const testFileStoragePath = testFile.storagePath;
+
+                const testAssetsFolderPath = `${__dirname}/../../../test/assets/`;
+                const localAvatarFileBuffer = await readFile(`${testAssetsFolderPath}/avatar.png`);
+
+                await testFile.upload(localAvatarFileBuffer, { contentType: 'image/png' });
+
+                const result: StoragePath = {
+                  bucketId: testFileStoragePath.bucketId,
+                  pathString: testFileStoragePath.pathString
+                };
+
+                return result;
+              };
+          }
+        }
+
+        describe('processing', () => {
           const testFileContent = 'This is a test file.';
 
           function createUploadedFile(type: 'processable' | 'non-processable') {
@@ -571,112 +616,49 @@ demoApiFunctionContextFactory((f) => {
             }
           }
 
-          describe('non-existent StorageFileDocument', () => {
-            itShouldFail('to process the non-existent StorageFileDocument', async () => {
-              const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
-
-              const processStorageFileParams: ProcessStorageFileParams = {
-                key: storageFile.key
-              };
-
-              await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
-            });
-          });
-
-          describe('non-existent file associated with StorageFileDocument', () => {
-            itShouldFail('to process the non-existent StorageFileDocument', async () => {
-              const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
-
-              const processStorageFileParams: ProcessStorageFileParams = {
-                key: storageFile.key
-              };
-
-              await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
-            });
-          });
-
-          describe('non-processable file', () => {
-            // files that are not processable, but might be flagged for processing accidentally
-            demoStorageFileContext({ f, createUploadedFile: createUploadedFile('non-processable') }, (sf) => {
-              itShouldFail('to process the file if it is not marked for processing.', async () => {
-                const storageFile = await assertSnapshotData(sf.document);
-                expect(storageFile.ps).toBe(StorageFileProcessingState.DO_NOT_PROCESS);
+          describe('processStorageFile()', () => {
+            describe('non-existent StorageFileDocument', () => {
+              itShouldFail('to process the non-existent StorageFileDocument', async () => {
+                const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
 
                 const processStorageFileParams: ProcessStorageFileParams = {
-                  key: sf.documentKey
+                  key: storageFile.key
                 };
 
-                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE));
+                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
               });
             });
-          });
 
-          describe('processable file', () => {
-            demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable') }, (sf) => {
-              it('should create the processing task for the file', async () => {
-                const storageFile = await assertSnapshotData(sf.document);
-                expect(storageFile.p).toBeDefined();
-                expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
-                expect(storageFile.pn).not.toBeDefined();
-                expect(storageFile.pat).not.toBeDefined();
+            describe('non-existent file associated with StorageFileDocument', () => {
+              itShouldFail('to process the non-existent StorageFileDocument', async () => {
+                const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
 
                 const processStorageFileParams: ProcessStorageFileParams = {
-                  key: sf.documentKey
+                  key: storageFile.key
                 };
 
-                await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
-
-                const updatedStorageFile = await assertSnapshotData(sf.document);
-                expect(updatedStorageFile.p).toBeDefined();
-                expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                expect(updatedStorageFile.pn).toBeDefined();
-                expect(updatedStorageFile.pat).toBeDefined();
+                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
               });
+            });
 
-              describe('runImmediately=true', () => {
-                it('should create the processing task for the file and run the first step', async () => {
+            describe('non-processable file', () => {
+              // files that are not processable, but might be flagged for processing accidentally
+              demoStorageFileContext({ f, createUploadedFile: createUploadedFile('non-processable') }, (sf) => {
+                itShouldFail('to process the file if it is not marked for processing.', async () => {
                   const storageFile = await assertSnapshotData(sf.document);
-                  expect(storageFile.p).toBeDefined();
-                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
-                  expect(storageFile.pn).not.toBeDefined();
-                  expect(storageFile.pat).not.toBeDefined();
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.DO_NOT_PROCESS);
 
                   const processStorageFileParams: ProcessStorageFileParams = {
-                    key: sf.documentKey,
-                    runImmediately: true
+                    key: sf.documentKey
                   };
 
-                  await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
-
-                  const updatedStorageFile = await assertSnapshotData(sf.document);
-                  expect(updatedStorageFile.p).toBeDefined();
-                  expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                  expect(updatedStorageFile.pn).toBeDefined();
-                  expect(updatedStorageFile.pat).toBeDefined();
-
-                  const notificationTaskKey = updatedStorageFile.pn;
-
-                  const notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey as string);
-                  const notification = await assertSnapshotData(notificationDocument);
-
-                  expect(notification).toBeDefined();
-                  expect(notification.tpr).toEqual([]); // has two steps, so should not have finished processing yet
-
-                  const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
-                  expect(metadata).toBeDefined();
-                  expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]); // should have finished subtask A
-                  expect(metadata.storageFile).toBe(sf.documentId);
-                  expect(metadata.storagePath?.bucketId).toBe(storageFile.bucketId);
-                  expect(metadata.storagePath?.pathString).toBe(storageFile.pathString);
-                  expect(metadata.p).toBe(storageFile.p);
-
-                  const subtaskMetadata = metadata.sd;
-                  expect(subtaskMetadata?.numberValue).toBeDefined();
-                  expect(subtaskMetadata?.stringValue).toBeDefined();
+                  await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE));
                 });
               });
+            });
 
-              describe('the related stored file does not exist', () => {
+            describe('processable file', () => {
+              demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable') }, (sf) => {
                 it('should create the processing task for the file', async () => {
                   const storageFile = await assertSnapshotData(sf.document);
                   expect(storageFile.p).toBeDefined();
@@ -696,85 +678,112 @@ demoApiFunctionContextFactory((f) => {
                   expect(updatedStorageFile.pn).toBeDefined();
                   expect(updatedStorageFile.pat).toBeDefined();
                 });
-              });
 
-              describe('file processing task already created', () => {
-                beforeEach(async () => {
-                  await sf.process();
-                });
+                describe('runImmediately=true', () => {
+                  it('should create the processing task for the file and run the first step', async () => {
+                    const storageFile = await assertSnapshotData(sf.document);
+                    expect(storageFile.p).toBeDefined();
+                    expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+                    expect(storageFile.pn).not.toBeDefined();
+                    expect(storageFile.pat).not.toBeDefined();
 
-                it('should do nothing', async () => {
-                  const storageFile = await assertSnapshotData(sf.document);
-                  expect(storageFile.p).toBeDefined();
-                  expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                  expect(storageFile.pn).toBeDefined();
-                  expect(storageFile.pat).toBeDefined();
+                    const processStorageFileParams: ProcessStorageFileParams = {
+                      key: sf.documentKey,
+                      runImmediately: true
+                    };
 
-                  const processStorageFileParams: ProcessStorageFileParams = {
-                    key: sf.documentKey
-                  };
+                    await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
 
-                  await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+                    const updatedStorageFile = await assertSnapshotData(sf.document);
+                    expect(updatedStorageFile.p).toBeDefined();
+                    expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                    expect(updatedStorageFile.pn).toBeDefined();
+                    expect(updatedStorageFile.pat).toBeDefined();
 
-                  const updatedStorageFile = await assertSnapshotData(sf.document);
-                  expect(updatedStorageFile.p).toBe(storageFile.p);
-                  expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                  expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
-                });
+                    const notificationTaskKey = updatedStorageFile.pn;
 
-                describe('inconsistent state', () => {
-                  describe('processing state is set but no notification task is set', () => {
-                    beforeEach(async () => {
-                      await sf.document.update({
-                        ps: StorageFileProcessingState.PROCESSING,
-                        pat: new Date(),
-                        pn: null
-                      });
-                    });
+                    const notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey as string);
+                    const notification = await assertSnapshotData(notificationDocument);
 
-                    it('should create a new processing task', async () => {
-                      const storageFile = await assertSnapshotData(sf.document);
-                      expect(storageFile.p).toBeDefined();
-                      expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                      expect(storageFile.pn).toBeUndefined(); // inconsistent state where the pn is not set
-                      expect(storageFile.pat).toBeDefined();
+                    expect(notification).toBeDefined();
+                    expect(notification.tpr).toEqual([]); // has two steps, so should not have finished processing yet
 
-                      const processStorageFileParams: ProcessStorageFileParams = {
-                        key: sf.documentKey
-                      };
+                    const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+                    expect(metadata).toBeDefined();
+                    expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]); // should have finished subtask A
+                    expect(metadata.storageFile).toBe(sf.documentId);
+                    expect(metadata.storagePath?.bucketId).toBe(storageFile.bucketId);
+                    expect(metadata.storagePath?.pathString).toBe(storageFile.pathString);
+                    expect(metadata.p).toBe(storageFile.p);
 
-                      await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
-
-                      const updatedStorageFile = await assertSnapshotData(sf.document);
-                      expect(updatedStorageFile.p).toBe(storageFile.p);
-                      expect(updatedStorageFile.pn).toBeDefined();
-                      expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                      expect(updatedStorageFile.pat).toBeAfter(storageFile.pat as Date);
-                    });
+                    const subtaskMetadata = metadata.sd;
+                    expect(subtaskMetadata?.numberValue).toBeDefined();
+                    expect(subtaskMetadata?.stringValue).toBeDefined();
                   });
                 });
 
-                describe('file processing started hours ago', () => {
+                describe('the related stored file does not exist', () => {
+                  it('should create the processing task for the file', async () => {
+                    const storageFile = await assertSnapshotData(sf.document);
+                    expect(storageFile.p).toBeDefined();
+                    expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+                    expect(storageFile.pn).not.toBeDefined();
+                    expect(storageFile.pat).not.toBeDefined();
+
+                    const processStorageFileParams: ProcessStorageFileParams = {
+                      key: sf.documentKey
+                    };
+
+                    await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                    const updatedStorageFile = await assertSnapshotData(sf.document);
+                    expect(updatedStorageFile.p).toBeDefined();
+                    expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                    expect(updatedStorageFile.pn).toBeDefined();
+                    expect(updatedStorageFile.pat).toBeDefined();
+                  });
+                });
+
+                describe('file processing task already created', () => {
                   beforeEach(async () => {
-                    await sf.document.update({
-                      pat: addMilliseconds(new Date(), -(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS * 2))
-                    });
+                    await sf.process();
                   });
 
-                  describe('notification task does not exist', () => {
-                    demoNotificationContext({ f, doc: () => sf.loadProcessingTaskDocument() }, (nc) => {
+                  it('should do nothing', async () => {
+                    const storageFile = await assertSnapshotData(sf.document);
+                    expect(storageFile.p).toBeDefined();
+                    expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                    expect(storageFile.pn).toBeDefined();
+                    expect(storageFile.pat).toBeDefined();
+
+                    const processStorageFileParams: ProcessStorageFileParams = {
+                      key: sf.documentKey
+                    };
+
+                    await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                    const updatedStorageFile = await assertSnapshotData(sf.document);
+                    expect(updatedStorageFile.p).toBe(storageFile.p);
+                    expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                    expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
+                  });
+
+                  describe('inconsistent state', () => {
+                    describe('processing state is set but no notification task is set', () => {
+                      beforeEach(async () => {
+                        await sf.document.update({
+                          ps: StorageFileProcessingState.PROCESSING,
+                          pat: new Date(),
+                          pn: null
+                        });
+                      });
+
                       it('should create a new processing task', async () => {
                         const storageFile = await assertSnapshotData(sf.document);
                         expect(storageFile.p).toBeDefined();
                         expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                        expect(storageFile.pn).toBeDefined();
+                        expect(storageFile.pn).toBeUndefined(); // inconsistent state where the pn is not set
                         expect(storageFile.pat).toBeDefined();
-
-                        // delete the notification task
-                        await nc.document.accessor.delete();
-
-                        const notificationExists = await nc.document.exists();
-                        expect(notificationExists).toBe(false);
 
                         const processStorageFileParams: ProcessStorageFileParams = {
                           key: sf.documentKey
@@ -786,105 +795,100 @@ demoApiFunctionContextFactory((f) => {
                         expect(updatedStorageFile.p).toBe(storageFile.p);
                         expect(updatedStorageFile.pn).toBeDefined();
                         expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                        expect(updatedStorageFile.pat).not.toBeSameSecondAs(storageFile.pat as Date); // new processing start time
+                        expect(updatedStorageFile.pat).toBeAfter(storageFile.pat as Date);
                       });
                     });
                   });
-                });
 
-                describe('processing task', () => {
-                  demoNotificationContext({ f, doc: () => sf.loadProcessingTaskDocument() }, (nc) => {
-                    it('should run the entire task and run cleanup successfully.', async () => {
-                      let storageFile = await assertSnapshotData(sf.document);
-                      expect(storageFile.p).toBeDefined();
-                      expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                      expect(storageFile.pn).toBeDefined();
-                      expect(storageFile.pat).toBeDefined();
-
-                      // run subtask A
-                      const runSubtaskA = await nc.sendNotification();
-                      expect(runSubtaskA).toBeDefined();
-                      expect(runSubtaskA.throttled).toBe(false);
-                      expect(runSubtaskA.isNotificationTask).toBe(true);
-                      expect(runSubtaskA.success).toBe(true);
-
-                      let notification = await assertSnapshotData(nc.document);
-                      let metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
-
-                      expect(metadata).toBeDefined();
-                      expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]);
-
-                      // run subtask B
-                      const runSubtaskB = await nc.sendNotification({ ignoreSendAtThrottle: true }); // ignore send throttle
-                      expect(runSubtaskB).toBeDefined();
-                      expect(runSubtaskB.throttled).toBe(false);
-                      expect(runSubtaskB.isNotificationTask).toBe(true);
-                      expect(runSubtaskB.success).toBe(true);
-
-                      notification = await assertSnapshotData(nc.document);
-                      metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
-
-                      expect(metadata).toBeDefined();
-                      expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]);
-
-                      // run cleanup
-                      const runCleanup = await nc.sendNotification({ ignoreSendAtThrottle: true }); // ignore send throttle
-                      expect(runCleanup).toBeDefined();
-                      expect(runCleanup.throttled).toBe(false);
-                      expect(runCleanup.isNotificationTask).toBe(true);
-                      expect(runCleanup.success).toBe(true);
-
-                      storageFile = await assertSnapshotData(sf.document);
-                      expect(storageFile.p).toBe(storageFile.p);
-                      expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
-                      expect(storageFile.pn).toBeUndefined(); // notification task reference is removed
-                      expect(storageFile.pat).toBeDefined(); // does not change
-                      expect(storageFile.pcat).toBeDefined();
+                  describe('file processing started hours ago', () => {
+                    beforeEach(async () => {
+                      await sf.document.update({
+                        pat: addMilliseconds(new Date(), -(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS * 2))
+                      });
                     });
 
-                    describe('canRunNextCheckpoint=true', () => {
-                      beforeEach(async () => {
-                        const notificationItem = await assertSnapshotData(nc.document);
+                    describe('notification task does not exist', () => {
+                      demoNotificationContext({ f, doc: () => sf.loadProcessingTaskDocument() }, (nc) => {
+                        it('should create a new processing task', async () => {
+                          const storageFile = await assertSnapshotData(sf.document);
+                          expect(storageFile.p).toBeDefined();
+                          expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                          expect(storageFile.pn).toBeDefined();
+                          expect(storageFile.pat).toBeDefined();
 
-                        await nc.document.update({
-                          n: {
-                            ...notificationItem.n,
-                            d: {
-                              ...notificationItem.n.d,
-                              sd: {
-                                ...((notificationItem.n.d as any)?.sd ?? {}),
-                                canRunNextCheckpoint: true
-                              }
-                            } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
-                          }
+                          // delete the notification task
+                          await nc.document.accessor.delete();
+
+                          const notificationExists = await nc.document.exists();
+                          expect(notificationExists).toBe(false);
+
+                          const processStorageFileParams: ProcessStorageFileParams = {
+                            key: sf.documentKey
+                          };
+
+                          await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                          const updatedStorageFile = await assertSnapshotData(sf.document);
+                          expect(updatedStorageFile.p).toBe(storageFile.p);
+                          expect(updatedStorageFile.pn).toBeDefined();
+                          expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                          expect(updatedStorageFile.pat).not.toBeSameSecondAs(storageFile.pat as Date); // new processing start time
                         });
                       });
+                    });
+                  });
 
+                  describe('processing task', () => {
+                    demoNotificationContext({ f, doc: () => sf.loadProcessingTaskDocument() }, (nc) => {
                       it('should run the entire task and run cleanup successfully.', async () => {
-                        const storageFile = await assertSnapshotData(sf.document);
+                        let storageFile = await assertSnapshotData(sf.document);
                         expect(storageFile.p).toBeDefined();
                         expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                         expect(storageFile.pn).toBeDefined();
                         expect(storageFile.pat).toBeDefined();
 
                         // run subtask A
-                        const runSubtask = await nc.sendNotification();
-                        expect(runSubtask).toBeDefined();
-                        expect(runSubtask.notificationTaskCompletionType).toBe(true); // should have completed all steps, including cleanup
-                        expect(runSubtask.throttled).toBe(false);
-                        expect(runSubtask.isNotificationTask).toBe(true);
-                        expect(runSubtask.success).toBe(true);
+                        const runSubtaskA = await nc.sendNotification();
+                        expect(runSubtaskA).toBeDefined();
+                        expect(runSubtaskA.throttled).toBe(false);
+                        expect(runSubtaskA.isNotificationTask).toBe(true);
+                        expect(runSubtaskA.success).toBe(true);
 
-                        const notification = await assertSnapshotData(nc.document);
-                        const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+                        let notification = await assertSnapshotData(nc.document);
+                        let metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
 
                         expect(metadata).toBeDefined();
-                        expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
-                        expect(notification.tpr).toEqual([STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING]);
-                        expect(notification.d).toBe(true); // marked as done now
+                        expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]);
+
+                        // run subtask B
+                        const runSubtaskB = await nc.sendNotification({ ignoreSendAtThrottle: true }); // ignore send throttle
+                        expect(runSubtaskB).toBeDefined();
+                        expect(runSubtaskB.throttled).toBe(false);
+                        expect(runSubtaskB.isNotificationTask).toBe(true);
+                        expect(runSubtaskB.success).toBe(true);
+
+                        notification = await assertSnapshotData(nc.document);
+                        metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+
+                        expect(metadata).toBeDefined();
+                        expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]);
+
+                        // run cleanup
+                        const runCleanup = await nc.sendNotification({ ignoreSendAtThrottle: true }); // ignore send throttle
+                        expect(runCleanup).toBeDefined();
+                        expect(runCleanup.throttled).toBe(false);
+                        expect(runCleanup.isNotificationTask).toBe(true);
+                        expect(runCleanup.success).toBe(true);
+
+                        storageFile = await assertSnapshotData(sf.document);
+                        expect(storageFile.p).toBe(storageFile.p);
+                        expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+                        expect(storageFile.pn).toBeUndefined(); // notification task reference is removed
+                        expect(storageFile.pat).toBeDefined(); // does not change
+                        expect(storageFile.pcat).toBeDefined();
                       });
 
-                      describe('delayUntil is passed', () => {
+                      describe('canRunNextCheckpoint=true', () => {
                         beforeEach(async () => {
                           const notificationItem = await assertSnapshotData(nc.document);
 
@@ -895,7 +899,6 @@ demoApiFunctionContextFactory((f) => {
                                 ...notificationItem.n.d,
                                 sd: {
                                   ...((notificationItem.n.d as any)?.sd ?? {}),
-                                  delayUntil: 100,
                                   canRunNextCheckpoint: true
                                 }
                               } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
@@ -903,7 +906,7 @@ demoApiFunctionContextFactory((f) => {
                           });
                         });
 
-                        it('should run the task up until the first delayUntil is reached', async () => {
+                        it('should run the entire task and run cleanup successfully.', async () => {
                           const storageFile = await assertSnapshotData(sf.document);
                           expect(storageFile.p).toBeDefined();
                           expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
@@ -913,7 +916,7 @@ demoApiFunctionContextFactory((f) => {
                           // run subtask A
                           const runSubtask = await nc.sendNotification();
                           expect(runSubtask).toBeDefined();
-                          expect(runSubtask.notificationTaskCompletionType).toEqual(delayCompletion()); // should have completed all steps, including cleanup
+                          expect(runSubtask.notificationTaskCompletionType).toBe(true); // should have completed all steps, including cleanup
                           expect(runSubtask.throttled).toBe(false);
                           expect(runSubtask.isNotificationTask).toBe(true);
                           expect(runSubtask.success).toBe(true);
@@ -922,15 +925,87 @@ demoApiFunctionContextFactory((f) => {
                           const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
 
                           expect(metadata).toBeDefined();
-                          expect(metadata.sd?.canRunNextCheckpoint).toBe(true);
-                          expect(metadata.sd?.delayUntil).toBe(100); // check metadata was merged
-                          expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]); // all subtasks completed
-                          expect(notification.tpr).toEqual([]); // no tasks completed yet, just sub tasks
-                          expect(notification.d).toBe(false); // not marked as done
+                          expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
+                          expect(notification.tpr).toEqual([STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING]);
+                          expect(notification.d).toBe(true); // marked as done now
+                        });
+
+                        describe('delayUntil is passed', () => {
+                          beforeEach(async () => {
+                            const notificationItem = await assertSnapshotData(nc.document);
+
+                            await nc.document.update({
+                              n: {
+                                ...notificationItem.n,
+                                d: {
+                                  ...notificationItem.n.d,
+                                  sd: {
+                                    ...((notificationItem.n.d as any)?.sd ?? {}),
+                                    delayUntil: 100,
+                                    canRunNextCheckpoint: true
+                                  }
+                                } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
+                              }
+                            });
+                          });
+
+                          it('should run the task up until the first delayUntil is reached', async () => {
+                            const storageFile = await assertSnapshotData(sf.document);
+                            expect(storageFile.p).toBeDefined();
+                            expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                            expect(storageFile.pn).toBeDefined();
+                            expect(storageFile.pat).toBeDefined();
+
+                            // run subtask A
+                            const runSubtask = await nc.sendNotification();
+                            expect(runSubtask).toBeDefined();
+                            expect(runSubtask.notificationTaskCompletionType).toEqual(delayCompletion()); // should have completed all steps, including cleanup
+                            expect(runSubtask.throttled).toBe(false);
+                            expect(runSubtask.isNotificationTask).toBe(true);
+                            expect(runSubtask.success).toBe(true);
+
+                            const notification = await assertSnapshotData(nc.document);
+                            const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+
+                            expect(metadata).toBeDefined();
+                            expect(metadata.sd?.canRunNextCheckpoint).toBe(true);
+                            expect(metadata.sd?.delayUntil).toBe(100); // check metadata was merged
+                            expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]); // all subtasks completed
+                            expect(notification.tpr).toEqual([]); // no tasks completed yet, just sub tasks
+                            expect(notification.d).toBe(false); // not marked as done
+                          });
                         });
                       });
                     });
                   });
+                });
+              });
+            });
+          });
+
+          describe('processAllQueuedStorageFiles()', () => {
+            describe('processable file', () => {
+              demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable') }, (sf) => {
+                it('should process the file', async () => {
+                  let storageFile = await assertSnapshotData(sf.document);
+
+                  expect(storageFile.pn).toBeUndefined();
+                  expect(storageFile.pat).toBeUndefined();
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+                  expect(storageFile.fs).toBe(StorageFileState.OK);
+
+                  const instance = await f.storageFileServerActions.processAllQueuedStorageFiles({});
+                  const result = await instance();
+
+                  expect(result.storageFilesVisited).toBe(1);
+                  expect(result.storageFilesProcessStarted).toBe(1);
+                  expect(result.storageFilesFailedStarting).toBe(0);
+
+                  storageFile = await assertSnapshotData(sf.document);
+                  expect(storageFile.fs).toBe(StorageFileProcessingState.PROCESSING);
+                  expect(storageFile.pn).toBeDefined();
+                  expect(storageFile.pat).toBeDefined();
+                  expect(storageFile.fs).toBe(StorageFileState.OK);
                 });
               });
             });
