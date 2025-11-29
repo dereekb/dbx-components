@@ -1,5 +1,5 @@
 import { type Maybe } from '../value/maybe.type';
-import { type DateOrUnixDateTimeNumber, type Milliseconds, addMilliseconds } from './date';
+import { type DateOrUnixDateTimeNumber, type Milliseconds, addMilliseconds, dateFromDateOrTimeMillisecondsNumber } from './date';
 import { dateFromDateOrTimeNumber } from './date.unix';
 
 // MARK: Expires
@@ -85,7 +85,7 @@ export interface ExpirationDetails<T extends Expires = Expires> {
  */
 export function expirationDetails<T extends Expires = Expires>(input: ExpirationDetailsInput<T>): ExpirationDetails<T> {
   const { expiresAt, expires, now: inputNow, expiresFromDate, defaultExpiresFromDateToNow, expiresIn } = input;
-  const parsedExpiresFromDate = expiresFromDate != null ? dateFromDateOrTimeNumber(expiresFromDate) : null;
+  const parsedExpiresFromDate = expiresFromDate != null ? dateFromDateOrTimeMillisecondsNumber(expiresFromDate) : null;
 
   function getNow(nowOverride?: Maybe<Date>) {
     const now = nowOverride ?? inputNow ?? new Date();

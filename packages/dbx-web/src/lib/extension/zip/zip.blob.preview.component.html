@@ -1,0 +1,14 @@
+<dbx-loading [context]="context">
+  <div>
+    @switch (mode()) {
+      @case ('list') {
+        <dbx-zip-preview-file-entry-list [state$]="listEntriesState$"></dbx-zip-preview-file-entry-list>
+      }
+      @case ('view_entry') {
+        <div>
+          <p>Entry: {{ selectedFileEntrySignal() | json }}</p>
+        </div>
+      }
+    }
+  </div>
+</dbx-loading>

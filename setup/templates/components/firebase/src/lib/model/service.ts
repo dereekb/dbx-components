@@ -60,6 +60,7 @@ import {
   StorageFileGroupDocument,
   StorageFileGroupRoles,
   storageFileGroupFirestoreCollection,
+  StorageFileGroupFirestoreCollection
 } from '@dereekb/firebase';
 import { noAccessRoleMap, fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';

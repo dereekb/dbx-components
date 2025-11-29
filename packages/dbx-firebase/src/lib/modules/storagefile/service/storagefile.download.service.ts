@@ -1,8 +1,21 @@
 import { inject, Injectable } from '@angular/core';
-import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
+import { StorageFileFunctions, DownloadStorageFileParams, StorageFileKey, StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity, DownloadStorageFileResult } from '@dereekb/firebase';
 import { addMilliseconds, Maybe, Milliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, SECONDS_IN_MINUTE, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { DbxFirebaseStorageFileDownloadStorage, DbxFirebaseStorageFileDownloadUrlPair } from './storagefile.download.storage.service';
 import { distinctUntilChanged, filter, first, from, interval, map, Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
+
+/**
+ * Used as a custom source for downloading StorageFiles.
+ */
+export interface DbxFirebaseStorageFileDownloadServiceCustomSource {
+  /**
+   * Retrieves the download result for the StorageFile using the input parameters.
+   *
+   * @param storageFileId
+   * @returns
+   */
+  downloadStorageFileResult(params: DownloadStorageFileParams, storageFileId: StorageFileId): Promise<DownloadStorageFileResult>;
+}
 
 /**
  * Service used for retrieving download links for StorageFiles.
@@ -89,6 +102,20 @@ export class DbxFirebaseStorageFileDownloadService {
    * @returns
    */
   downloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
+    return this.downloadPairForStorageFileUsingSource(storageFileIdOrKey, undefined);
+  }
+
+  /**
+   * Retrieves the download URL for the StorageFile using the default parameters and pulled from the input source, if applicable.
+   *
+   * If no source is provided, uses the default internal source.
+   *
+   * These URLs are cached locally to prevent extra/redundant calls to the server.
+   *
+   * @param storageFileIdOrKey
+   * @returns
+   */
+  downloadPairForStorageFileUsingSource(storageFileIdOrKey: StorageFileId | StorageFileKey, source: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
     const storageFileId = firestoreModelId(storageFileIdOrKey);
     const obs: Observable<DbxFirebaseStorageFileDownloadUrlPair> = this.getCachedDownloadPairForStorageFile(storageFileId).pipe(
       switchMap((cachedPair) => {
@@ -96,10 +123,10 @@ export class DbxFirebaseStorageFileDownloadService {
 
         const downloadAndCacheResult = () => {
           const expiresAt = addMilliseconds(new Date(), this._expiresAfterTime);
-          return from(this.createDownloadPairForStorageFile(storageFileIdOrKey, { expiresAt })).pipe(
+
+          return from(this._createDownloadPairForStorageFileUsingSource(source, storageFileIdOrKey, { expiresAt })).pipe(
             tap((downloadUrlPair) => {
-              // add to the cache
-              this.storageFileDownloadStorage.addDownloadUrl(downloadUrlPair).pipe(first()).subscribe();
+              this.addPairForStorageFileToCache(downloadUrlPair);
             })
           );
         };
@@ -120,6 +147,13 @@ export class DbxFirebaseStorageFileDownloadService {
   }
 
   /**
+   * Adds the given download URL pair to the cache.
+   */
+  addPairForStorageFileToCache(downloadUrlPair: DbxFirebaseStorageFileDownloadUrlPair): void {
+    this.storageFileDownloadStorage.addDownloadUrl(downloadUrlPair).pipe(first()).subscribe();
+  }
+
+  /**
    * Creates a new download URL for the StorageFile.
    *
    * @param storageFileIdOrKey
@@ -127,6 +161,14 @@ export class DbxFirebaseStorageFileDownloadService {
    * @returns
    */
   createDownloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey, inputParams?: Omit<DownloadStorageFileParams, 'key'>): Promise<DbxFirebaseStorageFileDownloadUrlPair> {
+    return this._createDownloadPairForStorageFileUsingSource(undefined, storageFileIdOrKey, inputParams);
+  }
+
+  private _createDownloadPairForStorageFileUsingSource(inputSource: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>, storageFileIdOrKey: StorageFileId | StorageFileKey, inputParams?: Omit<DownloadStorageFileParams, 'key'>): Promise<DbxFirebaseStorageFileDownloadUrlPair> {
+    const source = inputSource ?? {
+      downloadStorageFileResult: (params) => this.storageFileFunctions.storageFile.readStorageFile.download(params)
+    };
+
     const storageFileId = firestoreModelId(storageFileIdOrKey);
     const expiresAt = inputParams?.expiresAt ?? addMilliseconds(new Date(), this._expiresAfterTime);
 
@@ -135,11 +177,11 @@ export class DbxFirebaseStorageFileDownloadService {
       key: firestoreModelKey(storageFileIdentity, storageFileId)
     };
 
-    return this.storageFileFunctions.storageFile.readStorageFile.download(params).then((x) => {
+    return source.downloadStorageFileResult(params, storageFileId).then((x) => {
       return {
         id: storageFileId,
         downloadUrl: x.url,
-        expiresAt: unixDateTimeSecondsNumberFromDate(expiresAt)
+        expiresAt: unixDateTimeSecondsNumberFromDate(inputParams?.expiresAt ?? addMilliseconds(new Date(), this._expiresAfterTime))
       };
     });
   }

@@ -998,7 +998,6 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
       } as RegenerateStorageFileGroupContentParams);
 
       let storageFileGroupsUpdated = 0;
-      let storageFileGroupsSkipped = 0;
       let contentStorageFilesFlaggedForProcessing = 0;
 
       await iterateFirestoreDocumentSnapshotPairs({
@@ -1011,8 +1010,6 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
 
             storageFileGroupsUpdated += 1;
             contentStorageFilesFlaggedForProcessing += result.contentStorageFilesFlaggedForProcessing;
-          } else {
-            storageFileGroupsSkipped += 1;
           }
         },
         queryFactory: storageFileGroupCollection,
@@ -1025,7 +1022,6 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
       });
 
       const result: RegenerateAllFlaggedStorageFileGroupsContentResult = {
-        storageFileGroupsSkipped,
         storageFileGroupsUpdated,
         contentStorageFilesFlaggedForProcessing
       };

@@ -309,10 +309,6 @@ export class RegenerateAllFlaggedStorageFileGroupsContentParams {}
 
 export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
   /**
-   * The number of StorageFileGroups that were skipped because they were not initialized or flagged for initialization.
-   */
-  readonly storageFileGroupsSkipped: number;
-  /**
    * The number of StorageFileGroups that were updated.
    */
   readonly storageFileGroupsUpdated: number;

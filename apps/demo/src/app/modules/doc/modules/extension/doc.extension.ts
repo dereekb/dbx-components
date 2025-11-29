@@ -40,6 +40,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'StorageFile',
     detail: 'storagefile',
     ref: 'doc.extension.storagefile'
+  },
+  {
+    icon: 'folder',
+    title: 'Zip',
+    detail: 'zip',
+    ref: 'doc.extension.zip'
   }
 ];
 

@@ -207,6 +207,13 @@ export type StorageFilePublicDownloadUrl = StorageDownloadUrl;
 export type StorageFileSignedDownloadUrl = StorageSignedDownloadUrl;
 
 /**
+ * A download URL for a StorageFile.
+ *
+ * This can be a public download URL or a signed download URL.
+ */
+export type StorageFileDownloadUrl = StorageFilePublicDownloadUrl | StorageFileSignedDownloadUrl;
+
+/**
  * A StorageFile in the system, which references a file in Google Cloud Storage.
  *
  * Contains file metadata and ownership information, along with other arbitrary metadata.

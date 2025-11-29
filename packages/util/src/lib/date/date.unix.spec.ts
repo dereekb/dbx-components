@@ -1,16 +1,16 @@
-import { unixDateTimeSecondsNumberFromDateOrTimeNumber, type UnixDateTimeNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberFromDate, dateFromDateOrTimeNumber, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
+import { unixDateTimeSecondsNumberFromDateOrTimeNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberFromDate, unixDateTimeSecondsNumberToDate, dateFromDateOrTimeSecondsNumber, UnixDateTimeSecondsNumber } from '@dereekb/util';
 
 describe('unixDateTimeSecondsNumberFromDateOrTimeNumber()', () => {
   const date = new Date('2023-01-01T00:00:05.500Z'); // 5.5 seconds into 2023-01-01 UTC
-  const expectedUnixTime = Math.ceil(date.getTime() / 1000); // Equivalent to 1672531206
+  const expectedUnixTime: UnixDateTimeSecondsNumber = Math.ceil(date.getTime() / 1000); // Equivalent to 1672531206
 
-  it('should convert a Date object to a UnixDateTimeNumber', () => {
+  it('should convert a Date object to a UnixDateTimeSecondsNumber', () => {
     const result = unixDateTimeSecondsNumberFromDateOrTimeNumber(date);
     expect(result).toBe(expectedUnixTime);
   });
 
-  it('should return the same UnixDateTimeNumber if a number is passed', () => {
-    const unixTime: UnixDateTimeNumber = 1672531200;
+  it('should return the same UnixDateTimeSecondsNumber if a number is passed', () => {
+    const unixTime: UnixDateTimeSecondsNumber = 1672531200;
     const result = unixDateTimeSecondsNumberFromDateOrTimeNumber(unixTime);
     expect(result).toBe(unixTime);
   });
@@ -28,12 +28,12 @@ describe('unixDateTimeSecondsNumberFromDateOrTimeNumber()', () => {
   it('should handle date with milliseconds by ceiling to the nearest second', () => {
     // Test with a date that has milliseconds to ensure Math.ceil is applied
     const dateWithMs = new Date('2023-10-26T10:20:30.123Z'); // 123 milliseconds
-    const expectedTimeWithMs = Math.ceil(dateWithMs.getTime() / 1000);
+    const expectedTimeWithMs: UnixDateTimeSecondsNumber = Math.ceil(dateWithMs.getTime() / 1000);
     const result = unixDateTimeSecondsNumberFromDateOrTimeNumber(dateWithMs);
     expect(result).toBe(expectedTimeWithMs);
 
     const dateAtBoundaryMs = new Date('2023-10-26T10:20:30.999Z'); // 999 milliseconds
-    const expectedTimeAtBoundaryMs = Math.ceil(dateAtBoundaryMs.getTime() / 1000);
+    const expectedTimeAtBoundaryMs: UnixDateTimeSecondsNumber = Math.ceil(dateAtBoundaryMs.getTime() / 1000);
     const resultAtBoundary = unixDateTimeSecondsNumberFromDateOrTimeNumber(dateAtBoundaryMs);
     expect(resultAtBoundary).toBe(expectedTimeAtBoundaryMs);
 
@@ -45,7 +45,7 @@ describe('unixDateTimeSecondsNumberFromDateOrTimeNumber()', () => {
 });
 
 describe('unixDateTimeSecondsNumberForNow()', () => {
-  it('should return a UnixDateTimeNumber (number)', () => {
+  it('should return a UnixDateTimeSecondsNumber (number)', () => {
     const result = unixDateTimeSecondsNumberForNow();
     expect(typeof result).toBe('number');
   });
@@ -60,9 +60,9 @@ describe('unixDateTimeSecondsNumberForNow()', () => {
 });
 
 describe('unixDateTimeSecondsNumberFromDate()', () => {
-  it('should convert a Date object to a UnixDateTimeNumber', () => {
+  it('should convert a Date object to a UnixDateTimeSecondsNumber', () => {
     const date = new Date('2023-01-01T12:30:45.000Z');
-    const expectedUnixTime = Math.ceil(date.getTime() / 1000);
+    const expectedUnixTime: UnixDateTimeSecondsNumber = Math.ceil(date.getTime() / 1000);
     const result = unixDateTimeSecondsNumberFromDate(date);
     expect(result).toBe(expectedUnixTime);
     expect(result).toBe(1672576245); // 2023-01-01T12:30:45.000Z
@@ -70,13 +70,13 @@ describe('unixDateTimeSecondsNumberFromDate()', () => {
 
   it('should handle a Date object with milliseconds by ceiling to the nearest second', () => {
     const dateWithMs = new Date('2023-10-26T10:20:30.123Z');
-    const expectedTimeWithMs = Math.ceil(dateWithMs.getTime() / 1000);
+    const expectedTimeWithMs: UnixDateTimeSecondsNumber = Math.ceil(dateWithMs.getTime() / 1000);
     const resultWithMs = unixDateTimeSecondsNumberFromDate(dateWithMs);
     expect(resultWithMs).toBe(expectedTimeWithMs);
     expect(resultWithMs).toBe(1698315631); // 2023-10-26T10:20:30.123Z -> 1698315631
 
     const dateAtBoundaryMs = new Date('2023-10-26T10:20:30.999Z');
-    const expectedTimeAtBoundaryMs = Math.ceil(dateAtBoundaryMs.getTime() / 1000);
+    const expectedTimeAtBoundaryMs: UnixDateTimeSecondsNumber = Math.ceil(dateAtBoundaryMs.getTime() / 1000);
     const resultAtBoundary = unixDateTimeSecondsNumberFromDate(dateAtBoundaryMs);
     expect(resultAtBoundary).toBe(expectedTimeAtBoundaryMs);
     expect(resultAtBoundary).toBe(1698315631); // 2023-10-26T10:20:30.999Z -> 1698315631
@@ -93,18 +93,18 @@ describe('unixDateTimeSecondsNumberFromDate()', () => {
   });
 });
 
-describe('dateFromDateOrTimeNumber()', () => {
+describe('dateFromDateOrTimeSecondsNumber()', () => {
   const baseDate = new Date('2023-01-01T12:00:00.000Z');
-  const baseUnixTime: UnixDateTimeNumber = Math.floor(baseDate.getTime() / 1000); // 1672574400
+  const baseUnixTime: UnixDateTimeSecondsNumber = Math.floor(baseDate.getTime() / 1000); // 1672574400
 
   it('should return the same Date object if a Date is passed', () => {
-    const result = dateFromDateOrTimeNumber(baseDate);
+    const result = dateFromDateOrTimeSecondsNumber(baseDate);
     expect(result).toBe(baseDate); // Should be the same instance
     expect(result?.getTime()).toBe(baseDate.getTime());
   });
 
-  it('should convert a UnixDateTimeNumber to a Date object', () => {
-    const result = dateFromDateOrTimeNumber(baseUnixTime);
+  it('should convert a UnixDateTimeSecondsNumber to a Date object', () => {
+    const result = dateFromDateOrTimeSecondsNumber(baseUnixTime);
     expect(result).toBeInstanceOf(Date);
     // The function unixDateTimeSecondsNumberToDate multiplies by 1000, so direct comparison of getTime()
     expect(result?.getTime()).toBe(baseUnixTime * 1000);
@@ -112,12 +112,12 @@ describe('dateFromDateOrTimeNumber()', () => {
   });
 
   it('should return null if null is passed', () => {
-    const result = dateFromDateOrTimeNumber(null);
+    const result = dateFromDateOrTimeSecondsNumber(null);
     expect(result).toBeNull();
   });
 
   it('should return undefined if undefined is passed', () => {
-    const result = dateFromDateOrTimeNumber(undefined);
+    const result = dateFromDateOrTimeSecondsNumber(undefined);
     expect(result).toBeUndefined();
   });
 
@@ -126,7 +126,7 @@ describe('dateFromDateOrTimeNumber()', () => {
     const dateWithMs = new Date('2023-10-26T10:20:30.123Z');
     const unixTimeForDateWithMs = Math.floor(dateWithMs.getTime() / 1000); // 1698315630
 
-    const result = dateFromDateOrTimeNumber(unixTimeForDateWithMs);
+    const result = dateFromDateOrTimeSecondsNumber(unixTimeForDateWithMs);
     expect(result).toBeInstanceOf(Date);
     expect(result?.getTime()).toBe(unixTimeForDateWithMs * 1000); // Back to milliseconds
     expect(result?.toISOString()).toBe('2023-10-26T10:20:30.000Z'); // Milliseconds are 000 when converted from Unix seconds
@@ -134,8 +134,8 @@ describe('dateFromDateOrTimeNumber()', () => {
 });
 
 describe('unixDateTimeSecondsNumberToDate()', () => {
-  it('should convert a positive UnixDateTimeNumber to a Date object', () => {
-    const unixTime: UnixDateTimeNumber = 1672531200; // 2023-01-01T00:00:00Z
+  it('should convert a positive UnixDateTimeSecondsNumber to a Date object', () => {
+    const unixTime: UnixDateTimeSecondsNumber = 1672531200; // 2023-01-01T00:00:00Z
     const result = unixDateTimeSecondsNumberToDate(unixTime);
     expect(result).toBeInstanceOf(Date);
     expect(result?.getTime()).toBe(unixTime * 1000);
@@ -143,15 +143,15 @@ describe('unixDateTimeSecondsNumberToDate()', () => {
   });
 
   it('should convert 0 (Unix epoch) to a Date object representing 1970-01-01T00:00:00.000Z', () => {
-    const unixTime: UnixDateTimeNumber = 0;
+    const unixTime: UnixDateTimeSecondsNumber = 0;
     const result = unixDateTimeSecondsNumberToDate(unixTime);
     expect(result).toBeInstanceOf(Date);
     expect(result?.getTime()).toBe(0);
     expect(result?.toISOString()).toBe('1970-01-01T00:00:00.000Z');
   });
 
-  it('should convert a negative UnixDateTimeNumber (before epoch) to a Date object', () => {
-    const unixTime: UnixDateTimeNumber = -86400; // One day before epoch: 1969-12-31T00:00:00Z
+  it('should convert a negative UnixDateTimeSecondsNumber (before epoch) to a Date object', () => {
+    const unixTime: UnixDateTimeSecondsNumber = -86400; // One day before epoch: 1969-12-31T00:00:00Z
     const result = unixDateTimeSecondsNumberToDate(unixTime);
     expect(result).toBeInstanceOf(Date);
     expect(result?.getTime()).toBe(unixTime * 1000);

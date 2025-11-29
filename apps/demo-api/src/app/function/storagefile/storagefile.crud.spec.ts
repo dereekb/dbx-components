@@ -1160,7 +1160,7 @@ demoApiFunctionContextFactory((f) => {
                     initIfNeeded: false
                   },
                   (sfg) => {
-                    it('should fail to regenerate the storage file group content if the storage file group is not initialized', async () => {
+                    itShouldFail('to regenerate the storage file group content if the storage file group is not initialized', async () => {
                       const storageFileGroup = await assertSnapshotData(sfg.document);
                       expect(storageFileGroup.s).toBe(true);
 
@@ -1170,9 +1170,14 @@ demoApiFunctionContextFactory((f) => {
 
                     describe('regenerateAllStorageFileGroupContent()', () => {
                       it('should skip the storage file group if it is not initialized', async () => {
+                        const storageFileGroup = await assertSnapshotData(sfg.document);
+                        expect(storageFileGroup.s).toBe(true); // check should be excluded by the query
+
                         const instance = await f.storageFileServerActions.regenerateAllFlaggedStorageFileGroupsContent({});
                         const result = await instance();
-                        expect(result.storageFileGroupsSkipped).toBe(1);
+
+                        expect(result.storageFileGroupsUpdated).toBe(0);
+                        expect(result.contentStorageFilesFlaggedForProcessing).toBe(0);
                       });
                     });
                   }
