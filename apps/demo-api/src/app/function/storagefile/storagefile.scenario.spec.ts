@@ -3,7 +3,7 @@ import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProf
 import { demoCallModel } from '../model/crud.functions';
 import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
 import { firestoreDummyKey, type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
-import { type MimeTypeWithoutParameters } from '@dereekb/util';
+import { ZIP_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import * as sharp from 'sharp';
@@ -280,7 +280,7 @@ demoApiFunctionContextFactory((f) => {
                         expect(fileMetadata).toBeDefined();
 
                         expect(fileMetadata.name).toBeDefined();
-                        expect(fileMetadata.contentType).toBe('application/zip');
+                        expect(fileMetadata.contentType).toBe(ZIP_MIME_TYPE);
 
                         const fileBytes = await file.getBytes();
                         const zip = new AdmZip(Buffer.from(fileBytes));
@@ -358,7 +358,7 @@ demoApiFunctionContextFactory((f) => {
                                     expect(fileMetadata).toBeDefined();
 
                                     expect(fileMetadata.name).toBeDefined();
-                                    expect(fileMetadata.contentType).toBe('application/zip');
+                                    expect(fileMetadata.contentType).toBe(ZIP_MIME_TYPE);
 
                                     const fileBytes = await file.getBytes();
                                     const zip = new AdmZip(Buffer.from(fileBytes));

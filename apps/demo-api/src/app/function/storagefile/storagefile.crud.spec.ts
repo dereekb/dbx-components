@@ -45,7 +45,7 @@ import {
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
   STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE
 } from '@dereekb/firebase';
-import { addMilliseconds, slashPathDetails, slashPathFolder, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, slashPathDetails, slashPathFolder, ZIP_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
@@ -1264,7 +1264,7 @@ demoApiFunctionContextFactory((f) => {
                               expect(fileMetadata).toBeDefined();
 
                               expect(fileMetadata.name).toBeDefined();
-                              expect(fileMetadata.contentType).toBe('application/zip');
+                              expect(fileMetadata.contentType).toBe(ZIP_MIME_TYPE);
 
                               const fileBytes = await file.getBytes();
                               const zip = new AdmZip(Buffer.from(fileBytes));

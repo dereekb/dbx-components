@@ -17,5 +17,9 @@ export default class FixJSDOMEnvironment extends JSDOMEnvironment {
     this.global.Headers = Headers;
     this.global.Request = Request;
     this.global.Response = Response;
+
+    // Fixes ReferenceError: TransformStream is not defined
+    // Occured once @zip.js/zip.js was added to dependencies
+    this.global.TransformStream = TransformStream;
   }
 }

@@ -6,6 +6,7 @@ export * from './json';
 export * from './mimetype';
 export * from './password';
 export * from './prefix';
+export * from './record';
 export * from './string';
 export * from './sort';
 export * from './replace';

@@ -30,7 +30,7 @@ import {
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, MS_IN_HOUR, performAsyncTasks, pushArrayItemsIntoArray, slashPathDetails, useCallback, type Maybe } from '@dereekb/util';
+import { cachedGetter, documentFileExtensionForMimeType, MS_IN_HOUR, performAsyncTasks, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
 import * as archiver from 'archiver';
@@ -318,7 +318,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 
               if (zipFileAccessor.uploadStream && zipFileAccessor.getStream) {
                 const uploadStream = zipFileAccessor.uploadStream({
-                  contentType: 'application/zip'
+                  contentType: ZIP_MIME_TYPE
                 });
 
                 const startedAt = new Date();
@@ -342,7 +342,23 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                         const metadata = await fileAccessor.getMetadata().catch(() => null);
 
                         if (metadata) {
-                          const name = slashPathDetails(metadata.name).fileName ?? `sf_${storageFile.id}`;
+                          const fileSlashPathDetails = slashPathDetails(metadata.name);
+                          let name: string;
+
+                          if (fileSlashPathDetails.typedFile) {
+                            name = fileSlashPathDetails.typedFile;
+                          } else {
+                            const untypedName = fileSlashPathDetails.fileName ?? `sf_${storageFile.id}`;
+
+                            // attempt to recover from a missing file name by using the content type
+                            if (metadata.contentType) {
+                              const extension = documentFileExtensionForMimeType(metadata.contentType);
+                              name = extension ? `${untypedName}.${extension}` : untypedName;
+                            } else {
+                              name = untypedName;
+                            }
+                          }
+
                           const fileStream = fileAccessor.getStream!();
 
                           await useCallback((x) => {

@@ -104,6 +104,11 @@ export class DbxEmbedComponent extends AbstractSubscriptionDirective {
           // only set the type if it is presented
           if (type) {
             embed.setAttribute('type', type);
+
+            // if the type is an image, also add the embed-image class
+            if (type.startsWith('image/')) {
+              embed.setAttribute('class', 'embed-image');
+            }
           }
 
           element.appendChild(embed);
