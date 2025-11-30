@@ -15,7 +15,7 @@ import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
   selector: 'dbx-zip-preview',
   template: `
     <dbx-loading [context]="context">
-      <dbx-zip-blob-preview [blob]="zipFileBlobSignal()"></dbx-zip-blob-preview>
+      <dbx-zip-blob-preview [downloadFileName]="downloadFileName()" [blob]="zipFileBlobSignal()"></dbx-zip-blob-preview>
     </dbx-loading>
   `,
   standalone: true,
@@ -27,6 +27,7 @@ export class DbxZipPreviewComponent implements OnDestroy {
    * The URL to download the zip file from, if applicable.
    */
   readonly srcUrl = input<Maybe<string>>();
+  readonly downloadFileName = input<Maybe<string>>();
 
   readonly srcUrl$ = toObservable(this.srcUrl);
 

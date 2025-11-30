@@ -1,13 +1,21 @@
 <dbx-loading [context]="context">
-  <div>
+  <div class="dbx-flex-bar dbx-zip-blob-preview-toolbar">
+    <dbx-icon-button [disabled]="!selectedNodeSignal()" icon="arrow_upward" text="Back" (click)="backClicked()"></dbx-icon-button>
+    <dbx-button-spacer></dbx-button-spacer>
+    <dbx-icon-button [disabled]="!selectedNodeSignal()" icon="home" text="Home" (click)="homeClicked()"></dbx-icon-button>
+    <dbx-spacer></dbx-spacer>
+    @if (downloadZipFileBlobButtonConfigSignal()) {
+      <dbx-download-blob-button [config]="downloadZipFileBlobButtonConfigSignal()"></dbx-download-blob-button>
+    }
+  </div>
+  <dbx-bar-header class="dbx-zip-blob-preview-header" [icon]="selectedNodeIconSignal()" [text]="selectedNodePathSignal()"></dbx-bar-header>
+  <div class="dbx-zip-blob-preview-content">
     @switch (mode()) {
-      @case ('list') {
-        <dbx-zip-preview-file-entry-list [state$]="listEntriesState$"></dbx-zip-preview-file-entry-list>
+      @case ('view_directory') {
+        <dbx-zip-preview-file-entry-list [state$]="listEntriesState$" [dbxListTitleGroup]="listTitleGroupDelegate" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeEntryAnchor"></dbx-zip-preview-file-entry-list>
       }
       @case ('view_entry') {
-        <div>
-          <p>Entry: {{ selectedFileEntrySignal() | json }}</p>
-        </div>
+        <dbx-embed class="dbx-zip-blob-preview-content-embed" [srcBlob]="selectedFileEntryBlobSignal()"></dbx-embed>
       }
     }
   </div>

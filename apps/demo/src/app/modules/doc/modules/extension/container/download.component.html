@@ -1,6 +1,16 @@
 <dbx-content-container>
   <doc-feature-layout header="Download" hint="Various download-related classes and components.">
     <!-- Examples -->
+    <doc-feature-example header="dbx-download-blob-button" hint="Button for downloading a blob.">
+      <h3>Example</h3>
+      <p>The example button has been customized with custom text and flat style with primary color.</p>
+      <dbx-download-blob-button [config]="blobDownloadConfig"></dbx-download-blob-button>
+      <h3>Delayed Example</h3>
+      <p>The example button is shown waiting for the blob promise to be ready.</p>
+      <dbx-download-blob-button [config]="blobDownloadDelayedConfig"></dbx-download-blob-button>
+      <p>Example with no content set. It is not clickable.</p>
+      <dbx-download-blob-button></dbx-download-blob-button>
+    </doc-feature-example>
     <doc-feature-example header="dbx-download-text-view" hint="View that provides buttons for copying or downloading content to a file.">
       <h3>CSV Example</h3>
       <dbx-download-text-view [content]="csvContent"></dbx-download-text-view>

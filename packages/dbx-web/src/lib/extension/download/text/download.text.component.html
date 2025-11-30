@@ -16,7 +16,7 @@
     <div class="dbx-download-text-view-actions">
       <dbx-button dbxAction dbxActionValue [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard"></dbx-button>
       <dbx-button-spacer></dbx-button-spacer>
-      <a #downloadButton [href]="fileUrlSignal()" [attr.download]="fileNameSignal()"><dbx-button icon="download" text="Download" [raised]="true" [working]="!downloadReadySignal()" [disabled]="!downloadReadySignal()"></dbx-button></a>
+      <dbx-download-blob-button [config]="downloadConfigSignal()"></dbx-download-blob-button>
     </div>
   </div>
 </ng-template>
