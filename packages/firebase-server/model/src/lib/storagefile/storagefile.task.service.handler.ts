@@ -30,7 +30,7 @@ import {
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, documentFileExtensionForMimeType, MS_IN_HOUR, performAsyncTasks, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_MIME_TYPE, type Maybe } from '@dereekb/util';
+import { cachedGetter, documentFileExtensionForMimeType, MS_IN_HOUR, performAsyncTasks, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
 import * as archiver from 'archiver';
@@ -318,7 +318,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 
               if (zipFileAccessor.uploadStream && zipFileAccessor.getStream) {
                 const uploadStream = zipFileAccessor.uploadStream({
-                  contentType: ZIP_MIME_TYPE
+                  contentType: ZIP_FILE_MIME_TYPE
                 });
 
                 const startedAt = new Date();

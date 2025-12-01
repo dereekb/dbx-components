@@ -10,5 +10,5 @@
     "useDefineForClassFields": true
   },
   "exclude": ["**/*.spec.ts", "jest.config.ts"],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "../dbx-web/src/lib/interaction/iframe/preview.service.preset.ts", "../dbx-web/src/lib/extension/preview/preview.service.ts"]
 }

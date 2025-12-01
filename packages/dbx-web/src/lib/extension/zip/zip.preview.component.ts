@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, OnDestroy, signal } from '@a
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DbxLoadingComponent } from '../../loading';
-import { Maybe } from '@dereekb/util';
+import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, from, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { beginLoading, errorResult, LoadingState, loadingStateContext, loadingStateFromObs, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
@@ -26,16 +26,28 @@ export class DbxZipPreviewComponent implements OnDestroy {
   /**
    * The URL to download the zip file from, if applicable.
    */
-  readonly srcUrl = input<Maybe<string>>();
+  readonly srcUrl = input<Maybe<WebsiteUrlWithPrefix>>();
+
+  /**
+   * The blob to use for the zip file, if applicable.
+   */
+  readonly blob = input<Maybe<Blob>>();
+
+  /**
+   * The file name to use for the zip file.
+   */
   readonly downloadFileName = input<Maybe<string>>();
 
   readonly srcUrl$ = toObservable(this.srcUrl);
+  readonly blob$ = toObservable(this.blob);
 
-  readonly zipFileBlobLoadingState$ = combineLatest([this.srcUrl$]).pipe(
-    switchMap(([srcUrl]) => {
+  readonly zipFileBlobLoadingState$ = combineLatest([this.srcUrl$, this.blob$]).pipe(
+    switchMap(([srcUrl, blob]) => {
       let obs: Observable<LoadingState<Blob>>;
 
-      if (srcUrl) {
+      if (blob) {
+        obs = of(successResult(blob));
+      } else if (srcUrl) {
         obs = from(
           fetch(srcUrl, { method: 'GET' }).then((x) =>
             x

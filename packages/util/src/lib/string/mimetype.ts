@@ -125,10 +125,10 @@ export function documentFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithout
 
 export type ApplicationFileExtension = 'zip';
 
-export const ZIP_MIME_TYPE: MimeTypeWithoutParameters = 'application/zip';
+export const ZIP_FILE_MIME_TYPE: MimeTypeWithoutParameters = 'application/zip';
 
 export const APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<ApplicationFileExtension, MimeTypeWithoutParameters> = {
-  zip: ZIP_MIME_TYPE
+  zip: ZIP_FILE_MIME_TYPE
 };
 
 export const APPLICATION_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD: Record<MimeTypeWithoutParameters, ApplicationFileExtension> = invertStringRecord(APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD);

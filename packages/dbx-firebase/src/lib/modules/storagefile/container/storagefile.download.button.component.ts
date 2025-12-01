@@ -9,6 +9,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, interval, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { DbxWebFilePreviewService } from '@dereekb/dbx-web';
 
 export interface DbxFirebaseStorageFileDownloadButtonSource {
   /**
@@ -56,7 +57,7 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
   readonly previewIcon?: Maybe<string>;
   readonly previewText?: Maybe<string>;
   /**
-   * Optional custom function to open a preview dialog. If not provided, the default preview dialog will be used.
+   * Optional custom function to open a preview dialog. If not provided, the default preview dialog provided by the DbxWebFilePreviewService will be used.
    *
    * The function can return undefined, in which case the default preview dialog will be used.
    */
@@ -82,6 +83,7 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
 })
 export class DbxFirebaseStorageFileDownloadButton {
   readonly matDialog = inject(MatDialog);
+  readonly dbxWebFilePreviewService = inject(DbxWebFilePreviewService);
   readonly dbxFirebaseStorageFileDownloadService = inject(DbxFirebaseStorageFileDownloadService);
 
   /**
@@ -232,14 +234,7 @@ export class DbxFirebaseStorageFileDownloadButton {
     const srcUrl = this.downloadUrlSignal() as string;
     const embedMimeType = this.embedMimeType();
 
-    return (
-      openPreview?.(srcUrl, embedMimeType) ??
-      DbxEmbedDialogComponent.openDialog(this.matDialog, {
-        srcUrl,
-        embedMimeType,
-        sanitizeUrl: true
-      })
-    );
+    return openPreview?.(srcUrl, embedMimeType) ?? this.dbxWebFilePreviewService.openPreviewDialog(srcUrl, embedMimeType);
   };
 
   // Cached Url Effect
@@ -248,6 +243,7 @@ export class DbxFirebaseStorageFileDownloadButton {
     switchMap((key) => (key ? this.dbxFirebaseStorageFileDownloadService.getCachedDownloadPairForStorageFile(key) : of(null))),
     shareReplay(1)
   );
+
   readonly cachedUrlForStorageFileKeySignal = toSignal(this.cachedUrlForStorageFileKey$);
 
   readonly cachedUrlEffect = effect(
@@ -315,7 +311,7 @@ export class DbxFirebaseStorageFileDownloadButton {
 
     if (handleGetDownloadUrl) {
       handleGetDownloadUrl(value, context);
-    } else if (customSource) {
+    } else {
       context.startWorkingWithObservable(this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFileUsingSource(value, customSource));
     }
   };
