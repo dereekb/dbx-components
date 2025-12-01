@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { WebsiteUrlWithPrefix } from '@dereekb/util';
+import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
+import { WebsiteUrlWithPrefix, Maybe } from '@dereekb/util';
 import { DbxDialogContentDirective, AbstractDialogDirective } from '../../interaction/dialog';
 import { DbxZipPreviewComponent } from './zip.preview.component';
-import { Maybe } from '@dereekb/util';
-import { MatDialogConfig } from '@angular/material/dialog';
 
 export interface DbxZipPreviewDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly srcUrl?: Maybe<WebsiteUrlWithPrefix>;

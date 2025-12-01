@@ -36,25 +36,25 @@ import {
   type DownloadStorageFileResult,
   SyncStorageFileWithGroupsParams,
   SyncAllFlaggedStorageFilesWithGroupsParams,
-  SyncAllFlaggedStorageFilesWithGroupsResult,
-  SyncStorageFileWithGroupsResult,
-  FirestoreDocumentSnapshotDataPairWithData,
+  type SyncAllFlaggedStorageFilesWithGroupsResult,
+  type SyncStorageFileWithGroupsResult,
+  type FirestoreDocumentSnapshotDataPairWithData,
   RegenerateAllFlaggedStorageFileGroupsContentParams,
-  RegenerateAllFlaggedStorageFileGroupsContentResult,
+  type RegenerateAllFlaggedStorageFileGroupsContentResult,
   RegenerateStorageFileGroupContentParams,
-  RegenerateStorageFileGroupContentResult,
-  StorageFileGroupDocument,
+  type RegenerateStorageFileGroupContentResult,
+  type StorageFileGroupDocument,
   storageFileFlaggedForSyncWithGroupsQuery,
   iterateFirestoreDocumentSnapshotPairBatches,
   loadDocumentsForIds,
   getDocumentSnapshotDataPairs,
   storageFileGroupsFlaggedForContentRegenerationQuery,
-  AsyncStorageFileGroupCreateAction,
+  type AsyncStorageFileGroupCreateAction,
   CreateStorageFileGroupParams,
-  Transaction,
-  StorageFileGroup,
+  type Transaction,
+  type StorageFileGroup,
   loadStorageFileGroupDocumentForReferencePair,
-  StorageFileGroupDocumentReferencePair,
+  type StorageFileGroupDocumentReferencePair,
   calculateStorageFileGroupEmbeddedFileUpdate,
   calculateStorageFileGroupRegeneration,
   getDocumentSnapshotDataPair,
@@ -63,14 +63,14 @@ import {
   storageFileGroupZipFileStoragePath,
   inferKeyFromTwoWayFlatFirestoreModelKey,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
-  StorageFileGroupZipStorageFileMetadata,
-  SendNotificationResult,
-  StorageFileGroupId
+  type StorageFileGroupZipStorageFileMetadata,
+  type SendNotificationResult,
+  type StorageFileGroupId
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
-import { NotificationExpediteServiceInstance, type NotificationExpediteServiceRef } from '../notification';
+import { type NotificationExpediteServiceInstance, type NotificationExpediteServiceRef } from '../notification';
 import { type StorageFileInitializeFromUploadResult, type StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
 import {
   uploadedFileIsNotAllowedToBeInitializedError,
@@ -87,10 +87,10 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, MS_IN_HOUR, MS_IN_MINUTE, performAsyncTasks, RelationChangeType, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
-import { addDays, addMinutes } from 'date-fns';
+import { addDays } from 'date-fns';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -841,7 +841,7 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
       }
     });
 
-    let result: SyncStorageFileWithGroupsResult = {
+    const result: SyncStorageFileWithGroupsResult = {
       storageFilesGroupsCreated,
       storageFilesGroupsUpdated
     };
@@ -957,7 +957,7 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
 
         let contentStorageFilesFlaggedForProcessing = 0;
 
-        let updateTemplate: Partial<StorageFileGroup> = {
+        const updateTemplate: Partial<StorageFileGroup> = {
           re: false // clear the regeneration flag
         };
 

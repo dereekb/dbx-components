@@ -1,5 +1,5 @@
 import { type AsyncFirebaseFunctionDeleteAction, type FirebaseFunctionDeleteAction, type AsyncFirebaseFunctionCreateAction, type AsyncFirebaseFunctionUpdateAction, type FirebaseFunctionCreateAction, type FirebaseFunctionUpdateAction } from '../../common';
-import { StorageFileGroupDocument, type StorageFileDocument } from './storagefile';
+import { type StorageFileGroupDocument, type StorageFileDocument } from './storagefile';
 
 export type StorageFileCreateAction<P extends object> = FirebaseFunctionCreateAction<P, StorageFileDocument>;
 export type AsyncStorageFileCreateAction<P extends object> = AsyncFirebaseFunctionCreateAction<P, StorageFileDocument>;

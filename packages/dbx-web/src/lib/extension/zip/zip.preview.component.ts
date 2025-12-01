@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, input, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, OnDestroy } from '@angular/core';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DbxLoadingComponent } from '../../loading';
 import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, from, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { beginLoading, errorResult, LoadingState, loadingStateContext, loadingStateFromObs, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { beginLoading, errorResult, LoadingState, loadingStateContext, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
 
 /**

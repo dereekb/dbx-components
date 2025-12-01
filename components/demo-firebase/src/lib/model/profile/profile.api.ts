@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { DownloadStorageFileParams, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, StorageFileSignedDownloadUrl, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { DownloadStorageFileParams, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { type Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
@@ -43,7 +43,7 @@ export class FinishOnboardingProfileParams extends InferredTargetModelParams {}
 
 export class DownloadProfileArchiveParams extends DownloadStorageFileParams {}
 
-export interface DownloadProfileArchiveResult extends DownloadStorageFileResult {}
+export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 
 /**
  * We set the key here to allow both the functions server and the type map/client access this shared key.

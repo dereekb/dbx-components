@@ -69,7 +69,6 @@ import {
   MAP_IDENTITY,
   type FilterFunction,
   unixDateTimeSecondsNumberFromDate,
-  unixDateTimeSecondsNumberToDate,
   dateFromDateOrTimeSecondsNumber
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';

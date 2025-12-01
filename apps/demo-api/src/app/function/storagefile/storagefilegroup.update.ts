@@ -1,4 +1,4 @@
-import { RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult, SyncStorageFileWithGroupsParams, type ProcessStorageFileParams, type UpdateStorageFileParams } from '@dereekb/firebase';
+import { type RegenerateStorageFileGroupContentParams, type RegenerateStorageFileGroupContentResult } from '@dereekb/firebase';
 import { type DemoUpdateModelFunction } from '../function';
 
 export const storageFileGroupRegenerateContent: DemoUpdateModelFunction<RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult> = async (request) => {

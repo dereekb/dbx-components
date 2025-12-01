@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 import { ContentTypeMimeType, Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
 import { DbxEmbedComponent } from './embed.component';
 import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
-import { MatDialogConfig } from '@angular/material/dialog';
 
 export interface DbxEmbedDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly srcUrl: WebsiteUrlWithPrefix;

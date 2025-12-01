@@ -1,8 +1,8 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { DownloadProfileArchiveParams, DownloadProfileArchiveResult, profileIdentity, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
-import { firestoreDummyKey, type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
+import { type DownloadProfileArchiveParams, type DownloadProfileArchiveResult, profileIdentity, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
+import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
 import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -379,7 +379,7 @@ demoApiFunctionContextFactory((f) => {
 
                                     // check the zip file contents
                                     const zipStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(storageFileGroup.zsf as string);
-                                    let zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+                                    const zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
 
                                     const file = f.storageContext.file(zipStorageFile);
 

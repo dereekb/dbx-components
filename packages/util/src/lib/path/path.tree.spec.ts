@@ -1,4 +1,4 @@
-import { slashPathDirectoryTree, SlashPathDirectoryTreeNodeValue, SlashPathDirectoryTreeNode } from './path.tree';
+import { slashPathDirectoryTree, type SlashPathDirectoryTreeNodeValue, type SlashPathDirectoryTreeNode } from './path.tree';
 import { slashPathDetails } from './path';
 
 describe('slashPathDirectoryTree', () => {

@@ -1,4 +1,4 @@
-import { type Maybe, type ModelKey, type ModelKeyTypeNamePair, UnixDateTimeSecondsNumber } from '@dereekb/util';
+import { type Maybe, type ModelKey, type ModelKeyTypeNamePair, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 
 /**
  * String context in which a model was viewed.

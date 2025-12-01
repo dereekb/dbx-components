@@ -1,5 +1,5 @@
-import { SlashPathFile, SlashPathFolder, SlashPath, mergeSlashPaths, Maybe } from '@dereekb/util';
-import { StorageFileGroupId } from './storagefile.id';
+import { type SlashPathFile, type SlashPathFolder, type SlashPath, mergeSlashPaths, type Maybe } from '@dereekb/util';
+import { type StorageFileGroupId } from './storagefile.id';
 
 /**
  * All StorageFileGroup generated files are stored under this root folder.

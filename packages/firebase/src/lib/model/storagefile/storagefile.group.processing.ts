@@ -1,7 +1,7 @@
-import { SlashPathTypedFile } from '@dereekb/util';
-import { StorageFileGroupId, StorageFilePurpose } from './storagefile.id';
-import { StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata } from './storagefile.task';
-import { StorageFileGroupCreatedStorageFileKey, storageFileGroupCreateStorageFileKeyFactory } from './storagefile';
+import { type SlashPathTypedFile } from '@dereekb/util';
+import { type StorageFileGroupId, type StorageFilePurpose } from './storagefile.id';
+import { type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata } from './storagefile.task';
+import { type StorageFileGroupCreatedStorageFileKey, storageFileGroupCreateStorageFileKeyFactory } from './storagefile';
 
 // MARK: StorageFileGroup Zip StorageFile
 /**

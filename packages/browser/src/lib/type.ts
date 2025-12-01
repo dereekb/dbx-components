@@ -1,4 +1,4 @@
-import { Destroyable, Maybe, MaybeNot } from '@dereekb/util';
+import { type Destroyable, type Maybe, type MaybeNot } from '@dereekb/util';
 
 /**
  * A URL created by the browser.

@@ -167,12 +167,12 @@ export function mimeTypeForFileExtension(extension: DbxComponentsKnownFileExtens
 export function mimeTypeForFileExtension(extension: SlashPathTypedFileExtension): Maybe<MimeTypeWithoutParameters>;
 export function mimeTypeForFileExtension(extension: Maybe<DbxComponentsKnownFileExtension | SlashPathTypedFileExtension>): Maybe<MimeTypeWithoutParameters>;
 export function mimeTypeForFileExtension(extension: Maybe<DbxComponentsKnownFileExtension | SlashPathTypedFileExtension>): Maybe<MimeTypeWithoutParameters> {
-  let result: Maybe<MimeTypeWithoutParameters> = mimeTypeForImageFileExtension(extension) ?? mimeTypeForDocumentFileExtension(extension);
+  const result: Maybe<MimeTypeWithoutParameters> = mimeTypeForImageFileExtension(extension) ?? mimeTypeForDocumentFileExtension(extension);
   return result;
 }
 
 export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<DbxComponentsKnownFileExtension> {
-  let result: Maybe<DbxComponentsKnownFileExtension> = imageFileExtensionForMimeType(mimeType) ?? documentFileExtensionForMimeType(mimeType) ?? applicationFileExtensionForMimeType(mimeType);
+  const result: Maybe<DbxComponentsKnownFileExtension> = imageFileExtensionForMimeType(mimeType) ?? documentFileExtensionForMimeType(mimeType) ?? applicationFileExtensionForMimeType(mimeType);
   return result;
 }
 

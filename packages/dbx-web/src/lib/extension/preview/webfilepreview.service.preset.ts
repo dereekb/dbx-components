@@ -1,7 +1,7 @@
 import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';
 import { DbxEmbedDialogComponent } from '../../interaction/iframe/embed.dialog.component';
 import { DbxZipPreviewDialogComponent } from '../zip';
-import { DbxWebFilePreviewServiceEntry, DbxWebFilePreviewServicePreviewFunction } from './webfilepreview';
+import { type DbxWebFilePreviewServiceEntry, type DbxWebFilePreviewServicePreviewFunction } from './webfilepreview';
 
 // MARK: Default
 /**

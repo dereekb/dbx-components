@@ -34,18 +34,18 @@ import {
   type StorageFileDocument,
   type DownloadStorageFileResult,
   STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE,
-  SyncStorageFileWithGroupsParams,
-  SyncStorageFileWithGroupsResult,
+  type SyncStorageFileWithGroupsParams,
+  type SyncStorageFileWithGroupsResult,
   loadDocumentsForIds,
   getDocumentSnapshotDataPairs,
-  StorageFileGroup,
-  StorageFileId,
+  type StorageFileGroup,
+  type StorageFileId,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
-  StorageFileGroupZipStorageFileMetadata,
+  type StorageFileGroupZipStorageFileMetadata,
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
   STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE
 } from '@dereekb/firebase';
-import { addMilliseconds, slashPathDetails, slashPathFolder, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
@@ -1243,7 +1243,7 @@ demoApiFunctionContextFactory((f) => {
                               expect(storageFileGroup.zat).not.toBeDefined();
 
                               let storageFile = await assertSnapshotData(sf_zip.document);
-                              let file = f.storageContext.file(storageFile);
+                              const file = f.storageContext.file(storageFile);
 
                               let fileExists = await file.exists(); // file should not yet exist
                               expect(fileExists).toBeFalsy();

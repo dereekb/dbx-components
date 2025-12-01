@@ -58,10 +58,10 @@ import {
   type StorageFileTypes,
   grantStorageFileRolesForUserAuthFunction,
   storageFileGroupFirestoreCollection,
-  StorageFileGroupFirestoreCollection,
-  StorageFileGroup,
-  StorageFileGroupDocument,
-  StorageFileGroupRoles
+  type StorageFileGroupFirestoreCollection,
+  type StorageFileGroup,
+  type StorageFileGroupDocument,
+  type StorageFileGroupRoles
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';

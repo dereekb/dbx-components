@@ -1,6 +1,5 @@
 import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
-import { unixDateTimeSecondsNumberToDate } from './date.unix';
 
 /**
  * The past or future direction.

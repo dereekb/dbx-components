@@ -1,4 +1,4 @@
-import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, input, model, effect, signal } from '@angular/core';
+import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, input, effect, signal, OnDestroy } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest } from 'rxjs';
 import { ContentTypeMimeType, Maybe } from '@dereekb/util';
@@ -14,7 +14,7 @@ import { browserObjectUrlRef } from '@dereekb/browser';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxEmbedComponent extends AbstractSubscriptionDirective {
+export class DbxEmbedComponent extends AbstractSubscriptionDirective implements OnDestroy {
   private readonly _browserObjectUrlRef = browserObjectUrlRef();
 
   readonly sanitizer = inject(DomSanitizer);

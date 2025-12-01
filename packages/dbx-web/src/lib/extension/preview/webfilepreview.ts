@@ -1,5 +1,5 @@
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { WebsiteUrlWithPrefix, Maybe, ContentTypeMimeType, ArrayOrValue, MimeTypeWithoutParameters } from '@dereekb/util';
+import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
+import { type WebsiteUrlWithPrefix, type Maybe, type ContentTypeMimeType, type ArrayOrValue, type MimeTypeWithoutParameters } from '@dereekb/util';
 
 /**
  * Used for previewing a src url and embedMimeType.

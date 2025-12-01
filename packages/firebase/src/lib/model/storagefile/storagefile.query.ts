@@ -1,7 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { whereDateIsBefore } from '../../common/firestore/query/constraint.template';
 import { type FirestoreQueryConstraint, where } from '../../common/firestore/query/constraint';
-import { type StorageFile, StorageFileGroup, StorageFileProcessingState } from './storagefile';
+import { type StorageFile, type StorageFileGroup, StorageFileProcessingState } from './storagefile';
 import { type StorageFilePurpose } from './storagefile.id';
 import { type FirebaseAuthUserId } from '../../common/auth/auth';
 

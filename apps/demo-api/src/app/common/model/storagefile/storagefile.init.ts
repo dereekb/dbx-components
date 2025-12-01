@@ -1,6 +1,6 @@
-import { MakeTemplateForStorageFileRelatedModelInitializationFunctionInput, MakeTemplateForStorageFileRelatedModelInitializationFunctionResult, StorageFileInitServerActionsContextConfig } from '@dereekb/firebase-server/model';
+import { type MakeTemplateForStorageFileRelatedModelInitializationFunctionInput, type MakeTemplateForStorageFileRelatedModelInitializationFunctionResult, type StorageFileInitServerActionsContextConfig } from '@dereekb/firebase-server/model';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { StorageFileGroup } from '@dereekb/firebase';
+import { type StorageFileGroup } from '@dereekb/firebase';
 import { profileIdentity } from 'demo-firebase';
 
 export function demoStorageFileInitServerActionsContextConfig(context: DemoFirebaseServerActionsContext): StorageFileInitServerActionsContextConfig {

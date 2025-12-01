@@ -1,4 +1,4 @@
-import { MS_IN_HOUR, NeedsSyncBoolean, type Maybe } from '@dereekb/util';
+import { MS_IN_HOUR, type NeedsSyncBoolean, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import {
   AbstractFirestoreDocument,
@@ -21,21 +21,17 @@ import {
   type StorageDownloadUrl,
   firestoreUniqueStringArray,
   optionalFirestoreBoolean,
-  SavedToFirestoreIfTrue,
+  type SavedToFirestoreIfTrue,
   firestoreSubObject,
   firestoreUnixDateTimeSecondsNumber,
   optionalFirestoreUnixDateTimeSecondsNumber,
   firestoreObjectArray,
-  FirestoreModelKey,
   firestoreModelIdString,
-  firestoreModelKeyFactory,
-  ReadFirestoreModelKeyInput,
   firestoreModelKey,
-  FirestoreModelKeyPart,
-  OneWayFlatFirestoreModelKey,
-  FirestoreCollectionModelKey
+  type OneWayFlatFirestoreModelKey,
+  type FirestoreCollectionModelKey
 } from '../../common';
-import { inferStorageFileGroupRelatedModelKey, StorageFileGroupId, StorageFileGroupRelatedStorageFilePurpose, StorageFileKey, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { inferStorageFileGroupRelatedModelKey, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {

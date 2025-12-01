@@ -1,7 +1,5 @@
-import { mimeTypeForFileExtension, MimeTypeWithoutParameters, slashPathDetails, slashPathDirectoryTree, SlashPathDirectoryTreeNode, SlashPathDirectoryTreeNodeValue, SlashPathDirectoryTreeRoot } from '@dereekb/util';
-import { BlobWriter, Entry, FileEntry } from '@zip.js/zip.js';
-import { Maybe } from '@dereekb/util';
-import { Getter } from '@dereekb/util';
+import { mimeTypeForFileExtension, type MimeTypeWithoutParameters, slashPathDetails, slashPathDirectoryTree, type SlashPathDirectoryTreeNode, type SlashPathDirectoryTreeNodeValue, type SlashPathDirectoryTreeRoot, type Maybe, type Getter } from '@dereekb/util';
+import { BlobWriter, type Entry, type FileEntry } from '@zip.js/zip.js';
 
 export type DbxZipBlobPreviewEntryNodeValue<T extends Entry = Entry> = SlashPathDirectoryTreeNodeValue<T> & {
   readonly mimeType: Maybe<MimeTypeWithoutParameters>;

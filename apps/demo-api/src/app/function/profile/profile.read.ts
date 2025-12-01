@@ -1,5 +1,5 @@
-import { DownloadProfileArchiveParams, DownloadProfileArchiveResult, type ProfileDocument, userProfileStorageFileGroupId } from 'demo-firebase';
-import { DemoReadModelFunction } from '../function';
+import { type DownloadProfileArchiveParams, type DownloadProfileArchiveResult, type ProfileDocument, userProfileStorageFileGroupId } from 'demo-firebase';
+import { type DemoReadModelFunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { storageFileGroupZipStorageFileKey } from '@dereekb/firebase';
 import { assertIsAdminInRequest } from '@dereekb/firebase-server';
