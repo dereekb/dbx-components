@@ -1,19 +1,20 @@
 import { systemStateExampleRead } from './../system/systemstate.read';
 import { createGuestbook } from '../guestbook/guestbook.create';
-import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
+import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateUsername, profileUpdateOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
 import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
 import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
-import { createProfile } from '../profile/profile.create';
+import { profileCreate } from '../profile/profile.create';
 import { createNotification } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
 import { storageFileDownload } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent } from '../storagefile/storagefilegroup.update';
+import { profileDownloadArchive } from '../profile/profile.read';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -21,7 +22,7 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
   //
   // Without Auth Examples
   // These are just to show how to create functions that do not assert auth.
-  profile: createProfile,
+  profile: profileCreate,
   notification: onCallSpecifierHandler({
     _: createNotification
   }),
@@ -39,6 +40,9 @@ export const demoReadModelMap: DemoOnCallReadModelMap = {
   }),
   storageFile: onCallSpecifierHandler({
     download: storageFileDownload
+  }),
+  profile: onCallSpecifierHandler({
+    downloadArchive: profileDownloadArchive
   })
 };
 
@@ -49,10 +53,10 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   }),
   guestbookEntry: insertGuestbookEntry,
   profile: onCallSpecifierHandler({
-    _: updateProfile,
-    username: updateProfileUsername,
-    onboard: updateProfleOnboarding,
-    createTestNotification: updateProfileCreateTestNotification
+    _: profileUpdate,
+    username: profileUpdateUsername,
+    onboard: profileUpdateOnboarding,
+    createTestNotification: profileUpdateCreateTestNotification
   }),
   notificationUser: onCallSpecifierHandler({
     _: updateNotificationUser,

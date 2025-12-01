@@ -3,11 +3,15 @@ import { StorageAccessor } from '@dereekb/dbx-core';
 import { map, mergeMap, catchError, Observable, of, switchMap, first } from 'rxjs';
 import { FirebaseAuthUserId, firestoreModelId, FirestoreModelIdInput, StorageFileId, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { UnixDateTimeSecondsNumber } from '@dereekb/util';
+import { ContentTypeMimeType, Maybe, splitCommaSeparatedString, splitJoinRemainder, UnixDateTimeSecondsNumber } from '@dereekb/util';
 
 export interface DbxFirebaseStorageFileDownloadUrlPair {
   readonly id: StorageFileId;
   readonly downloadUrl: StorageFileSignedDownloadUrl;
+  /**
+   * Mime type, if available.
+   */
+  readonly mimeType?: Maybe<ContentTypeMimeType>;
   /**
    * Expiration in seconds since epoch.
    */
@@ -38,7 +42,7 @@ export class DbxFirebaseStorageFileDownloadStorage {
   readonly authService = inject(DbxFirebaseAuthService);
   readonly storageAccessor = inject<StorageAccessor<DbxFirebaseStorageFileDownloadUserCache>>(DBX_FIREBASE_STORAGEFILE_DOWNLOAD_STORAGE_ACCESSOR_TOKEN);
 
-  addDownloadUrl({ id, downloadUrl, expiresAt }: DbxFirebaseStorageFileDownloadUrlPair): Observable<void> {
+  addDownloadUrl({ id, downloadUrl, expiresAt, mimeType }: DbxFirebaseStorageFileDownloadUrlPair): Observable<void> {
     return this.getCurrentUserDownloadCache().pipe(
       mergeMap((cache) => {
         const { uid, pairs: currentPairs } = cache;
@@ -46,7 +50,7 @@ export class DbxFirebaseStorageFileDownloadStorage {
         const storageKey = this.getStorageKeyForUid(uid);
         const pairs: DbxFirebaseStorageFileDownloadUrlPairsRecord = {
           ...currentPairs,
-          [id]: `${expiresAt}_${downloadUrl}`
+          [id]: `${expiresAt}_${mimeType}_${downloadUrl}`
         };
 
         return this.storageAccessor.set(storageKey, {
@@ -77,12 +81,13 @@ export class DbxFirebaseStorageFileDownloadStorage {
             let result: DbxFirebaseStorageFileDownloadUrlPair | undefined;
 
             if (pair) {
-              const [expiresAt, downloadUrl] = pair.split('_', 2);
+              const [expiresAt, mimeType, downloadUrl] = splitJoinRemainder(pair, '_', 3);
 
               result = {
                 id,
                 downloadUrl,
-                expiresAt: Number(expiresAt)
+                expiresAt: Number(expiresAt),
+                mimeType
               };
             }
 

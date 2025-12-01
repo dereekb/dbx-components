@@ -1275,7 +1275,7 @@ demoApiFunctionContextFactory((f) => {
                               const testStorageFileMetadata = await f.storageContext.file(testStorageFile).getMetadata();
 
                               expect(zipEntries.length).toBe(2); // info.json and the test file
-                              expect(zipEntries[0].entryName).toBe(slashPathDetails(testStorageFileMetadata.name).fileName);
+                              expect(zipEntries[0].entryName).toBe(slashPathDetails(testStorageFileMetadata.name).typedFile);
                               expect(zipEntries[1].entryName).toBe(STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME);
 
                               storageFileGroup = await assertSnapshotData(sfg.document);

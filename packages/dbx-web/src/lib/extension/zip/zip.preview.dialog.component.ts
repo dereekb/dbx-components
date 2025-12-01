@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { WebsiteUrlWithPrefix } from '@dereekb/util';
-import { AbstractDialogDirective } from '../../interaction/dialog/abstract.dialog.directive';
+import { DbxDialogContentDirective, AbstractDialogDirective } from '../../interaction/dialog';
 import { DbxZipPreviewComponent } from './zip.preview.component';
 import { Maybe } from '@dereekb/util';
 
@@ -17,7 +17,7 @@ export interface DbxZipPreviewDialogConfig {
       <dbx-zip-preview [srcUrl]="srcUrl" [blob]="blob" [downloadFileName]="downloadFileName"></dbx-zip-preview>
     </dbx-dialog-content>
   `,
-  imports: [DbxZipPreviewComponent],
+  imports: [DbxZipPreviewComponent, DbxDialogContentDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

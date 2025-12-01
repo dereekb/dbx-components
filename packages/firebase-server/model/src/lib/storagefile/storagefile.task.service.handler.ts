@@ -27,10 +27,11 @@ import {
   notificationTaskDelayRetry,
   completeSubtaskProcessingAndScheduleCleanupTaskResult,
   notificationSubtaskComplete,
-  STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
+  STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
+  StorageFileGroup
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, documentFileExtensionForMimeType, MS_IN_HOUR, performAsyncTasks, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
+import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, mapIdentityFunction, MS_IN_HOUR, performAsyncTasks, PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig } from '../notification/notification.task.subtask.handler';
 import * as archiver from 'archiver';
@@ -94,6 +95,12 @@ export interface StorageFileProcessingPurposeSubtaskCleanupOutput extends Notifi
    * Ignored if cleanupSuccess is false.
    */
   readonly queueForDelete?: Maybe<false | StorageFileQueueForDeleteTime>;
+  /**
+   * If true, will flag the StorageFile for resync with its StorageFileGroups during the cleanup process.
+   *
+   * Ignored if queueForDelete is true.
+   */
+  readonly flagResyncWithStorageFileGroups?: boolean;
 }
 
 export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>;
@@ -228,7 +235,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     defaultCleanup,
     cleanupFunction: async function (input, cleanupInstructions: StorageFileProcessingPurposeSubtaskCleanupOutput) {
       const { storageFileDocument } = input;
-      const { nextProcessingState, queueForDelete } = cleanupInstructions;
+      const { nextProcessingState, queueForDelete, flagResyncWithStorageFileGroups: syncWithStorageFileGroups } = cleanupInstructions;
 
       let updateTemplate: Partial<StorageFile> = {
         ps: nextProcessingState ?? StorageFileProcessingState.SUCCESS,
@@ -236,14 +243,20 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
         pn: null // clear reference
       };
 
-      if (queueForDelete != null && queueForDelete !== false) {
+      const shouldQueueForDelete = queueForDelete != null && queueForDelete !== false;
+
+      if (shouldQueueForDelete) {
         updateTemplate = {
           ...updateTemplate,
           ...markStorageFileForDeleteTemplate(queueForDelete)
         };
+      } else if (syncWithStorageFileGroups) {
+        // resync with storage file groups
+        updateTemplate.gs = true;
       }
 
       await storageFileDocument.update(updateTemplate);
+
       return notificationTaskComplete();
     }
   })({
@@ -277,11 +290,65 @@ export function allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors
 export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig {
   readonly storageFileFirestoreCollections: StorageFileFirestoreCollections;
   readonly storageAccessor: FirebaseStorageAccessor;
+  readonly zip?: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfigZipConfiguration;
+}
+
+export interface StorageFileGroupStorageFileZipInfoJson {
+  readonly sfg: string;
+  readonly sf: string[];
+  readonly s: string;
+  readonly f: string;
+}
+
+export interface StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput {
+  readonly input: StorageFileProcessingPurposeSubtaskInput<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask>;
+  readonly storageFileGroup: StorageFileGroup;
+}
+
+export type StorageFileGroupStorageFileZipConfigureZipArchiverOptionsFunction = (input: StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput) => PromiseOrValue<archiver.ArchiverOptions>;
+
+export interface StorageFileGroupStorageFileZipFinalizeArchiveInput extends StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput {
+  readonly archive: archiver.Archiver;
+}
+
+export type StorageFileGroupStorageFileZipFinalizeArchiveFunction = (input: StorageFileGroupStorageFileZipFinalizeArchiveInput) => Promise<void>;
+
+export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfigZipConfiguration {
+  /**
+   * Configures the maximum number of files to zip in parallel. Streaming more files in parallel concurrently requires more memory.
+   *
+   * Defaults to 3.
+   */
+  readonly maxNumberOfFilesToZipInParallel?: number;
+  /**
+   * Configures the options for the zip archiver.
+   *
+   * If not provided, the default options will be used.
+   */
+  readonly configureZipArchiverOptions?: StorageFileGroupStorageFileZipConfigureZipArchiverOptionsFunction;
+  /**
+   * Configures how the json info is generated.
+   *
+   * If false, the info json will not be appended to the zip file.
+   *
+   * The function should return an object that can be serialized to JSON.
+   */
+  readonly configureZipInfoJson?: false | ((baseInfoJson: StorageFileGroupStorageFileZipInfoJson) => PromiseOrValue<Maybe<any>>);
+  /**
+   * Optional function to hook into the finalization of the target zip archive.
+   */
+  readonly finalizeZipArchive?: StorageFileGroupStorageFileZipFinalizeArchiveFunction;
 }
 
 export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
-  const { storageFileFirestoreCollections, storageAccessor } = config;
+  const { storageFileFirestoreCollections, storageAccessor, zip } = config;
   const { storageFileCollection, storageFileGroupCollection } = storageFileFirestoreCollections;
+  const { maxNumberOfFilesToZipInParallel: inputMaxNumberOfFilesToZipInParallel, configureZipInfoJson: inputConfigureZipInfoJson, configureZipArchiverOptions: inputConfigureZipArchiverOptions, finalizeZipArchive } = zip ?? {};
+
+  const maxNumberOfFilesToZipInParallel = inputMaxNumberOfFilesToZipInParallel ?? 3;
+  const appendZipInfoJson = inputConfigureZipInfoJson !== false;
+  const configureZipArchiverOptions = inputConfigureZipArchiverOptions ?? (() => ({ zlib: { level: 9 } }));
+  const configureZipInfoJson = (appendZipInfoJson ? inputConfigureZipInfoJson : undefined) ?? MAP_IDENTITY;
 
   const storageFileGroupZipProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> = {
     target: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
@@ -322,7 +389,8 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                 });
 
                 const startedAt = new Date();
-                const newArchive = archiver('zip', { zlib: { level: 9 } });
+                const archiverOptions = await configureZipArchiverOptions({ input, storageFileGroup });
+                const newArchive = archiver('zip', archiverOptions);
 
                 // pipe the archive to the upload stream
                 newArchive.pipe(uploadStream, { end: true });
@@ -382,23 +450,44 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                     }
                   },
                   {
-                    maxParallelTasks: 3 // only stream three files concurrently to the archive to avoid issues with memory usage
+                    maxParallelTasks: maxNumberOfFilesToZipInParallel
                   }
                 );
 
                 const finishedAt = new Date();
 
                 // create the info.json file
-                const infoJson = {
-                  sfg: storageFileGroupId,
-                  sf: storageFileIdsToZip,
-                  s: startedAt.toISOString(),
-                  f: finishedAt.toISOString()
-                };
+                if (appendZipInfoJson) {
+                  const infoJson = await configureZipInfoJson({
+                    sfg: storageFileGroupId,
+                    sf: storageFileIdsToZip,
+                    s: startedAt.toISOString(),
+                    f: finishedAt.toISOString()
+                  });
 
-                newArchive.append(JSON.stringify(infoJson), {
-                  name: STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
-                });
+                  let infoJsonString: string | undefined;
+
+                  try {
+                    infoJsonString = JSON.stringify(infoJson);
+                  } catch (e) {
+                    console.error('storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(): Failed to convert the info json to a string. Check your custom configureInfoJson() function.', e);
+                  }
+
+                  if (infoJsonString) {
+                    newArchive.append(infoJsonString, {
+                      name: STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME
+                    });
+                  }
+                }
+
+                // perform any other tasks using the zip archive
+                if (finalizeZipArchive) {
+                  await finalizeZipArchive({
+                    input,
+                    storageFileGroup,
+                    archive: newArchive
+                  });
+                }
 
                 // finalize the archive
                 await newArchive.finalize();

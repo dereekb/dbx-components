@@ -47,8 +47,6 @@ import {
   storageFileFlaggedForSyncWithGroupsQuery,
   iterateFirestoreDocumentSnapshotPairBatches,
   loadDocumentsForIds,
-  loadAllFirestoreDocumentSnapshotPairs,
-  loadDocumentsForDocumentReferencesFromValues,
   getDocumentSnapshotDataPairs,
   storageFileGroupsFlaggedForContentRegenerationQuery,
   AsyncStorageFileGroupCreateAction,
@@ -89,10 +87,10 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, performAsyncTasks, RelationChangeType, runAsyncTasksForValues } from '@dereekb/util';
+import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, MS_IN_HOUR, MS_IN_MINUTE, performAsyncTasks, RelationChangeType, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
-import { addDays } from 'date-fns';
+import { addDays, addMinutes } from 'date-fns';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -116,7 +114,7 @@ export abstract class StorageFileServerActions {
   abstract processStorageFile(params: ProcessStorageFileParams): Promise<TransformAndValidateFunctionResult<ProcessStorageFileParams, (storageFileDocument: StorageFileDocument) => Promise<ProcessStorageFileResult>>>;
   abstract deleteAllQueuedStorageFiles(params: DeleteAllQueuedStorageFilesParams): Promise<TransformAndValidateFunctionResult<DeleteAllQueuedStorageFilesParams, () => Promise<DeleteAllQueuedStorageFilesResult>>>;
   abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
-  abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument: StorageFileDocument) => Promise<DownloadStorageFileResult>>>;
+  abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument?: Maybe<StorageFileDocument>) => Promise<DownloadStorageFileResult>>>;
   abstract createStorageFileGroup(params: CreateStorageFileGroupParams): AsyncStorageFileGroupCreateAction<CreateStorageFileGroupParams>;
   abstract syncStorageFileWithGroups(params: SyncStorageFileWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncStorageFileWithGroupsParams, (storageFileDocument: StorageFileDocument) => Promise<SyncStorageFileWithGroupsResult>>>;
   abstract syncAllFlaggedStorageFilesWithGroups(params: SyncAllFlaggedStorageFilesWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncAllFlaggedStorageFilesWithGroupsParams, () => Promise<SyncAllFlaggedStorageFilesWithGroupsResult>>>;
@@ -470,22 +468,28 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
 
         if (!storageFile.pn) {
           await beginProcessing(true); // if no processing task is set, restart processing to recover from the broken state
-        } else if (checkRetryProcessing || shouldCheckProcessing) {
+        } else {
           const { pn } = storageFile;
           const notificationDocument = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentForKey(pn);
-          const notification = await notificationDocument.snapshotData();
 
-          if (!notification) {
-            // the notification document is missing. Re-begin processing
-            await beginProcessing(true);
-          } else if (notification.d || forceRestartProcessing) {
-            // if the notification is somehow in the done state but the StorageFile never got notified in the same transaction, requeue.
-            await beginProcessing(true);
+          if (checkRetryProcessing || shouldCheckProcessing) {
+            const notification = await notificationDocument.snapshotData();
+
+            if (!notification) {
+              // the notification document is missing. Re-begin processing
+              await beginProcessing(true);
+            } else if (notification.d || forceRestartProcessing) {
+              // if the notification is somehow in the done state but the StorageFile never got notified in the same transaction, requeue.
+              await beginProcessing(true);
+            }
+
+            // NOTE: We could look at the state of the notification task more, but at this point the task is probably still valid and still running,
+            // so we can only wait on it. In general if the task still exists and is not yet done, then we should wait on it as the
+            // task running system should complete eventually by design.
+          } else if (expediteInstance) {
+            // enqueue the existing notification to be run in the expedite instance
+            expediteInstance.enqueue(notificationDocument);
           }
-
-          // NOTE: We could look at the state of the notification task more, but at this point the task is probably still valid and still running,
-          // so we can only wait on it. In general if the task still exists and is not yet done, then we should wait on it as the
-          // task running system should complete eventually by design.
         }
         break;
       case StorageFileProcessingState.DO_NOT_PROCESS:
@@ -625,36 +629,48 @@ export function deleteStorageFileFactory(context: StorageFileServerActionsContex
 }
 
 export function downloadStorageFileFactory(context: StorageFileServerActionsContext) {
-  const { storageService, firebaseServerActionTransformFunctionFactory } = context;
+  const { storageService, firebaseServerActionTransformFunctionFactory, storageFileCollection } = context;
 
   return firebaseServerActionTransformFunctionFactory(DownloadStorageFileParams, async (params) => {
-    const { asAdmin, expiresAt, expiresIn, responseDisposition, responseContentType } = params;
+    const { key: targetStorageFileDocumentKey, asAdmin, expiresAt, expiresIn: inputExpiresIn, responseDisposition, responseContentType } = params;
 
-    return async (storageFileDocument: StorageFileDocument) => {
+    return async (storageFileDocument?: Maybe<StorageFileDocument>) => {
+      // if the StorageFileDocument was not provided, set it from the target key
+      if (!storageFileDocument) {
+        storageFileDocument = storageFileCollection.documentAccessor().loadDocumentForKey(targetStorageFileDocumentKey);
+      }
+
       const storageFile = await assertSnapshotData(storageFileDocument);
       const fileAccessor = storageService.file(storageFile);
 
       let result: DownloadStorageFileResult;
 
       if (fileAccessor.getSignedUrl) {
-        const expires = expirationDetails({ expiresAt, expiresIn });
-        let downloadUrlExpiresAt = expires.getExpirationDate();
+        const expiresIn = inputExpiresIn ?? MS_IN_MINUTE * 30;
+        const expires = expirationDetails({ defaultExpiresFromDateToNow: true, expiresAt, expiresIn });
+        let downloadUrlExpiresAt = expires.getExpirationDate() as Date;
 
         // if they're not an admin, limit the expiration to a max of 30 days.
         if (downloadUrlExpiresAt && !asAdmin) {
           const maxExpirationDate = addDays(new Date(), 30);
-          downloadUrlExpiresAt = findMinDate([downloadUrlExpiresAt, maxExpirationDate]);
+          downloadUrlExpiresAt = findMinDate([downloadUrlExpiresAt, maxExpirationDate]) as Date;
         }
 
-        const downloadUrl = await fileAccessor.getSignedUrl({
-          action: 'read',
-          expiresAt: downloadUrlExpiresAt ?? undefined,
-          responseDisposition: responseDisposition ?? undefined, // can be set by anyone
-          responseType: asAdmin ? (responseContentType ?? undefined) : undefined // can only be set by admins
-        });
+        const [downloadUrl, metadata] = await Promise.all([
+          fileAccessor.getSignedUrl({
+            action: 'read',
+            expiresAt: downloadUrlExpiresAt ?? undefined,
+            responseDisposition: responseDisposition ?? undefined, // can be set by anyone
+            responseType: asAdmin ? (responseContentType ?? undefined) : undefined // can only be set by admins
+          }),
+          fileAccessor.getMetadata()
+        ]);
 
         result = {
-          url: downloadUrl
+          url: downloadUrl,
+          fileName: metadata.name ? slashPathDetails(metadata.name).end : undefined,
+          mimeType: responseContentType ?? metadata.contentType,
+          expiresAt: unixDateTimeSecondsNumberFromDate(downloadUrlExpiresAt)
         };
       } else {
         throw internalServerError('Signed url function appears to not be avalable.');
@@ -957,6 +973,7 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
             const { storageFileDocument } = await createStorageFileDocumentPair<StorageFileGroupZipStorageFileMetadata>({
               storagePathRef: zipStorageFile,
               accessor: storageFileDocumentAccessor,
+              parentStorageFileGroup: storageFileGroupDocument,
               purpose: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
               shouldBeProcessed: true,
               ownershipKey: o,
@@ -968,7 +985,7 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
             updateTemplate.zsf = storageFileDocument.id;
           } else {
             // flag it for processing again
-            await processStorageFileInTransaction({ storageFileDocument: existingZipStorageFilePair.document, storageFile: existingZipStorageFilePair.data }, transaction);
+            await processStorageFileInTransaction({ params: { processAgainIfSuccessful: true }, storageFileDocument: existingZipStorageFilePair.document, storageFile: existingZipStorageFilePair.data }, transaction);
           }
 
           contentStorageFilesFlaggedForProcessing += 1;

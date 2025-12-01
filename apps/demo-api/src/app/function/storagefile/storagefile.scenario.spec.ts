@@ -1,8 +1,8 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
-import { firestoreDummyKey, type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
+import { DownloadProfileArchiveParams, DownloadProfileArchiveResult, profileIdentity, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
+import { firestoreDummyKey, type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
 import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -12,7 +12,7 @@ import * as AdmZip from 'adm-zip';
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserAdminContext({ f }, (au) => {
-      demoProfileContext({ f, u: au }, (profile) => {
+      demoProfileContext({ f, u: au }, (p) => {
         function createTestFileForUser(content: string, fileName = 'test.any') {
           return async () => {
             const uid = au.uid;
@@ -309,6 +309,38 @@ demoApiFunctionContextFactory((f) => {
                                 }
                               },
                               (sf_zip) => {
+                                it('should allow regenerating the zip again', async () => {
+                                  const storageFileGroup = await assertSnapshotData(sfg.document);
+                                  expect(storageFileGroup.zsf).toBeDefined();
+
+                                  const zipStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(storageFileGroup.zsf as string);
+                                  let zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+
+                                  await sfg.regenerateStorageFileGroupContent(); // flag for regenerating again
+
+                                  zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING); // should now be processing
+
+                                  const resultZipDocument = await sfg.processZipFileRegeneration();
+                                  expect(resultZipDocument.key).toBe(zipStorageFileDocument.key);
+
+                                  zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+                                  expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS); // should now be fully processed again
+                                });
+
+                                it('should allow the user to download their zip file', async () => {
+                                  const downloadProfileArchiveParams: DownloadProfileArchiveParams = {
+                                    key: p.documentKey
+                                  };
+
+                                  const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(profileIdentity, downloadProfileArchiveParams, 'downloadArchive'))) as DownloadProfileArchiveResult;
+
+                                  expect(result).toBeDefined();
+                                  expect(result.url).toBeDefined();
+                                });
+
                                 describe('adding a new file to the group', () => {
                                   demoStorageFileContext({ f, createUploadedFile: createTestFileForUser('This is test file 4.', 'test4.any') }, (sf4) => {
                                     it('should update the storage group after the file is synced', async () => {

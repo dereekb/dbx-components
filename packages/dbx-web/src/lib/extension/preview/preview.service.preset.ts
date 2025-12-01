@@ -3,6 +3,7 @@ import { DbxEmbedDialogComponent } from '../../interaction/iframe/embed.dialog.c
 import { DbxZipPreviewDialogComponent } from '../zip';
 import { DbxWebFilePreviewServiceEntry, DbxWebFilePreviewServicePreviewFunction } from './preview';
 
+// MARK: Default
 /**
  * Default preset for previewing a file using a DbxEmbedDialogComponent.
  */
@@ -14,6 +15,7 @@ export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PRESET: DbxWebFilePreviewServi
   });
 };
 
+// MARK: Zip
 /**
  * Preset for previewing a zip file using a DbxZipPreviewDialogComponent.
  */
@@ -23,6 +25,9 @@ export const DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET: DbxWebFilePreviewServicePr
   });
 };
 
+/**
+ * DbxWebFilePreviewServiceEntry for previewing a zip file using a DbxZipPreviewDialogComponent.
+ */
 export const DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY: DbxWebFilePreviewServiceEntry = {
   mimeType: ZIP_FILE_MIME_TYPE,
   previewFunction: DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET

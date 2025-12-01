@@ -4,7 +4,7 @@ import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, ty
 import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType, IsNotEmpty } from 'class-validator';
 import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
-import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds } from '@dereekb/util';
+import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds, UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { StorageFileId } from './storagefile.id';
 import { SendNotificationResult } from '../notification/notification.api';
 
@@ -225,6 +225,28 @@ export class DownloadStorageFileParams extends TargetModelParams {
 }
 
 /**
+ * Result of downloading a StorageFile.
+ */
+export interface DownloadStorageFileResult {
+  /**
+   * The download URL.
+   */
+  readonly url: StorageFileSignedDownloadUrl;
+  /**
+   * The name of the StorageFile, if available.
+   */
+  readonly fileName?: Maybe<string>;
+  /**
+   * The mime type of the StorageFile, if available.
+   */
+  readonly mimeType?: Maybe<ContentTypeMimeType>;
+  /**
+   * Expiration time as a UnixDateTimeSecondsNumber value.
+   */
+  readonly expiresAt?: Maybe<UnixDateTimeSecondsNumber>;
+}
+
+/**
  * Used for creating or initializing a new StorageFileGroup for a StorageFile.
  *
  * Mainly used for testing. Not exposed to the API.
@@ -316,13 +338,6 @@ export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
    * The number of "content" StorageFiles that were flagged for processing again.
    */
   readonly contentStorageFilesFlaggedForProcessing: number;
-}
-
-export interface DownloadStorageFileResult {
-  /**
-   * The download URL.
-   */
-  readonly url: StorageFileSignedDownloadUrl;
 }
 
 /**

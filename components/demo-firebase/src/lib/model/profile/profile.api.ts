@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { DownloadStorageFileParams, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, StorageFileSignedDownloadUrl, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { type Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
@@ -41,6 +41,10 @@ export class UpdateProfileParams extends InferredTargetModelParams {
 
 export class FinishOnboardingProfileParams extends InferredTargetModelParams {}
 
+export class DownloadProfileArchiveParams extends DownloadStorageFileParams {}
+
+export interface DownloadProfileArchiveResult extends DownloadStorageFileResult {}
+
 /**
  * We set the key here to allow both the functions server and the type map/client access this shared key.
  */
@@ -59,6 +63,9 @@ export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Profile
 
 export type ProfileModelCrudFunctionsConfig = {
   profile: {
+    read: {
+      downloadArchive: [DownloadProfileArchiveParams, DownloadProfileArchiveResult];
+    };
     update: {
       _: UpdateProfileParams;
       username: SetProfileUsernameParams;
@@ -72,6 +79,7 @@ export type ProfileModelCrudFunctionsConfig = {
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
+    'read:downloadArchive',
     'update:_,username,onboard,createTestNotification' as any, // use "any" once typescript complains about combinations
     'delete'
   ]
@@ -88,6 +96,9 @@ export const profileFunctionMap = callModelFirebaseFunctionMapFactory(profileFun
 export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig> {
   abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
   abstract profile: {
+    readProfile: {
+      downloadArchive: ModelFirebaseCrudFunction<DownloadProfileArchiveParams, DownloadProfileArchiveResult>;
+    };
     updateProfile: {
       // full names
       updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;

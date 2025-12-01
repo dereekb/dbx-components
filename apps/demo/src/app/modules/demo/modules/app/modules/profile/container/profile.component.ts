@@ -1,13 +1,14 @@
 import { OnInit, Component, inject } from '@angular/core';
-import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
-import { first, map } from 'rxjs';
+import { WorkUsingContext, IsModifiedFunction, loadingStateContext, valueFromFinishedLoadingState, throwErrorFromLoadingStateError } from '@dereekb/rxjs';
+import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileDownloadButtonSource, dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
+import { first, firstValueFrom, map } from 'rxjs';
 import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';
 import { userAvatarUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValue } from '@dereekb/util';
 
 @Component({
   templateUrl: './profile.component.html',
@@ -46,6 +47,16 @@ export class DemoProfileViewComponent implements OnInit {
   readonly avatarDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
     text: 'Start Avatar Download',
     downloadReadyText: 'Save Avatar'
+  };
+
+  readonly archiveDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
+    text: 'Start Archive Download',
+    downloadReadyText: 'Save Archive'
+  };
+
+  readonly archiveDownloadSource: DbxFirebaseStorageFileDownloadButtonSource = {
+    storageFileKey: this.profileDocumentStore.zipArchiveStorageFileKey$,
+    customSource: dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs(() => this.profileDocumentStore.downloadArchive({}))
   };
 
   readonly storageService = inject(DbxFirebaseStorageService);

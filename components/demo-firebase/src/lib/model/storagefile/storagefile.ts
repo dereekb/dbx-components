@@ -103,6 +103,10 @@ export function makeUserAvatarFileStoragePath(userId: FirebaseAuthUserId): Slash
   return userStorageFolderPath(userId, USER_AVATAR_STORAGE_FILE_NAME_PREFIX, `${timestamp}.jpg`);
 }
 
+export function userAvatarFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
+  return [userProfileStorageFileGroupId(userId)];
+}
+
 export const USER_AVATAR_IMAGE_WIDTH = 512;
 export const USER_AVATAR_IMAGE_HEIGHT = USER_AVATAR_IMAGE_WIDTH;
 
