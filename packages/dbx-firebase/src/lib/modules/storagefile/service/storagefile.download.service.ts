@@ -34,7 +34,7 @@ export class DbxFirebaseStorageFileDownloadService {
   /**
    * Expiration duration for cached download URLs.
    */
-  protected _expiresAfterTime: Milliseconds = 3 * MS_IN_DAY;
+  protected _expiresAfterTime: Milliseconds = MS_IN_HOUR * 12;
 
   /**
    * When reading cached values, this buffer is added to the expiration time to prevent the URL from expiring while it is being used.
@@ -77,22 +77,25 @@ export class DbxFirebaseStorageFileDownloadService {
         if (pair) {
           const expiresAt = pair.expiresAt - this._expiresAfterTimeBuffer;
 
-          // every minute emit the result again
-          result = interval(MS_IN_MINUTE)
-            .pipe(
-              map(() => {
-                const now = unixDateTimeSecondsNumberForNow();
-                const isExpired = now > expiresAt;
-                return isExpired ? null : pair; // emit null once expired
-              })
-            )
-            .pipe(
-              filter((x) => x == null),
-              first(),
-              startWith(pair),
-              distinctUntilChanged(),
+          function pairIfNotExpired(): Maybe<DbxFirebaseStorageFileDownloadUrlPair> {
+            const now = unixDateTimeSecondsNumberForNow();
+            const isExpired = now > expiresAt;
+            return isExpired ? null : pair;
+          }
+
+          const initialPair = pairIfNotExpired();
+
+          if (initialPair) {
+            // every minute emit the result again
+            result = interval(MS_IN_MINUTE).pipe(
+              map(pairIfNotExpired),
+              first((x) => x == null), // only emit the first null value
+              startWith(initialPair), // send the initial value first
               shareReplay(1)
             );
+          } else {
+            result = of(null);
+          }
         } else {
           result = of(null);
         }
@@ -131,9 +134,7 @@ export class DbxFirebaseStorageFileDownloadService {
         let result: Observable<DbxFirebaseStorageFileDownloadUrlPair>;
 
         const downloadAndCacheResult = () => {
-          const expiresAt = addMilliseconds(new Date(), this._expiresAfterTime);
-
-          return from(this._createDownloadPairForStorageFileUsingSource(source, storageFileIdOrKey, { expiresAt })).pipe(
+          return from(this._createDownloadPairForStorageFileUsingSource(source, storageFileIdOrKey)).pipe(
             tap((downloadUrlPair) => {
               this.addPairForStorageFileToCache(downloadUrlPair);
             })

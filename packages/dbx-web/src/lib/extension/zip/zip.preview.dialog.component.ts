@@ -4,8 +4,9 @@ import { WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxDialogContentDirective, AbstractDialogDirective } from '../../interaction/dialog';
 import { DbxZipPreviewComponent } from './zip.preview.component';
 import { Maybe } from '@dereekb/util';
+import { MatDialogConfig } from '@angular/material/dialog';
 
-export interface DbxZipPreviewDialogConfig {
+export interface DbxZipPreviewDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly srcUrl?: Maybe<WebsiteUrlWithPrefix>;
   readonly blob?: Maybe<Blob>;
   readonly downloadFileName?: Maybe<string>;
@@ -36,6 +37,9 @@ export class DbxZipPreviewDialogComponent extends AbstractDialogDirective<void, 
 
   static openDialog(matDialog: MatDialog, config: DbxZipPreviewDialogConfig): MatDialogRef<DbxZipPreviewDialogComponent, void> {
     const dialogRef = matDialog.open(DbxZipPreviewDialogComponent, {
+      width: '80vw',
+      height: '80vh',
+      ...config,
       data: config
     });
 

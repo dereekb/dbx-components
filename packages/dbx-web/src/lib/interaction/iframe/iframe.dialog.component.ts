@@ -4,8 +4,9 @@ import { WebsiteUrlWithPrefix } from '@dereekb/util';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
 import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
 import { DbxIframeComponent } from './iframe.component';
+import { MatDialogConfig } from '@angular/material/dialog';
 
-export interface DbxIframeDialogConfig {
+export interface DbxIframeDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly contentUrl: WebsiteUrlWithPrefix;
 }
 
@@ -26,6 +27,7 @@ export class DbxIframeDialogComponent extends AbstractDialogDirective<void, DbxI
 
   static openDialog(matDialog: MatDialog, config: DbxIframeDialogConfig): MatDialogRef<DbxIframeDialogComponent, void> {
     const dialogRef = matDialog.open(DbxIframeDialogComponent, {
+      ...config,
       data: config
     });
 

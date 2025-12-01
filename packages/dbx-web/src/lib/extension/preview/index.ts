@@ -1,3 +1,3 @@
-export * from './preview';
-export * from './preview.service';
-export * from './preview.service.preset';
+export * from './webfilepreview';
+export * from './webfilepreview.service';
+export * from './webfilepreview.service.preset';

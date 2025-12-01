@@ -840,6 +840,7 @@ download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/index.ts"
 
 mkdir $API_APP_FOLDER/src/app/common/model/storagefile
+mkdir $API_APP_FOLDER/src/app/common/model/storagefile/storagefile.init.ts
 download_api_ts_file "src/app/common/model/storagefile/storagefile.module.ts"
 download_api_ts_file "src/app/common/model/storagefile/storagefile.upload.service.ts"
 download_api_ts_file "src/app/common/model/storagefile/index.ts"

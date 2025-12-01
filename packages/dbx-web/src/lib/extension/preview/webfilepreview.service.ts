@@ -1,8 +1,8 @@
 import { Inject, inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { WebsiteUrlWithPrefix, Maybe, ContentTypeMimeType, MimeTypeWithoutParameters, ArrayOrValue, setKeysOnMap, asArray } from '@dereekb/util';
-import { DbxWebFilePreviewServiceEntry, DbxWebFilePreviewServicePreviewFunction } from './preview';
-import { DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PRESET } from './preview.service.preset';
+import { DbxWebFilePreviewServiceEntry, DbxWebFilePreviewServicePreviewFunction } from './webfilepreview';
+import { DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PRESET } from './webfilepreview.service.preset';
 
 /**
  * Default entries to inject.

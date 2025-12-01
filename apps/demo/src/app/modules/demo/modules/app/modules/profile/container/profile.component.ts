@@ -56,7 +56,7 @@ export class DemoProfileViewComponent implements OnInit {
 
   readonly archiveDownloadSource: DbxFirebaseStorageFileDownloadButtonSource = {
     storageFileKey: this.profileDocumentStore.zipArchiveStorageFileKey$,
-    customSource: dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs(() => this.profileDocumentStore.downloadArchive({}))
+    customSource: dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs((x) => this.profileDocumentStore.downloadArchive({ ...x, key: undefined }))
   };
 
   readonly storageService = inject(DbxFirebaseStorageService);
