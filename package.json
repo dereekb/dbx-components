@@ -169,7 +169,8 @@
     "ts-jest": "29.3.2",
     "ts-node": "10.9.2",
     "typescript": ">=5.5.0 <5.6.0",
-    "typescript-eslint": "8.31.0"
+    "typescript-eslint": "8.31.0",
+    "glob": "^10.5.0"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "20.8.0",
