@@ -20,7 +20,7 @@ export interface DbxWidgetEntry {
   providedIn: 'root'
 })
 export class DbxWidgetService {
-  private _entries = new Map<DbxWidgetType, DbxWidgetEntry>();
+  private readonly _entries = new Map<DbxWidgetType, DbxWidgetEntry>();
 
   /**
    * Used to register an entry. If an entry with the same type is already registered, this will override it by default.

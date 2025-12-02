@@ -1,14 +1,43 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { DbxActionDialogDirective, DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, DbxButtonStyle, DbxEmbedDialogComponent } from '@dereekb/dbx-web';
-import { StorageFileKey, StorageFilePublicDownloadUrl, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
-import { ContentTypeMimeType, dateFromDateOrTimeNumber, DateOrUnixTimeNumber, isPast, Maybe, MS_IN_SECOND } from '@dereekb/util';
-import { DbxFirebaseStorageFileDownloadService } from '../service/storagefile.download.service';
+import { DbxActionDialogDirective, DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, DbxButtonStyle, DbxWebFilePreviewService } from '@dereekb/dbx-web';
+import { StorageFileDownloadUrl, StorageFileKey } from '@dereekb/firebase';
+import { ContentTypeMimeType, dateFromDateOrTimeSecondsNumber, DateOrUnixDateTimeSecondsNumber, isPast, Maybe, MS_IN_SECOND } from '@dereekb/util';
+import { DbxFirebaseStorageFileDownloadService, DbxFirebaseStorageFileDownloadServiceCustomSource } from '../service/storagefile.download.service';
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { WorkUsingObservable } from '@dereekb/rxjs';
+import { MaybeObservableOrValue, maybeValueFromObservableOrValue, WorkInstance, WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, interval, map, Observable, of, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, interval, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+
+export interface DbxFirebaseStorageFileDownloadButtonSource {
+  /**
+   * A static StorageFileKey to use.
+   */
+  readonly storageFileKey?: MaybeObservableOrValue<StorageFileKey>;
+  /**
+   * The expected mime type of the StorageFile to use when previewing.
+   */
+  readonly storageFileEmbedMimeType?: MaybeObservableOrValue<ContentTypeMimeType | string>;
+  /**
+   * Custom source to use with the DbxFirebaseStorageFileDownloadService. A more simple alternative to using handleGetDownloadUrl().
+   */
+  readonly customSource?: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>;
+  /**
+   * Optional custom work to use to get the download URL.
+   *
+   * If provided, customSource is ignored.
+   */
+  readonly handleGetDownloadUrl?: Maybe<WorkUsingContext<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair>>;
+  /**
+   * Optional custom success handler for the download URL.
+   */
+  readonly handleGetDownloadUrlSuccess?: (value: DbxFirebaseStorageFileDownloadUrlPair) => void;
+  /**
+   * Optional custom error handler for the download URL.
+   */
+  readonly handleGetDownloadUrlError?: (error: unknown) => void;
+}
 
 /**
  * Configuration for the DbxFirebaseStorageFileDownloadButton.
@@ -18,10 +47,14 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
   readonly previewButtonStyle?: Maybe<DbxButtonStyle>;
   /**
    * Whether or not to pre-load the download url from the source.
+   *
+   * Defaults to false.
    */
   readonly preload?: Maybe<boolean>;
   /**
    * Whether or not to show a preview button.
+   *
+   * Defaults to true.
    */
   readonly showPreviewButton?: Maybe<boolean>;
   readonly icon?: Maybe<string>;
@@ -30,12 +63,18 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
   readonly downloadReadyText?: Maybe<string>;
   readonly previewIcon?: Maybe<string>;
   readonly previewText?: Maybe<string>;
+  /**
+   * Optional custom function to open a preview dialog. If not provided, the default preview dialog provided by the DbxWebFilePreviewService will be used.
+   *
+   * The function can return undefined, in which case the default preview dialog will be used.
+   */
+  readonly openCustomPreview?: Maybe<(downloadUrl: StorageFileDownloadUrl, embedMimeType?: Maybe<string>) => Maybe<MatDialogRef<any>>>;
 }
 
 @Component({
   selector: 'dbx-firebase-storagefile-download-button',
   template: `
-    <dbx-anchor dbxActionAnchor [anchor]="anchorSignal()" dbxAction [dbxActionAutoTrigger]="preloadSignal()" dbxActionSnackbarError [dbxActionDisabled]="!storageFileKey()" [dbxActionValue]="storageFileKey" [dbxActionHandler]="handleGetDownloadUrl" [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess" [dbxActionErrorHandler]="handleGetDownloadUrlError">
+    <dbx-anchor dbxActionAnchor [anchor]="anchorSignal()" dbxAction [dbxActionAutoTrigger]="preloadSignal()" dbxActionSnackbarError [dbxActionDisabled]="!storageFileKeySignal()" [dbxActionValue]="storageFileKeySignal()" [dbxActionHandler]="handleGetDownloadUrl" [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess" [dbxActionErrorHandler]="handleGetDownloadUrlError">
       <dbx-button dbxActionButton [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
     </dbx-anchor>
     @if (showPreviewButtonSignal()) {
@@ -50,8 +89,10 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
   standalone: true
 })
 export class DbxFirebaseStorageFileDownloadButton {
-  readonly dbxFirebaseStorageFileDownloadService = inject(DbxFirebaseStorageFileDownloadService);
   readonly matDialog = inject(MatDialog);
+
+  readonly dbxWebFilePreviewService = inject(DbxWebFilePreviewService);
+  readonly dbxFirebaseStorageFileDownloadService = inject(DbxFirebaseStorageFileDownloadService);
 
   /**
    * The StorageFileKey to set up the download button for.
@@ -61,7 +102,7 @@ export class DbxFirebaseStorageFileDownloadButton {
   /**
    * The download URL to use for the download button.
    */
-  readonly storageFileDownloadUrl = input<Maybe<StorageFileSignedDownloadUrl | StorageFilePublicDownloadUrl>>();
+  readonly storageFileDownloadUrl = input<Maybe<StorageFileDownloadUrl>>();
 
   /**
    * The MIME type to use the embed component.
@@ -78,9 +119,12 @@ export class DbxFirebaseStorageFileDownloadButton {
   /**
    * Output event emitted when the download URL changes.
    */
-  readonly downloadUrlChange = output<Maybe<StorageFileSignedDownloadUrl>>();
+  readonly downloadUrlChange = output<Maybe<StorageFileDownloadUrl>>();
 
   readonly config = input<Maybe<DbxFirebaseStorageFileDownloadButtonConfig>>();
+  readonly source = input<Maybe<DbxFirebaseStorageFileDownloadButtonSource>>();
+
+  readonly source$ = toObservable(this.source);
 
   readonly configSignal = computed(() => {
     const config = this.config();
@@ -104,10 +148,28 @@ export class DbxFirebaseStorageFileDownloadButton {
     return config.preload ?? false;
   });
 
-  readonly downloadUrlSignal = signal<Maybe<StorageFileSignedDownloadUrl>>(undefined);
-  readonly downloadUrlExpiresAtSignal = signal<Maybe<DateOrUnixTimeNumber>>(undefined);
+  readonly downloadUrlSignal = signal<Maybe<StorageFileDownloadUrl>>(undefined);
+  readonly downloadMimeTypeSignal = signal<Maybe<ContentTypeMimeType>>(undefined);
+  readonly downloadUrlExpiresAtSignal = signal<Maybe<DateOrUnixDateTimeSecondsNumber>>(undefined);
 
-  readonly storageFileKey$ = toObservable(this.storageFileKey).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly storageFileKeyFromInput$ = toObservable(this.storageFileKey).pipe(distinctUntilChanged(), shareReplay(1));
+
+  readonly storageFileKeyFromSource$: Observable<Maybe<StorageFileKey>> = this.source$.pipe(
+    map((source) => source?.storageFileKey),
+    maybeValueFromObservableOrValue(),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly storageFileKey$: Observable<Maybe<StorageFileKey>> = combineLatest([this.storageFileKeyFromInput$, this.storageFileKeyFromSource$]).pipe(
+    map(([storageFileKeyFromInput, storageFileKeyFromSource]) => {
+      return storageFileKeyFromInput ?? storageFileKeyFromSource;
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly storageFileKeySignal = toSignal(this.storageFileKey$);
 
   readonly hasDownloadUrlSignal = computed(() => Boolean(this.downloadUrlSignal()));
 
@@ -189,15 +251,20 @@ export class DbxFirebaseStorageFileDownloadButton {
     return hasDownloadUrl && (config.showPreviewButton ?? true);
   });
 
-  readonly handleOpenPreviewDialog: DbxActionDialogFunction = () => {
-    const srcUrl = this.downloadUrlSignal() as string;
-    const embedMimeType = this.embedMimeType();
+  readonly openCustomPreviewSignal = computed(() => {
+    const config = this.configSignal();
+    return config.openCustomPreview;
+  });
 
-    return DbxEmbedDialogComponent.openDialog(this.matDialog, {
-      srcUrl,
-      embedMimeType,
-      sanitizeUrl: true
-    });
+  readonly handleOpenPreviewDialog: DbxActionDialogFunction = () => {
+    const openPreview = this.openCustomPreviewSignal();
+
+    const srcUrl = this.downloadUrlSignal() as string;
+    const inputEmbedMimeType = this.embedMimeType();
+    const downloadMimeType = this.downloadMimeTypeSignal();
+    const embedMimeType = inputEmbedMimeType ?? downloadMimeType;
+
+    return openPreview?.(srcUrl, embedMimeType) ?? this.dbxWebFilePreviewService.openPreviewDialog(srcUrl, embedMimeType);
   };
 
   // Cached Url Effect
@@ -206,6 +273,7 @@ export class DbxFirebaseStorageFileDownloadButton {
     switchMap((key) => (key ? this.dbxFirebaseStorageFileDownloadService.getCachedDownloadPairForStorageFile(key) : of(null))),
     shareReplay(1)
   );
+
   readonly cachedUrlForStorageFileKeySignal = toSignal(this.cachedUrlForStorageFileKey$);
 
   readonly cachedUrlEffect = effect(
@@ -214,6 +282,7 @@ export class DbxFirebaseStorageFileDownloadButton {
 
       if (cachedPair) {
         this.downloadUrlSignal.set(cachedPair.downloadUrl);
+        this.downloadMimeTypeSignal.set(cachedPair.mimeType);
         this.downloadUrlExpiresAtSignal.set(cachedPair.expiresAt);
       }
     },
@@ -223,7 +292,7 @@ export class DbxFirebaseStorageFileDownloadButton {
   );
 
   // Expiration Effect
-  readonly downloadUrlExpiresAt$ = toObservable(this.downloadUrlExpiresAtSignal).pipe(map(dateFromDateOrTimeNumber), distinctUntilChanged(), shareReplay(1));
+  readonly downloadUrlExpiresAt$ = toObservable(this.downloadUrlExpiresAtSignal).pipe(map(dateFromDateOrTimeSecondsNumber), distinctUntilChanged(), shareReplay(1));
 
   readonly downloadUrlHasExpired$ = this.downloadUrlExpiresAt$.pipe(
     switchMap((x) => {
@@ -252,6 +321,7 @@ export class DbxFirebaseStorageFileDownloadButton {
 
       if (expired) {
         this.downloadUrlSignal.set(undefined);
+        this.downloadMimeTypeSignal.set(undefined);
         this.downloadUrlExpiresAtSignal.set(undefined);
       }
     },
@@ -267,17 +337,40 @@ export class DbxFirebaseStorageFileDownloadButton {
   });
 
   // Handlers
-  readonly handleGetDownloadUrl: WorkUsingObservable<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair> = (value: StorageFileKey) => {
-    return this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFile(value);
+  readonly handleGetDownloadUrl: WorkUsingContext<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair> = (value: StorageFileKey, context: WorkInstance<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair>) => {
+    const source = this.source();
+    const { customSource, handleGetDownloadUrl } = source ?? {};
+
+    if (handleGetDownloadUrl) {
+      handleGetDownloadUrl(value, context);
+    } else {
+      context.startWorkingWithObservable(this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFileUsingSource(value, customSource));
+    }
   };
 
   readonly handleGetDownloadUrlSuccess = (value: DbxFirebaseStorageFileDownloadUrlPair) => {
+    const source = this.source();
+    const { handleGetDownloadUrlSuccess } = source ?? {};
+
     this.downloadUrlSignal.set(value.downloadUrl);
+    this.downloadMimeTypeSignal.set(value.mimeType);
     this.downloadUrlExpiresAtSignal.set(value.expiresAt);
+
+    if (handleGetDownloadUrlSuccess) {
+      handleGetDownloadUrlSuccess(value);
+    }
   };
 
   readonly handleGetDownloadUrlError = (error: unknown) => {
+    const source = this.source();
+    const { handleGetDownloadUrlError } = source ?? {};
+
     this.downloadUrlSignal.set(undefined);
+    this.downloadMimeTypeSignal.set(undefined);
     this.downloadUrlExpiresAtSignal.set(undefined);
+
+    if (handleGetDownloadUrlError) {
+      handleGetDownloadUrlError(error);
+    }
   };
 }

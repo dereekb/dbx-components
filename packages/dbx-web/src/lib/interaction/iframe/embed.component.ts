@@ -1,9 +1,10 @@
-import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, input } from '@angular/core';
+import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, input, effect, signal, OnDestroy } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest } from 'rxjs';
 import { ContentTypeMimeType, Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { browserObjectUrlRef } from '@dereekb/browser';
 
 @Component({
   selector: 'dbx-embed',
@@ -13,17 +14,46 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxEmbedComponent extends AbstractSubscriptionDirective {
+export class DbxEmbedComponent extends AbstractSubscriptionDirective implements OnDestroy {
+  private readonly _browserObjectUrlRef = browserObjectUrlRef();
+
   readonly sanitizer = inject(DomSanitizer);
 
   readonly root = viewChild<string, ElementRef<HTMLSpanElement>>('root', { read: ElementRef });
 
   readonly sanitizeUrl = input<Maybe<boolean>>(false);
-  readonly srcUrl = input.required<Maybe<string | SafeResourceUrl>>();
+
+  readonly srcUrl = input<Maybe<string | SafeResourceUrl>>();
   readonly type = input<Maybe<ContentTypeMimeType | string>>();
 
+  /**
+   * The input src blob or media source to use.
+   *
+   * If set, the srcUrl will be updated with the browser object URL.
+   */
+  readonly srcBlob = input<Maybe<Blob>>();
+  readonly srcUrlFromBlob = signal<Maybe<string>>(undefined);
+  readonly typeFromBlob = signal<Maybe<string>>(undefined);
+
+  readonly srcBlobEffect = effect(
+    () => {
+      const blob = this.srcBlob();
+
+      this.srcUrlFromBlob.set(this._browserObjectUrlRef.createBrowserUrl(blob));
+      this.typeFromBlob.set(blob?.type);
+    },
+    {
+      allowSignalWrites: true
+    }
+  );
+
   readonly srcUrlSignal = computed(() => {
-    let url: Maybe<string | SafeResourceUrl> = this.srcUrl();
+    const srcUrl = this.srcUrl();
+    const srcUrlFromBlob = this.srcUrlFromBlob();
+
+    const baseUrl = srcUrl ?? srcUrlFromBlob;
+
+    let url: Maybe<string | SafeResourceUrl> = baseUrl;
     const sanitizeUrl = this.sanitizeUrl();
 
     if (url && typeof url === 'string' && sanitizeUrl) {
@@ -33,12 +63,19 @@ export class DbxEmbedComponent extends AbstractSubscriptionDirective {
     return url;
   });
 
+  readonly typeSignal = computed(() => {
+    const type = this.type();
+    const typeFromBlob = this.typeFromBlob();
+    return type ?? typeFromBlob;
+  });
+
   readonly root$ = toObservable(this.root);
-  readonly srcUrl$ = toObservable(this.srcUrl);
-  readonly type$ = toObservable(this.type);
+  readonly srcUrl$ = toObservable(this.srcUrlSignal);
+  readonly type$ = toObservable(this.typeSignal);
 
   constructor() {
     super();
+
     this.sub = combineLatest([this.srcUrl$, this.root$, this.type$]).subscribe(([srcUrl, root, type]) => {
       const element = root?.nativeElement;
 
@@ -67,11 +104,21 @@ export class DbxEmbedComponent extends AbstractSubscriptionDirective {
           // only set the type if it is presented
           if (type) {
             embed.setAttribute('type', type);
+
+            // if the type is an image, also add the embed-image class
+            if (type.startsWith('image/')) {
+              embed.setAttribute('class', 'embed-image');
+            }
           }
 
           element.appendChild(embed);
         }
       }
     });
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._browserObjectUrlRef.destroy();
   }
 }

@@ -1,7 +1,7 @@
 import { type Maybe, MS_IN_HOUR } from '@dereekb/util';
 import { type NotificationTaskCheckpointString } from './notification';
 import { type NotificationItemMetadata } from './notification.item';
-import { notificationTaskPartiallyComplete, type NotificationTaskServiceHandleNotificationTaskResult } from './notification.task';
+import { notificationTaskComplete, notificationTaskPartiallyComplete, type NotificationTaskServiceHandleNotificationTaskResult } from './notification.task';
 
 /**
  * Used as a descriminator to determine which processing configuration to run for the input value.
@@ -62,7 +62,19 @@ export type NotificationTaskSubtaskCheckpoint = typeof NOTIFICATION_TASK_SUBTASK
 
 /**
  * Returned by a subtask to complete the processing step and schedule the cleanup step.
+ *
+ * This is used internally in subtask running. Do not use this directly. Use of notificationSubtaskComplete() is preferred.
  */
 export function completeSubtaskProcessingAndScheduleCleanupTaskResult<D extends NotificationTaskSubtaskData>(): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
   return notificationTaskPartiallyComplete(['processing']);
+}
+
+/**
+ * Similar to notificationTaskComplete, but is customized for a subtask with the intent of running the cleanup checkpoint.
+ */
+export function notificationSubtaskComplete<D extends NotificationTaskSubtaskData>(options?: Maybe<Pick<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>, 'updateMetadata' | 'canRunNextCheckpoint'>>): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
+  return {
+    ...notificationTaskComplete(options?.updateMetadata),
+    canRunNextCheckpoint: options?.canRunNextCheckpoint
+  };
 }

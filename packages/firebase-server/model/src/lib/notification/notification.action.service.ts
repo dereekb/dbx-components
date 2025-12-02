@@ -520,7 +520,7 @@ export interface CreateNotificationBoxInTransactionInput extends NotificationBox
    */
   readonly now?: Maybe<Date>;
   /**
-   * If true, skips create
+   * If true, skips calling create
    */
   readonly skipCreate?: Maybe<boolean>;
 }
@@ -1795,7 +1795,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
       let notificationWeeksCreated: number = 0;
       let notificationWeeksUpdated: number = 0;
 
-      // iterate through all JobApplication items that need to be synced
+      // iterate through all Notification items that need to be cleaned up
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const cleanupSentNotificationsResults = await cleanupSentNotifications();

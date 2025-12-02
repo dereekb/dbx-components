@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "12.5.10",
+  "version": "12.6.0",
   "peerDependencies": {
     "@angular/common": "^18.0.0",
     "@angular/core": "^18.0.0",
@@ -21,7 +21,8 @@
     "@angular/platform-browser": "^18.0.0",
     "@uirouter/angular": "15.0.0",
     "change-case-all": "^2.1.0",
-    "class-validator": "^0.14.0"
+    "class-validator": "^0.14.0",
+    "@zip.js/zip.js": "^2.8.0"
   },
   "dependencies": {},
   "exports": {

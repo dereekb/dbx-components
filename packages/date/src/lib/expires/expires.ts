@@ -1,5 +1,4 @@
-import { dateFromDateOrTimeNumber } from '../date/date.unix';
-import { type Expires, type DateOrUnixDateTimeNumber, type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Expires, type DateOrUnixDateTimeMillisecondsNumber, type Maybe, type Milliseconds, dateFromDateOrTimeMillisecondsNumber } from '@dereekb/util';
 import { addMilliseconds, addMinutes, isPast } from 'date-fns';
 export type { Expires } from '@dereekb/util';
 
@@ -51,7 +50,7 @@ export function anyHaveExpired(expires: Maybe<Expires>[], expireIfEmpty = true):
  *
  * @deprecated Use isThrottled() or expirationDetails({ expiresFromDate: time, expiresIn }).hasExpired() instead.
  */
-export function timeHasExpired(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?: Milliseconds): boolean {
+export function timeHasExpired(time: Maybe<DateOrUnixDateTimeMillisecondsNumber>, expiresIn?: Milliseconds): boolean {
   return hasExpired(toExpires(time, expiresIn));
 }
 
@@ -63,8 +62,8 @@ export function timeHasExpired(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?
  * @param timeNumber Number to convert to a date.
  * @param expiresIn If the input number is the initial date, and not the expiration date, this is used to find the expiresAt time.
  */
-export function toExpires(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?: Milliseconds): Expires {
-  let expiresAt = dateFromDateOrTimeNumber(time);
+export function toExpires(time: Maybe<DateOrUnixDateTimeMillisecondsNumber>, expiresIn?: Milliseconds): Expires {
+  let expiresAt = dateFromDateOrTimeMillisecondsNumber(time);
 
   if (expiresAt && expiresIn != null) {
     expiresAt = addMilliseconds(expiresAt, expiresIn);

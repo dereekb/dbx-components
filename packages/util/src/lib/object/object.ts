@@ -1,12 +1,12 @@
 import { arrayDecision } from '../array/array.find';
-import { type FieldOfType } from '../key';
+import { type PrimativeKey, type FieldOfType } from '../key';
 import { type SetIncludesMode } from '../set/set.mode';
 import { type KeyAsString } from '../type';
 
 /**
  * Any valid Plain-old Javascript Object key.
  */
-export type POJOKey = string | number | symbol;
+export type POJOKey = PrimativeKey | symbol;
 
 /**
  * String key of an object.

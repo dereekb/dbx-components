@@ -1,5 +1,5 @@
-export * from './notification.action.server';
-export * from './notification.action.init.server';
+export * from './notification.action.service';
+export * from './notification.action.init.service';
 export * from './notification.config.service';
 export * from './notification.config';
 export * from './notification.module';

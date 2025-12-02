@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "12.5.10",
+  "version": "12.6.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -49,7 +49,9 @@
     "@uirouter/rx": "^1.0.0",
     "@vapi-ai/server-sdk": "^0.10.0",
     "@vvo/tzdb": "^6.0.0",
+    "@zip.js/zip.js": "^2.8.11",
     "angular-calendar": "^0.31.0",
+    "archiver": "^7.0.0",
     "change-case-all": "^2.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -121,6 +123,8 @@
     "@swc/cli": "~0.5.0",
     "@swc/core": "1.5.7",
     "@swc/helpers": "0.5.15",
+    "@types/adm-zip": "^0.5.7",
+    "@types/archiver": "^7.0.0",
     "@types/jest": "29.5.14",
     "@types/jsonwebtoken": "^8.5.8",
     "@types/node": "^22.13.0",
@@ -130,6 +134,7 @@
     "@typescript-eslint/parser": "8.31.0",
     "@typescript-eslint/utils": "^8.31.0",
     "@ungap/structured-clone": "^1.2.0",
+    "adm-zip": "^0.5.16",
     "angular-eslint": "^19.3.0",
     "autoprefixer": "^10.4.0",
     "cypress": "^9.5.1",
@@ -164,7 +169,8 @@
     "ts-jest": "29.3.2",
     "ts-node": "10.9.2",
     "typescript": ">=5.5.0 <5.6.0",
-    "typescript-eslint": "8.31.0"
+    "typescript-eslint": "8.31.0",
+    "glob": "^10.5.0"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "20.8.0",

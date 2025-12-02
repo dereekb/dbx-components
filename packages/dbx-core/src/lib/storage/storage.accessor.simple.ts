@@ -1,5 +1,5 @@
 import { type Observable, map } from 'rxjs';
-import { isThrottled, unixTimeNumberForNow, DataDoesNotExistError, DataIsExpiredError, type ReadStoredData, type StoredData, type StoredDataStorageKey, type StoredDataString, type Maybe, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
+import { isThrottled, unixDateTimeSecondsNumberForNow, DataDoesNotExistError, DataIsExpiredError, type ReadStoredData, type StoredData, type StoredDataStorageKey, type StoredDataString, type Maybe, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
 import { type StorageAccessor } from './storage.accessor';
 
 // MARK: SimpleStorageAccessor
@@ -211,7 +211,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
 
   protected buildStoredData(value: T): StoredData {
     return {
-      storedAt: unixTimeNumberForNow(),
+      storedAt: unixDateTimeSecondsNumberForNow(),
       data: this.stringifyValue(value)
     };
   }

@@ -508,6 +508,18 @@ export function firestoreModelKeyPart<N extends FirestoreCollectionNameRef, K ex
 export const firestoreModelKey = firestoreModelKeyPart as <I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I, id: K) => FirestoreCollectionModelKey<I, K>;
 
 /**
+ * Creates a FirestoreModelKey for root FirestoreModelIdentity values.
+ */
+export type FirestoreModelKeyFactory<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId> = (id: K) => FirestoreCollectionModelKey<I, K>;
+
+/**
+ * Creates a FirestoreModelKeyFactory for the input root identity.
+ */
+export function firestoreModelKeyFactory<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I) {
+  return (id: K) => firestoreModelKey<I, K>(identity, id);
+}
+
+/**
  * Creates an array of FirestoreCollectionModelKey values from the input ids.
  *
  * @param identity

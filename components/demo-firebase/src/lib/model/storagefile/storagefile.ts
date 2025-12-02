@@ -1,5 +1,6 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
 import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
+import { profileIdentity } from '../profile';
 
 // MARK: User File Types
 export const USERS_ROOT_FOLDER_PATH: SlashPathFolder = '/u/';
@@ -56,6 +57,14 @@ export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashP
   return userStorageFolderPath(userId, USER_STORAGE_FOLDER_PATH, name);
 }
 
+export function userProfileStorageFileGroupId(userId: FirebaseAuthUserId): StorageFileGroupId {
+  return twoWayFlatFirestoreModelKey(firestoreModelKey(profileIdentity, userId));
+}
+
+export function userTestFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
+  return [userProfileStorageFileGroupId(userId)];
+}
+
 // === User Avatar ===
 /**
  * A test file that is uploaded by a user into their own uploads folder.
@@ -92,6 +101,10 @@ export const USER_AVATAR_STORAGE_FILE_NAME_PREFIX: SlashPathFile = 'avatar';
 export function makeUserAvatarFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
   const timestamp = stringFromTimeFactory(7)();
   return userStorageFolderPath(userId, USER_AVATAR_STORAGE_FILE_NAME_PREFIX, `${timestamp}.jpg`);
+}
+
+export function userAvatarFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
+  return [userProfileStorageFileGroupId(userId)];
 }
 
 export const USER_AVATAR_IMAGE_WIDTH = 512;

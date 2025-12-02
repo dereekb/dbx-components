@@ -90,7 +90,6 @@ demoApiFunctionContextFactory((f) => {
                           expect(result.notificationsVisited).toBe(1);
                           expect(result.notificationsFailed).toBe(1);
                           expect(result.notificationsDeleted).toBe(1);
-                          expect(result.notificationTaskCompletionType).toBeUndefined();
                         });
 
                         it('should not have created a NotificationBox and deleted the notification', async () => {

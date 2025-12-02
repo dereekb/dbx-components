@@ -1,11 +1,12 @@
 import { type Maybe } from '@dereekb/util';
-import { StorageFileCreationType, StorageFileProcessingState, StorageFileState, type StorageFile, type StorageFileDocument, type StorageFileFirestoreCollections } from './storagefile';
+import { StorageFileCreationType, type StorageFileGroup, storageFileGroupCreatedStorageFileKey, StorageFileProcessingState, StorageFileState, type StorageFile, type StorageFileDocument, type StorageFileFirestoreCollections } from './storagefile';
 import { type Transaction } from '../../common/firestore/types';
 import { type FirestoreDocumentAccessor } from '../../common/firestore/accessor/document';
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 import { type StoragePathRef, type StoragePath } from '../../common/storage/storage';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
-import { type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { firestoreModelId, type ReadFirestoreModelKeyInput } from '../../common';
 
 // MARK: Create Document
 export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadata = StorageFileMetadata> {
@@ -46,6 +47,20 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
    */
   readonly uploadedBy?: Maybe<FirebaseAuthUserId>;
   /**
+   * The group ids of the file.
+   *
+   * Corresponds with the "g" value in the StorageFile template.
+   */
+  readonly storageFileGroupIds?: Maybe<StorageFileGroupId[]>;
+  /**
+   * If true, will flag the file for group sync.
+   *
+   * Defaults to true if one or more values in "storageFileGroupIds" are provided.
+   *
+   * Ignored if the "storageFileGroupIds" value is empty.
+   */
+  readonly flagForStorageFileGroupsSync?: boolean;
+  /**
    * The ownership key of the file.
    *
    * Corresponds with the "o" value in the StorageFile template.
@@ -56,7 +71,13 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
    *
    * Corresponds with the "p" value in the StorageFile template.
    */
-  readonly purpose?: Maybe<StorageFilePurpose>;
+  readonly purpose?: Maybe<StorageFilePurpose | StorageFileGroupRelatedStorageFilePurpose>;
+  /**
+   * The StorageFileGroup that the file is associated with.
+   *
+   * This is ONLY used if the creation type is StorageFileCreationType.FOR_STORAGE_FILE_GROUP.
+   */
+  readonly parentStorageFileGroup?: Maybe<ReadFirestoreModelKeyInput<StorageFileGroup>>;
   /**
    * The metadata of the file.
    *
@@ -124,7 +145,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
   const defaultShouldBeProcessed = inputDefaultShouldBeProcessed ?? false;
 
   return async <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => {
-    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, metadata, shouldBeProcessed } = input;
+    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
     const now = inputNow ?? new Date();
 
     let accessor = inputAccessor;
@@ -144,18 +165,39 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
       throw new Error('createStorageFileDocumentPair() failed as neither a file, storagePathRef, or storagePath was provided.');
     }
 
-    const storageFileDocument = accessor.newDocument();
+    let storageFileDocument;
+
+    const p = purpose ?? inputTemplate?.p;
+    const ct = inputTemplate?.ct ?? defaultCreationType;
+
+    if (ct === StorageFileCreationType.FOR_STORAGE_FILE_GROUP) {
+      if (!parentStorageFileGroup || !p) {
+        throw new Error('createStorageFileDocumentPair() failed as either the "parentStorageFileGroup" or "purpose" value was not provided with StorageFileCreationType.FOR_STORAGE_FILE_GROUP creation type.');
+      }
+
+      const storageFileGroupId = firestoreModelId(parentStorageFileGroup);
+      const storageFileKey = storageFileGroupCreatedStorageFileKey(p, storageFileGroupId);
+
+      storageFileDocument = accessor.loadDocumentForKey(storageFileKey);
+    } else {
+      storageFileDocument = accessor.newDocument();
+    }
+
+    const g = storageFileGroupIds ?? [];
+    const gs = g.length > 0 && flagForStorageFileGroupsSync !== false;
 
     const template: StorageFile<M> = {
       ...inputTemplate,
+      g,
+      gs,
       cat: now,
       u: user ?? inputTemplate?.u,
       uby: uploadedBy ?? inputTemplate?.uby,
-      p: purpose ?? inputTemplate?.p,
+      p,
       d: metadata ?? inputTemplate?.d,
       fs: inputTemplate?.fs ?? StorageFileState.OK,
       ps: (shouldBeProcessed ?? defaultShouldBeProcessed) ? StorageFileProcessingState.QUEUED_FOR_PROCESSING : StorageFileProcessingState.DO_NOT_PROCESS,
-      ct: inputTemplate?.ct ?? defaultCreationType,
+      ct,
       bucketId: storagePath.bucketId,
       pathString: storagePath.pathString
     };

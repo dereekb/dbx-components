@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 import { ContentTypeMimeType, Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
 import { DbxEmbedComponent } from './embed.component';
 import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
 
-export interface DbxEmbedDialogConfig {
+export interface DbxEmbedDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly srcUrl: WebsiteUrlWithPrefix;
   readonly embedMimeType?: Maybe<ContentTypeMimeType | string>;
   readonly sanitizeUrl?: boolean;
@@ -36,6 +36,7 @@ export class DbxEmbedDialogComponent extends AbstractDialogDirective<void, DbxEm
 
   static openDialog(matDialog: MatDialog, config: DbxEmbedDialogConfig): MatDialogRef<DbxEmbedDialogComponent, void> {
     const dialogRef = matDialog.open(DbxEmbedDialogComponent, {
+      ...config,
       data: config
     });
 

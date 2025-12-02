@@ -1,6 +1,6 @@
 import { OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileDownloadButtonSource, dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
@@ -46,6 +46,16 @@ export class DemoProfileViewComponent implements OnInit {
   readonly avatarDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
     text: 'Start Avatar Download',
     downloadReadyText: 'Save Avatar'
+  };
+
+  readonly archiveDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
+    text: 'Start Archive Download',
+    downloadReadyText: 'Save Archive'
+  };
+
+  readonly archiveDownloadSource: DbxFirebaseStorageFileDownloadButtonSource = {
+    storageFileKey: this.profileDocumentStore.zipArchiveStorageFileKey$,
+    customSource: dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs((x) => this.profileDocumentStore.downloadArchive({ ...x, key: undefined }))
   };
 
   readonly storageService = inject(DbxFirebaseStorageService);

@@ -6,7 +6,7 @@ import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 /**
  * Default providers to inject.
  */
-export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new InjectionToken('DefaultDbxFirebaseDevelopmentWidgetEntries');
+export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new InjectionToken<DbxFirebaseDevelopmentWidgetEntry[]>('DefaultDbxFirebaseDevelopmentWidgetEntries');
 
 /**
  * Service used for registering widgets used for development.

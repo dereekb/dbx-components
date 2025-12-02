@@ -67,7 +67,9 @@ import {
   filterNullAndUndefinedValues,
   type ModelMapToFunction,
   MAP_IDENTITY,
-  type FilterFunction
+  type FilterFunction,
+  unixDateTimeSecondsNumberFromDate,
+  dateFromDateOrTimeSecondsNumber
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -569,8 +571,8 @@ export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
   return firestoreField<Date, ISO8601DateString>({
     default: config.default ?? (() => new Date()),
     defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? formatToISO8601DateString : null),
-    fromData: (input: ISO8601DateString) => toJsDate(input),
-    toData: (input: Date) => toISODateString(input)
+    fromData: toJsDate,
+    toData: toISODateString
   });
 }
 
@@ -602,12 +604,108 @@ export function optionalFirestoreDate(config?: OptionalFirestoreDateFieldConfig)
   return optionalFirestoreField<Date, ISO8601DateString>({
     ...config,
     dontStoreValueIf,
-    transformFromData: (input: ISO8601DateString) => {
-      return toJsDate(input);
-    },
-    transformToData: (input: Date) => {
-      return toISODateString(input);
-    }
+    transformFromData: toJsDate,
+    transformToData: toISODateString
+  });
+}
+
+/**
+ * Configuration for a Firestore date field that is stored as a number.
+ */
+export type FirestoreDateNumberFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<Date, number> & {
+  /**
+   * Whether to save the default date as the current timestamp
+   */
+  readonly saveDefaultAsNow?: boolean;
+  /**
+   * Converts a Date object to a number.
+   */
+  readonly fromDate: (input: Date) => number;
+  /**
+   * Converts a number to a Date object.
+   */
+  readonly toDate: (input: number) => Date;
+};
+
+/**
+ * Creates a field mapping configuration for Firestore date fields.
+ *
+ * Handles conversion between JavaScript Date objects and ISO8601 strings stored in Firestore.
+ *
+ * @param config - Configuration for the date field
+ * @returns A field mapping configuration for Date values
+ */
+export function firestoreDateNumber(config: FirestoreDateNumberFieldConfig) {
+  const { fromDate, toDate } = config;
+  return firestoreField<Date, number>({
+    default: config.default ?? (() => new Date()),
+    defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? fromDate(new Date()) : null),
+    fromData: toDate,
+    toData: fromDate
+  });
+}
+
+/**
+ * Configuration for an optional Firestore date field.
+ *
+ * @template Date - JavaScript Date object type
+ * @template ISO8601DateString - ISO8601 date string format in Firestore
+ */
+export type OptionalFirestoreDateNumberFieldConfig = OptionalFirestoreFieldConfig<Date, number> & Pick<FirestoreDateNumberFieldConfig, 'fromDate' | 'toDate'>;
+
+/**
+ * Creates a field mapping configuration for optional Firestore date field that is stored as a number.
+ *
+ * @param config - Configuration for the optional date field
+ * @returns A field mapping configuration for optional Date values
+ */
+export function optionalFirestoreDateNumber(config: OptionalFirestoreDateNumberFieldConfig) {
+  const { fromDate, toDate, dontStoreValueIf: inputDontStoreValueIf } = config;
+
+  let dontStoreValueIf = inputDontStoreValueIf;
+
+  if (dontStoreValueIf != null && isDate(dontStoreValueIf)) {
+    const comparisonDate = dontStoreValueIf;
+    dontStoreValueIf = (x) => isSameDate(x, comparisonDate);
+  }
+
+  return optionalFirestoreField<Date, number>({
+    ...config,
+    dontStoreValueIf,
+    transformFromData: toDate,
+    transformToData: fromDate
+  });
+}
+
+export type FirestoreUnixDateTimeSecondsNumberFieldConfig = Omit<FirestoreDateNumberFieldConfig, 'fromDate' | 'toDate'>;
+
+/**
+ * Creates a field mapping configuration for Firestore Date fields that are stored as a UnixDateTimeSecondsNumber.
+ *
+ * @param config - Configuration for the date field
+ * @returns A field mapping configuration for Date values
+ */
+export function firestoreUnixDateTimeSecondsNumber(config: FirestoreUnixDateTimeSecondsNumberFieldConfig) {
+  return firestoreDateNumber({
+    ...config,
+    fromDate: unixDateTimeSecondsNumberFromDate,
+    toDate: dateFromDateOrTimeSecondsNumber
+  });
+}
+
+export type OptionalFirestoreUnixDateTimeSecondsNumberFieldConfig = Omit<OptionalFirestoreDateNumberFieldConfig, 'fromDate' | 'toDate'>;
+
+/**
+ * Creates a field mapping configuration for optional Firestore Date fields that are stored as a UnixDateTimeSecondsNumber.
+ *
+ * @param config - Configuration for the optional date field
+ * @returns A field mapping configuration for optional Date values
+ */
+export function optionalFirestoreUnixDateTimeSecondsNumber(config?: OptionalFirestoreUnixDateTimeSecondsNumberFieldConfig) {
+  return optionalFirestoreDateNumber({
+    ...config,
+    fromDate: unixDateTimeSecondsNumberFromDate,
+    toDate: dateFromDateOrTimeSecondsNumber
   });
 }
 

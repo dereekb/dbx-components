@@ -36,6 +36,8 @@ export function notificationSummariesFlaggedForNeedsInitializationQuery(): Fires
   return [where<NotificationSummary>('s', '==', true)];
 }
 
+// TODO: Also grab summaries that are flagged as invalid and use to delete/cleanup as needed.
+
 // MARK: NotificationBox
 /**
  * Query for notificationBoxes that are flagged for initialization.

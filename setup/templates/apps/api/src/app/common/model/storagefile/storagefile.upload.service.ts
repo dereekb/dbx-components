@@ -2,7 +2,7 @@ import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUpload
 import { APP_CODE_PREFIXFirebaseServerActionsContext } from '../../firebase/action.context';
 import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME } from 'FIREBASE_COMPONENTS_NAME';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
-import { mimetypeForImageType, SlashPathPathMatcherPath } from '@dereekb/util';
+import { mimeTypeForImageFileExtension, SlashPathPathMatcherPath } from '@dereekb/util';
 import * as sharp from 'sharp';
 
 export function APP_CODE_PREFIX_CAMELStorageFileUploadServiceFactory(APP_CODE_PREFIX_CAMELFirebaseServerActionsContext: APP_CODE_PREFIXFirebaseServerActionsContext): StorageFileInitializeFromUploadService {
@@ -56,7 +56,7 @@ export function APP_CODE_PREFIX_CAMELStorageFileUploadServiceFactory(APP_CODE_PR
         return storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e);
       }
 
-      const fileMimeType = mimetypeForImageType('jpeg');
+      const fileMimeType = mimeTypeForImageFileExtension('jpeg');
 
       // create the new file at /avatar/u/{userId}/avatar
       const newPath = makeUserAvatarFileStoragePath(userId);

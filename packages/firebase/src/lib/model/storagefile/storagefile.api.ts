@@ -1,10 +1,12 @@
 import { Expose, Type } from 'class-transformer';
-import { TargetModelParams, OnCallCreateModelResult } from '../../common';
+import { TargetModelParams, OnCallCreateModelResult, FirestoreModelKey, IsFirestoreModelKey, IsFirestoreModelId } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
-import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType, IsNotEmpty } from 'class-validator';
 import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
-import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds } from '@dereekb/util';
+import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds, UnixDateTimeSecondsNumber } from '@dereekb/util';
+import { StorageFileId } from './storagefile.id';
+import { SendNotificationResult } from '../notification/notification.api';
 
 /**
  * Used for directly create a new StorageFile.
@@ -83,17 +85,34 @@ export class ProcessStorageFileParams extends TargetModelParams {
   checkRetryProcessing?: Maybe<boolean>;
 
   /**
-   * Used with retryProcessing.
+   * Used with checkRetryProcessing.
    *
-   * If set, will forcibly create a new processing task even if the existing processing task appears to be ok.
+   * If set, will forcibly create a new processing task even if the existing processing task appears to be ok, or if processing was already marked complete.
    */
   @Expose()
   @IsBoolean()
   @IsOptional()
   forceRestartProcessing?: Maybe<boolean>;
+
+  /**
+   * If set, will start the processing again if the StorageFile is in a successful processing state.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  processAgainIfSuccessful?: Maybe<boolean>;
 }
 
-export interface ProcessStorageFileResult {}
+export interface ProcessStorageFileResult {
+  /**
+   * Whether or not the StorageFile was run immediately.
+   */
+  readonly runImmediately: boolean;
+  /**
+   * The expedite result, if runImmediately returned true.
+   */
+  readonly expediteResult: Maybe<SendNotificationResult>;
+}
 
 /**
  * Processes all StorageFiles that are queued for processing.
@@ -205,11 +224,142 @@ export class DownloadStorageFileParams extends TargetModelParams {
   asAdmin?: Maybe<boolean>;
 }
 
+/**
+ * Result of downloading a StorageFile.
+ */
 export interface DownloadStorageFileResult {
   /**
    * The download URL.
    */
   readonly url: StorageFileSignedDownloadUrl;
+  /**
+   * The name of the StorageFile, if available.
+   */
+  readonly fileName?: Maybe<string>;
+  /**
+   * The mime type of the StorageFile, if available.
+   */
+  readonly mimeType?: Maybe<ContentTypeMimeType>;
+  /**
+   * Expiration time as a UnixDateTimeSecondsNumber value.
+   */
+  readonly expiresAt?: Maybe<UnixDateTimeSecondsNumber>;
+}
+
+/**
+ * Used for creating or initializing a new StorageFileGroup for a StorageFile.
+ *
+ * Mainly used for testing. Not exposed to the API.
+ *
+ * The preferred way is to create a StorageFileGroup through a StorageFile.
+ */
+export class CreateStorageFileGroupParams {
+  /**
+   * ModelKey to use for creating the StorageFileGroup.
+   */
+  @Expose()
+  @IsOptional()
+  @IsNotEmpty()
+  @IsFirestoreModelKey()
+  model?: Maybe<FirestoreModelKey>;
+
+  /**
+   * StorageFileId to use for creating the StorageFileGroup.
+   */
+  @Expose()
+  @IsNotEmpty()
+  @IsFirestoreModelId()
+  storageFileId?: Maybe<StorageFileId>;
+}
+
+export class SyncStorageFileWithGroupsParams extends TargetModelParams {
+  /**
+   * If true, will force syncing even if the StorageFile is not flagged for a resync.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  force?: boolean;
+}
+
+export interface SyncStorageFileWithGroupsResult {
+  /**
+   * The number of StorageFileGroups that were created.
+   */
+  readonly storageFilesGroupsCreated: number;
+  /**
+   * The number of StorageFileGroups that were updated.
+   */
+  readonly storageFilesGroupsUpdated: number;
+}
+
+export class SyncAllFlaggedStorageFilesWithGroupsParams {}
+
+export interface SyncAllFlaggedStorageFilesWithGroupsResult {
+  /**
+   * The total number of StorageFiles that were synced.
+   */
+  readonly storageFilesSynced: number;
+  /**
+   * The total number of StorageFileGroups that were created.
+   */
+  readonly storageFilesGroupsCreated: number;
+  /**
+   * The total number of StorageFileGroups that were updated.
+   */
+  readonly storageFilesGroupsUpdated: number;
+}
+
+export class RegenerateStorageFileGroupContentParams extends TargetModelParams {
+  /**
+   * If true, will force syncing even if the StorageFile is not flagged for a resync.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  force?: boolean;
+}
+
+export interface RegenerateStorageFileGroupContentResult {
+  /**
+   * The total number of "content" StorageFiles that were flagged for processing again.
+   */
+  readonly contentStorageFilesFlaggedForProcessing: number;
+}
+
+export class RegenerateAllFlaggedStorageFileGroupsContentParams {}
+
+export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
+  /**
+   * The number of StorageFileGroups that were updated.
+   */
+  readonly storageFileGroupsUpdated: number;
+  /**
+   * The number of "content" StorageFiles that were flagged for processing again.
+   */
+  readonly contentStorageFilesFlaggedForProcessing: number;
+}
+
+/**
+ * Used for initializing an uninitialized model like NotificationBox or NotificationSummary.
+ */
+export class InitializeStorageFileModelParams extends TargetModelParams {
+  /**
+   * Whether or not to throw an error if the notification has already been sent or is being sent.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  throwErrorIfAlreadyInitialized?: boolean;
+}
+
+export class InitializeAllApplicableStorageFileGroupsParams {}
+
+export interface InitializeAllApplicableStorageFileGroupsResult {
+  readonly storageFileGroupsVisited: number;
+  readonly storageFileGroupsSucceeded: number;
+  readonly storageFileGroupsFailed: number;
+  readonly storageFileGroupsAlreadyInitialized: number;
 }
 
 // MARK: Functions
@@ -227,6 +377,7 @@ export type StorageFileModelCrudFunctionsConfig = {
     update: {
       _: UpdateStorageFileParams;
       process: [ProcessStorageFileParams, ProcessStorageFileResult];
+      syncWithGroups: [SyncStorageFileWithGroupsParams, SyncStorageFileWithGroupsResult];
     };
     read: {
       download: [DownloadStorageFileParams, DownloadStorageFileResult];
@@ -235,10 +386,16 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: DeleteStorageFileParams;
     };
   };
+  storageFileGroup: {
+    update: {
+      regenerateContent: [RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult];
+    };
+  };
 };
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process', 'delete:_', 'read:download']
+  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download'],
+  storageFileGroup: ['update:regenerateContent']
 };
 
 export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<StorageFileFunctionTypeMap, StorageFileModelCrudFunctionsConfig> {
@@ -251,12 +408,18 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
     updateStorageFile: {
       update: ModelFirebaseCrudFunction<UpdateStorageFileParams>;
       process: ModelFirebaseCrudFunction<ProcessStorageFileParams, ProcessStorageFileResult>;
+      syncWithGroups: ModelFirebaseCrudFunction<SyncStorageFileWithGroupsParams, SyncStorageFileWithGroupsResult>;
     };
     readStorageFile: {
       download: ModelFirebaseCrudFunction<DownloadStorageFileParams, DownloadStorageFileResult>;
     };
     deleteStorageFile: {
       delete: ModelFirebaseCrudFunction<DeleteStorageFileParams>;
+    };
+  };
+  abstract storageFileGroup: {
+    updateStorageFileGroup: {
+      regenerateContent: ModelFirebaseCrudFunction<RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult>;
     };
   };
 }

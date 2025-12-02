@@ -646,7 +646,8 @@ export class SendQueuedNotificationsParams {
   readonly sendNotificationLoopsTaskExcessThreshold?: Maybe<number>;
 }
 
-export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+export interface SendQueuedNotificationsResult
+  extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
   readonly excessLoopsDetected: boolean;
   readonly notificationLoopCount: number;
   readonly notificationBoxesCreated: number;

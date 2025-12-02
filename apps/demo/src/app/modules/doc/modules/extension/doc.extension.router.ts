@@ -8,6 +8,7 @@ import { DocExtensionTableComponent } from './container/table.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
 import { DocExtensionDownloadComponent } from './container/download.component';
 import { DocExtensionStorageFileComponent } from './container/storagefile.component';
+import { DocExtensionZipComponent } from './container/zip.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -64,6 +65,12 @@ export const docExtensionStorageFileState: Ng2StateDeclaration = {
   component: DocExtensionStorageFileComponent
 };
 
+export const docExtensionZipState: Ng2StateDeclaration = {
+  url: '/zip',
+  name: 'doc.extension.zip',
+  component: DocExtensionZipComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -74,5 +81,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionTableState,
   docExtensionStructureState,
   docExtensionDownloadState,
-  docExtensionStorageFileState
+  docExtensionStorageFileState,
+  docExtensionZipState
 ];

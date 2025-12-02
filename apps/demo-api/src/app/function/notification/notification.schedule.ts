@@ -1,21 +1,25 @@
-import { type DemoScheduleFunction } from '../function';
+import { type DemoScheduleFunction, runDemoScheduledTasks } from '../function';
 
 export const notificationHourlyUpdateSchedule: DemoScheduleFunction = async (request) => {
-  // init all new notification boxes
-  const initializeAllApplicableNotificationBoxes = await request.nest.notificationInitActions.initializeAllApplicableNotificationBoxes({});
-  const initializeNotificationBoxesResult = await initializeAllApplicableNotificationBoxes();
+  console.log('notificationHourlyUpdateSchedule - running');
 
-  console.log({ initializeNotificationBoxesResult });
+  await runDemoScheduledTasks({
+    initializeAllApplicableNotificationBoxes: async () => {
+      const initializeAllApplicableNotificationBoxes = await request.nest.notificationInitActions.initializeAllApplicableNotificationBoxes({});
+      const initializeNotificationBoxesResult = await initializeAllApplicableNotificationBoxes();
+      return { initializeNotificationBoxesResult };
+    },
+    initializeAllApplicableNotificationSummaries: async () => {
+      const initializeAllApplicableNotificationSummaries = await request.nest.notificationInitActions.initializeAllApplicableNotificationSummaries({});
+      const initializeNotificationSummariesResult = await initializeAllApplicableNotificationSummaries();
+      return { initializeNotificationSummariesResult };
+    },
+    sendQueuedNotifications: async () => {
+      const sendQueuedNotifications = await request.nest.notificationActions.sendQueuedNotifications({});
+      const sendQueuedNotificationsResult = await sendQueuedNotifications();
+      return { sendQueuedNotificationsResult };
+    }
+  });
 
-  // init all new notification summaries
-  const initializeAllApplicableNotificationSummaries = await request.nest.notificationInitActions.initializeAllApplicableNotificationSummaries({});
-  const initializeNotificationSummariesResult = await initializeAllApplicableNotificationSummaries();
-
-  console.log({ initializeNotificationSummariesResult });
-
-  // send all queued notifications
-  const sendQueuedNotifications = await request.nest.notificationActions.sendQueuedNotifications({});
-  const sendQueuedNotificationsResult = await sendQueuedNotifications();
-
-  console.log({ sendQueuedNotificationsResult });
+  console.log('notificationHourlyUpdateSchedule - done');
 };

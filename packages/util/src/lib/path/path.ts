@@ -610,10 +610,14 @@ export interface SlashPathDetails {
   readonly file?: Maybe<SlashPathFile | SlashPathTypedFile>;
   /**
    * The file name, if file is defined.
+   *
+   * This is only the filename without the extension, even if the file is a typed file.
    */
   readonly fileName?: Maybe<string>;
   /**
    * The typed file part, if the file is a typed file.
+   *
+   * This is the full file name including the extension if the file is a typed file.
    */
   readonly typedFile: Maybe<SlashPathTypedFile>;
   /**

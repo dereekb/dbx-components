@@ -1,7 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { whereDateIsBefore } from '../../common/firestore/query/constraint.template';
 import { type FirestoreQueryConstraint, where } from '../../common/firestore/query/constraint';
-import { type StorageFile, StorageFileProcessingState } from './storagefile';
+import { type StorageFile, type StorageFileGroup, StorageFileProcessingState } from './storagefile';
 import { type StorageFilePurpose } from './storagefile.id';
 import { type FirebaseAuthUserId } from '../../common/auth/auth';
 
@@ -27,4 +27,39 @@ export interface StorageFilePurposeAndUserQueryInput {
 
 export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQueryInput): FirestoreQueryConstraint[] {
   return [where<StorageFile>('p', '==', input.purpose), where<StorageFile>('u', '==', input.user)];
+}
+
+export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstraint[] {
+  return [where<StorageFile>('gs', '==', true)];
+}
+
+// MARK: StorageFileGroup
+/**
+ * Query for storageFileGroups that are flagged for initialization.
+ *
+ * @param now
+ * @returns
+ */
+export function storageFileGroupsFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
+  return [where<StorageFileGroup>('s', '==', true)];
+}
+
+/**
+ * Query for storageFileGroups that are flagged for content regeneration.
+ *
+ * @param now
+ * @returns
+ */
+export function storageFileGroupsFlaggedForContentRegenerationQuery(): FirestoreQueryConstraint[] {
+  return [where<StorageFileGroup>('re', '==', true)];
+}
+
+/**
+ * Query for storageFileGroups that are flagged as invalid.
+ *
+ * @param now
+ * @returns
+ */
+export function storageFileGroupsFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
+  return [where<StorageFileGroup>('fi', '==', true)];
 }

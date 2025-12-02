@@ -48,6 +48,8 @@ export type NotificationTypes = typeof notificationUserIdentity | typeof notific
 
 /**
  * Notification-related model that is initialized asynchronously at a later time.
+ *
+ * Examples: NotificationSummary, NotificationBox
  */
 export interface InitializedNotificationModel {
   /**
@@ -180,7 +182,7 @@ export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH 
  *
  * Notification Items can be delivered here.
  */
-export interface NotificationSummary {
+export interface NotificationSummary extends InitializedNotificationModel {
   /**
    * Notification Summary creation date
    */
@@ -236,7 +238,8 @@ export const notificationSummaryConverter = snapshotConverterFunctions<Notificat
     }),
     lat: optionalFirestoreDate(),
     rat: optionalFirestoreDate(),
-    s: optionalFirestoreBoolean({ dontStoreIf: false })
+    s: optionalFirestoreBoolean({ dontStoreIf: false }),
+    fi: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 
@@ -269,7 +272,7 @@ export const notificationBoxIdentity = firestoreModelIdentity('notificationBox',
  *
  * Update to each recipient is propogated from NotificationUser values.
  */
-export interface NotificationBox {
+export interface NotificationBox extends InitializedNotificationModel {
   /**
    * Notification Box creation date
    */
