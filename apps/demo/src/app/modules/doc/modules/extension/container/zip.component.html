@@ -1,0 +1,14 @@
+<dbx-content-container>
+  <doc-feature-layout header="Zip Preview" hint="Used for previewing a zip file and its content.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-zip-preview" hint="Used to render a zip preview based on the input zip blob.">
+      <p>The previewer is automatically resized to fit the height of the container. Images may not retain their aspect ratio when being previewed.</p>
+      <p>The mime type is determined by the file extension of files in the zip. File types that are not supported will be displayed as a text file.</p>
+      <dbx-content-border>
+        <div style="height: 800px">
+          <dbx-zip-preview downloadFileName="test.zip" [srcUrl]="zipUrl"></dbx-zip-preview>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

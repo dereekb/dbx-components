@@ -53,13 +53,22 @@ import {
   StoragePath,
   StorageFileFirestoreCollection,
   ProcessStorageFileParams,
-  FirebaseStorageContext
+  FirebaseStorageContext,
+  SyncStorageFileWithGroupsResult,
+  RegenerateStorageFileGroupContentResult,
+  StorageFileGroup,
+  StorageFileGroupDocument,
+  StorageFileGroupId,
+  StorageFileGroupFirestoreCollection,
+  SyncAllFlaggedStorageFilesWithGroupsResult,
+  RegenerateAllFlaggedStorageFileGroupsContentResult
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter, AsyncFactory } from '@dereekb/util';
-import { NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { markStorageFileForDeleteTemplate, NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 
 // MARK: Demo Api Testing Fixture
 @Module({
@@ -132,6 +141,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
     return this.instance.storageFileServerActions;
   }
 
+  get storageFileInitServerActions() {
+    return this.instance.storageFileInitServerActions;
+  }
+
   get storageContext() {
     return this.instance.storageContext;
   }
@@ -188,6 +201,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get storageFileServerActions() {
     return this.get(StorageFileServerActions);
+  }
+
+  get storageFileInitServerActions() {
+    return this.get(StorageFileInitServerActions);
   }
 
   get profileServerActions() {
@@ -257,6 +274,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.storageFileServerActions;
   }
 
+  get storageFileInitServerActions() {
+    return this.instance.storageFileInitServerActions;
+  }
+
   get profileServerActions() {
     return this.instance.profileServerActions;
   }
@@ -309,6 +330,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get storageFileServerActions() {
     return this.get(StorageFileServerActions);
+  }
+
+  get storageFileInitServerActions() {
+    return this.get(StorageFileInitServerActions);
   }
 
   get profileServerActions() {
@@ -627,7 +652,7 @@ export interface DemoApiNotificationBoxTestContextParams {
   for: ModelTestContextFixture<any, any, any, any, any>;
   ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
   /**
-   * Whether or not to initialize the NotificationBox. Defaults to false.
+   * Whether or not to create the NotificationBox. Defaults to false.
    */
   createIfNeeded?: boolean;
   /**
@@ -834,7 +859,7 @@ export interface DemoApiNotificationWeekTestContextParams {
    */
   week?: YearWeekCode;
   /**
-   * Whether or not to initialize the week. Defaults to true.
+   * Whether or not to initialize the NotificationWeek. Defaults to true.
    */
   init?: boolean;
 }
@@ -893,6 +918,22 @@ export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctio
   async loadProcessingTaskDocument(): Promise<NotificationDocument> {
     return this.instance.loadProcessingTaskDocument();
   }
+
+  async syncWithStorageFileGroups(): Promise<SyncStorageFileWithGroupsResult> {
+    return this.instance.syncWithStorageFileGroups();
+  }
+
+  async syncAllFlaggedStorageFilesWithGroups(): Promise<SyncAllFlaggedStorageFilesWithGroupsResult> {
+    return this.instance.syncAllFlaggedStorageFilesWithGroups();
+  }
+
+  async markForDeletion(): Promise<void> {
+    return this.instance.markForDeletion();
+  }
+
+  async deleteStorageFile(force?: Maybe<boolean>): Promise<void> {
+    return this.instance.deleteStorageFile(force);
+  }
 }
 
 export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -917,12 +958,32 @@ export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFuncti
     const notificationTaskDocument = this.testContext.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey);
     return notificationTaskDocument;
   }
+
+  async syncWithStorageFileGroups(): Promise<SyncStorageFileWithGroupsResult> {
+    const instance = await this.testContext.storageFileServerActions.syncStorageFileWithGroups({ key: this.documentKey });
+    return instance(this.document);
+  }
+
+  async syncAllFlaggedStorageFilesWithGroups(): Promise<SyncAllFlaggedStorageFilesWithGroupsResult> {
+    const instance = await this.testContext.storageFileServerActions.syncAllFlaggedStorageFilesWithGroups({});
+    return instance();
+  }
+
+  async markForDeletion(): Promise<void> {
+    await this.document.update(markStorageFileForDeleteTemplate());
+  }
+
+  async deleteStorageFile(force?: Maybe<boolean>): Promise<void> {
+    const instance = await this.testContext.storageFileServerActions.deleteStorageFile({ key: this.documentKey, force });
+    return instance(this.document);
+  }
 }
 
 export const demoStorageFileContextFactory = () =>
   modelTestContextFactory<StorageFile, StorageFileDocument, DemoApiStorageFileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileFirestoreCollection>({
     makeFixture: (f) => new DemoApiStorageFileTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.storageFileCollection,
+    collectionForDocument: (fi, doc) => fi.demoFirestoreCollections.storageFileCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiStorageFileTestContextInstance(delegate, ref, testInstance),
     makeRef: async (collection, params, p) => {
       let ref: StorageFileDocument;
@@ -947,3 +1008,114 @@ export const demoStorageFileContextFactory = () =>
   });
 
 export const demoStorageFileContext = demoStorageFileContextFactory();
+
+// MARK: StorageFileGroup
+export interface DemoApiStorageFileGroupTestContextParams {
+  /**
+   * StorageFileGroup id to initialize for.
+   */
+  readonly storageFileGroupId?: Maybe<AsyncGetterOrValue<StorageFileGroupId>>;
+  /**
+   * Whether or not to create the StorageFileGroup. Defaults to false.
+   */
+  createIfNeeded?: boolean;
+  /**
+   * Whether or not to create and initialize. Defaults to false.
+   */
+  initIfNeeded?: boolean;
+}
+
+export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileGroupTestContextInstance<F>> {
+  async initializeStorageFileGroup(): Promise<void> {
+    return this.instance.initializeStorageFileGroup();
+  }
+
+  async regenerateStorageFileGroupContent(): Promise<RegenerateStorageFileGroupContentResult> {
+    return this.instance.regenerateStorageFileGroupContent();
+  }
+
+  async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
+    return this.instance.regenerateAllFlaggedStorageFileGroupsContent();
+  }
+
+  async processZipFileRegeneration(): Promise<StorageFileDocument> {
+    return this.instance.processZipFileRegeneration();
+  }
+}
+
+export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  async initializeStorageFileGroup(): Promise<void> {
+    const initStorageFileGroup = await this.testContext.storageFileInitServerActions.initializeStorageFileGroup({
+      key: this.documentKey
+    });
+
+    await initStorageFileGroup(this.document);
+  }
+
+  async regenerateStorageFileGroupContent(): Promise<RegenerateStorageFileGroupContentResult> {
+    const instance = await this.testContext.storageFileServerActions.regenerateStorageFileGroupContent({ key: this.documentKey });
+    return instance(this.document);
+  }
+
+  async regenerateAllFlaggedStorageFileGroupsContent(): Promise<RegenerateAllFlaggedStorageFileGroupsContentResult> {
+    const instance = await this.testContext.storageFileServerActions.regenerateAllFlaggedStorageFileGroupsContent({});
+    return instance();
+  }
+
+  async processZipFileRegeneration(): Promise<StorageFileDocument> {
+    const storageFileGroup = await assertSnapshotData(this.document);
+    const zipStorageFileDocument = this.testContext.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(storageFileGroup.zsf as string);
+
+    const processStorageFileInstance = await this.testContext.storageFileServerActions.processStorageFile({
+      key: zipStorageFileDocument.key,
+      processAgainIfSuccessful: true,
+      runImmediately: true
+    });
+
+    await processStorageFileInstance(zipStorageFileDocument);
+    return zipStorageFileDocument;
+  }
+}
+
+export const demoStorageFileGroupContextFactory = () =>
+  modelTestContextFactory<StorageFileGroup, StorageFileGroupDocument, DemoApiStorageFileGroupTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileGroupTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileGroupTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileGroupFirestoreCollection>({
+    makeFixture: (f) => new DemoApiStorageFileGroupTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.storageFileGroupCollection,
+    collectionForDocument: (fi, doc) => fi.demoFirestoreCollections.storageFileGroupCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiStorageFileGroupTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      let ref: StorageFileGroupDocument;
+
+      if (params.storageFileGroupId) {
+        const id = await getValueFromGetter(params.storageFileGroupId);
+        ref = collection.documentAccessor().loadDocumentForId(id);
+      } else {
+        throw new Error('Must use storageFileGroupId to create a new reference, or use the "doc" parameter.');
+      }
+
+      return ref.documentRef;
+    },
+    initDocument: async (instance, params) => {
+      const p = instance.testContext;
+
+      if (params.createIfNeeded === true || params.initIfNeeded === true) {
+        const exists = await instance.document.exists();
+
+        // create if it doesn't exist
+        if (!exists) {
+          const createStorageFileGroup = await p.storageFileServerActions.createStorageFileGroup({
+            storageFileId: instance.documentId
+          });
+
+          await createStorageFileGroup();
+        }
+
+        // initialize
+        if (params.initIfNeeded === true) {
+          await instance.initializeStorageFileGroup();
+        }
+      }
+    }
+  });
+
+export const demoStorageFileGroupContext = demoStorageFileGroupContextFactory();

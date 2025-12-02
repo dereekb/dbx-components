@@ -56,7 +56,12 @@ import {
   type StorageFileDocument,
   type StorageFileRoles,
   type StorageFileTypes,
-  grantStorageFileRolesForUserAuthFunction
+  grantStorageFileRolesForUserAuthFunction,
+  storageFileGroupFirestoreCollection,
+  type StorageFileGroupFirestoreCollection,
+  type StorageFileGroup,
+  type StorageFileGroupDocument,
+  type StorageFileGroupRoles
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
@@ -81,6 +86,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
+  abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
 }
 
 export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext): DemoFirestoreCollections {
@@ -100,7 +106,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationCollectionGroup: notificationFirestoreCollectionGroup(firestoreContext),
     notificationWeekCollectionFactory: notificationWeekFirestoreCollectionFactory(firestoreContext),
     notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext),
-    storageFileCollection: storageFileFirestoreCollection(firestoreContext)
+    storageFileCollection: storageFileFirestoreCollection(firestoreContext),
+    storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext)
   };
 }
 
@@ -215,6 +222,13 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
   getFirestoreCollection: (c) => c.app.storageFileCollection
 });
 
+export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFileGroup, StorageFileGroupDocument, StorageFileGroupRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFileGroup, StorageFileGroupDocument>, context: DemoFirebaseContext, model: StorageFileGroupDocument): PromiseOrValue<GrantedRoleMap<StorageFileGroupRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.storageFileGroupCollection
+});
+
 // MARK: Services
 export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes;
 
@@ -233,7 +247,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationBox: notificationBoxFirebaseModelServiceFactory,
   notification: notificationFirebaseModelServiceFactory,
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
-  storageFile: storageFileFirebaseModelServiceFactory
+  storageFile: storageFileFirebaseModelServiceFactory,
+  storageFileGroup: storageFileGroupFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

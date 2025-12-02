@@ -3,7 +3,7 @@ import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIXFirebaseModelS
 import { onCallHandlerWithNestApplicationFactory, onCallHandlerWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleHandlerWithNestApplicationFactory, onScheduleHandlerWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, ProfileServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
-import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions, StorageFileInitServerActions } from '@dereekb/firebase-server/model';
 import { runNamedAsyncTasksFunction } from '@dereekb/util';
 
 export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIXFirebaseModelServices> {
@@ -34,6 +34,10 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
 
   get storageFileServerActions(): StorageFileServerActions {
     return this.nest.get(StorageFileServerActions);
+  }
+
+  get storageFileInitActions(): StorageFileInitServerActions {
+    return this.nest.get(StorageFileInitServerActions);
   }
 
   get profileActions(): ProfileServerActions {

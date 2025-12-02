@@ -2,14 +2,17 @@
 @use '../style/theming';
 @use './calendar/calendar';
 @use './table/table';
+@use './zip/zip';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
+  $zip-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
     $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
+    $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
@@ -19,11 +22,16 @@
   @if ($table-enabled == 1) {
     @include table.core();
   }
+
+  @if ($zip-enabled == 1) {
+    @include zip.core();
+  }
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
+  $zip-enabled: 1;
 
   @if ($theme-config-or-typography-config != null) {
     @if (theming.private-is-theme-object($theme-config-or-typography-config)) {
@@ -31,6 +39,7 @@
 
       $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
       $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
+      $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
     }
 
     @if ($calendar-enabled == 1) {
@@ -40,16 +49,22 @@
     @if ($table-enabled == 1) {
       @include table.typography($theme-config-or-typography-config);
     }
+
+    @if ($zip-enabled == 1) {
+      @include zip.typography($theme-config-or-typography-config);
+    }
   }
 }
 
 @mixin all-extension-theme($theme-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
+  $zip-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
     $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
+    $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
@@ -58,5 +73,9 @@
 
   @if ($table-enabled == 1) {
     @include table.theme($theme-config);
+  }
+
+  @if ($zip-enabled == 1) {
+    @include zip.theme($theme-config);
   }
 }

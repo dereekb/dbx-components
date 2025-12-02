@@ -1,11 +1,10 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, inject, input, viewChild } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 import { Observable, first, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { DownloadTextContent } from './download.text';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AbstractSubscriptionDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../../loading/loading.component';
@@ -13,21 +12,24 @@ import { NgTemplateOutlet } from '@angular/common';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { DbxActionModule } from '../../../action/action.module';
 import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
+import { browserObjectUrlRef } from '@dereekb/browser';
+import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
 
 /**
- * DbxStructureDirective used specifically on the body of the app.
+ * View for previewing and downloading arbitrary text content.
  */
 @Component({
   templateUrl: './download.text.component.html',
   selector: 'dbx-download-text-view',
   standalone: true,
-  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective],
+  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective {
+export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective implements OnDestroy {
   private readonly _clipboard = inject(Clipboard);
   private readonly _matSnackbar = inject(MatSnackBar);
-  private readonly _sanitizer = inject(DomSanitizer);
+
+  private readonly _browserObjectUrl = browserObjectUrlRef();
 
   readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });
 
@@ -70,29 +72,22 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
   );
 
   readonly contentSignal = toSignal(this.content$);
-
   readonly contentDataSignal = computed(() => this.contentSignal()?.content);
+  readonly fileNameSignal = computed(() => this.contentSignal()?.name ?? 'download.txt');
 
-  readonly fileUrlSignal = computed(() => {
+  readonly downloadConfigSignal = computed(() => {
     const content = this.contentSignal();
-
-    let fileUrl: Maybe<SafeResourceUrl> = undefined;
+    const fileName = this.fileNameSignal();
+    let result: Maybe<DbxDownloadBlobButtonConfig> = undefined;
 
     if (content) {
-      const blob = new Blob([content.content], { type: content.mimeType ?? 'application/octet-stream' });
-      fileUrl = this._sanitizer.bypassSecurityTrustResourceUrl(window.URL.createObjectURL(blob));
+      result = {
+        blob: new Blob([content.content], { type: content.mimeType ?? 'application/octet-stream' }),
+        fileName
+      };
     }
 
-    return fileUrl;
-  });
-
-  readonly fileNameSignal = computed(() => this.contentSignal()?.name ?? 'File');
-
-  readonly downloadReadySignal = computed(() => {
-    const downloadButton = this.downloadButton();
-    const fileName = this.fileNameSignal();
-    const fileUrl = this.fileUrlSignal();
-    return Boolean(downloadButton && fileName && fileUrl);
+    return result;
   });
 
   readonly context = loadingStateContext({ obs: this.contentLoadingState$ });
@@ -139,4 +134,9 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
       })
     );
   };
+
+  override ngOnDestroy() {
+    super.ngOnDestroy();
+    this._browserObjectUrl.destroy();
+  }
 }

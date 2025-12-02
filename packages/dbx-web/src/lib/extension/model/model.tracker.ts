@@ -1,4 +1,4 @@
-import { type UnixDateTimeNumber, type Maybe, type ModelKey, type ModelKeyTypeNamePair } from '@dereekb/util';
+import { type Maybe, type ModelKey, type ModelKeyTypeNamePair, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 
 /**
  * String context in which a model was viewed.
@@ -9,7 +9,7 @@ export interface DbxModelViewTrackerEvent {
   /**
    * Event time
    */
-  readonly d?: UnixDateTimeNumber;
+  readonly d?: UnixDateTimeSecondsNumber;
   /**
    * Context
    */
@@ -25,7 +25,7 @@ export interface DbxModelViewTrackerEventSet {
   /**
    * The latest date/time number.
    */
-  readonly l: UnixDateTimeNumber;
+  readonly l: UnixDateTimeSecondsNumber;
   /**
    * List of events.
    */

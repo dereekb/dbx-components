@@ -14,8 +14,11 @@ export class DocInteractionIframeComponent {
   readonly contentUrl = 'https://iframetester.com/';
 
   /**
-   * Not necessarily required, but recommended.
+   * Type is necessarily required, but recommended.
    */
-  readonly embedMimeType = 'application/pdf';
-  readonly embedSrcUrl = 'https://staging.hellosubs.co/assets/test/resume/resume.pdf';
+  readonly embedPdfMimeType = 'application/pdf';
+  readonly embedPdfSrcUrl = '/assets/test/resume.pdf';
+
+  readonly embedImageMimeType = 'image/png';
+  readonly embedImageSrcUrl = '/assets/test/avatar.png';
 }

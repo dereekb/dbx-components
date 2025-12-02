@@ -160,6 +160,23 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
 }
 
 /**
+ * Throws an error if the LoadingState value has an error.
+ */
+export function throwErrorFromLoadingStateError<L extends LoadingState>(): OperatorFunction<L, L> {
+  return (obs: Observable<L>) => {
+    return obs.pipe(
+      map((x) => {
+        if (isLoadingStateWithError(x)) {
+          throw x.error;
+        }
+
+        return x;
+      })
+    );
+  };
+}
+
+/**
  * Returns the value once the LoadingState has finished loading, even if an error occured or there is no value.
  *
  * Can optionally specify a default value to use instead.

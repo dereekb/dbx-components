@@ -277,12 +277,41 @@ export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO
  *
  * Returned by Date.getTime().
  */
-export type UnixDateTimeNumber = number;
+export type UnixDateTimeMillisecondsNumber = number;
 
 /**
- * A date or a unix timestamp
+ * A date or a unix timestamp (in milliseconds)
  */
-export type DateOrUnixDateTimeNumber = Date | UnixDateTimeNumber;
+export type DateOrUnixDateTimeMillisecondsNumber = Date | UnixDateTimeMillisecondsNumber;
+
+/**
+ * Converts a Date object or unix timestamp (in milliseconds) to a Date object.
+ *
+ * @param input - Date object or unix timestamp (in milliseconds) to convert
+ * @returns Date object if input is valid. Returns null/undefined if input is null/undefined
+ */
+export function dateFromDateOrTimeMillisecondsNumber(input: DateOrUnixDateTimeMillisecondsNumber): Date;
+export function dateFromDateOrTimeMillisecondsNumber(input: MaybeNot): MaybeNot;
+export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDateTimeMillisecondsNumber>): Maybe<Date>;
+export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDateTimeMillisecondsNumber>): Maybe<Date> {
+  if (input == null) {
+    return input as null | undefined;
+  } else if (isDate(input)) {
+    return input as Date;
+  } else {
+    return unixMillisecondsNumberToDate(input as UnixDateTimeMillisecondsNumber);
+  }
+}
+
+/**
+ * Converts a unix timestamp number to a Date object.
+ *
+ * @param dateTimeNumber - Unix timestamp number to convert
+ * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined
+ */
+export function unixMillisecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeMillisecondsNumber>): Maybe<Date> {
+  return dateTimeNumber != null ? new Date(dateTimeNumber) : (dateTimeNumber as null | undefined);
+}
 
 /**
  * Number of milliseconds.
@@ -487,3 +516,14 @@ export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Ma
 export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date> {
   return input != null ? new Date(input.getTime() + (ms ?? 0)) : input;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use UnixDateTimeMillisecondsNumber instead.
+ */
+export type UnixDateTimeNumber = UnixDateTimeMillisecondsNumber;
+
+/**
+ * @deprecated use DateOrUnixDateTimeMillisecondsNumber instead.
+ */
+export type DateOrUnixDateTimeNumber = DateOrUnixDateTimeMillisecondsNumber;

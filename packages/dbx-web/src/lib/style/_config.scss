@@ -192,7 +192,9 @@ $default-notice-color: #f28600;
     // calendar enabled by default
     'calendar': 1,
     // table enabled by default
-    'table': 1
+    'table': 1,
+    // zip enabled by default
+    'zip': 1
   );
 
   @if ($input-dbx-theme-extension-config != null) {
@@ -216,4 +218,8 @@ $default-notice-color: #f28600;
 
 @function get-dbx-extension-table-enabled($theme-config) {
   @return get-dbx-extension-config-var($theme-config, 'table');
+}
+
+@function get-dbx-extension-zip-enabled($theme-config) {
+  @return get-dbx-extension-config-var($theme-config, 'zip');
 }

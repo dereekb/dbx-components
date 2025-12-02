@@ -1,5 +1,5 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, type GrantedReadRole, type GrantedUpdateRole, type WebsiteFileLink } from '@dereekb/model';
-import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique, type IndexRef, filterUniqueByIndex } from '@dereekb/util';
+import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique, type IndexRef, filterUniqueByIndex, unixDateTimeSecondsNumberFromDate, dateFromDateOrTimeSecondsNumber } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { type FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { type DocumentSnapshot } from '../types';
@@ -33,7 +33,9 @@ import {
   optionalFirestoreString,
   optionalFirestoreEnum,
   optionalFirestoreNumber,
-  optionalFirestoreArray
+  optionalFirestoreArray,
+  optionalFirestoreUnixDateTimeSecondsNumber,
+  firestoreUnixDateTimeSecondsNumber
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -132,7 +134,7 @@ export function testSnapshotDefaultsSnapshotData(data: Partial<TestSnapshotDefau
 }
 
 describe('firestoreDate()', () => {
-  const dateField = firestoreDate()!;
+  const dateField = firestoreDate();
 
   it('should convert data from a date string to a Date.', () => {
     const dateString: ISO8601DateString = '2021-08-16T05:00:00.000Z';
@@ -151,6 +153,39 @@ describe('firestoreDate()', () => {
     const converted = dateField.to!.convert!(value);
     expect(converted).toBeDefined();
     expect(converted).toBe(dateString);
+  });
+
+  describe('saveDefaultAsNow = true', () => {
+    it('should return a date for now if the date is undefined or null', () => {
+      const result = testSnapshotDefaultsConverter.mapFunctions.from({} as any);
+      const date = result.date;
+      expect(date).toBeDefined();
+    });
+  });
+});
+
+describe('firestoreUnixDateTimeSecondsNumber()', () => {
+  const dateField = firestoreUnixDateTimeSecondsNumber({});
+
+  it('should convert data from a date string to a Date.', () => {
+    const dateString: ISO8601DateString = '2021-08-16T05:00:00.000Z';
+    const unixDateTimeSecondsNumber = unixDateTimeSecondsNumberFromDate(new Date(dateString));
+    const value = dateFromDateOrTimeSecondsNumber(unixDateTimeSecondsNumber) as Date;
+
+    const converted = dateField.from!.convert!(unixDateTimeSecondsNumber);
+    expect(converted).toBeDefined();
+    expect(converted?.getTime()).toBe(value.getTime());
+    expect(isValid(converted)).toBe(true);
+  });
+
+  it('should convert data from a date to a UnixDateTimeSecondsNumber.', () => {
+    const dateString = '2021-08-16T05:00:00.000Z';
+    const unixDateTimeSecondsNumber = unixDateTimeSecondsNumberFromDate(new Date(dateString));
+    const value = dateFromDateOrTimeSecondsNumber(unixDateTimeSecondsNumber) as Date;
+
+    const converted = dateField.to!.convert!(value);
+    expect(converted).toBeDefined();
+    expect(converted).toBe(unixDateTimeSecondsNumber);
   });
 
   describe('saveDefaultAsNow = true', () => {
@@ -669,6 +704,38 @@ describe('optionalFirestoreDate()', () => {
     it('should set null when undefined', () => {
       const result = converter.mapFunctions.from({});
 
+      expect(result.value).toBe(undefined);
+    });
+
+    it('should pass through null values', () => {
+      const result = converter.mapFunctions.from({
+        value: null
+      });
+
+      expect(result.value).toBeUndefined();
+    });
+
+    it('should pass through undefined values', () => {
+      const result = converter.mapFunctions.from({
+        value: undefined
+      });
+
+      expect(result.value).toBeUndefined();
+    });
+  });
+});
+
+describe('optionalFirestoreUnixDateTimeSecondsNumber()', () => {
+  describe('with transform', () => {
+    const dateTimeSecondsField = optionalFirestoreUnixDateTimeSecondsNumber();
+    const converter = snapshotConverterFunctions<TestOptionalFirestoreDate>({
+      fields: {
+        value: dateTimeSecondsField
+      }
+    });
+
+    it('should set null when undefined', () => {
+      const result = converter.mapFunctions.from({});
       expect(result.value).toBe(undefined);
     });
 

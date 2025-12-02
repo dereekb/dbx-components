@@ -10,7 +10,8 @@
     flex: 1 1 auto;
   }
 
-  .decoration {
+  .decoration,
+  .pointer-disabled {
     pointer-events: none;
   }
 

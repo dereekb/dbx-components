@@ -5,14 +5,14 @@ import { userHasNoProfileError } from '../../common';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 import { firestoreModelKey } from '@dereekb/firebase';
 
-export const updateProfile: DemoUpdateModelFunction<UpdateProfileParams> = async (request) => {
+export const profileUpdate: DemoUpdateModelFunction<UpdateProfileParams> = async (request) => {
   const { nest, auth, data } = request;
   const updateProfile = await nest.profileActions.updateProfile(data);
   const profileDocument: ProfileDocument = await profileForUserRequest(request);
   await updateProfile(profileDocument);
 };
 
-export const updateProfileUsername: DemoUpdateModelFunction<SetProfileUsernameParams> = async (request) => {
+export const profileUpdateUsername: DemoUpdateModelFunction<SetProfileUsernameParams> = async (request) => {
   const { nest, auth, data } = request;
   const setProfileUsername = await nest.profileActions.setProfileUsername(data);
   const profileDocument: ProfileDocument = await profileForUserRequest(request);
@@ -25,7 +25,7 @@ export const updateProfileUsername: DemoUpdateModelFunction<SetProfileUsernamePa
   await setProfileUsername(profileDocument);
 };
 
-export const updateProfleOnboarding: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
+export const profileUpdateOnboarding: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
   const { nest, auth, data } = request;
   const uid = auth.uid;
 
@@ -38,7 +38,7 @@ export const updateProfleOnboarding: DemoUpdateModelFunction<FinishOnboardingPro
   return true;
 };
 
-export const updateProfileCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = async (request) => {
+export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = async (request) => {
   const { nest, auth, data } = request;
   const uid = auth.uid;
 
