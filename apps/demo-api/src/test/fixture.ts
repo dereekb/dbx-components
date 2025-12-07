@@ -1026,6 +1026,10 @@ export interface DemoApiStorageFileGroupTestContextParams {
 }
 
 export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileGroupTestContextInstance<F>> {
+  async createStorageFileGroup(): Promise<void> {
+    return this.instance.createStorageFileGroup();
+  }
+
   async initializeStorageFileGroup(): Promise<void> {
     return this.instance.initializeStorageFileGroup();
   }
@@ -1044,6 +1048,14 @@ export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFu
 }
 
 export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  async createStorageFileGroup() {
+    const createStorageFileGroup = await this.testContext.storageFileServerActions.createStorageFileGroup({
+      storageFileId: this.documentId
+    });
+
+    await createStorageFileGroup();
+  }
+
   async initializeStorageFileGroup(): Promise<void> {
     const initStorageFileGroup = await this.testContext.storageFileInitServerActions.initializeStorageFileGroup({
       key: this.documentKey
@@ -1103,11 +1115,7 @@ export const demoStorageFileGroupContextFactory = () =>
 
         // create if it doesn't exist
         if (!exists) {
-          const createStorageFileGroup = await p.storageFileServerActions.createStorageFileGroup({
-            storageFileId: instance.documentId
-          });
-
-          await createStorageFileGroup();
+          await instance.createStorageFileGroup();
         }
 
         // initialize

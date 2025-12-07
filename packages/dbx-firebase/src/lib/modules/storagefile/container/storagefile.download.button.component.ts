@@ -10,11 +10,20 @@ import { combineLatest, distinctUntilChanged, interval, map, Observable, of, sha
 import { DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 
+/**
+ * Source configuration for the DbxFirebaseStorageFileDownloadButtonComponent.
+ */
 export interface DbxFirebaseStorageFileDownloadButtonSource {
   /**
    * A static StorageFileKey to use.
    */
   readonly storageFileKey?: MaybeObservableOrValue<StorageFileKey>;
+  /**
+   * Whether or not to pre-load the download url from the source.
+   *
+   * Defaults to false.
+   */
+  readonly preload?: Maybe<boolean>;
   /**
    * The expected mime type of the StorageFile to use when previewing.
    */
@@ -37,20 +46,18 @@ export interface DbxFirebaseStorageFileDownloadButtonSource {
    * Optional custom error handler for the download URL.
    */
   readonly handleGetDownloadUrlError?: (error: unknown) => void;
+  /**
+   * Called when the download URL changes.
+   */
+  readonly downloadUrlChanged?: Maybe<(downloadUrl: Maybe<StorageFileDownloadUrl>) => void>;
 }
 
 /**
- * Configuration for the DbxFirebaseStorageFileDownloadButton.
+ * Configuration for the DbxFirebaseStorageFileDownloadButtonComponent.
  */
 export interface DbxFirebaseStorageFileDownloadButtonConfig {
   readonly buttonStyle?: Maybe<DbxButtonStyle>;
   readonly previewButtonStyle?: Maybe<DbxButtonStyle>;
-  /**
-   * Whether or not to pre-load the download url from the source.
-   *
-   * Defaults to false.
-   */
-  readonly preload?: Maybe<boolean>;
   /**
    * Whether or not to show a preview button.
    *
@@ -69,6 +76,15 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
    * The function can return undefined, in which case the default preview dialog will be used.
    */
   readonly openCustomPreview?: Maybe<(downloadUrl: StorageFileDownloadUrl, embedMimeType?: Maybe<string>) => Maybe<MatDialogRef<any>>>;
+  // COMPAT
+  /**
+   * Whether or not to pre-load the download url from the source.
+   *
+   * Defaults to false.
+   *
+   * @deprecated use the preload property on the source/DbxFirebaseStorageFileDownloadButtonSource instead.
+   */
+  readonly preload?: Maybe<boolean>;
 }
 
 @Component({
@@ -88,7 +104,7 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFirebaseStorageFileDownloadButton {
+export class DbxFirebaseStorageFileDownloadButtonComponent {
   readonly matDialog = inject(MatDialog);
 
   readonly dbxWebFilePreviewService = inject(DbxWebFilePreviewService);
@@ -115,6 +131,11 @@ export class DbxFirebaseStorageFileDownloadButton {
    * Defaults to true.
    */
   readonly showPreviewButton = input<Maybe<boolean>>(true);
+
+  /**
+   * Whether or not to pre-load the download URL from the source.
+   */
+  readonly preload = input<Maybe<boolean>>(undefined);
 
   /**
    * Output event emitted when the download URL changes.
@@ -144,8 +165,10 @@ export class DbxFirebaseStorageFileDownloadButton {
   });
 
   readonly preloadSignal = computed(() => {
+    const preload = this.preload();
+    const source = this.source();
     const config = this.configSignal();
-    return config.preload ?? false;
+    return preload ?? source?.preload ?? config.preload ?? false;
   });
 
   readonly downloadUrlSignal = signal<Maybe<StorageFileDownloadUrl>>(undefined);
@@ -333,7 +356,13 @@ export class DbxFirebaseStorageFileDownloadButton {
   // Output Effect
   readonly downloadUrlChangeEffect = effect(() => {
     const downloadUrl = this.downloadUrlSignal();
+    const source = this.source();
+
     this.downloadUrlChange.emit(downloadUrl);
+
+    if (source?.downloadUrlChanged) {
+      source.downloadUrlChanged(downloadUrl);
+    }
   });
 
   // Handlers

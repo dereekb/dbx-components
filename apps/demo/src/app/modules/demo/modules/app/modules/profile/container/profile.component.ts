@@ -1,6 +1,6 @@
 import { OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButton, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileDownloadButtonSource, dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButtonComponent, DbxFirebaseStorageFileDownloadButtonConfig, DbxFirebaseStorageFileDownloadButtonSource, dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
@@ -32,7 +32,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
     DbxLabelBlockComponent,
     DbxAvatarComponent,
     DbxLoadingProgressComponent,
-    DbxFirebaseStorageFileDownloadButton
+    DbxFirebaseStorageFileDownloadButtonComponent
   ],
   standalone: true
 })
