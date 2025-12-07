@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { DownloadStorageFileParams, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { DownloadStorageFileParams, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { type Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
@@ -97,7 +97,7 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
   abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
   abstract profile: {
     readProfile: {
-      downloadArchive: ModelFirebaseCrudFunction<DownloadProfileArchiveParams, DownloadProfileArchiveResult>;
+      downloadArchive: ModelFirebaseReadFunction<DownloadProfileArchiveParams, DownloadProfileArchiveResult>;
     };
     updateProfile: {
       // full names

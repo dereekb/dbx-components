@@ -312,7 +312,7 @@ export interface StorageFileGroupStorageFileZipFinalizeArchiveInput extends Stor
 
 export type StorageFileGroupStorageFileZipFinalizeArchiveFunction = (input: StorageFileGroupStorageFileZipFinalizeArchiveInput) => Promise<void>;
 
-export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfigZipConfiguration {
+export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfigZipConfiguration extends Pick<StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask>, 'cleanup'> {
   /**
    * Configures the maximum number of files to zip in parallel. Streaming more files in parallel concurrently requires more memory.
    *
@@ -351,6 +351,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 
   const storageFileGroupZipProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> = {
     target: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
+    cleanup: zip?.cleanup,
     flow: [
       {
         subtask: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE_CREATE_ZIP_SUBTASK,

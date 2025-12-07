@@ -89,5 +89,15 @@ service cloud.firestore {
         allow read: if false;
       }
     }
+
+    // MARK: StorageFile
+    match /sf/{storageFile} {
+      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+    }
+
+    match /sfg/{storageFileGroup} {
+      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+    }
+
   }
 }
