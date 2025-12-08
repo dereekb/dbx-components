@@ -15,7 +15,7 @@
         <dbx-zip-preview-file-entry-list [state$]="listEntriesState$" [dbxListTitleGroup]="listTitleGroupDelegate" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeEntryAnchor"></dbx-zip-preview-file-entry-list>
       }
       @case ('view_entry') {
-        <dbx-embed class="dbx-zip-blob-preview-content-embed" [srcBlob]="selectedFileEntryBlobSignal()"></dbx-embed>
+        <dbx-embed class="dbx-zip-blob-preview-content-embed" [blob]="selectedFileEntryBlobSignal()"></dbx-embed>
       }
     }
   </div>

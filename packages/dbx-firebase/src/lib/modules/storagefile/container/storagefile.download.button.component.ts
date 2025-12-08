@@ -9,6 +9,13 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, interval, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { isSameDate } from '@dereekb/date';
+
+export interface DbxFirebaseStorageFileDownloadDetails {
+  readonly downloadUrl: StorageFileDownloadUrl;
+  readonly mimeType?: Maybe<ContentTypeMimeType>;
+  readonly expiresAt?: Maybe<Date>;
+}
 
 /**
  * Source configuration for the DbxFirebaseStorageFileDownloadButtonComponent.
@@ -47,9 +54,9 @@ export interface DbxFirebaseStorageFileDownloadButtonSource {
    */
   readonly handleGetDownloadUrlError?: (error: unknown) => void;
   /**
-   * Called when the download URL changes.
+   * Called when the download details change.
    */
-  readonly downloadUrlChanged?: Maybe<(downloadUrl: Maybe<StorageFileDownloadUrl>) => void>;
+  readonly downloadDetailsChangeCallback?: Maybe<(downloadDetails: Maybe<DbxFirebaseStorageFileDownloadDetails>) => void>;
 }
 
 /**
@@ -138,9 +145,9 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   readonly preload = input<Maybe<boolean>>(undefined);
 
   /**
-   * Output event emitted when the download URL changes.
+   * Output event emitted when the download details change.
    */
-  readonly downloadUrlChange = output<Maybe<StorageFileDownloadUrl>>();
+  readonly downloadDetailsChange = output<Maybe<DbxFirebaseStorageFileDownloadDetails>>();
 
   readonly config = input<Maybe<DbxFirebaseStorageFileDownloadButtonConfig>>();
   readonly source = input<Maybe<DbxFirebaseStorageFileDownloadButtonSource>>();
@@ -287,7 +294,13 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const downloadMimeType = this.downloadMimeTypeSignal();
     const embedMimeType = inputEmbedMimeType ?? downloadMimeType;
 
-    return openPreview?.(srcUrl, embedMimeType) ?? this.dbxWebFilePreviewService.openPreviewDialog(srcUrl, embedMimeType);
+    return (
+      openPreview?.(srcUrl, embedMimeType) ??
+      this.dbxWebFilePreviewService.openPreviewDialog({
+        srcUrl,
+        embedMimeType
+      })
+    );
   };
 
   // Cached Url Effect
@@ -315,9 +328,10 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   );
 
   // Expiration Effect
-  readonly downloadUrlExpiresAt$ = toObservable(this.downloadUrlExpiresAtSignal).pipe(map(dateFromDateOrTimeSecondsNumber), distinctUntilChanged(), shareReplay(1));
+  readonly downloadUrlExpiresAtDate$ = toObservable(this.downloadUrlExpiresAtSignal).pipe(map(dateFromDateOrTimeSecondsNumber), distinctUntilChanged(isSameDate), shareReplay(1));
+  readonly downloadUrlExpiresAtDateSignal = toSignal(this.downloadUrlExpiresAtDate$);
 
-  readonly downloadUrlHasExpired$ = this.downloadUrlExpiresAt$.pipe(
+  readonly downloadUrlHasExpired$ = this.downloadUrlExpiresAtDate$.pipe(
     switchMap((x) => {
       let obs: Observable<boolean>;
 
@@ -354,14 +368,34 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   );
 
   // Output Effect
-  readonly downloadUrlChangeEffect = effect(() => {
+  readonly downloadDetailsSignal = computed(() => {
     const downloadUrl = this.downloadUrlSignal();
+    const mimeType = this.downloadMimeTypeSignal();
+    const expiresAt = this.downloadUrlExpiresAtDateSignal();
+
+    const details: Maybe<DbxFirebaseStorageFileDownloadDetails> =
+      downloadUrl != null
+        ? {
+            downloadUrl,
+            mimeType,
+            expiresAt
+          }
+        : undefined;
+
+    return details;
+  });
+
+  readonly downloadDetailsChangedEffect = effect(() => {
+    const details: Maybe<DbxFirebaseStorageFileDownloadDetails> = this.downloadDetailsSignal();
+    this.downloadDetailsChange.emit(details);
+  });
+
+  readonly sourceDownloadDetailsChangeCallbackEffect = effect(() => {
+    const details: Maybe<DbxFirebaseStorageFileDownloadDetails> = this.downloadDetailsSignal();
     const source = this.source();
 
-    this.downloadUrlChange.emit(downloadUrl);
-
-    if (source?.downloadUrlChanged) {
-      source.downloadUrlChanged(downloadUrl);
+    if (source?.downloadDetailsChangeCallback) {
+      source.downloadDetailsChangeCallback(details);
     }
   });
 

@@ -1,0 +1,35 @@
+<dbx-content-container>
+  <doc-feature-layout header="Web File Preview" hint="Used for previewing arbitrary content available at a url or blob.">
+    <!-- Examples -->
+    <doc-feature-example header="DbxWebFilePreviewService" hint="Service used to register and handle previewing arbitrary content available at a url or blob.">
+      <p>Content can be registered using the DbxWebFilePreviewService's registerEntry function. The service will then handle previewing the content based on the provided configuration.</p>
+      <p>Entries can be configured with a preview component function and an optional preview dialog function, which can be used to preview the content in a dialog.</p>
+      <p>Entries can also be configured via the DBX_WEB_FILE_PREVIEW_SERVICE_ENTRIES_TOKEN injection token.</p>
+      <h3>Dialog Example</h3>
+      <dbx-content-border>
+        <dbx-button (buttonClick)="openZipExampleDialog()">Open Zip Example Dialog</dbx-button>
+        <dbx-button (buttonClick)="openPngExampleDialog()">Open Png Example Dialog</dbx-button>
+      </dbx-content-border>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-web-file-preview" hint="Used to render an inline preview of the given url or blob.">
+      <p>The preview relies on the DbxWebFilePreviewService's entry configurations to determine the appropriate preview component to use.</p>
+      <dbx-content-border>
+        <div style="height: 400px">
+          <dbx-web-file-preview [config]="zipConfig"></dbx-web-file-preview>
+        </div>
+      </dbx-content-border>
+      <p>Image (png) Examples</p>
+      <dbx-content-border>
+        <div style="height: 200px">
+          <dbx-web-file-preview [config]="pngConfig"></dbx-web-file-preview>
+        </div>
+      </dbx-content-border>
+      <p>Image (no mime type) Examples</p>
+      <dbx-content-border>
+        <div style="height: 200px">
+          <dbx-web-file-preview [config]="imageNoMimeTypeConfig"></dbx-web-file-preview>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

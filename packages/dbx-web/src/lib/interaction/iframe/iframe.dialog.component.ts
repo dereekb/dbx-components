@@ -1,35 +1,29 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 import { WebsiteUrlWithPrefix } from '@dereekb/util';
-import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
-import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
 import { DbxIframeComponent } from './iframe.component';
+import { DbxInjectionDialogComponent } from '../dialog/dialog.injection.component';
 
 export interface DbxIframeDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly contentUrl: WebsiteUrlWithPrefix;
 }
 
-@Component({
-  template: `
-    <dbx-dialog-content>
-      <dbx-iframe [contentUrl]="contentUrl"></dbx-iframe>
-    </dbx-dialog-content>
-  `,
-  imports: [DbxDialogContentDirective, DbxIframeComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
-})
-export class DbxIframeDialogComponent extends AbstractDialogDirective<void, DbxIframeDialogConfig> {
-  get contentUrl() {
-    return this.data.contentUrl;
-  }
-
-  static openDialog(matDialog: MatDialog, config: DbxIframeDialogConfig): MatDialogRef<DbxIframeDialogComponent, void> {
-    const dialogRef = matDialog.open(DbxIframeDialogComponent, {
-      ...config,
-      data: config
-    });
-
-    return dialogRef;
-  }
+/**
+ * Opens a dialog with DbxEmbedComponent.
+ *
+ * @param matDialog The MatDialog instance to use.
+ * @param config The configuration for the dialog.
+ * @returns The MatDialogRef for the dialog.
+ */
+export function openIframeDialog(matDialog: MatDialog, config: DbxIframeDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxIframeComponent>, void> {
+  return DbxInjectionDialogComponent.openDialog(matDialog, {
+    ...config,
+    showCloseButton: true,
+    componentConfig: {
+      componentClass: DbxIframeComponent,
+      init: (x) => {
+        const { contentUrl } = config;
+        x.contentUrl.set(contentUrl);
+      }
+    }
+  });
 }

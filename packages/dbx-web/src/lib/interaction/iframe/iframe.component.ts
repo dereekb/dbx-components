@@ -1,4 +1,4 @@
-import { Component, viewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input } from '@angular/core';
+import { Component, viewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { asyncScheduler, combineLatest, delayWhen, map, Subject, switchMap, timer, startWith } from 'rxjs';
 import { Maybe } from '@dereekb/util';
@@ -22,7 +22,7 @@ export class DbxIframeComponent extends AbstractSubscriptionDirective implements
   readonly scrolling = input<'auto' | 'no' | 'yes', 'auto' | 'no' | 'yes' | boolean>('no', { transform: (x) => (x == null ? 'no' : typeof x === 'string' ? x : x === true ? 'auto' : 'no') });
 
   readonly sanitizeUrl = input<boolean>(false);
-  readonly contentUrl = input.required<Maybe<string | SafeResourceUrl>>();
+  readonly contentUrl = model<Maybe<string | SafeResourceUrl>>();
 
   readonly contentUrlSignal = computed(() => {
     let url: Maybe<string | SafeResourceUrl> = this.contentUrl();
