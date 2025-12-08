@@ -1,5 +1,5 @@
-import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
-import { WebsiteUrlWithPrefix, Maybe } from '@dereekb/util';
+import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
+import { type WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
 import { DbxInjectionDialogComponent } from '../../interaction/dialog';
 import { DbxZipPreviewComponent } from './zip.preview.component';
 

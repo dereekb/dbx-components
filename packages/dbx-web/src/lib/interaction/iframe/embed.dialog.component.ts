@@ -1,5 +1,5 @@
-import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
-import { ContentTypeMimeType, Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
+import { type ContentTypeMimeType, type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxEmbedComponent } from './embed.component';
 import { DbxInjectionDialogComponent } from '../dialog/dialog.injection.component';
 

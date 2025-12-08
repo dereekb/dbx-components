@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, model, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, model, OnDestroy } from '@angular/core';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DbxLoadingComponent } from '../../loading';

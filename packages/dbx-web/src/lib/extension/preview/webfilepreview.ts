@@ -1,5 +1,5 @@
-import { MatDialogConfig, type MatDialog, type MatDialogRef } from '@angular/material/dialog';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type MatDialogConfig, type MatDialog, type MatDialogRef } from '@angular/material/dialog';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type WebsiteUrlWithPrefix, type Maybe, type ContentTypeMimeType, type ArrayOrValue, type MimeTypeWithoutParameters } from '@dereekb/util';
 
 /**

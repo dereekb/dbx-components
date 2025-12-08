@@ -1,7 +1,7 @@
 import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';
 import { DbxZipPreviewComponent } from '../zip';
-import { DbxWebFilePreviewServicePreviewComponentFunction, DbxWebFilePreviewServicePreviewDialogWithComponentFunction, type DbxWebFilePreviewServiceEntry } from './webfilepreview';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type DbxWebFilePreviewServicePreviewComponentFunction, type DbxWebFilePreviewServiceEntry } from './webfilepreview';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 // MARK: Zip
 export const DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_COMPONENT_PRESET: DbxWebFilePreviewServicePreviewComponentFunction = (input) => {

@@ -1,7 +1,7 @@
 import { MatDialog } from '@angular/material/dialog';
 import { Component, inject } from '@angular/core';
 import { DocInteractionExampleDialogComponent } from '../component/interaction.dialog.component';
-import { DbxContentContainerDirective, DbxContentPitDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxInjectionDialogComponent, openIframeDialog } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentPitDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent, openIframeDialog } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';

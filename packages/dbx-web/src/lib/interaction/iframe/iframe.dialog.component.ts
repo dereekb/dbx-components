@@ -1,5 +1,5 @@
-import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
-import { WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
+import { type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxIframeComponent } from './iframe.component';
 import { DbxInjectionDialogComponent } from '../dialog/dialog.injection.component';
 
