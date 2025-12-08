@@ -1,45 +1,47 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
-import { ContentTypeMimeType, Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
-import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
+import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
+import { type ContentTypeMimeType, type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxEmbedComponent } from './embed.component';
-import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
+import { DbxInjectionDialogComponent } from '../dialog/dialog.injection.component';
 
 export interface DbxEmbedDialogConfig extends Omit<MatDialogConfig, 'data'> {
-  readonly srcUrl: WebsiteUrlWithPrefix;
+  readonly srcUrl?: Maybe<WebsiteUrlWithPrefix>;
+  readonly blob?: Maybe<Blob>;
   readonly embedMimeType?: Maybe<ContentTypeMimeType | string>;
   readonly sanitizeUrl?: boolean;
 }
 
-@Component({
-  template: `
-    <dbx-dialog-content>
-      <dbx-embed [srcUrl]="srcUrl" [sanitizeUrl]="sanitizeUrl" [type]="type"></dbx-embed>
-    </dbx-dialog-content>
-  `,
-  imports: [DbxDialogContentDirective, DbxEmbedComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
-})
-export class DbxEmbedDialogComponent extends AbstractDialogDirective<void, DbxEmbedDialogConfig> {
-  get type() {
-    return this.data.embedMimeType;
-  }
+/**
+ * Opens a dialog with DbxEmbedComponent.
+ *
+ * @param matDialog The MatDialog instance to use.
+ * @param config The configuration for the dialog.
+ * @returns The MatDialogRef for the dialog.
+ */
+export function openEmbedDialog(matDialog: MatDialog, config: DbxEmbedDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxEmbedComponent>, void> {
+  return DbxInjectionDialogComponent.openDialog(matDialog, {
+    ...config,
+    showCloseButton: false,
+    componentConfig: {
+      componentClass: DbxEmbedComponent,
+      init: (x) => {
+        const { blob, srcUrl, embedMimeType, sanitizeUrl } = config;
 
-  get srcUrl() {
-    return this.data.srcUrl;
-  }
+        if (blob != null) {
+          x.blob.set(blob);
+        }
 
-  get sanitizeUrl() {
-    return this.data.sanitizeUrl;
-  }
+        if (srcUrl != null) {
+          x.srcUrl.set(srcUrl);
+        }
 
-  static openDialog(matDialog: MatDialog, config: DbxEmbedDialogConfig): MatDialogRef<DbxEmbedDialogComponent, void> {
-    const dialogRef = matDialog.open(DbxEmbedDialogComponent, {
-      ...config,
-      data: config
-    });
+        if (embedMimeType != null) {
+          x.type.set(embedMimeType);
+        }
 
-    return dialogRef;
-  }
+        if (sanitizeUrl != null) {
+          x.sanitizeUrl.set(sanitizeUrl);
+        }
+      }
+    }
+  });
 }

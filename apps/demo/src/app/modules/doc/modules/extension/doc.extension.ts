@@ -46,6 +46,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Zip',
     detail: 'zip',
     ref: 'doc.extension.zip'
+  },
+  {
+    icon: 'preview',
+    title: 'Web File Preview',
+    detail: 'web file preview',
+    ref: 'doc.extension.webfilepreview'
   }
 ];
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, model, OnDestroy } from '@angular/core';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DbxLoadingComponent } from '../../loading';
@@ -26,17 +26,17 @@ export class DbxZipPreviewComponent implements OnDestroy {
   /**
    * The URL to download the zip file from, if applicable.
    */
-  readonly srcUrl = input<Maybe<WebsiteUrlWithPrefix>>();
+  readonly srcUrl = model<Maybe<WebsiteUrlWithPrefix>>();
 
   /**
    * The blob to use for the zip file, if applicable.
    */
-  readonly blob = input<Maybe<Blob>>();
+  readonly blob = model<Maybe<Blob>>();
 
   /**
    * The file name to use for the zip file.
    */
-  readonly downloadFileName = input<Maybe<string>>();
+  readonly downloadFileName = model<Maybe<string>>();
 
   readonly srcUrl$ = toObservable(this.srcUrl);
   readonly blob$ = toObservable(this.blob);

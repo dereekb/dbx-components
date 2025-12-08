@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
-import { WebsiteUrlWithPrefix, Maybe } from '@dereekb/util';
-import { DbxDialogContentDirective, AbstractDialogDirective } from '../../interaction/dialog';
+import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
+import { type WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
+import { DbxInjectionDialogComponent } from '../../interaction/dialog';
 import { DbxZipPreviewComponent } from './zip.preview.component';
 
 export interface DbxZipPreviewDialogConfig extends Omit<MatDialogConfig, 'data'> {
@@ -10,37 +9,34 @@ export interface DbxZipPreviewDialogConfig extends Omit<MatDialogConfig, 'data'>
   readonly downloadFileName?: Maybe<string>;
 }
 
-@Component({
-  template: `
-    <dbx-dialog-content>
-      <dbx-zip-preview [srcUrl]="srcUrl" [blob]="blob" [downloadFileName]="downloadFileName"></dbx-zip-preview>
-    </dbx-dialog-content>
-  `,
-  imports: [DbxZipPreviewComponent, DbxDialogContentDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
-})
-export class DbxZipPreviewDialogComponent extends AbstractDialogDirective<void, DbxZipPreviewDialogConfig> {
-  get srcUrl() {
-    return this.data.srcUrl;
-  }
+/**
+ * Opens a dialog with DbxZipPreviewComponent.
+ *
+ * @param matDialog The MatDialog instance to use.
+ * @param config The configuration for the dialog.
+ * @returns The MatDialogRef for the dialog.
+ */
+export function openZipPreviewDialog(matDialog: MatDialog, config: DbxZipPreviewDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxZipPreviewComponent>, void> {
+  return DbxInjectionDialogComponent.openDialog(matDialog, {
+    ...config,
+    showCloseButton: false,
+    componentConfig: {
+      componentClass: DbxZipPreviewComponent,
+      init: (x) => {
+        const { blob, srcUrl, downloadFileName } = config;
 
-  get blob() {
-    return this.data.blob;
-  }
+        if (blob != null) {
+          x.blob.set(blob);
+        }
 
-  get downloadFileName() {
-    return this.data.downloadFileName;
-  }
+        if (srcUrl != null) {
+          x.srcUrl.set(srcUrl);
+        }
 
-  static openDialog(matDialog: MatDialog, config: DbxZipPreviewDialogConfig): MatDialogRef<DbxZipPreviewDialogComponent, void> {
-    const dialogRef = matDialog.open(DbxZipPreviewDialogComponent, {
-      width: '80vw',
-      height: '80vh',
-      ...config,
-      data: config
-    });
-
-    return dialogRef;
-  }
+        if (downloadFileName != null) {
+          x.downloadFileName.set(downloadFileName);
+        }
+      }
+    }
+  });
 }
