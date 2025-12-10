@@ -6,19 +6,22 @@
     </div>
   }
   <!-- Time -->
-  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="showDateInputSignal() ? '50' : '100'">
-    @if (showTimeInputSignal()) {
-      <ng-container [ngTemplateOutlet]="timeMenuAndInputTemplate"></ng-container>
-    }
-    @if (showAddTimeSignal()) {
-      <div class="add-time-button-wrapper">
-        <button mat-button class="mat-datepicker-button-highlight dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
-          <mat-icon>timer</mat-icon>
-          Add Time
-        </button>
-      </div>
-    }
-  </div>
+  @if (showTimeInputSignal() || showAddTimeSignal()) {
+    <!-- Only show flex if there is content to be displayed. -->
+    <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="showDateInputSignal() ? '50' : '100'">
+      @if (showTimeInputSignal()) {
+        <ng-container [ngTemplateOutlet]="timeMenuAndInputTemplate"></ng-container>
+      }
+      @if (showAddTimeSignal()) {
+        <div class="add-time-button-wrapper">
+          <button mat-button class="mat-datepicker-button-highlight dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
+            <mat-icon>timer</mat-icon>
+            Add Time
+          </button>
+        </div>
+      }
+    </div>
+  }
   <!-- Date Hint -->
   @switch (hasErrorSignal()) {
     @case (false) {
