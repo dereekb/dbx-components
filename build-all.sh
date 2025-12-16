@@ -1,2 +1,2 @@
 #!/bin/bash
-npx nx run-many --target=build
+npx nx run-many -t build

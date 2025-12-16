@@ -6,7 +6,7 @@
     "build-all": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx run-many --target=build --parallel --max-parallel=2",
+        "command": "npx nx run-many -t build --all --parallel=1",
         "color": true
       }
     },
