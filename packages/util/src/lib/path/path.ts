@@ -8,7 +8,7 @@ import { replaceStringsFunction } from '../string/replace';
 import { type PrimativeValue } from '../type';
 import { type Maybe } from '../value/maybe.type';
 import { indexRange, type IndexRangeInput } from '../value/indexed';
-import { splitJoinRemainder } from '../string';
+import { splitJoinRemainder } from '../string/string';
 
 export const SLASH_PATH_SEPARATOR = '/';
 export const SLASH_PATH_FILE_TYPE_SEPARATOR = '.';
