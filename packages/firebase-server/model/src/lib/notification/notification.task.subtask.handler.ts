@@ -99,7 +99,7 @@ export interface NotificationTaskSubtaskCleanupInstructions {
  *
  * This is called during the cleanup step.
  */
-export type NotificationTaskSubtaskCleanupInstructionsFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>) => CUI;
+export type NotificationTaskSubtaskCleanupInstructionsFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>) => PromiseOrValue<CUI>;
 
 /**
  * The actual cleanup function to execute using the input and instructions.
@@ -489,11 +489,11 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
                 cleanupFunctionInput = input;
               } else {
                 // processor is unknown. Complete the task.
-                cleanupInstructions = defaultCleanup(cleanupFunctionInput);
+                cleanupInstructions = await defaultCleanup(cleanupFunctionInput);
               }
             } else {
               // target is unknown. Complete the task.
-              cleanupInstructions = defaultCleanup(cleanupFunctionInput);
+              cleanupInstructions = await defaultCleanup(cleanupFunctionInput);
             }
 
             if (cleanupInstructions.cleanupSuccess === false && notificationTask.currentCheckpointSendAttempts <= maxCleanupRetryAttempts) {

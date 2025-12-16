@@ -13,7 +13,7 @@ import { StorageFileUploadStreamUnsupportedError } from './error';
  * @param options The upload options.
  * @returns A promise that resolves when the upload is complete.
  */
-export async function uploadFileWithStream<R = unknown>(file: FirebaseStorageAccessorFile<R>, readableStream: Readable, options?: StorageUploadOptions): Promise<void> {
+export async function uploadFileWithStream<R = unknown>(file: FirebaseStorageAccessorFile<R>, readableStream: Pick<Readable, 'pipe'>, options?: StorageUploadOptions): Promise<void> {
   if (!file.uploadStream) {
     throw new StorageFileUploadStreamUnsupportedError();
   }

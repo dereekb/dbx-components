@@ -69,7 +69,7 @@ export function delayCompletion<S extends NotificationTaskCheckpointString = Not
  *
  * This does not affect the failure/retry count for a notification task.
  */
-export function notificationTaskDelayRetry<D extends NotificationItemMetadata = {}>(delayUntil: Date | Milliseconds, updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+export function notificationTaskDelayRetry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(delayUntil: Date | Milliseconds, updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
     completion: delayCompletion(),
     delayUntil,
@@ -90,7 +90,7 @@ export function notificationTaskPartiallyComplete<D extends NotificationItemMeta
 /**
  * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task was completed successfully.
  */
-export function notificationTaskComplete<D extends NotificationItemMetadata = {}>(updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+export function notificationTaskComplete<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
     completion: true,
     updateMetadata
@@ -100,7 +100,7 @@ export function notificationTaskComplete<D extends NotificationItemMetadata = {}
 /**
  * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task failed.
  */
-export function notificationTaskFailed<D extends NotificationItemMetadata = {}>(updateMetadata?: Maybe<Partial<D>>, removeFromCompletedCheckpoints?: Maybe<ArrayOrValue<NotificationTaskCheckpointString>>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+export function notificationTaskFailed<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(updateMetadata?: Maybe<Partial<D>>, removeFromCompletedCheckpoints?: Maybe<ArrayOrValue<S>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
     completion: false,
     updateMetadata,
@@ -115,7 +115,7 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}>(
  * @param force If true, then canRunNextCheckpoint will be set to true even if it is already defined.
  * @returns A new result.
  */
-export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}>(result: NotificationTaskServiceHandleNotificationTaskResult<D>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(result: NotificationTaskServiceHandleNotificationTaskResult<D, S>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   if (force || result.canRunNextCheckpoint == null) {
     result = {
       ...result,
