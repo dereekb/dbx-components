@@ -23,7 +23,7 @@ export type DbxWebFilePreviewComponentConfig = DbxWebFilePreviewServicePreviewCo
 export class DbxWebFilePreviewComponent {
   readonly webFilePreviewService = inject(DbxWebFilePreviewService);
 
-  readonly config = input<DbxWebFilePreviewComponentConfig>();
+  readonly config = input<Maybe<DbxWebFilePreviewComponentConfig>>();
 
   readonly componentConfigSignal = computed(() => {
     const config = this.config();

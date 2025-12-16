@@ -390,14 +390,19 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     this.downloadDetailsChange.emit(details);
   });
 
-  readonly sourceDownloadDetailsChangeCallbackEffect = effect(() => {
-    const details: Maybe<DbxFirebaseStorageFileDownloadDetails> = this.downloadDetailsSignal();
-    const source = this.source();
+  readonly sourceDownloadDetailsChangeCallbackEffect = effect(
+    () => {
+      const details: Maybe<DbxFirebaseStorageFileDownloadDetails> = this.downloadDetailsSignal();
+      const source = this.source();
 
-    if (source?.downloadDetailsChangeCallback) {
-      source.downloadDetailsChangeCallback(details);
+      if (source?.downloadDetailsChangeCallback) {
+        source.downloadDetailsChangeCallback(details);
+      }
+    },
+    {
+      allowSignalWrites: true
     }
-  });
+  );
 
   // Handlers
   readonly handleGetDownloadUrl: WorkUsingContext<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair> = (value: StorageFileKey, context: WorkInstance<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair>) => {
