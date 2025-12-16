@@ -51,8 +51,19 @@ export async function assertDocumentExists<D extends FirestoreDocument<any>>(doc
   const exists = await document.exists();
 
   if (!exists) {
-    throw modelNotAvailableError({
-      message: message ?? `The ${document.modelType} was unavailable.`
-    });
+    throw documentModelNotAvailableError(document, message);
   }
+}
+
+/**
+ * Error thrown by assertDocumentExists().
+ *
+ * @param document
+ * @param message
+ * @returns
+ */
+export function documentModelNotAvailableError(document: Pick<FirestoreDocument<any>, 'modelType'>, message?: string) {
+  return modelNotAvailableError({
+    message: message ?? `The ${document.modelType} was unavailable.`
+  });
 }

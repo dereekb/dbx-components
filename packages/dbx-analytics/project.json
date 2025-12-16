@@ -5,7 +5,7 @@
   "sourceRoot": "packages/dbx-analytics/src",
   "prefix": "dbx",
   "tags": [],
-  "implicitDependencies": ["!util-test"],
+  "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",

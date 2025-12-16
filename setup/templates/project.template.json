@@ -6,7 +6,7 @@
     "build-all": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx run-many --target=build --parallel --max-parallel=2",
+        "command": "npx nx run-many -t build",
         "color": true
       }
     },
@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "description": "",
-        "command": "npx nx run-many --exclude=workspace --target=lint --fix"
+        "command": "npx nx run-many --exclude=workspace -t lint --fix"
       }
     },
     "start-release": {

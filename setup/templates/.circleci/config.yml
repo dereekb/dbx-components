@@ -176,7 +176,7 @@ jobs:
       - run:
           name: configure npmrc / npm login
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-      - run: npx nx run-many --target=publish-npmjs
+      - run: npx nx run-many -t publish-npmjs
 # --- WORKFLOWS ---
 workflows:
   version: 2

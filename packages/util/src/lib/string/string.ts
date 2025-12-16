@@ -1,4 +1,4 @@
-import { type ArrayOrValue, asArray } from '../array';
+import { type ArrayOrValue, asArray } from '../array/array';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
 
