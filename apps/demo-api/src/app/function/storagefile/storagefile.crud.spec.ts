@@ -45,11 +45,11 @@ import {
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
   STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE,
   storageFilePurposeAndUserQuery,
-  StorageFilePurpose,
-  FirebaseAuthUserId,
-  StorageFilePurposeSubgroup
+  type StorageFilePurpose,
+  type FirebaseAuthUserId,
+  type StorageFilePurposeSubgroup
 } from '@dereekb/firebase';
-import { addMilliseconds, GetterOrValue, getValueFromGetter, Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';

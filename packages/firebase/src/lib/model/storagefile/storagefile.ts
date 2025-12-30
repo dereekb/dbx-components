@@ -31,7 +31,7 @@ import {
   type OneWayFlatFirestoreModelKey,
   type FirestoreCollectionModelKey
 } from '../../common';
-import { inferStorageFileGroupRelatedModelKey, StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { inferStorageFileGroupRelatedModelKey, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
