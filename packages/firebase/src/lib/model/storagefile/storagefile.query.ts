@@ -2,7 +2,7 @@ import { type Maybe } from '@dereekb/util';
 import { whereDateIsBefore } from '../../common/firestore/query/constraint.template';
 import { type FirestoreQueryConstraint, where } from '../../common/firestore/query/constraint';
 import { type StorageFile, type StorageFileGroup, StorageFileProcessingState } from './storagefile';
-import { type StorageFilePurpose } from './storagefile.id';
+import { StorageFilePurposeSubgroup, type StorageFilePurpose } from './storagefile.id';
 import { type FirebaseAuthUserId } from '../../common/auth/auth';
 
 // MARK: StorageFile
@@ -21,12 +21,22 @@ export function storageFilesQueuedForDeleteQuery(now?: Maybe<Date>): FirestoreQu
 }
 
 export interface StorageFilePurposeAndUserQueryInput {
-  readonly purpose: StorageFilePurpose;
   readonly user: FirebaseAuthUserId;
+  readonly purpose: StorageFilePurpose;
+  /**
+   * Target a specific subgroup
+   */
+  readonly purposeSubgroup?: Maybe<StorageFilePurposeSubgroup>;
 }
 
 export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQueryInput): FirestoreQueryConstraint[] {
-  return [where<StorageFile>('p', '==', input.purpose), where<StorageFile>('u', '==', input.user)];
+  const constraints: FirestoreQueryConstraint[] = [where<StorageFile>('p', '==', input.purpose), where<StorageFile>('u', '==', input.user)];
+
+  if (input.purposeSubgroup) {
+    constraints.push(where<StorageFile>('pg', '==', input.purposeSubgroup));
+  }
+
+  return constraints;
 }
 
 export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstraint[] {

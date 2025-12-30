@@ -1,5 +1,5 @@
 import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, userProfileStorageFileGroupId, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
 import {
@@ -43,9 +43,13 @@ import {
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
   type StorageFileGroupZipStorageFileMetadata,
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
-  STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE
+  STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE,
+  storageFilePurposeAndUserQuery,
+  StorageFilePurpose,
+  FirebaseAuthUserId,
+  StorageFilePurposeSubgroup
 } from '@dereekb/firebase';
-import { addMilliseconds, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, GetterOrValue, getValueFromGetter, Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
@@ -573,11 +577,11 @@ demoApiFunctionContextFactory((f) => {
         describe('processing', () => {
           const testFileContent = 'This is a test file.';
 
-          function createUploadedFile(type: 'processable' | 'non-processable') {
+          function createUploadedFile(type: 'processable' | 'non-processable', overrideUid?: Maybe<GetterOrValue<FirebaseAuthUserId>>) {
             switch (type) {
               case 'processable':
                 return async () => {
-                  const uid = au.uid;
+                  const uid = getValueFromGetter(overrideUid) ?? au.uid;
 
                   const filePath = userTestFileUploadsFilePath(uid, 'test.any');
                   const testFile = await f.storageContext.file(filePath);
@@ -595,7 +599,7 @@ demoApiFunctionContextFactory((f) => {
                 };
               case 'non-processable':
                 return async () => {
-                  const uid = au.uid;
+                  const uid = getValueFromGetter(overrideUid) ?? au.uid;
 
                   const filePath = userAvatarUploadsFilePath(uid);
                   const testFile = await f.storageContext.file(filePath);
@@ -659,6 +663,56 @@ demoApiFunctionContextFactory((f) => {
 
             describe('processable file', () => {
               demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable') }, (sf) => {
+                describe('query tests', () => {
+                  demoAuthorizedUserContext({ f }, (u) => {
+                    demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable', () => u.uid) }, (sf2) => {
+                      describe('storageFilePurposeAndUserQuery()', () => {
+                        it('query should match the specific user and purpose', async () => {
+                          const storageFile = await assertSnapshotData(sf.document);
+                          const constraints = storageFilePurposeAndUserQuery({ purpose: storageFile.p as StorageFilePurpose, user: storageFile.u as string });
+
+                          const result = await f.demoFirestoreCollections.storageFileCollection.queryDocument(constraints).getDocs();
+
+                          expect(result).toHaveLength(1);
+                          expect(result[0].key).toBe(sf.documentKey);
+                        });
+
+                        describe('with purpose subgroup', () => {
+                          /**
+                           * Create a second file for the primary user
+                           */
+                          demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable') }, (sf3) => {
+                            beforeEach(async () => {
+                              await sf.document.update({ pg: 'test' });
+                            });
+
+                            it('query should match the specific user, purpose', async () => {
+                              const storageFile = await assertSnapshotData(sf.document);
+                              const constraints = storageFilePurposeAndUserQuery({ purpose: storageFile.p as StorageFilePurpose, user: storageFile.u as string });
+
+                              const result = await f.demoFirestoreCollections.storageFileCollection.queryDocument(constraints).getDocs();
+
+                              expect(result).toHaveLength(2);
+                              expect(result.map((x) => x.key)).toContain(sf.documentKey);
+                              expect(result.map((x) => x.key)).toContain(sf3.documentKey);
+                            });
+
+                            it('query should match the specific user, purpose, and purpose subgroup', async () => {
+                              const storageFile = await assertSnapshotData(sf.document);
+                              const constraints = storageFilePurposeAndUserQuery({ purpose: storageFile.p as StorageFilePurpose, user: storageFile.u as string, purposeSubgroup: storageFile.pg as StorageFilePurposeSubgroup });
+
+                              const result = await f.demoFirestoreCollections.storageFileCollection.queryDocument(constraints).getDocs();
+
+                              expect(result).toHaveLength(1);
+                              expect(result[0].key).toBe(sf.documentKey);
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+
                 it('should create the processing task for the file', async () => {
                   const storageFile = await assertSnapshotData(sf.document);
                   expect(storageFile.p).toBeDefined();
@@ -752,6 +806,7 @@ demoApiFunctionContextFactory((f) => {
                   it('should do nothing', async () => {
                     const storageFile = await assertSnapshotData(sf.document);
                     expect(storageFile.p).toBeDefined();
+                    expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                     expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                     expect(storageFile.pn).toBeDefined();
                     expect(storageFile.pat).toBeDefined();
@@ -764,6 +819,7 @@ demoApiFunctionContextFactory((f) => {
 
                     const updatedStorageFile = await assertSnapshotData(sf.document);
                     expect(updatedStorageFile.p).toBe(storageFile.p);
+                    expect(updatedStorageFile.pg).toBeUndefined(); // no purpose subgroup
                     expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                     expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
                   });
@@ -781,6 +837,7 @@ demoApiFunctionContextFactory((f) => {
                       it('should create a new processing task', async () => {
                         const storageFile = await assertSnapshotData(sf.document);
                         expect(storageFile.p).toBeDefined();
+                        expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                         expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                         expect(storageFile.pn).toBeUndefined(); // inconsistent state where the pn is not set
                         expect(storageFile.pat).toBeDefined();
@@ -793,6 +850,7 @@ demoApiFunctionContextFactory((f) => {
 
                         const updatedStorageFile = await assertSnapshotData(sf.document);
                         expect(updatedStorageFile.p).toBe(storageFile.p);
+                        expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                         expect(updatedStorageFile.pn).toBeDefined();
                         expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                         expect(updatedStorageFile.pat).toBeAfter(storageFile.pat as Date);
@@ -812,6 +870,7 @@ demoApiFunctionContextFactory((f) => {
                         it('should create a new processing task', async () => {
                           const storageFile = await assertSnapshotData(sf.document);
                           expect(storageFile.p).toBeDefined();
+                          expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                           expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                           expect(storageFile.pn).toBeDefined();
                           expect(storageFile.pat).toBeDefined();
@@ -830,6 +889,7 @@ demoApiFunctionContextFactory((f) => {
 
                           const updatedStorageFile = await assertSnapshotData(sf.document);
                           expect(updatedStorageFile.p).toBe(storageFile.p);
+                          expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                           expect(updatedStorageFile.pn).toBeDefined();
                           expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                           expect(updatedStorageFile.pat).not.toBeSameSecondAs(storageFile.pat as Date); // new processing start time
@@ -843,6 +903,7 @@ demoApiFunctionContextFactory((f) => {
                       it('should run the entire task and run cleanup successfully.', async () => {
                         let storageFile = await assertSnapshotData(sf.document);
                         expect(storageFile.p).toBeDefined();
+                        expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                         expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
                         expect(storageFile.pn).toBeDefined();
                         expect(storageFile.pat).toBeDefined();
@@ -882,6 +943,7 @@ demoApiFunctionContextFactory((f) => {
 
                         storageFile = await assertSnapshotData(sf.document);
                         expect(storageFile.p).toBe(storageFile.p);
+                        expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                         expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
                         expect(storageFile.pn).toBeUndefined(); // notification task reference is removed
                         expect(storageFile.pat).toBeDefined(); // does not change
@@ -1231,6 +1293,7 @@ demoApiFunctionContextFactory((f) => {
                             it('should be flagged for processing', async () => {
                               const storageFile = await assertSnapshotData(sf_zip.document);
                               expect(storageFile.p).toBe(STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE);
+                              expect(storageFile.pg).toBeUndefined(); // no purpose subgroup
                               expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
 
                               expect(storageFile.d).toBeDefined();

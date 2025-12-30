@@ -31,7 +31,7 @@ import {
   type OneWayFlatFirestoreModelKey,
   type FirestoreCollectionModelKey
 } from '../../common';
-import { inferStorageFileGroupRelatedModelKey, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { inferStorageFileGroupRelatedModelKey, StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
@@ -310,6 +310,12 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    */
   p?: Maybe<StorageFilePurpose>;
   /**
+   * Subgroup of the purpose of the file, if applicable.
+   *
+   * If a StorageFilePurpose should have subgroups, then all StorageFiles should have subgroups too.
+   */
+  pg?: Maybe<StorageFilePurposeSubgroup>;
+  /**
    * Arbitrary metadata attached to the StorageFile.
    */
   d?: Maybe<M>;
@@ -368,6 +374,7 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
     uby: optionalFirestoreString(),
     o: optionalFirestoreString(),
     p: optionalFirestoreString(),
+    pg: optionalFirestoreString(),
     d: firestorePassThroughField(),
     sdat: optionalFirestoreDate(),
     g: firestoreUniqueStringArray(),

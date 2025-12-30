@@ -72,6 +72,7 @@ export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
  * @param input
  * @returns
  */
+export function getValueFromGetter<T>(input: Maybe<GetterOrValue<T>>): Maybe<T>;
 export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>): T;
 export function getValueFromGetter<T, A>(this: unknown, input: FactoryWithRequiredInput<T, A>, args: A): T;

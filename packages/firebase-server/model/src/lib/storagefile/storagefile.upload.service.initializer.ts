@@ -62,7 +62,7 @@ export interface StorageFileInitializeFromUploadServiceInitializerCreateStorageF
   /**
    * If set, the initializer will query existing StorageFiles for the user and purpose and flag them for deletion.
    *
-   * If true, createStorageFileResult will be used.
+   * If true, createStorageFileResult will be used to retrieve the purpose/user. If the result has a purposeSubgroup, it will be used as well.
    */
   readonly flagPreviousForDelete?: Maybe<boolean | StorageFilePurposeAndUserQueryInput>;
 }
@@ -78,8 +78,6 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
   readonly createdFile: StoragePathRef;
   /**
    * If set, the initializer will query existing StorageFiles for the user and purpose and flag them for deletion.
-   *
-   * If true, createStorageFileResult will be used.
    */
   readonly flagPreviousForDelete?: Maybe<StorageFilePurposeAndUserQueryInput>;
 }
@@ -265,7 +263,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
                   if (typeof flagPreviousForDeleteResult === 'object') {
                     flagPreviousForDelete = flagPreviousForDeleteResult;
                   } else {
-                    const { p, u } = createStorageFileResult.storageFile;
+                    const { p, pg, u } = createStorageFileResult.storageFile;
 
                     if (!p || !u) {
                       throw new Error('initializeFromUpload(): flagPreviousForDelete=true requires that the created StorageFile have a purpose (p) and user (u).');
@@ -273,6 +271,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
                     flagPreviousForDelete = {
                       purpose: p,
+                      purposeSubgroup: pg,
                       user: u
                     };
                   }

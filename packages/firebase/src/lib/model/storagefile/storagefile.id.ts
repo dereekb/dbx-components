@@ -17,6 +17,20 @@ export type StorageFileKey = FirestoreModelKey;
 export type StorageFilePurpose = string;
 
 /**
+ * Used as an arbitrary discriminator for a StorageFile in relation to the StorageFilePurpose.
+ *
+ * This is useful for being able to query StorageFiles that have a specific purpose and purpose subgroup.
+ *
+ * Example use case: Documents with the same StorageFilePurpose/processing, but should only have a single StorageFile per subgroup.
+ */
+export type StorageFilePurposeSubgroup = string;
+
+/**
+ * A default constant to use as a default StorageFilePurposeSubgroup value for StorageFiles that have a purpose that defines subgroups.
+ */
+export const EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP: StorageFilePurposeSubgroup = '';
+
+/**
  * A StorageFilePurpose that is related to a StorageFileGroup.
  *
  * Should only have the characters characters "a-z", "0-9", and/or "_", as it is used as part of a FirestoreModelId for StorageFileGroupCreatedStorageFileKey.
