@@ -97,9 +97,21 @@ export interface NotificationTaskSubtaskCleanupInstructions {
 /**
  * Cleanup function for a NotificationTaskSubtask.
  *
- * This is called during the cleanup step.
+ * This is called during the cleanup step. It is called even when the processor or target is unknown.
  */
 export type NotificationTaskSubtaskCleanupInstructionsFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>) => PromiseOrValue<CUI>;
+
+/**
+ * Optional cleanup override function for a NotificationTaskSubtask processor.
+ *
+ * The input has more parameters available to the input compared to NotificationTaskSubtaskCleanupInstructionsFunction. Can also call the configured default cleanup instructions function.
+ *
+ * If this function returns null/undefined, then the default cleanup instructions will be used.
+ */
+export type NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
+  input: I,
+  defaultCleanupInstructions: NotificationTaskSubtaskCleanupInstructionsFunction<I, CUI, D, M, S>
+) => Maybe<PromiseOrValue<Maybe<CUI>>>;
 
 /**
  * The actual cleanup function to execute using the input and instructions.
@@ -135,7 +147,7 @@ export interface NotificationTaskSubtaskProcessorConfig<I extends NotificationTa
    *
    * If not provided, the default cleanup actions will take place.
    */
-  readonly cleanup?: NotificationTaskSubtaskCleanupInstructionsFunction<I, CUI, D, M, S>;
+  readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S>;
   /**
    * If true, then results returned by this processor will set "canRunNextCheckpoint" to true if it is undefined.
    */
@@ -256,7 +268,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
 
     interface NotificationTaskSubtaskProcessor<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S> = any, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> {
       readonly process: NotificationTaskSubtaskProcessorProcessFunction<I, D, M, S>;
-      readonly cleanup?: NotificationTaskSubtaskCleanupInstructionsFunction<I, CUI, D, M, S>;
+      readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S>;
     }
 
     const processors: Record<NotificationTaskSubtaskTarget, NotificationTaskSubtaskProcessor<I, CUI, D, M, S>> = {};
@@ -485,7 +497,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
                   subtaskData
                 } as I;
 
-                cleanupInstructions = await processor.cleanup(input);
+                cleanupInstructions = (await processor.cleanup(input, defaultCleanup)) ?? (await defaultCleanup(cleanupFunctionInput));
                 cleanupFunctionInput = input;
               } else {
                 // processor is unknown. Complete the task.

@@ -139,6 +139,14 @@ export interface StorageFileProcessingNotificationTaskHandlerConfig extends Omit
   readonly storageAccessor: FirebaseStorageAccessor;
 }
 
+export const storageFileProcessingNotificationTaskHandlerDefaultCleanup = (): StorageFileProcessingPurposeSubtaskCleanupOutput => {
+  return {
+    cleanupSuccess: true,
+    nextProcessingState: StorageFileProcessingState.SUCCESS,
+    queueForDelete: false // do not queue for delete automatically
+  };
+};
+
 /**
  * Creates a NotificationTaskServiceTaskHandlerConfig that handles the StorageFileProcessingNotificationTask.
  */
@@ -158,14 +166,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     }
   });
 
-  function defaultCleanup(): StorageFileProcessingPurposeSubtaskCleanupOutput {
-    return {
-      cleanupSuccess: true,
-      nextProcessingState: StorageFileProcessingState.SUCCESS,
-      queueForDelete: false // do not queue for delete automatically
-    };
-  }
-
+  const defaultCleanup = storageFileProcessingNotificationTaskHandlerDefaultCleanup;
   const processors = [...inputProcessors] as StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileProcessingSubtaskMetadata, StorageFileProcessingSubtask>[];
 
   if (allStorageFileGroupProcessorConfig !== false) {
@@ -197,7 +198,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
 
       if (!purpose) {
         // attempt to load the purpose from the storage file, if it exists.
-        purpose = await loadStorageFile().then((x) => x.p);
+        purpose = (await loadStorageFile().then((x) => x.p)) as string;
       }
 
       let storagePath: StoragePath;
@@ -212,8 +213,8 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       const fileDetailsAccessor = makeFileDetailsAccessor(file);
 
       const input = {
-        purpose: purpose!,
-        target: purpose!,
+        purpose,
+        target: purpose,
         loadStorageFile,
         fileDetailsAccessor,
         storageFileDocument
