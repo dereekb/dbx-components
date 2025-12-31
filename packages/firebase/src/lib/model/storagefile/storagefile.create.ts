@@ -5,7 +5,7 @@ import { type FirestoreDocumentAccessor } from '../../common/firestore/accessor/
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 import { type StoragePathRef, type StoragePath } from '../../common/storage/storage';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
-import { type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { firestoreModelId, type ReadFirestoreModelKeyInput } from '../../common';
 
 // MARK: Create Document
@@ -73,6 +73,12 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
    */
   readonly purpose?: Maybe<StorageFilePurpose | StorageFileGroupRelatedStorageFilePurpose>;
   /**
+   * The subgroup of the purpose.
+   *
+   * Corresponds with the "pg" value in the StorageFile template.
+   */
+  readonly purposeSubgroup?: Maybe<StorageFilePurposeSubgroup>;
+  /**
    * The StorageFileGroup that the file is associated with.
    *
    * This is ONLY used if the creation type is StorageFileCreationType.FOR_STORAGE_FILE_GROUP.
@@ -121,6 +127,12 @@ export interface CreateStorageFileDocumentPairFactoryConfig {
    */
   readonly defaultCreationType?: Maybe<StorageFileCreationType>;
   /**
+   * The default value for purposeSubgroup.
+   *
+   * If true, defaults to EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP.
+   */
+  readonly defaultPurposeSubgroup?: Maybe<StorageFilePurposeSubgroup | true>;
+  /**
    * The default value for shouldBeProcessed.
    *
    * Defaults to false.
@@ -140,12 +152,13 @@ export type CreateStorageFileDocumentPairFactory = <M extends StorageFileMetadat
  * @returns
  */
 export function createStorageFileDocumentPairFactory(config: CreateStorageFileDocumentPairFactoryConfig = {}): CreateStorageFileDocumentPairFactory {
-  const { defaultCreationType: inputDefaultCreationType, defaultShouldBeProcessed: inputDefaultShouldBeProcessed } = config;
+  const { defaultCreationType: inputDefaultCreationType, defaultShouldBeProcessed: inputDefaultShouldBeProcessed, defaultPurposeSubgroup: inputDefaultPurposeSubgroup } = config;
   const defaultCreationType = inputDefaultCreationType ?? StorageFileCreationType.DIRECTLY_CREATED;
   const defaultShouldBeProcessed = inputDefaultShouldBeProcessed ?? false;
+  const defaultPurposeSubgroup = inputDefaultPurposeSubgroup != null ? (inputDefaultPurposeSubgroup === true ? EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP : inputDefaultPurposeSubgroup) : undefined;
 
   return async <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => {
-    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
+    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, purposeSubgroup, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
     const now = inputNow ?? new Date();
 
     let accessor = inputAccessor;
@@ -168,6 +181,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
     let storageFileDocument;
 
     const p = purpose ?? inputTemplate?.p;
+    const pg = purposeSubgroup ?? inputTemplate?.pg ?? (p != null ? defaultPurposeSubgroup : undefined);
     const ct = inputTemplate?.ct ?? defaultCreationType;
 
     if (ct === StorageFileCreationType.FOR_STORAGE_FILE_GROUP) {
@@ -194,6 +208,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
       u: user ?? inputTemplate?.u,
       uby: uploadedBy ?? inputTemplate?.uby,
       p,
+      pg,
       d: metadata ?? inputTemplate?.d,
       fs: inputTemplate?.fs ?? StorageFileState.OK,
       ps: (shouldBeProcessed ?? defaultShouldBeProcessed) ? StorageFileProcessingState.QUEUED_FOR_PROCESSING : StorageFileProcessingState.DO_NOT_PROCESS,
