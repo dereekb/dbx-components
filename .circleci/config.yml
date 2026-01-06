@@ -309,6 +309,13 @@ workflows:
   # Publishes to npm
   publish:
     jobs:
+      # Wait for approval before deploying to npm
+      # Publishing now requires two-auth approval.
+      - hold-publish-npm:
+          type: approval
+          filters:
+            branches:
+              only: main
       - build:
           filters:
             branches:
@@ -316,6 +323,7 @@ workflows:
       - publish-to-npm:
           requires:
             - build
+            - hold-publish-npm
           filters:
             branches:
               only: main

@@ -65,6 +65,16 @@ export class InitializeStorageFileFromUploadParams implements Pick<StoragePath, 
   @Expose()
   @IsString()
   pathString!: StorageSlashPath;
+
+  /**
+   * Whether or not to attempt to expedite the processing of the created StorageFile, if it is queued for processing.
+   *
+   * If it cannot be processed, this argument will have no effect.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  expediteProcessing?: boolean;
 }
 
 export class ProcessStorageFileParams extends TargetModelParams {

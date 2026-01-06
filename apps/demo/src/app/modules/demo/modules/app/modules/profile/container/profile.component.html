@@ -4,7 +4,7 @@
       <dbx-section header="Avatar">
         <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="image/*">
           <ng-content>
-            <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument>
+            <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true" [dbxActionSuccessHandler]="handleAvatarUploadInitializationSuccess">
               <div class="dbx-flex-bar">
                 <dbx-loading dbxActionLoadingContext>
                   <dbx-avatar avatarSize="large" [avatarUrl]="avatarUrlSignal()"></dbx-avatar>

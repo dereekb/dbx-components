@@ -216,13 +216,20 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
 
 export interface InitializeStorageFileFromUploadFileInput {
   readonly file: FirebaseStorageAccessorFile;
+  /**
+   * Whether or not to attempt to expedite the processing of the created StorageFile, if it is queued for processing.
+   *
+   * If it cannot be processed, this argument will have no effect.
+   */
+  readonly expediteProcessing?: Maybe<boolean>;
 }
 
 export function _initializeStorageFileFromUploadFileFactory(context: StorageFileServerActionsContext) {
-  const { storageFileInitializeFromUploadService } = context;
+  const { firestoreContext, storageFileInitializeFromUploadService, notificationExpediteService } = context;
+  const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
 
   return async (input: InitializeStorageFileFromUploadFileInput) => {
-    const { file } = input;
+    const { file, expediteProcessing } = input;
     const { bucketId, pathString } = file.storagePath;
 
     // file must exist
@@ -265,6 +272,29 @@ export function _initializeStorageFileFromUploadFileFactory(context: StorageFile
 
           if (initializationResult.storageFileDocument) {
             storageFileDocument = initializationResult.storageFileDocument;
+
+            // expedite processing if requested
+            if (storageFileDocument != null && expediteProcessing) {
+              const storageFile = await assertSnapshotData(storageFileDocument);
+
+              if (storageFile.ps === StorageFileProcessingState.QUEUED_FOR_PROCESSING) {
+                const expediteInstance = notificationExpediteService.expediteInstance();
+
+                await firestoreContext.runTransaction(async (transaction) => {
+                  expediteInstance.initialize();
+
+                  await processStorageFileInTransaction(
+                    {
+                      storageFileDocument: storageFileDocument as StorageFileDocument,
+                      expediteInstance
+                    },
+                    transaction
+                  );
+                });
+
+                await expediteInstance.send().catch(() => null);
+              }
+            }
           } else {
             httpsError = uploadedFileInitializationDiscardedError();
           }
@@ -319,11 +349,11 @@ export function initializeStorageFileFromUploadFactory(context: StorageFileServe
   const _initializeStorageFileFromUploadFile = _initializeStorageFileFromUploadFileFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(InitializeStorageFileFromUploadParams, async (params) => {
-    const { bucketId, pathString } = params;
+    const { bucketId, pathString, expediteProcessing } = params;
 
     return async () => {
       const file = storageService.file(bucketId == null ? pathString : { bucketId, pathString });
-      return _initializeStorageFileFromUploadFile({ file });
+      return _initializeStorageFileFromUploadFile({ file, expediteProcessing });
     };
   });
 }
@@ -340,7 +370,6 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
       };
 
       await storageFileDocument.update(updateTemplate);
-
       return storageFileDocument;
     };
   });
