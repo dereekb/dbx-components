@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-analytics",
-  "version": "12.6.6",
+  "version": "12.6.7",
   "peerDependencies": {
     "@dereekb/rxjs": "*",
     "rxjs": "^7.5.0",
