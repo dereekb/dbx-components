@@ -155,6 +155,10 @@ describe('stringToBoolean()', () => {
       expect(stringToBoolean('true')).toBe(true);
     });
 
+    it('should return true for "True" (case-insensitive)', () => {
+      expect(stringToBoolean('True')).toBe(true);
+    });
+
     it('should return true for "TRUE" (case-insensitive)', () => {
       expect(stringToBoolean('TRUE')).toBe(true);
     });
@@ -187,6 +191,10 @@ describe('stringToBoolean()', () => {
   describe('falsy values', () => {
     it('should return false for "false"', () => {
       expect(stringToBoolean('false')).toBe(false);
+    });
+
+    it('should return false for "False" (case-insensitive)', () => {
+      expect(stringToBoolean('False')).toBe(false);
     });
 
     it('should return false for "FALSE" (case-insensitive)', () => {

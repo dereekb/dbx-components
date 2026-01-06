@@ -54,6 +54,32 @@ demoApiFunctionContextFactory((f) => {
                 expect(result.initializationsSuccessCount).toBe(1);
                 expect(result.filesVisited).toBe(1);
                 expect(result.modelKeys).toHaveLength(1);
+
+                const storageFile = await assertSnapshotData(f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForKey(result.modelKeys[0]));
+                expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
+              });
+
+              it('should initialize an uploaded test file with expedite processing', async () => {
+                const uploadedFilePath = await createTestFileForUser('This is a test file.')();
+
+                expect(uploadedFilePath.bucketId).toBeDefined();
+                expect(uploadedFilePath.pathString).toBeDefined();
+
+                const uploadedFile = f.storageContext.file(uploadedFilePath);
+                const uploadedFileExists = await uploadedFile.exists();
+
+                expect(uploadedFileExists).toBe(true);
+
+                const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
+                  bucketId: uploadedFilePath.bucketId,
+                  pathString: uploadedFilePath.pathString,
+                  expediteProcessing: true
+                });
+
+                const storageFileDocument = await instance();
+
+                const storageFile = await assertSnapshotData(storageFileDocument);
+                expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
               });
             });
 
@@ -127,6 +153,29 @@ demoApiFunctionContextFactory((f) => {
 
                   profile = await assertSnapshotData(p.document);
                   expect(profile.avatar).toBeDefined();
+                });
+
+                it('should initialize an uploaded avatar with expedite processing', async () => {
+                  const uploadedFilePath = await uploadAvatarForUser('avatar.png', 'image/png')();
+
+                  expect(uploadedFilePath.bucketId).toBeDefined();
+                  expect(uploadedFilePath.pathString).toBeDefined();
+
+                  const uploadedFile = f.storageContext.file(uploadedFilePath);
+                  const uploadedFileExists = await uploadedFile.exists();
+
+                  expect(uploadedFileExists).toBe(true);
+
+                  const instance = await f.storageFileServerActions.initializeStorageFileFromUpload({
+                    bucketId: uploadedFilePath.bucketId,
+                    pathString: uploadedFilePath.pathString,
+                    expediteProcessing: true // should get ignored as the avatar has no processing
+                  });
+
+                  const storageFileDocument = await instance();
+
+                  const storageFile = await assertSnapshotData(storageFileDocument);
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.DO_NOT_PROCESS);
                 });
 
                 describe('initialized', () => {

@@ -8,6 +8,7 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
 import { AsyncPipe } from '@angular/common';
 import { userAvatarUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './profile.component.html',
@@ -118,5 +119,10 @@ export class DemoProfileViewComponent implements OnInit {
 
   readonly handleUpdateProfile: WorkUsingContext<DemoProfileFormValue> = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.updateProfile(form));
+  };
+
+  readonly handleAvatarUploadInitializationSuccess: DbxActionSuccessHandlerFunction<any> = () => {
+    // example
+    // console.log('Avatar uploaded and initialized successfully.');
   };
 }
