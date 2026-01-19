@@ -1,7 +1,7 @@
 import { type MailgunNotificationEmailSendService, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService } from '@dereekb/firebase-server/model';
 import { type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { type DemoMailgunBasicTemplateData } from './notification.mailgun';
-import { ArrayOrValue } from '@dereekb/util';
+import { type ArrayOrValue } from '@dereekb/util';
 
 export const DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY = 'notificationtemplate';
 

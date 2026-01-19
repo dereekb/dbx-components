@@ -1,4 +1,4 @@
-import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, EmailAddress, NameEmailPair } from '@dereekb/util';
+import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
