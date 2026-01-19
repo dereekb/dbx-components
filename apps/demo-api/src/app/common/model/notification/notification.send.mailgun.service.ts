@@ -1,6 +1,7 @@
 import { type MailgunNotificationEmailSendService, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService } from '@dereekb/firebase-server/model';
 import { type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { type DemoMailgunBasicTemplateData } from './notification.mailgun';
+import { type ArrayOrValue } from '@dereekb/util';
 
 export const DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY = 'notificationtemplate';
 
@@ -29,13 +30,13 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
     mailgunService,
     defaultSendTemplateName: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
     messageBuilders: {
-      notificationTemplate: (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): MailgunTemplateEmailRequest => {
+      notificationTemplate: (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): ArrayOrValue<MailgunTemplateEmailRequest> => {
         const { messages } = input;
 
         const to: MailgunRecipient[] = messages.map((x) => {
           const { recipient: inputRecipient } = x.inputContext;
-          const { title, openingMessage, action, actionUrl } = x.content;
-          const { subject = title } = x.emailContent ?? {};
+          const { title, openingMessage, action, actionUrl, from: contentFrom } = x.content;
+          const { subject = title, replyTo, replyToEmail, from = contentFrom } = x.emailContent ?? {};
 
           const userVariables: DemoMailgunBasicTemplateData = {
             title,

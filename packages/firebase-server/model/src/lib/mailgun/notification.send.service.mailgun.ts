@@ -1,4 +1,4 @@
-import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, type EmailAddress, asArray, pushArrayItemsIntoArray } from '@dereekb/util';
+import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, type EmailAddress, asArray, pushArrayItemsIntoArray, type ArrayOrValue } from '@dereekb/util';
 import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
 import { type NotificationSendEmailMessagesResult, type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
 import { type NotificationEmailSendService } from '../notification/notification.send.service';
@@ -49,9 +49,9 @@ export interface MailgunNotificationEmailSendServiceConfig {
 export const MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST = 50;
 
 /**
- * Function that converts the input into a MailgunTemplateEmailRequest.
+ * Function that converts the input into zero or more MailgunTemplateEmailRequests.
  */
-export type MailgunNotificationEmailSendServiceTemplateBuilder = (input: MailgunNotificationEmailSendServiceTemplateBuilderInput) => PromiseOrValue<MailgunTemplateEmailRequest>;
+export type MailgunNotificationEmailSendServiceTemplateBuilder = (input: MailgunNotificationEmailSendServiceTemplateBuilderInput) => PromiseOrValue<ArrayOrValue<MailgunTemplateEmailRequest>>;
 
 export type MailgunNotificationEmailSendService = NotificationEmailSendService;
 
@@ -81,8 +81,8 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
       });
 
       // create the template requests
-      const templateRequests = await Promise.all(
-        messageSendBatches.map(([sendTemplateName, messages]) => {
+      const templateRequestArrays: ArrayOrValue<MailgunTemplateEmailRequest>[] = await Promise.all(
+        messageSendBatches.map(async ([sendTemplateName, messages]) => {
           const sendTemplateNameToLowercase = sendTemplateName.toLowerCase();
           const builderForKey = lowercaseKeysMessageBuilders[sendTemplateNameToLowercase as any];
 
@@ -94,6 +94,8 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
           }
         })
       );
+
+      const templateRequests: MailgunTemplateEmailRequest[] = templateRequestArrays.flat();
 
       const sendFn = async () => {
         const success: EmailAddress[] = [];
