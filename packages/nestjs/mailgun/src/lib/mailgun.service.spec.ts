@@ -3,6 +3,7 @@ import { type MailgunFileAttachment } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 import { type MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 const testEmail = 'test.components@dereekb.com';
 const testEmail2 = 'test2.components@dereekb.com';
@@ -113,6 +114,106 @@ describe('MailgunService', () => {
         });
 
         expect(result.status).toBe(200);
+      });
+
+      describe('bcc', () => {
+        itShouldFail('to send an email if the request specifies cc but allowBatchSending is not defined', async () => {
+          await expectFail(() =>
+            mailgunService.sendTemplateEmail({
+              to: [
+                {
+                  email: testEmail,
+                  name: 'Test',
+                  userVariables: {
+                    value: 'a'
+                  }
+                }
+              ],
+              cc: [
+                {
+                  email: testEmail2,
+                  name: 'Test 2'
+                }
+              ],
+              // allowBatchSending: false,    // undefined, should fail since bcc is specified
+              subject: 'test',
+              template: templateName,
+              testEmail: true,
+              templateVariables: {
+                test: true,
+                a: 1,
+                b: 2,
+                c: ['d', 'e']
+              }
+            })
+          );
+        });
+
+        itShouldFail('to send an email if the request specifies bcc but allowBatchSending is not defined', async () => {
+          await expectFail(() =>
+            mailgunService.sendTemplateEmail({
+              to: [
+                {
+                  email: testEmail,
+                  name: 'Test',
+                  userVariables: {
+                    value: 'a'
+                  }
+                }
+              ],
+              bcc: [
+                {
+                  email: testEmail2,
+                  name: 'Test 2'
+                }
+              ],
+              // allowBatchSending: false,    // undefined, should fail since bcc is specified
+              subject: 'test',
+              template: templateName,
+              testEmail: true,
+              templateVariables: {
+                test: true,
+                a: 1,
+                b: 2,
+                c: ['d', 'e']
+              }
+            })
+          );
+        });
+
+        it('should send a test email to the to email and add the bcc email', async () => {
+          const result = await mailgunService.sendTemplateEmail({
+            to: [
+              {
+                email: testEmail,
+                name: 'Test',
+                userVariables: {
+                  value: 'a'
+                }
+              }
+            ],
+            bcc: [
+              {
+                email: testEmail2,
+                name: 'Test 2'
+              }
+            ],
+            batchSend: false, // do not batch send so it all goes through as a single email
+            subject: 'test',
+            template: templateName,
+            testEmail: true,
+            templateVariables: {
+              test: true,
+              a: 1,
+              b: 2,
+              c: ['d', 'e']
+            }
+            // testEmail: false,
+            // sendTestEmails: true
+          });
+
+          expect(result.status).toBe(200);
+        });
       });
     });
   });

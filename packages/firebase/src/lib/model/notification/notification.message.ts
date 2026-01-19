@@ -1,4 +1,4 @@
-import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, EmailAddress, NameEmailPair } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
@@ -16,6 +16,13 @@ export interface NotificationMessageInputContext {
 }
 
 /**
+ * Arbitrary key used by the sending configuration service for choosing a pre-configured entity.
+ *
+ * Typically used for customizing the "from" or "replyTo" addresses while maintaining a separation of concerns.
+ */
+export type NotificationMessageEntityKey = string;
+
+/**
  * Arbitrary template name/key that is used to configure which template to use by the sending service.
  */
 export type NotificationSendMessageTemplateName = string;
@@ -30,6 +37,10 @@ export interface NotificationMessageContent {
    * The sending service determines how this template is used.
    */
   readonly sendTemplateName?: Maybe<NotificationSendMessageTemplateName>;
+  /**
+   * The key used to determine who to send it from.
+   */
+  readonly from?: Maybe<NotificationMessageEntityKey>;
   /**
    * The title/subject of the message for the recipient
    */
@@ -65,6 +76,20 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
    * Email action prompt. If not defined, defaults to the title.
    */
   readonly prompt?: string;
+  /**
+   * Entity key to send the email from.
+   */
+  readonly from?: Maybe<NotificationMessageEntityKey>;
+  /**
+   * Entity key to reply to.
+   */
+  readonly replyTo?: Maybe<NotificationMessageEntityKey>;
+  /**
+   * A name/email pair to reply to.
+   *
+   * If the "replyTo" is present, this value acts as a fallback if the entity key returns no match.
+   */
+  readonly replyToEmail?: Maybe<NameEmailPair>;
 }
 
 export interface NotificationMessageNotificationSummaryContent {}
