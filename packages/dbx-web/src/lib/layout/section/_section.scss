@@ -58,7 +58,7 @@ $header-left-reserved-space-small-screen: 120px;
   .dbx-section-header-padded {
     padding: 0 !important;
 
-    .dbx-section-header {
+    > .dbx-section-header {
       padding: 0 4px;
     }
   }
