@@ -1,6 +1,6 @@
-import { Configurable, Maybe } from '@dereekb/util';
-import { NotificationExpediteService, NotificationExpediteServiceInstance, NotificationExpediteServiceSendNotificationOptions } from './notification.expedite.service';
-import { _createNotificationDocumentFromPair, createNotificationDocumentPair, CreateNotificationDocumentPairInput, CreateNotificationDocumentPairResult, SendNotificationResult } from '@dereekb/firebase';
+import { type Configurable, type Maybe } from '@dereekb/util';
+import { type NotificationExpediteService, type NotificationExpediteServiceInstance, type NotificationExpediteServiceSendNotificationOptions } from './notification.expedite.service';
+import { _createNotificationDocumentFromPair, createNotificationDocumentPair, type CreateNotificationDocumentPairInput, type CreateNotificationDocumentPairResult, type SendNotificationResult } from '@dereekb/firebase';
 
 /**
  * Options related to the run
