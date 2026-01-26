@@ -5,7 +5,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { type NotificationDocument, NotificationSendState, NotificationSendType, createNotificationDocument, type CreateNotificationTemplate, delayCompletion, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 import { EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE, EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, type ExampleNotificationTaskData, exampleNotificationTaskTemplate, exampleNotificationTaskWithNoModelTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
-import { NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS, UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
+import { createOrRunUniqueNotificationDocument, NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS, UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
@@ -514,6 +514,224 @@ demoApiFunctionContextFactory((f) => {
                         });
                       });
                     });
+                  });
+                });
+              });
+            });
+
+            describe('createOrRunUniqueNotificationDocument()', () => {
+              describe('document does not exist', () => {
+                itShouldFail('if the task template is not flagged as unique', async () => {
+                  const baseTemplate = exampleNotificationTaskTemplate({
+                    profileDocument: p.document
+                  });
+
+                  const template: CreateNotificationTemplate = {
+                    ...baseTemplate,
+                    st: NotificationSendType.TASK_NOTIFICATION
+                  };
+
+                  await expectFail(() =>
+                    createOrRunUniqueNotificationDocument({
+                      context: f.demoFirestoreCollections,
+                      template
+                    })
+                  );
+                });
+
+                it('should create the notification document but not run it since run is not provided', async () => {
+                  const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                    profileDocument: p.document
+                  });
+
+                  const template: CreateNotificationTemplate = {
+                    ...baseTemplate,
+                    st: NotificationSendType.TASK_NOTIFICATION
+                  };
+
+                  const result = await createOrRunUniqueNotificationDocument({
+                    context: f.demoFirestoreCollections,
+                    template
+                  });
+
+                  expect(result.notificationCreated).toBe(true);
+                  expect(result.runResult).toBeUndefined();
+                });
+
+                describe('updateNextRunAtTime provided in options', () => {
+                  it('should set the "sat" value on the created notification to the provided value', async () => {
+                    const updateNextRunAtTime = addMinutes(new Date(), 10);
+
+                    const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                      profileDocument: p.document
+                    });
+
+                    const template: CreateNotificationTemplate = {
+                      ...baseTemplate,
+                      st: NotificationSendType.TASK_NOTIFICATION
+                    };
+
+                    const expediteInstance = f.notificationExpediteService.expediteInstance();
+                    expediteInstance.initialize();
+
+                    const result = await createOrRunUniqueNotificationDocument({
+                      context: f.demoFirestoreCollections,
+                      template,
+                      expediteInstance,
+                      updateNextRunAtTime
+                    });
+
+                    expect(result.notificationCreated).toBe(true);
+                    expect(result.notification.sat).toBeSameSecondAs(updateNextRunAtTime);
+                    expect(result.runResult).toBeUndefined();
+                    expect(result.runEnqueued).toBeUndefined();
+
+                    const sendResult = await expediteInstance.send();
+                    expect(sendResult).toHaveLength(0);
+
+                    const notification = await assertSnapshotData(result.notificationDocument);
+                    expect(notification.sat).toBeSameSecondAs(updateNextRunAtTime);
+                  });
+                });
+              });
+
+              describe('document exists', () => {
+                let existingNotificationDocument: NotificationDocument;
+
+                beforeEach(async () => {
+                  const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                    profileDocument: p.document
+                  });
+
+                  const template: CreateNotificationTemplate = {
+                    ...baseTemplate,
+                    st: NotificationSendType.TASK_NOTIFICATION
+                  };
+
+                  const createResult = await createNotificationDocument({
+                    context: f.demoFirestoreCollections,
+                    template
+                  });
+
+                  existingNotificationDocument = createResult.notificationDocument;
+                });
+
+                describe('expediteService provided in options', () => {
+                  it('should run the notification document immediately', async () => {
+                    const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                      profileDocument: p.document
+                    });
+
+                    const template: CreateNotificationTemplate = {
+                      ...baseTemplate,
+                      st: NotificationSendType.TASK_NOTIFICATION
+                    };
+
+                    const result = await createOrRunUniqueNotificationDocument({
+                      context: f.demoFirestoreCollections,
+                      template,
+                      expediteService: f.notificationExpediteService
+                    });
+
+                    expect(result.notificationCreated).toBe(false);
+                    expect(result.runResult).toBeDefined();
+                  });
+                });
+
+                describe('expediteInstance provided in options', () => {
+                  it('should queue the notification document up in the expedite instance', async () => {
+                    const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                      profileDocument: p.document
+                    });
+
+                    const template: CreateNotificationTemplate = {
+                      ...baseTemplate,
+                      st: NotificationSendType.TASK_NOTIFICATION
+                    };
+
+                    const expediteInstance = f.notificationExpediteService.expediteInstance();
+                    expediteInstance.initialize();
+
+                    const result = await createOrRunUniqueNotificationDocument({
+                      context: f.demoFirestoreCollections,
+                      template,
+                      expediteInstance
+                    });
+
+                    expect(result.notificationCreated).toBe(false);
+                    expect(result.runResult).toBeUndefined();
+                    expect(result.runEnqueued).toBe(true);
+
+                    const sendResult = await expediteInstance.send();
+                    expect(sendResult).toHaveLength(1);
+                  });
+                });
+
+                describe('expediteInstance provided in options', () => {
+                  it('should queue the notification document up in the expedite instance', async () => {
+                    const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                      profileDocument: p.document
+                    });
+
+                    const template: CreateNotificationTemplate = {
+                      ...baseTemplate,
+                      st: NotificationSendType.TASK_NOTIFICATION
+                    };
+
+                    const expediteInstance = f.notificationExpediteService.expediteInstance();
+                    expediteInstance.initialize();
+
+                    const result = await createOrRunUniqueNotificationDocument({
+                      context: f.demoFirestoreCollections,
+                      template,
+                      expediteInstance
+                    });
+
+                    expect(result.notificationCreated).toBe(false);
+                    expect(result.runResult).toBeUndefined();
+                    expect(result.runEnqueued).toBe(true);
+
+                    const sendResult = await expediteInstance.send();
+                    expect(sendResult).toHaveLength(1);
+                  });
+                });
+
+                describe('updateNextRunAtTime provided in options', () => {
+                  it('should only update the "sat" value on the existing notification', async () => {
+                    let notification = await assertSnapshotData(existingNotificationDocument);
+                    const currentSat = notification.sat;
+
+                    const updateNextRunAtTime = addMinutes(new Date(), 10);
+
+                    const baseTemplate = exampleUniqueNotificationTaskTemplate({
+                      profileDocument: p.document
+                    });
+
+                    const template: CreateNotificationTemplate = {
+                      ...baseTemplate,
+                      st: NotificationSendType.TASK_NOTIFICATION
+                    };
+
+                    const expediteInstance = f.notificationExpediteService.expediteInstance();
+                    expediteInstance.initialize();
+
+                    const result = await createOrRunUniqueNotificationDocument({
+                      context: f.demoFirestoreCollections,
+                      template,
+                      updateNextRunAtTime
+                    });
+
+                    expect(result.notificationCreated).toBe(false);
+                    expect(result.notification.sat).toBeSameSecondAs(updateNextRunAtTime);
+                    expect(result.runResult).toBeUndefined();
+                    expect(result.runEnqueued).toBeUndefined();
+
+                    const sendResult = await expediteInstance.send();
+                    expect(sendResult).toHaveLength(0);
+
+                    notification = await assertSnapshotData(result.notificationDocument);
+                    expect(notification.sat).not.toBeSameSecondAs(currentSat);
+                    expect(notification.sat).toBeSameSecondAs(updateNextRunAtTime);
                   });
                 });
               });

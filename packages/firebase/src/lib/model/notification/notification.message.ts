@@ -1,4 +1,4 @@
-import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair } from '@dereekb/util';
+import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair, type ArrayOrValue } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
@@ -80,6 +80,14 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
    * Entity key to send the email from.
    */
   readonly from?: Maybe<NotificationMessageEntityKey>;
+  /**
+   * Entity key(s) to cc.
+   */
+  readonly cc?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
+  /**
+   * Entity key(s) to bcc.
+   */
+  readonly bcc?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
   /**
    * Entity key to reply to.
    */

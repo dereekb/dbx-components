@@ -22,8 +22,8 @@
         <p>{{ lorem }}</p>
         <button mat-button mat-flat-button color="primary">Ok</button>
       </dbx-subsection>
-      <dbx-section header="Parent Section" icon="circle" hint="This is a section with a subsection inside.">
-        <dbx-subsection header="Subsection Header" icon="circle" hint="This is the subsection hint and a circle." [elevate]="true">
+      <dbx-section [paddedHeader]="true" header="Parent Section" icon="circle" hint="This is a section with a subsection inside. It has header padding.">
+        <dbx-subsection header="Subsection Header" icon="circle" hint="This is the subsection hint and a circle. It has no header padding." [elevate]="true">
           <span sectionHeader>Custom Navigation Span</span>
           <p>{{ lorem }}</p>
           <button mat-button mat-flat-button color="primary">Ok</button>

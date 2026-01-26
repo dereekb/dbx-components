@@ -2,6 +2,7 @@ export * from './notification.action.service';
 export * from './notification.action.init.service';
 export * from './notification.config.service';
 export * from './notification.config';
+export * from './notification.create.run';
 export * from './notification.module';
 export * from './notification.send.service.notificationsummary';
 export * from './notification.send.service.text';
