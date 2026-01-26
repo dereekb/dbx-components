@@ -1,7 +1,7 @@
 import { CreateNotificationDocumentPairResult, firestoreDummyKey, NotificationDocument, SendNotificationParams, SendNotificationResult } from '@dereekb/firebase';
 import { NotificationServerActions } from './notification.action.service';
 import { Abstract, Injectable, Provider } from '@nestjs/common';
-import { runAsyncTasksForValues } from '@dereekb/util';
+import { Maybe, runAsyncTasksForValues } from '@dereekb/util';
 
 export type NotificationExpediteServiceSendNotificationOptions = Pick<SendNotificationParams, 'ignoreSendAtThrottle' | 'throwErrorIfSent'>;
 
@@ -19,7 +19,7 @@ export abstract class NotificationExpediteService {
   /**
    * Attempts to immediately send/run the input notification document.
    */
-  abstract sendNotification(notificationDocument: NotificationDocument, options?: NotificationExpediteServiceSendNotificationOptions): Promise<SendNotificationResult>;
+  abstract sendNotification(notificationDocument: NotificationDocument, options?: Maybe<NotificationExpediteServiceSendNotificationOptions>): Promise<SendNotificationResult>;
 
   /**
    * Creates a new NotificationExpediteServiceInstance.
@@ -51,7 +51,7 @@ export interface NotificationExpediteServiceInstance {
   /**
    * Attempts to send all the queued notifications.
    */
-  send(options?: NotificationExpediteServiceSendNotificationOptions): Promise<SendNotificationResult[]>;
+  send(options?: Maybe<NotificationExpediteServiceSendNotificationOptions>): Promise<SendNotificationResult[]>;
 }
 
 /**
@@ -82,7 +82,7 @@ export function notificationExpediteServiceInstance(notificationExpediteService:
     return enqueued;
   };
 
-  const send = async (options?: NotificationExpediteServiceSendNotificationOptions) => {
+  const send = async (options?: Maybe<NotificationExpediteServiceSendNotificationOptions>) => {
     const results = await runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x, options), {
       nonConcurrentTaskKeyFactory: (x) => x.parent.id // only send one notification at a time for a notification box
     });

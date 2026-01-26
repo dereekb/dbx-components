@@ -357,12 +357,9 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
 }
 
 /**
- * Creates a new Notification and saves it to Firestore. Returns the pair.
- *
- * @param input
+ * Internal function used by createNotificationDocument().
  */
-export async function createNotificationDocument(input: CreateNotificationDocumentPairInput): Promise<CreateNotificationDocumentPairResult> {
-  const pair = createNotificationDocumentPair(input);
+export async function _createNotificationDocumentFromPair(input: Pick<CreateNotificationDocumentPairInput, 'shouldCreateNotification' | keyof ShouldSendCreatedNotificationInput>, pair: CreateNotificationDocumentPairResult): Promise<CreateNotificationDocumentPairResult> {
   const { notification, notificationDocument, isNotificationTask, overrideExistingTask } = pair;
 
   if (input.shouldCreateNotification !== false && shouldSendCreatedNotificationInput(input)) {
@@ -377,6 +374,15 @@ export async function createNotificationDocument(input: CreateNotificationDocume
 
   return pair;
 }
+/**
+ * Creates a new Notification and saves it to Firestore. Returns the pair.
+ *
+ * @param input
+ */
+export async function createNotificationDocument(input: CreateNotificationDocumentPairInput): Promise<CreateNotificationDocumentPairResult> {
+  const pair = createNotificationDocumentPair(input);
+  return _createNotificationDocumentFromPair(input, pair);
+}
 
 /**
  * Creates a new Notification and saves it to Firestore and returns the pair if sendNotification in the input is not false.
@@ -386,6 +392,7 @@ export async function createNotificationDocument(input: CreateNotificationDocume
  */
 export async function createNotificationDocumentIfSending(input: CreateNotificationDocumentPairInput): Promise<Maybe<CreateNotificationDocumentPairResult>> {
   const pair = await createNotificationDocument(input);
+
   if (pair.notificationCreated) {
     return pair;
   } else {
