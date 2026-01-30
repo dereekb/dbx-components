@@ -1,5 +1,5 @@
-import { Maybe, NameEmailPair, asArray, mergeArraysIntoArray, filterMaybeArrayValues } from '@dereekb/util';
-import { MailgunRecipient, MailgunTemplateEmailRequest } from './mailgun';
+import { type Maybe, type NameEmailPair, asArray, mergeArraysIntoArray, filterMaybeArrayValues } from '@dereekb/util';
+import { type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
 
 /**
  * The default template subject to use when batch sending emails.
@@ -64,12 +64,12 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
   const configAllowBatchSend = baseRequest.batchSend !== false;
 
   return (recipients: MailgunRecipientBatchSendTarget[]) => {
-    let allowBatchSend = configAllowBatchSend && recipients.length > 1;
+    const allowBatchSend = configAllowBatchSend && recipients.length > 1;
 
     let batchSendRequest: Maybe<MailgunTemplateEmailRequest>;
-    let nonBatchSendRequests: MailgunTemplateEmailRequest[] = [];
+    const nonBatchSendRequests: MailgunTemplateEmailRequest[] = [];
 
-    let batchSendRequestRecipients: MailgunRecipient[] = [];
+    const batchSendRequestRecipients: MailgunRecipient[] = [];
 
     recipients.forEach((recipient) => {
       const recipientHasCarbonCopy = baseRequestHasCarbonCopy || Boolean(recipient.cc?.length || recipient.bcc?.length);
@@ -83,7 +83,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
         // use the subject from the recipient's user variables if available as a defaul
         const cc = mergeArraysIntoArray([], baseRequestCc, recipient.cc);
         const bcc = mergeArraysIntoArray([], baseRequestBcc, recipient.bcc);
-        const subject = (useSubjectFromRecipientUserVariables ? recipient.userVariables?.subject : undefined) ?? defaultSubject ?? recipient.userVariables?.subject;
+        const subject = (useSubjectFromRecipientUserVariables ? recipient.userVariables?.['subject'] : undefined) ?? defaultSubject ?? recipient.userVariables?.['subject'];
 
         const request = {
           ...baseRequest,

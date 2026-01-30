@@ -1,4 +1,4 @@
-import { convertMailgunTemplateEmailRequestToMailgunMessageData, type MailgunTemplateEmailRequest, MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY, convertMailgunRecipientsToStrings } from './mailgun';
+import { convertMailgunTemplateEmailRequestToMailgunMessageData, convertMailgunRecipientsToStrings } from './mailgun';
 import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipientBatchSendTarget } from './mailgun.util';
 
 const senderEmail = 'sender@dereekb.com';
