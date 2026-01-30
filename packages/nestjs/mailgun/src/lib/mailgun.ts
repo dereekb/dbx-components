@@ -52,14 +52,14 @@ export interface MailgunEmailRequest {
    * NOTE: "batchSend" must be false because the behavior of batchSend changes how Mailgun handles the cc recipients in a way that it is equivalent to adding the cc recipients to "to",
    * but without the ability to use recipient variables for those recipients.
    */
-  readonly cc?: ArrayOrValue<NameEmailPair>;
+  readonly cc?: Maybe<ArrayOrValue<NameEmailPair>>;
   /**
    * Blind carbon copy recipients of the email. The "batchSend" value must be false.
    *
    * NOTE: "batchSend" must be false because the behavior of batchSend changes how Mailgun handles the bcc recipients in a way that it is equivalent to adding the bcc recipients to "to",
    * but without the ability to use recipient variables for those recipients.
    */
-  readonly bcc?: ArrayOrValue<NameEmailPair>;
+  readonly bcc?: Maybe<ArrayOrValue<NameEmailPair>>;
 }
 
 export interface MailgunFileAttachment {
@@ -90,7 +90,7 @@ export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, Mailgu
    */
   readonly attachments?: ArrayOrValue<MailgunFileAttachment>;
   /**
-   * Apply custom parameters directly.
+   * Apply/override output message data parameters directly.
    */
   readonly messageData?: Partial<MailgunMessageData>;
   /**
@@ -133,6 +133,17 @@ export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig {
   readonly isTestingEnvironment?: boolean;
 }
 
+/**
+ * The maximum number of recipients allowed in a single batch send request.
+ */
+export const MAX_BATCH_SEND_RECIPIENTS = 1000;
+
+/**
+ * Converts a MailgunTemplateEmailRequest to a MailgunMessageData.
+ *
+ * @param config
+ * @returns
+ */
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
   const { request, defaultSender, isTestingEnvironment: testEnvironment, recipientVariablePrefix = DEFAULT_RECIPIENT_VARIABLE_PREFIX } = config;
 
@@ -150,12 +161,16 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
 
   const from = request.from ? convertMailgunRecipientToString(request.from) : defaultSender;
   const to = convertMailgunRecipientsToStrings(toInput);
-  const cc = ccInput ? convertMailgunRecipientsToStrings(ccInput) : undefined;
-  const bcc = bccInput ? convertMailgunRecipientsToStrings(bccInput) : undefined;
+  const cc = ccInput?.length ? convertMailgunRecipientsToStrings(ccInput) : undefined;
+  const bcc = bccInput?.length ? convertMailgunRecipientsToStrings(bccInput) : undefined;
 
   // throw an error if batchSend is not defined and cc or bcc is defined
   if (request.batchSend == null && (ccInput || bccInput)) {
     throw new Error('convertMailgunTemplateEmailRequestToMailgunMessageData(): batchSend must be false when either "cc" or "bcc" is defined.');
+  }
+
+  if (allowBatchSending && to.length > MAX_BATCH_SEND_RECIPIENTS) {
+    throw new Error(`convertMailgunTemplateEmailRequestToMailgunMessageData(): Can only batch send to a maximum of ${MAX_BATCH_SEND_RECIPIENTS} recipients.`);
   }
 
   const data: MailgunMessageData = {
