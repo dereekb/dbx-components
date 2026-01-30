@@ -8,6 +8,26 @@ export type ArrayOrValue<T> = T | T[];
 
 // MARK: Functions
 /**
+ * Converts the input value to an array containing itself, or returns itself if it is a non-empty array. Otherwise returns undefined.
+ *
+ * @param arrayOrValue
+ * @returns
+ */
+export function convertMaybeToNonEmptyArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): Maybe<T[]> {
+  let result: Maybe<T[]>;
+
+  if (arrayOrValue) {
+    result = convertToArray(arrayOrValue);
+
+    if (result.length === 0) {
+      result = undefined;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Converts the input value to an array containing itself, or returns itself if it is an array.
  *
  * @param arrayOrValue
@@ -22,6 +42,7 @@ export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[
 }
 
 export const asArray = convertMaybeToArray;
+export const asNonEmptyArray = convertMaybeToNonEmptyArray;
 
 /**
  * Converts the input value to an array containing itself, or returns itself if it is an array.

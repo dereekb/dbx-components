@@ -34,6 +34,7 @@ export abstract class AbstractMailgunContentFirebaseServerNewUserService<U exten
     const baseRequestTo = baseRequest.to;
 
     await this.mailgunService.sendTemplateEmail({
+      batchSend: false, // do not use batch sending by default, as we should only be sending to one user
       ...baseRequest,
       to: {
         name: baseRequestTo?.name,

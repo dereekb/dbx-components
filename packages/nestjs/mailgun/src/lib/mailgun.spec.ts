@@ -14,7 +14,7 @@ describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
     describe('templateVariables', () => {
       it('should encode the template variables properly.', () => {
         const request = {
-          subject: 'Reset Your Dbx Components Password Requeset',
+          subject: 'Reset Your Dbx Components Password Request',
           replyTo: {
             email: replyToEmail
           },
