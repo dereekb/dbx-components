@@ -94,8 +94,8 @@ export type FirestoreModelIdentityType = 'root' | 'nested';
  * The identity is used for creating collections, documents, and queries with the
  * correct types and paths.
  *
- * @template M - The model type (e.g., 'user', 'post')
- * @template C - The collection name (e.g., 'users', 'posts')
+ * @template M - The model type (e.g., 'profile', 'post')
+ * @template C - The collection name (e.g., 'pr', 'po')
  */
 export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> &
   FirestoreCollectionNameRef<C> &

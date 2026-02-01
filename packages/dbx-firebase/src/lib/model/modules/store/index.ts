@@ -1,4 +1,5 @@
 export * from './model.store.module';
+export * from './store';
 export * from './store.collection';
 export * from './store.collection.crud';
 export * from './store.collection.change.directive';
@@ -15,3 +16,6 @@ export * from './store.subcollection';
 export * from './store.subcollection.document';
 export * from './store.subcollection.directive';
 export * from './store.subcollection.rxjs';
+export * from './store.document.context.store';
+export * from './store.document.context.store.link';
+export * from './store.document.context.store.directive';

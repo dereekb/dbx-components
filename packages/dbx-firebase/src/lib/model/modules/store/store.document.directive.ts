@@ -1,12 +1,13 @@
 import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId, TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { ModelKey, type Maybe } from '@dereekb/util';
-import { DbxFirebaseDocumentStore } from './store.document';
+import { DbxFirebaseDocumentStore } from './store';
 import { BehaviorSubject, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { linkDocumentStoreToParentContextStores } from './store.document.context.store.link';
 
 /**
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.
@@ -48,6 +49,7 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   constructor(store: S) {
     this.replaceStore(store);
+    linkDocumentStoreToParentContextStores(store);
 
     // sync inputs to store any time the store changes
     this._storeSub.subscription = this._store.subscribe((x) => {

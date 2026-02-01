@@ -4,7 +4,7 @@ import { cleanup, type ObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type ComponentStore } from '@ngrx/component-store';
 import { map, type Observable, type Subscription } from 'rxjs';
-import { type DbxFirebaseDocumentStore } from './store.document';
+import { type DbxFirebaseDocumentStore } from './store';
 
 export interface DbxFirebaseComponentStoreWithParentContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> {
   readonly parent?: Maybe<PD>;
