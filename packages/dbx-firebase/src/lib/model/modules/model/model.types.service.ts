@@ -49,6 +49,7 @@ export type DbxFirebaseModelTypesMap = DbxModelTypesMap<DbxFirebaseModelTypeInfo
 @Injectable()
 export class DbxFirebaseModelTypesService {
   readonly dbxFirebaseModelContextService = inject(DbxFirebaseModelContextService);
+
   readonly dbxModelTypesService = inject(DbxModelTypesService<DbxFirebaseModelTypeInfo>);
 
   constructor(@Inject(DbxFirebaseModelTypesServiceConfig) initialConfig: DbxFirebaseModelTypesServiceConfig) {

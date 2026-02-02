@@ -49,7 +49,6 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   constructor(store: S) {
     this.replaceStore(store);
-    linkDocumentStoreToParentContextStores(store);
 
     // sync inputs to store any time the store changes
     this._storeSub.subscription = this._store.subscribe((x) => {

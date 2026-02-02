@@ -11,7 +11,18 @@ export const DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN = new InjectionToke
  * Provides the DbxFirebaseDocumentStoreContextStore.
  */
 export function provideDbxFirebaseDocumentStoreContextStore(): Provider[] {
-  return [{ provide: DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN, useClass: DbxFirebaseDocumentStoreContextStore, multi: true }];
+  return [
+    {
+      // Create/Provide a "nearest" DbxFirebaseDocumentStoreContextStore.
+      provide: DbxFirebaseDocumentStoreContextStore
+    },
+    {
+      // Also make that context store available to the DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN.
+      provide: DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN,
+      useExisting: DbxFirebaseDocumentStoreContextStore,
+      multi: true
+    }
+  ];
 }
 
 /**

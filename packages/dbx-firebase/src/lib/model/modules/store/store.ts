@@ -5,9 +5,9 @@ import { Maybe } from '@dereekb/util';
 import { Observable, Subscription } from 'rxjs';
 
 /**
- * Provides accessors to a single model/document.
+ * Provides read-only accessors to a single model/document.
  */
-export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LockSetComponent {
+export interface DbxFirebaseDocumentReadOnlyStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly firestoreCollectionLike$: Observable<FirestoreCollectionLike<T, D>>;
   readonly firestoreCollection$: Observable<FirestoreCollection<T, D>>;
 
@@ -22,6 +22,8 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
 
   readonly currentDocument$: Observable<Maybe<D>>;
   readonly document$: Observable<D>;
+  readonly currentId$: Observable<Maybe<FirestoreModelId>>;
+  readonly currentKey$: Observable<Maybe<FirestoreModelKey>>;
   readonly id$: Observable<FirestoreModelId>;
   readonly key$: Observable<FirestoreModelKey>;
   readonly ref$: Observable<DocumentReference<T>>;
@@ -43,7 +45,12 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly currentExists$: Observable<boolean>;
   readonly exists$: Observable<boolean>;
   readonly modelIdentity$: Observable<FirestoreModelIdentity>;
+}
 
+/**
+ * Provides accessors to a single model/document.
+ */
+export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseDocumentReadOnlyStore<T, D>, LockSetComponent {
   /**
    * Sets the id of the document to load.
    */
@@ -83,13 +90,4 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
    * Sets the FirestoreCollectionLike to retrieve documents from.
    */
   readonly setFirestoreCollectionLike: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollectionLike<T, D>>>) => Subscription);
-}
-
-export interface DbxFirebaseDocumentStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  readonly firestoreCollectionLike?: Maybe<FirestoreCollectionLike<T, D>>;
-  readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
-  readonly streamMode?: FirestoreAccessorStreamMode;
-  readonly id?: Maybe<FirestoreModelId>;
-  readonly key?: Maybe<FirestoreModelKey>;
-  readonly ref?: Maybe<DocumentReference<T>>;
 }

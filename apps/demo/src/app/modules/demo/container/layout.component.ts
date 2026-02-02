@@ -2,7 +2,7 @@ import { ClickableAnchorLinkSegueRef, ClickableAnchorLink, ClickableAnchorLinkTr
 import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextStore, DbxFirebaseDocumentStoreContextStoreDirective } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxFirebaseDocumentStoreContextStore, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent } from '@dereekb/dbx-firebase';
 import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 import { AsyncPipe } from '@angular/common';
@@ -12,7 +12,7 @@ import { AsyncPipe } from '@angular/common';
   styleUrls: ['../demo.scss'],
   encapsulation: ViewEncapsulation.None,
   standalone: true,
-  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe, DbxFirebaseDocumentStoreContextStoreDirective]
+  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective]
 })
 export class DemoLayoutComponent {
   readonly dbxAuthService = inject(DbxFirebaseAuthService);

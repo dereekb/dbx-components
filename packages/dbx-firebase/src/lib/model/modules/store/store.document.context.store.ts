@@ -2,10 +2,9 @@ import { Injectable } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { DbxFirebaseDocumentStore } from './store';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
-import { Configurable, IndexRef, Maybe, separateValues, sortByIndexRangeAscendingCompareFunction, sortByNumberFunction } from '@dereekb/util';
+import { Configurable, Maybe, separateValues, sortByNumberFunction } from '@dereekb/util';
 import { combineLatest, distinctUntilChanged, first, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { isSameDate } from '@dereekb/date';
-import { distinctUntilKeysChange, distinctUntilMapHasDifferentKeys } from '@dereekb/rxjs';
 
 /**
  * A unique number for a store entry.
@@ -22,7 +21,6 @@ export interface DbxFirebaseDocumentStoreContextStoreEntry {
    * The number the entry was assigned when added to the store.
    */
   readonly entryNumber: DbxFirebaseDocumentStoreContextStoreEntryNumber;
-
   /**
    * The referenced document store.
    */
@@ -32,11 +30,19 @@ export interface DbxFirebaseDocumentStoreContextStoreEntry {
   readonly modelIdentity?: Maybe<FirestoreModelIdentity>;
 }
 
+export interface DbxFirebaseDocumentStoreContextStoreEntryWithIdentity extends Omit<DbxFirebaseDocumentStoreContextStoreEntry, 'modelIdentity'> {
+  readonly modelIdentity: FirestoreModelIdentity;
+}
+
 export interface DbxFirebaseDocumentStoreContextStoreState {
   /**
    * The next entry number to use for a new store.
    */
   readonly nextEntryNumber: DbxFirebaseDocumentStoreContextStoreEntryNumber;
+  /**
+   * The current number of entries
+   */
+  readonly currentEntryCount: number;
   /**
    * The map of all current stores.
    *
@@ -54,18 +60,26 @@ export class DbxFirebaseDocumentStoreContextStore extends ComponentStore<DbxFire
   constructor() {
     super({
       nextEntryNumber: 0,
+      currentEntryCount: 0,
       stores: new Map(),
       lastStoresChangeAt: new Date()
     });
   }
 
   // MARK: Accessors
-  readonly stores$ = this.select((state) => state.stores).pipe(distinctUntilMapHasDifferentKeys(), shareReplay(1));
+  readonly stores$ = this.select((state) => [state.stores, state.currentEntryCount, state.nextEntryNumber] as const, {
+    debounce: true, // NOTE: The addStore/removeStore functions use the same map, so we overload the equal function to properly trigger changes to the map.
+    equal: (a, b) => a[1] === b[1] && a[2] === b[2] // only considered different if the nextEntryNumber changes
+  }).pipe(
+    map((x) => x[0]),
+    shareReplay(1)
+  );
+
   readonly lastStoresChangeAt$ = this.select((state) => state.lastStoresChangeAt).pipe(distinctUntilChanged(isSameDate), shareReplay(1));
 
-  readonly entriesGroupedByIdentity$ = this.select((state) => state.stores).pipe(
+  readonly entriesGroupedByIdentity$: Observable<DbxFirebaseDocumentStoreContextStoreEntryWithIdentity[]> = this.stores$.pipe(
     switchMap((stores) => {
-      let entriesObs: Observable<DbxFirebaseDocumentStoreContextStoreEntry[]>;
+      let entriesObs: Observable<DbxFirebaseDocumentStoreContextStoreEntryWithIdentity[]>;
 
       const allEntries = Array.from(stores.values());
 
@@ -78,7 +92,7 @@ export class DbxFirebaseDocumentStoreContextStore extends ComponentStore<DbxFire
               first(),
               map((z) => {
                 // set the model identity on the entry
-                (entryWithoutCachedIdentity as Configurable<DbxFirebaseDocumentStoreContextStoreEntry>).modelIdentity = z;
+                (entryWithoutCachedIdentity as Configurable<DbxFirebaseDocumentStoreContextStoreEntryWithIdentity>).modelIdentity = z;
                 // return the entry
                 return entryWithoutCachedIdentity;
               })
@@ -86,11 +100,11 @@ export class DbxFirebaseDocumentStoreContextStore extends ComponentStore<DbxFire
           )
         ).pipe(
           map(() => {
-            return allEntries; // all the entries should have an identity now
+            return allEntries as DbxFirebaseDocumentStoreContextStoreEntryWithIdentity[]; // all the entries should have an identity now
           })
         );
       } else {
-        entriesObs = of(hasIdentity);
+        entriesObs = of(hasIdentity as DbxFirebaseDocumentStoreContextStoreEntryWithIdentity[]);
       }
 
       return entriesObs;
@@ -126,7 +140,7 @@ function addStore(state: DbxFirebaseDocumentStoreContextStoreState, store: DbxFi
     stores.set(store, entry);
 
     // update the last changed date
-    nextState = { ...state, lastStoresChangeAt: new Date(), nextEntryNumber: nextEntryNumber + 1 };
+    nextState = { ...state, currentEntryCount: state.currentEntryCount + 1, lastStoresChangeAt: new Date(), nextEntryNumber: nextEntryNumber + 1 };
   }
 
   return nextState;
@@ -144,7 +158,7 @@ function removeStore(state: DbxFirebaseDocumentStoreContextStoreState, store: Db
     stores.delete(store);
 
     // update the last changed date
-    nextState = { ...state, lastStoresChangeAt: new Date() };
+    nextState = { ...state, currentEntryCount: state.currentEntryCount - 1, lastStoresChangeAt: new Date() };
   }
 
   return nextState;

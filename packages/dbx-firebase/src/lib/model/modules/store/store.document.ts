@@ -30,10 +30,18 @@ import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFro
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
-import { DbxFirebaseDocumentStore, DbxFirebaseDocumentStoreContextState } from './store';
+import { DbxFirebaseDocumentStore } from './store';
+import { linkDocumentStoreToParentContextStores } from './store.document.context.store.link';
 
 @Injectable()
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {
+  protected constructor(@Inject(null) @Optional() initialState?: C) {
+    super(initialState);
+
+    console.log({ initialState });
+    linkDocumentStoreToParentContextStores(this);
+  }
+
   // MARK: Effects
 
   // MARK: Accessors
@@ -115,6 +123,16 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly documentLoadingState$: Observable<LoadingState<D>> = this.currentDocument$.pipe(
     map((x) => (x ? successResult(x) : beginLoading<D>())),
+    shareReplay(1)
+  );
+
+  readonly currentId$: Observable<Maybe<FirestoreModelId>> = this.currentDocument$.pipe(
+    map((x) => x?.id),
+    shareReplay(1)
+  );
+
+  readonly currentKey$: Observable<Maybe<FirestoreModelKey>> = this.currentDocument$.pipe(
+    map((x) => x?.key),
     shareReplay(1)
   );
 
@@ -234,7 +252,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly modelIdentity$: Observable<FirestoreModelIdentity> = this.document$.pipe(
+  readonly modelIdentity$: Observable<FirestoreModelIdentity> = this.firestoreCollectionLike$.pipe(
     map((x) => x.modelIdentity),
     shareReplay(1)
   );
@@ -310,4 +328,12 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
   override readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => state) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
 
   override readonly clearRefs = this.updater((state) => state);
+}
+export interface DbxFirebaseDocumentStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  readonly firestoreCollectionLike?: Maybe<FirestoreCollectionLike<T, D>>;
+  readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
+  readonly streamMode?: FirestoreAccessorStreamMode;
+  readonly id?: Maybe<FirestoreModelId>;
+  readonly key?: Maybe<FirestoreModelKey>;
+  readonly ref?: Maybe<DocumentReference<T>>;
 }

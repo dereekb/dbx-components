@@ -25,9 +25,9 @@ import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isO
  *
  * This represents the entity type in the domain model and is used for type identification.
  * Model types should follow standard TypeScript naming conventions (typically PascalCase
- * or camelCase) and represent the singular form of the entity (e.g., 'user', 'blogPost').
+ * or camelCase) and represent the singular form of the entity (e.g., 'user', 'post').
  *
- * @example 'user', 'blogPost', 'orderItem'
+ * @example 'user', 'post', 'order'
  */
 export type FirestoreModelType = ModelTypeString;
 
@@ -40,7 +40,7 @@ export type FirestoreModelType = ModelTypeString;
  * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections
  * with the same name to be returned regardless of their location in the document hierarchy.
  *
- * @example 'users', 'blog_posts', 'order_items'
+ * @example 'u', 'ps', 'or'
  */
 export type FirestoreCollectionName = string;
 
@@ -57,7 +57,7 @@ export const FIRESTORE_COLLECTION_NAME_SEPARATOR = '/';
  * the entire Firestore database. It's used for collection group queries and for distinguishing between
  * collections with the same name but at different hierarchy levels.
  *
- * @example 'users', 'users/user_id/posts', 'organizations/org_id/members'
+ * @example 'u', 'u/ps', 'u/or'
  */
 export type FirestoreCollectionType = ModelTypeString;
 
