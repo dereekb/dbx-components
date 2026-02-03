@@ -4,7 +4,7 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseCollectionWithParentStore } from './store.subcollection';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
