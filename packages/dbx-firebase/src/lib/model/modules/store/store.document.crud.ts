@@ -2,7 +2,7 @@ import { type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, typ
 import { lazyFrom, type LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, type PartialOnKeys } from '@dereekb/util';
 import { shareReplay, exhaustMap, first, from, type Observable } from 'rxjs';
-import { type DbxFirebaseDocumentStore } from './store.document';
+import { type DbxFirebaseDocumentStore } from './store';
 
 // MARK: Create
 export type DbxFirebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (params: I) => Observable<LoadingState<O>>;

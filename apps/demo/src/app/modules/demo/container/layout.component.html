@@ -1,4 +1,4 @@
-<dbx-sidenav [anchors]="navAnchors$ | async" dbxSetStyle="demo-app">
+<dbx-sidenav [anchors]="navAnchors$ | async" dbxSetStyle="demo-app" dbxFirebaseDocumentStoreContextStore>
   <ng-container top *dbxIfSidenavDisplayMode="['mobile', 'full']">
     <dbx-content-border>
       <p class="mat-h2">dbx-components</p>
@@ -6,6 +6,9 @@
     </dbx-content-border>
   </ng-container>
   <dbx-sidenav-page color="primary">
+    <span navRight>
+      <dbx-firebase-model-entities-popover-button dbxFirebaseDocumentStoreContextModelEntitiesSource></dbx-firebase-model-entities-popover-button>
+    </span>
     <ui-view></ui-view>
   </dbx-sidenav-page>
   <div bottom>

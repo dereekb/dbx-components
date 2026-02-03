@@ -44,6 +44,7 @@ describe('DbxBasicLoadingComponent', () => {
 
     beforeEach(() => {
       fixture = TestBed.createComponent(BasicLoadingWithContentComponent);
+
       component = fixture.componentInstance;
 
       component.loadingSignal.set(false);

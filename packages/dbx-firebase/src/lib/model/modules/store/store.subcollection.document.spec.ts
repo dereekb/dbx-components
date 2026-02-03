@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector, runInInjectionContext } from '@angular/core';
 import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from '@dereekb/firebase/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseDocumentWithParentStore } from './store.subcollection.document';
+import { TestBed } from '@angular/core/testing';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
@@ -25,11 +26,21 @@ describe('AbstractDbxFirebaseDocumentWithParentStore', () => {
     let parentStore: TestDbxFirebaseDocumentStore;
     let store: TestDbxFirebaseDocumentWithParentStore;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [],
+        declarations: []
+      }).compileComponents();
+
+      const injector = TestBed.inject(Injector);
+
       const firestoreCollection = f.instance.firestoreCollection;
-      parentStore = new TestDbxFirebaseDocumentStore(firestoreCollection);
-      store = new TestDbxFirebaseDocumentWithParentStore(f.instance.mockItemSubItemCollection);
-      sub = new SubscriptionObject();
+
+      runInInjectionContext(injector, () => {
+        parentStore = new TestDbxFirebaseDocumentStore(firestoreCollection);
+        store = new TestDbxFirebaseDocumentWithParentStore(f.instance.mockItemSubItemCollection);
+        sub = new SubscriptionObject();
+      });
     });
 
     afterEach(() => {

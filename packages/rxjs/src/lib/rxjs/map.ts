@@ -1,5 +1,5 @@
-import { map, type OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
-import { type MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys, type PrimativeKey } from '@dereekb/util';
+import { map, type OperatorFunction, switchMap, shareReplay, distinctUntilChanged, type MonoTypeOperatorFunction } from 'rxjs';
+import { type MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys } from '@dereekb/util';
 import { asObservable, type ObservableOrValue } from './getter';
 
 /**
@@ -22,6 +22,6 @@ export function mapKeysIntersectionToArray<T>(keysObs: ObservableOrValue<Iterabl
  *
  * @returns
  */
-export function distinctUntilMapHasDifferentKeys<I extends Map<K, any>, K extends PrimativeKey>() {
+export function distinctUntilMapHasDifferentKeys<I extends Map<K, V>, K, V>(): MonoTypeOperatorFunction<I> {
   return distinctUntilChanged<I>(mapsHaveSameKeys);
 }

@@ -1,7 +1,7 @@
 import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId, TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { ModelKey, type Maybe } from '@dereekb/util';
-import { DbxFirebaseDocumentStore } from './store.document';
+import { DbxFirebaseDocumentStore } from './store';
 import { BehaviorSubject, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';

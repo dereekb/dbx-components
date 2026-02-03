@@ -30,7 +30,7 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   }
 
   // MARK: State Changes
-  readonly resetStore = this.updater(() => ({ ...this.initialState } as S));
+  readonly resetStore = this.updater(() => ({ ...this.initialState }) as S);
 
   // MARK: Locks
   protected setupLockSet({ parent, locks }: LockSetComponentStoreConfig): void {

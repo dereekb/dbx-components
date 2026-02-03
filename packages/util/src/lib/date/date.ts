@@ -359,44 +359,49 @@ export type Hours = number;
 export type Days = number;
 
 /**
+ * Number of days in a year (ignoring leap years, which are 366 days).
+ */
+export const DAYS_IN_YEAR: Days = 365;
+
+/**
  * Number of hours in a day.
  */
-export const HOURS_IN_DAY = 24;
+export const HOURS_IN_DAY: Hours = 24;
 
 /**
  * Number of seconds in a minute.
  */
-export const SECONDS_IN_MINUTE = 60;
+export const SECONDS_IN_MINUTE: Seconds = 60;
 
 /**
  * Number of minutes in a day.
  */
-export const MINUTES_IN_DAY = 1440;
+export const MINUTES_IN_DAY: Minutes = 1440;
 
 /**
  * Number of minutes in an hour.
  */
-export const MINUTES_IN_HOUR = 60;
+export const MINUTES_IN_HOUR: Minutes = 60;
 
 /**
  * Number of milliseconds in a second.
  */
-export const MS_IN_SECOND = 1000;
+export const MS_IN_SECOND: Milliseconds = 1000;
 
 /**
  * Number of milliseconds in a minute.
  */
-export const MS_IN_MINUTE = MS_IN_SECOND * 60;
+export const MS_IN_MINUTE: Milliseconds = MS_IN_SECOND * 60;
 
 /**
  * Number of milliseconds in an hour.
  */
-export const MS_IN_HOUR = MS_IN_MINUTE * 60;
+export const MS_IN_HOUR: Milliseconds = MS_IN_MINUTE * 60;
 
 /**
  * Number of milliseconds in a day.
  */
-export const MS_IN_DAY = MS_IN_HOUR * HOURS_IN_DAY;
+export const MS_IN_DAY: Milliseconds = MS_IN_HOUR * HOURS_IN_DAY;
 
 /**
  * Day of the month, 1-31
