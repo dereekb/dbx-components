@@ -37,8 +37,6 @@ import { linkDocumentStoreToParentContextStores } from './store.document.context
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {
   protected constructor(@Inject(null) @Optional() initialState?: C) {
     super(initialState);
-
-    console.log({ initialState });
     linkDocumentStoreToParentContextStores(this);
   }
 

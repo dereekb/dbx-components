@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector, runInInjectionContext } from '@angular/core';
 import { DocumentReference } from '@dereekb/firebase';
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
 import { isLoadingStateLoading, SubscriptionObject } from '@dereekb/rxjs';
 import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
@@ -17,10 +18,20 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
     let sub: SubscriptionObject;
     let store: TestDbxFirebaseDocumentStore;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [],
+        declarations: []
+      }).compileComponents();
+
+      const injector = TestBed.inject(Injector);
+
       const firestoreCollection = f.instance.firestoreCollection;
       sub = new SubscriptionObject();
-      store = new TestDbxFirebaseDocumentStore(firestoreCollection);
+
+      runInInjectionContext(injector, () => {
+        store = new TestDbxFirebaseDocumentStore(firestoreCollection);
+      });
     });
 
     afterEach(() => {

@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { DbxFirebaseModelEntity } from './model.entities';
-import { DbxFirebaseModelEntitiesWidgetService, DbxFirebaseModelTypesService } from '@dereekb/dbx-firebase';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
+import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
+import { DbxFirebaseModelTypesService } from '../model.types.service';
 
 @Component({
   selector: 'dbx-firebase-model-entities-entity',
