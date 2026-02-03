@@ -97,6 +97,38 @@ export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, Mailgu
    * Finalize the recipient variables before they are re-encoded back to JSON and added to the Mailgun message data.
    */
   readonly finalizeRecipientVariables?: Maybe<MailgunTemplateEmailRequestFinalizeRecipientVariablesFunction>;
+  /**
+   * (Optional) recipient variables configuration.
+   */
+  readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig;
+}
+
+export interface MailgunTemplateEmailRequestRecipientVariablesConfig {
+  /**
+   * The recipient variable prefix to use for the recipient variables.
+   *
+   * If false, the recipient variables will not be appended to variable names.
+   *
+   * Defaults to DEFAULT_RECIPIENT_VARIABLE_PREFIX ("recipient-")
+   */
+  readonly recipientVariablePrefix?: Maybe<string | false>;
+  /**
+   * If true, the recipient variables will be appended to variable names while merging into the global variables.
+   *
+   * Templates that use recipient variables will probably rely on the recipient variable prefix to access the recipient variables,
+   * but when batch sending is disabled, the variable that will be
+   *
+   * Ignored if recipientVariablePrefix is falsy.
+   *
+   * Defaults to true.
+   */
+  readonly addRecipientVariablePrefixToAllMergedGlobalVariables?: Maybe<boolean>;
+  /**
+   * If true, each recipient variable that is merged into the global variables will be added to the global variables without the recipient variable prefix.
+   *
+   * Defaults to false.
+   */
+  readonly addCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables?: Maybe<boolean>;
 }
 
 /**
@@ -126,10 +158,9 @@ export type MailgunAPIResponse = APIResponse;
 export const DEFAULT_RECIPIENT_VARIABLE_PREFIX = 'recipient-';
 export const MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY = `h:Reply-To`;
 
-export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig {
+export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig extends MailgunTemplateEmailRequestRecipientVariablesConfig {
   readonly request: MailgunTemplateEmailRequest;
   readonly defaultSender?: string;
-  readonly recipientVariablePrefix?: Maybe<string | false>;
   readonly isTestingEnvironment?: boolean;
 }
 
@@ -145,7 +176,12 @@ export const MAX_BATCH_SEND_RECIPIENTS = 1000;
  * @returns
  */
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
-  const { request, defaultSender, isTestingEnvironment: testEnvironment, recipientVariablePrefix = DEFAULT_RECIPIENT_VARIABLE_PREFIX } = config;
+  const { request, defaultSender, isTestingEnvironment: testEnvironment, recipientVariablePrefix: inputRecipientVariablePrefix = DEFAULT_RECIPIENT_VARIABLE_PREFIX, addRecipientVariablePrefixToAllMergedGlobalVariables: inputAddRecipientVariablePrefixToAllMergedGlobalVariables = true, addCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables: inputAddCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables = false } = config;
+
+  const { recipientVariablesConfig } = request;
+  const recipientVariablePrefix = recipientVariablesConfig?.recipientVariablePrefix ?? inputRecipientVariablePrefix;
+  const addRecipientVariablePrefixToAllMergedGlobalVariables = recipientVariablesConfig?.addRecipientVariablePrefixToAllMergedGlobalVariables ?? inputAddRecipientVariablePrefixToAllMergedGlobalVariables;
+  const addCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables = recipientVariablesConfig?.addCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables ?? inputAddCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables;
 
   const finalizeRecipientVariables = request.finalizeRecipientVariables ?? MAP_IDENTITY;
   const allowBatchSending = request.batchSend ?? true;
@@ -255,7 +291,15 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
               const encodedValue = encodeMailgunTemplateVariableValue(value);
 
               if (encodedValue != null) {
-                data[`v:${key}`] = encodedValue;
+                if (recipientVariablePrefix && addRecipientVariablePrefixToAllMergedGlobalVariables) {
+                  // also add the variable using the recipient variable prefix
+                  const recipientVariableKey = `${recipientVariablePrefix}${key}`;
+                  data[`v:${recipientVariableKey}`] = encodedValue;
+                }
+
+                if (!recipientVariablePrefix || !addRecipientVariablePrefixToAllMergedGlobalVariables || addCopyOfMergedRecipientVariablesWithoutPrefixToGlobalVariables) {
+                  data[`v:${key}`] = encodedValue;
+                }
               }
             }
           });

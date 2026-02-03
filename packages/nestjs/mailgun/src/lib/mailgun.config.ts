@@ -1,5 +1,5 @@
-import { type EmailParticipantString, type WebsiteUrl } from '@dereekb/util';
-import { type MailgunSenderDomainString } from './mailgun';
+import { Maybe, type EmailParticipantString, type WebsiteUrl } from '@dereekb/util';
+import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig, type MailgunSenderDomainString } from './mailgun';
 import { type MailgunOptions } from './mailgun.type';
 
 export abstract class MailgunServiceConfig {
@@ -31,13 +31,7 @@ export abstract class MailgunServiceConfig {
      * NOTE: Mailgun charges for any sent testmode emails to non-sandbox domains.
      */
     readonly sendTestEmails?: boolean;
-    /**
-     * Global recipient variable prefix to use in emails. Adds each recipient variable to the template variables list with the given prefix.
-     *
-     * If false, the recipient variables are not added to the variables list.
-     */
-    readonly recipientVariablePrefix?: string | false;
-  };
+  } & Pick<MailgunTemplateEmailRequestRecipientVariablesConfig, 'recipientVariablePrefix'>;
 
   static assertValidConfig(config: MailgunServiceConfig) {
     if (!config.mailgun.username) {

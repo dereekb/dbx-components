@@ -1,5 +1,5 @@
 import { type Maybe, type NameEmailPair, asArray, mergeArraysIntoArray, filterMaybeArrayValues } from '@dereekb/util';
-import { type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
+import { MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
 
 /**
  * The default template subject to use when batch sending emails.
@@ -35,6 +35,10 @@ export interface ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig {
    * Defaults to true.
    */
   readonly useSubjectFromRecipientUserVariables?: Maybe<boolean>;
+  /**
+   * Configuration for the recipient variables.
+   */
+  readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig;
 }
 
 /**
@@ -49,7 +53,7 @@ export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: M
  * @returns
  */
 export function expandMailgunRecipientBatchSendTargetRequestFactory(config: ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig): ExpandMailgunRecipientBatchSendTargetRequestFactory {
-  const { request: baseRequest, useSubjectFromRecipientUserVariables } = config;
+  const { request: baseRequest, useSubjectFromRecipientUserVariables, recipientVariablesConfig } = config;
   const defaultSubject = baseRequest.subject;
 
   if (!defaultSubject && !useSubjectFromRecipientUserVariables) {
@@ -87,6 +91,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
 
         const request = {
           ...baseRequest,
+          recipientVariablesConfig: baseRequest.recipientVariablesConfig ?? recipientVariablesConfig,
           to: recipient,
           cc,
           bcc,
@@ -103,6 +108,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
 
       batchSendRequest = {
         ...baseRequest,
+        recipientVariablesConfig: baseRequest.recipientVariablesConfig ?? recipientVariablesConfig,
         to: batchSendRequestRecipients,
         subject,
         batchSend: true
