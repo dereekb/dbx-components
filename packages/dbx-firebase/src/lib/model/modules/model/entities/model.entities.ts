@@ -1,8 +1,8 @@
-import { FirestoreDocument, FirestoreModelIdentity } from '@dereekb/firebase';
-import { Maybe, ModelKey } from '@dereekb/util';
-import { DbxFirebaseDocumentReadOnlyStore } from '../../store/store';
-import { LoadingState } from '@dereekb/rxjs';
-import { Observable } from 'rxjs';
+import { type FirestoreDocument, type FirestoreModelIdentity } from '@dereekb/firebase';
+import { type Maybe, type ModelKey } from '@dereekb/util';
+import { type DbxFirebaseDocumentReadOnlyStore } from '../../store/store';
+import { type LoadingState } from '@dereekb/rxjs';
+import { type Observable } from 'rxjs';
 
 /**
  * Provides a source of entities.

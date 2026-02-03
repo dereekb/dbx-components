@@ -1,5 +1,5 @@
-import { Maybe, type EmailParticipantString, type WebsiteUrl } from '@dereekb/util';
-import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig, type MailgunSenderDomainString } from './mailgun';
+import { type EmailParticipantString, type WebsiteUrl } from '@dereekb/util';
+import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunSenderDomainString } from './mailgun';
 import { type MailgunOptions } from './mailgun.type';
 
 export abstract class MailgunServiceConfig {

@@ -1,5 +1,5 @@
-import { map, type OperatorFunction, switchMap, shareReplay, distinctUntilChanged, MonoTypeOperatorFunction } from 'rxjs';
-import { type MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys, type PrimativeKey } from '@dereekb/util';
+import { map, type OperatorFunction, switchMap, shareReplay, distinctUntilChanged, type MonoTypeOperatorFunction } from 'rxjs';
+import { type MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys } from '@dereekb/util';
 import { asObservable, type ObservableOrValue } from './getter';
 
 /**

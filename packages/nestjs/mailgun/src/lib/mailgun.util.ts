@@ -1,5 +1,5 @@
 import { type Maybe, type NameEmailPair, asArray, mergeArraysIntoArray, filterMaybeArrayValues } from '@dereekb/util';
-import { MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
+import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
 
 /**
  * The default template subject to use when batch sending emails.

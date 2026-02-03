@@ -3,8 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, Subscription } from 'rxjs';
 import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection, DocumentReference, FirestoreModelId, FirestoreModelKey, SingleItemFirestoreCollection, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { AbstractDbxFirebaseDocumentStore } from './store.document';
-import { DbxFirebaseDocumentStoreContextState } from './store.document';
+import { AbstractDbxFirebaseDocumentStore , DbxFirebaseDocumentStoreContextState } from './store.document';
 import { DbxFirebaseDocumentStore } from './store';
 import { DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
 

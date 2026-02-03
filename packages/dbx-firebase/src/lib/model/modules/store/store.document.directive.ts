@@ -7,7 +7,6 @@ import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs
 import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { linkDocumentStoreToParentContextStores } from './store.document.context.store.link';
 
 /**
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.

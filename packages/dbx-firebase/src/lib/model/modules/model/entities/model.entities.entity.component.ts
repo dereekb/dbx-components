@@ -3,8 +3,8 @@ import { DbxFirebaseModelEntity } from './model.entities';
 import { DbxFirebaseModelEntitiesWidgetService, DbxFirebaseModelTypesService } from '@dereekb/dbx-firebase';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { distinct, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 
 @Component({

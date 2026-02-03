@@ -4,9 +4,9 @@ import { MatAccordion } from '@angular/material/expansion';
 import { DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesEntityComponent } from './model.entities.entity.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, defaultIfEmpty, map, Observable, of, share, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, defaultIfEmpty, map, Observable, shareReplay, switchMap } from 'rxjs';
 import { Maybe } from '@dereekb/util';
-import { beginLoading, filterMaybeArray, LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, switchMapMaybe, tapLog, valueFromFinishedLoadingState, valueFromLoadingState } from '@dereekb/rxjs';
+import { beginLoading, filterMaybeArray, LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 
 @Component({
   selector: 'dbx-firebase-model-entities',

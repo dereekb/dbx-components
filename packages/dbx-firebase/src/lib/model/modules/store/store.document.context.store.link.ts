@@ -1,6 +1,6 @@
-import { inject, DestroyRef, InjectionToken, Provider } from '@angular/core';
+import { inject, DestroyRef, InjectionToken, type Provider } from '@angular/core';
 import { DbxFirebaseDocumentStoreContextStore } from './store.document.context.store';
-import { DbxFirebaseDocumentStore } from './store';
+import { type DbxFirebaseDocumentStore } from './store';
 
 /**
  * Injection token for DbxFirebaseDocumentStoreContextStore.
