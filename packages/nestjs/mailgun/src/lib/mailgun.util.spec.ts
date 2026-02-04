@@ -654,6 +654,94 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         expect(objectVariable).toBe(JSON.stringify(object));
       });
     });
+
+    describe('allowSingleRecipientBatchSendRequests = true', () => {
+      it('should build a single batch request for one recipient with no carbon copy values', () => {
+        const baseRequest = {
+          subject: 'Should Be Ignored',
+          from: {
+            email: senderEmail
+          },
+          replyTo: {
+            email: replyToEmail
+          },
+          template: 'actiontemplate',
+          templateVariables: {
+            prompt: 'Reset Your Password Request - 337772',
+            notkept: null,
+            date: new Date()
+          }
+        };
+
+        const TEST_SUBJECT = 'test subject';
+
+        const line1 = 'A password reset was requested. Log into Dbx Components with the following temporary password to begin password reset.';
+        const line2 = '337772';
+        const text = 'Log Into Dbx Components';
+        const url = 'https://components.dereekb.com/auth/login';
+        const title = 'Reset Your Password Request - 337772';
+        const object = {
+          a: 'b'
+        };
+
+        const recipientA: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          userVariables: {
+            subject: TEST_SUBJECT,
+            line1,
+            line2,
+            text,
+            url,
+            title,
+            object
+          }
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          allowSingleRecipientBatchSendRequests: true,
+          useSubjectFromRecipientUserVariables: true // pull subject from recipients
+        });
+
+        const requests = factory([recipientA]);
+        expect(requests.length).toBe(1); // should have only one batch request as there is no cc/bcc
+
+        const request = requests[0];
+        expect(request.subject).toBe(MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE); // should get pulled from the recipient
+        expect(request.batchSend).toBe(true); // batch send is enabled
+
+        const result = convertMailgunTemplateEmailRequestToMailgunMessageData({ request });
+        const { from, to, cc, bcc } = result;
+
+        expect(from).toBe(convertMailgunRecipientsToStrings([{ email: senderEmail }])[0]);
+        expect(to).toEqual(convertMailgunRecipientsToStrings([recipientA]));
+        expect(cc).toBeUndefined();
+        expect(bcc).toBeUndefined();
+
+        expect(result.subject).toBe(MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE);
+        expect(result['recipient-variables']).toBeDefined();
+
+        // check the recipient variable names were copied to the template variables
+        const line1Variable = result['v:recipient-line1'];
+        expect(line1Variable).toBe(`%recipient.line1%`);
+
+        const line2Variable = result['v:recipient-line2'];
+        expect(line2Variable).toBe(`%recipient.line2%`);
+
+        const textVariable = result['v:recipient-text'];
+        expect(textVariable).toBe(`%recipient.text%`);
+
+        const urlVariable = result['v:recipient-url'];
+        expect(urlVariable).toBe(`%recipient.url%`);
+
+        const titleVariable = result['v:recipient-title'];
+        expect(titleVariable).toBe(`%recipient.title%`);
+
+        const objectVariable = result['v:recipient-object'];
+        expect(objectVariable).toBe(`%recipient.object%`);
+      });
+    });
   });
 
   describe('multiple recipients', () => {
