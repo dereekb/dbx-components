@@ -1,4 +1,4 @@
-import { Inject, Injectable, Type } from '@angular/core';
+import { Inject, Injectable, Optional, Type } from '@angular/core';
 import { ArrayOrValue, Maybe, asArray, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 
@@ -32,8 +32,8 @@ export abstract class DbxFirebaseModelEntitiesWidgetServiceConfig {
 export class DbxFirebaseModelEntitiesWidgetService {
   private readonly _entries = new Map<FirestoreModelIdentity, DbxFirebaseModelEntitiesWidgetEntry>();
 
-  constructor(@Inject(DbxFirebaseModelEntitiesWidgetServiceConfig) initialConfig: DbxFirebaseModelEntitiesWidgetServiceConfig) {
-    if (initialConfig.entries) {
+  constructor(@Optional() @Inject(DbxFirebaseModelEntitiesWidgetServiceConfig) initialConfig?: DbxFirebaseModelEntitiesWidgetServiceConfig) {
+    if (initialConfig?.entries) {
       this.register(initialConfig.entries);
     }
   }

@@ -36,6 +36,12 @@ export interface ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig {
    */
   readonly useSubjectFromRecipientUserVariables?: Maybe<boolean>;
   /**
+   * Whether or not to allow a single recipient (with no carbon copy data) to be sent as a batch send request.
+   *
+   * Defaults to false.
+   */
+  readonly allowSingleRecipientBatchSendRequests?: Maybe<boolean>;
+  /**
    * Configuration for the recipient variables.
    */
   readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig;
@@ -53,7 +59,7 @@ export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: M
  * @returns
  */
 export function expandMailgunRecipientBatchSendTargetRequestFactory(config: ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig): ExpandMailgunRecipientBatchSendTargetRequestFactory {
-  const { request: baseRequest, useSubjectFromRecipientUserVariables, recipientVariablesConfig } = config;
+  const { request: baseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig } = config;
   const defaultSubject = baseRequest.subject;
 
   if (!defaultSubject && !useSubjectFromRecipientUserVariables) {
@@ -68,7 +74,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
   const configAllowBatchSend = baseRequest.batchSend !== false;
 
   return (recipients: MailgunRecipientBatchSendTarget[]) => {
-    const allowBatchSend = configAllowBatchSend && recipients.length > 1;
+    const allowBatchSend = configAllowBatchSend && (allowSingleRecipientBatchSendRequests || recipients.length > 1);
 
     let batchSendRequest: Maybe<MailgunTemplateEmailRequest>;
     const nonBatchSendRequests: MailgunTemplateEmailRequest[] = [];
