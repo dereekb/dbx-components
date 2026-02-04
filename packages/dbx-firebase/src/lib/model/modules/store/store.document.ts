@@ -26,7 +26,7 @@ import {
   FIRESTORE_PERMISSION_DENIED_ERROR_CODE,
   isClientFirebaseError
 } from '@dereekb/firebase';
-import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading } from '@dereekb/rxjs';
+import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading, tapLog } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
@@ -121,6 +121,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly documentLoadingState$: Observable<LoadingState<D>> = this.currentDocument$.pipe(
     map((x) => (x ? successResult(x) : beginLoading<D>())),
+    tapLog('documentLoadingState$'),
     shareReplay(1)
   );
 
@@ -169,17 +170,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>> = this.currentDocument$.pipe(
-    switchMap(() => loadingStateFromObs(this.snapshot$)),
-    shareReplay(1)
-  );
-
-  readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>> = this.snapshot$.pipe(
-    map((x) => documentDataWithIdAndKey(x)),
-    shareReplay(1)
-  );
-
-  readonly data$: Observable<DocumentDataWithIdAndKey<T>> = this.currentDocument$.pipe(
-    switchMap(() => this.currentData$.pipe(filterMaybe())),
+    switchMap(() => loadingStateFromObs(this.snapshot$).pipe(catchError((error) => of(errorResult(error) as LoadingState<DocumentSnapshot<T>>)))),
     shareReplay(1)
   );
 
@@ -204,6 +195,16 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
       return result;
     }),
+    shareReplay(1)
+  );
+
+  readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>> = this.dataLoadingState$.pipe(
+    map((x) => x.value),
+    shareReplay(1)
+  );
+
+  readonly data$: Observable<DocumentDataWithIdAndKey<T>> = this.currentDocument$.pipe(
+    switchMap(() => this.currentData$.pipe(filterMaybe())),
     shareReplay(1)
   );
 
