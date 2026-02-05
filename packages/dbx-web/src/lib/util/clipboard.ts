@@ -125,6 +125,8 @@ export interface CopyToClipboardFunctionWithSnackbarMessageConfig extends CopyTo
  * @returns
  */
 export function injectCopyToClipboardFunctionWithSnackbarMessage(config?: CopyToClipboardFunctionWithSnackbarMessageConfig) {
+  // TODO: Add service for configuring global defaults for snackbar messages
+
   const snackbar = inject(MatSnackBar);
 
   const DEFAULT_SUCCESS_MESSAGE = 'Copied to clipboard';

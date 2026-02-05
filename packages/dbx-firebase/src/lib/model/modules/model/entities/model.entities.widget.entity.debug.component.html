@@ -7,32 +7,19 @@
     }
   </div>
 
-  <!-- Loading State Section -->
-  <div class="dbx-debug-section">
-    <h4>Loading State</h4>
-    <p class="dbx-json">{{ loadingState() | json }}</p>
-  </div>
-
-  <!-- Model Identity Section -->
-  <div class="dbx-debug-section">
-    <h4>Model Identity</h4>
-    <div>
-      <strong>Type:</strong>
-      {{ modelIdentity.modelType }}
-    </div>
-    <div>
-      <strong>Collection:</strong>
-      {{ modelIdentity.collectionName }}
-    </div>
-  </div>
-
   <!-- Document Data Section -->
   <div class="dbx-debug-section">
     <h4>Document Data</h4>
-    @if (currentData(); as data) {
-      <pre class="dbx-json dbx-debug-json">{{ data | json }}</pre>
-    } @else {
-      <p class="dbx-empty">No data available</p>
-    }
+    <dbx-loading [context]="context">
+      @if (currentData(); as data) {
+        <dbx-content-pit [rounded]="true">
+          <div class="dbx-json">
+            <dbx-click-to-copy-text>{{ data | json }}</dbx-click-to-copy-text>
+          </div>
+        </dbx-content-pit>
+      } @else {
+        <p class="dbx-empty">No data available</p>
+      }
+    </dbx-loading>
   </div>
 </div>
