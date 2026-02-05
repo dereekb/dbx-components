@@ -1,20 +1,20 @@
 import { InjectionToken, Injector, Provider, StaticProvider } from '@angular/core';
-import { DbxFirebaseModelEntity } from './model.entities';
+import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithKeyAndStore, DbxFirebaseModelEntityWithStore } from './model.entities';
 import { DbxFirebaseModelEntitiesWidgetEntry } from './model.entities.widget.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 /**
- * Injection token for providing DbxFirebaseModelEntity context to dynamically loaded widgets.
+ * Injection token for providing DbxFirebaseModelEntityWithStore context to dynamically loaded widgets.
  */
-export const DBX_FIREBASE_MODEL_ENTITY_DATA = new InjectionToken<DbxFirebaseModelEntity>('DbxFirebaseModelEntityData');
+export const DBX_FIREBASE_MODEL_ENTITY_WITH_STORE_TOKEN = new InjectionToken<DbxFirebaseModelEntityWithStore>('DbxFirebaseModelEntityWithStore');
 
 /**
  * Contains the DbxInjectionComponentConfig for the different injected components a DbxFirebaseModelEntity
  */
 export interface DbxFirebaseModelEntitiesWidgetInjectionConfig {
   readonly entry: DbxFirebaseModelEntitiesWidgetEntry;
-  readonly entity: DbxFirebaseModelEntity;
+  readonly entity: DbxFirebaseModelEntityWithStore;
   readonly entityComponentConfig?: Maybe<DbxInjectionComponentConfig<unknown>>;
   readonly commonComponentConfig?: Maybe<DbxInjectionComponentConfig<unknown>>;
   readonly debugComponentConfig?: Maybe<DbxInjectionComponentConfig<unknown>>;
@@ -23,7 +23,7 @@ export interface DbxFirebaseModelEntitiesWidgetInjectionConfig {
 /**
  * Factory function used to create a DbxFirebaseModelEntitiesWidgetInjectionConfig given the input.
  */
-export type DbxFirebaseModelEntitiesWidgetInjectionConfigFactory = (entry: DbxFirebaseModelEntitiesWidgetEntry, entity: DbxFirebaseModelEntity) => DbxFirebaseModelEntitiesWidgetInjectionConfig;
+export type DbxFirebaseModelEntitiesWidgetInjectionConfigFactory = (entry: DbxFirebaseModelEntitiesWidgetEntry, entity: DbxFirebaseModelEntityWithStore) => DbxFirebaseModelEntitiesWidgetInjectionConfig;
 
 /**
  * Creates a DbxFirebaseModelEntitiesWidgetInjectionConfigFactory.
@@ -32,10 +32,10 @@ export type DbxFirebaseModelEntitiesWidgetInjectionConfigFactory = (entry: DbxFi
  * @returns
  */
 export function dbxFirebaseModelEntityWidgetInjectionConfigFactory(injector?: Maybe<Injector>): DbxFirebaseModelEntitiesWidgetInjectionConfigFactory {
-  return (entry: DbxFirebaseModelEntitiesWidgetEntry, entity: DbxFirebaseModelEntity): DbxFirebaseModelEntitiesWidgetInjectionConfig => {
+  return (entry: DbxFirebaseModelEntitiesWidgetEntry, entity: DbxFirebaseModelEntityWithStore): DbxFirebaseModelEntitiesWidgetInjectionConfig => {
     const providers: StaticProvider[] = [
       {
-        provide: DBX_FIREBASE_MODEL_ENTITY_DATA,
+        provide: DBX_FIREBASE_MODEL_ENTITY_WITH_STORE_TOKEN,
         useValue: entity
       }
     ];

@@ -14,7 +14,6 @@ import { provideDbxFirebaseModelTypesService, type ProvideDbxFirebaseModelTypesS
 import { provideDbxFirebaseAnalyticsUserEventsListenerService } from './analytics';
 import { provideDbxFirebaseStorageFileService } from './modules/storagefile/storagefile.providers';
 import { provideDbxFirebaseModelEntitiesWidgetService, ProvideDbxFirebaseModelEntitiesWidgetServiceConfig } from './model/modules/model/entities/model.entities.providers';
-import { DbxFirebaseModelEntitiesWidgetServiceConfig } from './model';
 
 export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   // Required Configurations

@@ -4,5 +4,7 @@ export * from './model.entities.popover.component';
 export * from './model.entities.providers';
 export * from './model.entities.source.directive';
 export * from './model.entities';
+export * from './model.entities.widget.entity.abstract.directive';
+export * from './model.entities.widget.entity.debug.component';
 export * from './model.entities.widget';
 export * from './model.entities.widget.service';

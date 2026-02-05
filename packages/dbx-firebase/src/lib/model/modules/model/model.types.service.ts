@@ -86,11 +86,11 @@ export class DbxFirebaseModelTypesService {
   }
 
   // MARK: Retrieval
-  currentInfoForType(type: ModelTypeString | FirestoreCollectionType): Observable<Maybe<DbxFirebaseModelTypeInfo>> {
+  currentInfoForType(type: FirestoreCollectionType): Observable<Maybe<DbxFirebaseModelTypeInfo>> {
     return this.dbxModelTypesService.typesMap$.pipe(map((x) => x[type]));
   }
 
-  infoForType(type: ModelTypeString | FirestoreCollectionType): Observable<DbxFirebaseModelTypeInfo> {
+  infoForType(type: FirestoreCollectionType): Observable<DbxFirebaseModelTypeInfo> {
     return this.currentInfoForType(type).pipe(
       map((x) => {
         if (!x) {

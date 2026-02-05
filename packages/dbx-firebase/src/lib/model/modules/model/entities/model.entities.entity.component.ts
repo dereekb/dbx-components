@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnDestroy, Type } from '@angular/core';
-import { DbxFirebaseModelEntity } from './model.entities';
+import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithStore, isDbxFirebaseModelEntityWithStore } from './model.entities';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap, catchError } from 'rxjs';
+import { combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap, catchError, startWith } from 'rxjs';
 import { filterMaybe, loadingStateContext, tapLog } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
 import { DbxFirebaseModelTypesService, type DbxFirebaseModelDisplayInfo, type DbxFirebaseModelTypeInfo } from '../model.types.service';
@@ -29,6 +29,22 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
   readonly entity = input.required<DbxFirebaseModelEntity>();
 
   readonly entity$ = toObservable(this.entity);
+  readonly currentEntityWithStore$ = this.entity$.pipe(
+    map((x) => {
+      let result: Maybe<DbxFirebaseModelEntityWithStore>;
+
+      if (isDbxFirebaseModelEntityWithStore(x)) {
+        result = x;
+      } else {
+        result = null;
+      }
+
+      return result;
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly modelIdentity$ = this.entity$.pipe(
     map((x) => x.modelIdentity),
     distinctUntilChanged(),
@@ -88,8 +104,8 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
     shareReplay(1)
   );
 
-  readonly widgetInjectionConfig$ = combineLatest([this.currentWidgetEntry$, this.entity$]).pipe(
-    map(([entry, entity]) => this.widgetInjectionConfigFactory(entry, entity)),
+  readonly widgetInjectionConfig$ = combineLatest([this.currentWidgetEntry$, this.currentEntityWithStore$]).pipe(
+    map(([entry, entity]) => (entity ? this.widgetInjectionConfigFactory(entry, entity) : null)),
     shareReplay(1)
   );
 
