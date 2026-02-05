@@ -1,0 +1,21 @@
+{
+  "name": "dereekb-firebase-model",
+  "title": "@dereekb/firebase Model Creation",
+  "version": "1.0.0",
+  "description": "Guide for creating Firestore models using @dereekb/firebase library patterns. Covers model definition, converters, collections, queries, API DTOs, and action types.",
+  "keywords": [
+    "firebase",
+    "firestore",
+    "model",
+    "collection",
+    "converter",
+    "dereekb",
+    "typescript",
+    "dto",
+    "api",
+    "backend"
+  ],
+  "categories": ["backend", "database", "typescript"],
+  "author": "dereekb",
+  "license": "MIT"
+}

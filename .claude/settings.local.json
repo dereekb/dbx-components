@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["Bash(find:*)"]
+    "allow": ["Bash(find:*)", "Bash(pip3 install:*)"]
   }
 }
