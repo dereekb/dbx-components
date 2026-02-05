@@ -97,6 +97,34 @@
         </dbx-label-block>
       </div>
     </doc-feature-example>
+    <doc-feature-example header="dbxClickToCopyText" hint="Directive that enables click to copy text to clipboard. Pulls the text content automatically from the element, unless the [dbxClickToCopyText] input is provided.">
+      <div>
+        <p dbxClickToCopyText>Click To Copy!</p>
+      </div>
+      <div>
+        <p dbxClickToCopyText [highlighted]="false">Click To Copy!</p>
+      </div>
+      <div>
+        <p [dbxClickToCopyText]="'Custom Text'">Click To Copy "Custom Text"!</p>
+      </div>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-click-to-copy-text" hint="Component that enables click to copy text to clipboard, and displays an icon. Pulls the text content automatically from the element, unless the [dbxClickToCopyText] input is provided.">
+      <p>
+        <dbx-click-to-copy-text>Click To Copy!</dbx-click-to-copy-text>
+      </p>
+      <p>
+        <dbx-click-to-copy-text [highlighted]="true">Click To Copy! (Highlighted)</dbx-click-to-copy-text>
+      </p>
+      <p>
+        <dbx-click-to-copy-text [copyText]="'Custom Text'">Click To Copy "Custom Text"!</dbx-click-to-copy-text>
+      </p>
+      <p>
+        <dbx-click-to-copy-text [clickIconToCopyOnly]="true">Click To Copy "Custom Text" Via Icon Only!</dbx-click-to-copy-text>
+      </p>
+      <p>
+        <dbx-click-to-copy-text [clickIconToCopyOnly]="true" [clickToCopyIcon]="'content_paste'">Click To Copy With Custom Icon!</dbx-click-to-copy-text>
+      </p>
+    </doc-feature-example>
     <doc-feature-example header="dbx-label-block">
       <dbx-label-block header="A custom label">
         {{ lorem }}
@@ -120,7 +148,10 @@
       <dbx-detail-block header="No Icon Example">
         <span>{{ lorem }}</span>
       </dbx-detail-block>
-
+      <dbx-detail-block icon="photo_size_select_large" [bigHeader]="true" header="Big Example">
+        <p>This uses the bigHeader input to make the header text larger.</p>
+        <span>{{ lorem }}</span>
+      </dbx-detail-block>
       <div>
         <p>You can use the "alignHeader" input to wrap the header's content in a flex and push the content right so it is aligned with the title. This example is limited to 350px and the background color slighltly darkened.</p>
         <div style="width: 350px; background: #00000012">

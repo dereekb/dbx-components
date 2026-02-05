@@ -13,12 +13,14 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
   host: {
     class: 'd-block dbx-content-pit',
     '[class.dbx-content-pit-scrollable]': 'scrollableHeightSignal() != null',
+    '[class.dbx-content-pit-rounded]': 'rounded()',
     '[style.max-height]': 'scrollableHeightSignal()'
   },
   standalone: true
 })
 export class DbxContentPitDirective {
   readonly scrollable = input<Maybe<DbxContentPitScrollableInput>>();
+  readonly rounded = input<boolean>(false);
 
   readonly scrollableHeightSignal = computed(() => {
     let scrollable = this.scrollable();

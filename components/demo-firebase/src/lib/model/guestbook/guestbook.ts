@@ -63,8 +63,6 @@ export interface Guestbook {
 
 export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | GrantedReadRole;
 
-export type GuestbookWithId = DocumentDataWithIdAndKey<Guestbook>;
-
 export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument, typeof guestbookIdentity> {
   get modelIdentity() {
     return guestbookIdentity;

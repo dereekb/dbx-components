@@ -1,11 +1,12 @@
 import { AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { GuestbookWithId, publishedGuestbook } from 'demo-firebase';
+import { Guestbook, publishedGuestbook } from 'demo-firebase';
 import { Component, inject, viewChild, OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookListComponent } from 'demo-components';
 import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective } from '@dereekb/dbx-firebase';
 import { DbxRouteModelIdDirective } from '@dereekb/dbx-core';
 import { UIView } from '@uirouter/angular';
+import { DocumentDataWithIdAndKey } from '@dereekb/firebase';
 
 @Component({
   templateUrl: './list.component.html',
@@ -19,7 +20,7 @@ export class DemoGuestbookListPageComponent implements OnInit {
   readonly guestbookConstraints = publishedGuestbook();
 
   readonly guestbookListRef = this.demoAppRouterService.guestbookListRef();
-  readonly makeGuestbookAnchor: AnchorForValueFunction<GuestbookWithId> = (doc) => this.demoAppRouterService.guestbookRef(doc.id);
+  readonly makeGuestbookAnchor: AnchorForValueFunction<DocumentDataWithIdAndKey<Guestbook>> = (doc) => this.demoAppRouterService.guestbookRef(doc.id);
 
   ngOnInit(): void {
     const x = this.demoGuestbookCollectionStoreDirective();
