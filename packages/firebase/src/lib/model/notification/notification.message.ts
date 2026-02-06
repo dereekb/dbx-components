@@ -1,4 +1,4 @@
-import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair, type ArrayOrValue } from '@dereekb/util';
+import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair, type ArrayOrValue, PrimativeValue } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
@@ -26,6 +26,20 @@ export type NotificationMessageEntityKey = string;
  * Arbitrary template name/key that is used to configure which template to use by the sending service.
  */
 export type NotificationSendMessageTemplateName = string;
+
+/**
+ * Template configuration data for a notification message.
+ *
+ * This info is used by the sending service to configure the template, but is not passed directly to the template itself.
+ */
+export type NotificationMessageTemplateConfiguration = Record<string, any>;
+
+/**
+ * Template variables for a notification message.
+ *
+ * These variables may be directly passed to the template.
+ */
+export type NotificationMessageTemplateVariables = Record<string, any>;
 
 /**
  * Generic notification message content.
@@ -65,6 +79,14 @@ export interface NotificationMessageContent {
    * Url the action goes to.
    */
   readonly actionUrl?: Maybe<WebsiteUrl>;
+  /**
+   * Arbitrary template configuration data used by the sending service for configuration.
+   */
+  readonly templateConfig?: Maybe<NotificationMessageTemplateConfiguration>;
+  /**
+   * Arbitrary template data that may be directly passed to the template.
+   */
+  readonly templateVariables?: Maybe<NotificationMessageTemplateVariables>;
 }
 
 export interface NotificationMessageEmailContent extends NotificationMessageContent {

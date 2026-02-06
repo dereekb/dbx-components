@@ -39,6 +39,7 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
           const { subject = title, replyTo, replyToEmail, from = contentFrom } = x.emailContent ?? {};
 
           const userVariables: DemoMailgunBasicTemplateData = {
+            ...x.content.templateVariables,
             title,
             line1: openingMessage ?? '',
             text: action || DEFAULT_NOTIFICATION_ACTION_BUTTON_TEXT,
