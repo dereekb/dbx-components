@@ -6,8 +6,15 @@ import { type CustomFile, type CustomFileData, type MailgunMessageData, type Mes
 export type MailgunSenderDomainString = EmailAddressDomain;
 export type MailgunTemplateKey = string;
 
+/**
+ * Mailgun template variables.
+ *
+ * Each value is converted to a JSON string before being sent to Mailgun server.
+ */
+export type MailgunTemplateVariables = Record<string, any>;
+
 export interface MailgunRecipient extends NameEmailPair {
-  readonly userVariables?: Record<string, any>;
+  readonly userVariables?: Maybe<MailgunTemplateVariables>;
 }
 
 export interface MailgunEmailRequest {
@@ -18,7 +25,7 @@ export interface MailgunEmailRequest {
   /**
    * Template variables. Each value is converted to a JSON string before being sent to Mailgun server.
    */
-  readonly templateVariables?: Maybe<Record<string, any>>;
+  readonly templateVariables?: Maybe<MailgunTemplateVariables>;
   /**
    * Customzie who the email is from.
    */
