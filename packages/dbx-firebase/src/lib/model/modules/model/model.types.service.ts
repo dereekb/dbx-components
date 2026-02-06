@@ -1,7 +1,7 @@
 import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest, of, catchError } from 'rxjs';
 import { FirestoreCollectionType, FirestoreDocument, FirestoreDocumentData, FirestoreModelIdentity, FirestoreModelKey } from '@dereekb/firebase';
 import { DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
-import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
 import { ClickableAnchorLinkSegueRef, IconAndTitle, SegueRef } from '@dereekb/dbx-core';
 import { ObservableOrValue, filterMaybe, filterMaybeArray } from '@dereekb/rxjs';
 import { GrantedRole } from '@dereekb/model';

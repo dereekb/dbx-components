@@ -1,11 +1,9 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, inject, input, viewChild } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, viewChild } from '@angular/core';
 import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
-import { Observable, first, of, shareReplay, switchMap, tap } from 'rxjs';
-import { Clipboard } from '@angular/cdk/clipboard';
+import { type Maybe } from '@dereekb/util';
+import { Observable, first, of, shareReplay, switchMap } from 'rxjs';
 import { DownloadTextContent } from './download.text';
-import { AbstractSubscriptionDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../../loading/loading.component';
 import { NgTemplateOutlet } from '@angular/common';

@@ -1,8 +1,8 @@
-import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { DbxHelpContextReference, DbxHelpContextString } from './help';
+import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
+import { type DbxHelpContextReference, type DbxHelpContextString } from './help';
 import { DestroyRef, inject } from '@angular/core';
 import { DbxHelpContextService } from './help.context.service';
-import { DestroyFunction } from '@dereekb/util';
+import { type DestroyFunction } from '@dereekb/util';
 
 /**
  * Registers the input observable with the DbxHelpContextService.

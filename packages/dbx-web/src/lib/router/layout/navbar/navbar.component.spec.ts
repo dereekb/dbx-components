@@ -1,4 +1,3 @@
-import { DbxNavbarComponent, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService } from '@dereekb/dbx-web';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -6,6 +5,9 @@ import { UIRouterModule } from '@uirouter/angular';
 import { ClickableAnchorLink, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { APP_BASE_HREF } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
+import { DbxNavbarComponent } from './navbar.component';
+import { provideDbxRouterWebUiRouterProviderConfig } from '../../provider/uirouter/uirouter.router.providers';
+import { provideDbxScreenMediaService } from '../../../screen/screen.providers';
 
 describe('NavbarComponent', () => {
   beforeEach(async () => {

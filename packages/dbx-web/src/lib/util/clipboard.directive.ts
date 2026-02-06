@@ -1,4 +1,4 @@
-import { Directive, effect, ElementRef, HostListener, inject, input } from '@angular/core';
+import { Directive, effect, input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig, injectCopyToClipboardFunctionWithSnackbarMessage } from './clipboard';
 

@@ -1,8 +1,8 @@
-import { InjectionToken, Injector, Provider, StaticProvider } from '@angular/core';
-import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithKeyAndStore, DbxFirebaseModelEntityWithStore } from './model.entities';
-import { DbxFirebaseModelEntitiesWidgetEntry } from './model.entities.widget.service';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { InjectionToken, type Injector, type StaticProvider } from '@angular/core';
+import { type DbxFirebaseModelEntityWithStore } from './model.entities';
+import { type DbxFirebaseModelEntitiesWidgetEntry } from './model.entities.widget.service';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Injection token for providing DbxFirebaseModelEntityWithStore context to dynamically loaded widgets.

@@ -13,7 +13,7 @@ import { provideDbxFirebaseModelContextService, type ProvideDbxFirebaseModelCont
 import { provideDbxFirebaseModelTypesService, type ProvideDbxFirebaseModelTypesServiceConfig } from './model/modules/model/model.types.providers';
 import { provideDbxFirebaseAnalyticsUserEventsListenerService } from './analytics';
 import { provideDbxFirebaseStorageFileService } from './modules/storagefile/storagefile.providers';
-import { provideDbxFirebaseModelEntitiesWidgetService, ProvideDbxFirebaseModelEntitiesWidgetServiceConfig } from './model/modules/model/entities/model.entities.providers';
+import { provideDbxFirebaseModelEntitiesWidgetService, type ProvideDbxFirebaseModelEntitiesWidgetServiceConfig } from './model/modules/model/entities/model.entities.providers';
 
 export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   // Required Configurations

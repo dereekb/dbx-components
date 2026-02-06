@@ -1,6 +1,6 @@
-import { InjectionToken, Type } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { DbxHelpContextString } from './help';
+import { InjectionToken, type Type } from '@angular/core';
+import { type Maybe } from '@dereekb/util';
+import { type DbxHelpContextString } from './help';
 
 /**
  * Entry defining a help widget for a specific context

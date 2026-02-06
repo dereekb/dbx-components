@@ -6,12 +6,14 @@
       }
       <span>{{ titleSignal() }}</span>
     </mat-panel-title>
-    @if (headerInjectionConfigSignal(); as headerInjectionConfig) {
-      <mat-panel-description>
-        <span class="dbx-spacer"></span>
-        <dbx-injection [config]="headerInjectionConfig"></dbx-injection>
-      </mat-panel-description>
-    }
+    <ng-container>
+      @if (headerInjectionConfigSignal(); as headerInjectionConfig) {
+        <mat-panel-description>
+          <span class="dbx-spacer"></span>
+          <dbx-injection [config]="headerInjectionConfig"></dbx-injection>
+        </mat-panel-description>
+      }
+    </ng-container>
   </mat-expansion-panel-header>
   <ng-template matExpansionPanelContent>
     <div class="dbx-help-view-list-entry-content">

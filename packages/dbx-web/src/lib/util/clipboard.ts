@@ -1,7 +1,7 @@
 import { Clipboard } from '@angular/cdk/clipboard';
 import { inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { addMilliseconds, Configurable, GetterOrValueWithInput, getValueFromGetter, isPast, Maybe, Milliseconds, MS_IN_SECOND, Seconds } from '@dereekb/util';
+import { addMilliseconds, type Configurable, type GetterOrValueWithInput, getValueFromGetter, isPast, type Maybe, type Milliseconds, MS_IN_SECOND, type Seconds } from '@dereekb/util';
 
 /**
  * True if copying to the clipboard was successful.
@@ -45,7 +45,7 @@ export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToCli
     return new Promise<CopyToClipboardSuccess>((resolve, reject) => {
       const pending = clipboard.beginCopy(content);
 
-      let copyTimeoutAt = addMilliseconds(new Date(), copyTimeoutSeconds * MS_IN_SECOND);
+      const copyTimeoutAt = addMilliseconds(new Date(), copyTimeoutSeconds * MS_IN_SECOND);
 
       const attempt = () => {
         const copyIsFinished = pending.copy();

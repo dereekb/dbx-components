@@ -1,4 +1,4 @@
-import { type EnvironmentProviders, Injector, type Provider, makeEnvironmentProviders } from '@angular/core';
+import { type EnvironmentProviders, type Injector, type Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxHelpWidgetService, DbxHelpWidgetServiceConfig } from './help.widget.service';
 import { DbxHelpContextService } from './help.context.service';
 
