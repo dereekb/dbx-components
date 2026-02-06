@@ -48,6 +48,8 @@ export class DbxFirebaseModelEntitiesPopoverComponent extends AbstractPopoverDir
 
   static openPopover(popupService: DbxPopoverService, { origin, header, icon, emptyText, entities$ }: DbxFirebaseModelEntitiesPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
+      height: '600px',
+      width: '800px',
       key: popoverKey ?? DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY,
       origin,
       componentClass: DbxFirebaseModelEntitiesPopoverComponent,

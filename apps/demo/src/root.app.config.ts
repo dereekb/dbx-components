@@ -3,8 +3,8 @@ import { APP_INITIALIZER, type ApplicationConfig, importProvidersFrom, Injector 
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
-import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries } from '@dereekb/dbx-web';
+import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
+import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
@@ -111,6 +111,22 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
   return config;
 }
 
+export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebaseModelEntitiesWidgetServiceConfig {
+  const guestbook: DbxFirebaseModelEntitiesWidgetEntry = {
+    identity: guestbookIdentity,
+    entityComponentClass: undefined // TODO: ...
+  };
+
+  const entries: DbxFirebaseModelEntitiesWidgetEntry[] = [guestbook];
+
+  const config: DbxFirebaseModelEntitiesWidgetServiceConfig = {
+    entries,
+    debugComponentClass: DbxFirebaseModelEntitiesDebugWidgetComponent
+  };
+
+  return config;
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     // formly
@@ -180,6 +196,7 @@ export const appConfig: ApplicationConfig = {
     provideDbxCalendar(),
     provideDbxModelService(),
     provideDbxWebFilePreviewServiceEntries([DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY]),
+    provideDbxHelpServices(),
     // dbx-form, form related
     provideDbxFormConfiguration(),
     provideDbxFormFormlyFieldDeclarations(),
@@ -210,6 +227,9 @@ export const appConfig: ApplicationConfig = {
       },
       modelTypesService: {
         dbxFirebaseModelTypesServiceConfigFactory
+      },
+      modelEntitiesWidgetService: {
+        dbxFirebaseModelEntitiesWidgetServiceConfigFactory
       },
       development: {
         enabled: !environment.production,

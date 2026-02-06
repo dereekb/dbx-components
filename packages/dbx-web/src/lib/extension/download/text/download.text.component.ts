@@ -1,11 +1,9 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, inject, input, viewChild } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, viewChild } from '@angular/core';
 import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
-import { Observable, first, of, shareReplay, switchMap, tap } from 'rxjs';
-import { Clipboard } from '@angular/cdk/clipboard';
+import { type Maybe } from '@dereekb/util';
+import { Observable, first, of, shareReplay, switchMap } from 'rxjs';
 import { DownloadTextContent } from './download.text';
-import { AbstractSubscriptionDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../../loading/loading.component';
 import { NgTemplateOutlet } from '@angular/common';
@@ -14,6 +12,7 @@ import { DbxActionModule } from '../../../action/action.module';
 import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
 import { browserObjectUrlRef } from '@dereekb/browser';
 import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
+import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive';
 
 /**
  * View for previewing and downloading arbitrary text content.
@@ -25,10 +24,7 @@ import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../
   imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective implements OnDestroy {
-  private readonly _clipboard = inject(Clipboard);
-  private readonly _matSnackbar = inject(MatSnackBar);
-
+export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective implements OnDestroy {
   private readonly _browserObjectUrl = browserObjectUrlRef();
 
   readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });
@@ -97,46 +93,15 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
       first(),
       switchMap((downloadTextContent: Maybe<DownloadTextContent>) => {
         if (downloadTextContent) {
-          return new Promise<boolean>((resolve, reject) => {
-            const pending = this._clipboard.beginCopy(downloadTextContent.content);
-
-            let secondsRemainingForCopy = 20; // attempt to copy for up to 20 seconds
-
-            const attempt = () => {
-              const copyIsFinished = pending.copy();
-
-              if (!copyIsFinished && --secondsRemainingForCopy) {
-                setTimeout(attempt, MS_IN_SECOND);
-              } else {
-                // Remember to destroy when you're done!
-                pending.destroy();
-
-                if (copyIsFinished) {
-                  resolve(true);
-                } else {
-                  reject(false);
-                }
-              }
-            };
-
-            attempt();
-          });
+          return this._copyToClipboard(downloadTextContent.content);
         } else {
           return of(false);
-        }
-      }),
-      tap((success) => {
-        if (success) {
-          this._matSnackbar.open('Copied to clipboard', undefined, { duration: 3 * MS_IN_SECOND });
-        } else {
-          this._matSnackbar.open('Content failed to copy...', undefined, { duration: 3 * MS_IN_SECOND });
         }
       })
     );
   };
 
-  override ngOnDestroy() {
-    super.ngOnDestroy();
+  ngOnDestroy() {
     this._browserObjectUrl.destroy();
   }
 }

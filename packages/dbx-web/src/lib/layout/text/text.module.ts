@@ -8,8 +8,10 @@ import { DbxLinkifyComponent } from './linkify.component';
 import { DbxChipDirective } from './text.chip.directive';
 import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxNumberWithLimitComponent } from './number.limit.component';
+import { DbxClickToCopyTextDirective } from './copy.text.directive';
+import { DbxClickToCopyTextComponent } from './copy.text.component';
 
-const importsAndExports = [DbxUnitedStatesAddressComponent, DbxNumberWithLimitComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
+const importsAndExports = [DbxUnitedStatesAddressComponent, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
 
 @NgModule({
   imports: importsAndExports,

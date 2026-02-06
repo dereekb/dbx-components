@@ -1,0 +1,25 @@
+<div class="dbx-firebase-model-entities-debug-widget">
+  <!-- Model Key Section -->
+  <div class="dbx-debug-section">
+    <h4>Model Key Information</h4>
+    @if (currentKey(); as key) {
+      <dbx-firebase-model-key [modelKey]="key"></dbx-firebase-model-key>
+    }
+  </div>
+
+  <!-- Document Data Section -->
+  <div class="dbx-debug-section">
+    <h4>Document Data</h4>
+    <dbx-loading [context]="context">
+      @if (currentData(); as data) {
+        <dbx-content-pit [rounded]="true">
+          <div class="dbx-json">
+            <dbx-click-to-copy-text>{{ data | json }}</dbx-click-to-copy-text>
+          </div>
+        </dbx-content-pit>
+      } @else {
+        <p class="dbx-empty">No data available</p>
+      }
+    </dbx-loading>
+  </div>
+</div>

@@ -51,7 +51,7 @@ service cloud.firestore {
         allow get: if resourceIsPublished() || resourceIsOwnedByAuthUserId();
 
         // Can only query if the guestbook entry is published.
-        allow list: if resourceIsPublished();
+        allow list: if resourceIsPublished() || userClaimsIsSysAdmin();
       }
     }
 
@@ -63,7 +63,7 @@ service cloud.firestore {
       allow get: if resourceIsPublished() || resourceIsOwnedByAuthUserId();
 
       // Can only query if the guestbook entry is published.
-      allow list: if resourceIsPublished();
+      allow list: if resourceIsPublished() || userClaimsIsSysAdmin();
     }
 
 

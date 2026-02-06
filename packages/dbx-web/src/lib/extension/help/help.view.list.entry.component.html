@@ -1,0 +1,23 @@
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      @if (iconSignal(); as icon) {
+        <mat-icon class="dbx-button-spacer">{{ icon }}</mat-icon>
+      }
+      <span>{{ titleSignal() }}</span>
+    </mat-panel-title>
+    <ng-container>
+      @if (headerInjectionConfigSignal(); as headerInjectionConfig) {
+        <mat-panel-description>
+          <span class="dbx-spacer"></span>
+          <dbx-injection [config]="headerInjectionConfig"></dbx-injection>
+        </mat-panel-description>
+      }
+    </ng-container>
+  </mat-expansion-panel-header>
+  <ng-template matExpansionPanelContent>
+    <div class="dbx-help-view-list-entry-content">
+      <dbx-injection [config]="widgetInjectionConfigSignal()"></dbx-injection>
+    </div>
+  </ng-template>
+</mat-expansion-panel>

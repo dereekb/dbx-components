@@ -1,0 +1,29 @@
+<dbx-content-container>
+  <doc-feature-layout>
+    <h1>Help Context System</h1>
+    <p>The help context system enables parts of the view to signal to the UI different help topics. The system tracks which help contexts are active and provides a popover interface to display help widgets.</p>
+
+    <doc-feature-example header="dbxHelpContext" hint="This directive is used to signal to the DbxHelpContextService that a specific help topic is in the current context.">
+      <div class="dbx-small dbx-ok" [dbxHelpContext]="exampleHelpString">The context "{{ exampleHelpString }}" is now active.</div>
+    </doc-feature-example>
+
+    <doc-feature-example header="DbxHelpContextService" hint="This service keeps track of all the active help context strings.">
+      <dbx-content-pit>
+        <p>{{ activeHelpContextStringsSignal() | json }}</p>
+      </dbx-content-pit>
+      <p>Each entry can have a title, icon, and the widget class that is displayed when the entry is expanded.</p>
+    </doc-feature-example>
+
+    <doc-feature-example header="Help Popover Button" hint="The help popover button component opens a popover showing the help view.">
+      <p>Default usage:</p>
+      <dbx-help-view-popover-button></dbx-help-view-popover-button>
+      <p>The button can be passed configuration that can show only specific help topics and/or a custom header for the popover view.</p>
+      <dbx-help-view-popover-button [config]="helpButtonConfig"></dbx-help-view-popover-button>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-help-view-list" hint="The dbx-help-view-list component displays all active help contexts in an accordion. Use the helpContextStrings input to show specific help topics.">
+      <p></p>
+      <dbx-help-view-list [helpContextStrings]="testHelpContextStrings"></dbx-help-view-list>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

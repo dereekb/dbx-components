@@ -4,7 +4,7 @@ import { DbxDownloadTextViewComponent } from './download.text.component';
 const importsAndExports = [DbxDownloadTextViewComponent];
 
 /**
- * @deprecated import DbxDownloadtextVie
+ * @deprecated import DbxDownloadTextViewComponent directly instead.
  */
 @NgModule({
   imports: importsAndExports,

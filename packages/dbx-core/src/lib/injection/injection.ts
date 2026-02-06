@@ -11,11 +11,11 @@ export interface DbxInjectionComponentConfig<T = unknown> {
   /**
    * (Optional) providers to provide to the existing injector.
    */
-  readonly providers?: StaticProvider[];
+  readonly providers?: Maybe<StaticProvider[]>;
   /**
    * (Optional) Custom parent injector to use when creating the component.
    */
-  readonly injector?: Injector;
+  readonly injector?: Maybe<Injector>;
   /**
    * (Optional) Module ref to use when creating the component.
    */
@@ -23,11 +23,11 @@ export interface DbxInjectionComponentConfig<T = unknown> {
   /**
    * (Optional) Custom initialization code when an instance is created.
    */
-  readonly init?: (instance: T) => void;
+  readonly init?: Maybe<(instance: T) => void>;
   /**
    * unknown optional data to inject into the component.
    */
-  readonly data?: unknown;
+  readonly data?: Maybe<unknown>;
 }
 
 /**

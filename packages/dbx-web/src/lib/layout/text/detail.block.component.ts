@@ -16,7 +16,8 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
     </div>
   `,
   host: {
-    class: 'dbx-detail-block d-block'
+    class: 'dbx-detail-block d-block',
+    '[class.dbx-detail-block-big-header]': 'bigHeader()'
   },
   imports: [DbxDetailBlockHeaderComponent],
   standalone: true,
@@ -26,4 +27,5 @@ export class DbxDetailBlockComponent {
   readonly icon = input<Maybe<string>>();
   readonly header = input<Maybe<string>>();
   readonly alignHeader = input<boolean>(false);
+  readonly bigHeader = input<boolean>(false);
 }

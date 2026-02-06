@@ -9,7 +9,6 @@ import {
   type FirestoreContext,
   type FirestoreCollectionWithParent,
   firestoreBoolean,
-  type DocumentDataWithIdAndKey,
   AbstractFirestoreDocumentWithParent,
   optionalFirestoreDate,
   type FirestoreCollectionGroup,
@@ -62,8 +61,6 @@ export interface Guestbook {
 }
 
 export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | GrantedReadRole;
-
-export type GuestbookWithId = DocumentDataWithIdAndKey<Guestbook>;
 
 export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument, typeof guestbookIdentity> {
   get modelIdentity() {

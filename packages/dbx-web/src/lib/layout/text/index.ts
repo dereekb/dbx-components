@@ -7,4 +7,6 @@ export * from './linkify.component';
 export * from './text.chip.directive';
 export * from './text.chips.component';
 export * from './number.limit.component';
+export * from './copy.text.directive';
+export * from './copy.text.component';
 export * from './text.module';

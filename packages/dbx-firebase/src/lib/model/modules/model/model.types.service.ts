@@ -1,9 +1,9 @@
 import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest, of, catchError } from 'rxjs';
 import { FirestoreCollectionType, FirestoreDocument, FirestoreDocumentData, FirestoreModelIdentity, FirestoreModelKey } from '@dereekb/firebase';
 import { DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
-import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
 import { ClickableAnchorLinkSegueRef, IconAndTitle, SegueRef } from '@dereekb/dbx-core';
-import { ObservableOrValue, filterMaybeArray } from '@dereekb/rxjs';
+import { ObservableOrValue, filterMaybe, filterMaybeArray } from '@dereekb/rxjs';
 import { GrantedRole } from '@dereekb/model';
 import { Injectable, inject, Inject } from '@angular/core';
 import { DbxFirebaseModelContextService } from '../../service/model.context.service';
@@ -86,11 +86,11 @@ export class DbxFirebaseModelTypesService {
   }
 
   // MARK: Retrieval
-  currentInfoForType(type: ModelTypeString | FirestoreCollectionType): Observable<Maybe<DbxFirebaseModelTypeInfo>> {
+  currentInfoForType(type: FirestoreCollectionType): Observable<Maybe<DbxFirebaseModelTypeInfo>> {
     return this.dbxModelTypesService.typesMap$.pipe(map((x) => x[type]));
   }
 
-  infoForType(type: ModelTypeString | FirestoreCollectionType): Observable<DbxFirebaseModelTypeInfo> {
+  infoForType(type: FirestoreCollectionType): Observable<DbxFirebaseModelTypeInfo> {
     return this.currentInfoForType(type).pipe(
       map((x) => {
         if (!x) {
@@ -140,6 +140,7 @@ export interface DbxFirebaseModelTypesServiceInstance<D extends FirestoreDocumen
   readonly key$: Observable<string>;
   readonly modelType$: Observable<string>;
   readonly snapshotData$: Observable<Maybe<FirestoreDocumentData<D>>>;
+  readonly safeTypeInfo$: Observable<Maybe<DbxFirebaseModelTypeInfo<unknown>>>;
   readonly typeInfo$: Observable<DbxFirebaseModelTypeInfo<unknown>>;
   readonly identity$: Observable<FirestoreModelIdentity>;
   readonly segueRef$: Observable<Maybe<SegueRef>>;
@@ -154,11 +155,13 @@ export function dbxFirebaseModelTypesServiceInstance<D extends FirestoreDocument
   const modelType$ = modelInfoInstance$.pipe(switchMap((x) => x.modelType$));
   const snapshotData$ = modelInfoInstance$.pipe(switchMap((x) => x.snapshotData$));
 
-  const typeInfo$ = modelType$.pipe(
-    switchMap((x) => dbxFirebaseModelTypesService.infoForType(x)),
+  const safeTypeInfo$ = modelType$.pipe(
+    switchMap((x) => dbxFirebaseModelTypesService.currentInfoForType(x)),
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  const typeInfo$ = safeTypeInfo$.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   const identity$ = typeInfo$.pipe(
     map((x) => x.identity),
@@ -205,6 +208,7 @@ export function dbxFirebaseModelTypesServiceInstance<D extends FirestoreDocument
     key$,
     modelType$,
     snapshotData$,
+    safeTypeInfo$,
     typeInfo$,
     identity$,
     segueRef$,

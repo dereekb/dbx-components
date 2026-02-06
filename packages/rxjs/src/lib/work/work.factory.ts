@@ -8,7 +8,9 @@ import { WorkInstance, type WorkInstanceDelegate } from './work.instance';
 export type WorkFactory<T, O> = FactoryWithRequiredInput<Maybe<WorkInstance<T, O>>, T>;
 
 /**
- * Performs the work. Can either return an observable that will use the handler, or can use the handler itself.
+ * Performs the work.
+ *
+ * Can either return an observable that will use the handler, or can use the handler itself.
  */
 export type Work<T = unknown, O = unknown> = WorkUsingObservable<T, O> | WorkUsingContext<T, O>;
 

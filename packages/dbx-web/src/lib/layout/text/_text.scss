@@ -12,6 +12,7 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 $dbx-label-padded-padding: 6px;
 $dbx-detail-block-bottom-padding: 12px;
 $dbx-detail-block-content-offset: 30px;
+$click-to-copy-icon-size: 18px;
 
 // MARK: Mixin
 @mixin core() {
@@ -108,6 +109,12 @@ $dbx-detail-block-content-offset: 30px;
     padding-bottom: $dbx-detail-block-bottom-padding;
   }
 
+  .dbx-detail-block.dbx-detail-block-big-header {
+    .dbx-detail-block-header {
+      font-size: 1.18em;
+    }
+  }
+
   .dbx-text-no-overflow {
     white-space: pre-wrap !important;
     overflow: visible !important;
@@ -166,6 +173,10 @@ $dbx-detail-block-content-offset: 30px;
 
   .dbx-chip-margin {
     margin: 4px;
+  }
+
+  .dbx-chip-sublabel {
+    margin-left: $icon-spacing;
   }
 
   .dbx-us-address {
@@ -245,6 +256,10 @@ $dbx-detail-block-content-offset: 30px;
   .dbx-number-with-limit-rounded {
     border-radius: 12px;
   }
+
+  .dbx-click-to-copy-text-highlighted {
+    text-decoration: underline;
+  }
 }
 
 @mixin typography($theme-config-or-typography-config) {
@@ -256,8 +271,11 @@ $dbx-detail-block-content-offset: 30px;
     font-size: theming.m2-font-size($typography-config, 'caption');
   }
 
-  .dbx-chip-sublabel {
-    margin-left: $icon-spacing;
+  .dbx-click-to-copy-text-icon.mat-icon {
+    width: $click-to-copy-icon-size;
+    height: $click-to-copy-icon-size;
+    font-size: $click-to-copy-icon-size;
+    padding-left: 4px;
   }
 }
 

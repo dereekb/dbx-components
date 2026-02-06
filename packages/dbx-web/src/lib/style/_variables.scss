@@ -128,6 +128,9 @@ $dbx-grey-color-contrast: var($dbx-grey-color-contrast-var);
 $dbx-disabled-color-contrast: var($dbx-disabled-color-contrast-var);
 $dbx-bg-color-contrast: var($dbx-bg-color-contrast-var);
 
+$dbx-content-pit-rounded-border-radius-var: --dbx-content-pit-rounded-border-radius;
+$dbx-content-pit-rounded-border-radius: var($dbx-content-pit-rounded-border-radius-var);
+
 $dbx-avatar-size: var($dbx-avatar-size-var);
 $dbx-avatar-large-size: var($dbx-avatar-large-size-var);
 $dbx-avatar-small-size: var($dbx-avatar-small-size-var);

@@ -48,6 +48,10 @@ $scroll-content-bottom-padding: 42px;
     padding: $pit-padding;
   }
 
+  .dbx-content-pit-rounded {
+    border-radius: theming.$dbx-content-pit-rounded-border-radius;
+  }
+
   .dbx-content-pit > .dbx-label-block > .dbx-label {
     opacity: 0.66; // increase opacity slightly to make it easier to read against background
   }

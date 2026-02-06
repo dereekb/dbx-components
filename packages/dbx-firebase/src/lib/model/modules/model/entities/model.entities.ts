@@ -38,6 +38,16 @@ export interface DbxFirebaseModelEntityWithStore<T = any, D extends FirestoreDoc
 }
 
 /**
+ * Returns true if the input entity has a defined store.
+ *
+ * @param entity
+ * @returns
+ */
+export function isDbxFirebaseModelEntityWithStore<T = any, D extends FirestoreDocument<T> = FirestoreDocument<T>>(entity: DbxFirebaseModelEntity): entity is DbxFirebaseModelEntityWithStore<T, D> {
+  return entity.modelIdentity != null && entity.store != null;
+}
+
+/**
  * An entity that has a key.
  */
 export interface DbxFirebaseModelEntityWithKey extends DbxFirebaseModelEntity {

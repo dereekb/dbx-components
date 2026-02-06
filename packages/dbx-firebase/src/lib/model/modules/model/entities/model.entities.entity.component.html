@@ -1,14 +1,33 @@
 <mat-expansion-panel>
   <mat-expansion-panel-header>
     <mat-panel-title>
-      <span class="bold dbx-button-spacer">Name</span>
-      <!-- TODO: use the display info to show the name -->
+      @if (displayInfoSignal(); as displayInfo) {
+        @if (displayInfo.icon) {
+          <mat-icon class="dbx-button-spacer">{{ displayInfo.icon }}</mat-icon>
+        }
+        <span>{{ displayInfo.title }}</span>
+      }
     </mat-panel-title>
-    <mat-panel-description>
-      <!-- TODO: ... -->
-    </mat-panel-description>
   </mat-expansion-panel-header>
   <ng-template matExpansionPanelContent>
-    <!-- TODO: Content -->
+    <div class="dbx-firebase-model-entities-entity-panel-content">
+      <dbx-loading [context]="loadingContext">
+        @if (entityWidgetConfigSignal(); as config) {
+          <div class="dbx-pb3 dbx-firebase-model-entities-entity-content">
+            <dbx-injection [config]="config"></dbx-injection>
+          </div>
+        }
+        @if (commonWidgetConfigSignal(); as config) {
+          <div class="dbx-pb3 dbx-firebase-model-entities-common-content">
+            <dbx-injection [config]="config"></dbx-injection>
+          </div>
+        }
+        @if (debugWidgetConfigSignal(); as config) {
+          <div class="dbx-pb3 dbx-firebase-model-entities-debug-content">
+            <dbx-injection [config]="config"></dbx-injection>
+          </div>
+        }
+      </dbx-loading>
+    </div>
   </ng-template>
 </mat-expansion-panel>
