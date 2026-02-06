@@ -194,7 +194,9 @@ $default-notice-color: #f28600;
     // table enabled by default
     'table': 1,
     // zip enabled by default
-    'zip': 1
+    'zip': 1,
+    // help enabled by default
+    'help': 1
   );
 
   @if ($input-dbx-theme-extension-config != null) {
@@ -222,4 +224,8 @@ $default-notice-color: #f28600;
 
 @function get-dbx-extension-zip-enabled($theme-config) {
   @return get-dbx-extension-config-var($theme-config, 'zip');
+}
+
+@function get-dbx-extension-help-enabled($theme-config) {
+  @return get-dbx-extension-config-var($theme-config, 'help');
 }

@@ -30,19 +30,16 @@ import { beginLoading, filterMaybeArray, LoadingState, loadingStateContext, mapL
 })
 export class DbxFirebaseModelEntitiesComponent implements OnDestroy {
   /**
-   * All input entities.
+   * Whether the accordion should allow multiple expanded panels.
    */
+  readonly multi = input<boolean>(true);
+
   readonly entities = input<Observable<LoadingState<DbxFirebaseModelEntity[]>>>();
   readonly entities$: Observable<LoadingState<DbxFirebaseModelEntity[]>> = toObservable(this.entities).pipe(
     switchMapMaybe(),
     map((x) => x ?? beginLoading<DbxFirebaseModelEntity[]>()),
     shareReplay(1)
   );
-
-  /**
-   * Whether the accordion should allow multiple expanded panels.
-   */
-  readonly multi = input<boolean>(true);
 
   readonly entitiesWithKeysState$: Observable<LoadingState<DbxFirebaseModelEntityWithKeyAndStore[]>> = this.entities$.pipe(
     mapLoadingStateValueWithOperator(

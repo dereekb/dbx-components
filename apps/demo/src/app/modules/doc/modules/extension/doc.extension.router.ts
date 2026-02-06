@@ -10,6 +10,7 @@ import { DocExtensionDownloadComponent } from './container/download.component';
 import { DocExtensionStorageFileComponent } from './container/storagefile.component';
 import { DocExtensionZipComponent } from './container/zip.component';
 import { DocExtensionWebFilePreviewComponent } from './container/webfilepreview.component';
+import { DocExtensionHelpComponent } from './container/help.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -78,6 +79,12 @@ export const docExtensionWebFilePreviewState: Ng2StateDeclaration = {
   component: DocExtensionWebFilePreviewComponent
 };
 
+export const docExtensionHelpState: Ng2StateDeclaration = {
+  url: '/help',
+  name: 'doc.extension.help',
+  component: DocExtensionHelpComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -90,5 +97,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionDownloadState,
   docExtensionStorageFileState,
   docExtensionZipState,
-  docExtensionWebFilePreviewState
+  docExtensionWebFilePreviewState,
+  docExtensionHelpState
 ];

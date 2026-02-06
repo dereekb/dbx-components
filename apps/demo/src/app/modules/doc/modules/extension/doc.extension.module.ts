@@ -7,7 +7,7 @@ import { DocExtensionHomeComponent } from './container/home.component';
 import { DocExtensionLayoutComponent } from './container/layout.component';
 import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { STATES } from './doc.extension.router';
-import { DbxDownloadTextModule, DbxWidgetModule, DbxWidgetService } from '@dereekb/dbx-web';
+import { DbxDownloadTextModule, DbxWidgetModule, DbxWidgetService, DbxHelpWidgetService } from '@dereekb/dbx-web';
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
 import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
@@ -32,6 +32,10 @@ import { DocExtensionStructureComponent } from './container/structure.component'
 import { DocExtensionTableGroupHeaderExampleComponent } from './component/table.group.header.example.component';
 import { DocExtensionTableGroupFooterExampleComponent } from './component/table.group.footer.example.component';
 import { DocExtensionStorageFileComponent } from './container/storagefile.component';
+import { DocExtensionHelpComponent } from './container/help.component';
+import { DocExtensionHelpExampleWidgetComponent, HELP_WIDGET_EXAMPLE_CONTEXT_STRING } from './component/help.widget.example.component';
+import { HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO, DocExtensionHelpExampleWidgetTwoComponent } from './component/help.widget.example.two.component';
+import { DocExtensionHelpExampleWidgetExampleHeaderComponent } from './component/help.widget.example.header.component';
 
 @NgModule({
   imports: [
@@ -62,6 +66,8 @@ import { DocExtensionStorageFileComponent } from './container/storagefile.compon
     DocExtensionTableItemActionExampleComponent,
     DocExtensionTableGroupHeaderExampleComponent,
     DocExtensionTableGroupFooterExampleComponent,
+    // help
+    DocExtensionHelpExampleWidgetComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,
@@ -71,11 +77,12 @@ import { DocExtensionStorageFileComponent } from './container/storagefile.compon
     DocExtensionMapboxComponent,
     DocExtensionStructureComponent,
     DocExtensionDownloadComponent,
-    DocExtensionStorageFileComponent
+    DocExtensionStorageFileComponent,
+    DocExtensionHelpComponent
   ]
 })
 export class DocExtensionModule {
-  constructor(dbxWidgetService: DbxWidgetService) {
+  constructor(dbxWidgetService: DbxWidgetService, dbxHelpWidgetService: DbxHelpWidgetService) {
     dbxWidgetService.register({
       type: DOC_EXTENSION_WIDGET_EXAMPLE_TYPE,
       componentClass: DocExtensionWidgetExampleComponent
@@ -84,6 +91,19 @@ export class DocExtensionModule {
     dbxWidgetService.register({
       type: DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE,
       componentClass: DocExtensionWidgetIconExampleComponent
+    });
+
+    dbxHelpWidgetService.register({
+      helpContextString: HELP_WIDGET_EXAMPLE_CONTEXT_STRING,
+      title: 'Example Help Widget',
+      widgetComponentClass: DocExtensionHelpExampleWidgetComponent
+    });
+
+    dbxHelpWidgetService.register({
+      helpContextString: HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO,
+      title: 'Example Help Widget Two',
+      widgetComponentClass: DocExtensionHelpExampleWidgetTwoComponent,
+      headerComponentClass: DocExtensionHelpExampleWidgetExampleHeaderComponent
     });
   }
 }

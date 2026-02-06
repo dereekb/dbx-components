@@ -1,0 +1,27 @@
+@use '../../style/theming';
+
+@mixin core() {
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($theme-config-or-typography-config) {
+  // Add typography styles if needed
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-help') {
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($theme-config);
+    }
+  }
+}

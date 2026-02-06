@@ -3,16 +3,19 @@
 @use './calendar/calendar';
 @use './table/table';
 @use './zip/zip';
+@use './help/help';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
   $zip-enabled: 1;
+  $help-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
     $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
     $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
+    $help-enabled: config.get-dbx-extension-help-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
@@ -26,12 +29,17 @@
   @if ($zip-enabled == 1) {
     @include zip.core();
   }
+
+  @if ($help-enabled == 1) {
+    @include help.core();
+  }
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
   $zip-enabled: 1;
+  $help-enabled: 1;
 
   @if ($theme-config-or-typography-config != null) {
     @if (theming.private-is-theme-object($theme-config-or-typography-config)) {
@@ -40,6 +48,7 @@
       $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
       $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
       $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
+      $help-enabled: config.get-dbx-extension-help-enabled($theme-config);
     }
 
     @if ($calendar-enabled == 1) {
@@ -53,6 +62,10 @@
     @if ($zip-enabled == 1) {
       @include zip.typography($theme-config-or-typography-config);
     }
+
+    @if ($help-enabled == 1) {
+      @include help.typography($theme-config-or-typography-config);
+    }
   }
 }
 
@@ -60,11 +73,13 @@
   $calendar-enabled: 1;
   $table-enabled: 1;
   $zip-enabled: 1;
+  $help-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
     $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
     $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
+    $help-enabled: config.get-dbx-extension-help-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
@@ -77,5 +92,9 @@
 
   @if ($zip-enabled == 1) {
     @include zip.theme($theme-config);
+  }
+
+  @if ($help-enabled == 1) {
+    @include help.theme($theme-config);
   }
 }

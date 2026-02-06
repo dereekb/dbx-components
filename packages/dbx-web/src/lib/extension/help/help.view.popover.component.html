@@ -1,0 +1,12 @@
+<dbx-popover-content>
+  <!-- Header -->
+  <dbx-popover-header [icon]="icon" [header]="header">
+    <dbx-injection [config]="popoverHeaderConfig"></dbx-injection>
+  </dbx-popover-header>
+  <!-- Content -->
+  <dbx-popover-scroll-content>
+    <dbx-help-view-list [helpContextStrings]="helpContextStrings$">
+      <p empty>{{ emptyText }}</p>
+    </dbx-help-view-list>
+  </dbx-popover-scroll-content>
+</dbx-popover-content>

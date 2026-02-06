@@ -52,6 +52,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Web File Preview',
     detail: 'web file preview',
     ref: 'doc.extension.webfilepreview'
+  },
+  {
+    icon: 'help',
+    title: 'Help',
+    detail: 'dbx-help',
+    ref: 'doc.extension.help'
   }
 ];
 

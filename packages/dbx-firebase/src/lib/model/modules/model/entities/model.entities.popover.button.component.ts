@@ -18,18 +18,19 @@ export type DbxFirebaseModelEntitiesPopoverButtonConfig = DbxFirebaseModelEntiti
 })
 export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);
+
   readonly entitiesSource = inject(DbxFirebaseModelEntitiesSource);
 
   readonly buttonElement = viewChild.required<string, ElementRef>('button', { read: ElementRef });
-  readonly config = input<DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin>();
+  readonly config = input<DbxFirebaseModelEntitiesPopoverButtonConfig>();
 
   protected override _makePopoverRef(origin?: Maybe<ElementRef>): NgPopoverRef<unknown, unknown> {
-    const config = this.config();
-    const entities$ = this.entitiesSource.entities$;
-
     if (!origin) {
       throw new Error('Missing origin.');
     }
+
+    const config = this.config();
+    const entities$ = this.entitiesSource.entities$;
 
     return DbxFirebaseModelEntitiesPopoverComponent.openPopover(this._dbxPopoverService, {
       origin,
