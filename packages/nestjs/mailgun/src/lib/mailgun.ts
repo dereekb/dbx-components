@@ -29,11 +29,11 @@ export interface MailgunEmailRequest {
   /**
    * Customzie who the email is from.
    */
-  readonly from?: NameEmailPair;
+  readonly from?: Maybe<NameEmailPair>;
   /**
    * Customize who to reply to.
    */
-  readonly replyTo?: NameEmailPair;
+  readonly replyTo?: Maybe<NameEmailPair>;
   /**
    * Recipients of the email.
    */
@@ -84,7 +84,7 @@ export interface MailgunTemplateEmailRequestTestingParameters {
   /**
    * Whether or not this is considered a test email.
    */
-  readonly testEmail?: boolean;
+  readonly testEmail?: Maybe<boolean>;
   /**
    * Overrides the global configuration for sending test emails to force sending. Useful when debugging specific tests.
    */
