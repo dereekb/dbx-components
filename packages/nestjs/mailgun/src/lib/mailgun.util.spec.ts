@@ -1,6 +1,5 @@
 import { convertMailgunTemplateEmailRequestToMailgunMessageData, convertMailgunRecipientsToStrings, DEFAULT_RECIPIENT_VARIABLE_PREFIX } from './mailgun';
-import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipientBatchSendTarget } from './mailgun.util';
-import { notificationMessageEntityKeyRecipientLookup, NotificationMessageEntityKeyRecipientLookup } from './mailgun.util';
+import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipientBatchSendTarget , notificationMessageEntityKeyRecipientLookup, type NotificationMessageEntityKeyRecipientLookup } from './mailgun.util';
 
 const senderEmail = 'sender@dereekb.com';
 const replyToEmail = 'test.support@dereekb.com';

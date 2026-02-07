@@ -1,6 +1,6 @@
-import { type Maybe, type NameEmailPair, asArray, mergeArraysIntoArray, filterMaybeArrayValues, makeValuesGroupMap, ArrayOrValue, Configurable } from '@dereekb/util';
+import { type Maybe, type NameEmailPair, asArray, filterMaybeArrayValues, makeValuesGroupMap, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
-import { NotificationMessageEntityKey } from '@dereekb/firebase';
+import { type NotificationMessageEntityKey } from '@dereekb/firebase';
 
 /**
  * The default template subject to use when batch sending emails.
@@ -256,7 +256,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
     });
 
     // create batch send request(s)
-    let batchSendRequests: MailgunTemplateEmailRequest[] = [];
+    const batchSendRequests: MailgunTemplateEmailRequest[] = [];
 
     if (batchSendRequestRecipients.length > 0) {
       const subject = useSubjectFromRecipientUserVariables ? MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE : (defaultSubject as string);
