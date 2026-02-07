@@ -933,7 +933,12 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       const [batchRequest, recipientCRequest] = requests;
 
       // validate the recipient C request
-      expect(recipientCRequest.to).toBe(recipientC);
+      expect(recipientCRequest.to).toEqual({
+        ...recipientC,
+        from: baseRequest.from,
+        replyTo: baseRequest.replyTo,
+        bcc: undefined
+      });
 
       const recipientCRequestConversionResult = convertMailgunTemplateEmailRequestToMailgunMessageData({ request: recipientCRequest });
 
@@ -1084,7 +1089,13 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       const [recipientARequest, recipientBRequest] = requests;
 
       // validate the recipient A request
-      expect(recipientARequest.to).toBe(recipientA);
+      expect(recipientARequest.to).toEqual({
+        ...recipientA,
+        from: baseRequest.from,
+        replyTo: baseRequest.replyTo,
+        cc,
+        bcc: undefined
+      });
 
       const recipientARequestConversionResult = convertMailgunTemplateEmailRequestToMailgunMessageData({ request: recipientARequest });
 
@@ -1113,7 +1124,13 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       expect(recipientAObjectVariable).toBe(JSON.stringify(object));
 
       // validate the recipient B request
-      expect(recipientBRequest.to).toBe(recipientB);
+      expect(recipientBRequest.to).toEqual({
+        ...recipientB,
+        from: baseRequest.from,
+        replyTo: baseRequest.replyTo,
+        cc,
+        bcc: undefined
+      });
 
       const recipientBRequestConversionResult = convertMailgunTemplateEmailRequestToMailgunMessageData({ request: recipientBRequest });
 
@@ -1210,7 +1227,13 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       const [recipientARequest, recipientBRequest] = requests;
 
       // validate the recipient A request
-      expect(recipientARequest.to).toBe(recipientA);
+      expect(recipientARequest.to).toEqual({
+        ...recipientA,
+        from: baseRequest.from,
+        replyTo: baseRequest.replyTo,
+        cc: undefined,
+        bcc: undefined
+      });
 
       const recipientARequestConversionResult = convertMailgunTemplateEmailRequestToMailgunMessageData({ request: recipientARequest });
 
@@ -1239,7 +1262,13 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       expect(recipientAObjectVariable).toBe(JSON.stringify(object));
 
       // validate the recipient B request
-      expect(recipientBRequest.to).toBe(recipientB);
+      expect(recipientBRequest.to).toEqual({
+        ...recipientB,
+        from: baseRequest.from,
+        replyTo: baseRequest.replyTo,
+        cc: undefined,
+        bcc: undefined
+      });
 
       const recipientBRequestConversionResult = convertMailgunTemplateEmailRequestToMailgunMessageData({ request: recipientBRequest });
 
@@ -1549,6 +1578,233 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const individualRequest = requests.find((r) => r.batchSend === false);
         expect(individualRequest).toBeDefined();
         expect((individualRequest!.to as MailgunRecipientBatchSendTarget).email).toBe(testEmail2);
+      });
+    });
+
+    describe('with NotificationMessageEntityKeyRecipientLookup', () => {
+      const key1 = 'PRIMARY_SENDER';
+      const key2 = 'SYSTEM_SENDER';
+      const ccKey = 'CC_RECIPIENT';
+
+      const recipient1 = { name: 'Primary Sender', email: 'primary-sender@example.com' };
+      const recipient2 = { name: 'System Sender', email: 'system-sender@example.com' };
+      const ccRecipient = { name: 'CC Recipient', email: 'cc-recipient@example.com' };
+
+      const recipientsMap = new Map<string, typeof recipient1>();
+      recipientsMap.set(key1, recipient1);
+      recipientsMap.set(key2, recipient2);
+      recipientsMap.set(ccKey, ccRecipient);
+
+      const notificationMessageEntityKeyRecipientLookup: NotificationMessageEntityKeyRecipientLookup = {
+        recipientsMap,
+        getRecipientOrDefaultForKey: (key: string) => recipientsMap.get(key) as any, // mocking for test simplicity
+        getRecipientsForKeys: (keys: any) => {
+          const k = Array.isArray(keys) ? keys : [keys];
+          return k.map((key) => recipientsMap.get(key)).filter((x) => x) as any;
+        }
+      };
+
+      it('should resolve fromKey and replyToKey', () => {
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {}
+        };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          fromKey: key1,
+          replyToKey: key2
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.from).toEqual(recipient1);
+        expect(request.replyTo).toEqual(recipient2);
+      });
+
+      it('should prioritize explicit from/replyTo over keys', () => {
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {}
+        };
+
+        const explicitFrom = { email: 'explicit-from@example.com' };
+        const explicitReplyTo = { email: 'explicit-reply-to@example.com' };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          from: explicitFrom,
+          fromKey: key1,
+          replyTo: explicitReplyTo,
+          replyToKey: key2
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.from).toEqual(explicitFrom);
+        expect(request.replyTo).toEqual(explicitReplyTo);
+      });
+
+      it('should resolve ccKey and merge with existing cc', () => {
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {}
+        };
+
+        const explicitCc = { email: 'explicit-cc@example.com' };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          cc: [explicitCc],
+          ccKeys: ccKey
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.cc).toContainEqual(explicitCc);
+        expect(request.cc).toContainEqual(ccRecipient);
+      });
+
+      it('should override cc with ccKey when overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients is true', () => {
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {}
+        };
+
+        const explicitCc = { email: 'explicit-cc@example.com' };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          cc: [explicitCc],
+          ccKeys: ccKey
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup,
+          overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients: true
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.cc).not.toContainEqual(explicitCc);
+        expect(request.cc).toContainEqual(ccRecipient);
+        const cc = request.cc as any[];
+        expect(cc?.length).toBe(1);
+      });
+
+      it('should resolve bccKeys and merge with existing bcc', () => {
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {}
+        };
+
+        const explicitBcc = { email: 'explicit-bcc@example.com' };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          bcc: [explicitBcc],
+          bccKeys: ccKey // Using ccKey as a mock key for simplicity
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.bcc).toContainEqual(explicitBcc);
+        expect(request.bcc).toContainEqual(ccRecipient); // Should resolve to same recipient as key is same
+      });
+
+      it('should handle array of keys for ccKeys', () => {
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {}
+        };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          ccKeys: [key1, key2]
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.cc).toContainEqual(recipient1);
+        expect(request.cc).toContainEqual(recipient2);
+      });
+
+      it('should merge base request cc/bcc with resolved keys', () => {
+        const baseRequestCc = { email: 'base-cc@example.com' };
+        const baseRequest = {
+          subject: 'Subject',
+          template: 'template',
+          templateVariables: {},
+          cc: [baseRequestCc]
+        };
+
+        const recipient: MailgunRecipientBatchSendTarget = {
+          email: testEmail,
+          name: 'Test',
+          ccKeys: ccKey
+        };
+
+        const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: baseRequest,
+          useSubjectFromRecipientUserVariables: false,
+          notificationMessageEntityKeyRecipientLookup
+        });
+
+        const requests = factory([recipient]);
+        const request = requests[0];
+
+        expect(request.cc).toContainEqual(baseRequestCc);
+        expect(request.cc).toContainEqual(ccRecipient);
       });
     });
   });
