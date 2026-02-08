@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
-import { AbstractPopoverRefDirective, DbxButtonComponent, DbxButtonStyle, DbxIconButtonComponent, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverRefDirective, DbxButtonComponent, DbxButtonStyle, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseModelEntitiesPopoverComponent, DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin } from './model.entities.popover.component';
 import { Maybe } from '@dereekb/util';

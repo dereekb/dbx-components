@@ -1,5 +1,5 @@
-import { ThemePalette } from '@angular/material/core';
-import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { type ThemePalette } from '@angular/material/core';
+import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import type { DbxThemeColor } from '../layout';
 
 /**

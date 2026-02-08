@@ -6,7 +6,7 @@ import { DbxFirebaseModelEntitiesEntityComponent } from './model.entities.entity
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, defaultIfEmpty, map, Observable, shareReplay, switchMap } from 'rxjs';
 import { filterUniqueValues, Maybe, reverseCompareFn, sortByNumberFunction } from '@dereekb/util';
-import { beginLoading, filterMaybeArray, filterUnique, LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { beginLoading, filterMaybeArray, LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
 
 @Component({
