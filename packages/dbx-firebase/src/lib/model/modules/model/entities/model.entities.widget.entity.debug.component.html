@@ -12,11 +12,7 @@
     <h4>Document Data</h4>
     <dbx-loading [context]="context">
       @if (currentData(); as data) {
-        <dbx-content-pit [rounded]="true">
-          <div class="dbx-json">
-            <dbx-click-to-copy-text>{{ data | json }}</dbx-click-to-copy-text>
-          </div>
-        </dbx-content-pit>
+        <dbx-download-text-view [content]="contentSignal()"></dbx-download-text-view>
       } @else {
         <p class="dbx-empty">No data available</p>
       }

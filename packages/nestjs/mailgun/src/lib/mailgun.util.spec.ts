@@ -1,5 +1,5 @@
 import { convertMailgunTemplateEmailRequestToMailgunMessageData, convertMailgunRecipientsToStrings, DEFAULT_RECIPIENT_VARIABLE_PREFIX } from './mailgun';
-import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipientBatchSendTarget , notificationMessageEntityKeyRecipientLookup, type NotificationMessageEntityKeyRecipientLookup } from './mailgun.util';
+import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipientBatchSendTarget, notificationMessageEntityKeyRecipientLookup, type NotificationMessageEntityKeyRecipientLookup } from './mailgun.util';
 
 const senderEmail = 'sender@dereekb.com';
 const replyToEmail = 'test.support@dereekb.com';
@@ -1596,7 +1596,10 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
 
       const notificationMessageEntityKeyRecipientLookup: NotificationMessageEntityKeyRecipientLookup = {
         recipientsMap,
-        getRecipientOrDefaultForKey: (key: string) => recipientsMap.get(key) as any, // mocking for test simplicity
+        getRecipientOrDefaultForKey: (key: string | undefined | null, defaultRecipient?: any) => {
+          if (!key) return defaultRecipient;
+          return recipientsMap.get(key) ?? defaultRecipient;
+        },
         getRecipientsForKeys: (keys: any) => {
           const k = Array.isArray(keys) ? keys : [keys];
           return k.map((key) => recipientsMap.get(key)).filter((x) => x) as any;
@@ -1804,6 +1807,292 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
 
         expect(request.cc).toContainEqual(baseRequestCc);
         expect(request.cc).toContainEqual(ccRecipient);
+      });
+
+      describe('batching with keys', () => {
+        const TEST_SUBJECT = 'test subject';
+
+        it('should group recipients with different fromKey values into separate batches', () => {
+          const baseRequest = {
+            subject: 'Subject',
+            template: 'template',
+            templateVariables: {}
+          };
+
+          const recipientA: MailgunRecipientBatchSendTarget = {
+            email: testEmail,
+            name: 'Test A',
+            fromKey: key1, // Will resolve to primary-sender@example.com
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientB: MailgunRecipientBatchSendTarget = {
+            email: testEmail2,
+            name: 'Test B',
+            fromKey: key2, // Will resolve to system-sender@example.com
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientC: MailgunRecipientBatchSendTarget = {
+            email: testEmail3,
+            name: 'Test C',
+            fromKey: key1, // Same as A
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+            request: baseRequest,
+            useSubjectFromRecipientUserVariables: true,
+            notificationMessageEntityKeyRecipientLookup
+          });
+
+          const requests = factory([recipientA, recipientB, recipientC]);
+
+          // Should create 2 batch requests: one for A+C (key1), one for B (key2)
+          expect(requests.length).toBe(2);
+
+          const key1Batch = requests.find((r) => r.from?.email === recipient1.email);
+          expect(key1Batch).toBeDefined();
+          expect(key1Batch!.batchSend).toBe(true);
+          expect((key1Batch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+
+          const key2Batch = requests.find((r) => r.from?.email === recipient2.email);
+          expect(key2Batch).toBeDefined();
+          expect(key2Batch!.batchSend).toBe(true);
+          expect((key2Batch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(1);
+        });
+
+        it('should group recipients with different replyToKey values into separate batches', () => {
+          const baseRequest = {
+            subject: 'Subject',
+            template: 'template',
+            templateVariables: {}
+          };
+
+          const recipientA: MailgunRecipientBatchSendTarget = {
+            email: testEmail,
+            name: 'Test A',
+            replyToKey: key1, // Will resolve to primary-sender@example.com
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientB: MailgunRecipientBatchSendTarget = {
+            email: testEmail2,
+            name: 'Test B',
+            replyToKey: key2, // Will resolve to system-sender@example.com
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientC: MailgunRecipientBatchSendTarget = {
+            email: testEmail3,
+            name: 'Test C',
+            replyToKey: key1, // Same as A
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+            request: baseRequest,
+            useSubjectFromRecipientUserVariables: true,
+            notificationMessageEntityKeyRecipientLookup
+          });
+
+          const requests = factory([recipientA, recipientB, recipientC]);
+
+          // Should create 2 batch requests: one for A+C (key1), one for B (key2)
+          expect(requests.length).toBe(2);
+
+          const key1Batch = requests.find((r) => r.replyTo?.email === recipient1.email);
+          expect(key1Batch).toBeDefined();
+          expect(key1Batch!.batchSend).toBe(true);
+          expect((key1Batch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+
+          const key2Batch = requests.find((r) => r.replyTo?.email === recipient2.email);
+          expect(key2Batch).toBeDefined();
+          expect(key2Batch!.batchSend).toBe(true);
+          expect((key2Batch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(1);
+        });
+
+        it('should group recipients with different fromKey/replyToKey combinations', () => {
+          const baseRequest = {
+            subject: 'Subject',
+            template: 'template',
+            templateVariables: {}
+          };
+
+          const recipientA: MailgunRecipientBatchSendTarget = {
+            email: testEmail,
+            name: 'Test A',
+            fromKey: key1,
+            replyToKey: key2,
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientB: MailgunRecipientBatchSendTarget = {
+            email: testEmail2,
+            name: 'Test B',
+            fromKey: key1,
+            replyToKey: ccKey,
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientC: MailgunRecipientBatchSendTarget = {
+            email: testEmail3,
+            name: 'Test C',
+            fromKey: key1,
+            replyToKey: key2, // Same combination as A
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+            request: baseRequest,
+            useSubjectFromRecipientUserVariables: true,
+            notificationMessageEntityKeyRecipientLookup
+          });
+
+          const requests = factory([recipientA, recipientB, recipientC]);
+
+          // Should create 2 batch requests:
+          // 1. A+C: key1 from + key2 replyTo
+          // 2. B: key1 from + ccKey replyTo
+          expect(requests.length).toBe(2);
+
+          const key1_key2Batch = requests.find((r) => r.from?.email === recipient1.email && r.replyTo?.email === recipient2.email);
+          expect(key1_key2Batch).toBeDefined();
+          expect(key1_key2Batch!.batchSend).toBe(true);
+          expect((key1_key2Batch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+
+          const key1_ccKeyBatch = requests.find((r) => r.from?.email === recipient1.email && r.replyTo?.email === ccRecipient.email);
+          expect(key1_ccKeyBatch).toBeDefined();
+          expect(key1_ccKeyBatch!.batchSend).toBe(true);
+          expect((key1_ccKeyBatch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(1);
+        });
+
+        it('should fall back to baseRequest from/replyTo when keys are not found', () => {
+          const baseRequest = {
+            subject: 'Subject',
+            from: { email: senderEmail },
+            replyTo: { email: replyToEmail },
+            template: 'template',
+            templateVariables: {}
+          };
+
+          const recipientA: MailgunRecipientBatchSendTarget = {
+            email: testEmail,
+            name: 'Test A',
+            fromKey: 'UNKNOWN_KEY', // Not in lookup
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientB: MailgunRecipientBatchSendTarget = {
+            email: testEmail2,
+            name: 'Test B',
+            replyToKey: 'UNKNOWN_KEY', // Not in lookup
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+            request: baseRequest,
+            useSubjectFromRecipientUserVariables: true,
+            notificationMessageEntityKeyRecipientLookup
+          });
+
+          const requests = factory([recipientA, recipientB]);
+
+          // Should create 1 batch request using baseRequest from/replyTo
+          expect(requests.length).toBe(1);
+          expect(requests[0].batchSend).toBe(true);
+          expect(requests[0].from?.email).toBe(senderEmail);
+          expect(requests[0].replyTo?.email).toBe(replyToEmail);
+          expect((requests[0].to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+        });
+
+        it('should resolve baseRequest fromKey/replyToKey and use for batching', () => {
+          const baseRequest = {
+            subject: 'Subject',
+            fromKey: key1,
+            replyToKey: key2,
+            template: 'template',
+            templateVariables: {}
+          };
+
+          const recipientA: MailgunRecipientBatchSendTarget = {
+            email: testEmail,
+            name: 'Test A',
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientB: MailgunRecipientBatchSendTarget = {
+            email: testEmail2,
+            name: 'Test B',
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+            request: baseRequest,
+            useSubjectFromRecipientUserVariables: true,
+            notificationMessageEntityKeyRecipientLookup
+          });
+
+          const requests = factory([recipientA, recipientB]);
+
+          // Should create 1 batch request with resolved from/replyTo
+          expect(requests.length).toBe(1);
+          expect(requests[0].batchSend).toBe(true);
+          expect(requests[0].from?.email).toBe(recipient1.email);
+          expect(requests[0].replyTo?.email).toBe(recipient2.email);
+          expect((requests[0].to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+        });
+
+        it('should mix explicit from/replyTo with keys and group correctly', () => {
+          const explicitFrom = { email: 'explicit-from@example.com' };
+          const baseRequest = {
+            subject: 'Subject',
+            template: 'template',
+            templateVariables: {}
+          };
+
+          const recipientA: MailgunRecipientBatchSendTarget = {
+            email: testEmail,
+            name: 'Test A',
+            from: explicitFrom, // Explicit
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientB: MailgunRecipientBatchSendTarget = {
+            email: testEmail2,
+            name: 'Test B',
+            fromKey: key1, // Will resolve
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const recipientC: MailgunRecipientBatchSendTarget = {
+            email: testEmail3,
+            name: 'Test C',
+            from: explicitFrom, // Same as A
+            userVariables: { subject: TEST_SUBJECT }
+          };
+
+          const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+            request: baseRequest,
+            useSubjectFromRecipientUserVariables: true,
+            notificationMessageEntityKeyRecipientLookup
+          });
+
+          const requests = factory([recipientA, recipientB, recipientC]);
+
+          // Should create 2 batch requests:
+          // 1. A+C: explicit from
+          // 2. B: resolved from (key1)
+          expect(requests.length).toBe(2);
+
+          const explicitBatch = requests.find((r) => r.from?.email === explicitFrom.email);
+          expect(explicitBatch).toBeDefined();
+          expect((explicitBatch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+
+          const resolvedBatch = requests.find((r) => r.from?.email === recipient1.email);
+          expect(resolvedBatch).toBeDefined();
+          expect((resolvedBatch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(1);
+        });
       });
     });
   });

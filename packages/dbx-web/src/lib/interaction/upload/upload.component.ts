@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
 import { FileArrayAcceptMatchConfig } from './upload.accept';
-import { DbxButtonStyle } from '../../button/button.component';
+import { DbxButtonStyle } from '../../button/button';
 import { Maybe } from '@dereekb/util';
 import { DbxFileUploadButtonComponent, DbxFileUploadButtonFilesChangedEvent } from './upload.button.component';
 import { DbxFileUploadAreaComponent, DbxFileUploadAreaFilesChangedEvent } from './upload.area.component';

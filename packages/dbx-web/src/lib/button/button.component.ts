@@ -7,22 +7,7 @@ import { type DbxThemeColor } from '../layout/style/style';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { NgTemplateOutlet } from '@angular/common';
-
-export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
-
-/**
- * Style details for the button
- */
-export interface DbxButtonStyle {
-  readonly type?: DbxButtonType;
-  readonly mode?: ProgressSpinnerMode;
-  readonly color?: ThemePalette | DbxThemeColor;
-  readonly spinnerColor?: ThemePalette | DbxThemeColor;
-  readonly customButtonColor?: string;
-  readonly customTextColor?: string;
-  readonly customSpinnerColor?: string;
-  readonly fab?: boolean;
-}
+import { DbxButtonStyle, DbxButtonType } from './button';
 
 /**
  * @deprecated use DbxButtonType instead.

@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional, Type } from '@angular/core';
-import { ArrayOrValue, Maybe, asArray, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
+import { ArrayOrValue, Maybe, asArray, cachedGetter, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 
 export interface DbxFirebaseModelEntitiesWidgetEntry {
@@ -7,6 +7,12 @@ export interface DbxFirebaseModelEntitiesWidgetEntry {
    * Widget type to respond to.
    */
   readonly identity: FirestoreModelIdentity;
+  /**
+   * The priority to use when sorting the entities.
+   *
+   * Higher values are displayed first in the list.
+   */
+  readonly sortPriority?: Maybe<number>;
   /**
    * Widget component that is specific to this entity.
    */
@@ -49,6 +55,10 @@ export class DbxFirebaseModelEntitiesWidgetService {
 
   private readonly _entries = new Map<FirestoreModelIdentity, DbxFirebaseModelEntitiesWidgetEntry>();
 
+  private readonly _sortPriorityMap = cachedGetter(() => {
+    return new Map<FirestoreModelIdentity, number>(mapIterable(this._entries.values(), (entry) => [entry.identity, entry.sortPriority ?? -1]));
+  });
+
   constructor(@Optional() @Inject(DbxFirebaseModelEntitiesWidgetServiceConfig) initialConfig?: DbxFirebaseModelEntitiesWidgetServiceConfig) {
     this._commonComponentClass = initialConfig?.commonComponentClass;
     this._debugComponentClass = initialConfig?.debugComponentClass;
@@ -90,6 +100,9 @@ export class DbxFirebaseModelEntitiesWidgetService {
         this._entries.set(entry.identity, entry);
       }
     });
+
+    // Invalidate the cache
+    this._sortPriorityMap.reset();
   }
 
   // MARK: Get
@@ -115,5 +128,9 @@ export class DbxFirebaseModelEntitiesWidgetService {
 
   getWidgetEntries(identities: Iterable<FirestoreModelIdentity>): DbxFirebaseModelEntitiesWidgetEntry[] {
     return filterMaybeArrayValues(mapIterable(identities ?? [], (x) => this.getWidgetEntry(x)));
+  }
+
+  getSortPriorityMap() {
+    return this._sortPriorityMap();
   }
 }

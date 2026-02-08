@@ -11,12 +11,19 @@
       <div class="dbx-download-text-view-content-title dbx-mb2 mat-subtitle-2">{{ fileNameSignal() }}</div>
     }
     @if (showPreview()) {
-      <div class="dbx-download-text-preview dbx-json dbx-content-pit dbx-content-pit-scrollable dbx-mb3">{{ contentDataSignal() }}</div>
+      <dbx-content-pit [scrollable]="!expandPreview()" class="dbx-download-text-preview dbx-json dbx-mb3">
+        @if (showExpandPreviewButton()) {
+          <dbx-button class="dbx-content-pit-floating-button" [raised]="true" [icon]="expandPreview() ? 'unfold_less' : 'unfold_more'" (buttonClick)="toggleExpandPreview()"></dbx-button>
+        }
+        {{ contentDataSignal() }}
+      </dbx-content-pit>
     }
     <div class="dbx-download-text-view-actions">
       <dbx-button dbxAction dbxActionValue [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard"></dbx-button>
-      <dbx-button-spacer></dbx-button-spacer>
-      <dbx-download-blob-button [config]="downloadConfigSignal()"></dbx-download-blob-button>
+      @if (showDownloadButton()) {
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-download-blob-button [config]="downloadConfigSignal()"></dbx-download-blob-button>
+      }
     </div>
   </div>
 </ng-template>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, model, signal, viewChild } from '@angular/core';
 import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { Observable, first, of, shareReplay, switchMap } from 'rxjs';
@@ -13,6 +13,7 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
 import { browserObjectUrlRef } from '@dereekb/browser';
 import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
 import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive';
+import { DbxContentPitDirective } from '../../../layout/content/content.pit.directive';
 
 /**
  * View for previewing and downloading arbitrary text content.
@@ -21,18 +22,22 @@ import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive
   templateUrl: './download.text.component.html',
   selector: 'dbx-download-text-view',
   standalone: true,
-  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent],
+  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent, DbxContentPitDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective implements OnDestroy {
   private readonly _browserObjectUrl = browserObjectUrlRef();
 
   readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });
+  readonly showDownloadButton = input<boolean>(true);
 
   readonly loadingText = input<Maybe<string>>(undefined);
   readonly linear = input<Maybe<boolean>>(undefined);
   readonly showTitle = input<boolean>(true);
   readonly showPreview = input<boolean>(true);
+  readonly showExpandPreviewButton = input<boolean>(true);
+
+  readonly expandPreview = model<boolean>(false);
 
   readonly content = input<Maybe<DownloadTextContent>>(undefined);
   readonly contentState = input<MaybeObservableOrValue<LoadingState<DownloadTextContent>>>(undefined);
@@ -103,5 +108,9 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
 
   ngOnDestroy() {
     this._browserObjectUrl.destroy();
+  }
+
+  toggleExpandPreview() {
+    this.expandPreview.update((value) => !value);
   }
 }

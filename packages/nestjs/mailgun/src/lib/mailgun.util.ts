@@ -16,34 +16,50 @@ export const MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE = `%recipient.subject
 export interface MailgunRecipientBatchSendTarget extends MailgunRecipient {
   /**
    * The from value to use for the request.
+   *
+   * Takes priority over fromKey.
    */
   readonly from?: Maybe<NameEmailPair>;
   /**
    * Used to look up the from value entity.
+   *
+   * Is ignored if from is set.
    */
   readonly fromKey?: Maybe<NotificationMessageEntityKey>;
   /**
    * The reply-to value to use for the request.
+   *
+   * Takes priority over replyToKey.
    */
   readonly replyTo?: Maybe<NameEmailPair>;
   /**
    * Used to look up the reply-to value entity.
+   *
+   * Is ignored if replyTo is set.
    */
   readonly replyToKey?: Maybe<NotificationMessageEntityKey>;
   /**
    * Carbon copy recipients.
+   *
+   * Are merged with ccKeys when building the request.
    */
   readonly cc?: Maybe<ArrayOrValue<NameEmailPair>>;
   /**
    * Used to look up the carbon copy recipients.
+   *
+   * Are merged with cc when building the request.
    */
   readonly ccKeys?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
   /**
    * Blind carbon copy recipients.
+   *
+   * Are merged with bccKeys when building the request.
    */
   readonly bcc?: Maybe<ArrayOrValue<NameEmailPair>>;
   /**
    * Used to look up the blind carbon copy recipients.
+   *
+   * Are merged with bcc when building the request.
    */
   readonly bccKeys?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
 }
@@ -71,7 +87,7 @@ export interface ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig {
    *
    * The subject to use as a default.
    */
-  readonly request: Omit<MailgunTemplateEmailRequest, 'to' | 'subject'> & Pick<Partial<MailgunTemplateEmailRequest>, 'subject'> & Pick<MailgunRecipientBatchSendTarget, 'bccKeys' | 'ccKeys'>;
+  readonly request: Omit<MailgunTemplateEmailRequest, 'to' | 'subject'> & Pick<Partial<MailgunTemplateEmailRequest>, 'subject'> & Pick<MailgunRecipientBatchSendTarget, 'fromKey' | 'replyToKey' | 'bccKeys' | 'ccKeys'>;
   /**
    * Whether or not to pull the subject from the recipient's user variables when building the request. If false, expects that a subject is set on the default request.
    *
@@ -165,12 +181,19 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
     carbonCopyRecipientsKeys: inputBaseRequest.bccKeys
   });
 
-  const baseRequest: Omit<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request'], 'ccKeys' | 'bccKeys'> = {
+  const baseRequestFrom: Maybe<NameEmailPair> = inputBaseRequest.from ?? notificationMessageEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.fromKey);
+  const baseRequestReplyTo: Maybe<NameEmailPair> = inputBaseRequest.replyTo ?? notificationMessageEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.replyToKey);
+
+  const baseRequest: Omit<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request'], 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys'> = {
     ...inputBaseRequest,
+    from: baseRequestFrom,
+    replyTo: baseRequestReplyTo,
     cc: baseRequestCc,
     bcc: baseRequestBcc
   };
 
+  delete (baseRequest as Configurable<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request']>).fromKey;
+  delete (baseRequest as Configurable<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request']>).replyToKey;
   delete (baseRequest as Configurable<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request']>).ccKeys;
   delete (baseRequest as Configurable<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request']>).bccKeys;
 
@@ -184,16 +207,27 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
 
     // Process recipients to resolve keys
     const recipients: ResolvedMailgunRecipientBatchSendTarget[] = inputRecipients.map((recipient) => {
-      let from = recipient.from ?? baseRequest.from;
-      let replyTo = recipient.replyTo ?? baseRequest.replyTo;
+      let from = recipient.from;
+      let replyTo = recipient.replyTo;
 
       if (notificationMessageEntityKeyRecipientLookup) {
-        if (!from && recipient.fromKey) {
-          from = notificationMessageEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.fromKey);
+        // try the fromKey, otherwise use the baseRequest.from
+        if (!from) {
+          from = notificationMessageEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.fromKey, baseRequest.from);
         }
 
-        if (!replyTo && recipient.replyToKey) {
-          replyTo = notificationMessageEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.replyToKey);
+        // try the replyToKey, otherwise use the baseRequest.replyTo
+        if (!replyTo) {
+          replyTo = notificationMessageEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.replyToKey, baseRequest.replyTo);
+        }
+      } else {
+        // use defaults from base request
+        if (!from) {
+          from = baseRequest.from;
+        }
+
+        if (!replyTo) {
+          replyTo = baseRequest.replyTo;
         }
       }
 

@@ -3,7 +3,7 @@ import { AbstractSubscriptionDirective, dbxActionWorkProgress, type DbxActionWor
 import { Configurable, CssClass, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonConfig, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { DbxButtonType } from '../button.component';
+import { DbxButtonType } from '../button';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 @Directive()
