@@ -4,5 +4,5 @@
 @use './config';
 
 @mixin core($theme-config: null) {
-  @include all-core.all-component-core();
+  @include all-core.all-component-core($theme-config);
 }

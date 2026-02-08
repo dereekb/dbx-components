@@ -1,19 +1,29 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, viewChild } from '@angular/core';
-import { AbstractPopoverRefDirective, DbxIconButtonComponent, DbxPopoverService } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
+import { AbstractPopoverRefDirective, DbxButtonComponent, DbxButtonStyle, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseModelEntitiesPopoverComponent, DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin } from './model.entities.popover.component';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseModelEntitiesSource } from './model.entities';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 
-export type DbxFirebaseModelEntitiesPopoverButtonConfig = DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin;
+export interface DbxFirebaseModelEntitiesPopoverButtonConfig extends DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin {
+  /**
+   * The display configuration for the button.
+   */
+  readonly buttonDisplay?: Maybe<DbxButtonDisplay>;
+  /**
+   * The style configuration for the button.
+   */
+  readonly buttonStyle?: Maybe<DbxButtonStyle>;
+}
 
 @Component({
   selector: 'dbx-firebase-model-entities-popover-button',
   template: `
-    <dbx-icon-button #button (buttonClick)="showEntitiesPopover()" icon="data_object"></dbx-icon-button>
+    <dbx-button #button (buttonClick)="showEntitiesPopover()" [buttonStyle]="buttonStyleSignal()" [buttonDisplay]="buttonDisplaySignal()"></dbx-button>
   `,
   standalone: true,
-  imports: [DbxIconButtonComponent],
+  imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
@@ -23,6 +33,13 @@ export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopo
 
   readonly buttonElement = viewChild.required<string, ElementRef>('button', { read: ElementRef });
   readonly config = input<DbxFirebaseModelEntitiesPopoverButtonConfig>();
+
+  readonly buttonDisplaySignal = computed(() => {
+    const config = this.config();
+    return config?.buttonDisplay ?? { icon: config?.icon ?? 'data_object' };
+  });
+
+  readonly buttonStyleSignal = computed(() => this.config()?.buttonStyle);
 
   protected override _makePopoverRef(origin?: Maybe<ElementRef>): NgPopoverRef<unknown, unknown> {
     if (!origin) {

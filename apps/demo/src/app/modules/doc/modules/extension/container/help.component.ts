@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { DbxContentContainerDirective, DbxContentPitDirective, DbxHelpContextService, DbxHelpViewPopoverButtonConfig , DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentPitDirective, DbxHelpContextService, DbxHelpViewPopoverButtonConfig, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -26,6 +26,8 @@ export class DocExtensionHelpComponent {
   readonly testHelpContextStrings = [HELP_WIDGET_EXAMPLE_CONTEXT_STRING];
 
   readonly helpButtonConfig: DbxHelpViewPopoverButtonConfig = {
+    buttonDisplay: { icon: 'live_help', text: 'Help' },
+    buttonStyle: { color: 'primary', type: 'raised' },
     popoverHeaderConfig: {
       componentClass: DocExtensionHelpExampleWidgetHeaderComponent
     },

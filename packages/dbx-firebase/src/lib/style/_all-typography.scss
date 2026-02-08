@@ -1,6 +1,8 @@
 @use '../auth/login/login';
+@use '../model/model';
 
 // Includes all of the typographic styles.
 @mixin all-component-typographies($theme-config) {
   @include login.typography($theme-config);
+  @include model.all-model-typography($theme-config);
 }

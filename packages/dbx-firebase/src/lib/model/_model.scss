@@ -1,0 +1,15 @@
+@use '../style/config';
+@use '../style/theming';
+@use './modules/model/model';
+
+@mixin all-model-core($theme-config) {
+  @include model.core();
+}
+
+@mixin all-model-typography($theme-config-or-typography-config) {
+  @include model.typography($theme-config-or-typography-config);
+}
+
+@mixin all-model-theme($theme-config) {
+  @include model.theme($theme-config);
+}

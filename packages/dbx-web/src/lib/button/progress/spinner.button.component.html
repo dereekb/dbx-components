@@ -1,11 +1,12 @@
 <button class="dbx-base-button dbx-progress-spinner-button" #button mat-button [type]="buttonTypeAttributeSignal()" [color]="configSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="configSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
-  @if (showTextSignal()) {
+  @if (showTextContentSignal()) {
     @if (showTextButtonIconSignal()) {
       <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet" [class.working]="showProgressSignal()" [ngClass]="configSignal()?.buttonIcon?.customClass" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!">
         {{ configSignal()?.buttonIcon?.fontSet ? '' : configSignal()?.buttonIcon?.fontIcon }}
       </mat-icon>
     }
     <span class="button-text" [class.working]="showProgressSignal()">
+      <!-- TODO: Check ng-content has content, and if there is no ng-content input or text, then showTextContentSignal() should be false. -->
       {{ configSignal()?.text }}
       <ng-content></ng-content>
     </span>

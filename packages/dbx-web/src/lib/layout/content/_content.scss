@@ -23,6 +23,8 @@ $content-end-margin: theming.$padding-4;
 
 $scroll-content-bottom-padding: 42px;
 
+$dbx-content-pit-floating-button-margin: 8px;
+
 @mixin core() {
   .dbx-content-border {
     padding: $content-border-inner-padding;
@@ -57,9 +59,22 @@ $scroll-content-bottom-padding: 42px;
   }
 
   .dbx-content-pit-scrollable {
-    max-height: 140px; // TODO: Allow configuring height
+    max-height: theming.$dbx-content-pit-scrollable-max-height;
     max-width: 100%;
     overflow-y: scroll;
+  }
+
+  .dbx-content-pit-floating-button {
+    float: right;
+    position: sticky;
+    top: $dbx-content-pit-floating-button-margin;
+    z-index: 10;
+    margin-right: $dbx-content-pit-floating-button-margin;
+    margin-bottom: $dbx-content-pit-floating-button-margin;
+  }
+
+  .dbx-content-pit-scrollable > .dbx-content-pit-floating-button {
+    top: 0;
   }
 
   .dbx-content-end {

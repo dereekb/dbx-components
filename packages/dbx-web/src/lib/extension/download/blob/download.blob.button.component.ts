@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, inject, input, viewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AbstractSubscriptionDirective, DbxActionButtonDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
-import { DbxButtonComponent, type DbxButtonStyle } from '../../../button/button.component';
+import { DbxButtonComponent } from '../../../button/button.component';
+import { type DbxButtonStyle } from '../../../button/button';
 import { DbxActionModule } from '../../../action/action.module';
 import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
 import { browserObjectUrlRef } from '@dereekb/browser';

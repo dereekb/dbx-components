@@ -3,7 +3,7 @@ import { type ThemePalette } from '@angular/material/core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../../layout/style/style';
-import { type DbxButtonType } from '../button.component';
+import { type DbxButtonType } from '../button';
 import { type DbxButtonWorking, type DbxButtonWorkingProgress } from '@dereekb/dbx-core';
 
 export interface DbxProgressButtonConfig {
@@ -14,7 +14,7 @@ export interface DbxProgressButtonConfig {
   readonly spinnerColor?: Maybe<ThemePalette | DbxThemeColor>;
   readonly barColor?: Maybe<ThemePalette | DbxThemeColor>;
   /**
-   * Whether or not to render as an icon button.
+   * Only renders the icon button.
    */
   readonly iconOnly?: Maybe<boolean>;
   readonly spinnerSize?: Maybe<number>;

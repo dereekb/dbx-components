@@ -1,6 +1,8 @@
 @use '../auth/login/login';
+@use '../model/model';
 
 // Includes all theming config
-@mixin all-component-core() {
+@mixin all-component-core($theme-config) {
   @include login.core();
+  @include model.all-model-core($theme-config);
 }
