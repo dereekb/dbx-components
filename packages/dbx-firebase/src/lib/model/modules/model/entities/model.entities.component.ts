@@ -4,7 +4,7 @@ import { MatAccordion } from '@angular/material/expansion';
 import { DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesEntityComponent } from './model.entities.entity.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, defaultIfEmpty, map, Observable, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, combineLatestWith, defaultIfEmpty, distinctUntilChanged, map, Observable, shareReplay, switchMap } from 'rxjs';
 import { filterUniqueValues, Maybe, reverseCompareFn, sortByNumberFunction } from '@dereekb/util';
 import { beginLoading, filterMaybeArray, LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
@@ -37,6 +37,18 @@ export class DbxFirebaseModelEntitiesComponent implements OnDestroy {
    */
   readonly multi = input<boolean>(true);
 
+  /**
+   * If true, will only show entities that have a registered widget entry.
+   *
+   * Defaults to false.
+   */
+  readonly onlyShowRegisteredTypes = input<Maybe<boolean>>(undefined);
+  readonly onlyShowRegisteredTypes$ = toObservable(this.onlyShowRegisteredTypes).pipe(
+    map((x) => x ?? false),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly entities = input<Observable<LoadingState<DbxFirebaseModelEntity[]>>>();
   readonly entities$: Observable<LoadingState<DbxFirebaseModelEntity[]>> = toObservable(this.entities).pipe(
     switchMapMaybe(),
@@ -52,23 +64,28 @@ export class DbxFirebaseModelEntitiesComponent implements OnDestroy {
 
         interface DbxFirebaseModelEntityWithKeyAndStoreAndSortPriority extends DbxFirebaseModelEntityWithKeyAndStore {
           readonly sortPriority: number;
-          readonly isKnownType: boolean;
+          readonly isRegisteredType: boolean;
         }
 
         const entitiesWithKeys: Observable<Maybe<DbxFirebaseModelEntityWithKeyAndStoreAndSortPriority>[]> = combineLatest(
           entitiesWithStore.map((x) => {
             const sortPriorityMapEntry = sortPriorityMap.get(x.modelIdentity);
-            const isKnownType = sortPriorityMapEntry != null;
+            const isRegisteredType = sortPriorityMapEntry != null;
             const sortPriority = sortPriorityMapEntry ?? -2;
 
-            const obs: Observable<Maybe<DbxFirebaseModelEntityWithKeyAndStoreAndSortPriority>> = x.store.currentKey$.pipe(map((key) => (key ? { key, ...x, sortPriority, isKnownType } : null)));
+            const obs: Observable<Maybe<DbxFirebaseModelEntityWithKeyAndStoreAndSortPriority>> = x.store.currentKey$.pipe(map((key) => (key ? { key, ...x, sortPriority, isRegisteredType } : null)));
             return obs;
           })
         );
 
         return entitiesWithKeys.pipe(
           filterMaybeArray(),
-          map((entities) => {
+          combineLatestWith(this.onlyShowRegisteredTypes$),
+          map(([entities, onlyShowRegisteredTypes]) => {
+            if (onlyShowRegisteredTypes) {
+              entities = entities.filter((x) => x.isRegisteredType);
+            }
+
             return filterUniqueValues(entities, (x) => x.key).sort(reverseCompareFn(sortByNumberFunction((x) => x.sortPriority)));
           }),
           defaultIfEmpty([])

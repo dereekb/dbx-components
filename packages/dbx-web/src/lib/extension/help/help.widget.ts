@@ -19,6 +19,12 @@ export interface DbxHelpWidgetServiceEntry {
    */
   readonly icon?: Maybe<string>;
   /**
+   * The priority to use when sorting the entities.
+   *
+   * Higher values are displayed first in the list.
+   */
+  readonly sortPriority?: Maybe<number>;
+  /**
    * Custom help widget component class to use.
    *
    * The component will receive the context string as data.

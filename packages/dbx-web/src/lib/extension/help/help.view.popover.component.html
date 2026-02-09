@@ -5,7 +5,7 @@
   </dbx-popover-header>
   <!-- Content -->
   <dbx-popover-scroll-content>
-    <dbx-help-view-list [helpContextStrings]="helpContextStrings$">
+    <dbx-help-view-list [helpContextStrings]="helpContextStrings$" [allowEmptyListContent]="allowEmptyListContent" [helpListFooterComponentConfig]="helpListFooterComponentConfig">
       <p empty>{{ emptyText }}</p>
     </dbx-help-view-list>
   </dbx-popover-scroll-content>

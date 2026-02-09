@@ -97,7 +97,7 @@ export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
 export const filterMaybeStrict = filterMaybe as <T>() => OperatorFunction<Maybe<T>, MaybeSoStrict<T>>;
 
 /**
- * Observable filter that filters maybe value from the input array of maybe values
+ * Observable filter that filters out MaybeNot values from the input array of maybe values
  */
 export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
   return map(filterMaybeArrayValues) as OperatorFunction<Maybe<T>[], T[]>;
