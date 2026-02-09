@@ -22,8 +22,8 @@
     </doc-feature-example>
 
     <doc-feature-example header="dbx-help-view-list" hint="The dbx-help-view-list component displays all active help contexts in an accordion. Use the helpContextStrings input to show specific help topics.">
-      <p></p>
-      <dbx-help-view-list [helpContextStrings]="testHelpContextStrings"></dbx-help-view-list>
+      <p>The footer is also hidden/overridden if null is passed to the helpListFooterComponentConfig input.</p>
+      <dbx-help-view-list [helpContextStrings]="testHelpContextStrings" [helpListFooterComponentConfig]="null"></dbx-help-view-list>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

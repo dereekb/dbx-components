@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../../interaction/popover/abstract.popover.directive';
 import { DbxPopoverKey } from '../../interaction/popover/popover';
-import { DbxPopoverService } from '../../interaction/popover/popover.service';
+import { DbxPopoverConfigSizing, DbxPopoverService } from '../../interaction/popover/popover.service';
 import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../../interaction';
 import { DbxHelpViewListComponent } from './help.view.list.component';
 import { DbxHelpContextString } from './help';
@@ -39,12 +39,29 @@ export interface DbxHelpViewPopoverConfig {
    * Specific contexts to display. If not provided, shows all active contexts from the DbxHelpContextService.
    */
   readonly helpContextStrings?: Maybe<ObservableOrValue<ArrayOrValue<DbxHelpContextString>>>;
+
+  /**
+   * Optional footer component config to inject after the list.
+   */
+  readonly helpListFooterComponentConfig?: Maybe<DbxInjectionComponentConfig>;
+
+  /**
+   * Whether to show the empty list content.
+   *
+   * Defaults to true.
+   */
+  readonly allowEmptyListContent?: Maybe<boolean>;
+
   /**
    * Overrides the default popover header config.
    *
    * If not provided, the default popover header config will be used from DbxHelpWidgetService.
    */
   readonly popoverHeaderConfig?: Maybe<DbxInjectionComponentConfig>;
+  /**
+   * Additional popover configuration.
+   */
+  readonly popoverSizingConfig?: Maybe<DbxPopoverConfigSizing>;
 }
 
 export type DbxHelpViewPopoverConfigWithoutOrigin = Omit<DbxHelpViewPopoverConfig, 'origin'>;
@@ -65,16 +82,17 @@ export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknow
   readonly helpContextStrings$ = this.popover.data?.helpContextStrings ?? this._helpContextService.activeHelpContextStringsArray$;
 
   static openPopover(popoverService: DbxPopoverService, config: DbxHelpViewPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef {
-    const { origin, ...data } = config;
+    const { origin, popoverSizingConfig, ...data } = config;
 
     return popoverService.open({
       height: '500px',
       width: '600px',
+      ...popoverSizingConfig,
       key: popoverKey ?? DEFAULT_DBX_HELP_VIEW_POPOVER_KEY,
-      origin,
       componentClass: DbxHelpViewPopoverComponent,
       data,
-      isResizable: true
+      isResizable: true,
+      origin
     });
   }
 
@@ -85,6 +103,8 @@ export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknow
   readonly icon = this.config.icon ?? 'help';
   readonly header = this.config.header ?? 'Help';
   readonly emptyText = this.config.emptyText ?? 'No help topics available in current context.';
+  readonly allowEmptyListContent = this.config.allowEmptyListContent ?? true;
+  readonly helpListFooterComponentConfig = this.config.helpListFooterComponentConfig;
 
   readonly popoverHeaderConfig: Maybe<DbxInjectionComponentConfig> = (() => {
     let config: Maybe<DbxInjectionComponentConfig> = this.config.popoverHeaderConfig;

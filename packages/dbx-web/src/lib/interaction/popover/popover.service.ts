@@ -6,7 +6,7 @@ import { Overlay } from '@angular/cdk/overlay';
 export type DbxPopoverConfigSizing = Pick<NgOverlayContainerConfiguration, 'originX' | 'originY' | 'height' | 'width' | 'minHeight' | 'minWidth' | 'isResizable'>;
 
 export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T>, DbxPopoverConfigSizing {
-  injector?: Injector;
+  readonly injector?: Injector;
 }
 
 /**

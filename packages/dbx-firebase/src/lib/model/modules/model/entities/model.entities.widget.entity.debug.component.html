@@ -12,7 +12,7 @@
     <h4>Document Data</h4>
     <dbx-loading [context]="context">
       @if (currentData(); as data) {
-        <dbx-download-text-view [content]="contentSignal()"></dbx-download-text-view>
+        <dbx-download-text-view [showTitle]="false" [content]="contentSignal()"></dbx-download-text-view>
       } @else {
         <p class="dbx-empty">No data available</p>
       }

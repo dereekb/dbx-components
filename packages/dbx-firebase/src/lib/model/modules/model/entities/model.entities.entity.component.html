@@ -2,10 +2,17 @@
   <mat-expansion-panel-header>
     <mat-panel-title>
       @if (displayInfoSignal(); as displayInfo) {
-        @if (displayInfo.icon) {
-          <mat-icon class="dbx-button-spacer">{{ displayInfo.icon }}</mat-icon>
-        }
-        <span>{{ displayInfo.title }}</span>
+        <div class="dbx-list-two-line-item">
+          <div class="item-left">
+            <span class="dbx-pb2 dbx-flex-bar">
+              @if (displayInfo.icon) {
+                <mat-icon class="dbx-button-spacer">{{ displayInfo.icon }}</mat-icon>
+              }
+              <span>{{ displayInfo.title }}</span>
+            </span>
+            <span class="dbx-hint dbx-small">{{ modelTypeSignal() }}</span>
+          </div>
+        </div>
       }
     </mat-panel-title>
   </mat-expansion-panel-header>

@@ -1,7 +1,13 @@
 @use '../../../style/theming';
 
+$dbx-firebase-model-entities-expansion-panel-height: 64px;
+
 // MARK: Mixin
 @mixin core() {
+  .dbx-firebase-model-entities-accordion {
+    --mat-expansion-header-collapsed-state-height: #{$dbx-firebase-model-entities-expansion-panel-height};
+    --mat-expansion-header-expanded-state-height: #{$dbx-firebase-model-entities-expansion-panel-height};
+  }
 }
 
 @mixin color($theme-config) {

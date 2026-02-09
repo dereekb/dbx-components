@@ -36,6 +36,7 @@ import { DocExtensionHelpComponent } from './container/help.component';
 import { DocExtensionHelpExampleWidgetComponent, HELP_WIDGET_EXAMPLE_CONTEXT_STRING } from './component/help.widget.example.component';
 import { HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO, DocExtensionHelpExampleWidgetTwoComponent } from './component/help.widget.example.two.component';
 import { DocExtensionHelpExampleWidgetExampleHeaderComponent } from './component/help.widget.example.header.component';
+import { DocExtensionHelpListBottomExampleComponent } from './component/help.list.bottom.component';
 
 @NgModule({
   imports: [
@@ -104,6 +105,10 @@ export class DocExtensionModule {
       title: 'Example Help Widget Two',
       widgetComponentClass: DocExtensionHelpExampleWidgetTwoComponent,
       headerComponentClass: DocExtensionHelpExampleWidgetExampleHeaderComponent
+    });
+
+    dbxHelpWidgetService.setHelpListFooterComponentConfig({
+      componentClass: DocExtensionHelpListBottomExampleComponent
     });
   }
 }

@@ -3,7 +3,7 @@
   <dbx-popover-header [icon]="icon" [header]="header"></dbx-popover-header>
   <!-- Content -->
   <dbx-popover-scroll-content>
-    <dbx-firebase-model-entities [entities]="entities$">
+    <dbx-firebase-model-entities [entities]="entities$" [onlyShowRegisteredTypes]="onlyShowRegisteredTypes">
       <p empty>{{ emptyText }}</p>
     </dbx-firebase-model-entities>
   </dbx-popover-scroll-content>

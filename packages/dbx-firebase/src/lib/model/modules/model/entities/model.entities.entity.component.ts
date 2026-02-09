@@ -111,6 +111,8 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
 
   readonly hasTypeInfoSignal = toSignal(this.hasTypeInfo$);
   readonly displayInfoSignal = toSignal(this.displayInfo$);
+  readonly modelIdentitySignal = toSignal(this.modelIdentity$);
+  readonly modelTypeSignal = computed(() => this.modelIdentitySignal()?.modelType);
 
   readonly widgetInjectionConfigSignal = toSignal(this.widgetInjectionConfig$);
 

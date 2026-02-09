@@ -1,10 +1,13 @@
 import { Inject, Injectable, Optional, Type } from '@angular/core';
-import { ArrayOrValue, Maybe, asArray } from '@dereekb/util';
+import { ArrayOrValue, Maybe, asArray, cachedGetter, mapIterable } from '@dereekb/util';
 import { DbxHelpContextString } from './help';
 import { DbxHelpWidgetServiceEntry } from './help.widget';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 export abstract class DbxHelpWidgetServiceConfig {
+  /**
+   * All help widget service entries.
+   */
   abstract readonly entries?: Maybe<DbxHelpWidgetServiceEntry[]>;
   /**
    * Default icon to use for unknown help topics.
@@ -14,6 +17,10 @@ export abstract class DbxHelpWidgetServiceConfig {
    * Default/Unknown help topic component class.
    */
   abstract readonly defaultWidgetComponentClass?: Maybe<Type<unknown>>;
+  /**
+   * Optional component class that shows up under the help content in the list view.
+   */
+  abstract readonly helpListFooterComponentConfig?: Maybe<DbxInjectionComponentConfig>;
   /**
    * Optional header component class to use for the list view.
    */
@@ -30,7 +37,13 @@ export abstract class DbxHelpWidgetServiceConfig {
 export class DbxHelpWidgetService {
   private readonly _entries = new Map<DbxHelpContextString, DbxHelpWidgetServiceEntry>();
 
+  private readonly _sortPriorityMap = cachedGetter(() => {
+    return new Map<DbxHelpContextString, number>(mapIterable(this._entries.values(), (entry) => [entry.helpContextString, entry.sortPriority ?? -1]));
+  });
+
   private _defaultWidgetComponentClass: Maybe<Type<unknown>>;
+  private _helpListFooterComponentConfig: Maybe<DbxInjectionComponentConfig>;
+
   private _defaultIcon?: Maybe<string>;
   private _popoverHeaderComponentConfig: Maybe<DbxInjectionComponentConfig>;
 
@@ -38,6 +51,7 @@ export class DbxHelpWidgetService {
     this.setDefaultWidgetComponentClass(initialConfig?.defaultWidgetComponentClass);
     this.setDefaultIcon(initialConfig?.defaultIcon !== undefined ? initialConfig?.defaultIcon : 'help');
     this.setPopoverHeaderComponentConfig(initialConfig?.popoverHeaderComponentConfig);
+    this.setHelpListFooterComponentConfig(initialConfig?.helpListFooterComponentConfig);
 
     if (initialConfig?.entries) {
       this.register(initialConfig.entries);
@@ -66,6 +80,14 @@ export class DbxHelpWidgetService {
 
   setPopoverHeaderComponentConfig(componentConfig: Maybe<DbxInjectionComponentConfig>): void {
     this._popoverHeaderComponentConfig = componentConfig;
+  }
+
+  getHelpListFooterComponentConfig(): Maybe<DbxInjectionComponentConfig> {
+    return this._helpListFooterComponentConfig;
+  }
+
+  setHelpListFooterComponentConfig(componentConfig: Maybe<DbxInjectionComponentConfig>): void {
+    this._helpListFooterComponentConfig = componentConfig;
   }
 
   /**
@@ -103,5 +125,9 @@ export class DbxHelpWidgetService {
 
   hasHelpWidgetEntry(context: DbxHelpContextString): boolean {
     return this._entries.has(context);
+  }
+
+  getSortPriorityMap() {
+    return this._sortPriorityMap();
   }
 }

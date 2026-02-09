@@ -7,7 +7,7 @@
   </ng-container>
   <dbx-sidenav-page color="primary">
     <span navRight>
-      <dbx-firebase-model-entities-popover-button dbxFirebaseDocumentStoreContextModelEntitiesSource></dbx-firebase-model-entities-popover-button>
+      <dbx-firebase-model-entities-popover-button [config]="entitiesButtonConfig" dbxFirebaseDocumentStoreContextModelEntitiesSource></dbx-firebase-model-entities-popover-button>
     </span>
     <ui-view></ui-view>
   </dbx-sidenav-page>
