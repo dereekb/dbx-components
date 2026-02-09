@@ -20,7 +20,7 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
   selector: 'dbx-firebase-model-entities',
   template: `
     <dbx-loading [linear]="true" [context]="context">
-      <mat-accordion [multi]="multi()">
+      <mat-accordion class="dbx-firebase-model-entities-accordion" [multi]="multi()">
         @for (entity of entitiesWithKeysSignal(); track entity.key) {
           <dbx-firebase-model-entities-entity [entity]="entity"></dbx-firebase-model-entities-entity>
         }
