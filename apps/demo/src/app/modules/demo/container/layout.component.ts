@@ -105,7 +105,5 @@ export class DemoLayoutComponent {
     shareReplay(1)
   );
 
-  readonly entitiesButtonConfig: DbxFirebaseModelEntitiesPopoverButtonConfig = {
-    onlyShowRegisteredTypes: true
-  };
+  readonly entitiesButtonConfig: DbxFirebaseModelEntitiesPopoverButtonConfig = {};
 }
