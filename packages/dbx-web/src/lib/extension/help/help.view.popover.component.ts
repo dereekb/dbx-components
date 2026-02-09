@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../../interaction/popover/abstract.popover.directive';
 import { DbxPopoverKey } from '../../interaction/popover/popover';
-import { DbxPopoverConfig, DbxPopoverConfigSizing, DbxPopoverService } from '../../interaction/popover/popover.service';
+import { DbxPopoverConfigSizing, DbxPopoverService } from '../../interaction/popover/popover.service';
 import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../../interaction';
 import { DbxHelpViewListComponent } from './help.view.list.component';
 import { DbxHelpContextString } from './help';
