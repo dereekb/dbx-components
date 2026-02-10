@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
-import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
@@ -11,9 +11,11 @@ import { MatRipple } from '@angular/material/core';
 @Component({
   templateUrl: './anchor.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAnchorComponent, MatButton, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxAnchorComponent, MatButton, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent]
 })
 export class DocRouterAnchorComponent {
+  buttonClicks = 0;
+
   lorem = LOREM;
   mouse = '';
 

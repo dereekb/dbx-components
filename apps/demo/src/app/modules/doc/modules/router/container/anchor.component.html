@@ -32,6 +32,11 @@
         <dbx-anchor [anchor]="ref"><button mat-raised-button>With Button</button></dbx-anchor>
       </p>
 
+      <h4>Example with a segueRef and a dbx-button.</h4>
+      <p>
+        <dbx-anchor [anchor]="ref"><dbx-button [raised]="true" color="primary" text="dbx-button" icon="code"></dbx-button></dbx-anchor>
+      </p>
+
       <h4>Example with an onClick function.</h4>
       <p>
         <dbx-anchor [anchor]="fun"><button mat-raised-button>With Button</button></dbx-anchor>
@@ -49,28 +54,32 @@
       </p>
 
       <h4>Examples with disabled = true</h4>
-      <p>
-        <dbx-anchor [anchor]="ref" [disabled]="true">
-          <!-- disabled does not pass to the button automatically! -->
-          <button mat-raised-button [disabled]="true">With Button</button>
-        </dbx-anchor>
-        <dbx-anchor [anchor]="url" [disabled]="true">
-          <!-- disabled does not pass to card ripple automatically! -->
-          <mat-card class="example-card" matRipple [matRippleDisabled]="true">
-            <mat-card-header>
-              <mat-card-title-group>
-                <mat-card-title>With Card</mat-card-title>
-                <mat-card-subtitle>(To Url)</mat-card-subtitle>
-                <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" />
-              </mat-card-title-group>
-            </mat-card-header>
-            <mat-card-content>
-              {{ lorem }}
-            </mat-card-content>
-            <mat-card-actions align="end"></mat-card-actions>
-          </mat-card>
-        </dbx-anchor>
-      </p>
+      <p>mat button also disabled</p>
+      <dbx-anchor [anchor]="ref" [disabled]="true">
+        <!-- disabled does not pass to the button automatically! -->
+        <button mat-raised-button [disabled]="true">With Button</button>
+      </dbx-anchor>
+      <p>disabled anchor with dbx-button not disabled</p>
+      <dbx-anchor [anchor]="ref" [disabled]="true">
+        <dbx-button (buttonClick)="buttonClicks = buttonClicks + 1" icon="code" [raised]="true" color="accent" [text]="'Button Clicks ' + buttonClicks"></dbx-button>
+      </dbx-anchor>
+      <p>disabled anchor with mat card</p>
+      <dbx-anchor [anchor]="url" [disabled]="true">
+        <!-- disabled does not pass to card ripple automatically! -->
+        <mat-card class="example-card" matRipple [matRippleDisabled]="true">
+          <mat-card-header>
+            <mat-card-title-group>
+              <mat-card-title>With Card</mat-card-title>
+              <mat-card-subtitle>(To Url)</mat-card-subtitle>
+              <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" />
+            </mat-card-title-group>
+          </mat-card-header>
+          <mat-card-content>
+            {{ lorem }}
+          </mat-card-content>
+          <mat-card-actions align="end"></mat-card-actions>
+        </mat-card>
+      </dbx-anchor>
     </doc-feature-example>
     <doc-feature-example header="dbx-anchor-content" hint="Use to fill a dbx-anchor with the default content of an icon and/or title.">
       <h4>Text Only Example</h4>

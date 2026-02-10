@@ -1,5 +1,5 @@
 import { Component, computed, OnDestroy, Signal } from '@angular/core';
-import { AbstractDbxFirebaseModelEntitiesWidgetDirective } from './model.entities.widget.entity.abstract.directive';
+import { AbstractDbxFirebaseModelEntityWidgetDirective } from './model.entities.widget.entity.abstract.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { DbxFirebaseModelKeyComponent } from '../model.key.component';
@@ -17,7 +17,7 @@ import { twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
   standalone: true,
   imports: [DbxFirebaseModelKeyComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDownloadTextViewComponent, DbxLoadingComponent, JsonPipe]
 })
-export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFirebaseModelEntitiesWidgetDirective implements OnDestroy {
+export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFirebaseModelEntityWidgetDirective implements OnDestroy {
   // Convert store observables to signals for template usage
   readonly currentKey = toSignal(this.store.currentKey$);
   readonly currentData = toSignal(this.data$);
