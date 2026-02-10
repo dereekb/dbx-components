@@ -7,7 +7,7 @@ import { type Maybe } from '@dereekb/util';
 /**
  * Injection token for providing DbxFirebaseModelEntityWithStore context to dynamically loaded widgets.
  */
-export const DBX_FIREBASE_MODEL_ENTITY_WITH_STORE_TOKEN = new InjectionToken<DbxFirebaseModelEntityWithStore>('DbxFirebaseModelEntityWithStore');
+export const DBX_FIREBASE_MODEL_ENTITY_WITH_STORE_TOKEN = new InjectionToken<DbxFirebaseModelEntityWithStore<any, any>>('DbxFirebaseModelEntityWithStore');
 
 /**
  * Contains the DbxInjectionComponentConfig for the different injected components a DbxFirebaseModelEntity

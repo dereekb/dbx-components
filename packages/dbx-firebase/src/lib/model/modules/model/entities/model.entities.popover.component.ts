@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, DbxListEmptyContentComponent, DbxPopoverConfigSizing, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverKey, DbxPopoverScrollContentDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesComponent } from './model.entities.component';
@@ -46,6 +46,11 @@ export interface DbxFirebaseModelEntitiesPopoverConfig {
    * Additional popover configuration.
    */
   readonly popoverSizingConfig?: Maybe<DbxPopoverConfigSizing>;
+
+  /**
+   * Injector to use for the popover.
+   */
+  readonly injector?: Maybe<Injector>;
 }
 
 export type DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin = Omit<DbxFirebaseModelEntitiesPopoverConfig, 'origin' | 'entities$'>;
@@ -62,10 +67,12 @@ export class DbxFirebaseModelEntitiesPopoverComponent extends AbstractPopoverDir
   readonly entities$ = this.popover.data?.entities$;
 
   static openPopover(popupService: DbxPopoverService, config: DbxFirebaseModelEntitiesPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef {
-    const { origin, header, icon, emptyText, entities$, onlyShowRegisteredTypes, popoverSizingConfig } = config;
+    const { origin, header, icon, emptyText, entities$, onlyShowRegisteredTypes, popoverSizingConfig, injector } = config;
+
     return popupService.open({
       height: '600px',
       width: '800px',
+      injector: injector ?? undefined,
       isResizable: true,
       ...popoverSizingConfig,
       key: popoverKey ?? DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY,
