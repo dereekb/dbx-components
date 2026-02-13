@@ -1,5 +1,5 @@
-import { DestroyRef, effect, ElementRef, inject, Signal } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { DestroyRef, effect, type ElementRef, inject, type Signal } from '@angular/core';
+import { type Maybe } from '@dereekb/util';
 
 export interface OverrideClickElementEffectConfig {
   /**

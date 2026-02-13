@@ -1,5 +1,5 @@
 import { InjectionToken, type Type } from '@angular/core';
-import { GetterOrValue, type Maybe } from '@dereekb/util';
+import { type GetterOrValue, type Maybe } from '@dereekb/util';
 import { type DbxHelpContextKey } from './help';
 
 /**
