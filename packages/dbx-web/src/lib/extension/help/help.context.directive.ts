@@ -1,9 +1,9 @@
 import { Directive, input } from '@angular/core';
-import { DbxHelpContextString } from './help';
+import { DbxHelpContextKey } from './help';
 import { ArrayOrValue, asArray } from '@dereekb/util';
 import { map, Observable } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { registerHelpContextStringsWithDbxHelpContextService } from './help.context';
+import { registerHelpContextKeysWithDbxHelpContextService } from './help.context';
 
 /**
  * Directive that registers one or more help contexts to the current context.
@@ -16,10 +16,10 @@ export class DbxHelpContextDirective {
   /**
    * The input help context string(s) to add.
    */
-  readonly dbxHelpContext = input.required<ArrayOrValue<DbxHelpContextString>>();
-  readonly helpContextStrings$: Observable<DbxHelpContextString[]> = toObservable(this.dbxHelpContext).pipe(map(asArray));
+  readonly dbxHelpContext = input.required<ArrayOrValue<DbxHelpContextKey>>();
+  readonly helpContextKeys$: Observable<DbxHelpContextKey[]> = toObservable(this.dbxHelpContext).pipe(map(asArray));
 
   constructor() {
-    registerHelpContextStringsWithDbxHelpContextService(this.helpContextStrings$);
+    registerHelpContextKeysWithDbxHelpContextService(this.helpContextKeys$);
   }
 }

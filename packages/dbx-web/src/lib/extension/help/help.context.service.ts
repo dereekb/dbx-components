@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest, defaultIfEmpty, map, shareReplay, switchMap } from 'rxjs';
-import { DbxHelpContextString, DbxHelpContextReference } from './help';
+import { DbxHelpContextKey, DbxHelpContextReference } from './help';
 import { distinctUntilHasDifferentValues } from '@dereekb/rxjs';
 
 /**
@@ -13,9 +13,9 @@ export class DbxHelpContextService implements OnDestroy {
   /**
    * Observable of all currently active help context strings.
    */
-  readonly activeHelpContextStrings$: Observable<Set<DbxHelpContextString>> = this._contextReferences.pipe(
+  readonly activeHelpContextKeys$: Observable<Set<DbxHelpContextKey>> = this._contextReferences.pipe(
     switchMap((allReferences) =>
-      combineLatest(Array.from(allReferences).map((ref) => ref.helpContextStrings$)).pipe(
+      combineLatest(Array.from(allReferences).map((ref) => ref.helpContextKeys$)).pipe(
         map((x) => x.flat()),
         defaultIfEmpty([]),
         map((x) => new Set(x))
@@ -25,7 +25,7 @@ export class DbxHelpContextService implements OnDestroy {
     shareReplay(1)
   );
 
-  readonly activeHelpContextStringsArray$ = this.activeHelpContextStrings$.pipe(
+  readonly activeHelpContextKeysArray$ = this.activeHelpContextKeys$.pipe(
     map((x) => Array.from(x)),
     shareReplay(1)
   );

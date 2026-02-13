@@ -14,7 +14,7 @@ export interface ResizedEvent {
 /**
  * Creates a new Signal that emits resize events.
  *
- * Must be created in an injectable context.
+ * Must called in an Angular injection context.
  *
  * @param inputElement The element to observe for resize events. If not provided, the host element will be injected.
  */

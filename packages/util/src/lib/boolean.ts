@@ -17,6 +17,11 @@ export type IsEqual = boolean;
  */
 export type IsModified = boolean;
 
+/**
+ * A string that is either 'true' or 'false'.
+ */
+export type TrueOrFalseString = 'true' | 'false';
+
 // MARK: Maybe
 /**
  * If a non-null boolean value is provided, returns the opposite.
@@ -171,4 +176,14 @@ export function stringToBoolean(value: Maybe<string>, defaultValue?: Maybe<boole
   }
 
   return result;
+}
+
+/**
+ * Converts the input value to a boolean, or null if the value is nullish.
+ */
+export function trueOrFalseString(value: boolean): TrueOrFalseString;
+export function trueOrFalseString(value?: MaybeNot): MaybeNot;
+export function trueOrFalseString(value?: Maybe<boolean>): Maybe<TrueOrFalseString>;
+export function trueOrFalseString(value?: Maybe<boolean>): Maybe<TrueOrFalseString> {
+  return value == null ? value : value ? 'true' : 'false';
 }

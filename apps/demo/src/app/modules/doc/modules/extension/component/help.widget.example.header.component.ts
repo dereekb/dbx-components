@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { DbxAbstractHelpWidgetDirective, DbxButtonComponent, DbxHelpContextString } from '@dereekb/dbx-web';
+import { DbxAbstractHelpWidgetDirective, DbxButtonComponent, DbxHelpContextKey } from '@dereekb/dbx-web';
 
-export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextString = 'example';
+export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
 
 /**
  * Example help widget for user profile
@@ -10,7 +10,7 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextString = 'example
 @Component({
   selector: 'doc-extension-help-user-profile-widget-header',
   template: `
-    <dbx-button icon="live_help">{{ helpContextString }}</dbx-button>
+    <dbx-button icon="live_help">{{ helpContextKey }}</dbx-button>
   `,
   standalone: true,
   imports: [MatIcon, DbxButtonComponent],

@@ -95,13 +95,13 @@ export class DocExtensionModule {
     });
 
     dbxHelpWidgetService.register({
-      helpContextString: HELP_WIDGET_EXAMPLE_CONTEXT_STRING,
+      helpContextKey: HELP_WIDGET_EXAMPLE_CONTEXT_STRING,
       title: 'Example Help Widget',
       widgetComponentClass: DocExtensionHelpExampleWidgetComponent
     });
 
     dbxHelpWidgetService.register({
-      helpContextString: HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO,
+      helpContextKey: HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO,
       title: 'Example Help Widget Two',
       widgetComponentClass: DocExtensionHelpExampleWidgetTwoComponent,
       headerComponentClass: DocExtensionHelpExampleWidgetExampleHeaderComponent

@@ -42,11 +42,18 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     return anchorTypeForAnchor(anchor, disabled);
   });
 
+  readonly disabledSignal = computed(() => {
+    const disabled = this.disabled();
+    const anchor = this.anchorSignal();
+
+    return disabled || anchor?.disabled;
+  });
+
   readonly urlSignal = computed(() => this.anchorSignal()?.url);
   readonly targetSignal = computed(() => this.anchorSignal()?.target);
 
   readonly anchor$: Observable<Maybe<T>> = toObservable(this.anchorSignal);
-  readonly disabled$: Observable<Maybe<boolean>> = toObservable(this.disabled);
+  readonly disabled$: Observable<Maybe<boolean>> = toObservable(this.disabledSignal);
   readonly selected$: Observable<Maybe<boolean>> = toObservable(this.selectedSignal);
   readonly type$: Observable<ClickableAnchorType> = toObservable(this.typeSignal);
 

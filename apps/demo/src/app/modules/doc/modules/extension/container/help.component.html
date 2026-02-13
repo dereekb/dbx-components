@@ -9,7 +9,7 @@
 
     <doc-feature-example header="DbxHelpContextService" hint="This service keeps track of all the active help context strings.">
       <dbx-content-pit>
-        <p>{{ activeHelpContextStringsSignal() | json }}</p>
+        <p>{{ activeHelpContextKeysSignal() | json }}</p>
       </dbx-content-pit>
       <p>Each entry can have a title, icon, and the widget class that is displayed when the entry is expanded.</p>
     </doc-feature-example>
@@ -21,9 +21,9 @@
       <dbx-help-view-popover-button [config]="helpButtonConfig"></dbx-help-view-popover-button>
     </doc-feature-example>
 
-    <doc-feature-example header="dbx-help-view-list" hint="The dbx-help-view-list component displays all active help contexts in an accordion. Use the helpContextStrings input to show specific help topics.">
+    <doc-feature-example header="dbx-help-view-list" hint="The dbx-help-view-list component displays all active help contexts in an accordion. Use the helpContextKeys input to show specific help topics.">
       <p>The footer is also hidden/overridden if null is passed to the helpListFooterComponentConfig input.</p>
-      <dbx-help-view-list [helpContextStrings]="testHelpContextStrings" [helpListFooterComponentConfig]="null"></dbx-help-view-list>
+      <dbx-help-view-list [helpContextKeys]="testHelpContextKeys" [helpListFooterComponentConfig]="null"></dbx-help-view-list>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

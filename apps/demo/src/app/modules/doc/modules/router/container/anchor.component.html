@@ -37,6 +37,16 @@
         <dbx-anchor [anchor]="ref"><dbx-button [raised]="true" color="primary" text="dbx-button" icon="code"></dbx-button></dbx-anchor>
       </p>
 
+      <h4>Example with a anchor click event and dbx-button.</h4>
+      <p>
+        <dbx-anchor name="test" [anchor]="buttonClickAnchor"><dbx-button [raised]="true" color="primary" [text]="buttonClicksTextSignal()" icon="code"></dbx-button></dbx-anchor>
+      </p>
+
+      <h4>Example with a anchor click event and disabled dbx-anchor, but non-disabled dbx-button.</h4>
+      <p>
+        <dbx-anchor [anchor]="buttonClickAnchor" [disabled]="true"><dbx-button [raised]="true" color="primary" [text]="buttonClicksTextSignal()" icon="code"></dbx-button></dbx-anchor>
+      </p>
+
       <h4>Example with an onClick function.</h4>
       <p>
         <dbx-anchor [anchor]="fun"><button mat-raised-button>With Button</button></dbx-anchor>
@@ -61,7 +71,7 @@
       </dbx-anchor>
       <p>disabled anchor with dbx-button not disabled</p>
       <dbx-anchor [anchor]="ref" [disabled]="true">
-        <dbx-button (buttonClick)="buttonClicks = buttonClicks + 1" icon="code" [raised]="true" color="accent" [text]="'Button Clicks ' + buttonClicks"></dbx-button>
+        <dbx-button (buttonClick)="increaseClickButtonCount()" icon="code" [raised]="true" color="accent" [text]="buttonClicksTextSignal()"></dbx-button>
       </dbx-anchor>
       <p>disabled anchor with mat card</p>
       <dbx-anchor [anchor]="url" [disabled]="true">

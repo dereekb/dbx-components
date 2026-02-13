@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { DbxButtonComponent, DbxHelpContextString } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxHelpContextKey } from '@dereekb/dbx-web';
 
-export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextString = 'example';
+export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
 
 /**
  * Example help widget for user profile

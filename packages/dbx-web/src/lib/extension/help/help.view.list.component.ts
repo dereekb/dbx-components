@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { DbxHelpContextString } from './help';
+import { DbxHelpContextKey } from './help';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { asObservable, distinctUntilHasDifferentValues, ObservableOrValue } from '@dereekb/rxjs';
 import { map, Observable, of, shareReplay, switchMap } from 'rxjs';
@@ -13,8 +13,11 @@ import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx
 @Component({
   selector: 'dbx-help-view-list',
   template: `
+    <div class="dbx-help-view-list-header">
+      <dbx-injection [config]="helpListHeaderComponentConfigSignal()"></dbx-injection>
+    </div>
     <mat-accordion [multi]="multi()">
-      @for (widgetEntry of helpWidgetEntriesSignal(); track widgetEntry.helpContextString) {
+      @for (widgetEntry of helpWidgetEntriesSignal(); track widgetEntry.helpContextKey) {
         <dbx-help-view-list-entry [helpWidgetEntry]="widgetEntry"></dbx-help-view-list-entry>
       }
     </mat-accordion>
@@ -40,7 +43,7 @@ export class DbxHelpViewListComponent {
   /**
    * Whether the accordion should allow multiple expanded panels.
    */
-  readonly multi = input<boolean>(true);
+  readonly multi = input<Maybe<boolean>>();
 
   /**
    * Whether or not to show the empty list content.
@@ -48,14 +51,21 @@ export class DbxHelpViewListComponent {
   readonly allowEmptyListContent = input<boolean>(true);
 
   /**
-   * Optional footer component config to inject after the list.
+   * Optional header component config to inject before the list.
    *
-   * If set null, then will not show any footer.
+   * If set null, then will not show any header.
+   */
+  readonly helpListHeaderComponentConfig = input<Maybe<DbxInjectionComponentConfig>>(undefined);
+
+  /**
+   * Optional header component config to inject before the list.
+   *
+   * If set null, then will not show any header.
    */
   readonly helpListFooterComponentConfig = input<Maybe<DbxInjectionComponentConfig>>(undefined);
 
-  readonly helpContextStrings = input.required<ObservableOrValue<ArrayOrValue<DbxHelpContextString>>>();
-  readonly helpContextStrings$: Observable<DbxHelpContextString[]> = toObservable(this.helpContextStrings).pipe(
+  readonly helpContextKeys = input.required<ObservableOrValue<ArrayOrValue<DbxHelpContextKey>>>();
+  readonly helpContextKeys$: Observable<DbxHelpContextKey[]> = toObservable(this.helpContextKeys).pipe(
     switchMap((x) => asObservable(x) ?? of([])),
     map(asArray),
     distinctUntilHasDifferentValues(),
@@ -67,10 +77,20 @@ export class DbxHelpViewListComponent {
     shareReplay(1)
   );
 
-  readonly helpContextStringsSignal = toSignal(this.helpContextStrings$, { initialValue: [] });
-  readonly helpWidgetEntriesSignal = computed(() => this.helpWidgetService.getHelpWidgetEntriesForHelpContextStrings(this.helpContextStringsSignal()));
+  readonly helpContextKeysSignal = toSignal(this.helpContextKeys$, { initialValue: [] });
+  readonly helpWidgetEntriesSignal = computed(() => this.helpWidgetService.getHelpWidgetEntriesForHelpContextKeys(this.helpContextKeysSignal()));
 
   readonly hasNoHelpWidgetEntriesSignal = computed(() => !this.helpWidgetEntriesSignal()?.length);
+
+  readonly helpListHeaderComponentConfigSignal = computed(() => {
+    let config: Maybe<DbxInjectionComponentConfig> = this.helpListHeaderComponentConfig();
+
+    if (config !== null) {
+      config = this.helpWidgetService.getHelpListHeaderComponentConfig();
+    }
+
+    return config;
+  });
 
   readonly helpListFooterComponentConfigSignal = computed(() => {
     let config: Maybe<DbxInjectionComponentConfig> = this.helpListFooterComponentConfig();
