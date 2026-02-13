@@ -1,6 +1,6 @@
 {
   "name": "demo-firebase",
-  "version": "12.6.18",
+  "version": "12.6.19",
   "type": "commonjs",
   "dependencies": {
     "@dereekb/firebase": "12.0.0",
