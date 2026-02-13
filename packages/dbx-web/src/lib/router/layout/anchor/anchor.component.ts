@@ -1,11 +1,12 @@
 import { skipAllInitialMaybe } from '@dereekb/rxjs';
-import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed, ElementRef } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet, NgClass } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';
 import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
+import { overrideClickElementEffect } from '../../../util/click';
 
 /**
  * Component that renders an anchor element depending on the input.
@@ -18,8 +19,10 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
         <ng-container *ngTemplateOutlet="content"></ng-container>
       }
       @case ('clickable') {
-        <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
-          <ng-container *ngTemplateOutlet="content"></ng-container>
+        <a #clickable class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
+          <span #childClickTarget>
+            <ng-container *ngTemplateOutlet="content"></ng-container>
+          </span>
         </a>
       }
       @case ('sref') {
@@ -56,6 +59,9 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
 
   readonly block = input<Maybe<boolean>>();
 
+  readonly clickableElement = viewChild<string, Maybe<ElementRef<HTMLElement>>>('clickable', { read: ElementRef });
+  readonly childClickTarget = viewChild<string, Maybe<ElementRef<HTMLElement>>>('childClickTarget', { read: ElementRef });
+
   readonly templateRef = viewChild<string, Maybe<TemplateRef<unknown>>>('content', { read: TemplateRef });
   readonly templateRef$ = toObservable(this.templateRef).pipe(skipAllInitialMaybe(), shareReplay(1));
 
@@ -63,7 +69,14 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
 
   readonly srefAnchorConfig: DbxInjectionComponentConfig = this._dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
 
+  protected readonly _overrideClickElementEffect = overrideClickElementEffect({
+    clickTarget: this.clickableElement,
+    childClickTarget: this.childClickTarget,
+    disabledSignal: computed(() => this.typeSignal() !== 'clickable')
+  });
+
   clickAnchor(event?: Maybe<MouseEvent>): void {
+    console.log('click anchor');
     this.anchor()?.onClick?.(event);
   }
 

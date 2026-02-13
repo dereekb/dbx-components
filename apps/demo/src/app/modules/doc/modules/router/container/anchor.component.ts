@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
 import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxButtonComponent } from '@dereekb/dbx-web';
@@ -14,7 +14,8 @@ import { MatRipple } from '@angular/material/core';
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxAnchorComponent, MatButton, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent]
 })
 export class DocRouterAnchorComponent {
-  buttonClicks = 0;
+  readonly buttonClicksSignal = signal(0);
+  readonly buttonClicksTextSignal = computed(() => 'Button Clicks ' + this.buttonClicksSignal());
 
   lorem = LOREM;
   mouse = '';
@@ -41,6 +42,12 @@ export class DocRouterAnchorComponent {
     icon: 'route'
   };
 
+  buttonClickAnchor: ClickableAnchor = {
+    onClick: () => {
+      this.increaseClickButtonCount();
+    }
+  };
+
   fun: ClickableAnchor = {
     onClick: () => {
       if (this.lorem === LOREM) {
@@ -59,4 +66,8 @@ export class DocRouterAnchorComponent {
       this.mouse = `Mouse over ${type}`;
     }
   };
+
+  increaseClickButtonCount() {
+    this.buttonClicksSignal.update((x) => x + 1);
+  }
 }

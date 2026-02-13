@@ -28,7 +28,7 @@ export function provideDbxFirebaseDocumentStoreContextStore(): Provider[] {
 /**
  * Links a DbxFirebaseDocumentStore to parent DbxFirebaseDocumentStoreContextStore instances.
  *
- * This should be called in an injectable context.
+ * This should be called in an Angular injection context.
  */
 export function linkDocumentStoreToParentContextStores(store: DbxFirebaseDocumentStore<any, any>) {
   const contextStores = inject(DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN, { optional: true });
