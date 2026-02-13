@@ -4,7 +4,7 @@ import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, Mat
 import { MatIcon } from '@angular/material/icon';
 import { AsyncPipe } from '@angular/common';
 import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, DbxHelpWidgetEntryData, DbxHelpWidgetServiceEntry } from './help.widget';
-import { Maybe } from '@dereekb/util';
+import { getValueFromGetter, Maybe } from '@dereekb/util';
 import { DbxHelpWidgetService } from './help.widget.service';
 
 @Component({
@@ -23,7 +23,7 @@ export class DbxHelpViewListEntryComponent {
 
   readonly widgetInjectionConfigSignal: Signal<DbxInjectionComponentConfig> = computed(() => {
     const helpWidgetEntry = this.helpWidgetEntry();
-    const widgetComponentClass = helpWidgetEntry.widgetComponentClass;
+    const widgetComponentClass = getValueFromGetter(helpWidgetEntry.widgetComponentClass);
 
     const widgetData: DbxHelpWidgetEntryData = {
       helpWidgetEntry
@@ -44,7 +44,7 @@ export class DbxHelpViewListEntryComponent {
 
   readonly headerInjectionConfigSignal: Signal<Maybe<DbxInjectionComponentConfig>> = computed(() => {
     const helpWidgetEntry = this.helpWidgetEntry();
-    const headerComponentClass = helpWidgetEntry.headerComponentClass;
+    const headerComponentClass = getValueFromGetter(helpWidgetEntry.headerComponentClass);
 
     let config: Maybe<DbxInjectionComponentConfig> = undefined;
 

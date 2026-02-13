@@ -21,9 +21,9 @@ export class DocExtensionHelpComponent {
 
   readonly exampleHelpString = HELP_WIDGET_EXAMPLE_CONTEXT_STRING;
 
-  readonly activeHelpContextStringsSignal = toSignal(this._helpContextService.activeHelpContextStringsArray$, { initialValue: [] });
+  readonly activeHelpContextKeysSignal = toSignal(this._helpContextService.activeHelpContextKeysArray$, { initialValue: [] });
 
-  readonly testHelpContextStrings = [HELP_WIDGET_EXAMPLE_CONTEXT_STRING];
+  readonly testHelpContextKeys = [HELP_WIDGET_EXAMPLE_CONTEXT_STRING];
 
   readonly helpButtonConfig: DbxHelpViewPopoverButtonConfig = {
     buttonDisplay: { icon: 'live_help', text: 'Help' },
@@ -31,6 +31,6 @@ export class DocExtensionHelpComponent {
     popoverHeaderConfig: {
       componentClass: DocExtensionHelpExampleWidgetHeaderComponent
     },
-    helpContextStrings: [HELP_WIDGET_EXAMPLE_CONTEXT_STRING, HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO]
+    helpContextKeys: [HELP_WIDGET_EXAMPLE_CONTEXT_STRING, HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO]
   };
 }

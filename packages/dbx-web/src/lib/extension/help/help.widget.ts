@@ -1,15 +1,15 @@
 import { InjectionToken, type Type } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
-import { type DbxHelpContextString } from './help';
+import { GetterOrValue, type Maybe } from '@dereekb/util';
+import { type DbxHelpContextKey } from './help';
 
 /**
  * Entry defining a help widget for a specific context
  */
-export interface DbxHelpWidgetServiceEntry {
+export interface DbxHelpWidgetServiceEntry<D = unknown> {
   /**
    * Help context string specific to this entry.
    */
-  readonly helpContextString: DbxHelpContextString;
+  readonly helpContextKey: DbxHelpContextKey;
   /**
    * Title/Label for the help topic.
    */
@@ -18,6 +18,10 @@ export interface DbxHelpWidgetServiceEntry {
    * Icon for the help topic, if applicable.
    */
   readonly icon?: Maybe<string>;
+  /**
+   * Arbitrary metadata associated with the entry.
+   */
+  readonly meta?: Maybe<D>;
   /**
    * The priority to use when sorting the entities.
    *
@@ -29,21 +33,21 @@ export interface DbxHelpWidgetServiceEntry {
    *
    * The component will receive the context string as data.
    */
-  readonly widgetComponentClass: Type<unknown>;
+  readonly widgetComponentClass: GetterOrValue<Type<unknown>>;
   /**
    * Custom header component class to use that shows up on the widget.
    *
    * The component will receive the context string as data.
    */
-  readonly headerComponentClass?: Maybe<Type<unknown>>;
+  readonly headerComponentClass?: GetterOrValue<Maybe<Type<unknown>>>;
 }
 
 // MARK: Injection
-export interface DbxHelpWidgetEntryData {
+export interface DbxHelpWidgetEntryData<D = unknown> {
   /**
    * Corresponding widget entry.
    */
-  readonly helpWidgetEntry: DbxHelpWidgetServiceEntry;
+  readonly helpWidgetEntry: DbxHelpWidgetServiceEntry<D>;
 }
 
 /**

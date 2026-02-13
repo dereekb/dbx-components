@@ -1,9 +1,9 @@
 import { type Observable } from 'rxjs';
 
 /**
- * String type for identifying help topics
+ * Keys used for identifying help topics.
  */
-export type DbxHelpContextString = string;
+export type DbxHelpContextKey = string;
 
 /**
  * Reference object for tracking help context registrations.
@@ -13,5 +13,5 @@ export interface DbxHelpContextReference {
   /**
    * Observable of context strings that this reference provides.
    */
-  readonly helpContextStrings$: Observable<DbxHelpContextString[]>;
+  readonly helpContextKeys$: Observable<DbxHelpContextKey[]>;
 }

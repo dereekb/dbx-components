@@ -1,5 +1,5 @@
 import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
-import { type DbxHelpContextReference, type DbxHelpContextString } from './help';
+import { type DbxHelpContextReference, type DbxHelpContextKey } from './help';
 import { DestroyRef, inject } from '@angular/core';
 import { DbxHelpContextService } from './help.context.service';
 import { type DestroyFunction } from '@dereekb/util';
@@ -11,12 +11,12 @@ import { type DestroyFunction } from '@dereekb/util';
  *
  * Automatically cleans up, but returns a destroy function for manual cleanup.
  */
-export function registerHelpContextStringsWithDbxHelpContextService(helpContextStrings: ObservableOrValue<DbxHelpContextString[]>): DestroyFunction {
+export function registerHelpContextKeysWithDbxHelpContextService(helpContextKeys: ObservableOrValue<DbxHelpContextKey[]>): DestroyFunction {
   const helpContextService = inject(DbxHelpContextService);
   const destroyRef = inject(DestroyRef);
 
   const helpContextReference: DbxHelpContextReference = {
-    helpContextStrings$: asObservable(helpContextStrings)
+    helpContextKeys$: asObservable(helpContextKeys)
   };
 
   helpContextService.register(helpContextReference);

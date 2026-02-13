@@ -5,7 +5,7 @@ import { DbxPopoverKey } from '../../interaction/popover/popover';
 import { DbxPopoverConfigSizing, DbxPopoverService } from '../../interaction/popover/popover.service';
 import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../../interaction';
 import { DbxHelpViewListComponent } from './help.view.list.component';
-import { DbxHelpContextString } from './help';
+import { DbxHelpContextKey } from './help';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { ObservableOrValue } from '@dereekb/rxjs';
 import { DbxHelpContextService } from './help.context.service';
@@ -38,12 +38,17 @@ export interface DbxHelpViewPopoverConfig {
   /**
    * Specific contexts to display. If not provided, shows all active contexts from the DbxHelpContextService.
    */
-  readonly helpContextStrings?: Maybe<ObservableOrValue<ArrayOrValue<DbxHelpContextString>>>;
+  readonly helpContextKeys?: Maybe<ObservableOrValue<ArrayOrValue<DbxHelpContextKey>>>;
 
   /**
    * Optional footer component config to inject after the list.
    */
   readonly helpListFooterComponentConfig?: Maybe<DbxInjectionComponentConfig>;
+
+  /**
+   * Whether the accordion should allow multiple expanded panels.
+   */
+  readonly multi?: Maybe<boolean>;
 
   /**
    * Whether to show the empty list content.
@@ -79,7 +84,7 @@ export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknow
   private readonly _helpContextService = inject(DbxHelpContextService);
   private readonly _helpWidgetService = inject(DbxHelpWidgetService);
 
-  readonly helpContextStrings$ = this.popover.data?.helpContextStrings ?? this._helpContextService.activeHelpContextStringsArray$;
+  readonly helpContextKeys$ = this.popover.data?.helpContextKeys ?? this._helpContextService.activeHelpContextKeysArray$;
 
   static openPopover(popoverService: DbxPopoverService, config: DbxHelpViewPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef {
     const { origin, popoverSizingConfig, ...data } = config;
@@ -102,6 +107,7 @@ export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknow
 
   readonly icon = this.config.icon ?? 'help';
   readonly header = this.config.header ?? 'Help';
+  readonly multi = this.config.multi;
   readonly emptyText = this.config.emptyText ?? 'No help topics available in current context.';
   readonly allowEmptyListContent = this.config.allowEmptyListContent ?? true;
   readonly helpListFooterComponentConfig = this.config.helpListFooterComponentConfig;
