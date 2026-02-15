@@ -1,5 +1,5 @@
 import { Component, inject, input, computed } from '@angular/core';
-import { FirestoreModelKey, twoWayFlatFirestoreModelKey, flatFirestoreModelKey } from '@dereekb/firebase';
+import { FirestoreModelKey, twoWayFlatFirestoreModelKey, flatFirestoreModelKey, firestoreModelId } from '@dereekb/firebase';
 import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstance } from './model.types.service';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, of } from 'rxjs';
@@ -20,12 +20,18 @@ export class DbxFirebaseModelKeyComponent {
   readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);
 
   readonly modelKey = input<FirestoreModelKey>();
-  readonly oneWayFlatModelKey = computed(() => {
+
+  readonly modelKeyIdSignal = computed(() => {
+    const modelKey = this.modelKey();
+    return modelKey ? firestoreModelId(modelKey) : undefined;
+  });
+
+  readonly oneWayFlatModelKeySignal = computed(() => {
     const modelKey = this.modelKey();
     return modelKey ? flatFirestoreModelKey(modelKey) : undefined;
   });
 
-  readonly twoWayFlatModelKey = computed(() => {
+  readonly twoWayFlatModelKeySignal = computed(() => {
     const modelKey = this.modelKey();
     return modelKey ? twoWayFlatFirestoreModelKey(modelKey) : undefined;
   });
