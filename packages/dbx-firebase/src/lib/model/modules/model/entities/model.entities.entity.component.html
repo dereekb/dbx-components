@@ -10,7 +10,12 @@
               }
               <span>{{ displayInfo.title }}</span>
             </span>
-            <span class="dbx-hint dbx-small">{{ modelTypeSignal() }}</span>
+            <span>
+              <span class="dbx-hint dbx-small">{{ modelTypeSignal() }}</span>
+              @if (displayNameSignal(); as displayName) {
+                <span class="dbx-small dbx-u dbx-pl2">{{ displayName }}</span>
+              }
+            </span>
           </div>
         </div>
       }

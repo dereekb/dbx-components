@@ -55,6 +55,14 @@
     .dbx-pb#{$i} {
       padding-bottom: $padding !important;
     }
+
+    .dbx-pl#{$i} {
+      padding-left: $padding !important;
+    }
+
+    .dbx-pr#{$i} {
+      padding-right: $padding !important;
+    }
   }
 
   .dbx-h100 {
