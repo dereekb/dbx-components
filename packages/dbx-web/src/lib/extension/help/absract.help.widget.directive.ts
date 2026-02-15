@@ -6,7 +6,7 @@ import { DbxHelpContextKey } from './help';
  * Abstract help widget directive that injects the help widget data.
  */
 @Directive({})
-export abstract class DbxAbstractHelpWidgetDirective<D = unknown> {
+export abstract class AbstractDbxHelpWidgetDirective<D = unknown> {
   readonly helpWidgetData = inject<DbxHelpWidgetEntryData<D>>(DBX_HELP_WIDGET_ENTRY_DATA_TOKEN);
   readonly helpWidgetEntry = this.helpWidgetData.helpWidgetEntry;
 

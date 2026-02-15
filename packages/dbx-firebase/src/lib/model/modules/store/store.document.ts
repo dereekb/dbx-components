@@ -43,6 +43,12 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   // MARK: Effects
 
   // MARK: Accessors
+  readonly storeName$: Observable<Maybe<string>> = this.state$.pipe(
+    map((x) => x.storeName),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly currentFirestoreCollectionLike$: Observable<Maybe<FirestoreCollectionLike<T, D>>> = this.state$.pipe(
     map((x) => x.firestoreCollection ?? x.firestoreCollectionLike),
     distinctUntilChanged(),
@@ -257,6 +263,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   // MARK: State Changes
+  readonly setStoreName = this.updater((state, storeName: Maybe<string>) => ({ ...state, storeName })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
   readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, key: undefined, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
   readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
   readonly setFlatKey = this.updater((state, key: Maybe<TwoWayFlatFirestoreModelKey>) => (key ? { ...state, key: inferKeyFromTwoWayFlatFirestoreModelKey(key), id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
@@ -328,7 +335,9 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
 
   override readonly clearRefs = this.updater((state) => state);
 }
+
 export interface DbxFirebaseDocumentStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  readonly storeName?: Maybe<string>;
   readonly firestoreCollectionLike?: Maybe<FirestoreCollectionLike<T, D>>;
   readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
   readonly streamMode?: FirestoreAccessorStreamMode;

@@ -29,6 +29,7 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
   readonly entity = input.required<DbxFirebaseModelEntity>();
 
   readonly entity$ = toObservable(this.entity);
+
   readonly currentEntityWithStore$ = this.entity$.pipe(
     map((x) => {
       let result: Maybe<DbxFirebaseModelEntityWithStore>;
@@ -54,6 +55,17 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
   readonly store$ = this.entity$.pipe(
     map((x) => x.store),
     filterMaybe(),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly storeName$ = this.store$.pipe(
+    switchMap((x) => x.storeName$),
+    shareReplay(1)
+  );
+
+  readonly displayName$ = combineLatest([this.storeName$, this.entity$]).pipe(
+    map(([storeName, entity]) => entity.name ?? storeName),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -110,6 +122,7 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
   );
 
   readonly hasTypeInfoSignal = toSignal(this.hasTypeInfo$);
+  readonly displayNameSignal = toSignal(this.displayName$);
   readonly displayInfoSignal = toSignal(this.displayInfo$);
   readonly modelIdentitySignal = toSignal(this.modelIdentity$);
   readonly modelTypeSignal = computed(() => this.modelIdentitySignal()?.modelType);

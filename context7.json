@@ -1,0 +1,12 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "dbx-components",
+  "description": "A monorepo workspace of typescript libraries providing reusable Angular components with Firebase integration.",
+  "folders": [],
+  "excludeFolders": ["generators", "tools"],
+  "excludeFiles": [],
+  "rules": [],
+  "previousVersions": [],
+  "url": "https://context7.com/dereekb/dbx-components",
+  "public_key": "pk_r44N5vxMuG8oADQTHftdr"
+}

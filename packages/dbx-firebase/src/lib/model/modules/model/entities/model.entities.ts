@@ -25,6 +25,10 @@ export interface DbxFirebaseModelEntity {
    */
   readonly modelIdentity: FirestoreModelIdentity;
   /**
+   * Optional name for
+   */
+  readonly name?: Maybe<string>;
+  /**
    * An associated store for the document, if it is available.
    */
   readonly store?: Maybe<DbxFirebaseDocumentReadOnlyStore<any, any>>;

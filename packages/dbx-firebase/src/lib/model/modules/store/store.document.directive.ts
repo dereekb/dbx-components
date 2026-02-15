@@ -13,12 +13,14 @@ import { toObservable } from '@angular/core/rxjs-interop';
  */
 @Directive()
 export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> implements DbxFirebaseDocumentStoreTwoWayKeyProvider, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, OnDestroy {
+  readonly storeName = model<Maybe<string>>(undefined);
   readonly documentId = model<Maybe<FirestoreModelId>>(undefined);
   readonly key = model<Maybe<FirestoreModelKey>>(undefined);
   readonly flatKey = model<Maybe<TwoWayFlatFirestoreModelKey>>(undefined);
   readonly ref = model<Maybe<DocumentReference<T>>>(undefined);
   readonly streamMode = model<FirestoreAccessorStreamMode>(FirestoreAccessorStreamMode.STREAM);
 
+  private readonly _storeName$ = toObservable(this.storeName).pipe(skipInitialMaybe());
   private readonly _documentId$ = toObservable(this.documentId).pipe(skipInitialMaybe());
   private readonly _key$ = toObservable(this.key).pipe(skipInitialMaybe());
   private readonly _flatKey$ = toObservable(this.flatKey).pipe(skipInitialMaybe());
@@ -52,6 +54,7 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
     // sync inputs to store any time the store changes
     this._storeSub.subscription = this._store.subscribe((x) => {
       if (x) {
+        x.setStoreName(this._storeName$);
         x.setId(this._documentId$);
         x.setKey(this._key$);
         x.setFlatKey(this._flatKey$);
@@ -71,6 +74,10 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   }
 
   // MARK: Setters
+  setStoreName(storeName: Maybe<string>) {
+    this.storeName.set(storeName);
+  }
+
   setDocumentId(documentId: Maybe<FirestoreModelId>) {
     this.documentId.set(documentId);
   }

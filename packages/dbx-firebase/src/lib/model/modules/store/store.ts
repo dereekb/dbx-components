@@ -8,6 +8,11 @@ import { type Observable, type Subscription } from 'rxjs';
  * Provides read-only accessors to a single model/document.
  */
 export interface DbxFirebaseDocumentReadOnlyStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  /**
+   * String used to identify the store. Typically only for debugging UI purposes.
+   */
+  readonly storeName$: Observable<Maybe<string>>;
+
   readonly firestoreCollectionLike$: Observable<FirestoreCollectionLike<T, D>>;
   readonly firestoreCollection$: Observable<FirestoreCollection<T, D>>;
 
@@ -51,6 +56,11 @@ export interface DbxFirebaseDocumentReadOnlyStore<T, D extends FirestoreDocument
  * Provides accessors to a single model/document.
  */
 export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseDocumentReadOnlyStore<T, D>, LockSetComponent {
+  /**
+   * Sets the name of the store.
+   */
+  readonly setStoreName: (observableOrValue: ObservableOrValue<Maybe<string>>) => Subscription;
+
   /**
    * Sets the id of the document to load.
    */
