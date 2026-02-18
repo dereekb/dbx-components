@@ -67,7 +67,7 @@ import {
   type SendNotificationResult,
   type StorageFileGroupId,
   UpdateStorageFileGroupParams,
-  StorageFileGroupEmbeddedFile
+  type StorageFileGroupEmbeddedFile
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';

@@ -1,4 +1,4 @@
-import { SlashPathUntypedFile } from '@dereekb/util';
+import { type SlashPathUntypedFile } from '@dereekb/util';
 import { type FlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey, type FirestoreModelId, type FirestoreModelKey } from '../../common';
 
 // MARK: StorageFile
