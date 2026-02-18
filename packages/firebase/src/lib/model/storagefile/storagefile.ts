@@ -31,7 +31,7 @@ import {
   type OneWayFlatFirestoreModelKey,
   type FirestoreCollectionModelKey
 } from '../../common';
-import { inferStorageFileGroupRelatedModelKey, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { inferStorageFileGroupRelatedModelKey, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose, StorageFileDisplayName } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
@@ -258,6 +258,13 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    */
   cat: Date;
   /**
+   * Arbitrary display name for the file.
+   *
+   * This name is used in StorageFileGroup composite file generations, instead
+   * of the file's normal path file name, if available.
+   */
+  n?: Maybe<StorageFileDisplayName>;
+  /**
    * Type of creation.
    */
   ct?: Maybe<StorageFileCreationType>;
@@ -363,6 +370,7 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
   fields: {
     bucketId: firestoreString(),
     pathString: firestoreString(),
+    n: optionalFirestoreString(),
     cat: firestoreDate(),
     ct: optionalFirestoreEnum<StorageFileCreationType>({ defaultReadValue: StorageFileCreationType.NONE, dontStoreDefaultReadValue: true }),
     fs: firestoreEnum<StorageFileState>({ default: StorageFileState.INIT }),
@@ -410,6 +418,11 @@ export interface StorageFileGroupEmbeddedFile {
    */
   s: StorageFileId;
   /**
+   * Overrides the display name for this file within the group when generating
+   * a composite file (zip, etc.).
+   */
+  n?: Maybe<StorageFileDisplayName>;
+  /**
    * The time number it was added to the group.
    */
   sat: Date;
@@ -423,6 +436,7 @@ export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupE
   objectField: {
     fields: {
       s: firestoreModelIdString,
+      n: optionalFirestoreString(),
       sat: firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true }),
       zat: optionalFirestoreUnixDateTimeSecondsNumber()
     }

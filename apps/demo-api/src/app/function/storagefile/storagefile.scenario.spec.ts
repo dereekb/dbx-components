@@ -2,7 +2,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { type DownloadProfileArchiveParams, type DownloadProfileArchiveResult, profileIdentity, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
-import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
+import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, StorageFileDisplayName, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
 import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -273,7 +273,7 @@ demoApiFunctionContextFactory((f) => {
                         expect(storageFileGroup.re).toBe(true); // flagged for regeneration
 
                         // regenerate the zip file
-                        const regenerateResult = await sfg.regenerateStorageFileGroupContent(); //regenreate the content
+                        const regenerateResult = await sfg.regenerateStorageFileGroupContent(); //regenerate the content
                         expect(regenerateResult.contentStorageFilesFlaggedForProcessing).toBe(1); // only the zip storage file should be flagged now
 
                         storageFileGroup = await assertSnapshotData(sfg.document);
@@ -336,6 +336,98 @@ demoApiFunctionContextFactory((f) => {
 
                         const zipEntries = zip.getEntries();
                         expect(zipEntries.length).toBe(4); // info.json and the test files
+                      });
+
+                      describe('storage files have display names set', () => {
+                        const testFile1DisplayName: StorageFileDisplayName = 'Test File 1';
+                        const testFile2DisplayName: StorageFileDisplayName = 'Test File 2';
+
+                        beforeEach(async () => {
+                          await sf1.document.update({ n: testFile1DisplayName });
+                        });
+
+                        it('should generate the expected zip file', async () => {
+                          await sf1.syncAllFlaggedStorageFilesWithGroups();
+
+                          // initialize the storage file group
+                          await sfg.initializeStorageFileGroup();
+
+                          let storageFileGroup = await assertSnapshotData(sfg.document);
+
+                          expect(storageFileGroup.f).toHaveLength(3);
+
+                          await sfg.document.update({
+                            f: storageFileGroup.f.map((x) => {
+                              let result = x;
+
+                              if (x.s === sf2.documentId) {
+                                result = {
+                                  ...result,
+                                  n: testFile2DisplayName
+                                };
+                              }
+
+                              return result;
+                            })
+                          });
+
+                          // flag to regenerate the zip file
+                          await sfg.regenerateStorageFileGroupContent();
+
+                          storageFileGroup = await assertSnapshotData(sfg.document);
+                          expect(storageFileGroup.f).toHaveLength(3);
+
+                          const zsf = storageFileGroup.zsf as string;
+                          expect(zsf).toBeDefined();
+
+                          // PROCESSING
+                          const zipStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(zsf);
+
+                          // process the storage file immediately
+                          const processAllStorageFilesInstance = await f.storageFileServerActions.processAllQueuedStorageFiles({});
+                          await processAllStorageFilesInstance();
+
+                          // notification tasks are now queued up
+                          const sendQueuedNotificationsInstance = await f.notificationServerActions.sendQueuedNotifications({});
+                          await sendQueuedNotificationsInstance();
+
+                          // check the final result
+                          const zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+
+                          expect(zipStorageFile.fs).toBe(StorageFileState.OK); // should be ok and not marked for delete
+                          expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS); // should now be marked processing
+                          expect(zipStorageFile.pn).toBeUndefined(); // processing notification task cleared now that it is complete
+                          expect(zipStorageFile.sdat).not.toBeDefined(); // should not be flagged for deletion
+
+                          // check the storage file group final result
+                          storageFileGroup = await assertSnapshotData(sfg.document);
+                          expect(storageFileGroup.z).toBe(true); // zip should still be enabled
+                          expect(storageFileGroup.zat).toBeDefined(); // lasted file time is now set
+
+                          // check the zip file contents
+                          const file = f.storageContext.file(zipStorageFile);
+
+                          const fileExists = await file.exists(); // file should exist
+                          expect(fileExists).toBe(true);
+
+                          const fileMetadata = await file.getMetadata();
+                          expect(fileMetadata).toBeDefined();
+
+                          expect(fileMetadata.name).toBeDefined();
+                          expect(fileMetadata.contentType).toBe(ZIP_FILE_MIME_TYPE);
+
+                          const fileBytes = await file.getBytes();
+                          const zip = new AdmZip(Buffer.from(fileBytes));
+
+                          const zipEntries = zip.getEntries();
+                          expect(zipEntries.length).toBe(4); // info.json and the test files
+
+                          const names = zipEntries.map((x) => x.name);
+                          expect(names).toContain('info.json');
+                          expect(names).toContain(`${testFile1DisplayName}.any`);
+                          expect(names).toContain(`${testFile2DisplayName}.any`);
+                          expect(names).toContain('test3.any');
+                        });
                       });
 
                       describe('zip file generated', () => {

@@ -27,10 +27,15 @@ import {
   notificationTaskDelayRetry,
   notificationSubtaskComplete,
   STORAGE_FILE_GROUP_ZIP_INFO_JSON_FILE_NAME,
-  type StorageFileGroup
+  type StorageFileGroup,
+  StorageFileGroupEmbeddedFile,
+  StorageFileDisplayName,
+  StorageFileGroupDocument,
+  StorageMetadata,
+  FirebaseStorageAccessorFile
 } from '@dereekb/firebase';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
+import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe, DocumentFileExtension, isSlashPathTypedFile } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig, type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
 import * as archiver from 'archiver';
@@ -313,6 +318,23 @@ export interface StorageFileGroupStorageFileZipFinalizeArchiveInput extends Stor
 
 export type StorageFileGroupStorageFileZipFinalizeArchiveFunction = (input: StorageFileGroupStorageFileZipFinalizeArchiveInput) => Promise<void>;
 
+export interface StorageFileGroupStorageFileZipFileDisplayNameFunctionInput {
+  readonly metadata: StorageMetadata;
+  readonly fileAccessor: FirebaseStorageAccessorFile;
+  readonly storageFile: StorageFile;
+  readonly storageFileDocument: StorageFileDocument;
+  readonly storageFileGroupEmbeddedFile: StorageFileGroupEmbeddedFile;
+}
+
+export type StorageFileGroupStorageFileZipFileDisplayNameFunction = (input: StorageFileGroupStorageFileZipFileDisplayNameFunctionInput) => PromiseOrValue<Maybe<StorageFileDisplayName>>;
+
+export interface StorageFileGroupStorageFileZipFileDisplayNameFunctionFactoryInput {
+  readonly storageFileGroup: StorageFileGroup;
+  readonly storageFileGroupDocument: StorageFileGroupDocument;
+}
+
+export type StorageFileGroupStorageFileZipFileDisplayNameFunctionFactory = (input: StorageFileGroupStorageFileZipFileDisplayNameFunctionFactoryInput) => PromiseOrValue<StorageFileGroupStorageFileZipFileDisplayNameFunction>;
+
 export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfigZipConfiguration extends Pick<StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask>, 'cleanup'> {
   /**
    * Configures the maximum number of files to zip in parallel. Streaming more files in parallel concurrently requires more memory.
@@ -320,6 +342,10 @@ export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsCo
    * Defaults to 3.
    */
   readonly maxNumberOfFilesToZipInParallel?: number;
+  /**
+   * Optional factory for generating the display name of each file in the zip.
+   */
+  readonly zipFileDisplayNameFunctionFactory?: Maybe<StorageFileGroupStorageFileZipFileDisplayNameFunctionFactory>;
   /**
    * Configures the options for the zip archiver.
    *
@@ -343,12 +369,13 @@ export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsCo
 export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
   const { storageFileFirestoreCollections, storageAccessor, zip } = config;
   const { storageFileCollection, storageFileGroupCollection } = storageFileFirestoreCollections;
-  const { maxNumberOfFilesToZipInParallel: inputMaxNumberOfFilesToZipInParallel, configureZipInfoJson: inputConfigureZipInfoJson, configureZipArchiverOptions: inputConfigureZipArchiverOptions, finalizeZipArchive } = zip ?? {};
+  const { maxNumberOfFilesToZipInParallel: inputMaxNumberOfFilesToZipInParallel, zipFileDisplayNameFunctionFactory: inputZipFileDisplayNameFunctionFactory, configureZipInfoJson: inputConfigureZipInfoJson, configureZipArchiverOptions: inputConfigureZipArchiverOptions, finalizeZipArchive } = zip ?? {};
 
   const maxNumberOfFilesToZipInParallel = inputMaxNumberOfFilesToZipInParallel ?? 3;
   const appendZipInfoJson = inputConfigureZipInfoJson !== false;
   const configureZipArchiverOptions = inputConfigureZipArchiverOptions ?? (() => ({ zlib: { level: 9 } }));
   const configureZipInfoJson = (appendZipInfoJson ? inputConfigureZipInfoJson : undefined) ?? MAP_IDENTITY;
+  const zipFileDisplayNameFunctionFactory = inputZipFileDisplayNameFunctionFactory ?? (() => () => null);
 
   const storageFileGroupZipProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> = {
     target: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
@@ -375,9 +402,12 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
             const storageFileGroup = await storageFileGroupDocument.snapshotData();
 
             if (storageFileGroup) {
+              const embeddedFilesMap = new Map(storageFileGroup.f.map((x) => [x.s, x]));
               const storageFileIdsToZip = storageFileGroup.f.map((x) => x.s);
               const storageFilesToZip = loadDocumentsForIds(storageFileCollection.documentAccessor(), storageFileIdsToZip);
               const storageFileDataPairsToZip = await getDocumentSnapshotDataPairs(storageFilesToZip);
+
+              const zipFileDisplayNameFunction = await zipFileDisplayNameFunctionFactory({ storageFileGroup, storageFileGroupDocument });
 
               let flagCleanFileAssociations: Maybe<boolean> = undefined;
 
@@ -403,31 +433,36 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                     const { data: storageFile } = storageFileDataPair;
 
                     if (storageFile) {
+                      const { n: storageFileDisplayName } = storageFile;
+
                       // make sure it references the storage file group
                       const referencesStorageFileGroup = storageFile.g.some((x) => x === storageFileGroupId);
 
                       if (referencesStorageFileGroup) {
-                        const fileAccessor = storageAccessor.file(storageFile);
-                        const metadata = await fileAccessor.getMetadata().catch(() => null);
+                        const fileAccessor: FirebaseStorageAccessorFile = storageAccessor.file(storageFile);
+                        const metadata: Maybe<StorageMetadata> = await fileAccessor.getMetadata().catch(() => null);
 
                         if (metadata) {
                           const fileSlashPathDetails = slashPathDetails(metadata.name);
-                          let name: string;
 
-                          if (fileSlashPathDetails.typedFile) {
-                            name = fileSlashPathDetails.typedFile;
-                          } else {
-                            const untypedName = fileSlashPathDetails.fileName ?? `sf_${storageFile.id}`;
+                          const storageFileGroupEmbeddedFile = embeddedFilesMap.get(storageFile.id) as StorageFileGroupEmbeddedFile;
+                          const { n: embeddedFileNameOverride } = storageFileGroupEmbeddedFile as StorageFileGroupEmbeddedFile;
 
-                            // attempt to recover from a missing file name by using the content type
-                            if (metadata.contentType) {
-                              const extension = documentFileExtensionForMimeType(metadata.contentType);
-                              name = extension ? `${untypedName}.${extension}` : untypedName;
-                            } else {
-                              name = untypedName;
-                            }
+                          const nameFromFactory = await zipFileDisplayNameFunction({ metadata, fileAccessor, storageFile, storageFileDocument, storageFileGroupEmbeddedFile });
+
+                          let untypedName: Maybe<string> = nameFromFactory || storageFileDisplayName || embeddedFileNameOverride || fileSlashPathDetails.fileName;
+                          let extension: Maybe<string>;
+
+                          if (fileSlashPathDetails.typedFileExtension) {
+                            extension = fileSlashPathDetails.typedFileExtension;
+                          } else if (metadata.contentType) {
+                            extension = documentFileExtensionForMimeType(metadata.contentType);
                           }
 
+                          // set the default name if still unset
+                          untypedName = untypedName || `sf_${storageFile.id}`;
+
+                          const name = extension ? `${untypedName}.${extension}` : untypedName;
                           const fileStream = fileAccessor.getStream!();
 
                           await useCallback((x) => {

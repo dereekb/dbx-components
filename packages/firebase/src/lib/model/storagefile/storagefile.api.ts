@@ -429,6 +429,7 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
   };
   abstract storageFileGroup: {
     updateStorageFileGroup: {
+      // TODO: add a function to update the storage file group's embedded file display name
       regenerateContent: ModelFirebaseCrudFunction<RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult>;
     };
   };

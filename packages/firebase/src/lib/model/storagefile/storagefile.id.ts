@@ -1,3 +1,4 @@
+import { SlashPathUntypedFile } from '@dereekb/util';
 import { type FlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey, type FirestoreModelId, type FirestoreModelKey } from '../../common';
 
 // MARK: StorageFile
@@ -24,6 +25,15 @@ export type StorageFilePurpose = string;
  * Example use case: Documents with the same StorageFilePurpose/processing, but should only have a single StorageFile per subgroup.
  */
 export type StorageFilePurposeSubgroup = string;
+
+/**
+ * Arbitrary untyped name that is attached with a StorageFile.
+ *
+ * This is an alternate name for the file that can be used for display purposes. It
+ * is used within StorageFileGroup's zip file as the primary name. The display name
+ * is merged with the StorageFile's file path extension to create the file name.
+ */
+export type StorageFileDisplayName = SlashPathUntypedFile;
 
 /**
  * A default constant to use as a default StorageFilePurposeSubgroup value for StorageFiles that have a purpose that defines subgroups.
