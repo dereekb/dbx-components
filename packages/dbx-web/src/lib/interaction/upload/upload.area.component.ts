@@ -38,7 +38,7 @@ export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
     </ng-template>
   `,
   host: {
-    class: 'dbx-file-upload-area dbx-block',
+    class: 'dbx-file-upload-area',
     '[class.dbx-file-upload-area-with-hint]': 'hintSignal()',
     '[class.dbx-file-upload-area-disabled]': 'disabledSignal()',
     '[class.dbx-file-upload-area-working]': 'isWorkingSignal()',

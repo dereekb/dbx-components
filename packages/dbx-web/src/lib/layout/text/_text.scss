@@ -13,6 +13,7 @@ $dbx-label-padded-padding: 6px;
 $dbx-detail-block-bottom-padding: 12px;
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
+$dbx-detail-block-big-header-icon-size: 18px;
 
 // MARK: Mixin
 @mixin core() {
@@ -112,6 +113,13 @@ $click-to-copy-icon-size: 18px;
   .dbx-detail-block.dbx-detail-block-big-header {
     .dbx-detail-block-header {
       font-size: 1.18em;
+
+      .mat-icon {
+        padding-left: 3px;
+        height: $dbx-detail-block-big-header-icon-size;
+        width: $dbx-detail-block-big-header-icon-size;
+        font-size: $dbx-detail-block-big-header-icon-size;
+      }
     }
   }
 
