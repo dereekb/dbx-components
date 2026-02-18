@@ -88,8 +88,8 @@ export class ModelRelationUtility {
     return ModelRelationUtility.modifyCollection(current, change, mods, { readKey: (x) => x, merge: (a, b) => b });
   }
 
-  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T>): T[];
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T>): T[];
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { mask, readKey } = config;
 
@@ -119,7 +119,7 @@ export class ModelRelationUtility {
   private static _modifyCollectionWithoutMask<T extends RelationObject>(current: T[], change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { readKey, merge, shouldRemove } = config;
 
-    const readType = (config as UpdateMiltiTypeRelationConfig<T>).readType;
+    const readType = (config as UpdateMiltiTypeRelationConfig<T>).readType ?? (() => '0');
 
     function remove(rCurrent = current, rMods = mods) {
       return ModelRelationUtility._modifyCollection(
@@ -158,12 +158,14 @@ export class ModelRelationUtility {
     }
   }
 
-  static updateCollection<T extends RelationObject>(current: T[], update: T[], { readKey, readType, merge }: UpdateMiltiTypeRelationConfig<T>): T[] {
+  static updateCollection<T extends RelationObject>(current: T[], update: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
+    const { readKey, readType, merge } = config as UpdateMiltiTypeRelationConfig<T>;
     ModelRelationUtility._assertMergeProvided(merge);
     return ModelRelationUtility._modifyCollection(current, update, (x, y) => ModelRelationUtility._updateSingleTypeCollection(x, y, { readKey, merge }), readType);
   }
 
-  static insertCollection<T extends RelationObject>(current: T[], update: T[], { readKey, readType, merge }: UpdateMiltiTypeRelationConfig<T>): T[] {
+  static insertCollection<T extends RelationObject>(current: T[], update: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
+    const { readKey, readType, merge } = config as UpdateMiltiTypeRelationConfig<T>;
     ModelRelationUtility._assertMergeProvided(merge);
     return ModelRelationUtility._modifyCollection(current, update, (x, y) => ModelRelationUtility._insertSingleTypeCollection(x, y, { readKey, merge }), readType);
   }
@@ -171,7 +173,7 @@ export class ModelRelationUtility {
   /**
    * Used to modify a collection which may be multi-type. If readType is provided, the collection is handled as a multi-type map.
    */
-  private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: ReadRelationModelTypeFn<T>): T[] {
+  private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: Maybe<ReadRelationModelTypeFn<T>>): T[] {
     if (readType) {
       return ModelRelationUtility._modifyMultiTypeCollection(current, mods, readType, modifyCollection);
     } else {

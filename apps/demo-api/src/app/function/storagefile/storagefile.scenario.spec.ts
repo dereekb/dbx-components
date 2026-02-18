@@ -2,7 +2,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { type DownloadProfileArchiveParams, type DownloadProfileArchiveResult, profileIdentity, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
-import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, StorageFileDisplayName, storageFileIdentity, StorageFileProcessingState, StorageFileState, type StoragePath } from '@dereekb/firebase';
+import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, onCallUpdateModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, StorageFileDisplayName, storageFileIdentity, storageFileGroupIdentity, StorageFileProcessingState, StorageFileState, type StoragePath, type UpdateStorageFileGroupParams } from '@dereekb/firebase';
 import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -480,6 +480,76 @@ demoApiFunctionContextFactory((f) => {
 
                                   expect(result).toBeDefined();
                                   expect(result.url).toBeDefined();
+                                });
+
+                                describe('updating display name via API', () => {
+                                  it('should allow updating and clearing the display name of an embedded file', async () => {
+                                    const newDisplayName = 'Updated Test File Name';
+
+                                    // Test setting the display name
+                                    const updateParams: UpdateStorageFileGroupParams = {
+                                      key: sfg.documentKey,
+                                      entries: [
+                                        {
+                                          s: sf1.document.id,
+                                          n: newDisplayName
+                                        }
+                                      ]
+                                    };
+
+                                    let result = await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileGroupIdentity, updateParams));
+                                    expect(result).toBeDefined();
+
+                                    let storageFileGroup = await assertSnapshotData(sfg.document);
+                                    expect(storageFileGroup.f).toHaveLength(3); // should still have all 3 embedded files referenced
+
+                                    let updatedEmbeddedEntry = storageFileGroup.f.find((file) => file.s === sf1.document.id);
+                                    expect(updatedEmbeddedEntry).toBeDefined();
+                                    expect(updatedEmbeddedEntry?.n).toBe(newDisplayName);
+
+                                    // Test clearing the display name
+                                    const clearParams: UpdateStorageFileGroupParams = {
+                                      key: sfg.documentKey,
+                                      entries: [
+                                        {
+                                          s: sf1.document.id,
+                                          n: null
+                                        }
+                                      ]
+                                    };
+
+                                    result = await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileGroupIdentity, clearParams));
+
+                                    expect(result).toBeDefined();
+
+                                    storageFileGroup = await assertSnapshotData(sfg.document);
+                                    expect(storageFileGroup.f).toHaveLength(3); // should still have all 3 embedded files referenced
+
+                                    updatedEmbeddedEntry = storageFileGroup.f.find((file) => file.s === sf1.document.id);
+                                    expect(updatedEmbeddedEntry?.n).toBeUndefined(); // is now cleared
+                                  });
+
+                                  it('should only update files that exist in the group', async () => {
+                                    const nonExistentFileId = 'non_existent_file_id';
+
+                                    const updateParams: UpdateStorageFileGroupParams = {
+                                      key: sfg.documentKey,
+                                      entries: [
+                                        {
+                                          s: nonExistentFileId,
+                                          n: 'This Should Not Be Added'
+                                        }
+                                      ]
+                                    };
+
+                                    await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileGroupIdentity, updateParams));
+
+                                    const updatedStorageFileGroup = await assertSnapshotData(sfg.document);
+                                    expect(updatedStorageFileGroup.f).toHaveLength(3);
+
+                                    const nonExistentEmbeddedFile = updatedStorageFileGroup.f.find((file) => file.s === nonExistentFileId);
+                                    expect(nonExistentEmbeddedFile).toBeUndefined();
+                                  });
                                 });
 
                                 describe('adding a new file to the group', () => {

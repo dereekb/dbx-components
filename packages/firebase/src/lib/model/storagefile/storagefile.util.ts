@@ -58,7 +58,6 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
 
   const f = ModelRelationUtility.insertCollection(fWithRemovedTargetsRemoved, (insert ?? []) as StorageFileGroupEmbeddedFile[], {
     readKey: (x) => x.s,
-    readType: () => 'x',
     merge: (a, b) => mergeFunction([a, b]) as StorageFileGroupEmbeddedFile
   });
 
