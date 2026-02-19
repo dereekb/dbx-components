@@ -3,7 +3,6 @@ export * from './crm.api.notes';
 export * from './crm.api.tags';
 export * from './crm.config';
 export * from './crm.criteria';
-export * from './crm.criteria.util';
 export * from './crm.error.api';
 export * from './crm.factory';
 export * from './crm';
