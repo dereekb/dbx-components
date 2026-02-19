@@ -28,9 +28,9 @@ https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL,ZohoRecrui
 
 CRM Examples:
 
-https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoCRM.modules.ALL,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
 
-https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.ALL,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.ALL,ZohoCRM.settings.all,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
 
 - The scope is the list of roles we want to grant this refresh token
 - The clientId is the client id generated in the previous step
@@ -61,4 +61,4 @@ https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id
 - client_id and client_secret come from the client generated in step 1
 - the auth code is the code from the url in step 3
 
-This refresh token will be used as the 
+This refresh token will be used to retrieve new access tokens. Save this in your environment variables as `ZOHO_ACCOUNTS_REFRESH_TOKEN` or `ZOHO_CRM_ACCOUNTS_REFRESH_TOKEN`/`ZOHO_RECRUIT_ACCOUNTS_REFRESH_TOKEN`/etc. for a service-specific refresh token.

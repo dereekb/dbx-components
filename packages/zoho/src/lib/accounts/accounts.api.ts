@@ -27,8 +27,17 @@ export interface ZohoAccountsAccessTokenErrorResponse {
  * @param context
  * @returns
  */
-export function accessToken(context: ZohoAccountsContext): (input?: ZohoAccountsAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse> {
-  return (input) => context.fetchJson(`/oauth/v2/token?grant_type=refresh_token&client_id=${input?.client?.clientId ?? context.config.clientId}&client_secret=${input?.client?.clientSecret ?? context.config.clientSecret}&refresh_token=${input?.refreshToken ?? context.config.refreshToken}`, zohoAccountsApiFetchJsonInput('POST'));
+export function zohoAccountsAccessToken(context: ZohoAccountsContext): (input?: ZohoAccountsAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse> {
+  return (input) => {
+    const { clientId: configClientId, clientSecret: configClientSecret, refreshToken: configRefreshToken } = context.config;
+    const { client, refreshToken: inputRefreshToken } = input ?? {};
+
+    const clientId = client?.clientId ?? configClientId;
+    const clientSecret = client?.clientSecret ?? configClientSecret;
+    const refreshToken = inputRefreshToken ?? configRefreshToken;
+
+    return context.fetchJson(`/oauth/v2/token?grant_type=refresh_token&client_id=${clientId}&client_secret=${clientSecret}&refresh_token=${refreshToken}`, zohoAccountsApiFetchJsonInput('POST'));
+  };
 }
 
 export function zohoAccountsApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {

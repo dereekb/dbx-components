@@ -2,8 +2,43 @@ import { MS_IN_MINUTE, type Maybe, type UnixDateTimeNumber } from '@dereekb/util
 import { type ConfiguredFetch, type FetchJsonInterceptJsonResponseFunction, type FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
+/**
+ * Returned by Zoho CRM.
+ *
+ * The data array contains the list of possible success
+ */
+export interface ZohoServerErrorResponseDataArrayRef {
+  readonly data: ZohoServerErrorResponseDataArrayElement[];
+}
+
+/**
+ * Array of response elements that may contain either a success or error.
+ */
+export type ZohoServerErrorResponseDataArrayElement = ZohoServerErrorData | ZohoServerSuccessData;
+
+/**
+ * Default place-holder used by the ZohoServerFetchResponseDataArrayError class.
+ */
+export const ZOHO_DATA_ARRAY_BLANK_ERROR_CODE = '__internal_data_array_blank_error';
+
+/**
+ * Returns true if the input value is a ZohoServerErrorResponseDataArrayRef.
+ *
+ * @param value
+ * @returns
+ */
+export function isZohoServerErrorResponseDataArrayRef(value: unknown): value is ZohoServerErrorResponseDataArrayRef {
+  return Array.isArray((value as ZohoServerErrorResponseDataArrayRef)?.data);
+}
+
+/**
+ * Returned by Zoho Recruit.
+ */
 export type ZohoServerErrorResponseDataError = ZohoServerErrorData | ZohoServerErrorCode;
 
+/**
+ * Returned by Zoho Recruit.
+ */
 export interface ZohoServerErrorResponseData {
   readonly error: ZohoServerErrorResponseDataError;
 }
@@ -45,6 +80,15 @@ export interface ZohoServerErrorData<T = unknown> {
 }
 
 /**
+ * Zoho Server Success Data
+ *
+ * Always contains a code and message. Details and status are optional.
+ */
+export type ZohoServerSuccessData<T = unknown> = Omit<ZohoServerErrorData<T>, 'code'> & {
+  readonly code: ZohoServerSuccessCode;
+};
+
+/**
  * Contains details and a status
  */
 export type ZohoServerErrorDataWithDetails<T = unknown> = Required<ZohoServerErrorData<T>>;
@@ -84,13 +128,40 @@ export class ZohoServerError<D extends ZohoServerErrorData = ZohoServerErrorData
 export class ZohoServerFetchResponseError<D extends ZohoServerErrorData = ZohoServerErrorData> extends ZohoServerError<D> {
   constructor(
     readonly data: D,
+    readonly errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef,
     readonly responseError: FetchResponseError
   ) {
     super(data);
   }
 }
 
+/**
+ * Used as a transient error for situations where there are potentially multiple errors within the data array returned.
+ *
+ * Zoho CRM returns a non-200 error as a result, but generally there is a partial success that can occur, with both
+ * the successful and errored results returned within the data.
+ */
+export class ZohoServerFetchResponseDataArrayError extends ZohoServerFetchResponseError<ZohoServerErrorData> {
+  constructor(errorResponseData: ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError) {
+    super({ code: ZOHO_DATA_ARRAY_BLANK_ERROR_CODE, message: 'Check data for individual errors.' }, errorResponseData, responseError);
+  }
+
+  get errorDataArray() {
+    return (this.errorResponseData as ZohoServerErrorResponseDataArrayRef).data;
+  }
+}
+
 export type LogZohoServerErrorFunction = (error: FetchRequestFactoryError | ZohoServerError | ZohoServerFetchResponseError) => void;
+
+/**
+ * Config for logZohoServerErrorFunction.
+ */
+export interface LogZohoServerErrorFunctionConfig {
+  /**
+   * If true, will log errors that are ZohoServerFetchResponseDataArrayError.
+   */
+  readonly logDataArrayErrors?: boolean;
+}
 
 /**
  * Creates a logZohoServerErrorFunction that logs the error to console.
@@ -98,9 +169,12 @@ export type LogZohoServerErrorFunction = (error: FetchRequestFactoryError | Zoho
  * @param zohoApiNamePrefix Prefix to use when logging. I.E. ZohoRecruitError, etc.
  * @returns
  */
-export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoServerErrorFunction {
+export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: LogZohoServerErrorFunctionConfig): LogZohoServerErrorFunction {
+  const { logDataArrayErrors = false } = options ?? {};
   return (error: FetchRequestFactoryError | ZohoServerError | ZohoServerFetchResponseError) => {
-    if (error instanceof ZohoServerFetchResponseError) {
+    if (error instanceof ZohoServerFetchResponseDataArrayError && !logDataArrayErrors) {
+      // do nothing, since this is usually an intermediary error that is caught
+    } else if (error instanceof ZohoServerFetchResponseError) {
       console.log(`${zohoApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
     } else if (error instanceof ZohoServerError) {
       console.log(`${zohoApiNamePrefix}Error(code:${error.code}): `, { error });
@@ -311,32 +385,37 @@ export class ZohoTooManyRequestsError extends ZohoServerFetchResponseError {
  * @param responseError
  * @returns
  */
-export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
+export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
   let result: ZohoServerFetchResponseError | undefined;
-  const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
-  if (error) {
-    const errorData = zohoServerErrorData(error);
+  if (isZohoServerErrorResponseDataArrayRef(errorResponseData)) {
+    result = new ZohoServerFetchResponseDataArrayError(errorResponseData, responseError);
+  } else {
+    const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
-    switch (errorData.code) {
-      case ZOHO_INTERNAL_ERROR_CODE:
-        result = new ZohoInternalError(errorData, responseError);
-        break;
-      case ZOHO_INVALID_TOKEN_ERROR_CODE:
-        result = new ZohoInvalidTokenError(errorData, responseError);
-        break;
-      case ZOHO_INVALID_AUTHORIZATION_ERROR_CODE:
-        result = new ZohoInvalidAuthorizationError(errorData, responseError);
-        break;
-      case ZOHO_INVALID_QUERY_ERROR_CODE:
-        result = new ZohoInvalidQueryError(errorData, responseError);
-        break;
-      case ZOHO_TOO_MANY_REQUESTS_ERROR_CODE:
-        result = new ZohoTooManyRequestsError(errorData, responseError);
-        break;
-      default:
-        result = new ZohoServerFetchResponseError(errorData, responseError);
-        break;
+    if (error) {
+      const errorData = zohoServerErrorData(error);
+
+      switch (errorData.code) {
+        case ZOHO_INTERNAL_ERROR_CODE:
+          result = new ZohoInternalError(errorData, errorResponseData, responseError);
+          break;
+        case ZOHO_INVALID_TOKEN_ERROR_CODE:
+          result = new ZohoInvalidTokenError(errorData, errorResponseData, responseError);
+          break;
+        case ZOHO_INVALID_AUTHORIZATION_ERROR_CODE:
+          result = new ZohoInvalidAuthorizationError(errorData, errorResponseData, responseError);
+          break;
+        case ZOHO_INVALID_QUERY_ERROR_CODE:
+          result = new ZohoInvalidQueryError(errorData, errorResponseData, responseError);
+          break;
+        case ZOHO_TOO_MANY_REQUESTS_ERROR_CODE:
+          result = new ZohoTooManyRequestsError(errorData, errorResponseData, responseError);
+          break;
+        default:
+          result = new ZohoServerFetchResponseError(errorData, errorResponseData, responseError);
+          break;
+      }
     }
   }
 
@@ -347,12 +426,13 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
  * Attempts to retrieve an ZohoServerErrorResponseDataError from the input.
  *
  * Non-200 errors returned by the Zoho API are returned as the object directly instead of as an ZohoServerErrorResponseData directly.
+ * Zoho CRM returns a ZohoServerErrorResponseDataArrayRef value for errors.
  *
  * @param errorResponseData
  * @param responseError
  * @returns
  */
-export function tryFindZohoServerErrorData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZohoServerErrorResponseDataError> {
-  const error = (errorResponseData as ZohoServerErrorResponseData).error ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
+export function tryFindZohoServerErrorData(errorResponseData: ZohoServerErrorResponseDataArrayRef | ZohoServerErrorResponseData | ZohoServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZohoServerErrorResponseDataError> {
+  const error = (errorResponseData as ZohoServerErrorResponseData).error ?? (errorResponseData as ZohoServerErrorResponseDataArrayRef).data?.[0] ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
   return error;
 }

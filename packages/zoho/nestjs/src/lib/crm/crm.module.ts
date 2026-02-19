@@ -1,38 +1,38 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ZohoRecruitApi } from './recruit.api';
-import { ZohoRecruitServiceConfig } from './recruit.config';
+import { ZohoCrmApi } from './crm.api';
+import { ZohoCrmServiceConfig } from './crm.config';
 import { ZOHO_API_URL_CONFIG_KEY, zohoConfigServiceReaderFunction } from '../zoho.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 import { ZohoAccountsServiceConfig, zohoAccountsServiceConfigFromConfigService } from '../accounts/accounts.config';
-import { ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
+import { ZOHO_CRM_SERVICE_NAME } from '@dereekb/zoho';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Provider Factories
-export function zohoRecruitServiceConfigFactory(configService: ConfigService): ZohoRecruitServiceConfig {
-  const getFromConfigService = zohoConfigServiceReaderFunction(ZOHO_RECRUIT_SERVICE_NAME, configService);
+export function zohoCrmServiceConfigFactory(configService: ConfigService): ZohoCrmServiceConfig {
+  const getFromConfigService = zohoConfigServiceReaderFunction(ZOHO_CRM_SERVICE_NAME, configService);
 
-  const config: ZohoRecruitServiceConfig = {
-    zohoRecruit: {
+  const config: ZohoCrmServiceConfig = {
+    zohoCrm: {
       apiUrl: getFromConfigService(ZOHO_API_URL_CONFIG_KEY)
     }
   };
 
-  ZohoRecruitServiceConfig.assertValidConfig(config);
+  ZohoCrmServiceConfig.assertValidConfig(config);
   return config;
 }
 
-export function zohoRecruitAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
+export function zohoCrmAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
   return zohoAccountsServiceConfigFromConfigService({
     configService,
-    serviceAccessTokenKey: ZOHO_RECRUIT_SERVICE_NAME
+    serviceAccessTokenKey: ZOHO_CRM_SERVICE_NAME
   });
 }
 
-// MARK: App Zoho Recruit Module
-export interface ProvideAppZohoRecruitMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
+// MARK: App Zoho Crm Module
+export interface ProvideAppZohoCrmMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
-   * The ZohoRecruitModule requires the following dependencies in order to initialze properly:
+   * The ZohoCrmModule requires the following dependencies in order to initialze properly:
    * - ZohoAccountsAccessTokenCacheService
    *
    * This module declaration makes it easier to import a module that exports those depenendencies.
@@ -41,31 +41,31 @@ export interface ProvideAppZohoRecruitMetadataConfig extends Pick<ModuleMetadata
 }
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's ZohoRecruitModule.
+ * Convenience function used to generate ModuleMetadata for an app's ZohoCrmModule.
  *
  * @param provide
  * @param useFactory
  * @returns
  */
-export function appZohoRecruitModuleMetadata(config: ProvideAppZohoRecruitMetadataConfig): ModuleMetadata {
+export function appZohoCrmModuleMetadata(config: ProvideAppZohoCrmMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   return {
     imports: [ConfigModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [ZohoRecruitApi, ...(exports ?? [])],
+    exports: [ZohoCrmApi, ...(exports ?? [])],
     providers: [
       {
-        provide: ZohoRecruitServiceConfig,
+        provide: ZohoCrmServiceConfig,
         inject: [ConfigService],
-        useFactory: zohoRecruitServiceConfigFactory
+        useFactory: zohoCrmServiceConfigFactory
       },
-      ZohoRecruitApi,
+      ZohoCrmApi,
       // Accounts
       {
         provide: ZohoAccountsServiceConfig,
         inject: [ConfigService],
-        useFactory: zohoRecruitAccountServiceConfigFactory
+        useFactory: zohoCrmAccountServiceConfigFactory
       },
       ZohoAccountsApi,
       ...(providers ?? [])

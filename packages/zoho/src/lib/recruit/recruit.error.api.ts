@@ -65,7 +65,7 @@ export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails
   return result;
 }
 
-export function assertRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecruitModuleName, recordId?: ZohoRecruitRecordId) {
+export function assertZohoRecruitRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecruitModuleName, recordId?: ZohoRecruitRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
     if (x == null || !x.data?.length) {
       throw new ZohoRecruitRecordNoContentError(moduleName, recordId);
@@ -108,3 +108,9 @@ export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoS
 
 export const interceptZohoRecruit200StatusWithErrorResponse = interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorResponseData);
 export const handleZohoRecruitErrorFetch = handleZohoErrorFetchFactory(parseZohoRecruitError, logZohoRecruitErrorToConsole);
+
+// MARK: Compat
+/**
+ * @deprecated Use assertZohoRecruitRecordDataArrayResultHasContent instead.
+ */
+export const assertRecordDataArrayResultHasContent = assertZohoRecruitRecordDataArrayResultHasContent;

@@ -1,28 +1,30 @@
-import { appZohoRecruitModuleMetadata } from './recruit.module';
+import { appZohoCrmModuleMetadata } from './crm.module';
 import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ZohoRecruitApi } from './recruit.api';
+import { ZohoCrmApi } from './crm.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import {
   ZOHO_DUPLICATE_DATA_ERROR_CODE,
   ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE,
-  NewZohoRecruitRecordData,
-  ZohoRecruitRecordCrudDuplicateDataError,
-  ZohoRecruitRecordCrudMandatoryFieldNotFoundError,
-  ZohoRecruitRecordNoContentError,
-  ZohoRecruitRecord,
-  ZohoRecruitRecordCrudNoMatchingRecordError,
+  NewZohoCrmRecordData,
+  ZohoCrmRecordCrudDuplicateDataError,
+  ZohoCrmRecordCrudMandatoryFieldNotFoundError,
+  ZohoCrmRecordNoContentError,
+  ZohoCrmRecord,
+  ZohoCrmRecordCrudNoMatchingRecordError,
   ZOHO_INVALID_DATA_ERROR_CODE,
   ZohoInvalidQueryError,
-  ZohoRecruitRecordId,
-  ZOHO_RECRUIT_CANDIDATES_MODULE,
+  ZohoCrmRecordId,
+  ZOHO_CRM_CONTACTS_MODULE,
   ZohoServerFetchResponseError,
-  ZohoRecruitUpdateRecordData,
-  ZohoRecruitUpsertRecordData,
+  ZohoCrmUpdateRecordData,
+  ZohoCrmUpsertRecordData,
   ZOHO_ERROR_STATUS,
-  ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH,
-  ZohoRecruitTag
+  ZOHO_CRM_TAG_NAME_MAX_LENGTH,
+  ZohoCrmTagArrayRef,
+  ZohoCrmFieldName,
+  ZohoCrmCommaSeparateFieldNames
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
@@ -30,7 +32,7 @@ import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 
-const NON_EXISTENT_CANDIDATE_ID = '576777777777777712';
+const NON_EXISTENT_CANDIDATE_ID = '600000000000000000';
 
 /**
  * For the tests, atleast one account should have this email domain/suffix.
@@ -39,27 +41,25 @@ const TEST_ACCOUNT_EXPORT_SUFFIX = 'components.dereekb.com';
 const TEST_ACCOUNT_INSERT_EXPORT_SUFFIX = `insert.${TEST_ACCOUNT_EXPORT_SUFFIX}`;
 const TEST_ACCOUNT_UPSERT_EXPORT_SUFFIX = `upsert.${TEST_ACCOUNT_EXPORT_SUFFIX}`;
 
-/**
- * This candidate is only avaialble within the specific testing sandbox used for tests.
- */
-const TEST_CANDIDATE_ID = '576214000000574340';
 const TEST_CANDIDATE_EMAIL_ADDRESS = 'tester@components.dereekb.com';
 const UPSERT_TEST_FIRST_NAME_PREFIX = `Upsert`;
 const UPSERT_TEST_LAST_NAME = `Upsert`;
 
-interface TestCandidate extends ZohoRecruitRecord {
+interface TestContact extends ZohoCrmRecord, ZohoCrmTagArrayRef {
   Email: string; // required field
   First_Name?: string; // not required
   Last_Name: string;
-  Associated_Tags?: string[];
 }
+
+const TEST_CONTACT_FIELDS: ZohoCrmCommaSeparateFieldNames = 'Parent_Id,Owner,Created_Time,Note_Title';
+const TEST_CONTACT_FIELDS_ARRAY: ZohoCrmFieldName[] = ['Parent_Id', 'Owner', 'Created_Time', 'Note_Title'];
 
 jest.setTimeout(12000);
 
-@Module(appZohoRecruitModuleMetadata({}))
-export class TestZohoRecruitModule {}
+@Module(appZohoCrmModuleMetadata({}))
+export class TestZohoCrmModule {}
 
-describe('recruit.api', () => {
+describe('crm.api', () => {
   let nest: TestingModule;
 
   beforeEach(async () => {
@@ -71,7 +71,7 @@ describe('recruit.api', () => {
     ];
 
     const rootModule: DynamicModule = {
-      module: TestZohoRecruitModule,
+      module: TestZohoCrmModule,
       providers,
       exports: providers,
       global: true
@@ -84,17 +84,17 @@ describe('recruit.api', () => {
     nest = await builder.compile();
   });
 
-  describe('ZohoRecruitApi', () => {
-    let api: ZohoRecruitApi;
+  describe('ZohoCrmApi', () => {
+    let api: ZohoCrmApi;
 
     const GURANTEED_NUMBER_OF_UPSERT_TEST_RECORDS = 2;
 
     /**
      * Cached getter across all test runs. These records should always exist and can be used for updating.
      */
-    const loadTestRecords: Getter<Promise<ZohoRecruitRecord[]>> = cachedGetter(async () => {
-      const upsertResult = await api.upsertRecord<TestCandidate>({
-        module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+    const loadTestRecords: Getter<Promise<ZohoCrmRecord[]>> = cachedGetter(async () => {
+      const upsertResult = await api.upsertRecord<TestContact>({
+        module: ZOHO_CRM_CONTACTS_MODULE,
         data: [
           {
             First_Name: `${UPSERT_TEST_FIRST_NAME_PREFIX}_1`,
@@ -113,7 +113,7 @@ describe('recruit.api', () => {
     });
 
     beforeEach(() => {
-      api = nest.get(ZohoRecruitApi);
+      api = nest.get(ZohoCrmApi);
     });
 
     describe('records', () => {
@@ -123,8 +123,8 @@ describe('recruit.api', () => {
             it('should create a new record and return the change object details result directly', async () => {
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const result = await api.insertRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const result = await api.insertRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data: {
                   First_Name: `Create_${createNumber}`,
                   Last_Name: 'Candidate',
@@ -137,8 +137,8 @@ describe('recruit.api', () => {
             });
 
             it('should mark the object error if the input data is invalid for the object', async () => {
-              const result = await api.insertRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const result = await api.insertRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data: [
                   {
                     First_Name: `Failure`,
@@ -154,29 +154,29 @@ describe('recruit.api', () => {
             itShouldFail('if the input data is invalid for the object', async () => {
               await expectFail(
                 () =>
-                  api.insertRecord<TestCandidate>({
-                    module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  api.insertRecord<TestContact>({
+                    module: ZOHO_CRM_CONTACTS_MODULE,
                     data: {
                       First_Name: `Failure`,
                       lastNameFieldMissing: 'Candidate' // invalid field
                     } as any
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
+                jestExpectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
               );
             });
 
-            itShouldFail('if the input has a duplicate unique value in Zoho Recruit.', async () => {
+            itShouldFail('if the input has a duplicate unique value in Zoho Crm.', async () => {
               await expectFail(
                 () =>
-                  api.insertRecord<TestCandidate>({
-                    module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  api.insertRecord<TestContact>({
+                    module: ZOHO_CRM_CONTACTS_MODULE,
                     data: {
                       First_Name: `Failure`,
                       Last_Name: 'Candidate',
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudDuplicateDataError)
+                jestExpectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
               );
             });
           });
@@ -185,8 +185,8 @@ describe('recruit.api', () => {
             it('should create multiple new records', async () => {
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const result = await api.insertRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const result = await api.insertRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data: [
                   {
                     First_Name: `Create_${createNumber}`,
@@ -211,7 +211,7 @@ describe('recruit.api', () => {
             it('should return error items for records that could not be created', async () => {
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const data: NewZohoRecruitRecordData<TestCandidate>[] = [
+              const data: NewZohoCrmRecordData<TestContact>[] = [
                 {
                   First_Name: `Create_${createNumber}`,
                   lastNameFieldMissing: 'Candidate', // field does not exist!
@@ -224,8 +224,8 @@ describe('recruit.api', () => {
                 }
               ];
 
-              const result = await api.insertRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const result = await api.insertRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data
               });
 
@@ -247,8 +247,8 @@ describe('recruit.api', () => {
               const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
               const First_Name = `Updated For Test ${number}`;
 
-              const updateResult = await api.updateRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const updateResult = await api.updateRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data: {
                   id: recordToUpdate.id,
                   First_Name
@@ -257,21 +257,21 @@ describe('recruit.api', () => {
 
               expect(updateResult.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestContact>({ module: ZOHO_CRM_CONTACTS_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
 
             itShouldFail('if attempting to update a value that does not exist', async () => {
               await expectFail(
                 () =>
-                  api.updateRecord<TestCandidate>({
-                    module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  api.updateRecord<TestContact>({
+                    module: ZOHO_CRM_CONTACTS_MODULE,
                     data: {
                       id: NON_EXISTENT_CANDIDATE_ID,
                       First_Name: 'Failure'
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudNoMatchingRecordError)
+                jestExpectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
               );
             });
 
@@ -281,14 +281,14 @@ describe('recruit.api', () => {
 
               await expectFail(
                 () =>
-                  api.updateRecord<TestCandidate>({
-                    module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  api.updateRecord<TestContact>({
+                    module: ZOHO_CRM_CONTACTS_MODULE,
                     data: {
                       id: recordToUpdate.id,
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudDuplicateDataError)
+                jestExpectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
               );
             });
           });
@@ -301,8 +301,8 @@ describe('recruit.api', () => {
               const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
               const First_Name = `Updated For Test ${number}`;
 
-              const updateResult = await api.updateRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const updateResult = await api.updateRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data: [
                   {
                     id: recordToUpdate.id,
@@ -314,7 +314,7 @@ describe('recruit.api', () => {
               expect(updateResult.successItems).toHaveLength(1);
               expect(updateResult.successItems[0].result.details.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestContact>({ module: ZOHO_CRM_CONTACTS_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
 
@@ -322,7 +322,7 @@ describe('recruit.api', () => {
               const testRecords = await loadTestRecords();
               const recordToUpdate = testRecords[0];
 
-              const data: ZohoRecruitUpdateRecordData<TestCandidate>[] = [
+              const data: ZohoCrmUpdateRecordData<TestContact>[] = [
                 {
                   id: NON_EXISTENT_CANDIDATE_ID, // invalid data issue
                   First_Name: 'Failure'
@@ -333,8 +333,8 @@ describe('recruit.api', () => {
                 }
               ];
 
-              const result = await api.updateRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const result = await api.updateRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data
               });
 
@@ -355,8 +355,8 @@ describe('recruit.api', () => {
                 const Last_Name = `Create For Test ${number}`;
 
                 // inserting a new record, all required fields are required
-                const createResult = await api.upsertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const createResult = await api.upsertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data: {
                     Email: `upsert+${number}@${TEST_ACCOUNT_UPSERT_EXPORT_SUFFIX}`,
                     Last_Name
@@ -367,13 +367,13 @@ describe('recruit.api', () => {
                 expect(createResult.id).toBeDefined();
                 expect(Array.isArray(createResult)).toBe(false);
 
-                const createdRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: createResult.id });
+                const createdRecord = await api.getRecordById<TestContact>({ module: ZOHO_CRM_CONTACTS_MODULE, id: createResult.id });
                 expect(createdRecord.Last_Name).toBe(Last_Name);
               });
 
               it('should mark the object error if the input data is invalid for the object', async () => {
-                const result = await api.upsertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const result = await api.upsertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data: [
                     {
                       First_Name: `Failure`,
@@ -389,14 +389,14 @@ describe('recruit.api', () => {
               itShouldFail('if the input data is invalid for the object', async () => {
                 await expectFail(
                   () =>
-                    api.upsertRecord<TestCandidate>({
-                      module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                    api.upsertRecord<TestContact>({
+                      module: ZOHO_CRM_CONTACTS_MODULE,
                       data: {
                         First_Name: `Failure`,
                         lastNameFieldMissing: 'Candidate' // invalid field
                       } as any
                     }),
-                  jestExpectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
+                  jestExpectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
                 );
               });
             });
@@ -405,8 +405,8 @@ describe('recruit.api', () => {
               it('should create multiple new records', async () => {
                 const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-                const result = await api.upsertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const result = await api.upsertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data: [
                     {
                       First_Name: `Create_${createNumber}`,
@@ -431,7 +431,7 @@ describe('recruit.api', () => {
               it('should return error items for records that could not be created', async () => {
                 const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-                const data: NewZohoRecruitRecordData<TestCandidate>[] = [
+                const data: NewZohoCrmRecordData<TestContact>[] = [
                   {
                     First_Name: `Create_${createNumber}`,
                     lastNameFieldMissing: 'Candidate', // field does not exist!
@@ -444,8 +444,8 @@ describe('recruit.api', () => {
                   }
                 ];
 
-                const result = await api.upsertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const result = await api.upsertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data
                 });
 
@@ -467,8 +467,8 @@ describe('recruit.api', () => {
                 const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
                 const First_Name = `Updated For Test ${number}`;
 
-                const updateResult = await api.upsertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const updateResult = await api.upsertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data: {
                     id: recordToUpdate.id,
                     First_Name
@@ -477,21 +477,21 @@ describe('recruit.api', () => {
 
                 expect(updateResult.id).toBe(recordToUpdate.id);
 
-                const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+                const updatedRecord = await api.getRecordById<TestContact>({ module: ZOHO_CRM_CONTACTS_MODULE, id: recordToUpdate.id });
                 expect(updatedRecord.First_Name).toBe(First_Name);
               });
 
               itShouldFail('if attempting to update a value that does not exist', async () => {
                 await expectFail(
                   () =>
-                    api.updateRecord<TestCandidate>({
-                      module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                    api.updateRecord<TestContact>({
+                      module: ZOHO_CRM_CONTACTS_MODULE,
                       data: {
                         id: NON_EXISTENT_CANDIDATE_ID,
                         First_Name: 'Failure'
                       }
                     }),
-                  jestExpectFailAssertErrorType(ZohoRecruitRecordCrudNoMatchingRecordError)
+                  jestExpectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
                 );
               });
             });
@@ -504,8 +504,8 @@ describe('recruit.api', () => {
                 const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
                 const First_Name = `Updated For Test ${number}`;
 
-                const updateResult = await api.upsertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const updateResult = await api.upsertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data: [
                     {
                       id: recordToUpdate.id,
@@ -517,7 +517,7 @@ describe('recruit.api', () => {
                 expect(updateResult.successItems).toHaveLength(1);
                 expect(updateResult.successItems[0].result.details.id).toBe(recordToUpdate.id);
 
-                const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+                const updatedRecord = await api.getRecordById<TestContact>({ module: ZOHO_CRM_CONTACTS_MODULE, id: recordToUpdate.id });
                 expect(updatedRecord.First_Name).toBe(First_Name);
               });
 
@@ -525,7 +525,7 @@ describe('recruit.api', () => {
                 const testRecords = await loadTestRecords();
                 const recordToUpdate = testRecords[0];
 
-                const data: ZohoRecruitUpsertRecordData<TestCandidate>[] = [
+                const data: ZohoCrmUpsertRecordData<TestContact>[] = [
                   {
                     id: NON_EXISTENT_CANDIDATE_ID, // invalid data issue
                     First_Name: 'Failure'
@@ -537,7 +537,7 @@ describe('recruit.api', () => {
                 ];
 
                 const result = await api.upsertRecord({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data
                 });
 
@@ -551,14 +551,14 @@ describe('recruit.api', () => {
           });
 
           describe('delete', () => {
-            let testCandidateRecordId: ZohoRecruitRecordId;
+            let testCandidateRecordId: ZohoCrmRecordId;
 
             describe('exists', () => {
               beforeEach(async () => {
                 const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-                const result = await api.insertRecord<TestCandidate>({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const result = await api.insertRecord<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   data: {
                     First_Name: `Delete_${createNumber}`,
                     Last_Name: 'Candidate',
@@ -571,7 +571,7 @@ describe('recruit.api', () => {
 
               it('should delete a record', async () => {
                 const deleteResult = await api.deleteRecord({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   ids: testCandidateRecordId
                 });
 
@@ -583,7 +583,7 @@ describe('recruit.api', () => {
 
             it('should be successful but return an error for the failed delete', async () => {
               const deleteResult = await api.deleteRecord({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 ids: '12345'
               });
 
@@ -605,8 +605,8 @@ describe('recruit.api', () => {
 
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const result = await api.upsertRecord<TestCandidate>({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              const result = await api.upsertRecord<TestContact>({
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 data: [
                   {
                     First_Name: `Create_${createNumber}`,
@@ -626,7 +626,7 @@ describe('recruit.api', () => {
               expect(result.successItems[1].result.details.id).toBeDefined();
               expect(result.successItems[1].result.details.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestContact>({ module: ZOHO_CRM_CONTACTS_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
           });
@@ -634,7 +634,7 @@ describe('recruit.api', () => {
       });
 
       describe('read', () => {
-        let testRecordId: ZohoRecruitRecordId;
+        let testRecordId: ZohoCrmRecordId;
 
         beforeEach(async () => {
           const testRecords = await loadTestRecords();
@@ -645,7 +645,7 @@ describe('recruit.api', () => {
         describe('getRecordById()', () => {
           it('should return a record', async () => {
             const result = await api.getRecordById({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               id: testRecordId
             });
 
@@ -657,10 +657,10 @@ describe('recruit.api', () => {
             await expectFail(
               () =>
                 api.getRecordById({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   id: NON_EXISTENT_CANDIDATE_ID
                 }),
-              jestExpectFailAssertErrorType(ZohoRecruitRecordNoContentError)
+              jestExpectFailAssertErrorType(ZohoCrmRecordNoContentError)
             );
           });
         });
@@ -669,7 +669,8 @@ describe('recruit.api', () => {
           it('should return a page of records and respect the limit.', async () => {
             const limit = 3;
             const result = await api.getRecords({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              fields: TEST_CONTACT_FIELDS,
               per_page: limit
             });
 
@@ -679,12 +680,10 @@ describe('recruit.api', () => {
         });
 
         describe('searchRecords()', () => {
-          // This API call suddenly stopped working on Zoho Recruit, so waiting for more info from them.
-          /*
           it('should search results by email', async () => {
             const limit = 3;
             const result = await api.searchRecords({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               email: TEST_ACCOUNT_EXPORT_SUFFIX,
               per_page: limit
             });
@@ -692,13 +691,24 @@ describe('recruit.api', () => {
             expect(result).toBeDefined();
             expect(result.data.length).toBeLessThanOrEqual(limit);
           });
-          */
+
+          it('should search results by email', async () => {
+            const limit = 3;
+            const result = await api.searchRecords({
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              email: TEST_ACCOUNT_EXPORT_SUFFIX,
+              per_page: limit
+            });
+
+            expect(result).toBeDefined();
+            expect(result.data.length).toBeLessThanOrEqual(limit);
+          });
 
           it('should search results by a specific field', async () => {
             const limit = GURANTEED_NUMBER_OF_UPSERT_TEST_RECORDS;
 
-            const result = await api.searchRecords<TestCandidate>({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+            const result = await api.searchRecords<TestContact>({
+              module: ZOHO_CRM_CONTACTS_MODULE,
               criteria: [{ field: 'Last_Name', filter: 'starts_with', value: UPSERT_TEST_LAST_NAME }],
               per_page: limit
             });
@@ -713,8 +723,8 @@ describe('recruit.api', () => {
           it('should search results by a specific field', async () => {
             const limit = GURANTEED_NUMBER_OF_UPSERT_TEST_RECORDS;
 
-            const result = await api.searchRecords<TestCandidate>({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+            const result = await api.searchRecords<TestContact>({
+              module: ZOHO_CRM_CONTACTS_MODULE,
               criteria: [{ field: 'Last_Name', filter: 'starts_with', value: UPSERT_TEST_LAST_NAME }],
               per_page: limit
             });
@@ -730,7 +740,7 @@ describe('recruit.api', () => {
             const limit = GURANTEED_NUMBER_OF_UPSERT_TEST_RECORDS;
 
             const result = await api.searchRecords({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               criteria: [{ field: 'Last_Name', filter: 'starts_with', value: 'Should Not Return Any Results' }],
               per_page: limit
             });
@@ -743,7 +753,7 @@ describe('recruit.api', () => {
             await expectFail(
               () =>
                 api.searchRecords({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   criteria: [
                     {
                       field: 'Last_Name',
@@ -761,7 +771,7 @@ describe('recruit.api', () => {
           it('should search the pages', async () => {
             const itemsPerPage = 1;
             const fetchPage = api.searchRecordsPageFactory({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               criteria: [{ field: 'Last_Name', filter: 'starts_with', value: UPSERT_TEST_LAST_NAME }],
               per_page: itemsPerPage
             });
@@ -780,7 +790,7 @@ describe('recruit.api', () => {
           describe('getEmailsForRecord()', () => {
             it('should return the list of emails for the record', async () => {
               // No way to add emails, so don't expect any results.
-              const result = await api.getEmailsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+              const result = await api.getEmailsForRecord({ id: testRecordId, module: ZOHO_CRM_CONTACTS_MODULE });
               expect(result.data).toBeDefined();
             });
           });
@@ -790,7 +800,7 @@ describe('recruit.api', () => {
           describe('getAttachmentsForRecord()', () => {
             it('should return the list of attachments for the record', async () => {
               // No way to add attachments, so don't expect any results.
-              const result = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+              const result = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS_ARRAY });
               expect(result.data).toBeDefined();
             });
           });
@@ -810,7 +820,7 @@ describe('recruit.api', () => {
               console.log({ length });
 
               const result = await api.uploadAttachmentForRecord({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 id: testRecordId,
                 formData: formData as any,
                 attachmentCategoryName: 'Others'
@@ -830,7 +840,7 @@ describe('recruit.api', () => {
             it('should upload the attachment using the attachment_url', async () => {
 
               const result = await api.uploadAttachmentForRecord({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 id: testRecordId,
                 attachmentUrl: 'https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true',
                 attachmentCategoryName: 'Others'
@@ -847,14 +857,14 @@ describe('recruit.api', () => {
 
           describe('downloadAttachmentForRecord()', () => {
             it('should download the attachment', async () => {
-              const attachments = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+              const attachments = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS_ARRAY });
               const attachmentId = attachments.data[0]?.id;
 
               if (attachmentId) {
                 // No way to add attachments, so don't expect any results.
                 const result = await api.downloadAttachmentForRecord({
                   id: testRecordId,
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   attachment_id: attachmentId
                 });
 
@@ -868,7 +878,7 @@ describe('recruit.api', () => {
 
     describe('notes', () => {
       describe('record', () => {
-        let testRecordId: ZohoRecruitRecordId;
+        let testRecordId: ZohoCrmRecordId;
 
         beforeEach(async () => {
           const testRecords = await loadTestRecords();
@@ -879,7 +889,7 @@ describe('recruit.api', () => {
         describe('createNotesForRecord()', () => {
           it('should create a new note for the record', async () => {
             const result = await api.createNotesForRecord({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               id: testRecordId,
               notes: {
                 Note_Title: 'Test Note',
@@ -893,7 +903,7 @@ describe('recruit.api', () => {
 
           it('should fail to create notes for a record that does not exist', async () => {
             const result = await api.createNotesForRecord({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               id: '0',
               notes: {
                 Note_Title: 'Test Note',
@@ -908,11 +918,11 @@ describe('recruit.api', () => {
 
         describe('getNotesForRecord()', () => {
           beforeEach(async () => {
-            const testNotes = await api.getNotesForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+            const testNotes = await api.getNotesForRecord({ id: testRecordId, module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS });
 
             if (testNotes.data.length === 0) {
               await api.createNotesForRecord({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 id: testRecordId,
                 notes: {
                   Note_Title: 'Test Note',
@@ -923,7 +933,7 @@ describe('recruit.api', () => {
           });
 
           it('should return the list of notes from the record', async () => {
-            const result = await api.getNotesForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+            const result = await api.getNotesForRecord({ id: testRecordId, module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS_ARRAY });
             expect(result.data.length).toBeGreaterThan(0);
             expect(result.data[0].Parent_Id.id).toBe(testRecordId);
 
@@ -932,14 +942,14 @@ describe('recruit.api', () => {
           });
 
           itShouldFail('if a record that does not exist is referenced', async () => {
-            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_RECRUIT_CANDIDATES_MODULE }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
+            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
           });
         });
 
         describe('deleteNotes()', () => {
           it('should delete a note from the record', async () => {
             const result = await api.createNotesForRecord({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              module: ZOHO_CRM_CONTACTS_MODULE,
               id: testRecordId,
               notes: {
                 Note_Title: 'Test Note For Deleting',
@@ -964,33 +974,68 @@ describe('recruit.api', () => {
     });
 
     describe('tags', () => {
+      const TEST_TAG_NAME = `Test Tag`;
+
       describe('createTagsForModule()', () => {
         it('should create a new tag', async () => {
           const randomId = randomNumber(100000000000000);
 
           const result = await api.createTagsForModule({
-            module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+            module: ZOHO_CRM_CONTACTS_MODULE,
             tags: {
-              name: `Test ${randomId}`.substring(0, ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH)
+              name: `Test ${randomId}`.substring(0, ZOHO_CRM_TAG_NAME_MAX_LENGTH)
             }
           });
 
           expect(result.errorItems).toHaveLength(0);
           expect(result.successItems).toHaveLength(1);
         });
+
+        it(`should return an error item if the tag name is longer than ${ZOHO_CRM_TAG_NAME_MAX_LENGTH} characters`, async () => {
+          const result = await api.createTagsForModule({
+            module: ZOHO_CRM_CONTACTS_MODULE,
+            tags: {
+              name: 'A'.repeat(ZOHO_CRM_TAG_NAME_MAX_LENGTH + 1)
+            }
+          });
+
+          expect(result.errorItems).toHaveLength(1);
+          expect(result.successItems).toHaveLength(0);
+        });
+
+        describe('tag exists', () => {
+          beforeEach(async () => {
+            await api.createTagsForModule({
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              tags: {
+                name: TEST_TAG_NAME
+              }
+            });
+          });
+
+          it('should return a duplicateErrorItems in the result when attempting to create a duplicate tag', async () => {
+            const result = await api.createTagsForModule({
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              tags: {
+                name: TEST_TAG_NAME
+              }
+            });
+
+            expect(result.duplicateErrorItems).toHaveLength(1);
+            expect(result.duplicateErrorItems[0].result.code).toBe(ZOHO_DUPLICATE_DATA_ERROR_CODE);
+          });
+        });
       });
 
       describe('getTagsForModule()', () => {
         it('should return the list of tags', async () => {
-          const result = await api.getTagsForModule({ module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+          const result = await api.getTagsForModule({ module: ZOHO_CRM_CONTACTS_MODULE });
           expect(result).toBeDefined();
         });
       });
 
       describe('record', () => {
-        const TEST_TAG_NAME = `Test Tag`;
-
-        let testRecordId: ZohoRecruitRecordId;
+        let testRecordId: ZohoCrmRecordId;
 
         beforeEach(async () => {
           const testRecords = await loadTestRecords();
@@ -1001,17 +1046,19 @@ describe('recruit.api', () => {
         describe('addTagsToRecords()', () => {
           describe('tag exists', () => {
             beforeEach(async () => {
-              await api.createTagsForModule({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
-                tags: {
-                  name: TEST_TAG_NAME
-                }
-              });
+              await api
+                .createTagsForModule({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
+                  tags: {
+                    name: TEST_TAG_NAME
+                  }
+                })
+                .catch(() => {});
             });
 
             it('should add a tag to a record', async () => {
               const result = await api.addTagsToRecords({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 tag_names: TEST_TAG_NAME,
                 ids: testRecordId
               });
@@ -1023,35 +1070,50 @@ describe('recruit.api', () => {
             describe('record is tagged', () => {
               beforeEach(async () => {
                 await api.addTagsToRecords({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   tag_names: TEST_TAG_NAME,
                   ids: testRecordId
                 });
               });
 
+              it('should return the tag in the record', async () => {
+                const result = await api.getRecordById<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
+                  id: testRecordId
+                });
+
+                expect(result).toBeDefined();
+                expect(result.Tag?.map((tag) => tag.name)).toContain(TEST_TAG_NAME);
+              });
+
+              // NOTE: Searching by tags using criteria is unsupported...
+              /*
               describe('searchRecords()', () => {
+
                 it('should search results by associated tags', async () => {
-                  const result = await api.searchRecords<TestCandidate>({
-                    module: ZOHO_RECRUIT_CANDIDATES_MODULE,
-                    criteria: [{ field: 'Associated_Tags', filter: 'contains', value: TEST_TAG_NAME }]
+                  const result = await api.searchRecords<TestContact>({
+                    module: ZOHO_CRM_CONTACTS_MODULE,
+                    criteria: [{ field: 'Tag', filter: 'contains', value: TEST_TAG_NAME }]
                   });
 
                   expect(result).toBeDefined();
                   expect(result.data).not.toHaveLength(0);
                 });
+
               });
+              */
             });
           });
 
-          it('should fail if the tag is not known', async () => {
+          it('should create a new tag and add it to the record if the tag is unknown', async () => {
             const result = await api.addTagsToRecords({
-              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
-              tag_names: `UNKNOWN_TAG_${randomNumber(999999999)}`,
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              tag_names: `UNKNOWN_TAG_${randomNumber(99999999, 'floor')}`,
               ids: testRecordId
             });
 
-            expect(result.errorItems).toHaveLength(1);
-            expect(result.successItems).toHaveLength(0);
+            expect(result.errorItems).toHaveLength(0);
+            expect(result.successItems).toHaveLength(1);
           });
         });
 
@@ -1059,7 +1121,7 @@ describe('recruit.api', () => {
           describe('tag exists', () => {
             beforeEach(async () => {
               await api.createTagsForModule({
-                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                module: ZOHO_CRM_CONTACTS_MODULE,
                 tags: {
                   name: TEST_TAG_NAME
                 }
@@ -1069,7 +1131,7 @@ describe('recruit.api', () => {
             describe('record is tagged', () => {
               beforeEach(async () => {
                 await api.addTagsToRecords({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   tag_names: TEST_TAG_NAME,
                   ids: testRecordId
                 });
@@ -1077,7 +1139,7 @@ describe('recruit.api', () => {
 
               it('should remove a tag from a record', async () => {
                 const result = await api.removeTagsFromRecords({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   tag_names: TEST_TAG_NAME,
                   ids: testRecordId
                 });
@@ -1085,13 +1147,13 @@ describe('recruit.api', () => {
                 expect(result.errorItems).toHaveLength(0);
                 expect(result.successItems).toHaveLength(1);
 
-                const record = await api.getRecordById({
-                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                const record = await api.getRecordById<TestContact>({
+                  module: ZOHO_CRM_CONTACTS_MODULE,
                   id: testRecordId
                 });
 
-                expect((record as any).Associated_Tags).toBeDefined();
-                expect(((record as any).Associated_Tags as ZohoRecruitTag[]).filter((x) => x.name === TEST_TAG_NAME)).toHaveLength(0);
+                expect(record.Tag).toBeDefined();
+                expect(record.Tag?.map((tag) => tag.name)).not.toContain(TEST_TAG_NAME);
               });
             });
           });
@@ -1100,7 +1162,7 @@ describe('recruit.api', () => {
 
       /*
       describe('record', () => {
-        let testRecordId: ZohoRecruitRecordId;
+        let testRecordId: ZohoCrmRecordId;
 
         beforeEach(async () => {
           const testRecords = await loadTestRecords();
@@ -1110,7 +1172,7 @@ describe('recruit.api', () => {
 
         it('should add a tag to a record', async () => {
           const result = await api.addTagToRecord({
-            module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+            module: ZOHO_CRM_CONTACTS_MODULE,
             ids: testRecordId,
             tags: 'Test Tag'
           });
@@ -1124,7 +1186,7 @@ describe('recruit.api', () => {
     });
 
     describe('REST API Functions', () => {
-      // NOTE: Requires the ZohoRecruit.functions.execute.READ to be
+      // NOTE: Requires the ZohoCrm.functions.execute.READ to be
 
       describe('executeRestApiFunction()', () => {
         it('should execute the function', async () => {

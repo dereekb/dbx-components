@@ -25,7 +25,7 @@ export type ZohoRecruitCreateTagsResult = ZohoRecruitMultiRecordResult<ZohoRecru
 
 export type ZohoRecruitCreateTagsFunction = (input: ZohoRecruitCreateTagsRequest) => Promise<ZohoRecruitCreateTagsResult>;
 
-export function createTagsForModule(context: ZohoRecruitContext) {
+export function zohoRecruitCreateTagsForModule(context: ZohoRecruitContext) {
   return (input: ZohoRecruitCreateTagsRequest) =>
     context.fetchJson<ZohoRecruitCreateTagsResponse>(`/v2/settings/tags?${makeUrlSearchParams({ module: input.module })}`, zohoRecruitApiFetchJsonInput('POST', { tags: asArray(input.tags) })).then((x) => {
       const result = zohoRecruitMultiRecordResult<ZohoRecruitCreateTagData, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(input.tags), x.tags);
@@ -63,7 +63,7 @@ export type ZohoRecruitGetTagsFunction = (input: ZohoRecruitGetTagsRequest) => P
  * @param context
  * @returns
  */
-export function getTagsForModule(context: ZohoRecruitContext): ZohoRecruitGetTagsFunction {
+export function zohoRecruitGetTagsForModule(context: ZohoRecruitContext): ZohoRecruitGetTagsFunction {
   return (input: ZohoRecruitGetTagsRequest) =>
     context.fetchJson<ZohoRecruitGetTagsResponse>(`/v2/settings/tags?${makeUrlSearchParams({ module: input.module, my_tags: input.my_tags })}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => {
       // NOTE: This doesn't follow the api documentation, and instead is a normal page result except it has "tags" instead of "data".
@@ -75,10 +75,10 @@ export function getTagsForModule(context: ZohoRecruitContext): ZohoRecruitGetTag
     });
 }
 
-export type GetTagsForModulePageFactory = (input: ZohoRecruitGetTagsRequest, options?: Maybe<FetchPageFactoryOptions<ZohoRecruitGetTagsRequest, ZohoRecruitGetTagsResult>>) => FetchPage<ZohoRecruitGetTagsRequest, ZohoRecruitGetTagsResult>;
+export type ZohoRecruitGetTagsForModulePageFactory = (input: ZohoRecruitGetTagsRequest, options?: Maybe<FetchPageFactoryOptions<ZohoRecruitGetTagsRequest, ZohoRecruitGetTagsResult>>) => FetchPage<ZohoRecruitGetTagsRequest, ZohoRecruitGetTagsResult>;
 
-export function getTagsForModulePageFactory(context: ZohoRecruitContext): GetTagsForModulePageFactory {
-  return zohoFetchPageFactory(getTagsForModule(context));
+export function zohoRecruitGetTagsForModulePageFactory(context: ZohoRecruitContext): ZohoRecruitGetTagsForModulePageFactory {
+  return zohoFetchPageFactory(zohoRecruitGetTagsForModule(context));
 }
 
 // MARK: Add Tag To Record
@@ -138,7 +138,7 @@ export type ZohoRecruitAddTagsToRecordsFunction = (input: ZohoRecruitAddTagsToRe
  * @param context
  * @returns
  */
-export function addTagsToRecords(context: ZohoRecruitContext): ZohoRecruitAddTagsToRecordsFunction {
+export function zohoRecruitAddTagsToRecords(context: ZohoRecruitContext): ZohoRecruitAddTagsToRecordsFunction {
   return (input: ZohoRecruitAddTagsToRecordsRequest) => {
     if (Array.isArray(input.ids) && input.ids.length > ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
       throw new Error(`Cannot add tags to more than ${ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} records at once.`);
@@ -187,7 +187,7 @@ export type ZohoRecruitRemoveTagsFromRecordsFunction = (input: ZohoRecruitRemove
  * @param context
  * @returns
  */
-export function removeTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitRemoveTagsFromRecordsFunction {
+export function zohoRecruitRemoveTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitRemoveTagsFromRecordsFunction {
   return (input: ZohoRecruitRemoveTagsFromRecordsRequest) => {
     if (Array.isArray(input.ids) && input.ids.length > ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED) {
       throw new Error(`Cannot remove tags from more than ${ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED} records at once.`);
@@ -199,3 +199,34 @@ export function removeTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitR
     });
   };
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use zohoRecruitCreateTagsForModule instead.
+ */
+export const createTagsForModule = zohoRecruitCreateTagsForModule;
+
+/**
+ * @deprecated Use zohoRecruitGetTagsForModule instead.
+ */
+export const getTagsForModule = zohoRecruitGetTagsForModule;
+
+/**
+ * @deprecated Use zohoRecruitGetTagsForModulePageFactory instead.
+ */
+export const getTagsForModulePageFactory = zohoRecruitGetTagsForModulePageFactory;
+
+/**
+ * @deprecated Use zohoRecruitAddTagsToRecords instead.
+ */
+export const addTagsToRecords = zohoRecruitAddTagsToRecords;
+
+/**
+ * @deprecated Use zohoRecruitRemoveTagsFromRecords instead.
+ */
+export const removeTagsFromRecords = zohoRecruitRemoveTagsFromRecords;
+
+/**
+ * @deprecated Use ZohoRecruitGetTagsForModulePageFactory instead.
+ */
+export type GetTagsForModulePageFactory = ZohoRecruitGetTagsForModulePageFactory;
