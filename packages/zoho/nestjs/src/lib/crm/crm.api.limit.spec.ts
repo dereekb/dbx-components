@@ -54,7 +54,7 @@ describe('crm.api.limit', () => {
         /*
         const result = await Promise.all(range(DEFAULT_ZOHO_API_RATE_LIMIT).map(() => {
           return api.searchRecords<TestCandidate>({
-            module: ZOHO_CRM_CANDIDATES_MODULE,
+            module: ZOHO_CRM_LEADS_MODULE,
             criteria: [{ field: 'First_Name', filter: 'equals', value: 'test' }]
           });
         }));

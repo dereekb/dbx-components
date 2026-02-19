@@ -25,7 +25,7 @@ import {
 } from './crm';
 import { zohoCrmSearchRecordsCriteriaString, type ZohoCrmSearchRecordsCriteriaTreeElement } from './crm.criteria';
 import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, type WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
-import { assertRecordDataArrayResultHasContent, zohoCrmRecordCrudError } from './crm.error.api';
+import { assertZohoCrmRecordDataArrayResultHasContent, zohoCrmRecordCrudError } from './crm.error.api';
 import { ZOHO_SUCCESS_STATUS, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
 import { type ZohoDateTimeString } from '../zoho.type';
 import { BaseError } from 'make-error';
@@ -120,7 +120,7 @@ export type ZohoCrmInsertRecordFunction = ZohoCrmCreateRecordLikeFunction;
  * @param context
  * @returns
  */
-export function insertRecord(context: ZohoCrmContext): ZohoCrmInsertRecordFunction {
+export function zohoCrmInsertRecord(context: ZohoCrmContext): ZohoCrmInsertRecordFunction {
   return updateRecordLikeFunction(context, '', 'POST') as ZohoCrmInsertRecordFunction;
 }
 
@@ -138,7 +138,7 @@ export type ZohoCrmUpsertRecordFunction = ZohoCrmUpsertRecordLikeFunction;
  * @param context
  * @returns
  */
-export function upsertRecord(context: ZohoCrmContext): ZohoCrmUpsertRecordFunction {
+export function zohoCrmUpsertRecord(context: ZohoCrmContext): ZohoCrmUpsertRecordFunction {
   return updateRecordLikeFunction(context, '/upsert', 'POST') as ZohoCrmUpsertRecordFunction;
 }
 
@@ -153,7 +153,7 @@ export type ZohoCrmUpdateRecordFunction = ZohoCrmUpdateRecordLikeFunction;
  * @param context
  * @returns
  */
-export function updateRecord(context: ZohoCrmContext): ZohoCrmUpdateRecordFunction {
+export function zohoCrmUpdateRecord(context: ZohoCrmContext): ZohoCrmUpdateRecordFunction {
   return updateRecordLikeFunction(context, '', 'PUT') as ZohoCrmUpdateRecordFunction;
 }
 
@@ -186,7 +186,7 @@ export type ZohoCrmDeleteRecordResult = ZohoCrmChangeObjectResponseSuccessEntry[
  * @param context
  * @returns ZohoCrmDeleteRecordFunction
  */
-export function deleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecordFunction {
+export function zohoCrmDeleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecordFunction {
   return ({ ids, module, wf_trigger }: ZohoCrmDeleteRecordInput) => {
     return context.fetchJson<ZohoCrmDeleteRecordResponse>(`/v8/${module}?${makeUrlSearchParams({ ids, wf_trigger })}`, zohoCrmApiFetchJsonInput('DELETE')).then(zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs);
   };
@@ -210,11 +210,11 @@ export type ZohoCrmGetRecordByIdFunction = <T = ZohoCrmRecord>(input: ZohoCrmGet
  * @param context
  * @returns
  */
-export function getRecordById(context: ZohoCrmContext): ZohoCrmGetRecordByIdFunction {
+export function zohoCrmGetRecordById(context: ZohoCrmContext): ZohoCrmGetRecordByIdFunction {
   return <T>(input: ZohoCrmGetRecordByIdInput) =>
     context
       .fetchJson<ZohoCrmGetRecordByIdResponse<T>>(`/v8/${input.module}/${input.id}`, zohoCrmApiFetchJsonInput('GET'))
-      .then(assertRecordDataArrayResultHasContent(input.module))
+      .then(assertZohoCrmRecordDataArrayResultHasContent(input.module))
       .then((x) => x.data[0]);
 }
 
@@ -245,7 +245,7 @@ export type ZohoCrmGetRecordsFunction = <T = ZohoCrmRecord>(input: ZohoCrmGetRec
  * @param context
  * @returns
  */
-export function getRecords(context: ZohoCrmContext): ZohoCrmGetRecordsFunction {
+export function zohoCrmGetRecords(context: ZohoCrmContext): ZohoCrmGetRecordsFunction {
   return ((input: ZohoCrmGetRecordsInput) => context.fetchJson<ZohoCrmGetRecordsResponse>(`/v8/${input.module}?${zohoCrmUrlSearchParamsMinusModule(input).toString()}`, zohoCrmApiFetchJsonInput('GET'))) as ZohoCrmGetRecordsFunction;
 }
 
@@ -276,7 +276,7 @@ export type ZohoCrmSearchRecordsFunction = <T = ZohoCrmRecord>(input: ZohoCrmSea
  * @param context
  * @returns
  */
-export function searchRecords(context: ZohoCrmContext): ZohoCrmSearchRecordsFunction {
+export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchRecordsFunction {
   function searchRecordsUrlSearchParams<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) {
     const baseInput = { ...input };
     delete baseInput.criteria;
@@ -297,10 +297,10 @@ export function searchRecords(context: ZohoCrmContext): ZohoCrmSearchRecordsFunc
   return (<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoCrmSearchRecordsFunction;
 }
 
-export type SearchRecordsPageFactory = <T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>>) => FetchPage<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>;
+export type ZohoCrmSearchRecordsPageFactory = <T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>>) => FetchPage<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>;
 
-export function searchRecordsPageFactory(context: ZohoCrmContext): SearchRecordsPageFactory {
-  return zohoFetchPageFactory(searchRecords(context));
+export function zohoCrmSearchRecordsPageFactory(context: ZohoCrmContext): ZohoCrmSearchRecordsPageFactory {
+  return zohoFetchPageFactory(zohoCrmSearchRecords(context));
 }
 
 // MARK: Related Records
@@ -341,7 +341,7 @@ export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCr
  * @param context the ZohoCrmContext to use
  * @returns a ZohoCrmGetRelatedRecordsFunctionFactory
  */
-export function getRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
+export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
     return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
@@ -353,14 +353,14 @@ export type ZohoCrmGetEmailsForRecordRequest = ZohoCrmGetRelatedRecordsRequest;
 export type ZohoCrmGetEmailsForRecordResponse = ZohoPageResult<ZohoCrmRecordEmailMetadata>;
 export type ZohoCrmGetEmailsForRecordFunction = (input: ZohoCrmGetEmailsForRecordRequest) => Promise<ZohoCrmGetEmailsForRecordResponse>;
 
-export function getEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordFunction {
-  return getRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
+export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordFunction {
+  return zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
 }
 
-export type GetEmailsForRecordPageFactory = FetchPageFactory<ZohoCrmGetEmailsForRecordRequest, ZohoCrmGetEmailsForRecordResponse>;
+export type ZohoCrmGetEmailsForRecordPageFactory = FetchPageFactory<ZohoCrmGetEmailsForRecordRequest, ZohoCrmGetEmailsForRecordResponse>;
 
-export function getEmailsForRecordPageFactory(context: ZohoCrmContext): GetEmailsForRecordPageFactory {
-  return zohoFetchPageFactory(getEmailsForRecord(context));
+export function zohoCrmGetEmailsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordPageFactory {
+  return zohoFetchPageFactory(zohoCrmGetEmailsForRecord(context));
 }
 
 // MARK: Attachments
@@ -368,14 +368,14 @@ export type ZohoCrmGetAttachmentsForRecordRequest = ZohoCrmGetRelatedRecordsRequ
 export type ZohoCrmGetAttachmentsForRecordResponse = ZohoPageResult<ZohoCrmRecordAttachmentMetadata>;
 export type ZohoCrmGetAttachmentsForRecordFunction = (input: ZohoCrmGetAttachmentsForRecordRequest) => Promise<ZohoCrmGetAttachmentsForRecordResponse>;
 
-export function getAttachmentsForRecord(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordFunction {
-  return getRelatedRecordsFunctionFactory(context)<ZohoCrmRecordAttachmentMetadata>({ targetModule: ZOHO_CRM_ATTACHMENTS_MODULE });
+export function zohoCrmGetAttachmentsForRecord(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordFunction {
+  return zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordAttachmentMetadata>({ targetModule: ZOHO_CRM_ATTACHMENTS_MODULE });
 }
 
-export type GetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoCrmGetAttachmentsForRecordRequest, ZohoCrmGetAttachmentsForRecordResponse>;
+export type ZohoCrmGetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoCrmGetAttachmentsForRecordRequest, ZohoCrmGetAttachmentsForRecordResponse>;
 
-export function getAttachmentsForRecordPageFactory(context: ZohoCrmContext): GetAttachmentsForRecordPageFactory {
-  return zohoFetchPageFactory(getAttachmentsForRecord(context));
+export function zohoCrmGetAttachmentsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordPageFactory {
+  return zohoFetchPageFactory(zohoCrmGetAttachmentsForRecord(context));
 }
 
 /**
@@ -427,7 +427,7 @@ export type ZohoCrmUploadAttachmentForRecordFunction = (input: ZohoCrmUploadAtta
  * @param context
  * @returns
  */
-export function uploadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmUploadAttachmentForRecordFunction {
+export function zohoCrmUploadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmUploadAttachmentForRecordFunction {
   return (input: ZohoCrmUploadAttachmentForRecordRequest) => {
     const { attachmentCategoryId, attachmentCategoryName, formData } = input;
 
@@ -503,7 +503,7 @@ export type ZohoCrmDownloadAttachmentForRecordFunction = (input: ZohoCrmDownload
  * @param context
  * @returns
  */
-export function downloadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmDownloadAttachmentForRecordFunction {
+export function zohoCrmDownloadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmDownloadAttachmentForRecordFunction {
   return (input: ZohoCrmDownloadAttachmentForRecordRequest) => context.fetch(`/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'GET' }).then(parseFetchFileResponse);
 }
 
@@ -522,7 +522,7 @@ export type ZohoCrmDeleteAttachmentFromRecordFunction = (input: ZohoCrmDeleteAtt
  * @param context
  * @returns
  */
-export function deleteAttachmentFromRecord(context: ZohoCrmContext): ZohoCrmDeleteAttachmentFromRecordFunction {
+export function zohoCrmDeleteAttachmentFromRecord(context: ZohoCrmContext): ZohoCrmDeleteAttachmentFromRecordFunction {
   return (input: ZohoCrmDeleteAttachmentFromRecordRequest) => context.fetch(`/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'DELETE' });
 }
 
@@ -595,7 +595,7 @@ export type ZohoCrmExecuteRestApiFunctionFunction = (input: ZohoCrmExecuteRestAp
  * @param context
  * @returns
  */
-export function executeRestApiFunction(context: ZohoCrmContext): ZohoCrmExecuteRestApiFunctionFunction {
+export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmExecuteRestApiFunctionFunction {
   return (input: ZohoCrmExecuteRestApiFunctionRequest): Promise<ZohoCrmExecuteRestApiFunctionSuccessDetails> => {
     const inputSearchParams = makeUrlSearchParams(input.params);
     const inputSearchParamsString = inputSearchParams.toString();
@@ -695,11 +695,11 @@ export interface ZohoCrmMultiRecordResult<I, OS, OE> {
   readonly errorItems: ZohoCrmMultiRecordResultEntry<I, OE>[];
 }
 
-export interface ZohoRecrutMultiRecordResultItem {
+export interface ZohoCrmMultiRecordResultItem {
   readonly status: ZohoServerSuccessStatus | ZohoServerErrorStatus;
 }
 
-export function zohoCrmMultiRecordResult<I, OS extends ZohoRecrutMultiRecordResultItem, OE extends ZohoRecrutMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoCrmMultiRecordResult<I, OS, OE> {
+export function zohoCrmMultiRecordResult<I, OS extends ZohoCrmMultiRecordResultItem, OE extends ZohoCrmMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoCrmMultiRecordResult<I, OS, OE> {
   const successItems: ZohoCrmMultiRecordResultEntry<I, OS>[] = [];
   const errorItems: ZohoCrmMultiRecordResultEntry<I, OE>[] = [];
 

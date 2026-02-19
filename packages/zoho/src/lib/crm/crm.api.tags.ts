@@ -25,7 +25,7 @@ export type ZohoCrmCreateTagsResult = ZohoCrmMultiRecordResult<ZohoCrmCreateTagD
 
 export type ZohoCrmCreateTagsFunction = (input: ZohoCrmCreateTagsRequest) => Promise<ZohoCrmCreateTagsResult>;
 
-export function createTagsForModule(context: ZohoCrmContext) {
+export function zohoCrmCreateTagsForModule(context: ZohoCrmContext) {
   return (input: ZohoCrmCreateTagsRequest) =>
     context.fetchJson<ZohoCrmCreateTagsResponse>(`/v8/settings/tags?${makeUrlSearchParams({ module: input.module })}`, zohoCrmApiFetchJsonInput('POST', { tags: asArray(input.tags) })).then((x) => {
       const result = zohoCrmMultiRecordResult<ZohoCrmCreateTagData, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(input.tags), x.tags);
@@ -63,7 +63,7 @@ export type ZohoCrmGetTagsFunction = (input: ZohoCrmGetTagsRequest) => Promise<Z
  * @param context
  * @returns
  */
-export function getTagsForModule(context: ZohoCrmContext): ZohoCrmGetTagsFunction {
+export function zohoCrmGetTagsForModule(context: ZohoCrmContext): ZohoCrmGetTagsFunction {
   return (input: ZohoCrmGetTagsRequest) =>
     context.fetchJson<ZohoCrmGetTagsResponse>(`/v8/settings/tags?${makeUrlSearchParams({ module: input.module, my_tags: input.my_tags })}`, zohoCrmApiFetchJsonInput('GET')).then((x) => {
       // NOTE: This doesn't follow the api documentation, and instead is a normal page result except it has "tags" instead of "data".
@@ -75,10 +75,10 @@ export function getTagsForModule(context: ZohoCrmContext): ZohoCrmGetTagsFunctio
     });
 }
 
-export type GetTagsForModulePageFactory = (input: ZohoCrmGetTagsRequest, options?: Maybe<FetchPageFactoryOptions<ZohoCrmGetTagsRequest, ZohoCrmGetTagsResult>>) => FetchPage<ZohoCrmGetTagsRequest, ZohoCrmGetTagsResult>;
+export type ZohoCrmGetTagsForModulePageFactory = (input: ZohoCrmGetTagsRequest, options?: Maybe<FetchPageFactoryOptions<ZohoCrmGetTagsRequest, ZohoCrmGetTagsResult>>) => FetchPage<ZohoCrmGetTagsRequest, ZohoCrmGetTagsResult>;
 
-export function getTagsForModulePageFactory(context: ZohoCrmContext): GetTagsForModulePageFactory {
-  return zohoFetchPageFactory(getTagsForModule(context));
+export function zohoCrmGetTagsForModulePageFactory(context: ZohoCrmContext): ZohoCrmGetTagsForModulePageFactory {
+  return zohoFetchPageFactory(zohoCrmGetTagsForModule(context));
 }
 
 // MARK: Add Tag To Record
@@ -138,7 +138,7 @@ export type ZohoCrmAddTagsToRecordsFunction = (input: ZohoCrmAddTagsToRecordsReq
  * @param context
  * @returns
  */
-export function addTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTagsToRecordsFunction {
+export function zohoCrmAddTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTagsToRecordsFunction {
   return (input: ZohoCrmAddTagsToRecordsRequest) => {
     if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
       throw new Error(`Cannot add tags to more than ${ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} records at once.`);
@@ -187,7 +187,7 @@ export type ZohoCrmRemoveTagsFromRecordsFunction = (input: ZohoCrmRemoveTagsFrom
  * @param context
  * @returns
  */
-export function removeTagsFromRecords(context: ZohoCrmContext): ZohoCrmRemoveTagsFromRecordsFunction {
+export function zohoCrmRemoveTagsFromRecords(context: ZohoCrmContext): ZohoCrmRemoveTagsFromRecordsFunction {
   return (input: ZohoCrmRemoveTagsFromRecordsRequest) => {
     if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED) {
       throw new Error(`Cannot remove tags from more than ${ZOHO_CRM_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED} records at once.`);

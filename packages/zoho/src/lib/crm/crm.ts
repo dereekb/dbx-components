@@ -205,7 +205,7 @@ export interface ZohoCrmChangeObjectDetails {
  */
 export interface ZohoCrmRecordFieldsData {}
 
-export interface ZohoRecordDraftStateData {
+export interface ZohoCrmRecordDraftStateData {
   /**
    * Used to update a draft record or to convert a draft to a normal record.
    *
@@ -214,12 +214,12 @@ export interface ZohoRecordDraftStateData {
   $state?: ZohoCrmDraftOrSaveState;
 }
 
-export type NewZohoCrmRecordData<T = ZohoCrmRecordFieldsData> = T & ZohoRecordDraftStateData;
+export type NewZohoCrmRecordData<T = ZohoCrmRecordFieldsData> = T & ZohoCrmRecordDraftStateData;
 
 /**
  * A ZohoCrm record containing the corresponding record's id.
  */
-export type UpdateZohoCrmRecordData = UniqueModelWithId & ZohoCrmRecordFieldsData & ZohoRecordDraftStateData;
+export type UpdateZohoCrmRecordData = UniqueModelWithId & ZohoCrmRecordFieldsData & ZohoCrmRecordDraftStateData;
 
 /**
  * A ZohoCrm record containing record details.

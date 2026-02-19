@@ -113,7 +113,7 @@ export interface ZohoCrmSearchRecordsCriteriaEntry<T = any> {
 /**
  * Escape used for ZohoCrmSearchRecordsCriteriaString
  */
-export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunction({
+export const escapeZohoCrmFieldValueForCriteriaString = escapeStringCharactersFunction({
   /**
    * Parenthesis and commas must be escaped using a backslash
    */
@@ -128,6 +128,6 @@ export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunct
  * @returns
  */
 export function zohoCrmSearchRecordsCriteriaEntryToCriteriaString<T = any>(entry: ZohoCrmSearchRecordsCriteriaEntry<T>): ZohoCrmSearchRecordsCriteriaString {
-  const escapedValue = escapeZohoFieldValueForCriteriaString(entry.value);
+  const escapedValue = escapeZohoCrmFieldValueForCriteriaString(entry.value);
   return `(${entry.field}:${entry.filter}:${escapedValue})`;
 }

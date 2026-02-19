@@ -65,7 +65,7 @@ export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): Z
   return result;
 }
 
-export function assertRecordDataArrayResultHasContent<T>(moduleName?: ZohoCrmModuleName, recordId?: ZohoCrmRecordId) {
+export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: ZohoCrmModuleName, recordId?: ZohoCrmRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
     if (x == null || !x.data?.length) {
       throw new ZohoCrmRecordNoContentError(moduleName, recordId);

@@ -2,33 +2,33 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   ZohoCrm,
   ZohoCrmContext,
-  createNotes,
-  createNotesForRecord,
-  deleteNotes,
-  deleteRecord,
-  executeRestApiFunction,
-  getNotesForRecord,
-  getNotesForRecordPageFactory,
-  getRecordById,
-  getRecords,
-  getRelatedRecordsFunctionFactory,
-  insertRecord,
-  searchRecords,
-  searchRecordsPageFactory,
-  updateRecord,
-  upsertRecord,
+  zohoCrmCreateNotes,
+  zohoCrmCreateNotesForRecord,
+  zohoCrmDeleteNotes,
+  zohoCrmDeleteRecord,
+  zohoCrmExecuteRestApiFunction,
+  zohoCrmGetNotesForRecord,
+  zohoCrmGetNotesForRecordPageFactory,
+  zohoCrmGetRecordById,
+  zohoCrmGetRecords,
+  zohoCrmGetRelatedRecordsFunctionFactory,
+  zohoCrmInsertRecord,
+  zohoCrmSearchRecords,
+  zohoCrmSearchRecordsPageFactory,
+  zohoCrmUpdateRecord,
+  zohoCrmUpsertRecord,
   zohoCrmFactory,
-  createTagsForModule,
-  getTagsForModule,
-  addTagsToRecords,
-  getEmailsForRecord,
-  getEmailsForRecordPageFactory,
-  getAttachmentsForRecordPageFactory,
-  getAttachmentsForRecord,
-  downloadAttachmentForRecord,
-  uploadAttachmentForRecord,
-  deleteAttachmentFromRecord,
-  removeTagsFromRecords
+  zohoCrmCreateTagsForModule,
+  zohoCrmGetTagsForModule,
+  zohoCrmAddTagsToRecords,
+  zohoCrmGetEmailsForRecord,
+  zohoCrmGetEmailsForRecordPageFactory,
+  zohoCrmGetAttachmentsForRecordPageFactory,
+  zohoCrmGetAttachmentsForRecord,
+  zohoCrmDownloadAttachmentForRecord,
+  zohoCrmUploadAttachmentForRecord,
+  zohoCrmDeleteAttachmentFromRecord,
+  zohoCrmRemoveTagsFromRecords
 } from '@dereekb/zoho';
 import { ZohoCrmServiceConfig } from './crm.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -57,106 +57,106 @@ export class ZohoCrmApi {
 
   // MARK: Accessors
   get insertRecord() {
-    return insertRecord(this.crmContext);
+    return zohoCrmInsertRecord(this.crmContext);
   }
 
   get upsertRecord() {
-    return upsertRecord(this.crmContext);
+    return zohoCrmUpsertRecord(this.crmContext);
   }
 
   get updateRecord() {
-    return updateRecord(this.crmContext);
+    return zohoCrmUpdateRecord(this.crmContext);
   }
 
   get deleteRecord() {
-    return deleteRecord(this.crmContext);
+    return zohoCrmDeleteRecord(this.crmContext);
   }
 
   get getRecordById() {
-    return getRecordById(this.crmContext);
+    return zohoCrmGetRecordById(this.crmContext);
   }
 
   get getRecords() {
-    return getRecords(this.crmContext);
+    return zohoCrmGetRecords(this.crmContext);
   }
 
   get searchRecords() {
-    return searchRecords(this.crmContext);
+    return zohoCrmSearchRecords(this.crmContext);
   }
 
   get searchRecordsPageFactory() {
-    return searchRecordsPageFactory(this.crmContext);
+    return zohoCrmSearchRecordsPageFactory(this.crmContext);
   }
 
   get getRelatedRecordsFunctionFactory() {
-    return getRelatedRecordsFunctionFactory(this.crmContext);
+    return zohoCrmGetRelatedRecordsFunctionFactory(this.crmContext);
   }
 
   get getEmailsForRecord() {
-    return getEmailsForRecord(this.crmContext);
+    return zohoCrmGetEmailsForRecord(this.crmContext);
   }
 
   get getEmailsForRecordPageFactory() {
-    return getEmailsForRecordPageFactory(this.crmContext);
+    return zohoCrmGetEmailsForRecordPageFactory(this.crmContext);
   }
 
   get getAttachmentsForRecord() {
-    return getAttachmentsForRecord(this.crmContext);
+    return zohoCrmGetAttachmentsForRecord(this.crmContext);
   }
 
   get getAttachmentsForRecordPageFactory() {
-    return getAttachmentsForRecordPageFactory(this.crmContext);
+    return zohoCrmGetAttachmentsForRecordPageFactory(this.crmContext);
   }
 
   get uploadAttachmentForRecord() {
-    return uploadAttachmentForRecord(this.crmContext);
+    return zohoCrmUploadAttachmentForRecord(this.crmContext);
   }
 
   get downloadAttachmentForRecord() {
-    return downloadAttachmentForRecord(this.crmContext);
+    return zohoCrmDownloadAttachmentForRecord(this.crmContext);
   }
 
   get deleteAttachmentFromRecord() {
-    return deleteAttachmentFromRecord(this.crmContext);
+    return zohoCrmDeleteAttachmentFromRecord(this.crmContext);
   }
 
   get createNotes() {
-    return createNotes(this.crmContext);
+    return zohoCrmCreateNotes(this.crmContext);
   }
 
   get deleteNotes() {
-    return deleteNotes(this.crmContext);
+    return zohoCrmDeleteNotes(this.crmContext);
   }
 
   get createNotesForRecord() {
-    return createNotesForRecord(this.crmContext);
+    return zohoCrmCreateNotesForRecord(this.crmContext);
   }
 
   get getNotesForRecord() {
-    return getNotesForRecord(this.crmContext);
+    return zohoCrmGetNotesForRecord(this.crmContext);
   }
 
   get getNotesForRecordPageFactory() {
-    return getNotesForRecordPageFactory(this.crmContext);
+    return zohoCrmGetNotesForRecordPageFactory(this.crmContext);
   }
 
   get executeRestApiFunction() {
-    return executeRestApiFunction(this.crmContext);
+    return zohoCrmExecuteRestApiFunction(this.crmContext);
   }
 
   get createTagsForModule() {
-    return createTagsForModule(this.crmContext);
+    return zohoCrmCreateTagsForModule(this.crmContext);
   }
 
   get getTagsForModule() {
-    return getTagsForModule(this.crmContext);
+    return zohoCrmGetTagsForModule(this.crmContext);
   }
 
   get addTagsToRecords() {
-    return addTagsToRecords(this.crmContext);
+    return zohoCrmAddTagsToRecords(this.crmContext);
   }
 
   get removeTagsFromRecords() {
-    return removeTagsFromRecords(this.crmContext);
+    return zohoCrmRemoveTagsFromRecords(this.crmContext);
   }
 }

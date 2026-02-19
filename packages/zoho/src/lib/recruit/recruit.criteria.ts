@@ -113,7 +113,7 @@ export interface ZohoRecruitSearchRecordsCriteriaEntry<T = any> {
 /**
  * Escape used for ZohoRecruitSearchRecordsCriteriaString
  */
-export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunction({
+export const escapeZohoRecruitFieldValueForCriteriaString = escapeStringCharactersFunction({
   /**
    * Parenthesis and commas must be escaped using a backslash
    */
@@ -128,6 +128,12 @@ export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunct
  * @returns
  */
 export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T = any>(entry: ZohoRecruitSearchRecordsCriteriaEntry<T>): ZohoRecruitSearchRecordsCriteriaString {
-  const escapedValue = escapeZohoFieldValueForCriteriaString(entry.value);
+  const escapedValue = escapeZohoRecruitFieldValueForCriteriaString(entry.value);
   return `(${entry.field}:${entry.filter}:${escapedValue})`;
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use escapeZohoRecruitFieldValueForCriteriaString instead.
+ */
+export const escapeZohoFieldValueForCriteriaString = escapeZohoRecruitFieldValueForCriteriaString;
