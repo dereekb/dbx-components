@@ -1,7 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { TargetModelParams, OnCallCreateModelResult, FirestoreModelKey, IsFirestoreModelKey, IsFirestoreModelId } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
-import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType, IsNotEmpty } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType, IsNotEmpty, ValidateNested, IsArray } from 'class-validator';
 import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds, UnixDateTimeSecondsNumber } from '@dereekb/util';
@@ -320,6 +320,31 @@ export interface SyncAllFlaggedStorageFilesWithGroupsResult {
   readonly storageFilesGroupsUpdated: number;
 }
 
+export class UpdateStorageFileGroupParams extends TargetModelParams {
+  /**
+   * Entries to update, if selected.
+   */
+  @Expose()
+  @IsArray()
+  @IsOptional()
+  @Type(() => UpdateStorageFileGroupEntryParams)
+  @ValidateNested({ each: true })
+  entries?: Maybe<UpdateStorageFileGroupEntryParams[]>;
+}
+
+export class UpdateStorageFileGroupEntryParams {
+  @Expose()
+  @IsNotEmpty()
+  @IsFirestoreModelId()
+  s!: StorageFileId;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  n?: Maybe<string>;
+}
+
 export class RegenerateStorageFileGroupContentParams extends TargetModelParams {
   /**
    * If true, will force syncing even if the StorageFile is not flagged for a resync.
@@ -398,6 +423,7 @@ export type StorageFileModelCrudFunctionsConfig = {
   };
   storageFileGroup: {
     update: {
+      _: UpdateStorageFileGroupParams;
       regenerateContent: [RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult];
     };
   };
@@ -405,7 +431,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
   storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download'],
-  storageFileGroup: ['update:regenerateContent']
+  storageFileGroup: ['update:_,regenerateContent']
 };
 
 export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<StorageFileFunctionTypeMap, StorageFileModelCrudFunctionsConfig> {
@@ -429,6 +455,7 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
   };
   abstract storageFileGroup: {
     updateStorageFileGroup: {
+      update: ModelFirebaseCrudFunction<UpdateStorageFileGroupParams>;
       regenerateContent: ModelFirebaseCrudFunction<RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult>;
     };
   };

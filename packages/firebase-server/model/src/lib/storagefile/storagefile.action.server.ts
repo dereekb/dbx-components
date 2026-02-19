@@ -65,7 +65,9 @@ import {
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
   type StorageFileGroupZipStorageFileMetadata,
   type SendNotificationResult,
-  type StorageFileGroupId
+  type StorageFileGroupId,
+  UpdateStorageFileGroupParams,
+  type StorageFileGroupEmbeddedFile
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -87,7 +89,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -116,6 +118,7 @@ export abstract class StorageFileServerActions {
   abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
   abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument?: Maybe<StorageFileDocument>) => Promise<DownloadStorageFileResult>>>;
   abstract createStorageFileGroup(params: CreateStorageFileGroupParams): AsyncStorageFileGroupCreateAction<CreateStorageFileGroupParams>;
+  abstract updateStorageFileGroup(params: UpdateStorageFileGroupParams): Promise<TransformAndValidateFunctionResult<UpdateStorageFileGroupParams, (storageFileGroupDocument: StorageFileGroupDocument) => Promise<StorageFileGroupDocument>>>;
   abstract syncStorageFileWithGroups(params: SyncStorageFileWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncStorageFileWithGroupsParams, (storageFileDocument: StorageFileDocument) => Promise<SyncStorageFileWithGroupsResult>>>;
   abstract syncAllFlaggedStorageFilesWithGroups(params: SyncAllFlaggedStorageFilesWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncAllFlaggedStorageFilesWithGroupsParams, () => Promise<SyncAllFlaggedStorageFilesWithGroupsResult>>>;
   abstract regenerateStorageFileGroupContent(params: RegenerateStorageFileGroupContentParams): Promise<TransformAndValidateFunctionResult<RegenerateStorageFileGroupContentParams, (storageFileGroupDocument: StorageFileGroupDocument) => Promise<RegenerateStorageFileGroupContentResult>>>;
@@ -134,6 +137,7 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
     deleteStorageFile: deleteStorageFileFactory(context),
     downloadStorageFile: downloadStorageFileFactory(context),
     createStorageFileGroup: createStorageFileGroupFactory(context),
+    updateStorageFileGroup: updateStorageFileGroupFactory(context),
     syncStorageFileWithGroups: syncStorageFileWithGroupsFactory(context),
     syncAllFlaggedStorageFilesWithGroups: syncAllFlaggedStorageFilesWithGroupsFactory(context),
     regenerateStorageFileGroupContent: regenerateStorageFileGroupContentFactory(context),
@@ -371,6 +375,46 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
 
       await storageFileDocument.update(updateTemplate);
       return storageFileDocument;
+    };
+  });
+}
+
+export function updateStorageFileGroupFactory(context: StorageFileServerActionsContext) {
+  const { firestoreContext, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(UpdateStorageFileGroupParams, async (params) => {
+    const { entries } = params;
+
+    return async (storageFileGroupDocument: StorageFileGroupDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        const storageFileGroupDocumentInTransaction = storageFileGroupCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileGroupDocument);
+        const storageFileGroup = await assertSnapshotData(storageFileGroupDocumentInTransaction);
+
+        let f: Maybe<StorageFileGroupEmbeddedFile[]> = undefined;
+
+        // update entries
+        if (entries?.length) {
+          f = ModelRelationUtility.updateCollection(storageFileGroup.f, entries as StorageFileGroupEmbeddedFile[], {
+            readKey: (x) => x.s,
+            merge: (existing, update) => {
+              const n = update.n === undefined ? existing.n : update.n;
+
+              return {
+                ...existing,
+                n
+              };
+            }
+          });
+        }
+
+        const updateTemplate: Partial<StorageFileGroup> = {
+          f
+        };
+
+        await storageFileGroupDocumentInTransaction.update(updateTemplate);
+      });
+
+      return storageFileGroupDocument;
     };
   });
 }

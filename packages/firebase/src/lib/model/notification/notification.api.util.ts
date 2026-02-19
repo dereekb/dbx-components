@@ -16,7 +16,7 @@ export function updateNotificationBoxRecipientTemplateConfigRecord(a: Notificati
 
   if (b != null) {
     const cArray = notificationBoxRecipientTemplateConfigRecordToArray(a);
-    let updatedC = ModelRelationUtility.insertCollection(cArray, b, { readKey: (x) => x.type, readType: () => 'x', merge: (x, y) => ({ ...x, ...y }) });
+    let updatedC = ModelRelationUtility.insertCollection(cArray, b, { readKey: (x) => x.type, merge: (x, y) => ({ ...x, ...y }) });
 
     // remove types marked as remove
     updatedC = ModelRelationUtility.removeKeysFromCollection(

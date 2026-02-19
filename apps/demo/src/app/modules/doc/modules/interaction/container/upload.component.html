@@ -31,14 +31,19 @@
 
     <doc-feature-example header="dbx-file-upload-area" hint="Used to render an area that a user can drag-and-drop a file into. Shows text and an icon.">
       <dbx-content-border>
-        <dbx-file-upload-area icon="upload" text="Custom Text">
-          <div>This custom content inside the area.</div>
-        </dbx-file-upload-area>
+        <div class="dbx-pb3">
+          <dbx-file-upload-area class="dbx-block" icon="upload" text="Custom Text" (filesChanged)="areaCustomUploaded = $event">
+            <div>This custom content inside the area.</div>
+          </dbx-file-upload-area>
+        </div>
+        <dbx-content-pit>
+          <div class="dbx-json">{{ filesChangeResult(areaCustomUploaded) | json }}</div>
+        </dbx-content-pit>
       </dbx-content-border>
       <dbx-content-border>
         <ng-container *ngTemplateOutlet="acceptTemplate"></ng-container>
         <div class="dbx-pb3">
-          <dbx-file-upload-area icon="upload" text="Upload Only Images" accept="image/*" (filesChanged)="areaImagesUploaded = $event"></dbx-file-upload-area>
+          <dbx-file-upload-area class="dbx-block" icon="upload" text="Upload Only Images" accept="image/*" (filesChanged)="areaImagesUploaded = $event"></dbx-file-upload-area>
         </div>
         <dbx-content-pit>
           <div class="dbx-json">{{ filesChangeResult(areaImagesUploaded) | json }}</div>

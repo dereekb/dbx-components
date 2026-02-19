@@ -13,7 +13,7 @@ import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
 import { storageFileDownload } from '../storagefile/storagefile.read';
-import { storageFileGroupRegenerateContent } from '../storagefile/storagefilegroup.update';
+import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { profileDownloadArchive } from '../profile/profile.read';
 
 // MARK: Create
@@ -75,6 +75,7 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
     syncWithGroups: storageFileSyncWithGroups
   }),
   storageFileGroup: onCallSpecifierHandler({
+    _: storageFileGroupUpdate,
     regenerateContent: storageFileGroupRegenerateContent
   })
 };

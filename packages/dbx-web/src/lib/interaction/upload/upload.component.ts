@@ -7,6 +7,7 @@ import { DbxFileUploadAreaComponent, DbxFileUploadAreaFilesChangedEvent } from '
 import { NgTemplateOutlet } from '@angular/common';
 import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
 import { provideDbxFileUploadActionCompatable } from './upload.action';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 
 export type DbxFileUploadMode = 'area' | 'button' | 'default';
 
@@ -61,6 +62,7 @@ export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
   readonly area = viewChild.required<string, DbxFileUploadAreaComponent>('area', { read: DbxFileUploadAreaComponent });
   readonly button = viewChild.required<string, DbxFileUploadButtonComponent>('button', { read: DbxFileUploadButtonComponent });
   readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
+  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>();
 
   readonly mode = input<Maybe<DbxFileUploadMode>>();
   readonly text = input<Maybe<string>>(); // button text
@@ -93,13 +95,15 @@ export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
   readonly buttonTextSignal = computed(() => {
     const config = this.config();
     const text = this.text();
-    return config?.button?.text ?? text;
+    const buttonDisplay = this.buttonDisplay();
+    return config?.button?.text ?? buttonDisplay?.text ?? text;
   });
 
   readonly buttonIconSignal = computed(() => {
     const config = this.config();
     const icon = this.icon();
-    return config?.button?.icon ?? icon;
+    const buttonDisplay = this.buttonDisplay();
+    return config?.button?.icon ?? buttonDisplay?.icon ?? icon;
   });
 
   readonly areaTextSignal = computed(() => this.config()?.area?.text);

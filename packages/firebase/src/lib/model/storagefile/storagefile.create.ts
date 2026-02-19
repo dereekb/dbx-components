@@ -35,6 +35,12 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
    */
   readonly file?: FirebaseStorageAccessorFile;
   /**
+   * The display name of the StorageFile.
+   *
+   * Corresponds with the "n" value in the StorageFile template.
+   */
+  readonly displayName?: Maybe<string>;
+  /**
    * The user that the file is associated with.
    *
    * Corresponds with the "u" value in the StorageFile template.
@@ -158,7 +164,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
   const defaultPurposeSubgroup = inputDefaultPurposeSubgroup != null ? (inputDefaultPurposeSubgroup === true ? EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP : inputDefaultPurposeSubgroup) : undefined;
 
   return async <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => {
-    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, uploadedBy, user, purpose, purposeSubgroup, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
+    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, displayName, uploadedBy, user, purpose, purposeSubgroup, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
     const now = inputNow ?? new Date();
 
     let accessor = inputAccessor;
@@ -202,6 +208,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
 
     const template: StorageFile<M> = {
       ...inputTemplate,
+      n: displayName ?? inputTemplate?.n,
       g,
       gs,
       cat: now,

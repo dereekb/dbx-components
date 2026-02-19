@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server/mailgun",
-  "version": "12.6.20",
+  "version": "12.6.21",
   "type": "commonjs",
   "peerDependencies": {
     "mailgun.js": "^12.0.0"

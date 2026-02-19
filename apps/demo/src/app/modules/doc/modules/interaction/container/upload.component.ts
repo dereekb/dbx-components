@@ -18,6 +18,7 @@ export class DocInteractionUploadComponent {
   filesUploaded: Maybe<DbxFileUploadFilesChangedEvent>;
   buttonModeFilesUploaded: Maybe<DbxFileUploadFilesChangedEvent>;
   imagesUploaded: Maybe<DbxFileUploadAreaFilesChangedEvent>;
+  areaCustomUploaded: Maybe<DbxFileUploadAreaFilesChangedEvent>;
   areaImagesUploaded: Maybe<DbxFileUploadAreaFilesChangedEvent>;
 
   filesChangeResult(filesChangedEvent: Maybe<DbxFileUploadAreaFilesChangedEvent | DbxFileUploadButtonFilesChangedEvent>) {
