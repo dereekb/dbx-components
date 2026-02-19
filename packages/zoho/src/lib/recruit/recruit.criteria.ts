@@ -1,5 +1,4 @@
-import { type Maybe } from '@dereekb/util';
-import { type ZohoSearchRecordsCriteriaString, type ZohoSearchRecordsCriteriaTree, type ZohoSearchRecordsCriteriaFilterType, type ZohoSearchRecordsCriteriaEntry, zohoSearchRecordsCriteriaString, zohoSearchRecordsCriteriaStringForTree, zohoSearchRecordsCriteriaEntryToCriteriaString, escapeZohoFieldValueForCriteriaString, MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA } from '../shared/criteria';
+import { type ZohoSearchRecordsCriteriaString, type ZohoSearchRecordsCriteriaTree, type ZohoSearchRecordsCriteriaFilterType, type ZohoSearchRecordsCriteriaEntry, zohoSearchRecordsCriteriaString, zohoSearchRecordsCriteriaStringForTree, zohoSearchRecordsCriteriaEntryToCriteriaString, MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA } from '../shared/criteria';
 
 /**
  * Can search up to 10 criteria at a time.
@@ -16,7 +15,7 @@ export const zohoRecruitSearchRecordsCriteriaString = zohoSearchRecordsCriteriaS
 
 export const zohoRecruitSearchRecordsCriteriaStringForTree = zohoSearchRecordsCriteriaStringForTree;
 
-export interface ZohoRecruitSearchRecordsCriteriaTree<T = any> extends ZohoSearchRecordsCriteriaTree<T> {}
+export type ZohoRecruitSearchRecordsCriteriaTree<T = any> = ZohoSearchRecordsCriteriaTree<T>;
 
 export type ZohoRecruitSearchRecordsCriteriaTreeElement<T = any> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree<T> | ZohoRecruitSearchRecordsCriteriaString;
 
@@ -24,6 +23,6 @@ export type ZohoRecruitSearchRecordsCriteriaFilterType = ZohoSearchRecordsCriter
 
 export type ZohoRecruitSearchRecordsCriteriaEntryArray<T = any> = ZohoRecruitSearchRecordsCriteriaEntry<T>[];
 
-export interface ZohoRecruitSearchRecordsCriteriaEntry<T = any> extends ZohoSearchRecordsCriteriaEntry<T> {}
+export type ZohoRecruitSearchRecordsCriteriaEntry<T = any> = ZohoSearchRecordsCriteriaEntry<T>;
 
 export const zohoRecruitSearchRecordsCriteriaEntryToCriteriaString = zohoSearchRecordsCriteriaEntryToCriteriaString;

@@ -3,7 +3,7 @@ import { type ArrayOrValue, asArray, type Maybe, separateValues } from '@dereekb
 import { type ZohoCrmModuleNameRef, type ZohoCrmRecordId } from './crm';
 import { zohoCrmApiFetchJsonInput, type ZohoCrmChangeObjectLikeResponse, type ZohoCrmChangeObjectLikeResponseSuccessEntryMeta, type ZohoCrmChangeObjectResponse, type ZohoCrmChangeObjectResponseErrorEntry, type ZohoCrmChangeObjectResponseSuccessEntry, type ZohoCrmGetRecordsPageFilter, zohoCrmMultiRecordResult, type ZohoCrmMultiRecordResult, type ZohoCrmMultiRecordResultEntry } from './crm.api';
 import { ZOHO_DUPLICATE_DATA_ERROR_CODE, ZohoServerFetchResponseError } from '../zoho.error.api';
-import { ZohoCrmTag, ZohoCrmTagId, type ZohoCrmTagData, type ZohoCrmTagName, type ZohoCrmTagWithObjectDetails } from './crm.tags';
+import { type ZohoCrmTagId, type ZohoCrmTagData, type ZohoCrmTagName, type ZohoCrmTagWithObjectDetails } from './crm.tags';
 import { type FetchPage, type FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { zohoFetchPageFactory, type ZohoPageResult } from '../zoho.api.page';
 
@@ -182,7 +182,7 @@ export function zohoCrmAddTagsToRecordsRequestBody(input: ZohoCrmAddTagsToRecord
   }
 
   const tags: ZohoCrmAddTagsToRecordsRequest['tags'] = [...asArray(input.tags)];
-  let tagNames = new Set(tags.map((x) => x.name));
+  const tagNames = new Set(tags.map((x) => x.name));
 
   if (input.tag_names) {
     asArray(input.tag_names).forEach((x) => {

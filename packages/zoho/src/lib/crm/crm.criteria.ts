@@ -15,7 +15,7 @@ export const zohoCrmSearchRecordsCriteriaString = zohoSearchRecordsCriteriaStrin
 
 export const zohoCrmSearchRecordsCriteriaStringForTree = zohoSearchRecordsCriteriaStringForTree;
 
-export interface ZohoCrmSearchRecordsCriteriaTree<T = any> extends ZohoSearchRecordsCriteriaTree<T> {}
+export type ZohoCrmSearchRecordsCriteriaTree<T = any> = ZohoSearchRecordsCriteriaTree<T>;
 
 export type ZohoCrmSearchRecordsCriteriaTreeElement<T = any> = ZohoCrmSearchRecordsCriteriaEntryArray<T> | ZohoCrmSearchRecordsCriteriaTree<T> | ZohoCrmSearchRecordsCriteriaString;
 
@@ -23,7 +23,7 @@ export type ZohoCrmSearchRecordsCriteriaFilterType = ZohoSearchRecordsCriteriaFi
 
 export type ZohoCrmSearchRecordsCriteriaEntryArray<T = any> = ZohoCrmSearchRecordsCriteriaEntry<T>[];
 
-export interface ZohoCrmSearchRecordsCriteriaEntry<T = any> extends ZohoSearchRecordsCriteriaEntry<T> {}
+export type ZohoCrmSearchRecordsCriteriaEntry<T = any> = ZohoSearchRecordsCriteriaEntry<T>;
 
 export const escapeZohoCrmFieldValueForCriteriaString = escapeZohoFieldValueForCriteriaString;
 

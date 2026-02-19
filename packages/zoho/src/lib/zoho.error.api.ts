@@ -1,6 +1,5 @@
 import { MS_IN_MINUTE, type Maybe, type UnixDateTimeNumber } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonInterceptJsonResponseFunction, type FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { error } from 'console';
 import { BaseError } from 'make-error';
 
 /**

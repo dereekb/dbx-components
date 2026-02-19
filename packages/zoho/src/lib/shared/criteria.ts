@@ -1,4 +1,4 @@
-import { type Maybe, type ArrayOrValue, filterMaybeArrayValues, asArray, type PrimativeKey, escapeStringCharactersFunction, type EmailAddress } from '@dereekb/util';
+import { type Maybe, type ArrayOrValue, filterMaybeArrayValues, asArray, type PrimativeKey, escapeStringCharactersFunction } from '@dereekb/util';
 
 /**
  * Encoded criteria string.

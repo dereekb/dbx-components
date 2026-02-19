@@ -1,5 +1,5 @@
-import { ArrayOrValue, EmailAddress, PrimativeKey, asArray } from '@dereekb/util';
-import { ZohoSearchRecordsCriteriaEntryArray, ZohoSearchRecordsCriteriaEntry } from './criteria';
+import { type ArrayOrValue, type EmailAddress, type PrimativeKey, asArray } from '@dereekb/util';
+import { type ZohoSearchRecordsCriteriaEntryArray, type ZohoSearchRecordsCriteriaEntry } from './criteria';
 
 /**
  * Creates a ZohoSearchRecordsCriteriaEntryArray from an array of emails.

@@ -22,7 +22,6 @@ import {
   ZohoCrmUpsertRecordData,
   ZOHO_ERROR_STATUS,
   ZOHO_CRM_TAG_NAME_MAX_LENGTH,
-  ZohoCrmTag,
   ZohoCrmTagArrayRef,
   ZohoCrmFieldName,
   ZohoCrmCommaSeparateFieldNames

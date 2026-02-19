@@ -1,4 +1,4 @@
-import { Maybe, type HexColorCode } from '@dereekb/util';
+import { type Maybe, type HexColorCode } from '@dereekb/util';
 import { type ZohoCrmChangeObjectDetails } from './crm';
 
 export type ZohoCrmTagId = string;
