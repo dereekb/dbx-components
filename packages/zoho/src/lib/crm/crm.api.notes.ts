@@ -61,6 +61,12 @@ export interface ZohoCrmCreateNotesForRecordRequest extends ZohoCrmModuleNameRef
 
 export type ZohoCrmCreateNotesForRecordFunction = (input: ZohoCrmCreateNotesForRecordRequest) => Promise<ZohoCrmCreateNotesResult>;
 
+/**
+ * https://www.zoho.com/crm/developer/docs/api/v8/create-notes.html
+ *
+ * @param context
+ * @returns
+ */
 export function zohoCrmCreateNotesForRecord(context: ZohoCrmContext): ZohoCrmCreateNotesForRecordFunction {
   const createNotesInstance = zohoCrmCreateNotes(context);
   return (input: ZohoCrmCreateNotesForRecordRequest) => {

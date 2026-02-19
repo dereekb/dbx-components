@@ -61,4 +61,4 @@ https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id
 - client_id and client_secret come from the client generated in step 1
 - the auth code is the code from the url in step 3
 
-This refresh token will be used as the 
+This refresh token will be used to retrieve new access tokens. Save this in your environment variables as `ZOHO_ACCOUNTS_REFRESH_TOKEN` or `ZOHO_CRM_ACCOUNTS_REFRESH_TOKEN`/`ZOHO_RECRUIT_ACCOUNTS_REFRESH_TOKEN`/etc. for a service-specific refresh token.

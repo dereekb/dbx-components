@@ -26,7 +26,7 @@ import {
 import { zohoCrmSearchRecordsCriteriaString, type ZohoCrmSearchRecordsCriteriaTreeElement } from './crm.criteria';
 import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, type WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
 import { assertZohoCrmRecordDataArrayResultHasContent, zohoCrmRecordCrudError } from './crm.error.api';
-import { ZOHO_SUCCESS_STATUS, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
+import { ZOHO_SUCCESS_STATUS, ZohoServerFetchResponseDataArrayError, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
 import { type ZohoDateTimeString } from '../zoho.type';
 import { BaseError } from 'make-error';
 
@@ -91,22 +91,37 @@ export type ZohoCrmUpsertSingleRecordFunction = <T>(input: ZohoCrmUpsertSingleRe
  */
 function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoCrmUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoCrmUpdateRecordInput<T>) =>
-    context.fetchJson<ZohoCrmUpdateRecordResponse>(`/v8/${module}${fetchUrlPrefix}`, zohoCrmApiFetchJsonInput(fetchMethod, { data: asArray(data) })).then((x: ZohoCrmUpdateRecordResponse) => {
-      const isInputMultipleItems = Array.isArray(data);
-      const result = zohoCrmMultiRecordResult<Partial<T>, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(data), x.data);
+    context
+      .fetchJson<ZohoCrmUpdateRecordResponse>(`/v8/${module}${fetchUrlPrefix}`, zohoCrmApiFetchJsonInput(fetchMethod, { data: asArray(data) }))
+      .catch((e) => {
+        let result: ZohoCrmUpdateRecordResponse;
 
-      if (isInputMultipleItems) {
-        return result;
-      } else {
-        const { successItems, errorItems } = result;
-
-        if (errorItems[0] != null) {
-          throw zohoCrmRecordCrudError(errorItems[0].result);
+        if (e instanceof ZohoServerFetchResponseDataArrayError) {
+          result = {
+            data: e.errorDataArray as ZohoCrmChangeObjectResponseErrorEntry[]
+          };
         } else {
-          return successItems[0].result.details;
+          throw e;
         }
-      }
-    })) as ZohoCrmUpdateRecordLikeFunction;
+
+        return result;
+      })
+      .then((x: ZohoCrmUpdateRecordResponse) => {
+        const isInputMultipleItems = Array.isArray(data);
+        const result = zohoCrmMultiRecordResult<Partial<T>, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(data), x.data);
+
+        if (isInputMultipleItems) {
+          return result;
+        } else {
+          const { successItems, errorItems } = result;
+
+          if (errorItems[0] != null) {
+            throw zohoCrmRecordCrudError(errorItems[0].result);
+          } else {
+            return successItems[0].result.details;
+          }
+        }
+      })) as ZohoCrmUpdateRecordLikeFunction;
 }
 
 // MARK: Insert Record

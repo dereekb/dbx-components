@@ -1,6 +1,6 @@
 import { type FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-import { type ZohoServerErrorDataWithDetails, type ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE, type ParsedZohoServerError, ZOHO_INVALID_DATA_ERROR_CODE } from '../zoho.error.api';
+import { type ZohoServerErrorDataWithDetails, type ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE, type ParsedZohoServerError, ZOHO_INVALID_DATA_ERROR_CODE, ZohoServerErrorResponseDataArrayRef } from '../zoho.error.api';
 import { type ZohoCrmModuleName, type ZohoCrmRecordId } from './crm';
 import { type ZohoDataArrayResultRef } from '../zoho.api.page';
 
@@ -41,6 +41,8 @@ export class ZohoCrmRecordCrudNoMatchingRecordError extends ZohoCrmRecordCrudInv
 export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoCrmRecordCrudError {
   let result: ZohoCrmRecordCrudError;
 
+  console.log({ error, code: error.code });
+
   switch (error.code) {
     case ZOHO_INVALID_DATA_ERROR_CODE:
       const invalidDataError = new ZohoCrmRecordCrudInvalidDataError(error);
@@ -78,7 +80,7 @@ export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: Zoh
 export const logZohoCrmErrorToConsole = logZohoServerErrorFunction('ZohoCrm');
 
 export async function parseZohoCrmError(responseError: FetchResponseError) {
-  const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
+  const data: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef | undefined = await responseError.response.json().catch((x) => undefined);
   let result: ParsedZohoServerError | undefined;
 
   if (data) {
@@ -88,7 +90,7 @@ export async function parseZohoCrmError(responseError: FetchResponseError) {
   return result;
 }
 
-export function parseZohoCrmServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError) {
+export function parseZohoCrmServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;
   const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
