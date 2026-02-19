@@ -1,5 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Bash(find:*)", "Bash(pip3 install:*)", "WebFetch(domain:www.zoho.com)", "Bash(wc:*)", "Bash(npx tsc:*)"]
-  }
-}
