@@ -25,7 +25,7 @@ export function zohoRecruitServiceConfigFactory(configService: ConfigService): Z
 export function zohoRecruitAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
   return zohoAccountsServiceConfigFromConfigService({
     configService,
-    serviceAccessTokenKey: 'recruit'
+    serviceAccessTokenKey: ZOHO_RECRUIT_SERVICE_NAME
   });
 }
 

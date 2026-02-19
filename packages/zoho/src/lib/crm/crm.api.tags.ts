@@ -2,8 +2,8 @@ import { type ZohoCrmContext } from './crm.config';
 import { type ArrayOrValue, asArray, type Maybe, separateValues } from '@dereekb/util';
 import { type ZohoCrmModuleNameRef, type ZohoCrmRecordId } from './crm';
 import { zohoCrmApiFetchJsonInput, type ZohoCrmChangeObjectLikeResponse, type ZohoCrmChangeObjectLikeResponseSuccessEntryMeta, type ZohoCrmChangeObjectResponse, type ZohoCrmChangeObjectResponseErrorEntry, type ZohoCrmChangeObjectResponseSuccessEntry, type ZohoCrmGetRecordsPageFilter, zohoCrmMultiRecordResult, type ZohoCrmMultiRecordResult, type ZohoCrmMultiRecordResultEntry } from './crm.api';
-import { ZOHO_DUPLICATE_DATA_ERROR_CODE } from '../zoho.error.api';
-import { type ZohoCrmTagData, type ZohoCrmTagName, type ZohoCrmTagWithObjectDetails } from './crm.tags';
+import { ZOHO_DUPLICATE_DATA_ERROR_CODE, ZohoServerFetchResponseError } from '../zoho.error.api';
+import { ZohoCrmTag, ZohoCrmTagId, type ZohoCrmTagData, type ZohoCrmTagName, type ZohoCrmTagWithObjectDetails } from './crm.tags';
 import { type FetchPage, type FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { zohoFetchPageFactory, type ZohoPageResult } from '../zoho.api.page';
 
@@ -27,20 +27,41 @@ export type ZohoCrmCreateTagsFunction = (input: ZohoCrmCreateTagsRequest) => Pro
 
 export function zohoCrmCreateTagsForModule(context: ZohoCrmContext) {
   return (input: ZohoCrmCreateTagsRequest) =>
-    context.fetchJson<ZohoCrmCreateTagsResponse>(`/v8/settings/tags?${makeUrlSearchParams({ module: input.module })}`, zohoCrmApiFetchJsonInput('POST', { tags: asArray(input.tags) })).then((x) => {
-      const result = zohoCrmMultiRecordResult<ZohoCrmCreateTagData, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(input.tags), x.tags);
+    context
+      .fetchJson<ZohoCrmCreateTagsResponse>(`/v8/settings/tags?${makeUrlSearchParams({ module: input.module })}`, zohoCrmApiFetchJsonInput('POST', { tags: asArray(input.tags) }))
+      .catch((e) => {
+        let result: Maybe<ZohoCrmCreateTagsResponse>;
 
-      const { included: duplicateErrorItems, excluded: otherErrorItems } = separateValues(result.errorItems, (x) => {
-        return x.result.code === ZOHO_DUPLICATE_DATA_ERROR_CODE;
+        if (e instanceof ZohoServerFetchResponseError) {
+          const tags = e.data?.tags;
+
+          if (Array.isArray(tags)) {
+            result = {
+              tags
+            };
+          }
+        }
+
+        if (!result) {
+          throw e;
+        }
+
+        return result;
+      })
+      .then((x) => {
+        const result = zohoCrmMultiRecordResult<ZohoCrmCreateTagData, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(input.tags), x.tags);
+
+        const { included: duplicateErrorItems, excluded: otherErrorItems } = separateValues(result.errorItems, (x) => {
+          return x.result.code === ZOHO_DUPLICATE_DATA_ERROR_CODE;
+        });
+
+        return {
+          ...result,
+          errorItems: otherErrorItems,
+          duplicateErrorItems,
+          allErrorItems: result.errorItems
+        };
       });
-
-      return {
-        ...result,
-        errorItems: otherErrorItems,
-        duplicateErrorItems,
-        allErrorItems: result.errorItems
-      };
-    });
 }
 
 // MARK: Get Tags
@@ -91,7 +112,15 @@ export interface ZohoCrmAddTagsToRecordsRequest extends ZohoCrmModuleNameRef {
   /**
    * Tag names to add to the records.
    */
-  readonly tag_names: ArrayOrValue<ZohoCrmTagName>;
+  readonly tag_names?: Maybe<ArrayOrValue<ZohoCrmTagName>>;
+  /**
+   * Specific tags to add to the records.
+   */
+  readonly tags?: Maybe<ArrayOrValue<ZohoCrmTagData & { id?: Maybe<ZohoCrmTagId> }>>;
+  /**
+   * Specify if the existing tags are to be overwritten.
+   */
+  readonly over_write?: Maybe<boolean>;
   /**
    * Ids corresponding to the records in the module to add the tags to.
    *
@@ -140,14 +169,33 @@ export type ZohoCrmAddTagsToRecordsFunction = (input: ZohoCrmAddTagsToRecordsReq
  */
 export function zohoCrmAddTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTagsToRecordsFunction {
   return (input: ZohoCrmAddTagsToRecordsRequest) => {
-    if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
-      throw new Error(`Cannot add tags to more than ${ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} records at once.`);
-    }
-
-    return context.fetchJson<ZohoCrmAddTagsToRecordsResponse>(`/v8/${input.module}/actions/add_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoCrmApiFetchJsonInput('POST')).then((x: ZohoCrmAddTagsToRecordsResponse) => {
+    return context.fetchJson<ZohoCrmAddTagsToRecordsResponse>(`/v8/${input.module}/actions/add_tags`, zohoCrmApiFetchJsonInput('POST', zohoCrmAddTagsToRecordsRequestBody(input))).then((x: ZohoCrmAddTagsToRecordsResponse) => {
       const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
       return zohoCrmMultiRecordResult<ZohoCrmAddTagsToRecordsRequest, ZohoCrmAddTagsToRecordsSuccessEntry, ZohoCrmAddTagsToRecordsErrorEntry>(resultInputMap, x.data);
     });
+  };
+}
+
+export function zohoCrmAddTagsToRecordsRequestBody(input: ZohoCrmAddTagsToRecordsRequest) {
+  if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
+    throw new Error(`Cannot add/remove tags from more than ${ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} records at once.`);
+  }
+
+  const tags: ZohoCrmAddTagsToRecordsRequest['tags'] = [...asArray(input.tags)];
+  let tagNames = new Set(tags.map((x) => x.name));
+
+  if (input.tag_names) {
+    asArray(input.tag_names).forEach((x) => {
+      if (!tagNames.has(x)) {
+        tags.push({ name: x });
+        tagNames.add(x);
+      }
+    });
+  }
+
+  return {
+    tags,
+    ids: asArray(input.ids)
   };
 }
 
@@ -189,11 +237,7 @@ export type ZohoCrmRemoveTagsFromRecordsFunction = (input: ZohoCrmRemoveTagsFrom
  */
 export function zohoCrmRemoveTagsFromRecords(context: ZohoCrmContext): ZohoCrmRemoveTagsFromRecordsFunction {
   return (input: ZohoCrmRemoveTagsFromRecordsRequest) => {
-    if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED) {
-      throw new Error(`Cannot remove tags from more than ${ZOHO_CRM_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED} records at once.`);
-    }
-
-    return context.fetchJson<ZohoCrmRemoveTagsFromRecordsResponse>(`/v8/${input.module}/actions/remove_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoCrmApiFetchJsonInput('POST')).then((x: ZohoCrmRemoveTagsFromRecordsResponse) => {
+    return context.fetchJson<ZohoCrmRemoveTagsFromRecordsResponse>(`/v8/${input.module}/actions/remove_tags`, zohoCrmApiFetchJsonInput('POST', zohoCrmAddTagsToRecordsRequestBody(input))).then((x: ZohoCrmRemoveTagsFromRecordsResponse) => {
       const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
       return zohoCrmMultiRecordResult<ZohoCrmRemoveTagsFromRecordsRequest, ZohoCrmRemoveTagsFromRecordsSuccessEntry, ZohoCrmRemoveTagsFromRecordsErrorEntry>(resultInputMap, x.data);
     });

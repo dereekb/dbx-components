@@ -14,34 +14,14 @@ export type ZohoCrmModuleName = string;
 export const ZOHO_CRM_LEADS_MODULE = 'Leads';
 
 /**
- * Accounts module name
- */
-export const ZOHO_CRM_ACCOUNTS_MODULE = 'Accounts';
-
-/**
  * Contacts module name
  */
 export const ZOHO_CRM_CONTACTS_MODULE = 'Contacts';
 
 /**
- * Deals module name
- */
-export const ZOHO_CRM_DEALS_MODULE = 'Deals';
-
-/**
- * Campaigns module name
- */
-export const ZOHO_CRM_CAMPAIGNS_MODULE = 'Campaigns';
-
-/**
  * Tasks module name
  */
 export const ZOHO_CRM_TASKS_MODULE = 'Tasks';
-
-/**
- * Cases module name
- */
-export const ZOHO_CRM_CASES_MODULE = 'Cases';
 
 /**
  * Notes module name
@@ -146,12 +126,12 @@ export type ZohoCrmTerritoryId = string;
  */
 export type ZohoCrmFieldName = string;
 
-export type ZohoCrmDraftOrSaveState = 'draft' | 'save';
-
 /**
  * Comma separated list of field names
  */
 export type ZohoCrmCommaSeparateFieldNames = CommaSeparatedString;
+
+export type ZohoCrmDraftOrSaveState = 'draft' | 'save';
 
 export type ZohoCrmTrueFalseBoth = 'true' | 'false' | 'both';
 

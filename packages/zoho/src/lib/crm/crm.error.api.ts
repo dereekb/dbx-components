@@ -30,9 +30,24 @@ export class ZohoCrmRecordCrudDuplicateDataError extends ZohoCrmRecordCrudError 
 
 export type ZohoCrmRecordCrudInvalidDataErrorDetails = Record<string, string>;
 
+export interface ZohoCrmRecordCrudInvalidFieldDetails {
+  /**
+   * The api name for this field
+   *
+   * Example: 'id'
+   */
+  readonly api_name: string;
+  /**
+   * The json path for this field from the root data.
+   *
+   * Example: `$.data[0].id`
+   */
+  readonly json_path: string;
+}
+
 export class ZohoCrmRecordCrudInvalidDataError extends ZohoCrmRecordCrudError {
-  get invalidFieldDetails(): ZohoCrmRecordCrudInvalidDataErrorDetails {
-    return this.error.details as ZohoCrmRecordCrudInvalidDataErrorDetails;
+  get invalidFieldDetails(): ZohoCrmRecordCrudInvalidFieldDetails {
+    return this.error.details as ZohoCrmRecordCrudInvalidFieldDetails;
   }
 }
 
@@ -41,13 +56,11 @@ export class ZohoCrmRecordCrudNoMatchingRecordError extends ZohoCrmRecordCrudInv
 export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoCrmRecordCrudError {
   let result: ZohoCrmRecordCrudError;
 
-  console.log({ error, code: error.code });
-
   switch (error.code) {
     case ZOHO_INVALID_DATA_ERROR_CODE:
       const invalidDataError = new ZohoCrmRecordCrudInvalidDataError(error);
 
-      if (invalidDataError.invalidFieldDetails['id']) {
+      if (invalidDataError.invalidFieldDetails.api_name === 'id') {
         result = new ZohoCrmRecordCrudNoMatchingRecordError(error);
       } else {
         result = invalidDataError;
@@ -77,7 +90,7 @@ export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: Zoh
   };
 }
 
-export const logZohoCrmErrorToConsole = logZohoServerErrorFunction('ZohoCrm');
+export const logZohoCrmErrorToConsole = logZohoServerErrorFunction('ZohoCrm', { logDataArrayErrors: false });
 
 export async function parseZohoCrmError(responseError: FetchResponseError) {
   const data: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef | undefined = await responseError.response.json().catch((x) => undefined);

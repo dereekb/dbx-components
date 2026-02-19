@@ -137,7 +137,10 @@ export class ZohoServerFetchResponseError<D extends ZohoServerErrorData = ZohoSe
 }
 
 /**
- * Zoho Server Error that includes the FetchResponseError
+ * Used as a transient error for situations where there are potentially multiple errors within the data array returned.
+ *
+ * Zoho CRM returns a non-200 error as a result, but generally there is a partial success that can occur, with both
+ * the successful and errored results returned within the data.
  */
 export class ZohoServerFetchResponseDataArrayError extends ZohoServerFetchResponseError<ZohoServerErrorData> {
   constructor(errorResponseData: ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError) {
@@ -152,14 +155,27 @@ export class ZohoServerFetchResponseDataArrayError extends ZohoServerFetchRespon
 export type LogZohoServerErrorFunction = (error: FetchRequestFactoryError | ZohoServerError | ZohoServerFetchResponseError) => void;
 
 /**
+ * Config for logZohoServerErrorFunction.
+ */
+export interface LogZohoServerErrorFunctionConfig {
+  /**
+   * If true, will log errors that are ZohoServerFetchResponseDataArrayError.
+   */
+  readonly logDataArrayErrors?: boolean;
+}
+
+/**
  * Creates a logZohoServerErrorFunction that logs the error to console.
  *
  * @param zohoApiNamePrefix Prefix to use when logging. I.E. ZohoRecruitError, etc.
  * @returns
  */
-export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoServerErrorFunction {
+export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: LogZohoServerErrorFunctionConfig): LogZohoServerErrorFunction {
+  const { logDataArrayErrors = false } = options ?? {};
   return (error: FetchRequestFactoryError | ZohoServerError | ZohoServerFetchResponseError) => {
-    if (error instanceof ZohoServerFetchResponseError) {
+    if (error instanceof ZohoServerFetchResponseDataArrayError && !logDataArrayErrors) {
+      // do nothing, since this is usually an intermediary error that is caught
+    } else if (error instanceof ZohoServerFetchResponseError) {
       console.log(`${zohoApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
     } else if (error instanceof ZohoServerError) {
       console.log(`${zohoApiNamePrefix}Error(code:${error.code}): `, { error });

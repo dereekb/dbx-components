@@ -25,7 +25,7 @@ export function zohoCrmServiceConfigFactory(configService: ConfigService): ZohoC
 export function zohoCrmAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
   return zohoAccountsServiceConfigFromConfigService({
     configService,
-    serviceAccessTokenKey: 'crm'
+    serviceAccessTokenKey: ZOHO_CRM_SERVICE_NAME
   });
 }
 

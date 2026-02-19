@@ -93,19 +93,7 @@ function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | 
   return (<T>({ data, module }: ZohoCrmUpdateRecordInput<T>) =>
     context
       .fetchJson<ZohoCrmUpdateRecordResponse>(`/v8/${module}${fetchUrlPrefix}`, zohoCrmApiFetchJsonInput(fetchMethod, { data: asArray(data) }))
-      .catch((e) => {
-        let result: ZohoCrmUpdateRecordResponse;
-
-        if (e instanceof ZohoServerFetchResponseDataArrayError) {
-          result = {
-            data: e.errorDataArray as ZohoCrmChangeObjectResponseErrorEntry[]
-          };
-        } else {
-          throw e;
-        }
-
-        return result;
-      })
+      .catch(zohoCrmCatchZohoCrmChangeObjectLikeResponseError)
       .then((x: ZohoCrmUpdateRecordResponse) => {
         const isInputMultipleItems = Array.isArray(data);
         const result = zohoCrmMultiRecordResult<Partial<T>, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>(asArray(data), x.data);
@@ -203,7 +191,10 @@ export type ZohoCrmDeleteRecordResult = ZohoCrmChangeObjectResponseSuccessEntry[
  */
 export function zohoCrmDeleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecordFunction {
   return ({ ids, module, wf_trigger }: ZohoCrmDeleteRecordInput) => {
-    return context.fetchJson<ZohoCrmDeleteRecordResponse>(`/v8/${module}?${makeUrlSearchParams({ ids, wf_trigger })}`, zohoCrmApiFetchJsonInput('DELETE')).then(zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs);
+    return context
+      .fetchJson<ZohoCrmDeleteRecordResponse>(`/v8/${module}?${makeUrlSearchParams({ ids, wf_trigger })}`, zohoCrmApiFetchJsonInput('DELETE'))
+      .catch(zohoCrmCatchZohoCrmChangeObjectLikeResponseError)
+      .then(zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs);
   };
 }
 
@@ -239,8 +230,11 @@ export interface ZohoCrmGetRecordsPageFilter extends ZohoPageFilter {
   readonly approved?: ZohoCrmTrueFalseBoth;
 }
 
-export interface ZohoCrmGetRecordsInput extends ZohoCrmModuleNameRef, ZohoCrmGetRecordsPageFilter {
-  readonly fields?: ZohoCrmCommaSeparateFieldNames;
+export interface ZohoCrmGetRecordsFieldsRef {
+  readonly fields: ArrayOrValue<ZohoCrmFieldName> | ZohoCrmCommaSeparateFieldNames;
+}
+
+export interface ZohoCrmGetRecordsInput extends ZohoCrmModuleNameRef, ZohoCrmGetRecordsPageFilter, ZohoCrmGetRecordsFieldsRef {
   readonly sort_order?: SortingOrder;
   readonly sort_by?: ZohoCrmFieldName;
   readonly cvid?: ZohoCrmCustomViewId;
@@ -272,9 +266,7 @@ export function zohoCrmGetRecords(context: ZohoCrmContext): ZohoCrmGetRecordsFun
  */
 export interface ZohoCrmSearchRecordsInput<T = ZohoCrmRecord> extends ZohoCrmModuleNameRef, ZohoCrmGetRecordsPageFilter {
   readonly criteria?: Maybe<ZohoCrmSearchRecordsCriteriaTreeElement<T>>;
-  /**
-   * @deprecated may be deprecated. Waiting on Zoho Crm to get back to me.
-   */
+  readonly cvid?: Maybe<ZohoCrmCustomViewId>;
   readonly email?: Maybe<EmailAddress>;
   readonly phone?: Maybe<PhoneNumber>;
   readonly word?: Maybe<string>;
@@ -301,8 +293,8 @@ export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchReco
       baseInput.criteria = criteriaString;
     }
 
-    if (!baseInput.word && !input.criteria && !input.email && !input.phone) {
-      throw new Error('At least one of word, criteria, email, or phone must be provided');
+    if (!baseInput.word && !input.cvid && !input.criteria && !input.email && !input.phone) {
+      throw new Error('At least one of word, cvid, criteria, email, or phone must be provided');
     }
 
     const urlParams = zohoCrmUrlSearchParamsMinusModule(baseInput);
@@ -345,6 +337,11 @@ export interface ZohoCrmGetRelatedRecordsRequest extends ZohoCrmGetRecordByIdInp
   readonly filter?: Maybe<ZohoCrmGetRelatedRecordsPageFilter>;
 }
 
+/**
+ * A variant of ZohoCrmGetRelatedRecordsRequest that includes a required fields property.
+ */
+export interface ZohoCrmGetRelatedRecordsRequestWithFields extends ZohoCrmGetRelatedRecordsRequest, ZohoCrmGetRecordsFieldsRef {}
+
 export type ZohoCrmGetRelatedRecordsResponse<T = ZohoCrmRecord> = ZohoPageResult<T>;
 export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCrmGetRelatedRecordsRequest) => Promise<ZohoCrmGetRelatedRecordsResponse<T>>;
 
@@ -364,12 +361,41 @@ export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext)
 }
 
 // MARK: Emails
-export type ZohoCrmGetEmailsForRecordRequest = ZohoCrmGetRelatedRecordsRequest;
+
+/**
+ * Type filter to use when fetching emails for a record.
+ *
+ * https://www.zoho.com/crm/developer/docs/api/v8/get-email-rel-list.html
+ */
+export type ZohoCrmGetEmailsForRecordTypeFilter = 'sent_from_crm' | 'scheduled_in_crm' | 'drafts' | 'user_emails' | 'all_contacts_sent_crm_emails' | 'all_contacts_scheduled_crm_emails' | 'all_contacts_draft_crm_emails';
+
+export type ZohoCrmGetEmailsForRecordRequest = ZohoCrmGetRelatedRecordsRequest & {
+  /**
+   * The type of emails to fetch.
+   */
+  readonly type?: Maybe<ZohoCrmGetEmailsForRecordTypeFilter>;
+  /**
+   * The ID of the user whose emails you want to fetch.
+   *
+   * Note that you can use this parameter only with type=user_emails.
+   */
+  readonly owner_id?: Maybe<ZohoCrmRecordId>;
+};
+
 export type ZohoCrmGetEmailsForRecordResponse = ZohoPageResult<ZohoCrmRecordEmailMetadata>;
 export type ZohoCrmGetEmailsForRecordFunction = (input: ZohoCrmGetEmailsForRecordRequest) => Promise<ZohoCrmGetEmailsForRecordResponse>;
 
+export type ZohoCrmGetEmailsForRecordRawApiResponse = Omit<ZohoCrmGetEmailsForRecordResponse, 'data'> & {
+  Emails: ZohoCrmGetEmailsForRecordResponse['data'];
+};
+
 export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordFunction {
-  return zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
+  const getEmailsFactory = zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
+  return (input: ZohoCrmGetEmailsForRecordRequest) =>
+    getEmailsFactory(input).then((x) => {
+      const data = x.data ?? (x as unknown as ZohoCrmGetEmailsForRecordRawApiResponse).Emails;
+      return { ...x, data };
+    });
 }
 
 export type ZohoCrmGetEmailsForRecordPageFactory = FetchPageFactory<ZohoCrmGetEmailsForRecordRequest, ZohoCrmGetEmailsForRecordResponse>;
@@ -379,7 +405,7 @@ export function zohoCrmGetEmailsForRecordPageFactory(context: ZohoCrmContext): Z
 }
 
 // MARK: Attachments
-export type ZohoCrmGetAttachmentsForRecordRequest = ZohoCrmGetRelatedRecordsRequest;
+export type ZohoCrmGetAttachmentsForRecordRequest = ZohoCrmGetRelatedRecordsRequest & ZohoCrmGetRecordsFieldsRef;
 export type ZohoCrmGetAttachmentsForRecordResponse = ZohoPageResult<ZohoCrmRecordAttachmentMetadata>;
 export type ZohoCrmGetAttachmentsForRecordFunction = (input: ZohoCrmGetAttachmentsForRecordRequest) => Promise<ZohoCrmGetAttachmentsForRecordResponse>;
 
@@ -656,6 +682,25 @@ export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonB
 }
 
 // MARK: Results
+/**
+ * Catches ZohoServerFetchResponseDataArrayError and returns the error data array as the response data, as each data element will have the error details.
+ *
+ * Use to catch errors from functions that return ZohoCrmChangeObjectLikeResponse and pass the result to zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs.
+ */
+export function zohoCrmCatchZohoCrmChangeObjectLikeResponseError<R extends ZohoCrmChangeObjectLikeResponse<any>>(e: unknown): R {
+  let result: R;
+
+  if (e instanceof ZohoServerFetchResponseDataArrayError) {
+    result = {
+      data: e.errorDataArray
+    } as R;
+  } else {
+    throw e;
+  }
+
+  return result;
+}
+
 export type ZohoCrmChangeObjectLikeResponse<T extends ZohoCrmChangeObjectLikeResponseEntry = ZohoCrmChangeObjectLikeResponseEntry> = ZohoDataArrayResultRef<T>;
 export type ZohoCrmChangeObjectLikeResponseEntry<E extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta = ZohoCrmChangeObjectLikeResponseSuccessEntryMeta> = E | ZohoCrmChangeObjectResponseErrorEntry;
 export type ZohoCrmChangeObjectLikeResponseSuccessEntryType<T extends ZohoCrmChangeObjectLikeResponseEntry> = T extends ZohoCrmChangeObjectLikeResponseEntry<infer E> ? E : never;
