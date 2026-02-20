@@ -4,7 +4,7 @@ import { type LogZohoServerErrorFunction } from '../zoho.error.api';
 import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch, interceptZohoAccounts200StatusWithErrorResponse } from './accounts.error.api';
 import { type ZohoAccessToken, type ZohoAccessTokenCache, type ZohoAccessTokenFactory, type ZohoAccessTokenRefresher } from './accounts';
 import { MS_IN_MINUTE, MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
-import { accessToken } from './accounts.api';
+import { zohoAccountsAccessToken } from './accounts.api';
 import { zohoRateLimitedFetchHandler } from '../zoho.limit';
 
 export type ZohoAccounts = ZohoAccountsContextRef;
@@ -62,7 +62,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
 
     const tokenRefresher: ZohoAccessTokenRefresher = async () => {
       const createdAt = new Date().getTime();
-      const { access_token, api_domain, scope, expires_in } = await accessToken(accountsContext)();
+      const { access_token, api_domain, scope, expires_in } = await zohoAccountsAccessToken(accountsContext)();
 
       const result: ZohoAccessToken = {
         accessToken: access_token,

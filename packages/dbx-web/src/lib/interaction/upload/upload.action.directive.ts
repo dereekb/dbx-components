@@ -1,6 +1,5 @@
-import { Directive, OnInit, OnDestroy, inject } from '@angular/core';
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { Directive, inject } from '@angular/core';
+import { cleanSubscription, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { DbxFileUploadActionCompatable } from './upload.action';
 
 /**
@@ -10,25 +9,21 @@ import { DbxFileUploadActionCompatable } from './upload.action';
   selector: '[dbxFileUploadActionSync]',
   standalone: true
 })
-export class DbxFileUploadActionSyncDirective implements OnInit, OnDestroy {
+export class DbxFileUploadActionSyncDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance);
   readonly uploadCompatable = inject<DbxFileUploadActionCompatable>(DbxFileUploadActionCompatable);
 
-  private readonly _workingSub = new SubscriptionObject();
-  private readonly _disabledSub = new SubscriptionObject();
+  constructor() {
+    cleanSubscription(
+      this.source.isWorkingOrWorkProgress$.subscribe((working) => {
+        this.uploadCompatable.setWorking(working);
+      })
+    );
 
-  ngOnInit(): void {
-    this._workingSub.subscription = this.source.isWorkingOrWorkProgress$.subscribe((working) => {
-      this.uploadCompatable.setWorking(working);
-    });
-
-    this._disabledSub.subscription = this.source.isDisabled$.subscribe((disabled) => {
-      this.uploadCompatable.setDisabled(disabled);
-    });
-  }
-
-  ngOnDestroy(): void {
-    this._workingSub.destroy();
-    this._disabledSub.destroy();
+    cleanSubscription(
+      this.source.isDisabled$.subscribe((disabled) => {
+        this.uploadCompatable.setDisabled(disabled);
+      })
+    );
   }
 }

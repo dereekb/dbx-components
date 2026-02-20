@@ -1,10 +1,10 @@
-import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, effect, signal, OnDestroy, model } from '@angular/core';
+import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, effect, signal, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, throttleTime } from 'rxjs';
 import { ContentTypeMimeType, Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { browserObjectUrlRef } from '@dereekb/browser';
+import { clean, cleanSubscription } from '@dereekb/dbx-core';
 
 export type DbxEmbedComponentElement = 'embed' | 'img';
 
@@ -16,8 +16,8 @@ export type DbxEmbedComponentElement = 'embed' | 'img';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxEmbedComponent extends AbstractSubscriptionDirective implements OnDestroy {
-  private readonly _browserObjectUrlRef = browserObjectUrlRef();
+export class DbxEmbedComponent {
+  private readonly _browserObjectUrlRef = clean(browserObjectUrlRef());
 
   readonly sanitizer = inject(DomSanitizer);
 
@@ -85,62 +85,58 @@ export class DbxEmbedComponent extends AbstractSubscriptionDirective implements 
   readonly embedElementName$ = toObservable(this.embedElement);
 
   constructor() {
-    super();
-    this.sub = combineLatest([this.srcUrl$, this.root$, this.type$, this.embedElementName$])
-      .pipe(throttleTime(100, undefined, { leading: true, trailing: true }))
-      .subscribe(([srcUrl, root, type, forceEmbedElementName]) => {
-        const element = root?.nativeElement;
+    cleanSubscription(
+      combineLatest([this.srcUrl$, this.root$, this.type$, this.embedElementName$])
+        .pipe(throttleTime(100, undefined, { leading: true, trailing: true }))
+        .subscribe(([srcUrl, root, type, forceEmbedElementName]) => {
+          const element = root?.nativeElement;
 
-        if (element) {
-          // remove all embeds from the element
-          element?.childNodes.forEach((x) => element.removeChild(x));
+          if (element) {
+            // remove all embeds from the element
+            element?.childNodes.forEach((x) => element.removeChild(x));
 
-          if (srcUrl) {
-            const isImageType = type?.startsWith('image/');
-            const embedElementName = forceEmbedElementName ?? (isImageType ? 'img' : 'embed');
+            if (srcUrl) {
+              const isImageType = type?.startsWith('image/');
+              const embedElementName = forceEmbedElementName ?? (isImageType ? 'img' : 'embed');
 
-            // NOTE: We do this because of the following chromium behavior:
-            // https://issues.chromium.org/issues/40508296
-            //
-            // Embed cannot have src change dynamically, so we create a new embed element each time the src changes.
-            //
-            const embed = document.createElement(embedElementName);
+              // NOTE: We do this because of the following chromium behavior:
+              // https://issues.chromium.org/issues/40508296
+              //
+              // Embed cannot have src change dynamically, so we create a new embed element each time the src changes.
+              //
+              const embed = document.createElement(embedElementName);
 
-            let url: Maybe<string> = undefined;
+              let url: Maybe<string> = undefined;
 
-            if (srcUrl != null && typeof srcUrl !== 'string') {
-              url = this.sanitizer.sanitize(SecurityContext.URL, srcUrl);
-            } else {
-              url = srcUrl;
+              if (srcUrl != null && typeof srcUrl !== 'string') {
+                url = this.sanitizer.sanitize(SecurityContext.URL, srcUrl);
+              } else {
+                url = srcUrl;
+              }
+
+              // both embed and img use src
+              embed.setAttribute('src', url ?? '');
+
+              // if the type is an image, add the embed class
+              if (isImageType) {
+                embed.setAttribute('class', 'embed embed-img');
+              } else {
+                embed.setAttribute('class', 'embed');
+              }
+
+              switch (embedElementName) {
+                case 'embed':
+                  // only set the type if it is presented
+                  if (type) {
+                    embed.setAttribute('type', type);
+                  }
+                  break;
+              }
+
+              element.appendChild(embed);
             }
-
-            // both embed and img use src
-            embed.setAttribute('src', url ?? '');
-
-            // if the type is an image, add the embed class
-            if (isImageType) {
-              embed.setAttribute('class', 'embed embed-img');
-            } else {
-              embed.setAttribute('class', 'embed');
-            }
-
-            switch (embedElementName) {
-              case 'embed':
-                // only set the type if it is presented
-                if (type) {
-                  embed.setAttribute('type', type);
-                }
-                break;
-            }
-
-            element.appendChild(embed);
           }
-        }
-      });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._browserObjectUrlRef.destroy();
+        })
+    );
   }
 }

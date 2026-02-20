@@ -1,9 +1,10 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { OnDestroy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractAsyncFormlyFormDirective, formlyField, provideFormlyContext } from '../lib';
 import { AbstractControl } from '@angular/forms';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 export interface TestFormValue {
   text: string;
@@ -34,15 +35,10 @@ export function testTextField(): FormlyFieldConfig {
   selector: 'dbx-test-dbx-form',
   providers: [provideFormlyContext()]
 })
-export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
-  private readonly _fields = new BehaviorSubject<FormlyFieldConfig[]>([testTextField()]);
+export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFormlyFormDirective<T> {
+  private readonly _fields = completeOnDestroy(new BehaviorSubject<FormlyFieldConfig[]>([testTextField()]));
 
   readonly fields$: Observable<FormlyFieldConfig[]> = this._fields.asObservable();
-
-  override ngOnDestroy() {
-    super.ngOnDestroy();
-    this._fields.complete();
-  }
 
   // MARK: Testing
   setFields(fields: FormlyFieldConfig[]) {

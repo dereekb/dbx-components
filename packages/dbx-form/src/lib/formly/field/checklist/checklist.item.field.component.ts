@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, Type, inject, signal } from '@angular/core';
-import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, DbxInjectionComponent } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, DbxInjectionComponent, cleanSubscription } from '@dereekb/dbx-core';
 import { switchMapFilterMaybe } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, Observable } from 'rxjs';
 import { ValidationErrors, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -22,15 +22,17 @@ import { DbxAnchorComponent } from '@dereekb/dbx-web';
   standalone: true,
   imports: [DbxInjectionComponent]
 })
-export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective {
+export class DbxChecklistItemContentComponent<T = unknown> {
   readonly checklistItemFieldComponent = inject(DbxChecklistItemFieldComponent<T>);
 
   readonly config: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>> = {
     componentClass: this.checklistItemFieldComponent.componentClass,
     init: (instance) => {
-      this.sub = this.checklistItemFieldComponent.displayContent$.subscribe((content: ChecklistItemDisplayContent<T>) => {
-        instance.setDisplayContent(content);
-      });
+      cleanSubscription(
+        this.checklistItemFieldComponent.displayContent$.subscribe((content: ChecklistItemDisplayContent<T>) => {
+          instance.setDisplayContent(content);
+        })
+      );
     }
   };
 }
@@ -104,6 +106,7 @@ export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<Field
   }
 
   ngOnInit() {
+    // field prop is finally available here
     this._displayContentObs.set(this.checklistField.displayContent);
   }
 }

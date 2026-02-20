@@ -1,11 +1,11 @@
 import { BehaviorSubject, map, Observable, shareReplay, combineLatest, distinctUntilChanged } from 'rxjs';
-import { Directive, OnDestroy, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { DbxValueListItem } from '../list.view.value';
 import { addModifiers, ArrayOrValue, combineMaps, Maybe, Modifier, ModifierMap, removeModifiers } from '@dereekb/util';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue, SubscriptionObject } from '@dereekb/rxjs';
+import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { DbxValueListItemModifier, provideDbxValueListViewModifier } from '../list.view.value.modifier';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
+import { clean, cleanSubscription, completeOnDestroy, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 
 /**
  * DbxValueListViewModifier implementation
@@ -15,10 +15,10 @@ import { transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
   providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective),
   standalone: true
 })
-export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I>, OnDestroy {
+export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I> {
   readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>, Maybe<'' | ArrayOrValue<Modifier<I>>>>(undefined, { alias: 'dbxListItemModifier', transform: transformEmptyStringInputToUndefined });
 
-  private readonly _additionalModifiers = new BehaviorSubject<Maybe<ModifierMap<I>>>(undefined);
+  private readonly _additionalModifiers = completeOnDestroy(new BehaviorSubject<Maybe<ModifierMap<I>>>(undefined));
 
   readonly modifiers$ = combineLatest([this._additionalModifiers, toObservable(this.inputModifiers)]).pipe(
     map(([modifiers, inputModifiers]) => {
@@ -26,10 +26,6 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
     }),
     shareReplay(1)
   );
-
-  ngOnDestroy(): void {
-    this._additionalModifiers.complete();
-  }
 
   // MARK: Modifiers
   addModifiers(modifiers: ArrayOrValue<Modifier<I>>): void {
@@ -45,23 +41,22 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
  * Abstract directive used for managing modifyers for a DbxValueListView.
  */
 @Directive()
-export abstract class AbstractDbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements OnDestroy {
+export abstract class AbstractDbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListItemModifier = inject(DbxValueListItemModifier<T, I>);
 
   private _currentLinkedModifiers: Maybe<ArrayOrValue<Modifier<I>>>;
 
-  private readonly _modifiers = new BehaviorSubject<MaybeObservableOrValue<ArrayOrValue<Modifier<I>>>>(undefined);
+  private readonly _modifiers = completeOnDestroy(new BehaviorSubject<MaybeObservableOrValue<ArrayOrValue<Modifier<I>>>>(undefined));
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<I>>>> = this._modifiers.pipe(maybeValueFromObservableOrValue(), distinctUntilChanged());
 
-  private readonly _modifiersSub = new SubscriptionObject(
-    this.modifiers$.subscribe((modifiers) => {
-      this._linkModifiers(modifiers);
-    })
-  );
+  constructor() {
+    cleanSubscription(
+      this.modifiers$.subscribe((modifiers) => {
+        this._linkModifiers(modifiers);
+      })
+    );
 
-  ngOnDestroy(): void {
-    this._modifiersSub.destroy();
-    this._unlinkModifiers();
+    clean(() => this._unlinkModifiers());
   }
 
   setModifiers(modifiers: MaybeObservableOrValue<ArrayOrValue<Modifier<I>>>) {

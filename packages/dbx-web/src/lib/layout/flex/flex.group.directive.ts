@@ -2,7 +2,7 @@ import { ScreenMediaWidthType } from '../../screen/screen';
 import { DbxScreenMediaService } from '../../screen/screen.service';
 import { Directive, inject, input } from '@angular/core';
 import { map, distinctUntilChanged, shareReplay } from 'rxjs';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+
 import { type Maybe } from '@dereekb/util';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 
@@ -19,7 +19,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
   },
   standalone: true
 })
-export class DbxFlexGroupDirective extends AbstractSubscriptionDirective {
+export class DbxFlexGroupDirective {
   private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);
 
   readonly content = input<boolean>(true);

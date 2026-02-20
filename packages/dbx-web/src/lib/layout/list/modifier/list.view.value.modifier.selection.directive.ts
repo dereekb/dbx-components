@@ -1,4 +1,4 @@
-import { Directive, input, OnDestroy } from '@angular/core';
+import { Directive, input } from '@angular/core';
 import { Maybe, ArrayOrValue, Modifier } from '@dereekb/util';
 import { Observable, map } from 'rxjs';
 import { DbxValueListItem, DbxValueListItemDecisionFunction } from '../list.view.value';
@@ -16,7 +16,7 @@ export const DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION: DbxValueListItemDecisio
   selector: 'dbxListItemIsSelectedModifier,[dbxListItemIsSelectedModifier]',
   standalone: true
 })
-export class DbxListItemIsSelectedModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
+export class DbxListItemIsSelectedModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> {
   readonly listItemIsSelected = input.required<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<'' | DbxValueListItemDecisionFunction<T>>>({ alias: 'dbxListItemIsSelectedModifier', transform: transformEmptyStringInputToUndefined });
 
   readonly listItemIsSelectedModifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.listItemIsSelected).pipe(

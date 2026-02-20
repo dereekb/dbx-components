@@ -1,11 +1,11 @@
-import { Component, Type, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Type, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe, PixelsString } from '@dereekb/util';
 import { CompactContextStore } from '../../layout/compact/compact.store';
 import { CompactMode } from '../../layout/compact/compact';
 import { BehaviorSubject, Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
-import { AbstractTransitionWatcherDirective, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, completeOnDestroy, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxPopupController, DbxPopupKey, DbxPopupWindowState, DbxPopupWindowStateType } from './popup';
 import { DbxPopupCoordinatorComponent } from './popup.coordinator.component';
 
@@ -57,7 +57,7 @@ export interface DbxPopupComponentConfig<O, I, T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
+export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I> {
   private readonly popoverRef = inject(NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>);
   private readonly compactContextState = inject(CompactContextStore);
 
@@ -72,7 +72,7 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
     init: this.config.init ? (instance) => (this.config as Required<DbxPopupComponentConfig<O, I, T>>).init(instance as T, this) : undefined
   };
 
-  private readonly closing = new Subject<void>();
+  private readonly closing = completeOnDestroy(new Subject<void>());
   readonly isClosing$ = this.closing.pipe(
     first(),
     map(() => true),
@@ -81,7 +81,7 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
   );
   readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
-  private readonly _windowState = new BehaviorSubject<DbxPopupWindowStateType>(DbxPopupWindowState.NORMAL);
+  private readonly _windowState = completeOnDestroy(new BehaviorSubject<DbxPopupWindowStateType>(DbxPopupWindowState.NORMAL));
   readonly windowState$ = this._windowState.asObservable();
 
   getClosingValueFn?: (value?: I) => Promise<O>;
@@ -91,12 +91,6 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
     this.compactContextState.setMode(CompactMode.COMPACT);
     this._position = new PopupGlobalPositionStrategy(this.config.position ?? undefined, this.config.offset ?? undefined);
     this.popoverRef.overlay.updatePositionStrategy(this._position);
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this.closing.complete();
-    this._windowState.complete();
   }
 
   protected updateForSuccessfulTransition(): void {

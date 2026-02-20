@@ -1,5 +1,6 @@
-import { computed, Directive, ElementRef, inject, input, OnDestroy, OnInit } from '@angular/core';
+import { computed, Directive, ElementRef, inject, input, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { clean, completeOnDestroy } from '@dereekb/dbx-core';
 import { resizeSignal } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
@@ -11,11 +12,12 @@ export type DbxColumnSizeColumnValue = 'head' | 'tail' | number;
   selector: '[dbx-table-column-size]',
   standalone: true
 })
-export class DbxTableColumnSizeDirective implements OnDestroy {
+export class DbxTableColumnSizeDirective {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+
   readonly resized = resizeSignal(this.elementRef);
 
-  private readonly _columnsMap = new BehaviorSubject(new Map<DbxColumnSizeColumnValue, DbxColumnSizeColumnDirective>());
+  private readonly _columnsMap = completeOnDestroy(new BehaviorSubject(new Map<DbxColumnSizeColumnValue, DbxColumnSizeColumnDirective>()));
   readonly columns$ = this._columnsMap.asObservable();
 
   readonly columnsSignal = toSignal(this.columns$);
@@ -85,10 +87,6 @@ export class DbxTableColumnSizeDirective implements OnDestroy {
       this._columnsMap.next(this._columnsMap.value);
     }
   }
-
-  ngOnDestroy(): void {
-    this._columnsMap.complete();
-  }
 }
 
 /**
@@ -98,17 +96,19 @@ export class DbxTableColumnSizeDirective implements OnDestroy {
   selector: '[dbx-column-size-column]',
   standalone: true
 })
-export class DbxColumnSizeColumnDirective implements OnInit, OnDestroy {
+export class DbxColumnSizeColumnDirective implements OnInit {
   readonly dbxColumnSizeDirective = inject(DbxTableColumnSizeDirective);
+
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly index = input.required<DbxColumnSizeColumnValue>({ alias: 'dbx-column-size-column' });
 
-  ngOnInit(): void {
-    this.dbxColumnSizeDirective.addColumn(this);
+  constructor() {
+    clean(() => this.dbxColumnSizeDirective.removeColumn(this));
   }
 
-  ngOnDestroy(): void {
-    this.dbxColumnSizeDirective.removeColumn(this);
+  ngOnInit(): void {
+    // called after the index value has been input/set. Indexes are unique and set only once.
+    this.dbxColumnSizeDirective.addColumn(this);
   }
 
   get width(): number {

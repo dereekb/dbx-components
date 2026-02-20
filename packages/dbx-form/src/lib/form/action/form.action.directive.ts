@@ -1,8 +1,8 @@
-import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
+import { Directive, OnInit, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult } from '@dereekb/dbx-core';
-import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable, IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
+import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult, cleanLockSet } from '@dereekb/dbx-core';
+import { SubscriptionObject, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable, IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { IsModified, IsValid, MapFunction, Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -22,11 +22,21 @@ export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrVal
   selector: '[dbxActionForm]',
   standalone: true
 })
-export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDestroy {
+export class DbxActionFormDirective<T = object, O = T> implements OnInit {
   readonly form = inject(DbxMutableForm<T>, { host: true });
   readonly source = inject(DbxActionContextStoreSourceInstance<O, unknown>);
 
-  readonly lockSet = new LockSet();
+  readonly lockSet = cleanLockSet({
+    onDestroy: () => {
+      this.source.enable(APP_ACTION_FORM_DISABLED_KEY);
+    },
+    onLockSetDestroy: () => {
+      this._triggeredSub.destroy();
+      this._isCompleteSub.destroy();
+      this._isWorkingSub.destroy();
+      this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, false);
+    }
+  });
 
   /**
    * Whether or not to disable the form while the action is working.
@@ -183,16 +193,6 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
       .subscribe((disable) => {
         this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, disable);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.source.enable(APP_ACTION_FORM_DISABLED_KEY);
-    this.lockSet.destroyOnNextUnlock(() => {
-      this._triggeredSub.destroy();
-      this._isCompleteSub.destroy();
-      this._isWorkingSub.destroy();
-      this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, false);
-    });
   }
 
   checkIsValidAndIsModified(value: T, overrides?: CheckValidAndModifiedOverrides<T>): Observable<[IsValid, IsModified]> {

@@ -1,24 +1,22 @@
-import { Directive, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { Directive, NgZone, inject } from '@angular/core';
 import { AbstractTransitionDirective } from './transition.directive';
+import { cleanSubscription } from '../../../rxjs/subscription';
 
 /**
  * Abstract directive that listens to onSuccess transition events and runs a function.
  */
 @Directive()
-export abstract class AbstractTransitionWatcherDirective extends AbstractTransitionDirective implements OnInit, OnDestroy {
-  private readonly _transitionSub = new SubscriptionObject();
-
+export abstract class AbstractTransitionWatcherDirective extends AbstractTransitionDirective {
   protected readonly ngZone = inject(NgZone);
 
-  ngOnInit(): void {
-    this._transitionSub.subscription = this.transitionSuccess$.subscribe(() => {
-      this.updateForSuccessfulTransition();
-    });
-  }
+  constructor() {
+    super();
 
-  ngOnDestroy(): void {
-    this._transitionSub.destroy();
+    cleanSubscription(
+      this.transitionSuccess$.subscribe(() => {
+        this.updateForSuccessfulTransition();
+      })
+    );
   }
 
   // MARK: Action

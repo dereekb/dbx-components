@@ -1,5 +1,5 @@
 import { map, Observable, shareReplay } from 'rxjs';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { DbxInjectionComponentConfigWithoutInjector } from '@dereekb/dbx-core';
 import { ComponentStore } from '@ngrx/component-store';
 import { distinctUntilMapHasDifferentKeys, ObservableOrValueGetter } from '@dereekb/rxjs';
@@ -36,7 +36,7 @@ export interface DbxMapboxMapInjectionStoreState {
  * Store used for storing injectable content into the map.
  */
 @Injectable()
-export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectionStoreState> implements OnDestroy {
+export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectionStoreState> {
   constructor() {
     super({
       map: new Map<DbxMapboxInjectionKey, DbxMapboxInjectionConfig>()

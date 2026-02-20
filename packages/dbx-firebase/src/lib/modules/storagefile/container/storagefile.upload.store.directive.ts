@@ -1,10 +1,11 @@
-import { Directive, inject, input, OnDestroy } from '@angular/core';
-import { skipAllInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { Directive, inject, input } from '@angular/core';
+import { skipAllInitialMaybe } from '@dereekb/rxjs';
 import { DbxFirebaseStorageFileUploadStore } from '../store';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';
 import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Directive that provides a DbxFirebaseStorageFileUploadStore, and sync's the inputs to the store.
@@ -15,10 +16,7 @@ import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
   providers: [DbxFirebaseStorageFileUploadStore],
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadStoreDirective implements OnDestroy {
-  private readonly _allowedSub = new SubscriptionObject();
-  private readonly _multiSub = new SubscriptionObject();
-
+export class DbxFirebaseStorageFileUploadStoreDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
 
   readonly multipleUpload = input<Maybe<boolean>>();
@@ -28,12 +26,7 @@ export class DbxFirebaseStorageFileUploadStoreDirective implements OnDestroy {
   readonly isMultiUploadAllowed$ = toObservable(this.multipleUpload).pipe(skipAllInitialMaybe(), shareReplay(1));
 
   constructor() {
-    this._allowedSub.subscription = this.fileTypesAccepted$.subscribe((x) => this.uploadStore.setFileTypesAccepted(x));
-    this._multiSub.subscription = this.isMultiUploadAllowed$.subscribe((x) => this.uploadStore.setIsMultiUploadAllowed(x));
-  }
-
-  ngOnDestroy(): void {
-    this._allowedSub.destroy();
-    this._multiSub.destroy();
+    cleanSubscription(this.fileTypesAccepted$.subscribe((x) => this.uploadStore.setFileTypesAccepted(x)));
+    cleanSubscription(this.isMultiUploadAllowed$.subscribe((x) => this.uploadStore.setIsMultiUploadAllowed(x)));
   }
 }

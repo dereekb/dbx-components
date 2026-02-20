@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { NotificationId, NotificationItem } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
@@ -19,7 +19,7 @@ export interface DbxFirebaseNotificationItemStoreState {
  * Store used for selecting a specific NotificationItem from a list of notification items.
  */
 @Injectable()
-export class DbxFirebaseNotificationItemStore extends ComponentStore<DbxFirebaseNotificationItemStoreState> implements OnDestroy {
+export class DbxFirebaseNotificationItemStore extends ComponentStore<DbxFirebaseNotificationItemStoreState> {
   constructor() {
     super({
       items: [],

@@ -1,24 +1,21 @@
 import { Observable, BehaviorSubject, of, switchMap, shareReplay } from 'rxjs';
-import { Directive, OnDestroy } from '@angular/core';
+import { Directive } from '@angular/core';
 import { FilterSourceConnector, FilterSource, filterMaybe } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
+import { completeOnDestroy } from '../rxjs';
 
 /**
  * Abstract FilterSourceConnector directive.
  */
 @Directive()
-export abstract class AbstractFilterSourceConnectorDirective<F> implements FilterSourceConnector<F>, FilterSource<F>, OnDestroy {
-  private readonly _source = new BehaviorSubject<Maybe<FilterSource<F>>>(undefined);
+export abstract class AbstractFilterSourceConnectorDirective<F> implements FilterSourceConnector<F>, FilterSource<F> {
+  private readonly _source = completeOnDestroy(new BehaviorSubject<Maybe<FilterSource<F>>>(undefined));
 
   readonly filter$: Observable<F> = this._source.pipe(
     switchMap((x) => x?.filter$ ?? of(undefined)),
     filterMaybe(),
     shareReplay(1)
   );
-
-  ngOnDestroy(): void {
-    this._source.complete();
-  }
 
   connectWithSource(filterSource: FilterSource<F>): void {
     this._source.next(filterSource);

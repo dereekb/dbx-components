@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { FirebaseStorageAccessorFile, StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
@@ -139,7 +139,7 @@ export interface DbxFirebaseStorageFileUploadStoreState {
  * Store used for selecting a specific NotificationItem from a list of notification items.
  */
 @Injectable()
-export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebaseStorageFileUploadStoreState> implements OnDestroy {
+export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebaseStorageFileUploadStoreState> {
   constructor() {
     super({});
   }

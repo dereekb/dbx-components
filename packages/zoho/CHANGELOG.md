@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [12.7.0](https://github.com/dereekb/dbx-components/compare/v12.6.21-dev...v12.7.0) (2026-02-20)
+
+
+### Features
+
+* zoho crm ([#32](https://github.com/dereekb/dbx-components/issues/32)) ([abe424b](https://github.com/dereekb/dbx-components/commit/abe424b4ee58cef605a29a5839a2e36d22d24866))
+
+
+
 ## [12.6.21](https://github.com/dereekb/dbx-components/compare/v12.6.20-dev...v12.6.21) (2026-02-19)
 
 

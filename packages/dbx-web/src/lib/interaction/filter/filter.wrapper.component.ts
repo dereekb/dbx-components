@@ -9,7 +9,7 @@ import { WorkInstance } from '@dereekb/rxjs';
 /**
  * Action component used to simplify creating a filter form.
  *
- * Provides a DbxAction and configures the action to set the filter on a FilterSourceDirective when triggered.
+ * Provides a ActionContextStoreSource and configures the action to set the filter on a FilterSourceDirective when triggered.
  */
 @Component({
   selector: 'dbx-filter-wrapper',
@@ -29,6 +29,8 @@ export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHan
 
   constructor() {
     super();
+
+    // TODO: Consider throwing an error if dbxAction is provided at the same time as this, since the source would not be used?
 
     // configure handler function
     this._dbxActionHandlerInstance.setHandlerFunction((filter: F, instance: WorkInstance<F, unknown>) => {

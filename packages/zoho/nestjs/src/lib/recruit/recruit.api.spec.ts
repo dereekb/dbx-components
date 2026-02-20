@@ -136,7 +136,7 @@ describe('recruit.api', () => {
               expect(result.id).toBeDefined();
             });
 
-            it('should mark the object error if the input data is invalud for the object', async () => {
+            it('should mark the object error if the input data is invalid for the object', async () => {
               const result = await api.insertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: [
@@ -371,7 +371,7 @@ describe('recruit.api', () => {
                 expect(createdRecord.Last_Name).toBe(Last_Name);
               });
 
-              it('should mark the object error if the input data is invalud for the object', async () => {
+              it('should mark the object error if the input data is invalid for the object', async () => {
                 const result = await api.upsertRecord<TestCandidate>({
                   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                   data: [

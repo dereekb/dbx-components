@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, model, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, input, model, viewChild } from '@angular/core';
 import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { Observable, first, of, shareReplay, switchMap } from 'rxjs';
@@ -10,7 +10,6 @@ import { NgTemplateOutlet } from '@angular/common';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { DbxActionModule } from '../../../action/action.module';
 import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
-import { browserObjectUrlRef } from '@dereekb/browser';
 import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
 import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive';
 import { DbxContentPitDirective } from '../../../layout/content/content.pit.directive';
@@ -25,9 +24,7 @@ import { DbxContentPitDirective } from '../../../layout/content/content.pit.dire
   imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent, DbxContentPitDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective implements OnDestroy {
-  private readonly _browserObjectUrl = browserObjectUrlRef();
-
+export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective {
   readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });
   readonly showDownloadButton = input<boolean>(true);
 
@@ -105,10 +102,6 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
       })
     );
   };
-
-  ngOnDestroy() {
-    this._browserObjectUrl.destroy();
-  }
 
   toggleExpandPreview() {
     this.expandPreview.update((value) => !value);

@@ -25,7 +25,7 @@ import {
 } from './recruit';
 import { zohoRecruitSearchRecordsCriteriaString, type ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
 import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, type WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
-import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
+import { assertZohoRecruitRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZOHO_SUCCESS_STATUS, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
 import { type ZohoDateTimeString } from '../zoho.type';
 import { BaseError } from 'make-error';
@@ -120,7 +120,7 @@ export type ZohoRecruitInsertRecordFunction = ZohoRecruitCreateRecordLikeFunctio
  * @param context
  * @returns
  */
-export function insertRecord(context: ZohoRecruitContext): ZohoRecruitInsertRecordFunction {
+export function zohoRecruitInsertRecord(context: ZohoRecruitContext): ZohoRecruitInsertRecordFunction {
   return updateRecordLikeFunction(context, '', 'POST') as ZohoRecruitInsertRecordFunction;
 }
 
@@ -138,7 +138,7 @@ export type ZohoRecruitUpsertRecordFunction = ZohoRecruitUpsertRecordLikeFunctio
  * @param context
  * @returns
  */
-export function upsertRecord(context: ZohoRecruitContext): ZohoRecruitUpsertRecordFunction {
+export function zohoRecruitUpsertRecord(context: ZohoRecruitContext): ZohoRecruitUpsertRecordFunction {
   return updateRecordLikeFunction(context, '/upsert', 'POST') as ZohoRecruitUpsertRecordFunction;
 }
 
@@ -153,7 +153,7 @@ export type ZohoRecruitUpdateRecordFunction = ZohoRecruitUpdateRecordLikeFunctio
  * @param context
  * @returns
  */
-export function updateRecord(context: ZohoRecruitContext): ZohoRecruitUpdateRecordFunction {
+export function zohoRecruitUpdateRecord(context: ZohoRecruitContext): ZohoRecruitUpdateRecordFunction {
   return updateRecordLikeFunction(context, '', 'PUT') as ZohoRecruitUpdateRecordFunction;
 }
 
@@ -186,7 +186,7 @@ export type ZohoRecruitDeleteRecordResult = ZohoRecruitChangeObjectResponseSucce
  * @param context
  * @returns ZohoRecruitDeleteRecordFunction
  */
-export function deleteRecord(context: ZohoRecruitContext): ZohoRecruitDeleteRecordFunction {
+export function zohoRecruitDeleteRecord(context: ZohoRecruitContext): ZohoRecruitDeleteRecordFunction {
   return ({ ids, module, wf_trigger }: ZohoRecruitDeleteRecordInput) => {
     return context.fetchJson<ZohoRecruitDeleteRecordResponse>(`/v2/${module}?${makeUrlSearchParams({ ids, wf_trigger })}`, zohoRecruitApiFetchJsonInput('DELETE')).then(zohoRecruitChangeObjectLikeResponseSuccessAndErrorPairs);
   };
@@ -210,11 +210,11 @@ export type ZohoRecruitGetRecordByIdFunction = <T = ZohoRecruitRecord>(input: Zo
  * @param context
  * @returns
  */
-export function getRecordById(context: ZohoRecruitContext): ZohoRecruitGetRecordByIdFunction {
+export function zohoRecruitGetRecordById(context: ZohoRecruitContext): ZohoRecruitGetRecordByIdFunction {
   return <T>(input: ZohoRecruitGetRecordByIdInput) =>
     context
       .fetchJson<ZohoRecruitGetRecordByIdResponse<T>>(`/v2/${input.module}/${input.id}`, zohoRecruitApiFetchJsonInput('GET'))
-      .then(assertRecordDataArrayResultHasContent(input.module))
+      .then(assertZohoRecruitRecordDataArrayResultHasContent(input.module))
       .then((x) => x.data[0]);
 }
 
@@ -245,7 +245,7 @@ export type ZohoRecruitGetRecordsFunction = <T = ZohoRecruitRecord>(input: ZohoR
  * @param context
  * @returns
  */
-export function getRecords(context: ZohoRecruitContext): ZohoRecruitGetRecordsFunction {
+export function zohoRecruitGetRecords(context: ZohoRecruitContext): ZohoRecruitGetRecordsFunction {
   return ((input: ZohoRecruitGetRecordsInput) => context.fetchJson<ZohoRecruitGetRecordsResponse>(`/v2/${input.module}?${zohoRecruitUrlSearchParamsMinusModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET'))) as ZohoRecruitGetRecordsFunction;
 }
 
@@ -276,7 +276,7 @@ export type ZohoRecruitSearchRecordsFunction = <T = ZohoRecruitRecord>(input: Zo
  * @param context
  * @returns
  */
-export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRecordsFunction {
+export function zohoRecruitSearchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRecordsFunction {
   function searchRecordsUrlSearchParams<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) {
     const baseInput = { ...input };
     delete baseInput.criteria;
@@ -297,10 +297,10 @@ export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRec
   return (<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
 }
 
-export type SearchRecordsPageFactory = <T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>>) => FetchPage<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>;
+export type ZohoRecruitSearchRecordsPageFactory = <T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>>) => FetchPage<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>;
 
-export function searchRecordsPageFactory(context: ZohoRecruitContext): SearchRecordsPageFactory {
-  return zohoFetchPageFactory(searchRecords(context));
+export function zohoRecruitSearchRecordsPageFactory(context: ZohoRecruitContext): ZohoRecruitSearchRecordsPageFactory {
+  return zohoFetchPageFactory(zohoRecruitSearchRecords(context));
 }
 
 // MARK: Related Records
@@ -341,7 +341,7 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
  * @param context the ZohoRecruitContext to use
  * @returns a ZohoRecruitGetRelatedRecordsFunctionFactory
  */
-export function getRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
+export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
   return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
     return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
@@ -353,14 +353,14 @@ export type ZohoRecruitGetEmailsForRecordRequest = ZohoRecruitGetRelatedRecordsR
 export type ZohoRecruitGetEmailsForRecordResponse = ZohoPageResult<ZohoRecruitRecordEmailMetadata>;
 export type ZohoRecruitGetEmailsForRecordFunction = (input: ZohoRecruitGetEmailsForRecordRequest) => Promise<ZohoRecruitGetEmailsForRecordResponse>;
 
-export function getEmailsForRecord(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordFunction {
-  return getRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordEmailMetadata>({ targetModule: ZOHO_RECRUIT_EMAILS_MODULE });
+export function zohoRecruitGetEmailsForRecord(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordFunction {
+  return zohoRecruitGetRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordEmailMetadata>({ targetModule: ZOHO_RECRUIT_EMAILS_MODULE });
 }
 
-export type GetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetEmailsForRecordRequest, ZohoRecruitGetEmailsForRecordResponse>;
+export type ZohoRecruitGetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetEmailsForRecordRequest, ZohoRecruitGetEmailsForRecordResponse>;
 
-export function getEmailsForRecordPageFactory(context: ZohoRecruitContext): GetEmailsForRecordPageFactory {
-  return zohoFetchPageFactory(getEmailsForRecord(context));
+export function zohoRecruitGetEmailsForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordPageFactory {
+  return zohoFetchPageFactory(zohoRecruitGetEmailsForRecord(context));
 }
 
 // MARK: Attachments
@@ -368,14 +368,14 @@ export type ZohoRecruitGetAttachmentsForRecordRequest = ZohoRecruitGetRelatedRec
 export type ZohoRecruitGetAttachmentsForRecordResponse = ZohoPageResult<ZohoRecruitRecordAttachmentMetadata>;
 export type ZohoRecruitGetAttachmentsForRecordFunction = (input: ZohoRecruitGetAttachmentsForRecordRequest) => Promise<ZohoRecruitGetAttachmentsForRecordResponse>;
 
-export function getAttachmentsForRecord(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordFunction {
-  return getRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordAttachmentMetadata>({ targetModule: ZOHO_RECRUIT_ATTACHMENTS_MODULE });
+export function zohoRecruitGetAttachmentsForRecord(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordFunction {
+  return zohoRecruitGetRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordAttachmentMetadata>({ targetModule: ZOHO_RECRUIT_ATTACHMENTS_MODULE });
 }
 
-export type GetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetAttachmentsForRecordRequest, ZohoRecruitGetAttachmentsForRecordResponse>;
+export type ZohoRecruitGetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetAttachmentsForRecordRequest, ZohoRecruitGetAttachmentsForRecordResponse>;
 
-export function getAttachmentsForRecordPageFactory(context: ZohoRecruitContext): GetAttachmentsForRecordPageFactory {
-  return zohoFetchPageFactory(getAttachmentsForRecord(context));
+export function zohoRecruitGetAttachmentsForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordPageFactory {
+  return zohoFetchPageFactory(zohoRecruitGetAttachmentsForRecord(context));
 }
 
 /**
@@ -427,7 +427,7 @@ export type ZohoRecruitUploadAttachmentForRecordFunction = (input: ZohoRecruitUp
  * @param context
  * @returns
  */
-export function uploadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitUploadAttachmentForRecordFunction {
+export function zohoRecruitUploadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitUploadAttachmentForRecordFunction {
   return (input: ZohoRecruitUploadAttachmentForRecordRequest) => {
     const { attachmentCategoryId, attachmentCategoryName, formData } = input;
 
@@ -503,7 +503,7 @@ export type ZohoRecruitDownloadAttachmentForRecordFunction = (input: ZohoRecruit
  * @param context
  * @returns
  */
-export function downloadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitDownloadAttachmentForRecordFunction {
+export function zohoRecruitDownloadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitDownloadAttachmentForRecordFunction {
   return (input: ZohoRecruitDownloadAttachmentForRecordRequest) => context.fetch(`/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'GET' }).then(parseFetchFileResponse);
 }
 
@@ -522,7 +522,7 @@ export type ZohoRecruitDeleteAttachmentFromRecordFunction = (input: ZohoRecruitD
  * @param context
  * @returns
  */
-export function deleteAttachmentFromRecord(context: ZohoRecruitContext): ZohoRecruitDeleteAttachmentFromRecordFunction {
+export function zohoRecruitDeleteAttachmentFromRecord(context: ZohoRecruitContext): ZohoRecruitDeleteAttachmentFromRecordFunction {
   return (input: ZohoRecruitDeleteAttachmentFromRecordRequest) => context.fetch(`/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'DELETE' });
 }
 
@@ -595,7 +595,7 @@ export type ZohoRecruitExecuteRestApiFunctionFunction = (input: ZohoRecruitExecu
  * @param context
  * @returns
  */
-export function executeRestApiFunction(context: ZohoRecruitContext): ZohoRecruitExecuteRestApiFunctionFunction {
+export function zohoRecruitExecuteRestApiFunction(context: ZohoRecruitContext): ZohoRecruitExecuteRestApiFunctionFunction {
   return (input: ZohoRecruitExecuteRestApiFunctionRequest): Promise<ZohoRecruitExecuteRestApiFunctionSuccessDetails> => {
     const inputSearchParams = makeUrlSearchParams(input.params);
     const inputSearchParamsString = inputSearchParams.toString();
@@ -695,11 +695,11 @@ export interface ZohoRecruitMultiRecordResult<I, OS, OE> {
   readonly errorItems: ZohoRecruitMultiRecordResultEntry<I, OE>[];
 }
 
-export interface ZohoRecrutMultiRecordResultItem {
+export interface ZohoRecruitMultiRecordResultItem {
   readonly status: ZohoServerSuccessStatus | ZohoServerErrorStatus;
 }
 
-export function zohoRecruitMultiRecordResult<I, OS extends ZohoRecrutMultiRecordResultItem, OE extends ZohoRecrutMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoRecruitMultiRecordResult<I, OS, OE> {
+export function zohoRecruitMultiRecordResult<I, OS extends ZohoRecruitMultiRecordResultItem, OE extends ZohoRecruitMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoRecruitMultiRecordResult<I, OS, OE> {
   const successItems: ZohoRecruitMultiRecordResultEntry<I, OS>[] = [];
   const errorItems: ZohoRecruitMultiRecordResultEntry<I, OE>[] = [];
 
@@ -743,3 +743,103 @@ export interface ZohoRecruitMultiRecordResultEntry<I, O> {
  * @deprecated use ZohoRecruitGetRelatedRecordsPageFilter instead.
  */
 export type ZohoRecruitGetNotesPageFilter = ZohoRecruitGetRelatedRecordsPageFilter;
+
+/**
+ * @deprecated Use zohoRecruitInsertRecord instead.
+ */
+export const insertRecord = zohoRecruitInsertRecord;
+
+/**
+ * @deprecated Use zohoRecruitUpdateRecord instead.
+ */
+export const updateRecord = zohoRecruitUpdateRecord;
+
+/**
+ * @deprecated Use zohoRecruitUpsertRecord instead.
+ */
+export const upsertRecord = zohoRecruitUpsertRecord;
+
+/**
+ * @deprecated Use zohoRecruitDeleteRecord instead.
+ */
+export const deleteRecord = zohoRecruitDeleteRecord;
+
+/**
+ * @deprecated Use zohoRecruitGetRecordById instead.
+ */
+export const getRecordById = zohoRecruitGetRecordById;
+
+/**
+ * @deprecated Use zohoRecruitGetRecords instead.
+ */
+export const getRecords = zohoRecruitGetRecords;
+
+/**
+ * @deprecated Use zohoRecruitSearchRecords instead.
+ */
+export const searchRecords = zohoRecruitSearchRecords;
+
+/**
+ * @deprecated Use zohoRecruitSearchRecordsPageFactory instead.
+ */
+export const searchRecordsPageFactory = zohoRecruitSearchRecordsPageFactory;
+
+/**
+ * @deprecated Use zohoRecruitGetRelatedRecordsFunctionFactory instead.
+ */
+export const getRelatedRecordsFunctionFactory = zohoRecruitGetRelatedRecordsFunctionFactory;
+
+/**
+ * @deprecated Use zohoRecruitGetEmailsForRecord instead.
+ */
+export const getEmailsForRecord = zohoRecruitGetEmailsForRecord;
+
+/**
+ * @deprecated Use zohoRecruitGetEmailsForRecordPageFactory instead.
+ */
+export const getEmailsForRecordPageFactory = zohoRecruitGetEmailsForRecordPageFactory;
+
+/**
+ * @deprecated Use zohoRecruitGetAttachmentsForRecord instead.
+ */
+export const getAttachmentsForRecord = zohoRecruitGetAttachmentsForRecord;
+
+/**
+ * @deprecated Use zohoRecruitGetAttachmentsForRecordPageFactory instead.
+ */
+export const getAttachmentsForRecordPageFactory = zohoRecruitGetAttachmentsForRecordPageFactory;
+
+/**
+ * @deprecated Use zohoRecruitUploadAttachmentForRecord instead.
+ */
+export const uploadAttachmentForRecord = zohoRecruitUploadAttachmentForRecord;
+
+/**
+ * @deprecated Use zohoRecruitDownloadAttachmentForRecord instead.
+ */
+export const downloadAttachmentForRecord = zohoRecruitDownloadAttachmentForRecord;
+
+/**
+ * @deprecated Use zohoRecruitDeleteAttachmentFromRecord instead.
+ */
+export const deleteAttachmentFromRecord = zohoRecruitDeleteAttachmentFromRecord;
+
+/**
+ * @deprecated Use zohoRecruitExecuteRestApiFunction instead.
+ */
+export const executeRestApiFunction = zohoRecruitExecuteRestApiFunction;
+
+/**
+ * @deprecated Use ZohoRecruitSearchRecordsPageFactory instead.
+ */
+export type SearchRecordsPageFactory = ZohoRecruitSearchRecordsPageFactory;
+
+/**
+ * @deprecated Use ZohoRecruitGetEmailsForRecordPageFactory instead.
+ */
+export type GetEmailsForRecordPageFactory = ZohoRecruitGetEmailsForRecordPageFactory;
+
+/**
+ * @deprecated Use ZohoRecruitGetAttachmentsForRecordPageFactory instead.
+ */
+export type GetAttachmentsForRecordPageFactory = ZohoRecruitGetAttachmentsForRecordPageFactory;

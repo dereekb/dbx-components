@@ -1,7 +1,7 @@
-import { Directive, inject, OnDestroy } from '@angular/core';
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseStorageFileUploadStore } from '../store';
 import { DbxFileUploadComponent } from '@dereekb/dbx-web';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Directive that syncs a DbxFirebaseStorageFileUploadStore's configuration to a DbxFileUploadComponent.
@@ -11,23 +11,13 @@ import { DbxFileUploadComponent } from '@dereekb/dbx-web';
   exportAs: 'dbxFirebaseStorageFileUploadSync',
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadSyncDirective implements OnDestroy {
-  private readonly _allowedSub = new SubscriptionObject();
-  private readonly _multiSub = new SubscriptionObject();
-  private readonly _filesSub = new SubscriptionObject();
-
+export class DbxFirebaseStorageFileUploadSyncDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
   readonly uploadComponent = inject(DbxFileUploadComponent);
 
   constructor() {
-    this._allowedSub.subscription = this.uploadStore.fileTypesAllowed$.subscribe((x) => this.uploadComponent.setAccept(x));
-    this._multiSub.subscription = this.uploadStore.isMultiUploadAllowed$.subscribe((x) => this.uploadComponent.setMultiple(x));
-    this._filesSub.subscription = this.uploadComponent.filesChanged.subscribe((files) => this.uploadStore.setFiles(files.matchResult.accepted));
-  }
-
-  ngOnDestroy(): void {
-    this._allowedSub.destroy();
-    this._multiSub.destroy();
-    this._filesSub.destroy();
+    cleanSubscription(this.uploadStore.fileTypesAllowed$.subscribe((x) => this.uploadComponent.setAccept(x)));
+    cleanSubscription(this.uploadStore.isMultiUploadAllowed$.subscribe((x) => this.uploadComponent.setMultiple(x)));
+    cleanSubscription(this.uploadComponent.filesChanged.subscribe((files) => this.uploadStore.setFiles(files.matchResult.accepted)));
   }
 }

@@ -1,9 +1,9 @@
 import { distinctUntilChanged, filter, map, switchMap, combineLatest, Observable, EMPTY, exhaustMap, takeUntil, Subject, tap, shareReplay, throttleTime, Subscription } from 'rxjs';
-import { Directive, OnDestroy, effect, inject, input } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { Directive, effect, inject, input } from '@angular/core';
 import { DbxFormState, DbxFormStateRef, DbxMutableForm } from '../form';
 import { type Maybe } from '@dereekb/util';
 import { asObservable, ObservableOrValue, cleanup, errorOnEmissionsInPeriod } from '@dereekb/rxjs';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: ObservableOrValue<T>, modeObs: Observable<DbxFormSourceDirectiveMode>): Observable<T> {
   return dbxFormSourceObservableFromStream(form.stream$, inputObs, modeObs);
@@ -106,12 +106,13 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
   selector: '[dbxFormSource]',
   standalone: true
 })
-export class DbxFormSourceDirective<T = unknown> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFormSourceDirective<T = unknown> {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
   readonly dbxFormSourceMode = input<Maybe<DbxFormSourceDirectiveMode>>();
   readonly dbxFormSource = input<Maybe<ObservableOrValue<Maybe<Partial<T>>>>>();
 
+  protected readonly _effectSub = cleanSubscription();
   protected readonly _setFormSourceObservableEffect = effect(
     () => {
       const formSource = this.dbxFormSource();
@@ -125,10 +126,8 @@ export class DbxFormSourceDirective<T = unknown> extends AbstractSubscriptionDir
         });
       }
 
-      this.sub = subscription;
+      this._effectSub.setSub(subscription);
     },
-    {
-      allowSignalWrites: true
-    }
+    { allowSignalWrites: true }
   );
 }

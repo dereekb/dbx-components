@@ -173,17 +173,14 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
     return this._triggerCloseKeys;
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
-
+  ngOnInit(): void {
     if (this.config.closeOnEscape) {
       this._triggerCloseKeys = ['Escape'];
     }
   }
 
-  override ngOnDestroy(): void {
+  ngOnDestroy(): void {
     this.lockSet.destroyOnNextUnlock(() => {
-      super.ngOnDestroy();
       this._closing.complete();
     });
   }

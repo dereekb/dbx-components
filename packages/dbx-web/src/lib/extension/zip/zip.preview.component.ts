@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, model, OnDestroy } from '@angular/core';
-import { DbxInjectionComponent } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, Component, model } from '@angular/core';
+import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DbxLoadingComponent } from '../../loading';
 import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, from, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { beginLoading, errorResult, LoadingState, loadingStateContext, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { beginLoading, errorResult, LoadingState, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
 
 /**
@@ -22,7 +22,7 @@ import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
   imports: [DbxInjectionComponent, DbxLoadingComponent, DbxZipBlobPreviewComponent, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxZipPreviewComponent implements OnDestroy {
+export class DbxZipPreviewComponent {
   /**
    * The URL to download the zip file from, if applicable.
    */
@@ -67,9 +67,5 @@ export class DbxZipPreviewComponent implements OnDestroy {
   readonly zipFileBlob$ = this.zipFileBlobLoadingState$.pipe(valueFromFinishedLoadingState(), distinctUntilChanged(), shareReplay(1));
   readonly zipFileBlobSignal = toSignal(this.zipFileBlob$);
 
-  readonly context = loadingStateContext({ obs: this.zipFileBlobLoadingState$ });
-
-  ngOnDestroy(): void {
-    this.context.destroy();
-  }
+  readonly context = cleanLoadingContext({ obs: this.zipFileBlobLoadingState$ });
 }

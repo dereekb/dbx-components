@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoAccounts, ZohoAccountsContext, accessToken, zohoAccountsFactory } from '@dereekb/zoho';
+import { ZohoAccounts, ZohoAccountsContext, zohoAccountsAccessToken, zohoAccountsFactory } from '@dereekb/zoho';
 import { ZohoAccountsServiceConfig } from './accounts.config';
 import { ZohoAccountsAccessTokenCacheService } from './accounts.service';
 
@@ -11,7 +11,10 @@ export class ZohoAccountsApi {
     return this.zohoAccounts.accountsContext;
   }
 
-  constructor(@Inject(ZohoAccountsServiceConfig) readonly config: ZohoAccountsServiceConfig, @Inject(ZohoAccountsAccessTokenCacheService) readonly cacheService: ZohoAccountsAccessTokenCacheService) {
+  constructor(
+    @Inject(ZohoAccountsServiceConfig) readonly config: ZohoAccountsServiceConfig,
+    @Inject(ZohoAccountsAccessTokenCacheService) readonly cacheService: ZohoAccountsAccessTokenCacheService
+  ) {
     const accessTokenCache = config.zohoAccounts.accessTokenCache ? config.zohoAccounts.accessTokenCache : cacheService.loadZohoAccessTokenCache(config.zohoAccounts.serviceAccessTokenKey);
     this.zohoAccounts = zohoAccountsFactory(config.factoryConfig ?? {})({
       accessTokenCache,
@@ -21,6 +24,6 @@ export class ZohoAccountsApi {
 
   // MARK: Accessors
   get accessToken() {
-    return accessToken(this.accountsContext);
+    return zohoAccountsAccessToken(this.accountsContext);
   }
 }

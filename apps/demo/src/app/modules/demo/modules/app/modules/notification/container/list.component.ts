@@ -1,8 +1,8 @@
 import { AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { NotificationItem } from '@dereekb/firebase';
-import { DbxRouteModelIdDirective, DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
+import { DbxRouteModelIdDirective, DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective, DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
@@ -15,7 +15,7 @@ import { AsyncPipe } from '@angular/common';
   imports: [UIView, AsyncPipe, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective],
   standalone: true
 })
-export class DemoNotificationListPageComponent implements OnInit {
+export class DemoNotificationListPageComponent {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
 
   readonly dbxRouterService = inject(DbxRouterService);
@@ -25,7 +25,7 @@ export class DemoNotificationListPageComponent implements OnInit {
 
   readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
 
-  private readonly _notificationIdInstance = dbxRouteModelIdParamRedirect(this.dbxRouterService);
+  private readonly _notificationIdInstance = clean(dbxRouteModelIdParamRedirect(this.dbxRouterService));
 
   readonly reachedTestLimit$ = this.notificationSummaryDocumentStore.exists$.pipe(
     switchMap((exists) => {
@@ -46,7 +46,7 @@ export class DemoNotificationListPageComponent implements OnInit {
   readonly notificationItemListRef = this.demoAppRouterService.userNotificationListRef();
   readonly makeNotificationItemAnchor: AnchorForValueFunction<NotificationItem> = (doc) => this.demoAppRouterService.userNotificationListNotificationRef(doc.id);
 
-  ngOnInit(): void {
+  constructor() {
     this.dbxFirebaseNotificationItemStore.setItems(this.notificationSummaryDocumentStore.notificationItems$);
     this.dbxFirebaseNotificationItemStore.setSelectedId(this._notificationIdInstance.paramValue$);
   }

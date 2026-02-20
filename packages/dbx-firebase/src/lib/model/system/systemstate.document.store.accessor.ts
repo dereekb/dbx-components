@@ -2,14 +2,14 @@ import { SystemState, SystemStateStoredData, SystemStateTypeIdentifier } from '@
 import { LoadingState, mapLoadingState } from '@dereekb/rxjs';
 import { map, Observable, shareReplay } from 'rxjs';
 import { SystemStateDocumentStore } from './systemstate.document.store';
-import { Inject, Injectable, Injector, OnDestroy, Optional, inject } from '@angular/core';
+import { Inject, Injectable, Injector, Optional, inject } from '@angular/core';
 import { newWithInjector } from '@dereekb/dbx-core';
 
 /**
  * Abstract class used for accessing a SystemStateDocumentStore's data.
  */
 @Injectable()
-export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemStateStoredData = SystemStateStoredData> implements OnDestroy {
+export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemStateStoredData = SystemStateStoredData> {
   readonly systemStateDocumentStore = newWithInjector(SystemStateDocumentStore<T>, inject(Injector));
 
   readonly documentData$ = this.systemStateDocumentStore.data$;
@@ -25,9 +25,5 @@ export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemS
 
   constructor(@Inject(null) @Optional() type: SystemStateTypeIdentifier) {
     this.systemStateDocumentStore.setId(type);
-  }
-
-  ngOnDestroy(): void {
-    this.systemStateDocumentStore.ngOnDestroy();
   }
 }

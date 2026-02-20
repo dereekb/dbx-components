@@ -9,7 +9,7 @@ import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 export type DbxFormWorkingWrapperConfig = object;
 
 /**
- * Adds a loading bar to help signify asynchronos work is occuring.
+ * Adds a loading bar to help signify asynchronous work is occuring.
  *
  * By default shows loading during asynchronous validation of a field (FormControl status is "PENDING")
  */

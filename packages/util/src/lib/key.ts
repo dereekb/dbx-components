@@ -23,6 +23,11 @@ export type ReadKeyFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunct
 export type ReadRequiredKeyFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, K>;
 
 /**
+ * Reads all keys from the input object. Can return null/undefined.
+ */
+export type ReadAllKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, Maybe<ArrayOrValue<K>>>;
+
+/**
  * Reads one or more keys from the input object.
  */
 export type ReadOneOrMoreKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, ArrayOrValue<K>>;

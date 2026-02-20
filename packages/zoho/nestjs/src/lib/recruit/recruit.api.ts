@@ -2,38 +2,38 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   ZohoRecruit,
   ZohoRecruitContext,
-  associateCandidateRecordsWithJobOpenings,
-  createNotes,
-  createNotesForRecord,
-  deleteNotes,
-  deleteRecord,
-  executeRestApiFunction,
-  getNotesForRecord,
-  getNotesForRecordPageFactory,
-  getRecordById,
-  getRecords,
-  getRelatedRecordsFunctionFactory,
-  insertRecord,
-  searchCandidateAssociatedJobOpeningRecords,
-  searchCandidateAssociatedJobOpeningRecordsPageFactory,
-  searchJobOpeningAssociatedCandidateRecords,
-  searchJobOpeningAssociatedCandidateRecordsPageFactory,
-  searchRecords,
-  searchRecordsPageFactory,
-  updateRecord,
-  upsertRecord,
+  zohoRecruitAssociateCandidateRecordsWithJobOpenings,
+  zohoRecruitCreateNotes,
+  zohoRecruitCreateNotesForRecord,
+  zohoRecruitDeleteNotes,
+  zohoRecruitDeleteRecord,
+  zohoRecruitExecuteRestApiFunction,
+  zohoRecruitGetNotesForRecord,
+  zohoRecruitGetNotesForRecordPageFactory,
+  zohoRecruitGetRecordById,
+  zohoRecruitGetRecords,
+  zohoRecruitGetRelatedRecordsFunctionFactory,
+  zohoRecruitInsertRecord,
+  zohoRecruitSearchCandidateAssociatedJobOpeningRecords,
+  zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory,
+  zohoRecruitSearchJobOpeningAssociatedCandidateRecords,
+  zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory,
+  zohoRecruitSearchRecords,
+  zohoRecruitSearchRecordsPageFactory,
+  zohoRecruitUpdateRecord,
+  zohoRecruitUpsertRecord,
   zohoRecruitFactory,
-  createTagsForModule,
-  getTagsForModule,
-  addTagsToRecords,
-  getEmailsForRecord,
-  getEmailsForRecordPageFactory,
-  getAttachmentsForRecordPageFactory,
-  getAttachmentsForRecord,
-  downloadAttachmentForRecord,
-  uploadAttachmentForRecord,
-  deleteAttachmentFromRecord,
-  removeTagsFromRecords
+  zohoRecruitCreateTagsForModule,
+  zohoRecruitGetTagsForModule,
+  zohoRecruitAddTagsToRecords,
+  zohoRecruitGetEmailsForRecord,
+  zohoRecruitGetEmailsForRecordPageFactory,
+  zohoRecruitGetAttachmentsForRecordPageFactory,
+  zohoRecruitGetAttachmentsForRecord,
+  zohoRecruitDownloadAttachmentForRecord,
+  zohoRecruitUploadAttachmentForRecord,
+  zohoRecruitDeleteAttachmentFromRecord,
+  zohoRecruitRemoveTagsFromRecords
 } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -62,126 +62,126 @@ export class ZohoRecruitApi {
 
   // MARK: Accessors
   get insertRecord() {
-    return insertRecord(this.recruitContext);
+    return zohoRecruitInsertRecord(this.recruitContext);
   }
 
   get upsertRecord() {
-    return upsertRecord(this.recruitContext);
+    return zohoRecruitUpsertRecord(this.recruitContext);
   }
 
   get updateRecord() {
-    return updateRecord(this.recruitContext);
+    return zohoRecruitUpdateRecord(this.recruitContext);
   }
 
   get deleteRecord() {
-    return deleteRecord(this.recruitContext);
+    return zohoRecruitDeleteRecord(this.recruitContext);
   }
 
   get getRecordById() {
-    return getRecordById(this.recruitContext);
+    return zohoRecruitGetRecordById(this.recruitContext);
   }
 
   get getRecords() {
-    return getRecords(this.recruitContext);
+    return zohoRecruitGetRecords(this.recruitContext);
   }
 
   get searchRecords() {
-    return searchRecords(this.recruitContext);
+    return zohoRecruitSearchRecords(this.recruitContext);
   }
 
   get searchRecordsPageFactory() {
-    return searchRecordsPageFactory(this.recruitContext);
+    return zohoRecruitSearchRecordsPageFactory(this.recruitContext);
   }
 
   get getRelatedRecordsFunctionFactory() {
-    return getRelatedRecordsFunctionFactory(this.recruitContext);
+    return zohoRecruitGetRelatedRecordsFunctionFactory(this.recruitContext);
   }
 
   get getEmailsForRecord() {
-    return getEmailsForRecord(this.recruitContext);
+    return zohoRecruitGetEmailsForRecord(this.recruitContext);
   }
 
   get getEmailsForRecordPageFactory() {
-    return getEmailsForRecordPageFactory(this.recruitContext);
+    return zohoRecruitGetEmailsForRecordPageFactory(this.recruitContext);
   }
 
   get getAttachmentsForRecord() {
-    return getAttachmentsForRecord(this.recruitContext);
+    return zohoRecruitGetAttachmentsForRecord(this.recruitContext);
   }
 
   get getAttachmentsForRecordPageFactory() {
-    return getAttachmentsForRecordPageFactory(this.recruitContext);
+    return zohoRecruitGetAttachmentsForRecordPageFactory(this.recruitContext);
   }
 
   get uploadAttachmentForRecord() {
-    return uploadAttachmentForRecord(this.recruitContext);
+    return zohoRecruitUploadAttachmentForRecord(this.recruitContext);
   }
 
   get downloadAttachmentForRecord() {
-    return downloadAttachmentForRecord(this.recruitContext);
+    return zohoRecruitDownloadAttachmentForRecord(this.recruitContext);
   }
 
   get deleteAttachmentFromRecord() {
-    return deleteAttachmentFromRecord(this.recruitContext);
+    return zohoRecruitDeleteAttachmentFromRecord(this.recruitContext);
   }
 
   get createNotes() {
-    return createNotes(this.recruitContext);
+    return zohoRecruitCreateNotes(this.recruitContext);
   }
 
   get deleteNotes() {
-    return deleteNotes(this.recruitContext);
+    return zohoRecruitDeleteNotes(this.recruitContext);
   }
 
   get createNotesForRecord() {
-    return createNotesForRecord(this.recruitContext);
+    return zohoRecruitCreateNotesForRecord(this.recruitContext);
   }
 
   get getNotesForRecord() {
-    return getNotesForRecord(this.recruitContext);
+    return zohoRecruitGetNotesForRecord(this.recruitContext);
   }
 
   get getNotesForRecordPageFactory() {
-    return getNotesForRecordPageFactory(this.recruitContext);
+    return zohoRecruitGetNotesForRecordPageFactory(this.recruitContext);
   }
 
   get executeRestApiFunction() {
-    return executeRestApiFunction(this.recruitContext);
+    return zohoRecruitExecuteRestApiFunction(this.recruitContext);
   }
 
   get associateCandidateRecordsWithJobOpenings() {
-    return associateCandidateRecordsWithJobOpenings(this.recruitContext);
+    return zohoRecruitAssociateCandidateRecordsWithJobOpenings(this.recruitContext);
   }
 
   get searchCandidateAssociatedJobOpeningRecords() {
-    return searchCandidateAssociatedJobOpeningRecords(this.recruitContext);
+    return zohoRecruitSearchCandidateAssociatedJobOpeningRecords(this.recruitContext);
   }
 
   get searchCandidateAssociatedJobOpeningRecordsPageFactory() {
-    return searchCandidateAssociatedJobOpeningRecordsPageFactory(this.recruitContext);
+    return zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory(this.recruitContext);
   }
 
   get searchJobOpeningAssociatedCandidateRecords() {
-    return searchJobOpeningAssociatedCandidateRecords(this.recruitContext);
+    return zohoRecruitSearchJobOpeningAssociatedCandidateRecords(this.recruitContext);
   }
 
   get searchJobOpeningAssociatedCandidateRecordsPageFactory() {
-    return searchJobOpeningAssociatedCandidateRecordsPageFactory(this.recruitContext);
+    return zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory(this.recruitContext);
   }
 
   get createTagsForModule() {
-    return createTagsForModule(this.recruitContext);
+    return zohoRecruitCreateTagsForModule(this.recruitContext);
   }
 
   get getTagsForModule() {
-    return getTagsForModule(this.recruitContext);
+    return zohoRecruitGetTagsForModule(this.recruitContext);
   }
 
   get addTagsToRecords() {
-    return addTagsToRecords(this.recruitContext);
+    return zohoRecruitAddTagsToRecords(this.recruitContext);
   }
 
   get removeTagsFromRecords() {
-    return removeTagsFromRecords(this.recruitContext);
+    return zohoRecruitRemoveTagsFromRecords(this.recruitContext);
   }
 }

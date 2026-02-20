@@ -1,4 +1,4 @@
-import { Component, OnDestroy, output } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map, Observable } from 'rxjs';
 import { AbstractConfigAsyncFormlyFormDirective } from '../formly.directive';
@@ -18,7 +18,7 @@ import { DbxFormValueChangeDirective } from '../../form/io/form.change.directive
     class: 'd-block dbx-form-search-form'
   }
 })
-export class DbxFormSearchFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> implements OnDestroy {
+export class DbxFormSearchFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> {
   readonly search = output<string>();
 
   readonly fields$: Observable<FormlyFieldConfig[]> = this.currentConfig$.pipe(map(dbxFormSearchFormFields));

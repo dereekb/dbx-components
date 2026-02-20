@@ -1,4 +1,4 @@
-import { type ComponentRef, Injector, type ViewContainerRef } from '@angular/core';
+import { type ComponentRef, Injector, runInInjectionContext, type ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
 import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injection';
 import { type Initialized, type Destroyable, type Maybe } from '@dereekb/util';
@@ -121,11 +121,10 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     }
 
     const componentRef: ComponentRef<T> = content.createComponent(componentClass, { injector, ngModuleRef });
-
     const instance = componentRef.instance;
 
     if (init) {
-      init(instance);
+      runInInjectionContext(componentRef.injector, () => init(instance));
     }
 
     this.componentRef = componentRef;

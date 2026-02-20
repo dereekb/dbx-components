@@ -49,7 +49,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
   ngOnDestroy(): void {
     this._instance.destroy();
-    this._embeddedView?.destroy(); // destroy our embedded view too.
+    this._embeddedView?.destroy(); // destroy our embedded view too if it is set.
   }
 
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {

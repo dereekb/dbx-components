@@ -1,5 +1,5 @@
 import { first, Observable, map } from 'rxjs';
-import { Directive, OnInit, OnDestroy, ElementRef, inject, input } from '@angular/core';
+import { Directive, ElementRef, inject, input } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
 import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
@@ -19,7 +19,7 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
   selector: '[dbxActionPopover]',
   standalone: true
 })
-export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
+export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> {
   readonly elementRef = inject(ElementRef);
 
   readonly dbxActionPopover = input.required<DbxActionPopoverFunction<T>>();

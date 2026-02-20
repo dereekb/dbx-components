@@ -1,7 +1,7 @@
 import { type ArrayOrValue, asArray } from '../array/array';
 import { range } from '../array/array.number';
 import { type Milliseconds } from '../date/date';
-import { type PrimativeKey, type ReadOneOrMoreKeysFunction } from '../key';
+import { type ReadAllKeysFunction, type PrimativeKey } from '../key';
 import { multiValueMapBuilder } from '../map';
 import { incrementingNumberFactory } from '../number';
 import { addToSet, setContainsAnyValue } from '../set';
@@ -273,7 +273,7 @@ export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends Pr
    *
    * When in use the order is not guranteed.
    */
-  readonly nonConcurrentTaskKeyFactory?: ReadOneOrMoreKeysFunction<I, K>;
+  readonly nonConcurrentTaskKeyFactory?: Maybe<ReadAllKeysFunction<I, K>>;
   /**
    * Whether or not tasks are performed sequentially or if tasks are all done in "parellel".
    *
@@ -315,7 +315,11 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  * @param config
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
-  const defaultNonConcurrentTaskKeyFactory = makeDefaultNonConcurrentTaskKeyFactory();
+  /**
+   * By default returns null
+   */
+  const defaultNonConcurrentTaskKeyFactory = () => null;
+
   const { taskFactory, sequential, waitBetweenTaskInputRequests, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
   const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
   const maxPromisesToRunAtOneTime = Math.max(1, maxParallelTasks ?? 1);

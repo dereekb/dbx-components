@@ -1,5 +1,5 @@
 import { first, Observable } from 'rxjs';
-import { Directive, OnInit, OnDestroy, ElementRef, inject, input } from '@angular/core';
+import { Directive, ElementRef, inject, input } from '@angular/core';
 import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
 import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -15,7 +15,7 @@ export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, M
   selector: '[dbxActionDialog]',
   standalone: true
 })
-export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
+export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> {
   readonly elementRef = inject(ElementRef);
 
   readonly dbxActionDialog = input.required<DbxActionDialogFunction<T>>();

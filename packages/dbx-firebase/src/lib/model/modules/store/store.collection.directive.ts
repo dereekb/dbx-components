@@ -1,17 +1,18 @@
-import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, model, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreDocument, FirestoreModelKey, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
-import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { filterMaybe, skipInitialMaybe } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionMode } from '../../loader/collection.loader.instance';
 
 /**
  * Abstract directive that contains a DbxFirebaseCollectionStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements OnDestroy {
+export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
   readonly collectionMode = model<DbxFirebaseCollectionMode>('query');
   readonly collectionKeys = model<Maybe<FirestoreModelKey[]>>(undefined);
   readonly collectionRefs = model<Maybe<DocumentReference<T>[]>>(undefined);
@@ -28,8 +29,7 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
   private readonly _constraints = toObservable(this.constraints).pipe(skipInitialMaybe());
   private readonly _waitForNonNullConstraints = toObservable(this.waitForNonNullConstraints).pipe(skipInitialMaybe());
 
-  private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
-  private readonly _storeSub = new SubscriptionObject();
+  private readonly _store = completeOnDestroy(new BehaviorSubject<Maybe<S>>(undefined));
 
   readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
   readonly pageLoadingState$ = this.store$.pipe(switchMap((x) => x.pageLoadingState$));
@@ -38,24 +38,21 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
     this.replaceStore(store);
 
     // sync inputs to store any time the store changes
-    this._storeSub.subscription = this.store$.subscribe((x) => {
-      x.setCollectionMode(this._collectionMode);
-      x.setCollectionKeys(this._collectionKeys);
-      x.setCollectionRefs(this._collectionRefs);
-      x.setConstraints(this._constraints);
-      x.setMaxPages(this._maxPages);
-      x.setItemsPerPage(this._itemsPerPage);
-      x.setWaitForNonNullConstraints(this._waitForNonNullConstraints);
-    });
+    cleanSubscription(
+      this.store$.subscribe((x) => {
+        x.setCollectionMode(this._collectionMode);
+        x.setCollectionKeys(this._collectionKeys);
+        x.setCollectionRefs(this._collectionRefs);
+        x.setConstraints(this._constraints);
+        x.setMaxPages(this._maxPages);
+        x.setItemsPerPage(this._itemsPerPage);
+        x.setWaitForNonNullConstraints(this._waitForNonNullConstraints);
+      })
+    );
   }
 
   get store() {
     return this._store.value as S;
-  }
-
-  ngOnDestroy(): void {
-    this._store.complete();
-    this._storeSub.destroy();
   }
 
   /**

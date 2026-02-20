@@ -1,5 +1,5 @@
-import { inject, Directive, OnInit, OnDestroy, input, computed, signal, Signal } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { inject, Directive, input, computed, signal, Signal } from '@angular/core';
+import { cleanSubscriptionWithLockSet } from '../../../rxjs';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, combineLatest, Observable } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { isDefinedAndNotFalse, isNotFalse, type Maybe } from '@dereekb/util';
@@ -25,7 +25,7 @@ const DBX_ACTION_AUTO_TRIGGER_INSTANT_TRIGGER_DEBOUNCE = 10;
   selector: 'dbxActionAutoTrigger,[dbxActionAutoTrigger]',
   standalone: true
 })
-export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   readonly triggerDebounce = input<Maybe<number>>(undefined);
@@ -133,21 +133,19 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     map((x) => x[1]),
     shareReplay(1)
   );
+
   readonly automaticTrigger$: Observable<void> = this._isTriggerLimited$.pipe(
     filter((x) => x[1]),
     distinctUntilChanged((a, b) => a[0] === b[0]), // Only trigger when the count changes.
     map(() => undefined as void)
   );
 
-  ngOnInit(): void {
-    this.sub = this.automaticTrigger$.subscribe(() => {
-      this.source.trigger();
-    });
-  }
-
-  override ngOnDestroy(): void {
-    this.source.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
+  constructor() {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.automaticTrigger$.subscribe(() => {
+        this.source.trigger();
+      })
     });
   }
 }

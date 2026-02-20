@@ -91,14 +91,16 @@ export function actionContextStoreSourceMap<T = unknown, O = unknown>(): ActionC
     });
   }
 
+  function destroy(): void {
+    _actionKeySourceMap.complete();
+  }
+
   const result: ActionContextStoreSourceMap<T, O> = {
     actionKeySourceMap$: actionKeySourceMap$,
     sourceForKey: sourceForKey,
     addStoreSource: addStoreSource,
     removeStoreSource: removeStoreSource,
-    destroy: () => {
-      _actionKeySourceMap.complete();
-    }
+    destroy
   };
 
   return result;

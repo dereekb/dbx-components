@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, inject, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { AbstractSubscriptionDirective, DbxActionButtonDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
+import { clean, DbxActionButtonDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { type DbxButtonStyle } from '../../../button/button';
 import { DbxActionModule } from '../../../action/action.module';
@@ -52,10 +52,9 @@ export interface DbxDownloadBlobButtonConfig {
   imports: [NgClass, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDownloadBlobButtonComponent extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxDownloadBlobButtonComponent {
   private readonly _sanitizer = inject(DomSanitizer);
-
-  private readonly _browserObjectUrl = browserObjectUrlRef();
+  private readonly _browserObjectUrl = clean(browserObjectUrlRef());
 
   readonly config = input<Maybe<DbxDownloadBlobButtonConfig>>(undefined);
 
@@ -124,9 +123,4 @@ export class DbxDownloadBlobButtonComponent extends AbstractSubscriptionDirectiv
 
     return style;
   });
-
-  override ngOnDestroy() {
-    super.ngOnDestroy();
-    this._browserObjectUrl.destroy();
-  }
 }

@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormlyFieldConfig, FormlyForm, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { cleanWithLockSet } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { scanCount, switchMapFilterMaybe, SubscriptionObject } from '@dereekb/rxjs';
@@ -34,7 +34,7 @@ export interface DbxFormlyFormState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
+export class DbxFormlyComponent<T> implements DbxForm, DbxFormlyContextDelegate<T>, OnInit {
   private readonly _dbxFormlyContext = inject(DbxFormlyContext<T>);
 
   readonly formlyForm = viewChild(FormlyForm);
@@ -130,7 +130,21 @@ export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective impleme
   );
 
   private readonly _fieldsSignal = toSignal(this.fields$, { initialValue: undefined });
+
   readonly fieldsSignal = computed(() => this._fieldsSignal() ?? []);
+
+  constructor() {
+    cleanWithLockSet(this._dbxFormlyContext.lockSet, () => {
+      this._dbxFormlyContext.clearDelegate(this);
+      this._events.complete();
+      this._fields.complete();
+      this._reset.complete();
+      this._forceUpdate.complete();
+      this._disabled.complete();
+      this._disabledSub.destroy();
+      this._enforceDisabledSub.destroy();
+    });
+  }
 
   ngOnInit(): void {
     this._dbxFormlyContext.setDelegate(this);
@@ -160,20 +174,6 @@ export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective impleme
       this.form.statusChanges.pipe(throttleTime(50, undefined, { leading: true, trailing: true }))
     ]).subscribe((change) => {
       resyncDisabledState();
-    });
-  }
-
-  override ngOnDestroy(): void {
-    this._dbxFormlyContext.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
-      this._dbxFormlyContext.clearDelegate(this);
-      this._events.complete();
-      this._fields.complete();
-      this._reset.complete();
-      this._forceUpdate.complete();
-      this._disabled.complete();
-      this._disabledSub.destroy();
-      this._enforceDisabledSub.destroy();
     });
   }
 

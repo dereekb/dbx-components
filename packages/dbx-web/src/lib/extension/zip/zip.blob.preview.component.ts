@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input, Signal, signal, OnDestroy } from '@angular/core';
-import { DbxInjectionComponent } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, Component, computed, input, Signal, signal } from '@angular/core';
+import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { JsonPipe, NgTemplateOutlet } from '@angular/common';
 import { Maybe } from '@dereekb/util';
 import { ZipReader, BlobReader, Entry, FileEntry } from '@zip.js/zip.js';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../loading';
 import { distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { LoadingState, loadingStateContext, loadingStateFromObs, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { LoadingState, loadingStateFromObs, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { dbxZipBlobPreviewEntryTreeFromEntries, DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
 import { DbxZipPreviewEntryListComponent } from './zip.blob.preview.list.component';
 import { DbxBarHeaderComponent, DbxListEmptyContentComponent, DbxListTitleGroupData, DbxListTitleGroupDirective, DbxListTitleGroupTitleDelegate, DbxSpacerDirective, DbxValueListItemModifierDirective } from '../../layout';
@@ -31,7 +31,7 @@ export type DbxZipBlobPreviewGroupData = DbxListTitleGroupData<DbxZipBlobPreview
   imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxInjectionComponent, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, JsonPipe, NgTemplateOutlet, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxListEmptyContentComponent, DbxDownloadBlobButtonComponent, DbxSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxZipBlobPreviewComponent implements OnDestroy {
+export class DbxZipBlobPreviewComponent {
   readonly blob = input<Maybe<Blob>>();
 
   /**
@@ -173,11 +173,7 @@ export class DbxZipBlobPreviewComponent implements OnDestroy {
   );
   readonly selectedFileEntryBlobSignal: Signal<Maybe<Blob>> = toSignal(this.selectedFileEntryBlob$);
 
-  readonly context = loadingStateContext({ obs: this.allEntriesLoadingState$ });
-
-  ngOnDestroy(): void {
-    this.context.destroy();
-  }
+  readonly context = cleanLoadingContext({ obs: this.allEntriesLoadingState$ });
 
   readonly makeEntryAnchor: AnchorForValueFunction<DbxZipBlobPreviewEntryTreeNode> = (itemValue) => {
     return {

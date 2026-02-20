@@ -1,8 +1,9 @@
 import { DbxPopupController } from './popup';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxPopupCoordinatorService } from './popup.coordinator.service';
 import { delay, map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { clean } from '@dereekb/dbx-core';
 
 /**
  * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.
@@ -17,7 +18,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxPopupCoordinatorComponent implements OnInit, OnDestroy {
+export class DbxPopupCoordinatorComponent {
   private readonly _service = inject(DbxPopupCoordinatorService);
   private readonly _popup = inject(DbxPopupController);
 
@@ -29,11 +30,8 @@ export class DbxPopupCoordinatorComponent implements OnInit, OnDestroy {
   readonly show$ = this.isPopupForKey$.pipe(delay(0));
   readonly showSignal = toSignal(this.show$);
 
-  ngOnInit(): void {
+  constructor() {
     this._service.addPopup(this._popup);
-  }
-
-  ngOnDestroy(): void {
-    this._service.removePopup(this._popup.key, this._popup);
+    clean(() => this._service.removePopup(this._popup.key, this._popup));
   }
 }

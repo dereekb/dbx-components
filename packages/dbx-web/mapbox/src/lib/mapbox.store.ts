@@ -1,5 +1,5 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   isSameLatLngBound,
   isSameLatLngPoint,
@@ -134,7 +134,7 @@ export interface DbxMapboxStoreState {
  * Store used for retrieving information.
  */
 @Injectable()
-export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> implements OnDestroy {
+export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   private readonly dbxMapboxService = inject(DbxMapboxService);
 
   private safeLatLngPoint = latLngPointFunction({ wrap: true });

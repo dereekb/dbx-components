@@ -22,6 +22,8 @@ export interface DbxInjectionComponentConfig<T = unknown> {
   readonly ngModuleRef?: NgModuleRef<unknown>;
   /**
    * (Optional) Custom initialization code when an instance is created.
+   *
+   * This is called in an Angular injection context of the created component, so that inject() is available and will be destroyed when the created component is destroyed.
    */
   readonly init?: Maybe<(instance: T) => void>;
   /**

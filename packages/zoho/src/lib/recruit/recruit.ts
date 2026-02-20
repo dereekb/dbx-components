@@ -155,7 +155,7 @@ export interface ZohoRecruitChangeObjectDetails {
  */
 export interface ZohoRecruitRecordFieldsData {}
 
-export interface ZohoRecordDraftStateData {
+export interface ZohoRecruitRecordDraftStateData {
   /**
    * Used to update a draft record or to convert a draft to a normal record.
    *
@@ -164,12 +164,12 @@ export interface ZohoRecordDraftStateData {
   $state?: ZohoRecruitDraftOrSaveState;
 }
 
-export type NewZohoRecruitRecordData<T = ZohoRecruitRecordFieldsData> = T & ZohoRecordDraftStateData;
+export type NewZohoRecruitRecordData<T = ZohoRecruitRecordFieldsData> = T & ZohoRecruitRecordDraftStateData;
 
 /**
  * A ZohoRecruit record containing the corresponding record's id.
  */
-export type UpdateZohoRecruitRecordData = UniqueModelWithId & ZohoRecruitRecordFieldsData & ZohoRecordDraftStateData;
+export type UpdateZohoRecruitRecordData = UniqueModelWithId & ZohoRecruitRecordFieldsData & ZohoRecruitRecordDraftStateData;
 
 /**
  * A ZohoRecruit record containing record details.
@@ -352,3 +352,9 @@ export interface ZohoRecruitRecordAttachmentMetadata {
  * @deprecated use ZohoRecruitChangeObjectDetails instead.
  */
 export type ZohoRecruitRecordUpdateDetails = ZohoRecruitChangeObjectDetails;
+
+// MARK: Compat
+/**
+ * @deprecated Use ZohoRecruitRecordDraftStateData instead.
+ */
+export type ZohoRecordDraftStateData = ZohoRecruitRecordDraftStateData;

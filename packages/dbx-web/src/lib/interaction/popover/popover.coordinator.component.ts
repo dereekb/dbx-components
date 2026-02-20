@@ -1,8 +1,9 @@
 import { DbxPopoverController } from './popover';
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { delay, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { clean } from '@dereekb/dbx-core';
 
 /**
  * Used for coordinating popovers and closing/replacing existing ones when a new popover of the same name appears.
@@ -16,7 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   `,
   standalone: true
 })
-export class DbxPopoverCoordinatorComponent implements OnInit, OnDestroy {
+export class DbxPopoverCoordinatorComponent {
   private readonly _service = inject(DbxPopoverCoordinatorService);
   private readonly _popover = inject(DbxPopoverController);
 
@@ -29,11 +30,8 @@ export class DbxPopoverCoordinatorComponent implements OnInit, OnDestroy {
   readonly show$ = this.isPopoverForKey$.pipe(delay(0));
   readonly showSignal = toSignal(this.show$);
 
-  ngOnInit(): void {
+  constructor() {
     this._service.addPopover(this._popover);
-  }
-
-  ngOnDestroy(): void {
-    this._service.removePopover(this._popover.key, this._popover);
+    clean(() => this._service.removePopover(this._popover.key, this._popover));
   }
 }

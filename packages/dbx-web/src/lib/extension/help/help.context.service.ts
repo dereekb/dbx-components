@@ -1,14 +1,15 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest, defaultIfEmpty, map, shareReplay, switchMap } from 'rxjs';
 import { DbxHelpContextKey, DbxHelpContextReference } from './help';
 import { distinctUntilHasDifferentValues } from '@dereekb/rxjs';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
  * Service that tracks all active help context strings in the current context.
  */
 @Injectable()
-export class DbxHelpContextService implements OnDestroy {
-  private readonly _contextReferences = new BehaviorSubject<Set<DbxHelpContextReference>>(new Set());
+export class DbxHelpContextService {
+  private readonly _contextReferences = completeOnDestroy(new BehaviorSubject<Set<DbxHelpContextReference>>(new Set()));
 
   /**
    * Observable of all currently active help context strings.
@@ -40,9 +41,5 @@ export class DbxHelpContextService implements OnDestroy {
     const referenceSet = this._contextReferences.value;
     referenceSet.delete(reference);
     this._contextReferences.next(referenceSet);
-  }
-
-  ngOnDestroy(): void {
-    this._contextReferences.complete();
   }
 }

@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithStore, isDbxFirebaseModelEntityWithStore } from './model.entities';
-import { DbxInjectionComponent } from '@dereekb/dbx-core';
+import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, map, Observable, shareReplay, switchMap } from 'rxjs';
-import { filterMaybe, loadingStateContext } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
 import { DbxFirebaseModelTypesService, type DbxFirebaseModelDisplayInfo, type DbxFirebaseModelTypeInfo } from '../model.types.service';
 import { type Maybe } from '@dereekb/util';
@@ -20,7 +20,7 @@ import { dbxFirebaseModelEntityWidgetInjectionConfigFactory } from './model.enti
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
+export class DbxFirebaseModelEntitiesEntityComponent {
   readonly widgetInjectionConfigFactory = dbxFirebaseModelEntityWidgetInjectionConfigFactory();
 
   readonly entitiesWidgetService = inject(DbxFirebaseModelEntitiesWidgetService);
@@ -133,9 +133,5 @@ export class DbxFirebaseModelEntitiesEntityComponent implements OnDestroy {
   readonly commonWidgetConfigSignal = computed(() => this.widgetInjectionConfigSignal()?.commonComponentConfig);
   readonly debugWidgetConfigSignal = computed(() => this.widgetInjectionConfigSignal()?.debugComponentConfig);
 
-  readonly loadingContext = loadingStateContext({ obs: this.loadingState$ });
-
-  ngOnDestroy(): void {
-    this.loadingContext.destroy();
-  }
+  readonly loadingContext = cleanLoadingContext({ obs: this.loadingState$ });
 }
