@@ -223,6 +223,39 @@ describe('performTasksInParallelFunction()', () => {
       const input = range(0, tasksToRun);
 
       let wasRunningConcurrentTask = false;
+      const currentTaskValues = new Set<number>();
+
+      performTasksInParallel(input, {
+        maxParallelTasks: tasksToRun, // set to try to run then all in parallel
+        nonConcurrentTaskKeyFactory: (x) => null, // based on if they're even or odd
+        taskFactory: async (x, _, keys) => {
+          tasksStarted += 1;
+
+          currentTaskValues.add(x);
+
+          // check if already running or not
+          if (currentTaskValues.size > 1) {
+            wasRunningConcurrentTask = true;
+          }
+
+          await waitForMs(10);
+
+          currentTaskValues.delete(x);
+        }
+      }).then(() => {
+        expect(tasksStarted).toBe(tasksToRun);
+        expect(wasRunningConcurrentTask).toBe(true);
+        done();
+      });
+    });
+
+    it('should prevent tasks with the same key from running concurrently.', (done) => {
+      let tasksStarted = 0;
+
+      const tasksToRun = 8;
+      const input = range(0, tasksToRun);
+
+      let wasRunningConcurrentTask = false;
       const currentTaskKeys = new Set<'even' | 'odd'>();
 
       performTasksInParallel(input, {
