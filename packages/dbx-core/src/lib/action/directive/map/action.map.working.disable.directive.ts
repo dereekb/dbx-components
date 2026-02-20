@@ -1,6 +1,6 @@
 import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { AbstractSubscriptionDirective } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { type DbxActionDisabledKey } from '../../action';
 import { actionContextStoreSourceMapReader } from './action.map.utility';

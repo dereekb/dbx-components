@@ -13,6 +13,7 @@ export type DbxColumnSizeColumnValue = 'head' | 'tail' | number;
 })
 export class DbxTableColumnSizeDirective implements OnDestroy {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+
   readonly resized = resizeSignal(this.elementRef);
 
   private readonly _columnsMap = new BehaviorSubject(new Map<DbxColumnSizeColumnValue, DbxColumnSizeColumnDirective>());
@@ -100,6 +101,7 @@ export class DbxTableColumnSizeDirective implements OnDestroy {
 })
 export class DbxColumnSizeColumnDirective implements OnInit, OnDestroy {
   readonly dbxColumnSizeDirective = inject(DbxTableColumnSizeDirective);
+
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly index = input.required<DbxColumnSizeColumnValue>({ alias: 'dbx-column-size-column' });
 

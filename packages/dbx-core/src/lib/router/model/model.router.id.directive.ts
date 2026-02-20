@@ -3,7 +3,7 @@ import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
 import { Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 import { dbxRouteModelIdParamRedirect } from './id.param.redirect';
-import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
+import { AbstractSubscriptionDirective } from '../../rxjs/rxjs.directive';
 import { DbxRouterService } from '../router/service/router.service';
 import { DbxRouteModelIdDirectiveDelegate } from './model.router';
 

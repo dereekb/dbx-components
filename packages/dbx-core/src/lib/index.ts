@@ -9,6 +9,6 @@ export * from './filter';
 export * from './injection';
 export * from './ngrx';
 export * from './storage';
-export * from './subscription';
+export * from './rxjs';
 export * from './util';
 export * from './view';

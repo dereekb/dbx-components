@@ -2,7 +2,7 @@ import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, Observable, shareReplay, switchMap } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { AbstractSubscriptionDirective } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 

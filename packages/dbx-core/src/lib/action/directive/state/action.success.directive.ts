@@ -15,7 +15,7 @@ import { transformEmptyStringInputToUndefined } from '../../../util/input';
   selector: '[dbxActionHasSuccess]',
   standalone: true
 })
-export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
+export class DbxActionHasSuccessDirective extends AbstractIfDirective {
   private readonly _store = inject(DbxActionContextStoreSourceInstance);
 
   readonly hideAfter = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionHasSuccess', transform: transformEmptyStringInputToUndefined });

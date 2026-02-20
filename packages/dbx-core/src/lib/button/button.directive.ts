@@ -1,7 +1,7 @@
 import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';
 import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../subscription';
+import { AbstractSubscriptionDirective } from '../rxjs';
 import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, DbxButtonWorking, provideDbxButton } from './button';
 import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 

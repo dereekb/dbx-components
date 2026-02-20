@@ -4,6 +4,7 @@ import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, 
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe, ReadableError } from '@dereekb/util';
 import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
 import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkOrWorkProgress, DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
+import { lockSet } from '../rxjs';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtility.isFalse(state.disabled);
@@ -109,7 +110,12 @@ const INITIAL_STATE: ActionContextState = {
 
 @Injectable()
 export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
-  readonly lockSet = new LockSet();
+  readonly lockSet = lockSet({
+    onLockSetDestroy: () => super.ngOnDestroy(),
+    destroyLocksetTiming: {
+      delayTime: 2000
+    }
+  });
 
   constructor() {
     super({ ...INITIAL_STATE } as ActionContextState<T, O>);
@@ -416,10 +422,8 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
 
   // MARK: Cleanup
   override ngOnDestroy(): void {
-    // Wait for any actions to complete before destroying.
-    this.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
-    }, 2000);
+    // do not call super.destroy here, to keep the component store from destroying itself.
+    // the lockset is configured to cleanup the component store.
   }
 }
 

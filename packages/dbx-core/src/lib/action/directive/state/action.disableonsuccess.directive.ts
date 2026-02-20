@@ -1,7 +1,7 @@
 import { Directive, OnDestroy, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { combineLatest } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { AbstractSubscriptionDirective } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 

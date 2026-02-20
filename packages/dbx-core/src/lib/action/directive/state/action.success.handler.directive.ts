@@ -2,7 +2,7 @@ import { map, tap, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { AbstractSubscriptionDirective } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 

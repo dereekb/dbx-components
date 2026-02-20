@@ -1,7 +1,7 @@
 import { Directive, OnInit, inject } from '@angular/core';
 import { DbxRouteModelIdDirectiveDelegate } from './model.router';
 import { DbxAuthService } from '../../auth';
-import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
+import { AbstractSubscriptionDirective } from '../../rxjs/rxjs.directive';
 
 /**
  * Used for retrieving the user's current id DbxAuthService and passes it as an identifier for a DbxRouteModelIdDirectiveDelegate.

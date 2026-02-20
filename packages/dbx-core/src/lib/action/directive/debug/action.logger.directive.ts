@@ -1,5 +1,5 @@
 import { Directive, OnInit, inject } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { AbstractSubscriptionDirective } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**

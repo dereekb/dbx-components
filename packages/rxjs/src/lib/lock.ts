@@ -1,5 +1,5 @@
 import { type ObservableOrValue, asObservable } from './rxjs/getter';
-import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, type Observable, of, type Subscription, BehaviorSubject } from 'rxjs';
+import { defaultIfEmpty, delay, filter, first, map, shareReplay, Subscription, switchMap, tap, startWith, timeout, type Observable, of, BehaviorSubject, Subject } from 'rxjs';
 import { cleanup, combineLatestFromMapValuesObsFn, preventComplete } from './rxjs';
 import { type Destroyable, type Maybe, reduceBooleansWithOrFn, MS_IN_SECOND } from '@dereekb/util';
 import { SubscriptionObject } from './subscription';
@@ -10,23 +10,25 @@ export type OnLockSetUnlockedFunction = (unlocked: boolean) => void;
 export type RemoveLockFunction = () => void;
 
 export interface OnLockSetUnlockedConfig {
-  lockSet: LockSet;
-  fn: OnLockSetUnlockedFunction;
-  timeout?: Maybe<number>;
-  delayTime?: Maybe<number>;
+  readonly lockSet: LockSet;
+  readonly fn?: Maybe<OnLockSetUnlockedFunction>;
+  readonly timeout?: Maybe<number>;
+  readonly delayTime?: Maybe<number>;
 }
+
+export type DestroyOnNextUnlockConfig = Omit<OnLockSetUnlockedConfig, 'lockSet'>;
 
 export interface SetLockedConfig {
   /**
    * Whether or not to lock the config.
    */
-  locked?: boolean;
+  readonly locked?: boolean;
   /**
    * Optional duration to set the locked state.
    *
    * Only relevant for locking.
    */
-  duration?: number;
+  readonly duration?: number;
 }
 
 export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
@@ -57,8 +59,9 @@ export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayT
 export class LockSet implements Destroyable {
   private static LOCK_SET_CHILD_INDEX_STEPPER = 0;
 
-  private _locks = new BehaviorSubject<Map<LockKey, Observable<boolean>>>(new Map());
-  private _parentSub = new SubscriptionObject();
+  private readonly _onDestroy = new Subject<void>();
+  private readonly _locks = new BehaviorSubject<Map<LockKey, Observable<boolean>>>(new Map());
+  private readonly _parentSub = new SubscriptionObject();
 
   readonly locks$ = this._locks.asObservable();
 
@@ -72,6 +75,8 @@ export class LockSet implements Destroyable {
   );
 
   readonly isUnlocked$ = this.isLocked$.pipe(map((x) => !x));
+
+  readonly onDestroy$ = this._onDestroy.pipe(shareReplay(1));
 
   private get locks(): Map<LockKey, Observable<boolean>> {
     return this._locks.value;
@@ -174,9 +179,9 @@ export class LockSet implements Destroyable {
   }
 
   // Cleanup
-  destroyOnNextUnlock(config?: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: number): void {
-    let fn: OnLockSetUnlockedFunction | undefined;
-    let mergeConfig: Maybe<object>;
+  destroyOnNextUnlock(config?: Maybe<DestroyOnNextUnlockConfig['fn'] | DestroyOnNextUnlockConfig>, delayTime?: number): void {
+    let fn: Maybe<OnLockSetUnlockedFunction>;
+    let mergeConfig: Maybe<DestroyOnNextUnlockConfig>;
 
     if (config) {
       if (typeof config === 'function') {
@@ -193,12 +198,14 @@ export class LockSet implements Destroyable {
         fn?.(unlocked);
         setTimeout(() => this.destroy(), 100);
       },
-      delayTime
+      delayTime: delayTime ?? mergeConfig?.delayTime
     });
   }
 
   destroy(): void {
     this._locks.complete();
     this._parentSub.destroy();
+    this._onDestroy.next();
+    this._onDestroy.complete();
   }
 }

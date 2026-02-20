@@ -1,6 +1,6 @@
 import { Directive, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
+import { AbstractSubscriptionDirective } from '../../rxjs/rxjs.directive';
 import { DbxButton } from '../button';
 import { DbxRouterService } from '../../router/router/service/router.service';
 import { SegueRef } from '../../router/segue';

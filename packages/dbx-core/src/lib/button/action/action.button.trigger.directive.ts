@@ -1,5 +1,5 @@
 import { Directive, OnInit, inject } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
+import { AbstractSubscriptionDirective } from '../../rxjs/rxjs.directive';
 import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 

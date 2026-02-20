@@ -1,6 +1,6 @@
 import { Directive, effect, inject, input } from '@angular/core';
 import { LoadingContext, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { AbstractSubscriptionDirective } from '../subscription/subscription.directive';
+import { AbstractSubscriptionDirective } from '../rxjs/rxjs.directive';
 import { DbxButton } from './button';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, shareReplay, Subscription } from 'rxjs';
