@@ -19,7 +19,7 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
   selector: '[dbxActionPopover]',
   standalone: true
 })
-export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
+export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> {
   readonly elementRef = inject(ElementRef);
 
   readonly dbxActionPopover = input.required<DbxActionPopoverFunction<T>>();

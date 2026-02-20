@@ -6,6 +6,7 @@ import { DbxActionContextBaseSource } from './action.holder';
 import { Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject, Work, workFactory } from '@dereekb/rxjs';
 import { Injectable, OnDestroy } from '@angular/core';
+import { clean } from '../rxjs/clean';
 
 /**
  * DbxActionContextMachine configuration.
@@ -34,6 +35,7 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
  */
 export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements DbxActionContextSourceReference<T, O>, Destroyable {
   private _isShutdown = true;
+
   private readonly _config: DbxActionContextMachineConfig<T, O>;
   private readonly _handleValueReadySub = new SubscriptionObject();
   private readonly _successSub = new SubscriptionObject();
@@ -83,18 +85,16 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
 }
 
 /**
- * DbxActionContextMachine that implements OnDestroy and is configured for use as a Service/Injectable.
+ * DbxActionContextMachine configured for use as a Service/Injectable.
  */
 @Injectable()
-export class DbxActionContextMachineAsService<T = unknown, O = unknown> extends DbxActionContextMachine<T, O> implements OnDestroy {
+export class DbxActionContextMachineAsService<T = unknown, O = unknown> extends DbxActionContextMachine<T, O> {
   constructor() {
     super({
       oneTimeUse: false,
       handleValueReady: false
     });
-  }
 
-  ngOnDestroy(): void {
-    this.destroy();
+    clean(() => this.destroy());
   }
 }

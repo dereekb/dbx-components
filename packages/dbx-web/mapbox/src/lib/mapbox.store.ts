@@ -134,7 +134,7 @@ export interface DbxMapboxStoreState {
  * Store used for retrieving information.
  */
 @Injectable()
-export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> implements OnDestroy {
+export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   private readonly dbxMapboxService = inject(DbxMapboxService);
 
   private safeLatLngPoint = latLngPointFunction({ wrap: true });

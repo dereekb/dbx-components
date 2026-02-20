@@ -1,5 +1,6 @@
 import { Directive, OnDestroy, inject } from '@angular/core';
 import { FilterMap } from '@dereekb/rxjs';
+import { clean } from '../rxjs/clean';
 
 /**
  * Direction that provides a FilterMap.
@@ -10,10 +11,6 @@ import { FilterMap } from '@dereekb/rxjs';
   providers: [FilterMap],
   standalone: true
 })
-export class DbxFilterMapDirective<F> implements OnDestroy {
-  readonly filterMap = inject(FilterMap<F>);
-
-  ngOnDestroy(): void {
-    this.filterMap.destroy();
-  }
+export class DbxFilterMapDirective<F> {
+  readonly filterMap = clean(inject(FilterMap<F>));
 }

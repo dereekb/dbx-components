@@ -3,7 +3,7 @@ import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, 
 import { type Maybe } from '@dereekb/util';
 import { Observable, first, of, shareReplay, switchMap } from 'rxjs';
 import { DownloadTextContent } from './download.text';
-import { DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { clean, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../../loading/loading.component';
 import { NgTemplateOutlet } from '@angular/common';
@@ -25,9 +25,7 @@ import { DbxContentPitDirective } from '../../../layout/content/content.pit.dire
   imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent, DbxContentPitDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective implements OnDestroy {
-  private readonly _browserObjectUrl = browserObjectUrlRef();
-
+export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective {
   readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });
   readonly showDownloadButton = input<boolean>(true);
 
@@ -105,10 +103,6 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
       })
     );
   };
-
-  ngOnDestroy() {
-    this._browserObjectUrl.destroy();
-  }
 
   toggleExpandPreview() {
     this.expandPreview.update((value) => !value);

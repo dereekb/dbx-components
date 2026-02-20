@@ -1,22 +1,17 @@
-import { DestroyRef, inject } from '@angular/core';
-import { DestroyOnNextUnlockConfig, LockSet, OnLockSetUnlockedConfig, SubscriptionObject } from '@dereekb/rxjs';
-import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
-import { Unsubscribable } from 'rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { type GetterOrValue, getValueFromGetter, type Maybe } from '@dereekb/util';
+import { type Unsubscribable } from 'rxjs';
+import { clean } from './clean';
 
+// MARK: cleanSubscription()
 /**
- * Creates a new SubscriptionObject that is automatically destroyed when the component is destroyed.
+ * Creates a new SubscriptionObject that is automatically destroyed when the context is destroyed.
  *
  * Must be run within an Angular injection context.
  */
-export function subscriptionObject<T extends Unsubscribable = Unsubscribable>(sub?: Maybe<GetterOrValue<T>>): SubscriptionObject<T> {
-  const destroyRef = inject(DestroyRef);
-
+export function cleanSubscription<T extends Unsubscribable = Unsubscribable>(sub?: Maybe<GetterOrValue<T>>): SubscriptionObject<T> {
   const subscription = getValueFromGetter(sub);
   const subscriptionObject = new SubscriptionObject<T>(subscription);
-
-  destroyRef.onDestroy(() => {
-    subscriptionObject.destroy();
-  });
-
+  clean(subscriptionObject);
   return subscriptionObject;
 }

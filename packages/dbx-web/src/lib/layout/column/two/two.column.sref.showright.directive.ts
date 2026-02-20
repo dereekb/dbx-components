@@ -1,5 +1,5 @@
 import { Directive, inject } from '@angular/core';
-import { AbstractSubscriptionDirective, DbxRouterService, isSegueRefActive } from '@dereekb/dbx-core';
+import { cleanSubscription, DbxRouterService, isSegueRefActive } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { shareReplay, distinctUntilChanged, Subscription } from 'rxjs';
 import { isNot } from '@dereekb/rxjs';
@@ -11,7 +11,7 @@ import { isNot } from '@dereekb/rxjs';
   selector: '[dbxTwoColumnSrefShowRight]',
   standalone: true
 })
-export class DbxTwoColumnSrefShowRightDirective extends AbstractSubscriptionDirective {
+export class DbxTwoColumnSrefShowRightDirective {
   private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);
   private readonly _dbxRouterService = inject(DbxRouterService);
 
@@ -24,7 +24,6 @@ export class DbxTwoColumnSrefShowRightDirective extends AbstractSubscriptionDire
   );
 
   constructor() {
-    super();
-    this.sub = this._twoColumnsContextStore.setShowRight(this.showRight$) as Subscription;
+    cleanSubscription(this._twoColumnsContextStore.setShowRight(this.showRight$) as Subscription);
   }
 }

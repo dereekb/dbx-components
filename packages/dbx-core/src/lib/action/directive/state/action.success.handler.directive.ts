@@ -1,8 +1,8 @@
 import { map, tap, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../../rxjs';
+import { cleanSubscription } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -18,24 +18,26 @@ export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
   selector: '[dbxActionSuccessHandler]',
   standalone: true
 })
-export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionSuccessHandlerDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   readonly dbxActionSuccessHandler = input<Maybe<DbxActionSuccessHandlerFunction<O>>>();
   readonly successFunction$ = toObservable(this.dbxActionSuccessHandler).pipe(filterMaybe(), shareReplay(1));
 
-  ngOnInit(): void {
-    this.sub = this.successFunction$
-      .pipe(
-        switchMap((successFunction) =>
-          this.source.success$.pipe(
-            map((x) => [successFunction, x] as [DbxActionSuccessHandlerFunction<O>, O]),
-            tap(([successFn, result]) => {
-              successFn(result);
-            })
+  constructor() {
+    cleanSubscription(
+      this.successFunction$
+        .pipe(
+          switchMap((successFunction) =>
+            this.source.success$.pipe(
+              map((x) => [successFunction, x] as [DbxActionSuccessHandlerFunction<O>, O]),
+              tap(([successFn, result]) => {
+                successFn(result);
+              })
+            )
           )
         )
-      )
-      .subscribe();
+        .subscribe()
+    );
   }
 }

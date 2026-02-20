@@ -26,7 +26,7 @@ export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
   imports: [DbxDialogContentDirective, DbxPromptConfirmComponent, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boolean, DbxPromptConfirmDialogConfig> implements OnInit {
+export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boolean, DbxPromptConfirmDialogConfig> {
   get config(): DbxPromptConfirmDialogConfig {
     return this.data;
   }

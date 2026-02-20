@@ -1,7 +1,7 @@
-import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';
+import { Directive, Signal, computed, input, output, signal } from '@angular/core';
 import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../rxjs';
+import { cleanSubscription, completeOnDestroy } from '../rxjs';
 import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, DbxButtonWorking, provideDbxButton } from './button';
 import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 
@@ -9,12 +9,12 @@ import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
  * Abstract button component.
  */
 @Directive()
-export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDirective implements DbxButton, OnInit, OnDestroy {
+export abstract class AbstractDbxButtonDirective implements DbxButton {
   /**
    * Pre-interceptor button click.
    */
-  protected readonly _buttonClick = new Subject<void>();
-  protected readonly _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
+  protected readonly _buttonClick = completeOnDestroy(new Subject<void>());
+  protected readonly _buttonInterceptor = completeOnDestroy(new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined));
 
   readonly buttonClick = output();
 
@@ -58,31 +58,27 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   readonly display$ = toObservable(this.buttonDisplayContentSignal);
   readonly clicked$ = outputToObservable(this.buttonClick);
 
-  ngOnInit(): void {
-    this.sub = this._buttonClick
-      .pipe(
-        switchMap(() =>
-          this._buttonInterceptor.pipe(
-            switchMap((x) => {
-              if (x) {
-                return x.interceptButtonClick().pipe(first());
-              } else {
-                return of(true);
-              }
-            }),
-            filter((x) => Boolean(x)) // Ignore false values.
+  constructor() {
+    cleanSubscription(
+      this._buttonClick
+        .pipe(
+          switchMap(() =>
+            this._buttonInterceptor.pipe(
+              switchMap((x) => {
+                if (x) {
+                  return x.interceptButtonClick().pipe(first());
+                } else {
+                  return of(true);
+                }
+              }),
+              filter((x) => Boolean(x)) // Ignore false values.
+            )
           )
         )
-      )
-      .subscribe(() => {
-        this._forceButtonClicked();
-      });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._buttonClick.complete();
-    this._buttonInterceptor.complete();
+        .subscribe(() => {
+          this._forceButtonClicked();
+        })
+    );
   }
 
   setDisabled(disabled?: Maybe<boolean>): void {

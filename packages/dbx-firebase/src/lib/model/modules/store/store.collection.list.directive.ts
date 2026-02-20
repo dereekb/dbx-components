@@ -1,6 +1,6 @@
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { DbxListViewWrapper } from '@dereekb/dbx-web';
-import { Directive, OnInit, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 
 /**
@@ -10,18 +10,19 @@ import { DbxFirebaseCollectionStoreDirective } from './store.collection.directiv
   selector: '[dbxFirebaseCollectionList]',
   standalone: true
 })
-export class DbxFirebaseCollectionListDirective<T> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxFirebaseCollectionListDirective<T> {
   readonly dbxFirebaseCollectionStoreDirective = inject(DbxFirebaseCollectionStoreDirective<T>);
   readonly dbxListViewWrapper = inject(DbxListViewWrapper<T>, { host: true });
 
   constructor() {
-    super();
     this.dbxListViewWrapper.setState(this.dbxFirebaseCollectionStoreDirective.pageLoadingState$);
-  }
 
-  ngOnInit(): void {
-    this.sub = this.dbxListViewWrapper.loadMore?.subscribe(() => {
-      this.dbxFirebaseCollectionStoreDirective.next();
-    });
+    if (this.dbxListViewWrapper.loadMore) {
+      cleanSubscription(
+        this.dbxListViewWrapper.loadMore.subscribe(() => {
+          this.dbxFirebaseCollectionStoreDirective.next();
+        })
+      );
+    }
   }
 }

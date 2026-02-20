@@ -3,6 +3,7 @@ import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionCont
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
 import { PromiseOrValue, PromiseReference, promiseReference, type Maybe } from '@dereekb/util';
+import { clean } from '../rxjs';
 
 /**
  * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.
@@ -49,7 +50,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
   ngOnDestroy(): void {
     this._instance.destroy();
-    this._embeddedView?.destroy(); // destroy our embedded view too.
+    this._embeddedView?.destroy(); // destroy our embedded view too if it is set.
   }
 
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {

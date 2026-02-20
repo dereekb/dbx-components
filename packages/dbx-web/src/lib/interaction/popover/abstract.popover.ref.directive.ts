@@ -1,13 +1,15 @@
 import { OnDestroy, Directive, ElementRef, output } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 
 /**
  * Abstract class for showing and handling a popover ref.
  */
 @Directive()
-export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> extends AbstractSubscriptionDirective {
+export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> {
   private _popoverRef?: NgPopoverRef<T, R>;
+
+  protected readonly _popoverSub = cleanSubscription();
 
   showPopover(origin?: ElementRef): void {
     if (!this._popoverRef) {
@@ -18,10 +20,12 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> exte
   private _showPopoverRef(origin?: ElementRef): void {
     this._popoverRef = this._makePopoverRef(origin);
     this._afterOpened(this._popoverRef);
-    this.sub = this._popoverRef.afterClosed$.subscribe((x) => {
-      this._afterClosed(x);
-      this._popoverRef = undefined;
-    });
+    this._popoverSub.setSub(
+      this._popoverRef!.afterClosed$.subscribe((x) => {
+        this._afterClosed(x);
+        this._popoverRef = undefined;
+      })
+    );
   }
 
   protected abstract _makePopoverRef(origin?: ElementRef): NgPopoverRef<T, R>;
@@ -39,7 +43,7 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> exte
  * {@link AbstractPopoverRefDirective} extension that includes open/closed events.
  */
 @Directive()
-export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unknown> extends AbstractPopoverRefDirective<T, R> implements OnDestroy {
+export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unknown> extends AbstractPopoverRefDirective<T, R> {
   readonly popoverOpened = output<NgPopoverRef<T, R>>();
   readonly popoverClosed = output<NgPopoverCloseEvent<R>>();
 

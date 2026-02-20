@@ -1,6 +1,7 @@
 import { BehaviorSubject, distinctUntilChanged, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { type ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
 import { type Destroyable } from '@dereekb/util';
+import { OnDestroy } from '@angular/core';
 
 /**
  * Arbitrary string used to identify an action.
@@ -91,14 +92,16 @@ export function actionContextStoreSourceMap<T = unknown, O = unknown>(): ActionC
     });
   }
 
+  function destroy(): void {
+    _actionKeySourceMap.complete();
+  }
+
   const result: ActionContextStoreSourceMap<T, O> = {
     actionKeySourceMap$: actionKeySourceMap$,
     sourceForKey: sourceForKey,
     addStoreSource: addStoreSource,
     removeStoreSource: removeStoreSource,
-    destroy: () => {
-      _actionKeySourceMap.complete();
-    }
+    destroy
   };
 
   return result;

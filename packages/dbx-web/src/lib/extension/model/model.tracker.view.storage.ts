@@ -1,6 +1,6 @@
-import { Injectable, InjectionToken, OnDestroy, inject } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { unixDateTimeSecondsNumberForNow, encodeModelKeyTypePair, ModelRelationUtility, type Maybe } from '@dereekb/util';
-import { StorageAccessor } from '@dereekb/dbx-core';
+import { completeOnDestroy, StorageAccessor } from '@dereekb/dbx-core';
 import { map, mergeMap, catchError, Observable, of, Subject, tap } from 'rxjs';
 import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.tracker';
 
@@ -13,19 +13,15 @@ export const DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN = new InjectionToken(
  * Used for managing DbxModelViewTrackerEvent storage.
  */
 @Injectable()
-export class DbxModelViewTrackerStorage implements OnDestroy {
+export class DbxModelViewTrackerStorage {
   static readonly OBJECT_VIEW_TRACKER_STORAGE_LIST_KEY = 'dbxModelViewTrackerEvents';
   static readonly DEFAULT_MAX_EVENTS = 100;
 
   readonly storageAccessor = inject<StorageAccessor<DbxModelViewTrackerEventSet>>(DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN);
 
-  private readonly _newEvent = new Subject<DbxModelViewTrackerEvent>();
+  private readonly _newEvent = completeOnDestroy(new Subject<DbxModelViewTrackerEvent>());
 
   readonly newEvent$ = this._newEvent.asObservable();
-
-  ngOnDestroy(): void {
-    this._newEvent.complete();
-  }
 
   protected get storageKey(): string {
     return DbxModelViewTrackerStorage.OBJECT_VIEW_TRACKER_STORAGE_LIST_KEY;

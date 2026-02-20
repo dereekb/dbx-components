@@ -8,7 +8,7 @@ import { FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { addDays, format as formatDate } from 'date-fns';
 import { distinctUntilChanged, filter, startWith, throttleTime } from 'rxjs';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { cleanSubscription, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
 
 @Injectable()
@@ -76,7 +76,7 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
   standalone: true,
   imports: [MatDatepickerModule, ReactiveFormsModule, MatButtonModule]
 })
-export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnInit, OnDestroy {
+export class DbxTableDateRangeDayDistanceInputCellInputComponent {
   readonly tableStore = inject(DbxTableStore<DateRangeDayDistanceInput>);
 
   private readonly _syncSub = new SubscriptionObject();
@@ -108,33 +108,32 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnIn
     }
   });
 
-  ngOnInit(): void {
-    this._syncSub.subscription = this.tableStore.input$.subscribe((x) => {
-      const start = x?.date ?? null;
-      const end = start ? addDays(start, this.daysDistance) : undefined;
+  constructor() {
+    cleanSubscription(
+      this.tableStore.input$.subscribe((x) => {
+        const start = x?.date ?? null;
+        const end = start ? addDays(start, this.daysDistance) : undefined;
 
-      this.range.setValue({
-        start,
-        end
-      });
-    });
+        this.range.setValue({
+          start,
+          end
+        });
+      })
+    );
 
-    this._valueSub.subscription = this.rangeValue$
-      .pipe(
-        filter((x) => Boolean(x.start)),
-        distinctUntilChanged((a, b) => isSameDateDay(a?.start, b?.start)),
-        throttleTime(100, undefined, { trailing: true })
-      )
-      .subscribe((x) => {
-        if (x.start) {
-          this.tableStore.setInput({ date: x.start, distance: this.daysDistance });
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this._syncSub.destroy();
-    this._valueSub.destroy();
+    cleanSubscription(
+      this.rangeValue$
+        .pipe(
+          filter((x) => Boolean(x.start)),
+          distinctUntilChanged((a, b) => isSameDateDay(a?.start, b?.start)),
+          throttleTime(100, undefined, { trailing: true })
+        )
+        .subscribe((x) => {
+          if (x.start) {
+            this.tableStore.setInput({ date: x.start, distance: this.daysDistance });
+          }
+        })
+    );
   }
 
   get daysDistance() {

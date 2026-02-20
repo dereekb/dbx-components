@@ -1,8 +1,8 @@
-import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, Observable, shareReplay, switchMap } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../../../rxjs';
+import { cleanSubscription } from '../../../rxjs/subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -19,7 +19,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
   selector: 'dbxActionValue,[dbxActionValue]',
   standalone: true
 })
-export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionValueDirective<T, O> {
   readonly valueOrFunction = input<Maybe<GetterOrValue<T> | ''>>('', { alias: 'dbxActionValue' });
 
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
@@ -33,24 +33,15 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   );
 
   constructor() {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.sub = this.valueOrFunction$.pipe(switchMap((valueOrFunction) => this.source.triggered$.pipe(map(() => valueOrFunction)))).subscribe((valueOrFunction) => {
-      const value: T = getValueFromGetter(valueOrFunction);
-      this.source.readyValue(value);
-    });
+    cleanSubscription(
+      this.valueOrFunction$.pipe(switchMap((valueOrFunction) => this.source.triggered$.pipe(map(() => valueOrFunction)))).subscribe((valueOrFunction) => {
+        const value: T = getValueFromGetter(valueOrFunction);
+        this.source.readyValue(value);
+      })
+    );
   }
 
   setValueOrFunction(value: Maybe<GetterOrValue<T>>) {
     this._valueOrFunctionOverride.next(value);
-  }
-
-  override ngOnDestroy(): void {
-    this.source.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
-      this._valueOrFunctionOverride.complete();
-    });
   }
 }

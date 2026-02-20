@@ -1,8 +1,8 @@
-import { Component, viewChild, ElementRef, OnDestroy, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input, model } from '@angular/core';
+import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { asyncScheduler, combineLatest, delayWhen, map, Subject, switchMap, timer, startWith } from 'rxjs';
 import { Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
@@ -13,7 +13,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxIframeComponent extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxIframeComponent {
   readonly sanitizer = inject(DomSanitizer);
 
   readonly iframeLocationChanged = output<ElementRef<HTMLIFrameElement>>();
@@ -38,42 +38,38 @@ export class DbxIframeComponent extends AbstractSubscriptionDirective implements
   readonly iframe$ = toObservable(this.iframe);
   readonly contentUrl$ = toObservable(this.contentUrl);
 
-  readonly retry = new Subject<void>();
+  readonly retry = completeOnDestroy(new Subject<void>());
 
   constructor() {
-    super();
-    this.sub = combineLatest([this.contentUrl$, this.iframe$])
-      .pipe(
-        // delay retries by 50ms
-        switchMap((x) =>
-          this.retry.pipe(
-            startWith(undefined),
-            delayWhen((_, i) => timer(i ? 50 : 0, asyncScheduler)),
-            map(() => x)
+    cleanSubscription(() =>
+      combineLatest([this.contentUrl$, this.iframe$])
+        .pipe(
+          // delay retries by 50ms
+          switchMap((x) =>
+            this.retry.pipe(
+              startWith(undefined),
+              delayWhen((_, i) => timer(i ? 50 : 0, asyncScheduler)),
+              map(() => x)
+            )
           )
         )
-      )
-      .subscribe(([x, iframe]) => {
-        const contentWindow = iframe?.nativeElement.contentWindow;
+        .subscribe(([x, iframe]) => {
+          const contentWindow = iframe?.nativeElement.contentWindow;
 
-        if (contentWindow) {
-          let url: Maybe<string> = undefined;
+          if (contentWindow) {
+            let url: Maybe<string> = undefined;
 
-          if (x != null && typeof x !== 'string') {
-            url = this.sanitizer.sanitize(SecurityContext.URL, x);
+            if (x != null && typeof x !== 'string') {
+              url = this.sanitizer.sanitize(SecurityContext.URL, x);
+            } else {
+              url = x;
+            }
+
+            contentWindow.location.replace(url ?? '');
           } else {
-            url = x;
+            this.retry.next(); // queue up another retry for setting the iframe value
           }
-
-          contentWindow.location.replace(url ?? '');
-        } else {
-          this.retry.next(); // queue up another retry for setting the iframe value
-        }
-      });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this.retry.complete();
+        })
+    );
   }
 }

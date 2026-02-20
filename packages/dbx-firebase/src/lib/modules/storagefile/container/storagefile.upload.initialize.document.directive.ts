@@ -1,6 +1,6 @@
-import { Directive, inject, input, OnDestroy } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { DbxFirebaseStorageFileUploadStore, StorageFileDocumentStore } from '../store';
-import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, DbxActionHandlerInstance, clean, cleanSubscription } from '@dereekb/dbx-core';
 import { FirebaseStorageAccessorFile, OnCallCreateModelResult } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 
@@ -14,27 +14,27 @@ import { Maybe } from '@dereekb/util';
   exportAs: 'dbxFirebaseStorageFileUploadInitializeDocument',
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadInitializeDocumentDirective extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFirebaseStorageFileUploadInitializeDocumentDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
   readonly storageFileDocumentStore = inject(StorageFileDocumentStore);
 
   readonly initializeWithExpediteProcessing = input<Maybe<boolean>>();
 
   private readonly source: DbxActionContextStoreSourceInstance<FirebaseStorageAccessorFile, OnCallCreateModelResult> = inject(DbxActionContextStoreSourceInstance<FirebaseStorageAccessorFile, OnCallCreateModelResult>, { host: true });
-  private readonly _dbxActionHandlerInstance = new DbxActionHandlerInstance<FirebaseStorageAccessorFile, OnCallCreateModelResult>(this.source);
+  private readonly _dbxActionHandlerInstance = clean(new DbxActionHandlerInstance<FirebaseStorageAccessorFile, OnCallCreateModelResult>(this.source));
 
   constructor() {
-    super();
-
     // set the trigger
-    this.sub = this.uploadStore.uploadResult$.subscribe(async (result) => {
-      const successFileResult = result.successFileResults.find((x) => x.fileRef != null);
-      const fileRef = successFileResult?.fileRef;
+    cleanSubscription(
+      this.uploadStore.uploadResult$.subscribe(async (result) => {
+        const successFileResult = result.successFileResults.find((x) => x.fileRef != null);
+        const fileRef = successFileResult?.fileRef;
 
-      if (fileRef) {
-        this.source.triggerWithValue(fileRef);
-      }
-    });
+        if (fileRef) {
+          this.source.triggerWithValue(fileRef);
+        }
+      })
+    );
 
     // set the handler function
     this._dbxActionHandlerInstance.setHandlerFunction((fileRef, context) => {
@@ -48,10 +48,5 @@ export class DbxFirebaseStorageFileUploadInitializeDocumentDirective extends Abs
     });
 
     this._dbxActionHandlerInstance.init();
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._dbxActionHandlerInstance.destroy();
   }
 }

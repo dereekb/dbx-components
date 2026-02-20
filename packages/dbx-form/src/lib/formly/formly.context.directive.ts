@@ -13,7 +13,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
   providers: provideFormlyContext(),
   standalone: true
 })
-export class DbxFormlyFieldsContextDirective<T = unknown> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
+export class DbxFormlyFieldsContextDirective<T = unknown> extends AbstractAsyncFormlyFormDirective<T> {
   readonly fields = input<Maybe<FormlyFieldConfig[]>>(undefined, { alias: 'dbxFormlyFields' });
   readonly fields$ = toObservable(this.fields);
 }

@@ -3,6 +3,7 @@ import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionValueGetterValueGetterFunction, DbxActionValueGetterInstance } from './action.value.trigger.instance';
+import { clean } from '../../../rxjs/clean';
 
 export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {
   readonly valueGetterSignal?: Signal<Maybe<DbxActionValueGetterValueGetterFunction<T>>>;
@@ -14,7 +15,7 @@ export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {
  * Abstract class for directives that may perform an action when trigger is called, and returns a value.
  */
 @Directive()
-export abstract class AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractDbxActionValueGetterDirective<T> {
   private readonly _injector = inject(Injector);
 
   readonly source = inject(DbxActionContextStoreSourceInstance<T, unknown>);
@@ -23,12 +24,9 @@ export abstract class AbstractDbxActionValueGetterDirective<T> implements OnInit
     source: this.source
   });
 
-  ngOnInit(): void {
+  constructor() {
     this._triggerInstance.init();
-  }
-
-  ngOnDestroy(): void {
-    this._triggerInstance.destroy();
+    clean(this._triggerInstance);
   }
 
   setValueGetterFunction(valueGetterFunction: Maybe<DbxActionValueGetterValueGetterFunction<T>>) {
@@ -68,7 +66,7 @@ export abstract class AbstractDbxActionValueGetterDirective<T> implements OnInit
   selector: '[dbxActionValueGetter]',
   standalone: true
 })
-export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueGetterDirective<T> implements OnDestroy {
+export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueGetterDirective<T> {
   readonly dbxActionValueGetter = input<Maybe<DbxActionValueGetterValueGetterFunction<T>>>();
   readonly dbxActionValueGetterIsModified = input<Maybe<IsModifiedFunction>>();
   readonly dbxActionValueGetterIsEqual = input<Maybe<IsEqualFunction>>();

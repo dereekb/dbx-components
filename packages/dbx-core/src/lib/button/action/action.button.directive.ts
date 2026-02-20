@@ -1,6 +1,6 @@
-import { Directive, OnInit, OnDestroy } from '@angular/core';
+import { Directive } from '@angular/core';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { cleanSubscription } from '../../rxjs/subscription';
 
 /**
  * Context used for linking a button to an ActionContext.
@@ -9,25 +9,20 @@ import { SubscriptionObject } from '@dereekb/rxjs';
   selector: '[dbxActionButton]',
   standalone: true
 })
-export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective implements OnInit, OnDestroy {
-  private readonly _workingSub = new SubscriptionObject();
-  private readonly _disabledSub = new SubscriptionObject();
+export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective {
+  constructor() {
+    super();
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+    cleanSubscription(
+      this.source.isWorkingOrWorkProgress$.subscribe((working) => {
+        this.dbxButton.setWorking(working);
+      })
+    );
 
-    this._workingSub.subscription = this.source.isWorkingOrWorkProgress$.subscribe((working) => {
-      this.dbxButton.setWorking(working);
-    });
-
-    this._disabledSub.subscription = this.source.isDisabled$.subscribe((disabled) => {
-      this.dbxButton.setDisabled(disabled);
-    });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._workingSub.destroy();
-    this._disabledSub.destroy();
+    cleanSubscription(
+      this.source.isDisabled$.subscribe((disabled) => {
+        this.dbxButton.setDisabled(disabled);
+      })
+    );
   }
 }

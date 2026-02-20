@@ -1,5 +1,5 @@
-import { Directive, OnInit, inject, output } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { Directive, inject, output } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**
@@ -9,13 +9,13 @@ import { TwoColumnsContextStore } from './two.column.store';
   selector: '[dbxTwoColumnBack]',
   standalone: true
 })
-export class DbxTwoColumnBackDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxTwoColumnBackDirective {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
   readonly dbxTwoColumnBack = output();
 
-  ngOnInit(): void {
-    this.sub = this.twoColumnsContextStore.back$.subscribe(() => this.dbxTwoColumnBack.emit());
+  constructor() {
+    cleanSubscription(this.twoColumnsContextStore.back$.subscribe(() => this.dbxTwoColumnBack.emit()));
   }
 
   public backClicked(): void {

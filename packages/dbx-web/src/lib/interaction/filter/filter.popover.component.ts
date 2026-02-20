@@ -1,4 +1,4 @@
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { cleanSubscription, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, ElementRef, Type, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, map, skip, first, defaultIfEmpty } from 'rxjs';
@@ -28,9 +28,7 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> implements OnInit, OnDestroy {
-  private readonly _closeOnChangeSub = new SubscriptionObject();
-
+export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> {
   readonly config: DbxFilterComponentConfig<F> = this.popover.data as DbxFilterComponentConfig<F>;
 
   readonly icon = this.config.icon ?? 'filter_list';
@@ -72,9 +70,11 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
           }
 
           if (closeOnFilterChange !== false) {
-            this._closeOnChangeSub.subscription = filterSource.filter$.pipe(skip(1), filterMaybe(), first(), defaultIfEmpty(undefined)).subscribe(() => {
-              this.close();
-            });
+            cleanSubscription(
+              filterSource.filter$.pipe(skip(1), filterMaybe(), first(), defaultIfEmpty(undefined)).subscribe(() => {
+                this.close();
+              })
+            );
           }
 
           // run the next init if provided
@@ -131,10 +131,6 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
     }
 
     this.showPresetSignal.set(showPreset);
-  }
-
-  ngOnDestroy(): void {
-    this._closeOnChangeSub.destroy();
   }
 
   showPresets() {

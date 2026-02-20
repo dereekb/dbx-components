@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, PopupPosition, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DocInteractionExamplePopupContentComponent } from './interaction.popup.content.component';

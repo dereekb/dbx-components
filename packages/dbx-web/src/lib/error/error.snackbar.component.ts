@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { from } from 'rxjs';
 import { DbxErrorComponent } from './error.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
+import { clean, cleanSubscription } from '@dereekb/dbx-core';
 
 export type DbxErrorSnackbarConfig = Omit<MatSnackBarConfig<any>, 'data' | 'viewContainerRef'>;
 
@@ -32,37 +33,32 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
   imports: [CommonModule, MatIconModule, MatButtonModule, DbxErrorViewComponent, DbxErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxErrorSnackbarComponent implements OnInit, OnDestroy {
+export class DbxErrorSnackbarComponent {
   readonly snackBarRef = inject(MatSnackBarRef<DbxErrorSnackbarComponent>);
   readonly data = inject<DbxErrorSnackbarData>(MAT_SNACK_BAR_DATA);
 
   readonly error = this.data.error;
   private readonly _popoverOpen = signal(false);
 
-  private readonly _timer = makeTimer(this.data.duration ?? MS_IN_MINUTE, Boolean(this.data.duration));
+  private readonly _timer = clean(makeTimer(this.data.duration ?? MS_IN_MINUTE, Boolean(this.data.duration)));
   private readonly _allowAutoDismiss = this.data.duration != null;
 
   protected readonly _popoverSyncEffect = effect(() => toggleTimerRunning(this._timer, !this._popoverOpen()));
 
-  private readonly _popoverAfterClosedSub = new SubscriptionObject();
-  private readonly _autoDismissSub = new SubscriptionObject();
+  private readonly _popoverAfterClosedSub = cleanSubscription();
+  private readonly _autoDismissSub = cleanSubscription();
 
-  ngOnInit(): void {
+  constructor() {
     if (this._allowAutoDismiss) {
-      this._autoDismissSub.subscription = from(this._timer.promise).subscribe(() => this.dismiss());
+      this._autoDismissSub.setSub(from(this._timer.promise).subscribe(() => this.dismiss()));
     } else {
       this._popoverSyncEffect.destroy();
     }
   }
 
-  ngOnDestroy(): void {
-    this._autoDismissSub.destroy();
-    this._timer.destroy();
-  }
-
   onPopoverOpened(popover: NgPopoverRef) {
     this._popoverOpen.set(true);
-    this._popoverAfterClosedSub.subscription = popover.afterClosed$.subscribe(() => this._popoverOpen.set(false));
+    this._popoverAfterClosedSub.setSub(popover.afterClosed$.subscribe(() => this._popoverOpen.set(false)));
   }
 
   dismiss() {

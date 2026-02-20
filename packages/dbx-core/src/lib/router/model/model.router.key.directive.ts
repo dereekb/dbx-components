@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs';
-import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
+import { Directive, Input, inject } from '@angular/core';
 import { Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 import { dbxRouteModelKeyParamRedirect } from './id.param.redirect';
-import { AbstractSubscriptionDirective } from '../../rxjs/rxjs.directive';
+import { clean, cleanSubscription } from '../../rxjs';
 import { DbxRouterService } from '../router/service/router.service';
 import { DbxRouteModelKeyDirectiveDelegate } from './model.router';
 
@@ -16,22 +16,18 @@ import { DbxRouteModelKeyDirectiveDelegate } from './model.router';
   selector: '[dbxRouteModelKey]',
   standalone: true
 })
-export class DbxRouteModelKeyDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxRouteModelKeyDirective {
   readonly dbxRouterService = inject(DbxRouterService);
   readonly dbxRouteModelKeyDelegate = inject(DbxRouteModelKeyDirectiveDelegate, { host: true });
 
-  private readonly _redirectInstance = dbxRouteModelKeyParamRedirect(this.dbxRouterService);
+  private readonly _redirectInstance = clean(dbxRouteModelKeyParamRedirect(this.dbxRouterService));
 
   readonly keyFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly key$: Observable<Maybe<ModelKey>> = this._redirectInstance.value$;
 
-  ngOnInit(): void {
-    this.sub = this.dbxRouteModelKeyDelegate.useRouteModelKeyParamsObservable(this.keyFromParams$, this.key$);
+  constructor() {
+    cleanSubscription(this.dbxRouteModelKeyDelegate.useRouteModelKeyParamsObservable(this.keyFromParams$, this.key$));
     this._redirectInstance.init();
-  }
-
-  override ngOnDestroy(): void {
-    this._redirectInstance.destroy();
   }
 
   // MARK: Input

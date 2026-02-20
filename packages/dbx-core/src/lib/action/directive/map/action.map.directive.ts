@@ -1,5 +1,6 @@
-import { Directive, inject, OnDestroy } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { actionContextStoreSourceMap, ActionContextStoreSourceMap } from './action.map';
+import { clean } from '../../../rxjs/clean';
 
 /**
  * Context used for providing actions based on the action key.
@@ -17,10 +18,6 @@ import { actionContextStoreSourceMap, ActionContextStoreSourceMap } from './acti
   exportAs: 'actionMap',
   standalone: true
 })
-export class DbxActionContextMapDirective implements OnDestroy {
-  readonly actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);
-
-  ngOnDestroy(): void {
-    this.actionContextStoreSourceMap.destroy();
-  }
+export class DbxActionContextMapDirective {
+  readonly actionContextStoreSourceMap = clean(inject(ActionContextStoreSourceMap));
 }

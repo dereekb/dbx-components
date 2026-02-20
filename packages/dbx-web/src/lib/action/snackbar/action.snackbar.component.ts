@@ -1,10 +1,10 @@
-import { OnInit, Component, OnDestroy, AfterViewInit, inject, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, AfterViewInit, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
 import { shareReplay, switchMap, startWith, Subject, of, filter, map } from 'rxjs';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
-import { AbstractSubscriptionDirective, DbxActionDirective, DbxActionValueStreamDirective, DbxActionSuccessHandlerFunction, DbxActionSourceDirective, DbxActionSuccessHandlerDirective } from '@dereekb/dbx-core';
+import { cleanSubscription, DbxActionDirective, DbxActionValueStreamDirective, DbxActionSuccessHandlerFunction, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, completeOnDestroy } from '@dereekb/dbx-core';
 import { NgClass } from '@angular/common';
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
@@ -20,11 +20,11 @@ import { DbxSpacerDirective } from '../../layout/style/spacer.directive';
   imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective, DbxActionValueStreamDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective implements OnInit, AfterViewInit, OnDestroy {
+export class DbxActionSnackbarComponent implements AfterViewInit {
   readonly snackbarRef = inject(MatSnackBarRef<DbxActionSnackbarComponent>);
   readonly snackbarData = inject<DbxActionSnackbarDisplayConfig>(MAT_SNACK_BAR_DATA);
 
-  private readonly _durationTimeout = new Subject<void>();
+  private readonly _durationTimeout = completeOnDestroy(new Subject<void>());
   private readonly _actionRef = this.snackbarData.action?.reference;
 
   readonly sourceInstance$ = of(this._actionRef).pipe(
@@ -72,21 +72,18 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
   readonly message: Maybe<string> = this.snackbarData.message;
   readonly actionConfig: Maybe<DbxActionSnackbarActionConfig> = this.snackbarData.action;
 
-  ngOnInit(): void {
+  constructor() {
     // Subscribe and close if the duration is up and the action state is idle.
-    this.sub = this._durationTimeout
-      .pipe(
-        switchMap(() => this.loadingStateType$),
-        filter((x) => x === LoadingStateType.IDLE)
-      )
-      .subscribe(() => {
-        this.dismiss();
-      });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._durationTimeout.complete();
+    cleanSubscription(
+      this._durationTimeout
+        .pipe(
+          switchMap(() => this.loadingStateType$),
+          filter((x) => x === LoadingStateType.IDLE)
+        )
+        .subscribe(() => {
+          this.dismiss();
+        })
+    );
   }
 
   ngAfterViewInit(): void {

@@ -3,21 +3,19 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { FactoryWithInput, GetterOrValue, type Maybe } from '@dereekb/util';
 import { DbxActionHandlerInstance } from './action.handler.instance';
 import { Work } from '@dereekb/rxjs';
+import { clean } from '../../../rxjs';
 
 /**
  * Abstract directive that wraps and handles a DbxActionHandlerInstance lifecycle.
  */
 @Directive()
-export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> implements OnDestroy {
+export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> {
   readonly source: DbxActionContextStoreSourceInstance<T, O> = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
-  protected readonly _dbxActionHandlerInstance = new DbxActionHandlerInstance<T, O>(this.source);
+
+  protected readonly _dbxActionHandlerInstance = clean(new DbxActionHandlerInstance<T, O>(this.source));
 
   constructor() {
     this._dbxActionHandlerInstance.init();
-  }
-
-  ngOnDestroy(): void {
-    this._dbxActionHandlerInstance.destroy();
   }
 }
 

@@ -1,5 +1,5 @@
-import { Directive, OnInit, OnDestroy, inject, output } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { Directive, OnInit, inject, output } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { first, mergeMap, delay, map } from 'rxjs';
 import { DbxForm } from '../form';
@@ -13,27 +13,33 @@ import { DbxForm } from '../form';
   selector: '[dbxFormValueChange]',
   standalone: true
 })
-export class DbxFormValueChangeDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxFormValueChangeDirective<T> implements OnInit {
   readonly form = inject(DbxForm<T>, { host: true });
+
   readonly dbxFormValueChange = output<Maybe<T>>();
 
+  protected readonly _sub = cleanSubscription();
+
   ngOnInit(): void {
-    this.sub = this.form.stream$
-      .pipe(
-        mergeMap((x) =>
-          this.form.getValue().pipe(
-            first(),
-            map((value) => ({ isComplete: x.isComplete, value }))
-          )
-        ),
-        delay(0)
-      )
-      .subscribe(({ isComplete, value }) => {
-        if (isComplete) {
-          this.dbxFormValueChange.emit(value);
-        } else {
-          this.dbxFormValueChange.emit(undefined);
-        }
-      });
+    // specifically call within ngOnInit to ensure first emission occurs after the form is initialized.
+    this._sub.setSub(
+      this.form.stream$
+        .pipe(
+          mergeMap((x) =>
+            this.form.getValue().pipe(
+              first(),
+              map((value) => ({ isComplete: x.isComplete, value }))
+            )
+          ),
+          delay(0)
+        )
+        .subscribe(({ isComplete, value }) => {
+          if (isComplete) {
+            this.dbxFormValueChange.emit(value);
+          } else {
+            this.dbxFormValueChange.emit(undefined);
+          }
+        })
+    );
   }
 }

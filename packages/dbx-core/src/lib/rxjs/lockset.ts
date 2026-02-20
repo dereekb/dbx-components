@@ -1,7 +1,8 @@
 import { DestroyRef, inject } from '@angular/core';
-import { DestroyOnNextUnlockConfig, LockSet } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
-import { subscriptionObject } from './subscription';
+import { type DestroyOnNextUnlockConfig, LockSet, SubscriptionObject } from '@dereekb/rxjs';
+import { type DestroyFunction, type GetterOrValue, getValueFromGetter, type Maybe } from '@dereekb/util';
+import { cleanSubscription } from './subscription';
+import { type Unsubscribable } from 'rxjs';
 
 export interface LockSetConfig {
   /**
@@ -37,7 +38,7 @@ export function lockSet(config?: Maybe<LockSetConfig>): LockSet {
   });
 
   if (onLockSetDestroy) {
-    const _destroySub = subscriptionObject(
+    const _destroySub = cleanSubscription(
       lockSet.onDestroy$.subscribe(() => {
         onLockSetDestroy();
         _destroySub.destroy();
@@ -46,4 +47,44 @@ export function lockSet(config?: Maybe<LockSetConfig>): LockSet {
   }
 
   return lockSet;
+}
+
+// MARK: cleanWithLockSet()
+/**
+ * Runs the given onDestroy function when the context is destroyed, and the lock set's next unlock occurs.
+ *
+ * Must be run within an Angular injection context.
+ *
+ * @param lockSet The lockset to use.
+ * @param onDestroy The function to run when the lockset is unlocked.
+ */
+export function cleanWithLockSet(lockSet: LockSet, onDestroy: DestroyFunction) {
+  const destroyRef = inject(DestroyRef);
+
+  destroyRef.onDestroy(() => {
+    lockSet.onNextUnlock(() => {
+      onDestroy();
+    });
+  });
+}
+
+// MARK: cleanSubscriptionWithLockSet()
+/**
+ * Config for cleanSubscriptionWithLockSet()
+ */
+export interface CleanSubscriptionWithLockSetConfig<T extends Unsubscribable = Unsubscribable> {
+  readonly lockSet: LockSet;
+  readonly sub?: Maybe<GetterOrValue<T>>;
+}
+
+/**
+ * Creates a new SubscriptionObject that is automatically destroyed when the context is destroyed, and the lock set's next unlock occurs.
+ *
+ * Must be run within an Angular injection context.
+ */
+export function cleanSubscriptionWithLockSet<T extends Unsubscribable = Unsubscribable>(input: CleanSubscriptionWithLockSetConfig<T>): SubscriptionObject<T> {
+  const subscription = getValueFromGetter(input.sub);
+  const subscriptionObject = new SubscriptionObject<T>(subscription);
+  cleanWithLockSet(input.lockSet, () => subscriptionObject.destroy());
+  return subscriptionObject;
 }

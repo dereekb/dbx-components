@@ -25,7 +25,7 @@ export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discar
   imports: [DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
+export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective {
   readonly config: DbxPromptConfirmConfig = {
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',

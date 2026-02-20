@@ -1,10 +1,10 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal, input, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, input, effect } from '@angular/core';
 import { Maybe, DestroyFunctionObject, isNotFalse } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { clean, cleanSubscription } from '@dereekb/dbx-core';
 import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -24,7 +24,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxMapboxMenuComponent {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
   readonly matMenuTrigger = inject(MatMenuTrigger, { host: true });
 
@@ -46,59 +46,60 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
     }
   });
 
+  readonly active$ = toObservable(this.active);
+
+  protected readonly _sub = cleanSubscription();
   private readonly _menuCloseSub = new SubscriptionObject();
   private readonly _preventRightClick = new DestroyFunctionObject();
 
-  readonly active$ = toObservable(this.active);
+  constructor() {
+    cleanSubscription(
+      this.active$
+        .pipe(
+          switchMap((active) => {
+            if (active) {
+              return this.dbxMapboxMapStore.rightClickEvent$;
+            } else {
+              return of();
+            }
+          }),
+          filter(Boolean)
+        )
+        .subscribe((event) => {
+          const menu = this.matMenuTrigger.menu;
+          const buttonEvent = event.originalEvent;
 
-  ngOnInit(): void {
-    this.sub = this.active$
-      .pipe(
-        switchMap((active) => {
-          if (active) {
-            return this.dbxMapboxMapStore.rightClickEvent$;
-          } else {
-            return of();
+          if (menu && buttonEvent) {
+            buttonEvent.preventDefault();
+
+            // update position of this component for menu to open at
+            this.posSignal.set({
+              x: `${buttonEvent.x}px`,
+              y: `${buttonEvent.y}px`
+            });
+
+            // open menu
+            this.matMenuTrigger.openMenu();
+
+            // prevent right clicks in the cdkOverlay while the menu is open
+            this._preventRightClick.destroy = disableRightClickInCdkBackdrop(undefined, () => {
+              this.matMenuTrigger.closeMenu();
+            });
           }
-        }),
-        filter(Boolean)
-      )
-      .subscribe((event) => {
-        const menu = this.matMenuTrigger.menu;
-        const buttonEvent = event.originalEvent;
+        })
+    );
 
-        if (menu && buttonEvent) {
-          buttonEvent.preventDefault();
+    cleanSubscription(
+      this.matMenuTrigger.menuClosed.subscribe(() => {
+        // destroy prevention when the menu is closed.
+        this._preventRightClick.destroy();
+      })
+    );
 
-          // update position of this component for menu to open at
-          this.posSignal.set({
-            x: `${buttonEvent.x}px`,
-            y: `${buttonEvent.y}px`
-          });
-
-          // open menu
-          this.matMenuTrigger.openMenu();
-
-          // prevent right clicks in the cdkOverlay while the menu is open
-          this._preventRightClick.destroy = disableRightClickInCdkBackdrop(undefined, () => {
-            this.matMenuTrigger.closeMenu();
-          });
-        }
-      });
-
-    this._menuCloseSub.subscription = this.matMenuTrigger.menuClosed.subscribe(() => {
-      // destroy prevention when the menu is closed.
-      this._preventRightClick.destroy();
+    clean(() => {
+      if (this.matMenuTrigger) {
+        this.matMenuTrigger.closeMenu();
+      }
     });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._menuCloseSub.destroy();
-    this._preventRightClick.destroy();
-
-    if (this.matMenuTrigger) {
-      this.matMenuTrigger.closeMenu();
-    }
   }
 }

@@ -6,6 +6,7 @@ import { DbxFormlyContext } from './formly.context';
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxFormDisabledKey } from '../form/form';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Abstract component for wrapping a DbxFormlyContext.
@@ -13,15 +14,12 @@ import { DbxFormDisabledKey } from '../form/form';
  * The implementing component should use provideFormlyContext() to provide the DbxFormlyContext specific to this directive. The context is injected using only self.
  */
 @Directive()
-export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
+export abstract class AbstractFormlyFormDirective<T> {
   readonly context = inject(DbxFormlyContext<T>, { self: true });
 
   readonly disabled = input<boolean>(false);
-  private readonly _setDisabledOnContext = effect(() => this.context.setDisabled(undefined, this.disabled()));
 
-  ngOnDestroy(): void {
-    this._setDisabledOnContext.destroy();
-  }
+  protected readonly _disabledEffect = effect(() => this.context.setDisabled(undefined, this.disabled()));
 
   // Utility Functions
   getValue(): Observable<T> {
@@ -49,7 +47,7 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
  * Abstract component for wrapping a form.
  */
 @Directive()
-export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit {
   abstract fields: FormlyFieldConfig[];
 
   ngOnInit(): void {
@@ -61,28 +59,24 @@ export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyF
  * Abstract component for wrapping an asyncrhronously-configured form.
  */
 @Directive()
-export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit {
   /**
    * Used to provide fields to the context.
    */
   abstract readonly fields$: Observable<Maybe<FormlyFieldConfig[]>>;
 
-  private readonly _fieldsSub = new SubscriptionObject();
-
   ngOnInit(): void {
-    this._fieldsSub.subscription = this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
-      this.context.fields = fields;
-    });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._fieldsSub.destroy();
+    // fields$ is only available after initialization.
+    cleanSubscription(
+      this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
+        this.context.fields = fields;
+      })
+    );
   }
 }
 
 @Directive()
-export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> {
   readonly config = input<MaybeObservableOrValue<C>>(undefined);
 
   readonly currentConfig$ = toObservable(this.config).pipe(maybeValueFromObservableOrValue());

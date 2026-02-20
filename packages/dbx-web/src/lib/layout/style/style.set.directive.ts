@@ -1,8 +1,8 @@
-import { AbstractSubscriptionDirective, subscriptionObject } from '@dereekb/dbx-core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { splitCommaSeparatedStringToSet, type Maybe } from '@dereekb/util';
 import { Observable, distinctUntilChanged, map, shareReplay, delay, combineLatest } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, OnDestroy, OnInit, inject, signal, input } from '@angular/core';
+import { Directive, inject, signal, input } from '@angular/core';
 import { DbxStyleService } from './style.service';
 import { DbxStyleConfig, DbxStyleClass, DbxStyleName } from './style';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -49,7 +49,7 @@ export class DbxSetStyleDirective {
   readonly styleClass$: Observable<DbxStyleClass> = this._styleService.getStyleClassWithConfig(this.config$);
 
   constructor() {
-    subscriptionObject(
+    cleanSubscription(
       this.styleClass$.pipe(delay(0)).subscribe((style) => {
         this.outputStyleClassSignal.set(style);
       })

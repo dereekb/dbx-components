@@ -5,7 +5,7 @@ import { Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter, SubscriptionObject, WorkUsingContext } from '@dereekb/rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { distinctUntilChanged } from 'rxjs';
-import { DbxButtonDisplay } from '@dereekb/dbx-core';
+import { cleanSubscription, DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxFormlyContext, provideFormlyContext } from '../../formly/formly.context';
 import { DbxFormlyComponent } from '../../formly/formly.form.component';
 import { DbxFormSourceDirective } from '../io/form.input.directive';
@@ -54,8 +54,8 @@ export interface DbxFormActionDialogComponentConfig<O> {
   providers: [provideFormlyContext()],
   imports: [DbxDialogContentDirective, DbxActionModule, DbxButtonModule, DbxDialogContentCloseComponent, DbxFormlyComponent, DbxFormSourceDirective, DbxActionFormDirective, DbxFormlyComponent]
 })
-export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, DbxFormActionDialogComponentConfig<O>> implements OnInit, OnDestroy {
-  private readonly _fieldsSub = new SubscriptionObject();
+export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, DbxFormActionDialogComponentConfig<O>> implements OnInit {
+  private readonly _fieldsSub = cleanSubscription();
 
   readonly context = inject(DbxFormlyContext<O>, { self: true });
   readonly fields$ = asObservableFromGetter(this.data.fields);
@@ -68,16 +68,12 @@ export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, 
     ...this.data.submitButtonConfig
   };
 
-  override ngOnInit(): void {
-    super.ngOnInit();
-    this._fieldsSub.subscription = this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
-      this.context.fields = fields;
-    });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._fieldsSub.destroy();
+  ngOnInit(): void {
+    this._fieldsSub.setSub(
+      this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
+        this.context.fields = fields;
+      })
+    );
   }
 
   readonly handleSubmitValue: WorkUsingContext<O> = (value, context) => {

@@ -1,5 +1,5 @@
-import { OnDestroy, Directive, HostListener, inject, computed, input, Signal, output } from '@angular/core';
-import { AbstractSubscriptionDirective, dbxActionWorkProgress, type DbxActionWorkProgress, type DbxButtonWorking } from '@dereekb/dbx-core';
+import { Directive, HostListener, inject, computed, input, Signal, output } from '@angular/core';
+import { dbxActionWorkProgress, type DbxActionWorkProgress, type DbxButtonWorking } from '@dereekb/dbx-core';
 import { Configurable, CssClass, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonConfig, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -7,7 +7,7 @@ import { DbxButtonType } from '../button';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 @Directive()
-export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnDestroy {
+export abstract class AbstractProgressButtonDirective {
   private readonly globalConfig = inject<DbxProgressButtonGlobalConfig>(DBX_PROGRESS_BUTTON_GLOBAL_CONFIG, { optional: true }) ?? [];
 
   readonly btnClick = output<MouseEvent>();

@@ -1,8 +1,8 @@
-import { shareReplay, map, distinctUntilChanged } from 'rxjs';
-import { Directive, OnInit, inject } from '@angular/core';
+import { shareReplay, map, distinctUntilChanged, Subscription } from 'rxjs';
+import { Directive, inject } from '@angular/core';
 import { isSameVector } from '@dereekb/util';
 import { DbxMapboxLayoutComponent } from './mapbox.layout.component';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
  * Directive that synchronizes a map's virtual size with the size of the element.
@@ -11,7 +11,7 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
   selector: '[dbxMapboxLayoutVirtualResizeSync]',
   standalone: true
 })
-export class DbxMapboxLayoutVirtualResizeSyncComponent extends AbstractSubscriptionDirective implements OnInit {
+export class DbxMapboxLayoutVirtualResizeSyncComponent {
   readonly dbxMapboxLayoutComponent = inject(DbxMapboxLayoutComponent, { host: true });
 
   readonly resizedVector$ = this.dbxMapboxLayoutComponent.viewResized$.pipe(
@@ -28,7 +28,7 @@ export class DbxMapboxLayoutVirtualResizeSyncComponent extends AbstractSubscript
     shareReplay(1)
   );
 
-  ngOnInit(): void {
-    this.sub = this.dbxMapboxLayoutComponent.dbxMapboxMapStore.setMinimumVirtualViewportSize(this.resizedVector$);
+  constructor() {
+    cleanSubscription(this.dbxMapboxLayoutComponent.dbxMapboxMapStore.setMinimumVirtualViewportSize(this.resizedVector$) as Subscription);
   }
 }

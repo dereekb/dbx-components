@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, Provider } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Subject, distinct, map } from 'rxjs';
-import { SegueRef } from '@dereekb/dbx-core';
+import { completeOnDestroy, SegueRef } from '@dereekb/dbx-core';
 import { isMaybeNot, type Maybe } from '@dereekb/util';
 
 export interface TwoColumnsState {
@@ -50,8 +50,8 @@ const INITIAL_STATE: TwoColumnsState = {
 };
 
 @Injectable()
-export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> implements OnDestroy {
-  private readonly _back = new Subject<void>();
+export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
+  private readonly _back = completeOnDestroy(new Subject<void>());
 
   constructor() {
     super({ ...INITIAL_STATE });
@@ -168,12 +168,6 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
    */
   back(): void {
     this._back.next();
-  }
-
-  // MARK: Internal
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._back.complete();
   }
 }
 

@@ -1,14 +1,7 @@
 import { forwardRef, type Provider, type Type } from '@angular/core';
 import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { DbxActionContextMachineAsService } from './action.machine';
-
-export const actionContextStoreSourceInstanceFactory = (source: ActionContextStoreSource) => {
-  return new DbxActionContextStoreSourceInstance(source);
-};
-
-export const actionContextStoreSourceMachineFactory = () => {
-  return new DbxActionContextMachineAsService();
-};
+import { clean } from '../rxjs/clean';
 
 /**
  * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
@@ -22,14 +15,14 @@ export function provideActionStoreSource<S extends ActionContextStoreSource>(sou
         }
       : {
           provide: ActionContextStoreSource,
-          useFactory: actionContextStoreSourceMachineFactory
+          useFactory: () => new DbxActionContextMachineAsService()
         };
 
   return [
     storeSourceProvider,
     {
       provide: DbxActionContextStoreSourceInstance,
-      useFactory: actionContextStoreSourceInstanceFactory,
+      useFactory: (source: ActionContextStoreSource) => clean(new DbxActionContextStoreSourceInstance(source)),
       deps: [ActionContextStoreSource]
     }
   ];

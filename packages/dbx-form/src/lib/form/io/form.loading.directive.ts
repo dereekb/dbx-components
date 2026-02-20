@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
-import { Directive, OnDestroy, inject, input } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { Directive, inject, input } from '@angular/core';
+import { cleanSubscription } from '@dereekb/dbx-core';
 import { DbxMutableForm } from '../../form/form';
 import { LoadingState, MaybeObservableOrValue, filterMaybe, maybeValueFromObservableOrValue, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from './form.input.directive';
@@ -18,7 +18,7 @@ const DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE: DbxFormSourceDirectiveMode
   selector: '[dbxFormLoadingSource]',
   standalone: true
 })
-export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFormLoadingSourceDirective<T extends object = object> {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
   readonly dbxFormLoadingSourceMode = input<DbxFormSourceDirectiveMode, Maybe<DbxFormSourceDirectiveMode>>(DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE, { transform: (x) => x ?? DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE });
@@ -28,9 +28,10 @@ export class DbxFormLoadingSourceDirective<T extends object = object> extends Ab
   readonly source$: Observable<Maybe<T>> = toObservable(this.dbxFormLoadingSource).pipe(maybeValueFromObservableOrValue(), filterMaybe(), valueFromFinishedLoadingState());
 
   constructor() {
-    super();
-    this.sub = dbxFormSourceObservableFromStream(this.form.stream$, this.source$, this.mode$).subscribe((x) => {
-      this.form.setValue(x);
-    });
+    cleanSubscription(
+      dbxFormSourceObservableFromStream(this.form.stream$, this.source$, this.mode$).subscribe((x) => {
+        this.form.setValue(x);
+      })
+    );
   }
 }

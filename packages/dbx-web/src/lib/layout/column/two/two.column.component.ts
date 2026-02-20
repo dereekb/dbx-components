@@ -1,5 +1,5 @@
-import { OnDestroy, ChangeDetectionStrategy, Component, ElementRef, inject, input, effect } from '@angular/core';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, effect } from '@angular/core';
+
 import { Observable, combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -50,8 +50,9 @@ export interface DbxTwoColumnViewState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxTwoColumnComponent {
   private readonly _elementRef = inject(ElementRef);
+
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
   readonly reverseSizing = input<boolean>(false);

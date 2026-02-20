@@ -20,7 +20,7 @@ export interface DbxFirebaseEmailFormConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFirebaseEmailFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> implements OnDestroy {
+export class DbxFirebaseEmailFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> {
   readonly fields$: Observable<Maybe<FormlyFieldConfig[]>> = this.currentConfig$.pipe(
     map((config) => {
       const loginMode = config?.loginMode ?? 'login';

@@ -1,6 +1,6 @@
-import { Directive, OnDestroy, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../../rxjs';
+import { clean, cleanSubscription } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -13,21 +13,19 @@ export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
   selector: '[dbxActionDisabled]',
   standalone: true
 })
-export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxActionDisabledDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   readonly disabled = input<boolean, Maybe<boolean | ''>>(false, { alias: 'dbxActionDisabled', transform: (value) => value !== false });
   readonly disabled$ = toObservable(this.disabled);
 
   constructor() {
-    super();
-    this.sub = this.disabled$.subscribe((x) => {
-      this.source.disable(APP_ACTION_DISABLED_DIRECTIVE_KEY, x);
-    });
-  }
+    cleanSubscription(
+      this.disabled$.subscribe((x) => {
+        this.source.disable(APP_ACTION_DISABLED_DIRECTIVE_KEY, x);
+      })
+    );
 
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this.source.enable(APP_ACTION_DISABLED_DIRECTIVE_KEY);
+    clean(() => this.source.enable(APP_ACTION_DISABLED_DIRECTIVE_KEY));
   }
 }

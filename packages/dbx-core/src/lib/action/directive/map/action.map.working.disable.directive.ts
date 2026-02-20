@@ -1,6 +1,6 @@
-import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../../rxjs';
+import { clean, cleanSubscription } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { type DbxActionDisabledKey } from '../../action';
 import { actionContextStoreSourceMapReader } from './action.map.utility';
@@ -15,22 +15,24 @@ export const DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY = 'action_map_working_disab
   selector: '[dbxActionMapWorkingDisable]',
   standalone: true
 })
-export class DbxActionMapWorkingDisableDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionMapWorkingDisableDirective {
   private readonly _actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);
+
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
 
   readonly disabledKey = input<Maybe<DbxActionDisabledKey>>(undefined, { alias: 'dbxActionMapWorkingDisable' });
 
   readonly areAnySourcesWorking$ = actionContextStoreSourceMapReader(this._actionContextStoreSourceMap.actionKeySourceMap$).checkAny((x) => x.isWorking$, false);
 
-  ngOnInit(): void {
-    this.sub = this.areAnySourcesWorking$.subscribe((x) => {
-      this.source.disable(this.disabledKey() || DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY, x);
-    });
-  }
+  constructor() {
+    cleanSubscription(
+      this.areAnySourcesWorking$.subscribe((x) => {
+        this.source.disable(this.disabledKey() || DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY, x);
+      })
+    );
 
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this.source.enable(this.disabledKey() || DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY);
+    clean(() => {
+      this.source.enable(this.disabledKey() || DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY);
+    });
   }
 }

@@ -1,5 +1,5 @@
-import { Directive, OnInit, inject } from '@angular/core';
-import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { Directive, inject } from '@angular/core';
+import { DbxActionContextStoreSourceInstance, cleanSubscription } from '@dereekb/dbx-core';
 import { DbxErrorComponent } from './error.component';
 
 /**
@@ -9,13 +9,15 @@ import { DbxErrorComponent } from './error.component';
   selector: '[dbxActionError]',
   standalone: true
 })
-export class DbxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionErrorDirective {
   readonly error = inject(DbxErrorComponent, { host: true });
   readonly source = inject(DbxActionContextStoreSourceInstance);
 
-  ngOnInit(): void {
-    this.sub = this.source.error$.subscribe((error) => {
-      this.error.setError(error);
-    });
+  constructor() {
+    cleanSubscription(
+      this.source.error$.subscribe((error) => {
+        this.error.setError(error);
+      })
+    );
   }
 }

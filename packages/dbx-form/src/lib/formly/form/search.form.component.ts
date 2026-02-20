@@ -18,7 +18,7 @@ import { DbxFormValueChangeDirective } from '../../form/io/form.change.directive
     class: 'd-block dbx-form-search-form'
   }
 })
-export class DbxFormSearchFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> implements OnDestroy {
+export class DbxFormSearchFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> {
   readonly search = output<string>();
 
   readonly fields$: Observable<FormlyFieldConfig[]> = this.currentConfig$.pipe(map(dbxFormSearchFormFields));

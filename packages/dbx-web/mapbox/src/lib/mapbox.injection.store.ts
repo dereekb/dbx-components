@@ -36,7 +36,7 @@ export interface DbxMapboxMapInjectionStoreState {
  * Store used for storing injectable content into the map.
  */
 @Injectable()
-export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectionStoreState> implements OnDestroy {
+export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectionStoreState> {
   constructor() {
     super({
       map: new Map<DbxMapboxInjectionKey, DbxMapboxInjectionConfig>()

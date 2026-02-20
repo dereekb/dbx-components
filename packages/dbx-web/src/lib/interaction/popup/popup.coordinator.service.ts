@@ -1,5 +1,6 @@
 import { DbxPopupKey, DbxPopupController } from './popup';
 import { Injectable, OnDestroy } from '@angular/core';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
@@ -8,14 +9,10 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class DbxPopupCoordinatorService implements OnDestroy {
-  private readonly _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());
+export class DbxPopupCoordinatorService {
+  private readonly _popups = completeOnDestroy(new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map()));
 
   readonly popups$ = this._popups.asObservable();
-
-  ngOnDestroy(): void {
-    this._popups.complete();
-  }
 
   get popups(): Map<DbxPopupKey, DbxPopupController> {
     return this._popups.value;
