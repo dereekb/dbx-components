@@ -4,10 +4,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { DbxFirebaseModelKeyComponent } from '../model.key.component';
 import { DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDownloadTextViewComponent, DbxLoadingComponent, DownloadTextContent } from '@dereekb/dbx-web';
-import { loadingStateContext } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { clean, cleanLoadingContext } from '@dereekb/dbx-core';
+import { cleanLoadingContext } from '@dereekb/dbx-core';
 
 /**
  * A debug widget component that displays entity data and metadata.

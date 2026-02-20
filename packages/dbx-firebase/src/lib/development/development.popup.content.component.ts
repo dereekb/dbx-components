@@ -1,5 +1,5 @@
 import { ClickableAnchor, DbxActionAutoTriggerDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxAuthService, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
 import { WorkUsingContext, IsModifiedFunction } from '@dereekb/rxjs';

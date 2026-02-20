@@ -1,5 +1,5 @@
 import { cleanSubscription, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, ElementRef, Type, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, ElementRef, Type, signal, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';

@@ -3,7 +3,7 @@ import { LoadingState, mapLoadingState } from '@dereekb/rxjs';
 import { map, Observable, shareReplay } from 'rxjs';
 import { SystemStateDocumentStore } from './systemstate.document.store';
 import { Inject, Injectable, Injector, Optional, inject } from '@angular/core';
-import { clean, newWithInjector } from '@dereekb/dbx-core';
+import { newWithInjector } from '@dereekb/dbx-core';
 
 /**
  * Abstract class used for accessing a SystemStateDocumentStore's data.

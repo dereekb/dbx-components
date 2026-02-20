@@ -1,4 +1,4 @@
-import { Directive, OnInit, effect, inject, input } from '@angular/core';
+import { Directive, effect, inject, input } from '@angular/core';
 import { FirestoreDocument } from '@dereekb/firebase';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';

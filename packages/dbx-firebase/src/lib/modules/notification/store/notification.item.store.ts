@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { NotificationId, NotificationItem } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
