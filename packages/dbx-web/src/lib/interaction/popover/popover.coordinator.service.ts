@@ -11,6 +11,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class DbxPopoverCoordinatorService {
   private readonly _popovers = completeOnDestroy(new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map()));
+
   readonly popovers$ = this._popovers.asObservable();
 
   get popovers(): Map<DbxPopoverKey, DbxPopoverController> {

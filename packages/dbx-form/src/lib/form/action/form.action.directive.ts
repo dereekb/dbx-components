@@ -1,7 +1,7 @@
 import { Directive, OnInit, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult, lockSet } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult, cleanLockSet } from '@dereekb/dbx-core';
 import { SubscriptionObject, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable, IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { IsModified, IsValid, MapFunction, Maybe } from '@dereekb/util';
@@ -26,7 +26,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
   readonly form = inject(DbxMutableForm<T>, { host: true });
   readonly source = inject(DbxActionContextStoreSourceInstance<O, unknown>);
 
-  readonly lockSet = lockSet({
+  readonly lockSet = cleanLockSet({
     onDestroy: () => {
       this.source.enable(APP_ACTION_FORM_DISABLED_KEY);
     },

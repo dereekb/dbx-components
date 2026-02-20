@@ -1,8 +1,8 @@
-import { ClickableAnchor, DbxActionAutoTriggerDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxAuthService } from '@dereekb/dbx-core';
-import { Component, OnDestroy, OnInit, computed, inject } from '@angular/core';
+import { ClickableAnchor, DbxActionAutoTriggerDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxAuthService, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
-import { WorkUsingContext, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
+import { WorkUsingContext, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { first, BehaviorSubject, distinctUntilChanged, map, shareReplay, combineLatest, Observable } from 'rxjs';
 import { DbxFirebaseDevelopmentWidgetService } from './development.widget.service';
@@ -23,21 +23,19 @@ import { MatButtonModule } from '@angular/material/button';
   providers: [TwoColumnsContextStore],
   standalone: true
 })
-export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDestroy {
+export class DbxFirebaseDevelopmentPopupContentComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
   readonly dbxAuthService = inject(DbxAuthService);
   readonly dbxFirebaseDevelopmentWidgetService = inject(DbxFirebaseDevelopmentWidgetService);
   readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);
   readonly dbxFirebaseEmulatorService = inject(DbxFirebaseEmulatorService);
 
-  private readonly _backSub = new SubscriptionObject();
-
   readonly showEmulatorButton = this.dbxFirebaseEmulatorService.useEmulators === true;
   readonly emulatorUIAnchor: ClickableAnchor = this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
 
   readonly entries = this.dbxFirebaseDevelopmentWidgetService.getEntries();
 
-  private readonly _activeEntrySelector = new BehaviorSubject<Maybe<DevelopmentFirebaseFunctionSpecifier>>(DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY);
+  private readonly _activeEntrySelector = completeOnDestroy(new BehaviorSubject<Maybe<DevelopmentFirebaseFunctionSpecifier>>(DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY));
 
   readonly isLoggedIn$ = this.dbxAuthService.isLoggedIn$;
 
@@ -89,16 +87,13 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
     return widgetConfig;
   });
 
-  ngOnInit(): void {
+  constructor() {
     this.twoColumnsContextStore.setShowRight(this.showRight$);
-    this._backSub.subscription = this.twoColumnsContextStore.back$.subscribe(() => {
-      this.clearSelection();
-    });
-  }
-
-  ngOnDestroy(): void {
-    this._backSub.destroy();
-    this._activeEntrySelector.complete();
+    cleanSubscription(
+      this.twoColumnsContextStore.back$.subscribe(() => {
+        this.clearSelection();
+      })
+    );
   }
 
   readonly handleFormUpdate: WorkUsingContext<DbxFirebaseDevelopmentPopupContentFormValue, void> = (value, context) => {

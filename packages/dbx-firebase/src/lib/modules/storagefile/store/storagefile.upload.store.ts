@@ -139,7 +139,7 @@ export interface DbxFirebaseStorageFileUploadStoreState {
  * Store used for selecting a specific NotificationItem from a list of notification items.
  */
 @Injectable()
-export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebaseStorageFileUploadStoreState> implements OnDestroy {
+export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebaseStorageFileUploadStoreState> {
   constructor() {
     super({});
   }

@@ -1,10 +1,10 @@
-import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, model, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId, TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { ModelKey, type Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store';
 import { BehaviorSubject, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
-import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
+import { filterMaybe, skipInitialMaybe } from '@dereekb/rxjs';
+import { cleanSubscription, completeOnDestroy, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -12,7 +12,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> implements DbxFirebaseDocumentStoreTwoWayKeyProvider, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, OnDestroy {
+export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> implements DbxFirebaseDocumentStoreTwoWayKeyProvider, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate {
   readonly storeName = model<Maybe<string>>(undefined);
   readonly documentId = model<Maybe<FirestoreModelId>>(undefined);
   readonly key = model<Maybe<FirestoreModelKey>>(undefined);
@@ -27,8 +27,7 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   private readonly _ref$ = toObservable(this.ref).pipe(skipInitialMaybe());
   private readonly _streamMode$ = toObservable(this.streamMode).pipe(skipInitialMaybe());
 
-  private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
-  private readonly _storeSub = new SubscriptionObject();
+  private readonly _store = completeOnDestroy(new BehaviorSubject<Maybe<S>>(undefined));
 
   readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
 
@@ -52,21 +51,18 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
     this.replaceStore(store);
 
     // sync inputs to store any time the store changes
-    this._storeSub.subscription = this._store.subscribe((x) => {
-      if (x) {
-        x.setStoreName(this._storeName$);
-        x.setId(this._documentId$);
-        x.setKey(this._key$);
-        x.setFlatKey(this._flatKey$);
-        x.setRef(this._ref$);
-        x.setStreamMode(this._streamMode$);
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this._store.complete();
-    this._storeSub.destroy();
+    cleanSubscription(
+      this._store.subscribe((x) => {
+        if (x) {
+          x.setStoreName(this._storeName$);
+          x.setId(this._documentId$);
+          x.setKey(this._key$);
+          x.setFlatKey(this._flatKey$);
+          x.setRef(this._ref$);
+          x.setStreamMode(this._streamMode$);
+        }
+      })
+    );
   }
 
   get store() {

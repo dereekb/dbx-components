@@ -1,6 +1,6 @@
 import { ListLoadingStateContext, MaybeObservableOrValue, asObservable, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { Directive, input, NgModule, OnDestroy, output, TrackByFunction } from '@angular/core';
+import { combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
+import { Directive, input, NgModule, output, signal, TrackByFunction } from '@angular/core';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -21,21 +21,25 @@ export class DbxValueListViewComponentImportsModule {}
  * You might consider extending AbstractDbxSelectionListViewDirective instead, as it includes selection support.
  */
 @Directive()
-export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>, OnDestroy {
+export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T> {
   readonly valuesArray = input<Maybe<T[]>>();
   readonly values = input<MaybeObservableOrValue<T[]>>();
 
-  private readonly _trackBy = new BehaviorSubject<Maybe<TrackByFunction<T>>>(undefined);
-  private readonly _disabled = new BehaviorSubject<boolean>(false);
-  private readonly _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
-  private readonly _valuesOverride = new BehaviorSubject<MaybeObservableOrValue<T[]>>(undefined);
+  readonly clickValue = output<T>();
 
-  readonly trackBy$ = this._trackBy.asObservable();
+  private readonly _trackBySignal = signal<Maybe<TrackByFunction<T>>>(undefined);
+  private readonly _disabledSignal = signal<boolean>(false);
+  private readonly _selectionModeSignal = signal<Maybe<DbxListSelectionMode>>(undefined);
+  private readonly _valuesOverrideSignal = signal<MaybeObservableOrValue<T[]>>(undefined);
+
+  readonly trackBy$ = toObservable(this._trackBySignal);
+  readonly disabled$ = toObservable(this._disabledSignal);
+  readonly selectionMode$ = toObservable(this._selectionModeSignal);
 
   readonly _inputValuesArray$ = toObservable(this.valuesArray);
   readonly _inputValues$ = toObservable(this.values);
 
-  readonly _values$: Observable<Maybe<T[]>> = this._valuesOverride.pipe(
+  readonly _values$: Observable<Maybe<T[]>> = toObservable(this._valuesOverrideSignal).pipe(
     switchMap((x) => {
       let valuesObs: Observable<Maybe<T[]>>;
 
@@ -56,17 +60,6 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
     shareReplay(1)
   );
 
-  readonly disabled$ = this._disabled.asObservable();
-  readonly selectionMode$ = this._selectionMode.asObservable();
-
-  readonly clickValue = output<T>();
-
-  ngOnDestroy(): void {
-    this._disabled.complete();
-    this._selectionMode.complete();
-    this._valuesOverride.complete();
-  }
-
   onClickValue(value: T) {
     this.clickValue.emit(value);
   }
@@ -76,18 +69,18 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   }
 
   setValues(values: MaybeObservableOrValue<T[]>): void {
-    this._valuesOverride.next(values);
+    this._valuesOverrideSignal.set(values);
   }
 
   setDisabled(disabled: boolean): void {
-    this._disabled.next(disabled);
+    this._disabledSignal.set(disabled);
   }
 
   setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void {
-    this._selectionMode.next(selectionMode);
+    this._selectionModeSignal.set(selectionMode);
   }
 
   setTrackBy(trackBy: Maybe<TrackByFunction<T>>) {
-    this._trackBy.next(trackBy);
+    this._trackBySignal.set(trackBy);
   }
 }

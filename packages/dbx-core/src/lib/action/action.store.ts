@@ -4,7 +4,7 @@ import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, 
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe, ReadableError } from '@dereekb/util';
 import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
 import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkOrWorkProgress, DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
-import { lockSet } from '../rxjs';
+import { cleanLockSet } from '../rxjs';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtility.isFalse(state.disabled);
@@ -110,7 +110,7 @@ const INITIAL_STATE: ActionContextState = {
 
 @Injectable()
 export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
-  readonly lockSet = lockSet({
+  readonly lockSet = cleanLockSet({
     onLockSetDestroy: () => super.ngOnDestroy(),
     destroyLocksetTiming: {
       delayTime: 2000

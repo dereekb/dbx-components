@@ -1,9 +1,9 @@
-import { Directive, effect, inject, input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, effect, inject, input, OnInit } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseStorageFileUploadStore } from '../store/storagefile.upload.store';
 import { storageFileUploadFiles, StorageFileUploadFilesFinalResult, StorageFileUploadHandler } from './storagefile.upload.handler';
-import { DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
-import { errorResult, LoadingState, startWithBeginLoading, SubscriptionObject, successResult, WorkUsingContext } from '@dereekb/rxjs';
+import { clean, cleanSubscription, DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
+import { errorResult, LoadingState, startWithBeginLoading, successResult, WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, filter, map, of, switchMap, tap, throttleTime } from 'rxjs';
 import { StorageFileUploadFilesError } from './storagefile.upload.error';
@@ -15,16 +15,11 @@ import { StorageFileUploadFilesError } from './storagefile.upload.error';
   selector: '[dbxFirebaseStorageFileUploadActionHandler]',
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnInit, OnDestroy {
-  private readonly _triggerSub = new SubscriptionObject();
-  private readonly _readySub = new SubscriptionObject();
-  private readonly _isWorkingSub = new SubscriptionObject();
-  private readonly _progressSub = new SubscriptionObject();
-
+export class DbxFirebaseStorageFileUploadActionHandlerDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance<File[], StorageFileUploadFilesFinalResult>);
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
 
-  readonly _dbxActionHandlerInstance = new DbxActionHandlerInstance<File[], StorageFileUploadFilesFinalResult>(this.source);
+  readonly _dbxActionHandlerInstance = clean(new DbxActionHandlerInstance<File[], StorageFileUploadFilesFinalResult>(this.source));
 
   /**
    * If true, the action will be triggered when files are set.
@@ -102,45 +97,45 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnIni
   readonly files$ = this.uploadStore.files$;
   readonly uploadHandler$ = toObservable(this.uploadHandler);
 
-  ngOnInit(): void {
+  constructor() {
     this._dbxActionHandlerInstance.init();
 
     // trigger the action if files are available
-    this._triggerSub.subscription = this.triggerOnFiles$
-      .pipe(
-        switchMap((triggerOnFiles) => {
-          if (triggerOnFiles) {
-            return this.files$.pipe(map((x) => x?.length));
-          } else {
-            return of(false);
+    cleanSubscription(
+      this.triggerOnFiles$
+        .pipe(
+          switchMap((triggerOnFiles) => {
+            if (triggerOnFiles) {
+              return this.files$.pipe(map((x) => x?.length));
+            } else {
+              return of(false);
+            }
+          })
+        )
+        .subscribe((canTrigger) => {
+          if (canTrigger) {
+            this.source.trigger();
           }
         })
-      )
-      .subscribe((canTrigger) => {
-        if (canTrigger) {
-          this.source.trigger();
-        }
-      });
+    );
 
     // ready the source with files after trigger is called and files are available
-    this._readySub.subscription = this.files$.pipe(switchMap((files) => this.source.triggered$.pipe(map(() => files)))).subscribe((files) => {
-      this.source.readyValue(files);
-    });
+    cleanSubscription(
+      this.files$.pipe(switchMap((files) => this.source.triggered$.pipe(map(() => files)))).subscribe((files) => {
+        this.source.readyValue(files);
+      })
+    );
 
     // sync isWorking
-    this._isWorkingSub.subscription = this.uploadStore.setIsUploadHandlerWorking(this.source.isWorking$);
+    cleanSubscription(this.uploadStore.setIsUploadHandlerWorking(this.source.isWorking$));
 
     // sync progress amount
-    this._progressSub.subscription = this.source.setWorkProgress(
+    this.source.setWorkProgress(
       this.uploadStore.latestProgressEvent$.pipe(
         throttleTime(100, undefined, { leading: true, trailing: true }),
         map((x) => x?.overallProgress),
         distinctUntilChanged()
       )
     );
-  }
-
-  ngOnDestroy(): void {
-    this._dbxActionHandlerInstance.destroy();
   }
 }

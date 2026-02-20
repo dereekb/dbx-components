@@ -1,9 +1,10 @@
-import { OnDestroy, HostListener, AfterViewInit, Directive, inject } from '@angular/core';
+import { HostListener, AfterViewInit, Directive, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DbxPopupService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseDevelopmentPopupComponent } from './development.popup.component';
 import { DbxFirebaseDevelopmentService } from './development.service';
+import { clean } from '@dereekb/dbx-core';
 
 /**
  * Directive for showing the development tools snackbar when the app opens up and listening for keybindings for opening the popup.
@@ -12,7 +13,7 @@ import { DbxFirebaseDevelopmentService } from './development.service';
   selector: '[dbxFirebaseDevelopment]',
   standalone: true
 })
-export class DbxFirebaseDevelopmentDirective implements OnDestroy, AfterViewInit {
+export class DbxFirebaseDevelopmentDirective implements AfterViewInit {
   readonly popupService = inject(DbxPopupService);
   readonly matSnackBar = inject(MatSnackBar);
   readonly dbxFirebaseDevelopmentService = inject(DbxFirebaseDevelopmentService);
@@ -21,6 +22,10 @@ export class DbxFirebaseDevelopmentDirective implements OnDestroy, AfterViewInit
 
   get enabled() {
     return this.dbxFirebaseDevelopmentService.enabled;
+  }
+
+  constructor() {
+    clean(() => this.closePopup());
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -71,9 +76,5 @@ export class DbxFirebaseDevelopmentDirective implements OnDestroy, AfterViewInit
           this.openPopup();
         });
     }
-  }
-
-  ngOnDestroy(): void {
-    this.closePopup();
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithKeyAndStore, DbxFirebaseModelEntityWithStore } from './model.entities';
 import { MatAccordion } from '@angular/material/expansion';
 import { DbxIconButtonComponent, DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
@@ -8,6 +8,7 @@ import { combineLatest, combineLatestWith, defaultIfEmpty, distinctUntilChanged,
 import { filterUniqueValues, Maybe, reverseCompareFn, separateValues, sortByNumberFunction } from '@dereekb/util';
 import { beginLoading, filterMaybeArray, LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
+import { clean, cleanLoadingContext } from '@dereekb/dbx-core';
 
 interface DbxFirebaseModelEntitiesComponentAllEntities {
   readonly entities: DbxFirebaseModelEntityWithKeyAndStore[];
@@ -41,7 +42,7 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFirebaseModelEntitiesComponent implements OnDestroy {
+export class DbxFirebaseModelEntitiesComponent {
   readonly entitiesWidgetService = inject(DbxFirebaseModelEntitiesWidgetService);
 
   /**
@@ -136,11 +137,7 @@ export class DbxFirebaseModelEntitiesComponent implements OnDestroy {
 
   readonly hasNoEntitiesSignal = computed(() => !this.entitiesWithKeysSignal()?.length);
 
-  readonly context = loadingStateContext({ obs: this.allEntitiesState$ });
-
-  ngOnDestroy(): void {
-    this.context.destroy();
-  }
+  readonly context = cleanLoadingContext({ obs: this.allEntitiesState$ });
 
   clickShowUnregisteredEntities() {
     this.showUnregisteredTypesSignal.set(true);

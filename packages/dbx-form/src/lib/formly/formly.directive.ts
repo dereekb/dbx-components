@@ -65,9 +65,11 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
    */
   abstract readonly fields$: Observable<Maybe<FormlyFieldConfig[]>>;
 
+  protected readonly _fieldSub = cleanSubscription();
+
   ngOnInit(): void {
     // fields$ is only available after initialization.
-    cleanSubscription(
+    this._fieldSub.setSub(
       this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
         this.context.fields = fields;
       })

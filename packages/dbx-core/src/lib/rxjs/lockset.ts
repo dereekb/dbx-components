@@ -4,7 +4,7 @@ import { type DestroyFunction, type GetterOrValue, getValueFromGetter, type Mayb
 import { cleanSubscription } from './subscription';
 import { type Unsubscribable } from 'rxjs';
 
-export interface LockSetConfig {
+export interface CleanLockSetConfig {
   /**
    * Arbitrary onDestroy function to call when onDestroy is called by the internal DestroyRef.
    */
@@ -26,7 +26,7 @@ export interface LockSetConfig {
  *
  * @param onLockSetDestroy Optional callback to run when the lockset is unlocked.
  */
-export function lockSet(config?: Maybe<LockSetConfig>): LockSet {
+export function cleanLockSet(config?: Maybe<CleanLockSetConfig>): LockSet {
   const { onDestroy, onLockSetDestroy, destroyLocksetTiming } = config ?? {};
 
   const destroyRef = inject(DestroyRef);

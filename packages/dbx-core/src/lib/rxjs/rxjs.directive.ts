@@ -6,7 +6,7 @@ import { type Maybe } from '@dereekb/util';
 /**
  * Abstract component that contains a SubscriptionObject and will clean it up automatically.
  *
- * @deprecated Consider using subscriptionObject() directly instead, as it performs the same functionality
+ * @deprecated Consider using cleanSubscription() directly instead, as it performs the same functionality
  */
 @Directive()
 export abstract class AbstractSubscriptionDirective<T extends Unsubscribable = Unsubscribable> implements OnDestroy {
@@ -24,7 +24,7 @@ export abstract class AbstractSubscriptionDirective<T extends Unsubscribable = U
 /**
  * AbstractSubscriptionDirective extension that prevents the OnDestroy from occuring until the lockset is unlocked.
  *
- * @deprecated Consider using lockSet() directly instead, as it performs the same functionality.
+ * @deprecated Consider using cleanLockSet() directly instead, as it performs the same functionality.
  */
 @Directive()
 export abstract class AbstractLockSetSubscriptionDirective<T extends Unsubscribable = Unsubscribable> extends AbstractSubscriptionDirective<T> implements OnDestroy {

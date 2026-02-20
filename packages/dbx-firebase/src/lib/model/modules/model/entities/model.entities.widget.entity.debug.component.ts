@@ -1,4 +1,4 @@
-import { Component, computed, OnDestroy, Signal } from '@angular/core';
+import { Component, computed, Signal } from '@angular/core';
 import { AbstractDbxFirebaseModelEntityWidgetDirective } from './model.entities.widget.entity.abstract.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
@@ -7,6 +7,7 @@ import { DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDownloadTextVie
 import { loadingStateContext } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { clean, cleanLoadingContext } from '@dereekb/dbx-core';
 
 /**
  * A debug widget component that displays entity data and metadata.
@@ -17,7 +18,7 @@ import { twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
   standalone: true,
   imports: [DbxFirebaseModelKeyComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDownloadTextViewComponent, DbxLoadingComponent, JsonPipe]
 })
-export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFirebaseModelEntityWidgetDirective implements OnDestroy {
+export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFirebaseModelEntityWidgetDirective {
   // Convert store observables to signals for template usage
   readonly currentKey = toSignal(this.store.currentKey$);
   readonly currentData = toSignal(this.data$);
@@ -40,9 +41,5 @@ export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFir
     return content;
   });
 
-  readonly context = loadingStateContext(this.store.dataLoadingState$);
-
-  ngOnDestroy(): void {
-    this.context.destroy();
-  }
+  readonly context = cleanLoadingContext(this.store.dataLoadingState$);
 }
