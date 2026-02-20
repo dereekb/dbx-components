@@ -1,4 +1,4 @@
-import { Component, OnDestroy, output } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map, Observable } from 'rxjs';
 import { AbstractConfigAsyncFormlyFormDirective } from '../formly.directive';

@@ -1,8 +1,8 @@
 import { BehaviorSubject, map, Observable, shareReplay, combineLatest, distinctUntilChanged } from 'rxjs';
-import { Directive, OnDestroy, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { DbxValueListItem } from '../list.view.value';
 import { addModifiers, ArrayOrValue, combineMaps, Maybe, Modifier, ModifierMap, removeModifiers } from '@dereekb/util';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue, SubscriptionObject } from '@dereekb/rxjs';
+import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { DbxValueListItemModifier, provideDbxValueListViewModifier } from '../list.view.value.modifier';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { clean, cleanSubscription, completeOnDestroy, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';

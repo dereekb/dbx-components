@@ -4,7 +4,7 @@ import { Component, viewChild } from '@angular/core';
 import { filter } from 'rxjs';
 import { DbxButtonDirective } from './button.directive';
 import { DbxLoadingButtonDirective } from './button.loading.directive';
-import { SimpleLoadingContext } from '@dereekb/rxjs';
+import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
 
 describe('DbxLoadingButton', () => {
   beforeEach(async () => {
@@ -30,7 +30,7 @@ describe('DbxLoadingButton', () => {
   });
 
   it('should be linked to the button', () => {
-    expect((testComponent.loadingButtonDirective() as any)._subscriptionObject.hasSubscription).toBe(true);
+    expect(((testComponent.loadingButtonDirective() as any)._loadingEffectSub as SubscriptionObject).hasSubscription).toBe(true);
   });
 
   it('should set the button to working when loading is true.', (done) => {

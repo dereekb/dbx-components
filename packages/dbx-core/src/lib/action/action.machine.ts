@@ -5,7 +5,7 @@ import { DbxActionWorkInstanceDelegate } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
 import { Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject, Work, workFactory } from '@dereekb/rxjs';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { clean } from '../rxjs/clean';
 
 /**

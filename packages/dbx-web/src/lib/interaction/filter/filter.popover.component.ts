@@ -1,10 +1,10 @@
 import { cleanSubscription, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, ElementRef, Type, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, Type, signal, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
 import { DbxPopoverService } from '../popover/popover.service';
-import { FilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { FilterSource, filterMaybe } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
 import { type Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -28,7 +28,7 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> {
+export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective implements OnInit<unknown, DbxFilterComponentConfig<F>> {
   readonly config: DbxFilterComponentConfig<F> = this.popover.data as DbxFilterComponentConfig<F>;
 
   readonly icon = this.config.icon ?? 'filter_list';

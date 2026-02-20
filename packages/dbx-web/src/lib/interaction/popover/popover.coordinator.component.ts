@@ -1,5 +1,5 @@
 import { DbxPopoverController } from './popover';
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { delay, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';

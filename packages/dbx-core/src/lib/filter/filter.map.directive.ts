@@ -1,4 +1,4 @@
-import { Directive, OnDestroy, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { FilterMap } from '@dereekb/rxjs';
 import { clean } from '../rxjs/clean';
 

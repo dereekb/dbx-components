@@ -1,5 +1,5 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   isSameLatLngBound,
   isSameLatLngPoint,

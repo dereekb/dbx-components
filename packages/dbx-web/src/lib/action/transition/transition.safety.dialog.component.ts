@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractDialogDirective } from '../../interaction/dialog/abstract.dialog.directive';
 import { DbxPromptConfirmConfig, DbxPromptConfirmComponent } from '../../interaction/prompt/prompt.confirm.component';
 import { DbxErrorComponent } from '../../error/error.component';

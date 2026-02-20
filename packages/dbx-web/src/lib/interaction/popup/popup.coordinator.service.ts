@@ -1,5 +1,5 @@
 import { DbxPopupKey, DbxPopupController } from './popup';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject } from 'rxjs';
 
