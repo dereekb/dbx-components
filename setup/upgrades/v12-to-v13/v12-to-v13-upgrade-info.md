@@ -25,3 +25,20 @@ After migrating, you can run ```nx reset``` to reset the workspace's cache if yo
 You might find it useful to install the nx skills here if you are using AI agents like Claude:
 
 https://nx.dev/blog/nx-ai-agent-skills
+
+### Updating Packages
+Check the updated `package.json` for more info.
+
+#### Angular
+- Updated to v21.0.0
+
+#### Ngx Formly
+- Updated to v7.1.0
+
+#### Ngx Editor
+- Replaced ```ngx-editor``` with ```@bobbyquantum/ngx-editor```, as the original package is no longer maintained. See https://github.com/bobbyquantum/ngx-editor
+
+
+#### @jscutlery/semver
+- Removed. Will be using Nx Release tools from now on since Nx has updating release tooling.
+- See https://nx.dev/docs/features/manage-releases for more info. Updated release section will be below.
