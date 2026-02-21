@@ -10,15 +10,14 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-form/mapbox"],
       "options": {
-        "project": "packages/dbx-form/mapbox/ng-package.json"
+        "project": "packages/dbx-form/mapbox/ng-package.json",
+        "tsConfig": "packages/dbx-form/mapbox/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-form/mapbox/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-form/mapbox/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production",
       "dependsOn": []
@@ -27,7 +26,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/mapbox"],
       "options": {
-        "jestConfig": "packages/dbx-form/mapbox/jest.config.ts"
+        "jestConfig": "packages/dbx-form/mapbox/jest.config.ts",
+        "tsConfig": "packages/dbx-form/mapbox/tsconfig.spec.json"
       }
     },
     "lint": {

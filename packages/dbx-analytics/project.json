@@ -28,15 +28,14 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-analytics"],
       "options": {
-        "project": "packages/dbx-analytics/ng-package.json"
+        "project": "packages/dbx-analytics/ng-package.json",
+        "tsConfig": "packages/dbx-analytics/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-analytics/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-analytics/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
     },
@@ -44,7 +43,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-analytics", "{projectRoot}/.reports/jest/dbx-analytics.junit.xml"],
       "options": {
-        "jestConfig": "packages/dbx-analytics/jest.config.ts"
+        "jestConfig": "packages/dbx-analytics/jest.config.ts",
+        "tsConfig": "packages/dbx-analytics/tsconfig.spec.json"
       }
     },
     "lint": {

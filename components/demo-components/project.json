@@ -19,16 +19,15 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
-        "project": "components/demo-components/ng-package.json"
+        "project": "components/demo-components/ng-package.json",
+        "tsConfig": "components/demo-components/tsconfig.lib.json"
       },
       "dependsOn": [],
       "configurations": {
         "production": {
           "tsConfig": "components/demo-components/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "components/demo-components/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
     },
@@ -36,7 +35,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/components/demo-components"],
       "options": {
-        "jestConfig": "components/demo-components/jest.config.ts"
+        "jestConfig": "components/demo-components/jest.config.ts",
+        "tsConfig": "components/demo-components/tsconfig.spec.json"
       }
     },
     "lint": {

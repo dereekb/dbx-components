@@ -10,15 +10,14 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web/table"],
       "options": {
-        "project": "packages/dbx-web/table/ng-package.json"
+        "project": "packages/dbx-web/table/ng-package.json",
+        "tsConfig": "packages/dbx-web/table/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-web/table/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-web/table/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
     },
@@ -26,7 +25,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/table"],
       "options": {
-        "jestConfig": "packages/dbx-web/table/jest.config.ts"
+        "jestConfig": "packages/dbx-web/table/jest.config.ts",
+        "tsConfig": "packages/dbx-web/table/tsconfig.spec.json"
       }
     },
     "lint": {

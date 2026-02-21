@@ -29,15 +29,14 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase"],
       "options": {
-        "project": "packages/dbx-firebase/ng-package.json"
+        "project": "packages/dbx-firebase/ng-package.json",
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-firebase/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-firebase/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
     },
@@ -45,7 +44,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
-        "jestConfig": "packages/dbx-firebase/jest.config.ts"
+        "jestConfig": "packages/dbx-firebase/jest.config.ts",
+        "tsConfig": "packages/dbx-firebase/tsconfig.spec.json"
       }
     },
     "watch": {
