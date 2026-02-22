@@ -22,7 +22,7 @@
         "outputPath": "dist/apps/demo",
         "browser": "apps/demo/src/main.ts",
         "index": "apps/demo/src/index.html",
-        "polyfills": ["zone.js", "reflect-metadata"],
+        "polyfills": ["reflect-metadata"],
         "tsConfig": "apps/demo/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [

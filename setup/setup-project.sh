@@ -217,7 +217,7 @@ echo "Installing angular@$ANGULAR_VERSION...";
 rm -r node_modules
 rm package-lock.json
 npm install -D --force typescript@$TYPESCRIPT_VERSION @nx/angular@$NX_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
-npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
+npm install --force @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."

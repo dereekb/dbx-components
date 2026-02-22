@@ -20,7 +20,7 @@
         "outputPath": "ANGULAR_APP_DIST_FOLDER",
         "browser": "ANGULAR_APP_FOLDER/src/main.ts",
         "index": "ANGULAR_APP_FOLDER/src/index.html",
-        "polyfills": ["zone.js", "reflect-metadata"],
+        "polyfills": ["reflect-metadata"],
         "tsConfig": "ANGULAR_APP_FOLDER/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
