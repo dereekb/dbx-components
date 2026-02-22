@@ -14,7 +14,7 @@ import { Maybe } from '@dereekb/util';
   selector: 'dbx-firebase-model-key',
   templateUrl: './model.key.component.html',
   standalone: true,
-  imports: [MatIcon, DbxDetailBlockComponent, DbxButtonComponent, DbxClickToCopyTextComponent, DbxAnchorComponent]
+  imports: [DbxDetailBlockComponent, DbxButtonComponent, DbxClickToCopyTextComponent, DbxAnchorComponent]
 })
 export class DbxFirebaseModelKeyComponent {
   readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);

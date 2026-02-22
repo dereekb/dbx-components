@@ -13,7 +13,7 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
     <dbx-button icon="live_help">{{ helpContextKey }}</dbx-button>
   `,
   standalone: true,
-  imports: [MatIcon, DbxButtonComponent],
+  imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionHelpExampleWidgetExampleHeaderComponent extends AbstractDbxHelpWidgetDirective {}

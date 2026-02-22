@@ -19,7 +19,7 @@ import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
     </dbx-loading>
   `,
   standalone: true,
-  imports: [DbxInjectionComponent, DbxLoadingComponent, DbxZipBlobPreviewComponent, NgTemplateOutlet],
+  imports: [DbxLoadingComponent, DbxZipBlobPreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxZipPreviewComponent {

@@ -23,7 +23,7 @@ export interface LandingItemChild {
   templateUrl: './layout.component.html',
   styleUrls: ['../landing.scss'],
   standalone: true,
-  imports: [DbxSetStyleDirective, DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, NgFor, NgIf, DbxAnchorContentComponent]
+  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, NgFor, NgIf, DbxAnchorContentComponent]
 })
 export class LandingLayoutComponent {
   readonly docsAnchor: ClickableAnchorLink = {

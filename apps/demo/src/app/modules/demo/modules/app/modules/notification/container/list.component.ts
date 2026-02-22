@@ -12,7 +12,7 @@ import { AsyncPipe } from '@angular/common';
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [UIView, AsyncPipe, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective],
+  imports: [UIView, AsyncPipe, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule],
   standalone: true
 })
 export class DemoNotificationListPageComponent {

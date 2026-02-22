@@ -62,7 +62,7 @@ export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionLis
       </div>
     </div>
   `,
-  imports: [DatePipe, DbxIconButtonComponent, DbxSpacerDirective, DbxDownloadBlobButtonComponent],
+  imports: [DatePipe, DbxSpacerDirective, DbxDownloadBlobButtonComponent],
   standalone: true
 })
 export class DbxZipPreviewEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxZipPreviewEntryWithSelection> {

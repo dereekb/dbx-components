@@ -6,7 +6,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './iframe.component.html',
-  imports: [DbxLoadingModule, DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingProgressComponent, DbxBasicLoadingComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxIframeComponent, DbxEmbedComponent],
+  imports: [DbxLoadingModule, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxIframeComponent, DbxEmbedComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

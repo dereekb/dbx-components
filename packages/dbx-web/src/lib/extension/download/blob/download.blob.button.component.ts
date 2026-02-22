@@ -49,7 +49,7 @@ export interface DbxDownloadBlobButtonConfig {
     <a #downloadButton [ngClass]="{ 'pointer-disabled': !downloadReadySignal() }" e [href]="fileUrlSignal()" [attr.download]="fileNameSignal()"><dbx-button [buttonDisplay]="buttonDisplaySignal()" [buttonStyle]="buttonStyleSignal()" [working]="!downloadReadySignal()" [disabled]="!downloadReadySignal()"></dbx-button></a>
   `,
   standalone: true,
-  imports: [NgClass, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective],
+  imports: [NgClass, DbxActionModule, DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDownloadBlobButtonComponent {

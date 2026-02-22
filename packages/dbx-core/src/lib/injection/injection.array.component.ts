@@ -14,7 +14,7 @@ import { NgFor } from '@angular/common';
       <dbx-injection [config]="entry.injectionConfig"></dbx-injection>
     }
   `,
-  imports: [DbxInjectionComponent, NgFor],
+  imports: [DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

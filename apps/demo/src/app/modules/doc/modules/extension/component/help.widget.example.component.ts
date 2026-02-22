@@ -20,7 +20,7 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
     </div>
   `,
   standalone: true,
-  imports: [MatIcon],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionHelpExampleWidgetComponent {}

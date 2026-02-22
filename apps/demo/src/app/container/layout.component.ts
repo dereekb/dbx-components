@@ -12,7 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
-  imports: [UIView, DbxStyleBodyDirective, DbxFirebaseDevelopmentDirective, DbxBodyDirective, DbxStyleDirective, MatToolbar, DbxAnchorComponent, MatButtonModule, DbxButtonSpacerDirective, MatIconModule],
+  imports: [UIView, DbxStyleBodyDirective, DbxFirebaseDevelopmentDirective, DbxBodyDirective, MatToolbar, DbxAnchorComponent, MatButtonModule, DbxButtonSpacerDirective, MatIconModule],
   standalone: true
 })
 export class AppLayoutComponent {

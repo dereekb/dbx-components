@@ -12,7 +12,7 @@ import { AsyncPipe } from '@angular/common';
   styleUrls: ['../demo.scss'],
   encapsulation: ViewEncapsulation.None,
   standalone: true,
-  imports: [DbxSidenavComponent, DbxColorDirective, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective]
+  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective]
 })
 export class DemoLayoutComponent {
   readonly dbxAuthService = inject(DbxFirebaseAuthService);

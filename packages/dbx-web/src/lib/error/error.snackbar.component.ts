@@ -29,7 +29,7 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
     </div>
   `,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, DbxErrorViewComponent, DbxErrorComponent],
+  imports: [CommonModule, MatIconModule, MatButtonModule, DbxErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorSnackbarComponent {

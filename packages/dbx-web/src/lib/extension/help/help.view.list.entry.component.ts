@@ -10,7 +10,7 @@ import { DbxHelpWidgetService } from './help.widget.service';
 @Component({
   selector: 'dbx-help-view-list-entry',
   templateUrl: './help.view.list.entry.component.html',
-  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon, AsyncPipe],
+  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

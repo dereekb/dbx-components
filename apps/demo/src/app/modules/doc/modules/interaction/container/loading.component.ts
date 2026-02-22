@@ -14,7 +14,7 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
 @Component({
   templateUrl: './loading.component.html',
-  imports: [DbxLoadingModule, DbxContentLayoutModule, MatButtonModule, DbxLabelBlockComponent, DbxLoadingProgressComponent, DbxBasicLoadingComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent],
+  imports: [DbxLoadingModule, DbxContentLayoutModule, MatButtonModule, DbxLabelBlockComponent, DbxLoadingProgressComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

@@ -59,7 +59,7 @@ export const DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY = 'entiti
 
 @Component({
   templateUrl: './model.entities.popover.component.html',
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent, DbxListEmptyContentComponent],
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

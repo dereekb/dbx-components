@@ -15,7 +15,7 @@ import { cleanLoadingContext } from '@dereekb/dbx-core';
   selector: 'dbx-firebase-model-entities-debug-widget',
   templateUrl: './model.entities.widget.entity.debug.component.html',
   standalone: true,
-  imports: [DbxFirebaseModelKeyComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDownloadTextViewComponent, DbxLoadingComponent, JsonPipe]
+  imports: [DbxFirebaseModelKeyComponent, DbxDownloadTextViewComponent, DbxLoadingComponent]
 })
 export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFirebaseModelEntityWidgetDirective {
   // Convert store observables to signals for template usage

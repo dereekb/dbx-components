@@ -8,7 +8,7 @@ import { map, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './settings.component.html',
-  imports: [JsonPipe, AsyncPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFileUploadComponent, DbxFirebaseStorageFileDocumentStoreDirective],
+  imports: [JsonPipe, AsyncPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent],
   standalone: true
 })
 export class DemoAppSettingsComponent {

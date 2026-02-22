@@ -244,7 +244,7 @@ export const DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR = 'dateTimeFieldTimeNot
 
 @Component({
   templateUrl: 'datetime.field.component.html',
-  imports: [FlexLayoutModule, NgTemplateOutlet, MatButtonModule, NgClass, MatError, MatFormFieldModule, MatDatepickerModule, MatInputModule, FormsModule, ReactiveFormsModule, MatIconModule, MatMenuModule, MatFormFieldModule, GetValuePipe, DatePipe, DateDistancePipe, TimeDistancePipe, MatDividerModule],
+  imports: [FlexLayoutModule, NgTemplateOutlet, MatButtonModule, MatError, MatFormFieldModule, MatDatepickerModule, MatInputModule, FormsModule, ReactiveFormsModule, MatIconModule, MatMenuModule, MatFormFieldModule, GetValuePipe, DatePipe, DateDistancePipe, TimeDistancePipe, MatDividerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

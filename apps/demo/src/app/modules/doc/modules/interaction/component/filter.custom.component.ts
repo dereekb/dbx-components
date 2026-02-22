@@ -12,6 +12,6 @@ const DEFAULT_FILTER_VALUE: DocInteractionTestFilter = {};
   templateUrl: './filter.custom.component.html',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterCustomFilterComponent, () => DEFAULT_FILTER_VALUE)],
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DbxActionDirective, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
+  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestFilterCustomFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {}

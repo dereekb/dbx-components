@@ -10,7 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './storagefile.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFileUploadComponent, DbxFirebaseStorageFileUploadActionHandlerDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent]
 })
 export class DocExtensionStorageFileComponent {
   readonly storageService = inject(DbxFirebaseStorageService);
