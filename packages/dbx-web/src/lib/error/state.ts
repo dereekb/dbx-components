@@ -1,7 +1,7 @@
 import { type HttpErrorResponse } from '@angular/common/http';
 import { convertToPOJOServerErrorResponse } from './error.api';
 import { catchError, type MonoTypeOperatorFunction, of } from 'rxjs';
-import { type ActionCreator } from '@ngrx/store/src/models';
+import { type ActionCreator } from '@ngrx/store';
 import { type Action } from '@ngrx/store';
 import { type ServerError } from '@dereekb/util';
 

@@ -13,6 +13,8 @@
     "default": "./index.cjs.js"
   },
   "peerDependencies": {
-    "@dereekb/util": "*"
+    "@dereekb/util": "*",
+    "make-error": "*",
+    "fast-content-type-parse": "*"
   }
 }

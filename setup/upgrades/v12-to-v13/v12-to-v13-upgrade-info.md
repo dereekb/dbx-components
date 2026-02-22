@@ -38,6 +38,7 @@ Check the updated `package.json` for more info.
 #### Ngx Editor
 - Replaced ```ngx-editor``` with ```@bobbyquantum/ngx-editor```, as the original package is no longer maintained. See https://github.com/bobbyquantum/ngx-editor
 
+### @angular/fire
 
 #### @jscutlery/semver
 - Removed. Will be using Nx Release tools from now on since Nx has updating release tooling.

@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions-test';
 import { type Firestore } from '@google-cloud/firestore';
-import { type Auth } from 'firebase-admin/lib/auth/auth';
+import { type Auth } from 'firebase-admin/auth';
 import { type FeaturesList } from 'firebase-functions-test/lib/features';
 import { type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type TestFirestoreContext, type TestFirestoreInstance } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, jestTestContextBuilder, type JestTestContextFactory, type JestTestContextFixture } from '@dereekb/util/test';

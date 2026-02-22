@@ -2,16 +2,14 @@ import { type FirebaseAuthUserId } from '@dereekb/firebase';
 import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildJestTestContextFixture, type JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
 import { type FirebaseAdminTestContext } from './firebase.admin';
-import { type CreateRequest } from 'firebase-admin/lib/auth/auth-config';
-import { type UserRecord } from 'firebase-admin/lib/auth/user-record';
-import { type DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
-import { type Auth } from 'firebase-admin/lib/auth/auth';
+import { type CreateRequest, type UserRecord, type DecodedIdToken, type Auth } from 'firebase-admin/auth';
+import { type EventContext } from 'firebase-functions/v1';
+//import { type AuthData } from 'node_modules/firebase-functions/lib/common/providers/https';
 import { decode as decodeJwt } from 'jsonwebtoken';
 import { type CallableContextOptions, type ContextOptions, type WrappedFunction, type WrappedScheduledFunction, type WrappedV2Function } from 'firebase-functions-test/lib/main';
-import { type EventContext } from 'firebase-functions/lib/v1/cloud-functions';
-import { type AuthData } from 'firebase-functions/lib/common/providers/https';
 import { type WrappedBlockingFunction, type WrappedBlockingFunctionWithHandler, type WrappedCallableRequest, type WrappedCallableRequestOutput, type WrappedCallableRequestParams, type WrappedCloudFunction, type WrappedCloudFunctionV1 } from './firebase.function';
 import { type ScheduledEvent } from 'firebase-functions/scheduler';
+import { AuthData } from '@dereekb/firebase-server';
 
 // gen 1
 export type CallCloudFunction = WrappedCloudFunctionV1<any> | WrappedBlockingFunctionWithHandler<any, any> | WrappedBlockingFunction | WrappedV2Function<any> | WrappedCloudFunctionV1<any>;
@@ -370,7 +368,8 @@ export async function createTestFunctionContextAuthData(auth: Auth, userRecord: 
 
   const authData: AuthData = {
     uid: token.uid,
-    token
+    token,
+    rawToken: ''
   };
 
   return authData;

@@ -1,6 +1,5 @@
 import * as admin from 'firebase-admin';
 import { type Firestore } from '@google-cloud/firestore';
-import { type Auth } from 'firebase-admin/lib/auth/auth';
 import { type JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, type TestFirestoreContext, TestFirestoreContextFixture, type TestFirestoreInstance, makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestFirebaseStorageInstance } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, type JestBuildTestsWithContextFunction, jestTestContextBuilder, type JestTestContextFactory, type JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers, googleCloudFirestoreDrivers, googleCloudStorageFromFirebaseAdminStorage } from '@dereekb/firebase-server';
@@ -10,6 +9,7 @@ import { cachedGetter } from '@dereekb/util';
 import { type FirebaseAdminCloudFunctionWrapper, type FirebaseAdminCloudFunctionWrapperSource } from './firebase.function';
 import { type Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { GoogleCloudTestFirebaseStorageInstance } from '../storage/storage';
+import { type Auth } from 'firebase-admin/auth';
 
 export interface FirebaseAdminTestConfig {}
 

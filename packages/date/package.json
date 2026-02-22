@@ -16,6 +16,7 @@
   },
   "peerDependencies": {
     "@dereekb/util": "*",
+    "@dereekb/rxjs": "*",
     "date-fns": "^3.0.0",
     "date-fns-tz": "^3.0.0",
     "class-transformer": "^0.5.1",

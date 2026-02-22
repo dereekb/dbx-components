@@ -83,7 +83,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
         return uploadBytes(ref, input as StorageClientUploadBytesInput, metadataOption);
       }
     },
-    getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes),
+    getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes).then((x) => new Uint8Array(x)),
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
       const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);

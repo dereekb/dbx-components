@@ -1,5 +1,5 @@
 import { type INestApplicationContext } from '@nestjs/common';
-import { type CallableRequest } from 'firebase-functions/lib/common/providers/https';
+import { type CallableRequest } from 'firebase-functions/v2/https';
 import { type CallableContextWithAuthData } from '../../function/context';
 import { type OnCallWithNestContextRequest } from './call';
 

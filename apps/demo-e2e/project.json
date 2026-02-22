@@ -6,18 +6,6 @@
   "tags": [],
   "implicitDependencies": ["demo", "demo-api", "!util-test"],
   "targets": {
-    "e2e": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/demo-e2e/cypress.json",
-        "devServerTarget": "demo:serve:development"
-      },
-      "configurations": {
-        "production": {
-          "devServerTarget": "demo:serve:production"
-        }
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]

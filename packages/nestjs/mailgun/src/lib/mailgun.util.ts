@@ -1,6 +1,5 @@
 import { type Maybe, type NameEmailPair, asArray, filterMaybeArrayValues, makeValuesGroupMap, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
-import { type NotificationMessageEntityKey } from '@dereekb/firebase';
 
 /**
  * The default template subject to use when batch sending emails.
@@ -8,6 +7,13 @@ import { type NotificationMessageEntityKey } from '@dereekb/firebase';
  * This pulls the subject from each recipient's user variables.
  */
 export const MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE = `%recipient.subject%`;
+
+/**
+ * Arbitrary key used by the sending configuration service for choosing a pre-configured entity.
+ *
+ * Typically used for customizing the "from" or "replyTo" addresses while maintaining a separation of concerns.
+ */
+export type MailgunRecipientBatchSendTargetEntityKey = string;
 
 /**
  * A MailgunRecipient paired with additional cc/bcc values. This type is used by an ExpandMailgunRecipientBatchSendTargetRequestFactory to
@@ -25,7 +31,7 @@ export interface MailgunRecipientBatchSendTarget extends MailgunRecipient {
    *
    * Is ignored if from is set.
    */
-  readonly fromKey?: Maybe<NotificationMessageEntityKey>;
+  readonly fromKey?: Maybe<MailgunRecipientBatchSendTargetEntityKey>;
   /**
    * The reply-to value to use for the request.
    *
@@ -37,7 +43,7 @@ export interface MailgunRecipientBatchSendTarget extends MailgunRecipient {
    *
    * Is ignored if replyTo is set.
    */
-  readonly replyToKey?: Maybe<NotificationMessageEntityKey>;
+  readonly replyToKey?: Maybe<MailgunRecipientBatchSendTargetEntityKey>;
   /**
    * Carbon copy recipients.
    *
@@ -49,7 +55,7 @@ export interface MailgunRecipientBatchSendTarget extends MailgunRecipient {
    *
    * Are merged with cc when building the request.
    */
-  readonly ccKeys?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
+  readonly ccKeys?: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>;
   /**
    * Blind carbon copy recipients.
    *
@@ -61,7 +67,7 @@ export interface MailgunRecipientBatchSendTarget extends MailgunRecipient {
    *
    * Are merged with bcc when building the request.
    */
-  readonly bccKeys?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
+  readonly bccKeys?: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>;
 }
 
 /**
@@ -109,7 +115,7 @@ export interface ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig {
   /**
    * Optional lookup for notification message entity keys.
    */
-  readonly notificationMessageEntityKeyRecipientLookup?: Maybe<NotificationMessageEntityKeyRecipientLookup>;
+  readonly mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?: Maybe<MailgunRecipientBatchSendTargetEntityKeyRecipientLookup>;
   /**
    * Whether or not to override the carbon copy variables with the carbon copy key recipients.
    *
@@ -133,7 +139,7 @@ export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: M
  * @returns
  */
 export function expandMailgunRecipientBatchSendTargetRequestFactory(config: ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig): ExpandMailgunRecipientBatchSendTargetRequestFactory {
-  const { request: inputBaseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig, notificationMessageEntityKeyRecipientLookup, overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients } = config;
+  const { request: inputBaseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients } = config;
   const defaultSubject = inputBaseRequest.subject;
 
   if (!defaultSubject && !useSubjectFromRecipientUserVariables) {
@@ -143,7 +149,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
   interface DetermineCarbonCopyRecipientsInput {
     readonly baseRequestCarbonCopyRecipients?: Maybe<NameEmailPair[]>;
     readonly carbonCopyRecipients?: Maybe<ArrayOrValue<NameEmailPair>>;
-    readonly carbonCopyRecipientsKeys?: Maybe<ArrayOrValue<NotificationMessageEntityKey>>;
+    readonly carbonCopyRecipientsKeys?: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>;
   }
 
   /**
@@ -158,7 +164,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
     const { baseRequestCarbonCopyRecipients, carbonCopyRecipients, carbonCopyRecipientsKeys } = input;
 
     let cc: Maybe<NameEmailPair[]> = carbonCopyRecipients ? asArray(carbonCopyRecipients) : baseRequestCarbonCopyRecipients;
-    const resolvedCc = notificationMessageEntityKeyRecipientLookup?.getRecipientsForKeys(carbonCopyRecipientsKeys);
+    const resolvedCc = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?.getRecipientsForKeys(carbonCopyRecipientsKeys);
 
     if (resolvedCc?.length) {
       if (overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients) {
@@ -181,8 +187,8 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
     carbonCopyRecipientsKeys: inputBaseRequest.bccKeys
   });
 
-  const baseRequestFrom: Maybe<NameEmailPair> = inputBaseRequest.from ?? notificationMessageEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.fromKey);
-  const baseRequestReplyTo: Maybe<NameEmailPair> = inputBaseRequest.replyTo ?? notificationMessageEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.replyToKey);
+  const baseRequestFrom: Maybe<NameEmailPair> = inputBaseRequest.from ?? mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.fromKey);
+  const baseRequestReplyTo: Maybe<NameEmailPair> = inputBaseRequest.replyTo ?? mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.replyToKey);
 
   const baseRequest: Omit<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request'], 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys'> = {
     ...inputBaseRequest,
@@ -210,15 +216,15 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
       let from = recipient.from;
       let replyTo = recipient.replyTo;
 
-      if (notificationMessageEntityKeyRecipientLookup) {
+      if (mailgunRecipientBatchSendTargetEntityKeyRecipientLookup) {
         // try the fromKey, otherwise use the baseRequest.from
         if (!from) {
-          from = notificationMessageEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.fromKey, baseRequest.from);
+          from = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.fromKey, baseRequest.from);
         }
 
         // try the replyToKey, otherwise use the baseRequest.replyTo
         if (!replyTo) {
-          replyTo = notificationMessageEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.replyToKey, baseRequest.replyTo);
+          replyTo = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.replyToKey, baseRequest.replyTo);
         }
       } else {
         // use defaults from base request
@@ -319,15 +325,15 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
   };
 }
 
-// MARK: NotificationMessageEntityKeyRecipientLookup
+// MARK: MailgunRecipientBatchSendTargetEntityKeyRecipientLookup
 /**
  * A lookup for notification message entity keys to recipients.
  */
-export interface NotificationMessageEntityKeyRecipientLookup {
+export interface MailgunRecipientBatchSendTargetEntityKeyRecipientLookup {
   /**
    * The map of recipients for the given keys.
    */
-  readonly recipientsMap: Map<NotificationMessageEntityKey, NameEmailPair>;
+  readonly recipientsMap: Map<MailgunRecipientBatchSendTargetEntityKey, NameEmailPair>;
 
   /**
    * Returns the recipient for the given key, or the default recipient if the key is not found. If the input is nullish, returns the default recipient if one is defined, otherwise undefined.
@@ -336,8 +342,8 @@ export interface NotificationMessageEntityKeyRecipientLookup {
    * @param defaultRecipient The default recipient to return if the key is not found.
    * @returns The recipient for the given key, or the default recipient if the key is not found.
    */
-  getRecipientOrDefaultForKey(input: Maybe<NotificationMessageEntityKey>, defaultRecipient: NameEmailPair): NameEmailPair;
-  getRecipientOrDefaultForKey(input: Maybe<NotificationMessageEntityKey>, defaultRecipient?: Maybe<NameEmailPair>): Maybe<NameEmailPair>;
+  getRecipientOrDefaultForKey(input: Maybe<MailgunRecipientBatchSendTargetEntityKey>, defaultRecipient: NameEmailPair): NameEmailPair;
+  getRecipientOrDefaultForKey(input: Maybe<MailgunRecipientBatchSendTargetEntityKey>, defaultRecipient?: Maybe<NameEmailPair>): Maybe<NameEmailPair>;
 
   /**
    * Returns the recipients for the given keys. If the input is nullish, returns undefined.
@@ -345,29 +351,29 @@ export interface NotificationMessageEntityKeyRecipientLookup {
    * @param input The keys to look up.
    * @returns The recipients for the given keys.
    */
-  getRecipientsForKeys(input: Maybe<ArrayOrValue<NotificationMessageEntityKey>>): Maybe<NameEmailPair[]>;
-  getRecipientsForKeys(input: ArrayOrValue<NotificationMessageEntityKey>): NameEmailPair[];
+  getRecipientsForKeys(input: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>): Maybe<NameEmailPair[]>;
+  getRecipientsForKeys(input: ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>): NameEmailPair[];
 }
 
 /**
- * Configuration for notificationMessageEntityKeyRecipientLookup().
+ * Configuration for mailgunRecipientBatchSendTargetEntityKeyRecipientLookup().
  */
-export interface NotificationMessageEntityKeyRecipientLookupConfig {
-  readonly recipientsMap: Map<NotificationMessageEntityKey, NameEmailPair>;
+export interface MailgunRecipientBatchSendTargetEntityKeyRecipientLookupConfig {
+  readonly recipientsMap: Map<MailgunRecipientBatchSendTargetEntityKey, NameEmailPair>;
 }
 
 /**
- * Creates a NotificationMessageEntityKeyRecipientLookup given the input configuration.
+ * Creates a MailgunRecipientBatchSendTargetEntityKeyRecipientLookup given the input configuration.
  *
  * @param config The configuration for the lookup.
  * @returns The lookup.
  */
-export function notificationMessageEntityKeyRecipientLookup(config: NotificationMessageEntityKeyRecipientLookupConfig): NotificationMessageEntityKeyRecipientLookup {
+export function mailgunRecipientBatchSendTargetEntityKeyRecipientLookup(config: MailgunRecipientBatchSendTargetEntityKeyRecipientLookupConfig): MailgunRecipientBatchSendTargetEntityKeyRecipientLookup {
   const { recipientsMap } = config;
 
-  function getRecipientOrDefaultForKey(input: Maybe<NotificationMessageEntityKey>, defaultRecipient: NameEmailPair): NameEmailPair;
-  function getRecipientOrDefaultForKey(input: Maybe<NotificationMessageEntityKey>, defaultRecipient?: Maybe<NameEmailPair>): Maybe<NameEmailPair>;
-  function getRecipientOrDefaultForKey(input: Maybe<NotificationMessageEntityKey>, defaultRecipient?: Maybe<NameEmailPair>): Maybe<NameEmailPair> {
+  function getRecipientOrDefaultForKey(input: Maybe<MailgunRecipientBatchSendTargetEntityKey>, defaultRecipient: NameEmailPair): NameEmailPair;
+  function getRecipientOrDefaultForKey(input: Maybe<MailgunRecipientBatchSendTargetEntityKey>, defaultRecipient?: Maybe<NameEmailPair>): Maybe<NameEmailPair>;
+  function getRecipientOrDefaultForKey(input: Maybe<MailgunRecipientBatchSendTargetEntityKey>, defaultRecipient?: Maybe<NameEmailPair>): Maybe<NameEmailPair> {
     let result: Maybe<NameEmailPair> = defaultRecipient;
 
     if (input) {
@@ -377,8 +383,8 @@ export function notificationMessageEntityKeyRecipientLookup(config: Notification
     return result;
   }
 
-  function getRecipientsForKeys(input: ArrayOrValue<NotificationMessageEntityKey>): NameEmailPair[];
-  function getRecipientsForKeys(input: Maybe<ArrayOrValue<NotificationMessageEntityKey>>): Maybe<NameEmailPair[]> {
+  function getRecipientsForKeys(input: ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>): NameEmailPair[];
+  function getRecipientsForKeys(input: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>): Maybe<NameEmailPair[]> {
     let result: Maybe<NameEmailPair[]> = undefined;
 
     if (input) {

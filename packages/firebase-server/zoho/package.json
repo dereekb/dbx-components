@@ -15,6 +15,10 @@
     }
   },
   "peerDependencies": {
+    "@dereekb/date": "*",
+    "@dereekb/model": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/rxjs": "*",
     "@dereekb/firebase": "*",
     "@dereekb/util": "*",
     "@dereekb/zoho": "*"

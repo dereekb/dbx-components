@@ -1,5 +1,5 @@
 import { type Configurable, type PromiseOrValue } from '@dereekb/util';
-import { type CallableRequest } from 'firebase-functions/lib/common/providers/https';
+import { type CallableRequest } from 'firebase-functions/v2/https';
 import { type NestApplicationContextRequest, type NestContextCallableRequest, type NestContextCallableRequestWithAuth } from './nest';
 import { assertIsContextWithAuthData } from '../../function/context';
 import { type MakeNestContext } from '../nest.provider';

@@ -1,7 +1,7 @@
 import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '@dereekb/firebase';
 import { itShouldFail, expectFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
-import { type AuthData } from 'firebase-functions/lib/common/providers/https';
-import { type DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
+import { type AuthData } from '../../type';
+import { type DecodedIdToken } from 'firebase-admin/auth';
 import type * as admin from 'firebase-admin';
 import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.module';
@@ -523,7 +523,8 @@ describe('firebase server nest auth', () => {
             token = await u.loadDecodedIdToken();
             auth = {
               uid: u.uid,
-              token
+              token,
+              rawToken: ''
             };
           });
 
@@ -568,7 +569,8 @@ describe('firebase server nest auth', () => {
             token = await u.loadDecodedIdToken();
             auth = {
               uid: u.uid,
-              token
+              token,
+              rawToken: ''
             };
           });
 

@@ -7,7 +7,7 @@ import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from './auth.service.error';
-import { type CallableContext } from 'firebase-functions/lib/common/providers/https';
+import { CallableContext } from '../type';
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' }); // 6 digits
 

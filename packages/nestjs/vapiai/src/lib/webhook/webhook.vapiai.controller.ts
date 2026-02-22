@@ -1,4 +1,4 @@
-import { RawBody, RawBodyBuffer } from '@dereekb/nestjs';
+import { RawBody, type RawBodyBuffer } from '@dereekb/nestjs';
 import { Controller, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { VapiAiWebhookService } from './webhook.vapiai.service';

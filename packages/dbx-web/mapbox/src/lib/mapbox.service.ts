@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { latLngPoint, LatLngPointInput, Milliseconds } from '@dereekb/util';
-import { MapboxOptions, MapOptions } from 'mapbox-gl';
+import { MapOptions } from 'mapbox-gl';
 import { KnownMapboxStyle, MapboxZoomLevel } from './mapbox';
 
 export class DbxMapboxConfig {
-  readonly defaultStyle?: MapboxOptions['style'];
+  readonly defaultStyle?: MapOptions['style'];
   readonly defaultZoom?: MapboxZoomLevel;
   readonly defaultCenter?: LatLngPointInput;
   readonly defaultStoreRefreshPeriod?: number;

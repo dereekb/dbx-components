@@ -1,4 +1,4 @@
-import { type UserRecord } from 'firebase-admin/lib/auth/user-record';
+import { type UserRecord } from 'firebase-admin/auth';
 import * as functions from 'firebase-functions/v1';
 import { onGen1EventWithDemoNestContext } from '../function';
 

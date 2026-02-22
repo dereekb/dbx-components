@@ -1,4 +1,4 @@
-import { type UserRecord } from 'firebase-admin/lib/auth/user-record';
+import { type UserRecord } from 'firebase-admin/auth';
 import { Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { onCallWithNestApplicationFactory } from './call';

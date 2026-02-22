@@ -1,7 +1,7 @@
-import { RawBody, RawBodyBuffer } from '@dereekb/nestjs';
+import { RawBody, type RawBodyBuffer } from '@dereekb/nestjs';
 import { Controller, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { OpenAIWebhookService } from './webhook.openai.service';
+import { type OpenAIWebhookService } from './webhook.openai.service';
 
 @Controller('/webhook/openai')
 export class OpenAIWebhookController {
