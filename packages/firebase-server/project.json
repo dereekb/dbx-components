@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase-server/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["zoho", "util", "!util-test", "!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {

@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-analytics/src",
   "prefix": "dbx",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build": {

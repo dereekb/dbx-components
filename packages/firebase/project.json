@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!firebase-test"],
   "targets": {
     "build": {

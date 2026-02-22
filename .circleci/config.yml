@@ -212,8 +212,8 @@ jobs:
           name: setup git
           command: git config user.email "ci@dereekb.com" && git config user.name "ci"
       - run:
-          name: build release
-          command: npx nx run --parallel=1 workspace:version
+          name: build release with nx release
+          command: npx nx release --skip-publish --verbose
       - run:
           # we grab the relevant tag names before swapping to main
           name: "setup env vars for git changes"

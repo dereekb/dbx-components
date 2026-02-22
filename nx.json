@@ -94,5 +94,47 @@
   },
   "nxCloudAccessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU=",
   "useInferencePlugins": false,
-  "defaultBase": "develop"
+  "defaultBase": "main",
+  "release": {
+    "projects": ["tag:publishable"],
+    "projectsRelationship": "fixed",
+    "version": {
+      "conventionalCommits": true
+    },
+    "releaseTag": {
+      "requireSemver": true
+    },
+    "changelog": {
+      "workspaceChangelog": {
+        "createRelease": false,
+        "file": "{workspaceRoot}/CHANGELOG.md",
+        "renderOptions": {
+          "authors": false,
+          "applyUsernameToAuthors": false,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      },
+      "projectChangelogs": {
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
+        "renderOptions": {
+          "authors": false,
+          "applyUsernameToAuthors": false,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      },
+      "automaticFromRef": true
+    },
+    "git": {
+      "commit": true,
+      "commitMessage": "release($workspace): v{version} release",
+      "commitArgs": "--no-verify",
+      "tag": true,
+      "tagMessage": "v{version}",
+      "stageChanges": true
+    },
+    "releaseTagPattern": "v{version}"
+  }
 }

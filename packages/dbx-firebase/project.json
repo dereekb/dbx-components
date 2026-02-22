@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-firebase/src",
   "prefix": "dbx",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {

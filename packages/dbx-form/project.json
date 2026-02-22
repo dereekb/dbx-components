@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-form/src",
   "prefix": "dbx",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
