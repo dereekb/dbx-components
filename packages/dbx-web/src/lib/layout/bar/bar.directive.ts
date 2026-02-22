@@ -17,7 +17,7 @@ export class DbxBarDirective {
   readonly color = input<Maybe<DbxBarColor>>();
 
   readonly cssClassSignal = computed(() => {
-    const color = this.color();
-    return color ? `dbx-${color}-bg` : 'dbx-bg';
+    const color = this.color() ?? 'default';
+    return `dbx-${color}-bg`;
   });
 }

@@ -50,7 +50,7 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
    * Forces the drawer to assume the drawer has content if true, or assume it has no content if false.
    */
   readonly forceHasDrawerContent = input<Maybe<boolean>>(undefined);
-  readonly drawerButtonColor = input<DbxThemeColor, Maybe<DbxThemeColor>>('background', { transform: (x) => x ?? 'background' });
+  readonly drawerButtonColor = input<DbxThemeColor, Maybe<DbxThemeColor>>('default', { transform: (x) => x ?? 'default' });
 
   readonly openDrawer = input<Maybe<boolean>>(undefined); // input open/close drawer config
   readonly isDrawerOpenSignal = signal<Maybe<boolean>>(undefined); // Signal to toggle the drawer

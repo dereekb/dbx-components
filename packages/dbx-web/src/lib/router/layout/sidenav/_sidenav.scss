@@ -137,9 +137,6 @@ $active-background-transparent-color: 0.93;
 
   .dbx-sidenav {
     mat-sidenav {
-      color: $text-color;
-      background-color: $sidenav-background-color;
-
       .dbx-anchor-list.mat-mdc-nav-list {
         --mdc-list-list-item-label-text-color: #{$text-color};
         --mdc-list-list-item-supporting-text-color: #{$text-color};

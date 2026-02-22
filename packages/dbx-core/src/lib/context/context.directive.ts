@@ -15,14 +15,11 @@ export class DbxAppContextStateDirective {
 
   readonly state = input<Maybe<DbxAppContextState>>(undefined, { alias: 'dbxAppContextState' });
 
-  protected readonly _stateEffect = effect(
-    () => {
-      const state = this.state();
+  protected readonly _stateEffect = effect(() => {
+    const state = this.state();
 
-      if (state != null) {
-        this.dbxAppContextStateService.setState(state);
-      }
-    },
-    { allowSignalWrites: true }
-  );
+    if (state != null) {
+      this.dbxAppContextStateService.setState(state);
+    }
+  });
 }

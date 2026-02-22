@@ -1,16 +1,18 @@
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { splitCommaSeparatedStringToSet, type Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay, delay, combineLatest } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay, delay, combineLatest, Subscription } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, inject, signal, input } from '@angular/core';
+import { Directive, inject, signal, input, effect, OnDestroy } from '@angular/core';
 import { DbxStyleService } from './style.service';
 import { DbxStyleConfig, DbxStyleClass, DbxStyleName } from './style';
 import { toObservable } from '@angular/core/rxjs-interop';
 
+export type DbxSetStyleMode = 'both' | 'global' | 'self';
+
 /**
  * Used to denote which app style to use for all children below this.
  *
- * Will update the parent DbxStyleService.
+ * Will update the parent DbxStyleService if mode is "global".
  */
 @Directive({
   selector: '[dbxSetStyle]',
@@ -20,8 +22,16 @@ import { toObservable } from '@angular/core/rxjs-interop';
   },
   standalone: true
 })
-export class DbxSetStyleDirective {
+export class DbxSetStyleDirective implements OnDestroy {
   private readonly _styleService = inject(DbxStyleService);
+
+  /**
+   * The mode for the style.
+   *
+   * - global: The style will be set on the parent DbxStyleService.
+   * - self: The style will be applied to the host element.
+   */
+  readonly setStyleMode = input<DbxSetStyleMode>('self');
 
   /**
    * The input DbxStyleName to style the host element with.
@@ -48,12 +58,29 @@ export class DbxSetStyleDirective {
 
   readonly styleClass$: Observable<DbxStyleClass> = this._styleService.getStyleClassWithConfig(this.config$);
 
-  constructor() {
-    cleanSubscription(
-      this.styleClass$.pipe(delay(0)).subscribe((style) => {
+  readonly _outputStyleClassSubscription = cleanSubscription();
+
+  protected readonly _modeEffect = effect(() => {
+    const mode = this.setStyleMode();
+    let nextOutputStyleClassSubscription: Maybe<Subscription>;
+
+    if (mode === 'self' || mode === 'both') {
+      nextOutputStyleClassSubscription = this.styleClass$.pipe(delay(0)).subscribe((style) => {
         this.outputStyleClassSignal.set(style);
-      })
-    );
-    this._styleService.setConfig(this.config$);
+      });
+    }
+
+    this._outputStyleClassSubscription.setSub(nextOutputStyleClassSubscription);
+
+    if (mode === 'global' || mode === 'both') {
+      this._styleService.setConfig(this.config$);
+    } else {
+      this._styleService.unsetConfig(this.config$);
+    }
+  });
+
+  ngOnDestroy() {
+    // clear/unset this config if it is still set
+    this._styleService.unsetConfig(this.config$);
   }
 }

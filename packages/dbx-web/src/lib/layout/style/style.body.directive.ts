@@ -6,26 +6,22 @@ import { DbxStyleClass } from './style';
 import { Maybe } from '@dereekb/util';
 
 /**
- * Used to style the <body> element of the document document using the style provided by DbxStyleService.
+ * Used to style the <body> element of the browser view/document using the style provided by DbxStyleService.
  */
 @Directive({
   selector: '[dbxStyleBody]',
-  host: {
-    '[class]': 'styleClassNameSignal()'
-  },
   standalone: true
 })
 export class DbxStyleBodyDirective {
   private readonly _styleService = inject(DbxStyleService);
   private readonly _renderer = inject(Renderer2);
 
-  private readonly _styleClassNameSignal = signal<Maybe<DbxStyleClass>>(undefined);
-  readonly styleClassNameSignal = this._styleClassNameSignal.asReadonly();
+  private _styleClassName: Maybe<DbxStyleClass> = undefined;
 
   constructor() {
     cleanSubscription(
       this._styleService.styleClassName$.pipe(delay(0)).subscribe((newClassStyleToApply) => {
-        const currentStyle = this._styleClassNameSignal();
+        const currentStyle = this._styleClassName;
 
         if (currentStyle) {
           this._renderer.removeClass(document.body, currentStyle);
@@ -35,7 +31,7 @@ export class DbxStyleBodyDirective {
           this._renderer.addClass(document.body, newClassStyleToApply);
         }
 
-        this._styleClassNameSignal.set(newClassStyleToApply);
+        this._styleClassName = newClassStyleToApply;
       })
     );
   }

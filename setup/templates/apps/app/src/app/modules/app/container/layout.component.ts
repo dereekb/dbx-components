@@ -9,4 +9,4 @@ import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
   imports: [UIView, DbxAppContextStateDirective],
   standalone: true
 })
-export class AppLayoutComponent {}
+export class AppLayoutComponent { }
