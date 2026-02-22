@@ -23,7 +23,7 @@ export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
   readonly template = input<Maybe<ObservableOrValueGetter<Maybe<DbxInjectionTemplateConfig<T>>>>>();
 
   // allow signal writes for each as during their initialization they may write to a signal in some cases when initializing
-  protected readonly _contentEffect = effect(() => this.setContent(this.content()), { allowSignalWrites: true });
-  protected readonly _configEffect = effect(() => this.setConfig(this.config()), { allowSignalWrites: true });
-  protected readonly _templateEffect = effect(() => this.setTemplate(this.template()), { allowSignalWrites: true });
+  protected readonly _contentEffect = effect(() => this.setContent(this.content()));
+  protected readonly _configEffect = effect(() => this.setConfig(this.config()));
+  protected readonly _templateEffect = effect(() => this.setTemplate(this.template()));
 }

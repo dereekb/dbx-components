@@ -55,12 +55,9 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
   readonly openDrawer = input<Maybe<boolean>>(undefined); // input open/close drawer config
   readonly isDrawerOpenSignal = signal<Maybe<boolean>>(undefined); // Signal to toggle the drawer
 
-  protected readonly _openDrawerEffect = effect(
-    () => {
-      this.isDrawerOpenSignal.set(this.openDrawer());
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly _openDrawerEffect = effect(() => {
+    this.isDrawerOpenSignal.set(this.openDrawer());
+  });
 
   readonly storeHasDrawerContent = toSignal(this.dbxMapboxMapStore.hasDrawerContent$);
   readonly drawerHasContentSignal = computed(() => this.forceHasDrawerContent() ?? this.storeHasDrawerContent());

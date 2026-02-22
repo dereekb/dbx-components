@@ -113,21 +113,18 @@ export class DbxFormSourceDirective<T = unknown> {
   readonly dbxFormSource = input<Maybe<ObservableOrValue<Maybe<Partial<T>>>>>();
 
   protected readonly _effectSub = cleanSubscription();
-  protected readonly _setFormSourceObservableEffect = effect(
-    () => {
-      const formSource = this.dbxFormSource();
-      const mode: DbxFormSourceDirectiveMode = this.dbxFormSourceMode() ?? 'reset';
+  protected readonly _setFormSourceObservableEffect = effect(() => {
+    const formSource = this.dbxFormSource();
+    const mode: DbxFormSourceDirectiveMode = this.dbxFormSourceMode() ?? 'reset';
 
-      let subscription: Maybe<Subscription>;
+    let subscription: Maybe<Subscription>;
 
-      if (formSource) {
-        subscription = dbxFormSourceObservableFromStream(this.form.stream$, formSource, mode).subscribe((x) => {
-          this.form.setValue(x);
-        });
-      }
+    if (formSource) {
+      subscription = dbxFormSourceObservableFromStream(this.form.stream$, formSource, mode).subscribe((x) => {
+        this.form.setValue(x);
+      });
+    }
 
-      this._effectSub.setSub(subscription);
-    },
-    { allowSignalWrites: true }
-  );
+    this._effectSub.setSub(subscription);
+  });
 }
