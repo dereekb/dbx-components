@@ -31,6 +31,7 @@ Check the updated `package.json` for more info.
 
 #### Angular
 - Updated to v21.0.0
+- This update will NOT go with full zoneless due to some dependencies not supporting zoneless yet.
 
 #### Ngx Formly
 - At the time of writing, the update to v7.1.0 isn't compatable with angular 21.
@@ -42,8 +43,13 @@ Check the updated `package.json` for more info.
       11 │ import { MatCommonModule, MatRippleModule } from '@angular/materia...
 ```
 
-#### Ngx Editor
-- Replaced ```ngx-editor``` with ```@bobbyquantum/ngx-editor```, as the original package is no longer maintained. See https://github.com/bobbyquantum/ngx-editor
+- We built a custom version/branch that can be used instead.
+
+#### @ng-web-apis/geolocation
+- GeolocationService was renamed to WaGeolocationService
+
+#### @bobbyquantum/ngx-editor
+- Replaced `ngx-editor` with `@bobbyquantum/ngx-editor`, as the original package is no longer maintained. See https://github.com/bobbyquantum/ngx-editor
 
 #### @angular/fire
 At the time of writing, @angular/fire still hasn't had an Angular 21 update, possibly due to rxfire not being updated yet. We created a special branch on dereekb/rxfire that has the Angular 21 update. We will use that until the official package is updated.
@@ -65,8 +71,9 @@ You'll need to specify the following overrides in `package.json`:
 - In the future, we will also remove `date-fns-tz` and replace it with `date-fns/tz`.
 
 #### ngx-material-intl-tel-input
-- Has been added to replace `ngx-mat-intl-tel-input` that hasn't been updated in a while.
+- Replaced `ngx-mat-intl-tel-input` with `ngx-material-intl-tel-input`  that hasn't been updated in a while.
 
 #### @jscutlery/semver
 - Removed. Will be using Nx Release tools from now on since Nx has updating release tooling.
-- See https://nx.dev/docs/features/manage-releases for more info. Updated release section will be below.
+- See https://nx.dev/docs/features/manage-releases for more info
+- You can use the [nx-release-migration.md](nx-release-migration.md) file to help you migrate.

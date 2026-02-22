@@ -2,8 +2,8 @@
   "name": "demo-components",
   "version": "12.7.0",
   "peerDependencies": {
-    "@angular/common": "^18.0.0",
-    "@angular/core": "^18.0.0",
+    "@angular/common": "^21.0.0",
+    "@angular/core": "^21.0.0",
     "@dereekb/dbx-firebase": "12.0.0",
     "@dereekb/rxjs": "12.0.0",
     "@dereekb/util": "12.0.0",
@@ -13,9 +13,9 @@
     "rxjs": "^7.4.0",
     "@dereekb/dbx-core": "12.0.0",
     "@uirouter/angular": "15.0.0",
-    "@angular/cdk": "^18.0.0",
-    "@angular/material": "^18.0.0",
-    "@ngbracket/ngx-layout": "^18.0.0",
+    "@angular/cdk": "^21.0.0",
+    "@angular/material": "^21.0.0",
+    "@ngbracket/ngx-layout": "^21.0.0",
     "@dereekb/dbx-analytics": "12.0.0",
     "@dereekb/firebase": "12.0.0",
     "@ngx-formly/core": "^6.0.0"

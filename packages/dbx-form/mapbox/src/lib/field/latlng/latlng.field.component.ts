@@ -6,7 +6,7 @@ import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
 import { asObservableFromGetter, filterMaybe, ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
-import { GeolocationService } from '@ng-web-apis/geolocation';
+import { WaGeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
 import { DbxMapboxInjectionStore, DbxMapboxMapStore, DbxMapboxMarkerDisplayConfig, DbxMapboxModule, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldMarkerComponent } from './latlng.field.marker.component';
@@ -116,7 +116,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
   standalone: true
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
-  private readonly _geolocationService = inject(GeolocationService);
+  private readonly _geolocationService = inject(WaGeolocationService);
 
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxMapboxInjectionStore = inject(DbxMapboxInjectionStore, { optional: true });

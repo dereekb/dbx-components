@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
-import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
+import { NgxMaterialIntlTelInputComponent } from 'ngx-material-intl-tel-input';
 
 export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
   readonly preferredCountries?: Maybe<string[]>;
@@ -27,7 +27,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 @Component({
   templateUrl: 'phone.field.component.html',
-  imports: [CommonModule, MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatIntlTelInputComponent],
+  imports: [CommonModule, MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMaterialIntlTelInputComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
