@@ -1,5 +1,5 @@
 import { addSeconds } from 'date-fns';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { ZoomOAuthAccessTokenCacheService, fileZoomOAuthAccessTokenCacheService, memoryZoomOAuthAccessTokenCacheService, mergeZoomOAuthAccessTokenCacheServices } from './oauth.service';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -74,7 +74,7 @@ describe('oauth.service', () => {
     describe('accessToken()', () => {
       describe('refresh token errors', () => {
         itShouldFail('with an ZoomOAuthAccessTokenError if refresh fails.', async () => {
-          await expectFail(() => api.userAccessToken({ refreshToken: 'invalidCode' }), jestExpectFailAssertErrorType(ZoomOAuthAccessTokenError));
+          await expectFail(() => api.userAccessToken({ refreshToken: 'invalidCode' }), expectFailAssertErrorType(ZoomOAuthAccessTokenError));
         });
       });
     });
