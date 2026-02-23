@@ -1,5 +1,5 @@
 import { type FirestoreQueryConstraint, iterateFirestoreDocumentSnapshotPairs, type StorageFile, type StorageFileFirestoreCollection, type StorageFileKey, StorageFileState } from '@dereekb/firebase';
-import { dateFromDateOrTimeNumber, type Maybe, type Milliseconds, type ArrayOrValue, asArray } from '@dereekb/util';
+import { dateFromDateOrTimeMillisecondsNumber, type Maybe, type Milliseconds, type ArrayOrValue, asArray } from '@dereekb/util';
 
 /**
  * Describes when a StorageFile should be queued for deletion.
@@ -73,7 +73,7 @@ export async function queryAndFlagStorageFilesForDelete(input: QueryAndFlagStora
  */
 export function markStorageFileForDeleteTemplate(queueForDeleteTime?: Maybe<StorageFileQueueForDeleteTime>): Pick<StorageFile, 'sdat' | 'fs'> {
   const updateTemplate: Pick<StorageFile, 'sdat' | 'fs'> = {
-    sdat: queueForDeleteTime === true || queueForDeleteTime == null ? new Date() : dateFromDateOrTimeNumber(queueForDeleteTime),
+    sdat: queueForDeleteTime === true || queueForDeleteTime == null ? new Date() : dateFromDateOrTimeMillisecondsNumber(queueForDeleteTime),
     fs: StorageFileState.QUEUED_FOR_DELETE
   };
 

@@ -14,14 +14,6 @@ export interface MakeUrlSearchParamsOptions {
    * Defaults to true.
    */
   readonly filterEmptyValues?: boolean;
-  /**
-   * Whether to filter out null and undefined empty values from the input objects.
-   *
-   * Defaults to true.
-   *
-   * @deprecated Use filterEmptyValues instead.
-   */
-  readonly filterNullAndUndefinedValues?: boolean;
 }
 
 /**
@@ -32,9 +24,9 @@ export interface MakeUrlSearchParamsOptions {
  * @returns
  */
 export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>) {
-  const { omitKeys, filterNullAndUndefinedValues, filterEmptyValues: filterValues = filterNullAndUndefinedValues ?? true } = options ?? {};
+  const { omitKeys, filterEmptyValues: filterValues } = options ?? {};
   const mergedInput = Array.isArray(input) ? mergeObjects(input) : input;
-  const filteredInput = filterValues ? filterEmptyPojoValues(mergedInput ?? {}) : mergedInput;
+  const filteredInput = (filterValues ?? true) ? filterEmptyPojoValues(mergedInput ?? {}) : mergedInput;
   const searchParams = new URLSearchParams(filteredInput as unknown as Record<string, string>);
 
   if (omitKeys != null) {

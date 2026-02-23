@@ -1,5 +1,5 @@
 import { type TreeNode } from './tree';
-import { FlattenTreeAddNodeDecision, flattenTree, flattenTreeToArray, flattenTreeToArrayFunction, flattenTrees } from './tree.flatten';
+import { FlattenTreeAddNodeDecision, flattenTree, flattenTreeToArray, flattenTreeToArrayFunction } from './tree.flatten';
 import { breadthFirstExploreTreeTraversalFactoryFunction } from './tree.explore';
 
 interface TestNodeValue {
@@ -322,7 +322,7 @@ describe('flattenTrees()', () => {
   it('should flatten an array of trees into a single array of nodes.', () => {
     const trees = [root1, root2];
     const flattenNodeFn = flattenTreeToArrayFunction<TestNode>();
-    const result = flattenTrees(trees, flattenNodeFn);
+    const result = flattenNodeFn(trees);
     const expectedNodes = [
       root1,
       child1,
@@ -341,7 +341,7 @@ describe('flattenTrees()', () => {
   it('should return an empty array if given an empty array of trees.', () => {
     const trees: TestNode[] = [];
     const flattenNodeFn = flattenTreeToArrayFunction<TestNode>();
-    const result = flattenTrees(trees, flattenNodeFn);
+    const result = flattenNodeFn(trees);
     expect(result).toEqual([]);
   });
 
@@ -349,7 +349,7 @@ describe('flattenTrees()', () => {
     const trees = [child1, child2]; // Smaller trees for simplicity
     const mapFn = (node: TestNode) => node.value.id;
     const flattenMappedFn = flattenTreeToArrayFunction<TestNode, string>(mapFn);
-    const result = flattenTrees(trees, flattenMappedFn);
+    const result = flattenMappedFn(trees);
     const expectedIds = [
       'child1',
       'leaf1',
@@ -365,7 +365,7 @@ describe('flattenTrees()', () => {
       const trees = [root1, root2];
       const flattenNodeFn = flattenTreeToArrayFunction<TestNode>();
       const addNodeFn = (node: TestNode) => ((node.value.value ?? 0) >= 10 ? FlattenTreeAddNodeDecision.ADD_ALL : FlattenTreeAddNodeDecision.SKIP_ALL);
-      const result = flattenTrees(trees, flattenNodeFn, addNodeFn);
+      const result = flattenNodeFn(trees, undefined, addNodeFn);
       // Should include nodes with value >= 10: root1 (100), root2 (200), leaf4 (40)
       // child1, child2, child3 are filtered out along with their children
       const expectedNodes = [root1, root2, leaf4];
@@ -378,7 +378,7 @@ describe('flattenTrees()', () => {
       const mapFn = (node: TestNode) => node.value.id;
       const flattenMappedFn = flattenTreeToArrayFunction<TestNode, string>(mapFn);
       const addNodeFn = (node: TestNode, mappedValue: string) => (mappedValue.startsWith('leaf') ? FlattenTreeAddNodeDecision.ADD_ALL : FlattenTreeAddNodeDecision.ADD_CHILDREN_ONLY);
-      const result = flattenTrees(trees, flattenMappedFn, addNodeFn);
+      const result = flattenMappedFn(trees, undefined, addNodeFn);
       // Should skip child nodes but include leaf nodes
       const expectedIds = ['leaf1', 'leaf2', 'leaf3'];
       expect(result).toEqual(expectedIds);
@@ -388,7 +388,7 @@ describe('flattenTrees()', () => {
       const trees = [root1, root2];
       const flattenNodeFn = flattenTreeToArrayFunction<TestNode>();
       const addNodeFn = () => FlattenTreeAddNodeDecision.SKIP_ALL;
-      const result = flattenTrees(trees, flattenNodeFn, addNodeFn);
+      const result = flattenNodeFn(trees, undefined, addNodeFn);
       expect(result).toEqual([]);
     });
 
@@ -401,7 +401,7 @@ describe('flattenTrees()', () => {
         if (mappedValue === 'leaf4') return FlattenTreeAddNodeDecision.ADD_ALL;
         return FlattenTreeAddNodeDecision.SKIP_ALL;
       };
-      const result = flattenTrees(trees, flattenMappedFn, addNodeFn);
+      const result = flattenMappedFn(trees, undefined, addNodeFn);
       // Should skip root1, root2 (ADD_CHILDREN_ONLY) but traverse their children, include leaf4 (ADD_ALL)
       const expectedIds = ['leaf4'];
       expect(result).toEqual(expectedIds);
@@ -415,7 +415,7 @@ describe('flattenTrees()', () => {
         if (node.value.id === 'child2') return FlattenTreeAddNodeDecision.ADD_NODE_ONLY;
         return FlattenTreeAddNodeDecision.ADD_ALL;
       };
-      const result = flattenTrees(trees, flattenNodeFn, addNodeFn);
+      const result = flattenNodeFn(trees, undefined, addNodeFn);
       // child1: ADD_CHILDREN_ONLY (skip child1, add leaf1, leaf2), child2: ADD_NODE_ONLY (add child2, skip leaf3)
       const expectedNodes = [leaf1, leaf2, child2];
       expect(result).toEqual(expectedNodes);
@@ -427,7 +427,7 @@ describe('flattenTrees()', () => {
       const defaultAddNodeFn = (node: TestNode, mappedValue: number) => (mappedValue >= 50 ? FlattenTreeAddNodeDecision.ADD_ALL : FlattenTreeAddNodeDecision.SKIP_ALL);
       const flattenMappedFn = flattenTreeToArrayFunction<TestNode, number>(mapFn, defaultAddNodeFn);
       const runtimeAddNodeFn = (node: TestNode, mappedValue: number) => (mappedValue >= 100 ? FlattenTreeAddNodeDecision.ADD_CHILDREN_ONLY : FlattenTreeAddNodeDecision.ADD_ALL);
-      const result = flattenTrees(trees, flattenMappedFn, runtimeAddNodeFn);
+      const result = flattenMappedFn(trees, undefined, runtimeAddNodeFn);
       // root1 (100): ADD_CHILDREN_ONLY, root2 (200): ADD_CHILDREN_ONLY, others: ADD_ALL
       // Should skip root1 and root2 but include their children
       const expectedValues = [1, 10, 20, 2, 30, 3, 40];

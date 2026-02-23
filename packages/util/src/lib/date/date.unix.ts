@@ -80,39 +80,3 @@ export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeS
 export function unixDateTimeSecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeSecondsNumber>): Maybe<Date> {
   return dateTimeNumber != null ? new Date(dateTimeNumber * 1000) : (dateTimeNumber as null | undefined);
 }
-
-// MARK: Compat
-/**
- * @deprecated use UnixDateTimeSecondsNumber instead
- */
-export type UnixTimeNumber = UnixDateTimeSecondsNumber;
-
-/**
- * @deprecated use DateOrUnixDateTimeSecondsNumber instead
- */
-export type DateOrUnixTimeNumber = Date | UnixTimeNumber;
-
-/**
- * @deprecated use unixDateTimeSecondsNumberFromDateOrTimeNumber instead
- */
-export const unixTimeNumberFromDateOrTimeNumber = unixDateTimeSecondsNumberFromDateOrTimeNumber;
-
-/**
- * @deprecated use unixDateTimeSecondsNumberForNow instead
- */
-export const unixTimeNumberForNow = unixDateTimeSecondsNumberForNow;
-
-/**
- * @deprecated use unixDateTimeSecondsNumberFromDate instead
- */
-export const unixTimeNumberFromDate = unixDateTimeSecondsNumberFromDate;
-
-/**
- * @deprecated use dateFromDateOrTimeSecondsNumber instead
- */
-export const dateFromDateOrTimeNumber = dateFromDateOrTimeSecondsNumber;
-
-/**
- * @deprecated use unixDateTimeSecondsNumberToDate instead
- */
-export const unixTimeNumberToDate = unixDateTimeSecondsNumberToDate;

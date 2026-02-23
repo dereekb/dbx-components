@@ -52,24 +52,3 @@ export function allValuesAreMaybeNot<T>(values: Maybe<T>[]): values is MaybeNot[
 export function allValuesAreNotMaybe<T>(values: Maybe<T>[]): values is T[] {
   return values.findIndex((x) => x == null) === -1;
 }
-
-// MARK: Compat
-/**
- * Filters all maybe values from the input array. If a maybe value is input, returns an empty array.
- *
- * @param values
- * @returns
- *
- * @deprecated use filterMaybeArrayValues instead.
- */
-export const filterMaybeValues = filterMaybeArrayValues;
-
-/**
- * Filters all empty and maybe values from the input array. If a maybe value is input, returns an empty array.
- *
- * @param values
- * @returns
- *
- * @deprecated use filterEmptyArrayValues instead.
- */
-export const filterEmptyValues = filterEmptyArrayValues;

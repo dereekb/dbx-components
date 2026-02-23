@@ -210,9 +210,3 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
     return page;
   };
 }
-
-// MARK: Compat
-/**
- * @deprecated Use FetchPageResult instead.
- */
-export type FetchPageResults<T> = FetchPageResult<T>;

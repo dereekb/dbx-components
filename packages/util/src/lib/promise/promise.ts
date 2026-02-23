@@ -528,6 +528,3 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }
-
-// MARK: Compat
-export type PromiseAsyncTaskFn<T, K = unknown> = PerformAsyncTaskFn<T, K>;
