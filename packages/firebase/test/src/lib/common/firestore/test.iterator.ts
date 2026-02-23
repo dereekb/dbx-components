@@ -4,8 +4,6 @@ import { filter, first, from, switchMap } from 'rxjs';
 import { mockItemWithValue, type MockItemCollectionFixture, type MockItemDocument, type MockItem } from '../mock';
 import { arrayContainsDuplicateValue } from '@dereekb/util';
 
-jest.setTimeout(9000);
-
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
  *

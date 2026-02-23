@@ -88,13 +88,6 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
       }
     },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
-      "options": {
-        "jestConfig": "apps/demo-api/jest.config.ts"
-      }
-    },
     "watch": {
       "executor": "nx:run-commands",
       "options": {
@@ -128,6 +121,13 @@
           }
         ],
         "parallel": false
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/demo-api"
       }
     }
   }

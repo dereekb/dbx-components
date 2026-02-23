@@ -1,5 +1,5 @@
 import { type CollectionReference } from '@dereekb/firebase';
-import { AbstractWrappedFixtureWithInstance, type JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util/test';
+import { AbstractWrappedFixtureWithInstance, type TestWrappedContextFactoryBuilder, instanceWrapTestContextFactory } from '@dereekb/util/test';
 import { type TestFirestoreContextFixture } from '../firestore/firestore.instance';
 import { type MockItemFirestoreCollection, type MockItem } from './mock.item';
 import { type MockItemCollections, makeMockItemCollections } from './mock.item.service';
@@ -63,8 +63,8 @@ export class MockItemCollectionFixture extends AbstractWrappedFixtureWithInstanc
 
 export interface MockItemCollectionFirebaseContextConfig {}
 
-export function testWithMockItemCollectionFixture(config?: MockItemCollectionFirebaseContextConfig): JestTestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
-  return instanceWrapJestTestContextFactory({
+export function testWithMockItemCollectionFixture(config?: MockItemCollectionFirebaseContextConfig): TestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
+  return instanceWrapTestContextFactory({
     wrapFixture: (fixture) => new MockItemCollectionFixture(fixture),
     makeInstance: (wrap) => new MockItemCollectionFixtureInstance(wrap),
     teardownInstance: (instance: MockItemCollectionFixtureInstance) => {}

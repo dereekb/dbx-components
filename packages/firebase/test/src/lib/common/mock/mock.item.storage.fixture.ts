@@ -1,4 +1,4 @@
-import { AbstractWrappedFixtureWithInstance, type JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util/test';
+import { AbstractWrappedFixtureWithInstance, type TestWrappedContextFactoryBuilder, instanceWrapTestContextFactory } from '@dereekb/util/test';
 import { type TestFirebaseStorage, type TestFirebaseStorageContextFixture, type TestFirebaseStorageInstance } from '../storage/storage.instance';
 
 // MARK: Test Item Testing Fixture
@@ -29,8 +29,8 @@ export class MockItemStorageFixture extends AbstractWrappedFixtureWithInstance<M
 
 export interface MockItemStorageFirebaseStorageContextConfig {}
 
-export function testWithMockItemStorageFixture(config?: MockItemStorageFirebaseStorageContextConfig): JestTestWrappedContextFactoryBuilder<MockItemStorageFixture, TestFirebaseStorageContextFixture> {
-  return instanceWrapJestTestContextFactory({
+export function testWithMockItemStorageFixture(config?: MockItemStorageFirebaseStorageContextConfig): TestWrappedContextFactoryBuilder<MockItemStorageFixture, TestFirebaseStorageContextFixture> {
+  return instanceWrapTestContextFactory({
     wrapFixture: (fixture) => new MockItemStorageFixture(fixture),
     makeInstance: (wrap) => new MockItemStorageFixtureInstance(wrap),
     teardownInstance: (instance: MockItemStorageFixtureInstance) => {}

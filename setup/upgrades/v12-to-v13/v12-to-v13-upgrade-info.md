@@ -263,3 +263,42 @@ You'll need to specify the following overrides in `package.json`:
 
 **Removed deprecated types:**
 - `DbxFirebaseOptions` type removed
+
+### Migrating to Vitest
+Jest still has some issues with the ESM node environment, which caused an issue while trying to utilize a non-esm package within a test that utilized `sharp`. Unfortunately, `sharp` still has no progress towards moving to ESM, but there was a workaround, that requires the use of `mlly` and `import.meta.url`. The issue is that Jest messes with the ESM environment where `import.meta.url` is not available, which caused the workaround to fail.
+
+Vitest does not have this issue, so `demo-api` is being migrated to use Vitest.
+
+There is a migration guide here: https://vitest.dev/guide/migration.html#jest
+
+#### Install Vitest
+Run `nx add @nx/vitest` to add Vitest to the project.
+
+Optionally update the following dependencies:
+
+```
+"@swc-node/register": "1.11.1",
+"@swc/cli": "0.8.0",
+"@swc/core": "1.15.13",
+"@swc/helpers": "0.5.19",
+```
+
+#### Update Project Configuration
+Use the nx generator for configuring vitest. The previous `project.json` file had a `run-tests` target that ran the tests. Before running the generator, remove the `run-tests` target.
+
+Example for demo-api:
+
+```
+    "run-tests": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
+      "options": {
+        "jestConfig": "apps/demo-api/jest.config.ts"
+      }
+    },
+```
+
+Now run `nx g @nx/vitest:configuration --project=demo-api --testEnvironment=node --testTarget=run-tests` to add Vitest to the project.
+
+#### util-test changes
+With the addition of Vitest, the `util-test` package has been updated to support Vitest. Since vitest and jest are similar, the utilities are mostly the same.

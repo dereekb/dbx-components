@@ -1,5 +1,5 @@
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions-test';
+import admin from 'firebase-admin';
+import functions from 'firebase-functions-test';
 import { type Firestore } from '@google-cloud/firestore';
 import { type Auth } from 'firebase-admin/auth';
 import { type FeaturesList } from 'firebase-functions-test/lib/features';
