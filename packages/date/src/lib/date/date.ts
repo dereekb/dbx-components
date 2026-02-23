@@ -20,9 +20,9 @@ import {
   type DayOfWeek,
   dayOfWeek,
   sortNumbersAscendingFunction,
-  type UnixDateTimeNumber,
+  type UnixDateTimeMillisecondsNumber,
   MS_IN_SECOND,
-  type DateOrUnixDateTimeNumber,
+  type DateOrUnixDateTimeMillisecondsNumber,
   type DateHourMinuteOrSecond,
   type FloorOrCeilRounding
 } from '@dereekb/util';
@@ -125,11 +125,11 @@ export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Ma
  * @param input
  * @returns
  */
-export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeNumber): Date {
-  return isDate(input) ? (input as Date) : parseJsDateString(input as string) ?? new Date(input);
+export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeMillisecondsNumber): Date {
+  return isDate(input) ? (input as Date) : (parseJsDateString(input as string) ?? new Date(input));
 }
 
-export function parseJsDateString(input: ISO8601DateString | UTCDateString | UnixDateTimeNumber): Maybe<Date> {
+export function parseJsDateString(input: ISO8601DateString | UTCDateString | UnixDateTimeMillisecondsNumber): Maybe<Date> {
   const date = typeof input === 'string' && isISO8601DateString(input) ? parseISO(input as string) : new Date(input);
   return isValid(date) ? date : undefined;
 }
@@ -329,12 +329,12 @@ export function roundDateDownTo(date: Date, roundToUnit: DateHourMinuteOrSecond)
 }
 
 export function roundDateTo(date: Date, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): Date;
-export function roundDateTo(unixDateTimeNumber: UnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): UnixDateTimeNumber;
-export function roundDateTo(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): DateOrUnixDateTimeNumber {
+export function roundDateTo(unixDateTimeNumber: UnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): UnixDateTimeMillisecondsNumber;
+export function roundDateTo(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): DateOrUnixDateTimeMillisecondsNumber {
   return typeof date === 'number' ? roundDateToUnixDateTimeNumber(date, roundToUnit, roundType) : roundDateTo(date, roundToUnit, roundType);
 }
 
-export function roundDateToDate(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): Date {
+export function roundDateToDate(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): Date {
   return new Date(roundDateToUnixDateTimeNumber(date, roundToUnit, roundType));
 }
 
@@ -346,7 +346,7 @@ export function roundDateToDate(date: DateOrUnixDateTimeNumber, roundToUnit: Dat
  * @param roundType
  * @returns
  */
-export function roundDateToUnixDateTimeNumber(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): UnixDateTimeNumber {
+export function roundDateToUnixDateTimeNumber(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): UnixDateTimeMillisecondsNumber {
   const inputTimeUnrounded = typeof date === 'number' ? date : date.getTime();
 
   let roundAmount: number = 0;

@@ -1,4 +1,4 @@
-import { Maybe, type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { Maybe, type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeMillisecondsNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { VapiChatMessage, type VapiAssistantId, type VapiCostsItem, type VapiTranscriptRef } from '../vapiai.type';
 import { type Vapi } from '@vapi-ai/server-sdk';
 
@@ -38,7 +38,7 @@ export interface FunctionCallPayload extends BaseVapiPayload {
  * https://docs.vapi.ai/server-url/events#end-of-call-report
  */
 export interface EndOfCallReportPayload extends BaseVapiPayload, Omit<Vapi.ServerMessageEndOfCallReport, 'call'>, VapiTranscriptRef {
-  readonly timestamp: UnixDateTimeNumber;
+  readonly timestamp: UnixDateTimeMillisecondsNumber;
   readonly startedAt: ISO8601DateStringUTCFull;
   readonly endedAt: ISO8601DateStringUTCFull;
   readonly cost: DollarAmount;

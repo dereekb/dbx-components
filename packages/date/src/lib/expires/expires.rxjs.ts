@@ -1,4 +1,4 @@
-import { type Milliseconds, type DateOrUnixDateTimeNumber } from '@dereekb/util';
+import { type Milliseconds, type DateOrUnixDateTimeMillisecondsNumber } from '@dereekb/util';
 import { filter, map, type MonoTypeOperatorFunction, type Observable, type OperatorFunction, skipWhile, switchMap, takeWhile } from 'rxjs';
 import { hasExpired, toExpires, type Expires, timeHasExpired } from './expires';
 
@@ -24,14 +24,14 @@ export function skipExpired<T extends Expires>(): MonoTypeOperatorFunction<T> {
 /**
  * Skips the input date or timenumber until expiration occurs.
  */
-export function skipUntilExpiration(expiresIn?: number): MonoTypeOperatorFunction<DateOrUnixDateTimeNumber> {
+export function skipUntilExpiration(expiresIn?: number): MonoTypeOperatorFunction<DateOrUnixDateTimeMillisecondsNumber> {
   return filter((x) => timeHasExpired(x, expiresIn));
 }
 
 /**
  * Skips the input date or timenumber after expiration occurs.
  */
-export function skipAfterExpiration(expiresIn?: number): MonoTypeOperatorFunction<DateOrUnixDateTimeNumber> {
+export function skipAfterExpiration(expiresIn?: number): MonoTypeOperatorFunction<DateOrUnixDateTimeMillisecondsNumber> {
   return filter((x) => !timeHasExpired(x, expiresIn));
 }
 

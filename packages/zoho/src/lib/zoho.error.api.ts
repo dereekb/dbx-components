@@ -1,4 +1,4 @@
-import { MS_IN_MINUTE, type Maybe, type UnixDateTimeNumber } from '@dereekb/util';
+import { MS_IN_MINUTE, type Maybe, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonInterceptJsonResponseFunction, type FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
@@ -346,7 +346,7 @@ export interface ZohoRateLimitHeaderDetails {
   /**
    * The time at which the rate limit will reset.
    */
-  readonly reset: UnixDateTimeNumber;
+  readonly reset: UnixDateTimeMillisecondsNumber;
   /**
    * The time at which the rate limit will reset.
    */
