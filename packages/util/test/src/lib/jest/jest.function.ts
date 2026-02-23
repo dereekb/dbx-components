@@ -1,44 +1,52 @@
-import { forwardFunction, type Getter, mapObjectMap } from '@dereekb/util';
-
-export type UseJestFunctionFixtureFunctionGetter<I extends (...args: any[]) => O, O = any> = Getter<I>;
-
-export interface UseJestFunctionFixture<I extends (...args: any[]) => O, O = any> {
-  fn: Getter<I>;
-}
-
-export type JestFunctionFixtureBuildTests<I> = (fn: I) => void;
+import { type UseTestFunctionFixtureFunctionGetter, type UseTestFunctionFixture, type TestFunctionFixtureBuildTests, useTestFunctionFixture, type UseTestFunctionMapObject, type UseTestFunctionMapFixture, type UseTestFunctionMapFixtureGetterFunctions, type UseTestFunctionMapFixtureFunctions, type TestFunctionFixtureMapBuildTests, useTestFunctionMapFixture } from '../shared/shared.function';
 
 /**
- * Creates a test context and jest configurations that provides a function to build tests based on the configuration.
+ * @deprecated Use UseTestFunctionFixtureFunctionGetter from shared instead. This is kept for backwards compatibility.
  */
-export function useJestFunctionFixture<I extends (...args: any[]) => O, O = any>(config: UseJestFunctionFixture<I, O>, buildTests: JestFunctionFixtureBuildTests<I>): void {
-  const { fn } = config;
+export type UseJestFunctionFixtureFunctionGetter<I extends (...args: any[]) => O, O = any> = UseTestFunctionFixtureFunctionGetter<I, O>;
 
-  const forward = forwardFunction(fn);
-  buildTests(forward);
-}
+/**
+ * @deprecated Use UseTestFunctionFixture from shared instead. This is kept for backwards compatibility.
+ */
+export type UseJestFunctionFixture<I extends (...args: any[]) => O, O = any> = UseTestFunctionFixture<I, O>;
+
+/**
+ * @deprecated Use TestFunctionFixtureBuildTests from shared instead. This is kept for backwards compatibility.
+ */
+export type JestFunctionFixtureBuildTests<I> = TestFunctionFixtureBuildTests<I>;
+
+/**
+ * @deprecated Use useTestFunctionFixture from shared instead. This is kept for backwards compatibility.
+ */
+export const useJestFunctionFixture = useTestFunctionFixture;
 
 // MARK: Array Fixture
-export type UseJestFunctionMapObject = Record<string, (...args: any[]) => any>;
-
-export type UseJestFunctionMapFixture<T extends UseJestFunctionMapObject> = {
-  fns: UseJestFunctionMapFixtureGetterFunctions<T>;
-};
-
-export type UseJestFunctionMapFixtureGetterFunctions<T extends UseJestFunctionMapObject> = {
-  [K in keyof T]: T[K] extends UseJestFunctionFixtureFunctionGetter<infer I, infer O> ? T[K] : never;
-};
-
-export type UseJestFunctionMapFixtureFunctions<T extends UseJestFunctionMapObject> = {
-  [K in keyof T]: T[K] extends UseJestFunctionFixtureFunctionGetter<infer I, infer O> ? I : never;
-};
-
-export type JestFunctionFixtureMapBuildTests<T extends UseJestFunctionMapObject> = (fixture: UseJestFunctionMapFixtureFunctions<T>) => void;
+/**
+ * @deprecated Use UseTestFunctionMapObject from shared instead. This is kept for backwards compatibility.
+ */
+export type UseJestFunctionMapObject = UseTestFunctionMapObject;
 
 /**
- * Creates a test context and jest configurations that provides a function to build tests based on the configuration.
+ * @deprecated Use UseTestFunctionMapFixture from shared instead. This is kept for backwards compatibility.
  */
-export function useJestFunctionMapFixture<T extends UseJestFunctionMapObject>(config: UseJestFunctionMapFixture<T>, buildTests: JestFunctionFixtureMapBuildTests<T>): void {
-  const forwardedFunctions = mapObjectMap(config.fns, (fn) => forwardFunction(fn));
-  buildTests(forwardedFunctions);
-}
+export type UseJestFunctionMapFixture<T extends UseTestFunctionMapObject> = UseTestFunctionMapFixture<T>;
+
+/**
+ * @deprecated Use UseTestFunctionMapFixtureGetterFunctions from shared instead. This is kept for backwards compatibility.
+ */
+export type UseJestFunctionMapFixtureGetterFunctions<T extends UseTestFunctionMapObject> = UseTestFunctionMapFixtureGetterFunctions<T>;
+
+/**
+ * @deprecated Use UseTestFunctionMapFixtureFunctions from shared instead. This is kept for backwards compatibility.
+ */
+export type UseJestFunctionMapFixtureFunctions<T extends UseTestFunctionMapObject> = UseTestFunctionMapFixtureFunctions<T>;
+
+/**
+ * @deprecated Use TestFunctionFixtureMapBuildTests from shared instead. This is kept for backwards compatibility.
+ */
+export type JestFunctionFixtureMapBuildTests<T extends UseTestFunctionMapObject> = TestFunctionFixtureMapBuildTests<T>;
+
+/**
+ * @deprecated Use useTestFunctionMapFixture from shared instead. This is kept for backwards compatibility.
+ */
+export const useJestFunctionMapFixture = useTestFunctionMapFixture;

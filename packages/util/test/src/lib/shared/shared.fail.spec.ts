@@ -1,11 +1,12 @@
+import { describe, it, expect } from 'vitest';
 import { BaseError } from 'make-error';
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, VitestExpectedFailError, shouldFail, type VitestProvidesCallback, failDueToSuccess, VitestUnexpectedSuccessFailureError, expectFail, type VitestDoneCallback, VitestExpectedErrorOfSpecificTypeError, vitestExpectFailAssertErrorType, vitestDoneCallbackRef } from './vitest.fail';
+import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, ExpectedFailError, shouldFail, type TestProvidesCallback, failDueToSuccess, UnexpectedSuccessFailureError, expectFail, type TestDoneCallback, ExpectedErrorOfSpecificTypeError, expectFailAssertErrorType, testDoneCallbackRef } from './shared.fail';
 
 class TestError extends BaseError {}
 
-describe('vitestDoneCallbackRef()', () => {
-  it('should create a VitestDoneCallbackRef', () => {
-    const ref = vitestDoneCallbackRef();
+describe('testDoneCallbackRef()', () => {
+  it('should create a TestDoneCallbackRef', () => {
+    const ref = testDoneCallbackRef();
 
     expect(ref).toBeDefined();
     expect(ref._promise).toBeDefined();
@@ -16,7 +17,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('should resolve the promise when done is called without an error', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
 
     ref.done();
 
@@ -24,7 +25,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('should throw an error when done is called with an error', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
     const testError = new Error('test error');
     ref.done(testError);
 
@@ -32,7 +33,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('should throw an error when done is called with an error string', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
     const errorString = 'test error string';
 
     ref.done(errorString);
@@ -41,7 +42,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('should throw an error when done.fail is called with an error', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
     const testError = new Error('test error');
 
     ref.done.fail(testError);
@@ -50,7 +51,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('should throw an error when done.fail is called with an error string', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
     const errorString = 'test error';
 
     ref.done.fail(errorString);
@@ -59,7 +60,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('should only resolve the promise once if done is called multiple times', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
 
     ref.done();
     ref.done(); // Second call should be safe
@@ -68,7 +69,7 @@ describe('vitestDoneCallbackRef()', () => {
   });
 
   it('can be used in async test patterns', async () => {
-    const ref = vitestDoneCallbackRef();
+    const ref = testDoneCallbackRef();
 
     // Simulate an async operation that calls done when complete
     setTimeout(() => {
@@ -82,13 +83,13 @@ describe('vitestDoneCallbackRef()', () => {
 
 describe('expectFail', () => {
   describe('sync', () => {
-    it('should throw a VitestSuccessFailureError if an error is not thrown.', () => {
+    it('should throw an UnexpectedSuccessFailureError if an error is not thrown.', () => {
       try {
         expectFail(() => {
           //no error thrown
         });
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestUnexpectedSuccessFailureError);
+        expect(e).toBeInstanceOf(UnexpectedSuccessFailureError);
       }
     });
 
@@ -98,19 +99,19 @@ describe('expectFail', () => {
           throw new Error('success');
         });
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestExpectedFailError);
+        expect(e).toBeInstanceOf(ExpectedFailError);
       }
     });
   });
 
   describe('async', () => {
-    it('should throw a VitestSuccessFailureError if an error is not thrown.', async () => {
+    it('should throw an UnexpectedSuccessFailureError if an error is not thrown.', async () => {
       try {
         await expectFail(async () => {
           //no error thrown
         });
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestUnexpectedSuccessFailureError);
+        expect(e).toBeInstanceOf(UnexpectedSuccessFailureError);
       }
     });
 
@@ -120,7 +121,7 @@ describe('expectFail', () => {
           throw new Error('success');
         });
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestExpectedFailError);
+        expect(e).toBeInstanceOf(ExpectedFailError);
       }
     });
   });
@@ -135,7 +136,7 @@ describe('expectFail', () => {
           () => null
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestExpectedFailError);
+        expect(e).toBeInstanceOf(ExpectedFailError);
       }
     });
 
@@ -148,11 +149,11 @@ describe('expectFail', () => {
           () => true
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestExpectedFailError);
+        expect(e).toBeInstanceOf(ExpectedFailError);
       }
     });
 
-    it('should throw a VitestExpectedErrorOfSpecificTypeError if the assertion returns false.', async () => {
+    it('should throw an ExpectedErrorOfSpecificTypeError if the assertion returns false.', async () => {
       try {
         await expectFail(
           async () => {
@@ -161,7 +162,7 @@ describe('expectFail', () => {
           () => false
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestExpectedErrorOfSpecificTypeError);
+        expect(e).toBeInstanceOf(ExpectedErrorOfSpecificTypeError);
       }
     });
 
@@ -181,14 +182,14 @@ describe('expectFail', () => {
       }
     });
 
-    describe('vitestExpectFailAssertionFunction()', () => {
+    describe('expectFailAssertErrorType()', () => {
       it('should resolve successfully if the error is of the expected type', async () => {
         try {
           await expectFail(async () => {
             throw new Error('success');
-          }, vitestExpectFailAssertErrorType(Error));
+          }, expectFailAssertErrorType(Error));
         } catch (e) {
-          expect(e).toBeInstanceOf(VitestExpectedFailError);
+          expect(e).toBeInstanceOf(ExpectedFailError);
         }
       });
     });
@@ -197,17 +198,17 @@ describe('expectFail', () => {
 
 describe('expectSuccessfulFail', () => {
   describe('sync', () => {
-    it('should throw a VitestSuccessFailureError if VitestExpectedFailError is not thrown.', () => {
+    it('should throw an UnexpectedSuccessFailureError if ExpectedFailError is not thrown.', () => {
       try {
         expectSuccessfulFail(() => {
           //no error thrown
         });
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestUnexpectedSuccessFailureError);
+        expect(e).toBeInstanceOf(UnexpectedSuccessFailureError);
       }
     });
 
-    it('should resolve successfully if VitestExpectedFailError is thrown.', () => {
+    it('should resolve successfully if ExpectedFailError is thrown.', () => {
       try {
         expectSuccessfulFail(() => {
           failSuccessfully(); // fail successfully.
@@ -219,17 +220,17 @@ describe('expectSuccessfulFail', () => {
   });
 
   describe('async', () => {
-    it('should throw a VitestSuccessFailureError if VitestExpectedFailError is not thrown.', async () => {
+    it('should throw an UnexpectedSuccessFailureError if ExpectedFailError is not thrown.', async () => {
       try {
         await expectSuccessfulFail(async () => {
           //no error thrown in async
         });
       } catch (e) {
-        expect(e).toBeInstanceOf(VitestUnexpectedSuccessFailureError);
+        expect(e).toBeInstanceOf(UnexpectedSuccessFailureError);
       }
     });
 
-    it('should resolve successfully if VitestExpectedFailError is thrown.', async () => {
+    it('should resolve successfully if ExpectedFailError is thrown.', async () => {
       try {
         await expectSuccessfulFail(async () => {
           failSuccessfully(); // fail successfully.
@@ -239,7 +240,7 @@ describe('expectSuccessfulFail', () => {
       }
     });
 
-    it('should resolve successfully if VitestExpectedFailError is thrown in chain.', async () => {
+    it('should resolve successfully if ExpectedFailError is thrown in chain.', async () => {
       try {
         await expectSuccessfulFail(async () => {
           await Promise.resolve(0).then(() => {
@@ -254,14 +255,14 @@ describe('expectSuccessfulFail', () => {
 });
 
 describe('shouldFail()', () => {
-  function testFailureCaseWithFunction(describe: string, successfulFunction: VitestProvidesCallback) {
+  function testFailureCaseWithFunction(describe: string, successfulFunction: TestProvidesCallback) {
     it(describe, async () => {
       return shouldFail(successfulFunction)().then(
         () => {
           throw new Error('should have thrown an error.');
         },
         (e) => {
-          expect(e).not.toBeInstanceOf(VitestExpectedFailError);
+          expect(e).not.toBeInstanceOf(ExpectedFailError);
         }
       );
     });
@@ -316,7 +317,7 @@ describe('shouldFail()', () => {
       })
     );
 
-    testFailureCaseWithFunction('should fail if a promise is returned', ((done: VitestDoneCallback) => {
+    testFailureCaseWithFunction('should fail if a promise is returned', ((done: TestDoneCallback) => {
       return Promise.resolve(0 as any);
     }) as any);
 

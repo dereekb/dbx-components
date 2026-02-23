@@ -1,8 +1,8 @@
-import { makeTestBuilder, type TestVitestTestContextFixture } from './vitest.spec';
-import { type VitestTestWrappedContextFactoryBuilder, wrapVitestTestContextFactory } from './vitest.wrap';
+import { makeTestBuilder, type SharedTestContextFixture } from './shared.spec';
+import { type TestWrappedContextFactoryBuilder, wrapTestContextFactory } from './shared.wrap';
 
-export class WrappedTestVitestTestContextFixture {
-  constructor(readonly fixture: TestVitestTestContextFixture) {}
+export class WrappedTestSharedTestContextFixture {
+  constructor(readonly fixture: SharedTestContextFixture) {}
 }
 
 export interface WrappedTestConfigureWrapperExampleConfig {
@@ -11,24 +11,24 @@ export interface WrappedTestConfigureWrapperExampleConfig {
   onTeardown?: (effect: number) => void;
 }
 
-export function configureWrapperExample(config?: WrappedTestConfigureWrapperExampleConfig): VitestTestWrappedContextFactoryBuilder<WrappedTestVitestTestContextFixture, TestVitestTestContextFixture> {
-  return wrapVitestTestContextFactory<WrappedTestVitestTestContextFixture, TestVitestTestContextFixture, number>({
-    wrapFixture: (fixture) => new WrappedTestVitestTestContextFixture(fixture),
-    setupWrap: async (fixture: WrappedTestVitestTestContextFixture) => {
+export function configureWrapperExample(config?: WrappedTestConfigureWrapperExampleConfig): TestWrappedContextFactoryBuilder<WrappedTestSharedTestContextFixture, SharedTestContextFixture> {
+  return wrapTestContextFactory<WrappedTestSharedTestContextFixture, SharedTestContextFixture, number>({
+    wrapFixture: (fixture) => new WrappedTestSharedTestContextFixture(fixture),
+    setupWrap: async (fixture: WrappedTestSharedTestContextFixture) => {
       // Do nothing, but we could use the config here to initialize our new fixture for the tests it will be used it.
       config?.onSetup?.();
 
       // We return our effect. Is available within teardownWrap.
       return 0;
     },
-    teardownWrap: async (fixture: WrappedTestVitestTestContextFixture, effect: number) => {
+    teardownWrap: async (fixture: WrappedTestSharedTestContextFixture, effect: number) => {
       // Same here
       config?.onTeardown?.(effect);
     }
   });
 }
 
-describe('wrapVitestTestContextFactory()', () => {
+describe('wrapTestContextFactory()', () => {
   const testBuilder = makeTestBuilder();
 
   function makeWrapper() {

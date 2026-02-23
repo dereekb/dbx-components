@@ -1,6 +1,7 @@
-import { useVitestFunctionMapFixture } from './vitest.function';
+import { describe, it, expect } from 'vitest';
+import { useTestFunctionMapFixture } from './shared.function';
 
-describe('useVitestFunctionFixtureArray', () => {
+describe('useTestFunctionFixtureArray', () => {
   const config = {
     fns: {
       test: () => (input: string) => input.toUpperCase(),
@@ -8,7 +9,7 @@ describe('useVitestFunctionFixtureArray', () => {
     }
   };
 
-  useVitestFunctionMapFixture(config, (fns) => {
+  useTestFunctionMapFixture(config, (fns) => {
     it('should forward an object of results', () => {
       const value = 'hello';
       const result = fns.test(value);

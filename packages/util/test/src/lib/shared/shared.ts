@@ -3,46 +3,46 @@ import { type PromiseOrValue } from '@dereekb/util';
 /**
  * A fixture instance that is generated new for each test run.
  */
-export type VitestTestFixtureInstance<I> = I;
+export type TestFixtureInstance<I> = I;
 
 /**
  * The test fixture is used as a singleton across tests used in a single context.
  *
  * This allows us to define tests while referencing the instance.
  */
-export interface VitestTestFixture<I> {
-  readonly instance: VitestTestFixtureInstance<I>;
+export interface TestFixture<I> {
+  readonly instance: TestFixtureInstance<I>;
 }
 
-export type VitestTestContextFixtureClearInstanceFunction = () => void;
+export type TestContextFixtureClearInstanceFunction = () => void;
 
 /**
- * VitestTestFixture with additional functions that the VitestTestContextFactory sees for managing the instance.
+ * TestFixture with additional functions that the TestContextFactory sees for managing the instance.
  *
- * The fixture is used as a refernce point for the Instance that is changed between each test.
+ * The fixture is used as a reference point for the Instance that is changed between each test.
  */
-export interface VitestTestContextFixture<I> extends VitestTestFixture<I> {
+export interface TestContextFixture<I> extends TestFixture<I> {
   /**
    * Sets the instance before the tests run, and returns a function to clean the instance later.
    *
-   * If called again before the instance is finished being used, this should thrown an exception.
+   * If called again before the instance is finished being used, this should throw an exception.
    *
    * @param instance
    */
-  setInstance(instance: I): VitestTestContextFixtureClearInstanceFunction;
+  setInstance(instance: I): TestContextFixtureClearInstanceFunction;
 }
 
 /**
- * Abstract VitestTestContextFixture instance.
+ * Abstract TestContextFixture instance.
  */
-export abstract class AbstractVitestTestContextFixture<I> implements VitestTestContextFixture<I> {
+export abstract class AbstractTestContextFixture<I> implements TestContextFixture<I> {
   private _instance?: I;
 
   get instance(): I {
     return this._instance!;
   }
 
-  setInstance(instance: I): VitestTestContextFixtureClearInstanceFunction {
+  setInstance(instance: I): TestContextFixtureClearInstanceFunction {
     if (this._instance != null) {
       throw new Error(`The testing fixture is locked. Don't call setInstance() directly.`);
     }
@@ -56,29 +56,29 @@ export abstract class AbstractVitestTestContextFixture<I> implements VitestTestC
 }
 
 /**
- * Abstract VitestTestContextFixture instance with a parent.
+ * Abstract TestContextFixture instance with a parent.
  */
-export abstract class AbstractChildVitestTestContextFixture<I, P extends VitestTestContextFixture<any>> extends AbstractVitestTestContextFixture<I> {
+export abstract class AbstractChildTestContextFixture<I, P extends TestContextFixture<any>> extends AbstractTestContextFixture<I> {
   constructor(readonly parent: P) {
     super();
   }
 }
 
-export type VitestBuildTestsWithContextFunction<F> = (fixture: F) => void;
+export type BuildTestsWithContextFunction<F> = (fixture: F) => void;
 
 /**
- * Used for Vitest tests to execute a number of tests using the fixture.
+ * Used for tests to execute a number of tests using the fixture.
  *
  * The fixture is automatically setup and torn down each test per the configuration with a clean fixture instance.
  */
-export type VitestTestContextFactory<F> = (buildTests: VitestBuildTestsWithContextFunction<F>) => void;
+export type TestContextFactory<F> = (buildTests: BuildTestsWithContextFunction<F>) => void;
 
 /**
- * Used to configure a VitestTestContextFactory for building tests.
+ * Used to configure a TestContextFactory for building tests.
  */
-export type VitestTestContextBuilderFunction<I, F extends VitestTestContextFixture<I>, C> = (config?: Partial<C>) => VitestTestContextFactory<F>;
+export type TestContextBuilderFunction<I, F extends TestContextFixture<I>, C> = (config?: Partial<C>) => TestContextFactory<F>;
 
-export interface VitestTestContextBuilderConfig<I, F extends VitestTestContextFixture<I>, C> {
+export interface TestContextBuilderConfig<I, F extends TestContextFixture<I>, C> {
   /**
    * Builds a config given the optional, partial input config. This is used across all tests.
    */
@@ -113,16 +113,16 @@ export interface VitestTestContextBuilderConfig<I, F extends VitestTestContextFi
 }
 
 /**
- * Creates a VitestTestContextBuilderFunction given the input builder.
+ * Creates a TestContextBuilderFunction given the input builder.
  *
  * @param builder
  * @returns
  */
-export function vitestTestContextBuilder<I, F extends VitestTestContextFixture<I>, C>(builder: VitestTestContextBuilderConfig<I, F, C>): VitestTestContextBuilderFunction<I, F, C> {
+export function testContextBuilder<I, F extends TestContextFixture<I>, C>(builder: TestContextBuilderConfig<I, F, C>): TestContextBuilderFunction<I, F, C> {
   return (inputConfig?: Partial<C>) => {
     const config = builder.buildConfig(inputConfig);
 
-    return (buildTests: VitestBuildTestsWithContextFunction<F>) => {
+    return (buildTests: BuildTestsWithContextFunction<F>) => {
       const fixture = builder.buildFixture(config);
 
       // add before each
@@ -131,12 +131,12 @@ export function vitestTestContextBuilder<I, F extends VitestTestContextFixture<I
       }
 
       // add tests
-      useVitestContextFixture({
+      useContextFixture({
         fixture,
         /**
          * Build tests by passing the fixture to the testing functions.
          *
-         * This will inject all tests and sub Vitest lifecycle items.
+         * This will inject all tests and sub lifecycle items.
          */
         buildTests,
         initInstance: () => builder.setupInstance(config),
@@ -151,20 +151,20 @@ export function vitestTestContextBuilder<I, F extends VitestTestContextFixture<I
   };
 }
 
-export interface UseVitestContextFixture<C extends VitestTestContextFixture<I>, I> {
+export interface UseContextFixture<C extends TestContextFixture<I>, I> {
   readonly fixture: C;
-  readonly buildTests: VitestBuildTestsWithContextFunction<C>;
+  readonly buildTests: BuildTestsWithContextFunction<C>;
   initInstance(): PromiseOrValue<I>;
   destroyInstance?(instance: I): PromiseOrValue<void>;
 }
 
 /**
- * Creates a test context and vitest configurations that will initialize an instance
+ * Creates a test context and configurations that will initialize an instance
  */
-export function useVitestContextFixture<C extends VitestTestContextFixture<I>, I>(config: UseVitestContextFixture<C, I>): void {
+export function useContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;
 
-  let clearInstance: VitestTestContextFixtureClearInstanceFunction;
+  let clearInstance: TestContextFixtureClearInstanceFunction;
   let instance: I;
 
   // Create an instance

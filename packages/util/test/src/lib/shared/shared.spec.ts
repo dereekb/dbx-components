@@ -1,4 +1,4 @@
-import { AbstractVitestTestContextFixture, vitestTestContextBuilder, type VitestTestContextBuilderFunction } from './vitest';
+import { AbstractTestContextFixture, testContextBuilder, type TestContextBuilderFunction } from './shared';
 
 export interface TestConfig {
   a: string;
@@ -8,18 +8,18 @@ export class TestInstance {
   constructor(readonly config?: TestConfig) {}
 }
 
-export class TestVitestTestContextFixture extends AbstractVitestTestContextFixture<TestInstance> {}
+export class SharedTestContextFixture extends AbstractTestContextFixture<TestInstance> {}
 
 export function makeTestBuilder() {
-  return vitestTestContextBuilder<TestInstance, TestVitestTestContextFixture, TestConfig>({
+  return testContextBuilder<TestInstance, SharedTestContextFixture, TestConfig>({
     buildConfig: (input?: Partial<TestConfig>) => ({ a: '0', ...input }),
-    buildFixture: () => new TestVitestTestContextFixture(),
+    buildFixture: () => new SharedTestContextFixture(),
     setupInstance: async (config) => new TestInstance(config),
     teardownInstance: async () => undefined
   });
 }
 
-describe('vitestTestContextBuilder', () => {
+describe('TestContextBuilder', () => {
   it('should return a builder function', () => {
     const testBuilder = makeTestBuilder();
 
@@ -27,8 +27,8 @@ describe('vitestTestContextBuilder', () => {
     expect(typeof testBuilder).toBe('function');
   });
 
-  describe('VitestTestContextBuilderFunction', () => {
-    const testBuilder: VitestTestContextBuilderFunction<TestInstance, TestVitestTestContextFixture, TestConfig> = makeTestBuilder();
+  describe('TestContextBuilderFunction', () => {
+    const testBuilder: TestContextBuilderFunction<TestInstance, SharedTestContextFixture, TestConfig> = makeTestBuilder();
 
     it('should create a new test context with no config provided.', () => {
       const testContext = testBuilder();

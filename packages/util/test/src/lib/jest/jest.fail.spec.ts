@@ -1,5 +1,6 @@
 import { BaseError } from 'make-error';
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, type JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, type JestDoneCallback, JestExpectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
+import { failSuccessfully, expectSuccessfulFail, JestExpectedFailError, type JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, type JestDoneCallback, JestExpectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
+import { fakeDoneHandler, shouldFail } from '../shared/shared.fail';
 
 class TestError extends BaseError {}
 
@@ -172,90 +173,6 @@ describe('expectSuccessfulFail', () => {
       } catch (e) {
         failDueToSuccess();
       }
-    });
-  });
-});
-
-describe('shouldFail', () => {
-  function testFailureCaseWithFunction(describe: string, successfulFunction: JestProvidesCallback) {
-    it(describe, (done) => {
-      const fakeDone = fakeDoneHandler();
-      const { promise } = fakeDone;
-
-      shouldFail(successfulFunction)(fakeDone);
-
-      promise.then(
-        () => {
-          done.fail('should have thrown an error.');
-        },
-        (e) => {
-          expect(e).not.toBeInstanceOf(JestExpectedFailError);
-          done();
-        }
-      );
-    });
-  }
-
-  describe('with sync function', () => {
-    it(
-      'should pass if failSuccessfully() is called.',
-      shouldFail(() => {
-        failSuccessfully();
-      })
-    );
-
-    testFailureCaseWithFunction('should fail if another error occurs.', () => {
-      throw new Error('success');
-    });
-
-    testFailureCaseWithFunction('should fail if failSuccessfully() is not called within a sync function.', () => {
-      // synchronous return without done.
-    });
-  });
-
-  describe('with promise', () => {
-    it(
-      'should pass if failSuccessfully() is called.',
-      shouldFail(async () => {
-        failSuccessfully();
-      })
-    );
-
-    testFailureCaseWithFunction('should fail if another error occurs.', async () => {
-      return Promise.reject(new Error('success'));
-    });
-
-    testFailureCaseWithFunction('should fail if failSuccessfully() is not called within a promise-returning test.', () => {
-      return Promise.resolve(0);
-    });
-  });
-
-  describe('with done callback', () => {
-    it(
-      'should pass if failSuccessfully() is called.',
-      shouldFail((done) => {
-        failSuccessfully();
-      })
-    );
-
-    it(
-      'should pass if done.failSuccessfully() is called.',
-      shouldFail((done) => {
-        done.failSuccessfully();
-      })
-    );
-
-    testFailureCaseWithFunction('should fail if a promise is returned', ((done: JestDoneCallback) => {
-      return Promise.resolve(0 as any);
-    }) as any);
-
-    testFailureCaseWithFunction('should fail done returns an error', (done) => {
-      done(new Error('success'));
-    });
-
-    testFailureCaseWithFunction('should fail if failSuccessfully() is not called within a done-using test', (done) => {
-      // return success with done
-      done();
     });
   });
 });

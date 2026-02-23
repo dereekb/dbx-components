@@ -1,15 +1,19 @@
 /**
- * Vitest testing utilities for handling expected failures and errors.
+ * Testing utilities for handling expected failures and errors.
  */
 
 import { type Building, isPromise, promiseReference, type PromiseReference, type PromiseOrValue, build, type ClassType, type Maybe, type ClassLikeType } from '@dereekb/util';
-import { log } from 'console';
 import { BaseError } from 'make-error';
 
 // MARK: Types
-export type VitestDoneCallback = ((...args: any[]) => any) & {
+/**
+ * A done callback function used by test frameworks to signal that a test has completed.
+ *
+ * Most modern test frameworks have deprecated the "done" callback in favor of async/await.
+ */
+export type TestDoneCallback = ((...args: any[]) => any) & {
   /**
-   * NOTE: Not available in Vitest, but here for legacy purposes.
+   * NOTE: Not available in all test frameworks, but here for legacy purposes.
    *
    * @param error
    */
@@ -17,11 +21,11 @@ export type VitestDoneCallback = ((...args: any[]) => any) & {
 };
 
 /**
- * Passes the error to the VitestDoneCallback.
+ * Passes the error to the TestDoneCallback.
  * @param done
  * @param e
  */
-export function failWithVitestDoneCallback(done: VitestDoneCallback, e: unknown = new Error('failed test')) {
+export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = new Error('failed test')) {
   if (done.fail != null) {
     done.fail(e as Error);
   } else {
@@ -30,25 +34,25 @@ export function failWithVitestDoneCallback(done: VitestDoneCallback, e: unknown 
 }
 
 /**
- * @deprecated Vitest has deprecated the "done" callback in favor of async/await.
+ * @deprecated Most modern test frameworks have deprecated the "done" callback in favor of async/await.
  */
-export type VitestProvidesCallbackWithDone = (cb: VitestDoneCallback) => void | undefined;
-export type VitestProvidesCallback = VitestProvidesCallbackWithDone | (() => Promise<unknown>);
+export type TestProvidesCallbackWithDone = (cb: TestDoneCallback) => void | undefined;
+export type TestProvidesCallback = TestProvidesCallbackWithDone | (() => Promise<unknown>);
 
-export type VitestDoneCallbackRef = Omit<VitestDoneCallback, 'fail'> & {
+export type TestDoneCallbackRef = Omit<TestDoneCallback, 'fail'> & {
   readonly _promise: PromiseReference<void>;
-  readonly done: VitestDoneCallback;
+  readonly done: TestDoneCallback;
 };
 
 /**
- * Creates a new VitestDoneCallbackRef.
+ * Creates a new TestDoneCallbackRef.
  *
  * Used to create a promise reference that can be used to assert that a test function was called.
  */
-export function vitestDoneCallbackRef(): VitestDoneCallbackRef {
+export function testDoneCallbackRef(): TestDoneCallbackRef {
   const _promise = promiseReference<void>();
 
-  const done: VitestDoneCallback = (e?: any) => {
+  const done: TestDoneCallback = (e?: any) => {
     if (e) {
       _promise.reject(e);
     } else {
@@ -68,10 +72,10 @@ export function vitestDoneCallbackRef(): VitestDoneCallbackRef {
 /**
  * Error thrown by fail() and used by expectError()
  */
-export class VitestExpectedFailError extends BaseError {}
+export class ExpectedFailError extends BaseError {}
 
-export function failSuccessfullyError(message?: string): VitestExpectedFailError {
-  return new VitestExpectedFailError(message);
+export function failSuccessfullyError(message?: string): ExpectedFailError {
+  return new ExpectedFailError(message);
 }
 
 export function failSuccessfully(message?: string): never {
@@ -81,16 +85,16 @@ export function failSuccessfully(message?: string): never {
 /**
  * Error thrown when success occurs when it should not have.
  */
-export class VitestUnexpectedSuccessFailureError extends BaseError {}
+export class UnexpectedSuccessFailureError extends BaseError {}
 
-export function failDueToSuccessError(message?: string): VitestUnexpectedSuccessFailureError {
-  return new VitestUnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
+export function failDueToSuccessError(message?: string): UnexpectedSuccessFailureError {
+  return new UnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
 }
 
 /**
  * Error thrown when the error type was different than the expected type.
  */
-export class VitestExpectedErrorOfSpecificTypeError extends BaseError {
+export class ExpectedErrorOfSpecificTypeError extends BaseError {
   constructor(
     readonly encounteredType: unknown,
     readonly expectedType?: Maybe<ClassLikeType | string>
@@ -108,7 +112,7 @@ export function failDueToSuccess(): never {
 }
 
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
-  if (e instanceof VitestExpectedFailError) {
+  if (e instanceof ExpectedFailError) {
     // success
   } else {
     throw e;
@@ -119,43 +123,43 @@ export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
 /**
  * Used to assert additional information about the expected error.
  *
- * Can assert within this function, or return a boolean. A boolean returning false means the test should throw a VitestExpectedErrorOfSpecificTypeError.
+ * Can assert within this function, or return a boolean. A boolean returning false means the test should throw an ExpectedErrorOfSpecificTypeError.
  */
-export type VitestExpectFailAssertionFunction = (error: unknown) => PromiseOrValue<Maybe<boolean> | void>;
+export type ExpectFailAssertionFunction = (error: unknown) => PromiseOrValue<Maybe<boolean> | void>;
 
 /**
- * Creates a VitestExpectFailAssertionFunction that asserts the encountered error is of the expected type using the instanceof keyword.
+ * Creates an ExpectFailAssertionFunction that asserts the encountered error is of the expected type using the instanceof keyword.
  *
- * Throws a VitestExpectedErrorOfSpecificTypeError on failures.
+ * Throws an ExpectedErrorOfSpecificTypeError on failures.
  *
  * @param expectedType
  * @returns
  */
-export function vitestExpectFailAssertErrorType(expectedType: ClassType | ClassLikeType | typeof Error | any): VitestExpectFailAssertionFunction {
+export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeType | typeof Error | any): ExpectFailAssertionFunction {
   return (error: unknown) => {
     if (!(error instanceof expectedType)) {
-      throw new VitestExpectedErrorOfSpecificTypeError(error, expectedType);
+      throw new ExpectedErrorOfSpecificTypeError(error, expectedType);
     }
   };
 }
 
 /**
- * Function that expects any failure to be thrown, then throws a VitestExpectedFailError.
+ * Function that expects any failure to be thrown, then throws an ExpectedFailError.
  *
  * @param errorFn
  * @param handleError
  */
-export function expectFail(errorFn: () => void, assertFailType?: VitestExpectFailAssertionFunction): void;
-export function expectFail(errorFn: () => Promise<void>, assertFailType?: VitestExpectFailAssertionFunction): Promise<void>;
-export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, assertFailType?: VitestExpectFailAssertionFunction): PromiseOrValue<void> {
+export function expectFail(errorFn: () => void, assertFailType?: ExpectFailAssertionFunction): void;
+export function expectFail(errorFn: () => Promise<void>, assertFailType?: ExpectFailAssertionFunction): Promise<void>;
+export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, assertFailType?: ExpectFailAssertionFunction): PromiseOrValue<void> {
   function handleError(e: unknown) {
-    if (e instanceof VitestUnexpectedSuccessFailureError) {
+    if (e instanceof UnexpectedSuccessFailureError) {
       throw e;
     } else {
       const assertionResult = assertFailType?.(e);
 
       if (assertionResult === false) {
-        throw new VitestExpectedErrorOfSpecificTypeError(e);
+        throw new ExpectedErrorOfSpecificTypeError(e);
       }
 
       failSuccessfully();
@@ -176,7 +180,7 @@ export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, ass
 }
 
 /**
- * Function that expects a VitestExpectedFailError to be thrown.
+ * Function that expects an ExpectedFailError to be thrown.
  *
  * @param errorFn
  * @param handleError
@@ -198,16 +202,16 @@ export function expectSuccessfulFail<R extends PromiseOrValue<void>>(errorFn: ()
 }
 
 // MARK: ShouldFail
-export interface VitestShouldFailDoneCallback extends VitestDoneCallback {
+export interface ShouldFailDoneCallback extends TestDoneCallback {
   failSuccessfully(): void;
 }
 
-export type VitestShouldFailProvidesCallbackWithDone = (cb: VitestShouldFailDoneCallback) => void | undefined;
-export type VitestShouldFailProvidesCallbackWithResult = () => PromiseOrValue<unknown>;
-export type VitestShouldFailProvidesCallback = VitestShouldFailProvidesCallbackWithDone | VitestShouldFailProvidesCallbackWithResult;
+export type ShouldFailProvidesCallbackWithDone = (cb: ShouldFailDoneCallback) => void | undefined;
+export type ShouldFailProvidesCallbackWithResult = () => PromiseOrValue<unknown>;
+export type ShouldFailProvidesCallback = ShouldFailProvidesCallbackWithDone | ShouldFailProvidesCallbackWithResult;
 
 /**
- * Used to wrap a Vitest testing function and watch for VitestExpectedFailError errors in order to pass the test. Other exceptions are treated normally as failures.
+ * Used to wrap a testing function and watch for ExpectedFailError errors in order to pass the test. Other exceptions are treated normally as failures.
  *
  * This is typically used in conjunction with failSuccessfully(), expectSuccessfulFail(), or expectFail().
  *
@@ -215,16 +219,16 @@ export type VitestShouldFailProvidesCallback = VitestShouldFailProvidesCallbackW
  * @param strict
  * @returns
  */
-export function shouldFail(fn: VitestShouldFailProvidesCallback): () => Promise<unknown> {
+export function shouldFail(fn: ShouldFailProvidesCallback): () => Promise<unknown> {
   const usesDoneCallback = fn.length > 0;
 
-  // Return a function that checks arguments at runtime to avoid Vitest's done callback deprecation warning
+  // Return a function that checks arguments at runtime to avoid done callback deprecation warning
   return async function () {
-    const { done, _promise } = vitestDoneCallbackRef();
+    const { done, _promise } = testDoneCallbackRef();
 
     function handleError(e: unknown) {
-      if (!(e instanceof VitestExpectedFailError)) {
-        failWithVitestDoneCallback(done, e);
+      if (!(e instanceof ExpectedFailError)) {
+        failWithTestDoneCallback(done, e);
       } else {
         done();
       }
@@ -235,16 +239,16 @@ export function shouldFail(fn: VitestShouldFailProvidesCallback): () => Promise<
         let result: PromiseOrValue<any>;
 
         if (usesDoneCallback) {
-          const fakeDone = build<VitestShouldFailDoneCallback & VitestFakeDoneHandler>({
+          const fakeDone = build<ShouldFailDoneCallback & FakeDoneHandler>({
             base: fakeDoneHandler(),
             build: (x) => {
               x.failSuccessfully = () => {
-                (fakeDone as VitestFakeDoneHandler)(failSuccessfullyError());
+                (fakeDone as FakeDoneHandler)(failSuccessfullyError());
               };
             }
           });
 
-          const callbackWithDoneResult = (fn as VitestProvidesCallbackWithDone)(fakeDone as unknown as VitestShouldFailDoneCallback);
+          const callbackWithDoneResult = (fn as TestProvidesCallbackWithDone)(fakeDone as unknown as ShouldFailDoneCallback);
 
           if (isPromise(callbackWithDoneResult)) {
             fakeDone.reject(new Error('Configured to use "done" value while returning a promise. Configure your test to use one or the other.'));
@@ -253,7 +257,7 @@ export function shouldFail(fn: VitestShouldFailProvidesCallback): () => Promise<
           // return the fake done promise. Done/fail will resolve as a promise.
           result = fakeDone._ref.promise;
         } else {
-          result = (fn as VitestShouldFailProvidesCallbackWithResult)();
+          result = (fn as ShouldFailProvidesCallbackWithResult)();
         }
 
         return result;
@@ -273,9 +277,9 @@ export function shouldFail(fn: VitestShouldFailProvidesCallback): () => Promise<
 }
 
 // MARK: It
-export function itShouldFail(fn: VitestShouldFailProvidesCallback): void;
-export function itShouldFail(describe: string, fn: VitestShouldFailProvidesCallback): void;
-export function itShouldFail(describeOrFn: string | VitestShouldFailProvidesCallback, fn?: VitestShouldFailProvidesCallback): void {
+export function itShouldFail(fn: ShouldFailProvidesCallback): void;
+export function itShouldFail(describe: string, fn: ShouldFailProvidesCallback): void;
+export function itShouldFail(describeOrFn: string | ShouldFailProvidesCallback, fn?: ShouldFailProvidesCallback): void {
   let description;
 
   if (typeof describeOrFn === 'string') {
@@ -285,15 +289,15 @@ export function itShouldFail(describeOrFn: string | VitestShouldFailProvidesCall
     description = 'should fail';
   }
 
-  it(description, shouldFail(fn as VitestShouldFailProvidesCallback));
+  it(description, shouldFail(fn as ShouldFailProvidesCallback));
 }
 
 // MARK: Fake Done
-export interface VitestFakeDoneHandler extends VitestDoneCallback, PromiseReference {
+export interface FakeDoneHandler extends TestDoneCallback, PromiseReference {
   _ref: PromiseReference;
 }
 
-export function fakeDoneHandler(): VitestFakeDoneHandler {
+export function fakeDoneHandler(): FakeDoneHandler {
   const promiseRef = promiseReference();
 
   const doneHandler = promiseRef.resolve;
@@ -301,7 +305,7 @@ export function fakeDoneHandler(): VitestFakeDoneHandler {
     promiseRef.reject(e);
   };
 
-  const fakeDone: Building<VitestFakeDoneHandler> = (error?: string | { message: string }) => {
+  const fakeDone: Building<FakeDoneHandler> = (error?: string | { message: string }) => {
     if (error) {
       failHandler(error);
     } else {
@@ -318,5 +322,5 @@ export function fakeDoneHandler(): VitestFakeDoneHandler {
   fakeDone.resolve = promiseRef.resolve;
   fakeDone.reject = promiseRef.reject;
 
-  return fakeDone as VitestFakeDoneHandler;
+  return fakeDone as FakeDoneHandler;
 }

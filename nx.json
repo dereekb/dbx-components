@@ -65,6 +65,10 @@
     "@nx/eslint:lint": {
       "inputs": ["default", "{workspaceRoot}/.eslintignore", "{workspaceRoot}/.eslintrc.json"],
       "cache": true
+    },
+    "@nx/vitest:test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
     }
   },
   "generators": {
