@@ -20,9 +20,3 @@ export class DbxListGridViewDirectiveImportsModule {}
 export abstract class AbstractDbxListGridViewDirective<T> extends AbstractDbxListViewDirective<T> {
   abstract readonly config: DbxValueListGridViewConfig<DbxValueAsListItem<T>>;
 }
-
-// MARK: Compat
-/**
- * @deprecated Use DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE instead.
- */
-export const DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE = DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE;

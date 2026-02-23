@@ -44,17 +44,12 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   readonly selectionMode = input<Maybe<DbxListSelectionMode>>();
   readonly state = input<Maybe<ObservableOrValue<S>>>();
 
-  /**
-   * @deprecated use state as the input instead.
-   */
-  readonly deprecatedInputState$ = input<Maybe<Observable<S>>>(undefined, { alias: 'state$' });
-
   readonly selectionModeSignal: Signal<Maybe<DbxListSelectionMode>> = computed(() => {
     return this._selectionModeOverrideSignal() ?? this.selectionMode();
   });
 
-  readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state), toObservable(this.deprecatedInputState$)]).pipe(
-    map(([stateOverride, state, state$]) => stateOverride ?? state ?? state$),
+  readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state)]).pipe(
+    map(([stateOverride, state]) => stateOverride ?? state),
     maybeValueFromObservableOrValue(),
     shareReplay(1)
   );
@@ -107,9 +102,3 @@ export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxL
     return result;
   }
 }
-
-// MARK: COMPAT
-/**
- * @deprecated update components to use DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION instead of just referencing only the template and DbxListWrapperComponentImportsModule.
- */
-export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE;

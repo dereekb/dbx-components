@@ -1087,27 +1087,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly clearDrawerContent = this.updater((state) => setDrawerContent(state, undefined));
   readonly setDrawerContent = this.updater(setDrawerContent);
-
-  // MARK: Compat
-  /**
-   * @deprecated use drawerContent$ instead.
-   */
-  readonly content$ = this.drawerContent$;
-
-  /**
-   * @deprecated use hasDrawerContent$ instead.
-   */
-  readonly hasContent$ = this.hasDrawerContent$;
-
-  /**
-   * @deprecated use clearDrawerContent instead.
-   */
-  readonly clearContent = this.updater((state) => setDrawerContent(state, undefined));
-
-  /**
-   * @deprecated use setDrawerContent instead.
-   */
-  readonly setContent = this.updater(setDrawerContent);
 }
 
 function setDrawerContent(state: DbxMapboxStoreState, drawerContent: Maybe<DbxInjectionComponentConfig<unknown>>) {

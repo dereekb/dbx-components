@@ -7,7 +7,7 @@ import { DocExtensionHomeComponent } from './container/home.component';
 import { DocExtensionLayoutComponent } from './container/layout.component';
 import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { STATES } from './doc.extension.router';
-import { DbxDownloadTextModule, DbxWidgetModule, DbxWidgetService, DbxHelpWidgetService } from '@dereekb/dbx-web';
+import { DbxDownloadTextViewComponent, DbxWidgetViewComponent, DbxWidgetListGridComponent, DbxWidgetListGridViewComponent, DbxWidgetListGridViewItemComponent, DbxWidgetService, DbxHelpWidgetService } from '@dereekb/dbx-web';
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
 import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
@@ -18,7 +18,7 @@ import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { DbxTableDateModule, DbxTableModule } from '@dereekb/dbx-web/table';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
-import { DbxCalendarModule } from '@dereekb/dbx-web/calendar';
+import { DbxCalendarBaseComponent, DbxCalendarComponent } from '@dereekb/dbx-web/calendar';
 import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
 import { DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
@@ -40,13 +40,17 @@ import { DocExtensionHelpListBottomExampleComponent } from './component/help.lis
 
 @NgModule({
   imports: [
-    DbxCalendarModule,
+    DbxCalendarBaseComponent,
+    DbxCalendarComponent,
     DbxFormCalendarModule,
     DbxFormDateScheduleRangeFieldModule,
-    DbxWidgetModule,
+    DbxDownloadTextViewComponent,
+    DbxWidgetViewComponent,
+    DbxWidgetListGridComponent,
+    DbxWidgetListGridViewComponent,
+    DbxWidgetListGridViewItemComponent,
     DbxMapboxModule,
     DbxFormMapboxModule,
-    DbxDownloadTextModule,
     DbxTableModule,
     DbxTableDateModule,
     UIRouterModule.forChild({

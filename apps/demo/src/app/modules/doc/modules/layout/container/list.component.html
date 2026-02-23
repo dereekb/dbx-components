@@ -15,7 +15,7 @@
         </div>
 
         <div style="height: 200px">
-          <doc-complex-item-list [selectionMode]="selectionMode$ | async" [state$]="stateWithSelection$">
+          <doc-complex-item-list [selectionMode]="selectionMode$ | async" [state]="stateWithSelection$">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-complex-item-list>
         </div>
@@ -25,7 +25,7 @@
         <p>When the selection mode is set to "view", it will render items within a dbx-list-view instead. This lets you get the benefit of being able to turn the selection on/off without having to create another set of components.</p>
 
         <div style="height: 200px">
-          <doc-complex-item-list [state$]="stateWithSelection$" selectionMode="view">
+          <doc-complex-item-list [state]="stateWithSelection$" selectionMode="view">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-complex-item-list>
         </div>
@@ -38,7 +38,7 @@
         <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
         <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
         <div style="height: 400px">
-          <doc-item-list-grid [state$]="stateWithAnchors$" (loadMore)="loadMore()" (clickItem)="onPlainClick($event)">
+          <doc-item-list-grid [state]="stateWithAnchors$" (loadMore)="loadMore()" (clickItem)="onPlainClick($event)">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-item-list-grid>
         </div>
@@ -47,7 +47,7 @@
         <p>This directive allows changing the grid sizing of any child list grid. It is merged with the default configuration.</p>
         <p>The example grid below has a larger gap and smaller column size compared to the previous example.</p>
         <div style="height: 400px">
-          <doc-item-list-grid [dbxListGridSize]="customGridSize" [state$]="stateWithAnchors$" (loadMore)="loadMore()" (clickItem)="onPlainClick($event)">
+          <doc-item-list-grid [dbxListGridSize]="customGridSize" [state]="stateWithAnchors$" (loadMore)="loadMore()" (clickItem)="onPlainClick($event)">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-item-list-grid>
         </div>
@@ -58,33 +58,33 @@
 
         <p>Clicked: {{ clickedModifiedAnchorItem | json }}</p>
         <div style="height: 200px">
-          <doc-complex-item-list [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
+          <doc-complex-item-list [state]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
         </div>
 
         <h4>dbxListItemAnchorModifier</h4>
         <p>Used with dbxListItemModifier to set the anchor value on the list item using the itemValue of the list item.</p>
         <p>Clicked: {{ clickedModifiedAnchorItem | json }}</p>
         <div style="height: 200px">
-          <doc-complex-item-list [state$]="stateWithAnchors$" dbxListItemModifier [dbxListItemAnchorModifier]="makeClickAnchor"></doc-complex-item-list>
+          <doc-complex-item-list [state]="stateWithAnchors$" dbxListItemModifier [dbxListItemAnchorModifier]="makeClickAnchor"></doc-complex-item-list>
         </div>
 
         <h4>dbxListItemSelectionModifier</h4>
         <p>Used with dbxListItemModifier to change the selection of items. Is typically used in cases where items with a specific key or index are "selected".</p>
         <p>This example sets all items to be selected.</p>
         <div style="height: 200px">
-          <doc-complex-item-list [state$]="stateWithSelection$" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunction"></doc-complex-item-list>
+          <doc-complex-item-list [state]="stateWithSelection$" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunction"></doc-complex-item-list>
         </div>
       </doc-feature-example>
 
       <doc-feature-example header="dbxListItemDisableRippleModifier" hint="Used to disable ripples conditionally on a per-item basis using a function.">
         <div style="height: 200px">
-          <doc-complex-item-list dbxListItemModifier [dbxListItemDisableRippleModifier]="disableAllRipples" [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
+          <doc-complex-item-list dbxListItemModifier [dbxListItemDisableRippleModifier]="disableAllRipples" [state]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
         </div>
       </doc-feature-example>
 
       <doc-feature-example header="dbxListTitleGroup" hint="Basic DbxListTitleGroupDirective that allows you to group items by a value. The presentation by default is only a title and hint text.">
         <div style="height: 200px">
-          <doc-complex-item-list selectionMode="view" [dbxListTitleGroup]="dbxListTitleGroupDelegate" [state$]="stateWithAnchors$"></doc-complex-item-list>
+          <doc-complex-item-list selectionMode="view" [dbxListTitleGroup]="dbxListTitleGroupDelegate" [state]="stateWithAnchors$"></doc-complex-item-list>
         </div>
       </doc-feature-example>
 
@@ -95,7 +95,7 @@
         <p>Selected: {{ selectionState | json }}</p>
         <p>Values: {{ count$ | async }}</p>
         <div style="height: 200px">
-          <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
+          <doc-item-list [state]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
             <p top>This is the top.</p>
             <p bottom>This is the bottom.</p>
           </doc-item-list>
@@ -103,7 +103,7 @@
 
         <h4>Static List</h4>
         <div style="height: 200px">
-          <doc-item-list [state$]="staticState$">
+          <doc-item-list [state]="staticState$">
             <p top>This is the top.</p>
             <p bottom>This is the bottom.</p>
           </doc-item-list>
@@ -116,7 +116,7 @@
         <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
         <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
         <div style="height: 200px">
-          <doc-custom-item-list [state$]="stateWithAnchors$" (clickItem)="onPlainClick($event)">
+          <doc-custom-item-list [state]="stateWithAnchors$" (clickItem)="onPlainClick($event)">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-custom-item-list>
         </div>
@@ -125,7 +125,7 @@
         <p>The list view uses mat-nav-list internally, which displays a ripple on items that are clicked.</p>
         <p>Ripples are disabled for items when a list has emitAllClicks=false configured on it or the items have no anchor. Items that are disabled also do not have a ripple.</p>
         <div style="height: 200px">
-          <doc-custom-item-list [state$]="state$"></doc-custom-item-list>
+          <doc-custom-item-list [state]="state$"></doc-custom-item-list>
         </div>
         <p>The dbxListItemDisableRippleModifier can also be used to disable ripples on models.</p>
 
@@ -133,12 +133,12 @@
         <p>The list view uses mat-nav-list internally, which displays a hover over effect on the mat items by default.</p>
         <p>These can be disabled by adding the dbx-list-no-hover-effects CSS class.</p>
         <div style="height: 200px">
-          <doc-custom-item-list class="dbx-list-no-hover-effects" [state$]="state$"></doc-custom-item-list>
+          <doc-custom-item-list class="dbx-list-no-hover-effects" [state]="state$"></doc-custom-item-list>
         </div>
 
         <h4>.dbx-list-empty-content</h4>
         <p>Stying component that can be used to for the empty state.</p>
-        <doc-custom-item-list [state$]="emptyResult$">
+        <doc-custom-item-list [state]="emptyResult$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text</p>
           </dbx-list-empty-content>
@@ -146,13 +146,13 @@
 
         <h4>Loading</h4>
         <p>Permenant Loading State</p>
-        <doc-complex-item-list [state$]="statePermanentlyLoading$">
+        <doc-complex-item-list [state]="statePermanentlyLoading$">
           <dbx-list-empty-content emptyLoading>
             <p>This should appear while the list is empty and loading...</p>
           </dbx-list-empty-content>
         </doc-complex-item-list>
         <p>Loading After Non-empty Result Passed (Test)</p>
-        <doc-complex-item-list [state$]="statePermanentlyLoadingAfterNonEmptyResult$">
+        <doc-complex-item-list [state]="statePermanentlyLoadingAfterNonEmptyResult$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text (Should not be visible)</p>
           </dbx-list-empty-content>
@@ -161,7 +161,7 @@
           </dbx-list-empty-content>
         </doc-complex-item-list>
         <p>Not Loading After Non-empty Result Passed (Test)</p>
-        <doc-complex-item-list [state$]="stateWithNonEmptyResult$">
+        <doc-complex-item-list [state]="stateWithNonEmptyResult$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text (Should not be visible)</p>
           </dbx-list-empty-content>
@@ -170,7 +170,7 @@
           </dbx-list-empty-content>
         </doc-complex-item-list>
         <p>After Empty Result Passed (Test)</p>
-        <doc-complex-item-list [state$]="statePermanentlyLoadingAfterEmptyResult$">
+        <doc-complex-item-list [state]="statePermanentlyLoadingAfterEmptyResult$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text (Should not be visible)</p>
           </dbx-list-empty-content>
@@ -179,7 +179,7 @@
           </dbx-list-empty-content>
         </doc-complex-item-list>
         <p>After Empty Result Passed with empty value (Test)</p>
-        <doc-complex-item-list [state$]="statePermanentlyLoadingAfterEmptyResultWithEmptyValue$">
+        <doc-complex-item-list [state]="statePermanentlyLoadingAfterEmptyResultWithEmptyValue$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text (Should not be visible)</p>
           </dbx-list-empty-content>
