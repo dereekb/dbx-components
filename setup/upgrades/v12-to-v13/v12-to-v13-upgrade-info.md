@@ -77,3 +77,186 @@ You'll need to specify the following overrides in `package.json`:
 - Removed. Will be using Nx Release tools from now on since Nx has updating release tooling.
 - See https://nx.dev/docs/features/manage-releases for more info
 - You can use the [nx-release-migration.md](nx-release-migration.md) file to help you migrate.
+
+### Breaking Changes and Removing Deprecated Code
+
+#### @dereekb/util
+
+**Removed deprecated type aliases and functions:**
+- `UnixTimeNumber` type alias removed - use `UnixDateTimeNumber` instead
+- `timer` constant alias removed - use `makeTimer` instead
+- `filterMaybeValues` and `filterEmptyValues` aliases removed - use their non-aliased equivalents
+- `BooleanStringKeyArrayUtilityInstance` alias removed
+- `objectToTuples` function removed - use `Object.entries` instead
+- `MimeTypeForImageTypeInputType` and `mimetypeForImageType` removed
+- `PromiseAsyncTaskFn` type alias removed
+- `FetchPageResults` type alias removed
+- `nodeFetchService` constant alias removed
+- `filterNullAndUndefinedValues` option removed from fetch.url
+- `flattenTrees` function removed - `FlattenTreeFunction` now supports arrays directly
+- `PageCalculator` class and file completely removed
+
+**BREAKING CHANGE: Date and Unix Time Types**
+- `DateOrUnixDateTimeNumber` replaced with `DateOrUnixDateTimeMillisecondsNumber`
+- `UnixDateTimeMillisecondsNumber` replaced with `UnixDateTimeNumber`
+
+#### @dereekb/date
+
+**Removed DST-unsafe deprecated functions:**
+- `takeNextUpcomingTime`
+- `copyHoursAndMinutesFromDateToToday`
+- `copyHoursAndMinutesFromNow`
+- `copyHoursAndMinutesFromDate`
+
+**Removed deprecated formatting aliases:**
+- `toISO8601DayString`
+- `formatToISO8601DayString`
+- `dateShortDateStringFormat`
+
+**Removed expires functions (moved to @dereekb/rxjs):**
+- `atleastOneNotExpired`
+- `anyHaveExpired`
+- `timeHasExpired`
+- `toExpires`
+- `hasExpired`
+- `getExpiration`
+
+**Note:** RxJS expiration operators have been migrated to `@dereekb/rxjs/expires`. The `date/expires.rxjs` module now re-exports from the new location with deprecation notices.
+
+#### @dereekb/rxjs
+
+**Removed deprecated loading state aliases (18 functions):**
+- `unknownLoadingStatesIsLoading`
+- `allLoadingStatesHaveFinishedLoading`
+- `loadingStateIsIdle`
+- `isSuccessLoadingState`
+- `isErrorLoadingState`
+- `loadingStateIsLoading`
+- `loadingStateHasFinishedLoading`
+- `loadingStateHasError`
+- `loadingStateHasValue`
+- `loadingStateHasFinishedLoadingWithValue`
+- `loadingStateHasFinishedLoadingWithError`
+- `loadingStatesHaveEquivalentMetadata`
+- `LoadingStateWithMaybeSoValue`
+- `updatedStateForSetLoading`
+- `updatedStateForSetValue`
+- `updatedStateForSetError`
+
+**Removed deprecated properties:**
+- `showLoadingOnNoValue` property from loading.context.state
+- `initialFilterTakesPriority` setter from filter.source
+
+**Removed deprecated function aliases:**
+- `listLoadingStateIsEmpty` and `isListLoadingStateEmpty`
+- `switchMapMaybeObs` and `skipFirstMaybe`
+- `mapPageItemIteration`
+
+#### @dereekb/dbx-core
+
+**Deleted 10 deprecated NgModule files:**
+- `auth/auth.module.ts`
+- `context/context.module.ts`
+- `injection/injection.component.module.ts`
+- `pipe/async/async.pipe.module.ts`
+- `pipe/date/date.pipe.module.ts`
+- `pipe/misc/misc.pipe.module.ts`
+- `pipe/pipe.module.ts`
+- `pipe/value/value.pipe.module.ts`
+- `router/model/model.module.ts`
+- `router/router/provider/uirouter/uirouter.router.service.module.ts`
+
+**Removed deprecated directive classes:**
+- `AbstractSubscriptionDirective` from rxjs/rxjs.directive
+- `AbstractLockSetSubscriptionDirective` from rxjs/rxjs.directive
+
+**Removed deprecated properties:**
+- `initialFilterTakesPriority` setter from filter.abstract.source.directive
+
+#### @dereekb/dbx-web
+
+**Deleted 11 deprecated NgModule files:**
+- `calendar/calendar.module.ts`
+- `action/transition/action.transition.module.ts`
+- `extension/download/text/download.text.module.ts`
+- `extension/widget/widget.module.ts`
+- `keypress/keypress.module.ts`
+- `layout/block/block.layout.module.ts`
+- `layout/list/list.layout.module.ts`
+- `router/layout/anchorlist/anchorlist.module.ts`
+- `router/layout/list/list.module.ts`
+- `router/layout/navbar/navbar.module.ts`
+
+**BREAKING CHANGE: DbxSetStyleDirective**
+- Now has a new mode - by default sets style to self (not global/body)
+- Use the new mode parameter to control where styles are applied
+
+**BREAKING CHANGE: Color system changes**
+- Renamed `dbx-bg` to `dbx-default`
+- Removed `dbx-bg` color
+- Added `--dbx-color-bg` and `--dbx-color` CSS variables
+
+**Removed deprecated code:**
+- `deprecated.table.reader.cached.ts` file deleted
+- Deprecated inputs from `keydown.listener.directive.ts`: `appWindowKeyDownEnabled`, `appWindowKeyDownFilter`
+- Deprecated aliases from `mapbox.store.ts`: `content$`, `hasContent$`, `clearContent`, `setContent`
+- Deprecated template constants and `deprecatedInputState$` from list directives
+
+#### @dereekb/dbx-form
+
+**Deleted 8 deprecated NgModule files:**
+- `form/action/form.action.module.ts`
+- `form/action/transition/form.action.transition.module.ts`
+- `form/io/form.io.module.ts`
+- `formly/field/selection/selection.module.ts`
+- `formly/field/value/value.module.ts`
+- `formly/form/form.form.module.ts`
+- `formly/formly.module.ts`
+- `layout/form.layout.module.ts`
+
+**BREAKING CHANGE: Material Slider**
+- Angular Material changed the `thumbLabel` property to `discrete`
+- Update all slider configurations to use the new property name
+
+#### @dereekb/firebase
+
+**Removed deprecated constants and types:**
+- `notificationTemplateTypeDetailsRecord` constant
+- `StorageFileProcessingNotificationTaskCheckpoint` type and related constants
+- Typo function: `filterDisallowedFirestoreItemPageIteratorInputContraints`
+- `dontStoreIfValue` property (deprecated)
+
+#### @dereekb/firebase-server
+
+**BREAKING CHANGE: Firebase Functions v1 removed**
+- Deleted all Firebase Functions v1 files:
+  - `nest/function/v1/call.ts`
+  - `nest/function/v1/event.ts`
+  - `nest/function/v1/schedule.ts`
+- All code must now use Firebase Functions v2
+
+**Completed purpose→target migration:**
+- Removed deprecated `purpose` property from `StorageFileProcessingPurposeSubtaskInput`
+- Use `target` property instead
+
+**Removed deprecated constants and properties:**
+- Typo constant: `FIRESTBASE_SERVER_VALIDATION_ERROR_CODE`
+- Deprecated `crud` property removed
+
+#### @dereekb/dbx-firebase
+
+**Deleted 11 deprecated NgModule files:**
+- `auth/firebase.auth.module.ts`
+- `auth/login/firebase.login.module.ts`
+- `firebase/firebase.emulator.module.ts`
+- `firebase/firebase.module.ts`
+- `firestore/firebase.firestore.module.ts`
+- `function/firebase.function.module.ts`
+- `model/model.types.module.ts`
+- `model/modules/model/history/model.history.module.ts`
+- `modules/notification/notification.module.ts`
+- `pipe/pipe.module.ts`
+- `storage/firebase.storage.module.ts`
+
+**Removed deprecated types:**
+- `DbxFirebaseOptions` type removed
