@@ -4,7 +4,7 @@ import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../../layout/style/style';
 import { type DbxButtonType } from '../button';
-import { type DbxButtonWorking, type DbxButtonWorkingProgress } from '@dereekb/dbx-core';
+import { type DbxButtonWorking } from '@dereekb/dbx-core';
 
 export interface DbxProgressButtonConfig {
   readonly working?: Maybe<DbxButtonWorking>;
@@ -13,6 +13,7 @@ export interface DbxProgressButtonConfig {
   readonly buttonColor?: Maybe<ThemePalette | DbxThemeColor>;
   readonly spinnerColor?: Maybe<ThemePalette | DbxThemeColor>;
   readonly barColor?: Maybe<ThemePalette | DbxThemeColor>;
+
   /**
    * Only renders the icon button.
    */
@@ -20,10 +21,7 @@ export interface DbxProgressButtonConfig {
   readonly spinnerSize?: Maybe<number>;
   readonly spinnerRatio?: Maybe<number>;
   readonly mode?: Maybe<ProgressSpinnerMode>;
-  /**
-   * @deprecated use working instead
-   */
-  readonly value?: Maybe<DbxButtonWorkingProgress>;
+
   readonly fullWidth?: Maybe<boolean>;
   readonly disabled?: Maybe<boolean>;
   readonly customStyle?: Maybe<{ [key: string]: string }>;
@@ -34,6 +32,7 @@ export interface DbxProgressButtonConfig {
   readonly customSpinnerColor?: Maybe<string>;
   readonly buttonIcon?: Maybe<DbxProgressButtonIcon>;
   readonly id?: Maybe<string>;
+
   /**
    * The type of button to render.
    */
@@ -45,27 +44,9 @@ export interface DbxProgressButtonConfig {
   readonly buttonTypeAttribute?: Maybe<string>;
 
   /**
-   * @deprecated use buttonType=raised instead
-   */
-  readonly raised?: Maybe<boolean>;
-  /**
-   * @deprecated use buttonType=stroked instead
-   */
-  readonly stroked?: Maybe<boolean>;
-  /**
-   * @deprecated use buttonType=flat instead
-   */
-  readonly flat?: Maybe<boolean>;
-
-  /**
    * Whether or not this is a floating action button.
    */
   readonly fab?: Maybe<boolean>;
-
-  /**
-   * @deprecated use buttonTypeAttribute instead
-   */
-  readonly type?: Maybe<string>;
 }
 
 export interface DbxProgressButtonIcon {
@@ -84,9 +65,3 @@ export interface DbxProgressButtonTargetedConfig extends DbxProgressButtonConfig
 export type DbxProgressButtonGlobalConfig = DbxProgressButtonTargetedConfig[];
 
 export const DBX_PROGRESS_BUTTON_GLOBAL_CONFIG = new InjectionToken<DbxProgressButtonGlobalConfig>('DbxProgressButtonGlobalConfig');
-
-// MARK: Compat
-/**
- * @deprecated use DbxProgressButtonConfig instead.
- */
-export type DbxProgressButtonOptions = DbxProgressButtonConfig;

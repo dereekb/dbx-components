@@ -60,16 +60,10 @@ export abstract class AbstractProgressButtonDirective {
 
     let buttonType: DbxButtonType = 'basic';
 
-    if (config?.buttonType) {
-      buttonType = config.buttonType;
-    } else if (config?.raised) {
-      buttonType = 'raised';
-    } else if (config?.stroked) {
-      buttonType = 'stroked';
-    } else if (config?.flat) {
-      buttonType = 'flat';
-    } else if (config?.iconOnly) {
+    if (config?.iconOnly) {
       buttonType = 'icon';
+    } else if (config?.buttonType) {
+      buttonType = config.buttonType;
     }
 
     switch (buttonType) {
@@ -81,6 +75,9 @@ export abstract class AbstractProgressButtonDirective {
         break;
       case 'flat':
         classes.push('mat-mdc-unelevated-button mdc-button--unelevated');
+        break;
+      case 'tonal':
+        classes.push('mat-mdc-tonal-button mdc-button--tonal');
         break;
       default:
         classes.push('mat-unthemed');
@@ -97,7 +94,7 @@ export abstract class AbstractProgressButtonDirective {
     const config = this.configSignal();
     const configWorking = config?.working;
 
-    const workingProgress = dbxActionWorkProgress([working, configWorking], config?.value);
+    const workingProgress = dbxActionWorkProgress([working, configWorking]);
     return workingProgress;
   });
 
@@ -142,7 +139,7 @@ export abstract class AbstractProgressButtonDirective {
 
   readonly buttonTypeAttributeSignal = computed(() => {
     const options = this.configSignal();
-    return options?.buttonTypeAttribute ?? options?.type;
+    return options?.buttonTypeAttribute;
   });
 
   readonly buttonDisabledSignal = computed(() => {

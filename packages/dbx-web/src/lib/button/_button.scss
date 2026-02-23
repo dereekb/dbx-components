@@ -99,6 +99,7 @@ $big-button-height: 46px; // 33% bigger
       --mat-button-text-label-text-color: #{$color-value};
       --mat-button-text-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
       --mat-button-text-state-layer-color: #{$color-value};
+      --mat-progress-spinner-active-indicator-color: #{$color-value};
     }
 
     // raised buttons
@@ -111,7 +112,6 @@ $big-button-height: 46px; // 33% bigger
       --mat-button-protected-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
 
       // --mdc-circular-progress-active-indicator-color: #{$color-value};
-      --mat-progress-spinner-active-indicator-color: #{$color-value};
 
       &.mat-mdc-button-disabled {
         background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
@@ -152,8 +152,10 @@ $big-button-height: 46px; // 33% bigger
     }
 
     // tonal buttons
-    &.mat-mdc-tonal-button {
-      --mat-button-tonal-container-color: #{$color-value};
+    &.mat-mdc-tonal-button:not(.dbx-default) {
+      background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
+
+      --mat-button-tonal-container-color: color-mix(in srgb, #{$color-value} 12%, transparent);
       --mat-button-tonal-label-text-color: #{$contrast-value};
       --mat-button-tonal-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
       --mat-button-tonal-state-layer-color: #{$contrast-value};

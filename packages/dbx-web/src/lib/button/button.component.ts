@@ -57,6 +57,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly customSpinnerColor = input<Maybe<string>>();
 
   readonly basic = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly tonal = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly raised = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly stroked = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
@@ -72,14 +73,16 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     if (!type) {
       type = 'basic';
 
-      if (this.raised()) {
+      if (this.iconOnly()) {
+        type = 'icon';
+      } else if (this.raised()) {
         type = 'raised';
       } else if (this.stroked()) {
         type = 'stroked';
       } else if (this.flat()) {
         type = 'flat';
-      } else if (this.iconOnly()) {
-        type = 'icon';
+      } else if (this.tonal()) {
+        type = 'tonal';
       }
     }
 

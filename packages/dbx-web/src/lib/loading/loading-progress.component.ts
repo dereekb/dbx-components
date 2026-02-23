@@ -5,6 +5,7 @@ import { MatProgressSpinner, ProgressSpinnerMode } from '@angular/material/progr
 import { type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../layout/style/style';
 import { NgClass } from '@angular/common';
+import { DbxColorDirective } from '../layout/style/style.color.directive';
 
 export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
 
@@ -14,13 +15,13 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
 @Component({
   selector: 'dbx-loading-progress',
   template: `
-    <div class="loading-progress-view">
+    <div [dbxColor]="color()" class="loading-progress-view">
       @switch (linear()) {
         @case (true) {
-          <mat-progress-bar [mode]="bmode()" [color]="color()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
+          <mat-progress-bar [mode]="bmode()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
         }
         @default {
-          <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smode()" [color]="color()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
+          <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smode()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
         }
       }
       @if (text()) {
@@ -28,7 +29,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
       }
     </div>
   `,
-  imports: [MatProgressBar, MatProgressSpinner, NgClass],
+  imports: [MatProgressBar, MatProgressSpinner, NgClass, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
