@@ -1,9 +1,8 @@
 import { type INestApplicationContext, Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { type MakeNestContext } from '../../nest.provider';
-import { BlockingFunctionHandlerWithNestContextBuilderForBuilder, blockingFunctionHandlerWithNestContextFactory, makeBlockingFunctionWithHandler, NestContextBlockingFunctionHandler } from './blocking';
+import { BeforeCreateResponse, BlockingFunctionHandlerWithNestContextBuilderForBuilder, blockingFunctionHandlerWithNestContextFactory, makeBlockingFunctionWithHandler, NestContextBlockingFunctionHandler } from './blocking';
 import { AuthBlockingEvent, beforeUserCreated } from 'firebase-functions/v2/identity';
-import { BeforeCreateResponse } from 'firebase-functions/lib/common/providers/identity';
 
 @Injectable()
 export class TestInjectable {}

@@ -1,8 +1,11 @@
-import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { MaybeSo, type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
 import { type NestContextRequest } from '../nest';
 import { type BlockingFunction } from 'firebase-functions/v1';
 import { type BlockingOptions } from 'firebase-functions/identity';
+import { beforeUserCreated } from 'firebase-functions/identity';
+
+export type BeforeCreateResponse = MaybeSo<Awaited<ReturnType<Parameters<typeof beforeUserCreated>[1]>>>;
 
 export type BlockingFunctionNestContextRequest<N, E extends object> = NestContextRequest<N, E>;
 
