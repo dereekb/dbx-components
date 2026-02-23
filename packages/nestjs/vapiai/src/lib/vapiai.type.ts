@@ -1,3 +1,4 @@
+import { Maybe, MaybeSo } from '@dereekb/util';
 import { type Vapi } from '@vapi-ai/server-sdk';
 
 /**
@@ -34,7 +35,7 @@ export type VapiApiWebhookEventVerificationType = 'none' | 'secret' | 'hmac';
 /**
  * Cost item used by Vapi.ai.
  */
-export type VapiCostsItem = Vapi.ServerMessageEndOfCallReport.Costs.Item;
+export type VapiCostsItem = MaybeSo<Vapi.ServerMessageEndOfCallReport['costs']>[number];
 
 /**
  * Vapi.ai Call identifier
@@ -47,6 +48,8 @@ export type VapiCallId = string;
 export type VapiAssistantId = string;
 
 export type VapiTranscript = string;
+
+export type VapiChatMessage = MaybeSo<Vapi.Chat['messages']>[number];
 
 export interface VapiTranscriptRef {
   transcript?: VapiTranscript;

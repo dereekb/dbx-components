@@ -1,5 +1,5 @@
-import { type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
-import { type VapiAssistantId, type VapiCostsItem, type VapiTranscriptRef } from '../vapiai.type';
+import { Maybe, type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { VapiChatMessage, type VapiAssistantId, type VapiCostsItem, type VapiTranscriptRef } from '../vapiai.type';
 import { type Vapi } from '@vapi-ai/server-sdk';
 
 export type BaseVapiPayloadCall = Required<Pick<Vapi.Call, 'id' | 'orgId' | 'createdAt' | 'updatedAt' | 'type' | 'monitor' | 'transport' | 'status' | 'assistantId' | 'assistantOverrides'>>;
@@ -45,7 +45,7 @@ export interface EndOfCallReportPayload extends BaseVapiPayload, Omit<Vapi.Serve
   readonly costBreakdown: Vapi.CostBreakdown;
   readonly costs: VapiCostsItem[];
   readonly transcript: string;
-  readonly messages: Vapi.Chat.Messages.Item[];
+  readonly messages: VapiChatMessage[];
   readonly summary: string;
   readonly recordingUrl?: WebsiteUrlWithPrefix;
   readonly stereoRecordingUrl?: WebsiteUrlWithPrefix;
