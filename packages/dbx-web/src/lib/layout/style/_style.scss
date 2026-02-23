@@ -144,10 +144,10 @@
   }
 
   // material color overrides
-  --mdc-text-button-label-text-color: #{theming.$dbx-color-var};
+  // --mdc-text-button-label-text-color: #{theming.$dbx-color-var};
+  --mat-button-text-label-text-color: #{theming.$dbx-color-var};
   --mat-list-list-item-label-text-color: #{theming.$dbx-color-var};
   --mat-list-list-item-leading-icon-color: #{theming.$dbx-color-var};
-  --mat-list-list-item-hover-label-text-color: #{theming.$dbx-color-var};
 }
 
 @mixin typography($theme-config-or-typography-config) {

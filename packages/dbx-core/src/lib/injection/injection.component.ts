@@ -2,7 +2,6 @@ import { Component, ViewContainerRef, input, viewChild, effect } from '@angular/
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';
-import { NgTemplateOutlet } from '@angular/common';
 import { ObservableOrValueGetter } from '@dereekb/rxjs';
 
 /**
