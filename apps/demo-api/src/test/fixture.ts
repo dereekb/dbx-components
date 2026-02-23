@@ -69,6 +69,7 @@ import { markStorageFileForDeleteTemplate, NotificationExpediteService, Notifica
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 import { assertSnapshotData } from '@dereekb/firebase-server';
+import { AuthBlockingEvent } from 'firebase-functions/identity';
 
 // MARK: Demo Api Testing Fixture
 @Module({
@@ -409,8 +410,8 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
     makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance),
     initUser: async (instance) => {
       const userRecord = await instance.loadUserRecord();
-      const fn = instance.testContext.fnWrapper.wrapCloudFunction(initUserOnCreate(instance.nestAppPromiseGetter));
-      await instance.callEventCloudFunction(fn, userRecord);
+      const fn = instance.testContext.fnWrapper.wrapBlockingFunction(initUserOnCreate(instance.nestAppPromiseGetter));
+      await instance.callAuthBlockingFunction(fn, userRecord, 'google.firebase.auth.user.create');
     }
   });
 

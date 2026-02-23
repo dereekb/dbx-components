@@ -10,6 +10,7 @@ import { type CallableContextOptions, type ContextOptions, type WrappedFunction,
 import { type WrappedBlockingFunction, type WrappedBlockingFunctionWithHandler, type WrappedCallableRequest, type WrappedCallableRequestOutput, type WrappedCallableRequestParams, type WrappedCloudFunction, type WrappedCloudFunctionV1 } from './firebase.function';
 import { type ScheduledEvent } from 'firebase-functions/scheduler';
 import { AuthData } from '@dereekb/firebase-server';
+import { AuthBlockingEvent } from 'firebase-functions/identity';
 
 // gen 1
 export type CallCloudFunction = WrappedCloudFunctionV1<any> | WrappedBlockingFunctionWithHandler<any, any> | WrappedBlockingFunction | WrappedV2Function<any> | WrappedCloudFunctionV1<any>;
@@ -154,6 +155,34 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
     }
 
     return this.callWrappedFunction(fn, params as any, skipJsonConversion);
+  }
+
+  /**
+   * Calls a wrapped gen 2 auth blocking function with the input params and context options from makeContextOptions().
+   *
+   * @param fn
+   * @param userRecord
+   * @param eventType
+   * @param eventOverride
+   * @param skipJsonConversion
+   * @returns
+   */
+  callAuthBlockingFunction(fn: WrappedBlockingFunctionWithHandler<AuthBlockingEvent, void>, userRecord: UserRecord, eventType: 'google.firebase.auth.user.create' | 'google.firebase.auth.user.delete', eventOverride?: Partial<AuthBlockingEvent>, skipJsonConversion = false): Promise<void> {
+    const timestamp = new Date().toISOString();
+
+    const event: AuthBlockingEvent = {
+      ipAddress: '127.0.0.1',
+      userAgent: 'testing',
+      eventId: '0',
+      params: {},
+      resource: { service: 'dbx-test', name: 'fake-resource' },
+      timestamp,
+      ...eventOverride,
+      data: userRecord,
+      eventType
+    };
+
+    return this.callCloudFunction(fn, event, skipJsonConversion);
   }
 
   /**

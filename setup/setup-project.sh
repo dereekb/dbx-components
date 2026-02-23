@@ -48,13 +48,46 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.1.0"}    # update every major version
-NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
-ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^18.0.0"}
-TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.5.0 <5.6.0"}
-FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"^14.2.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.7.0"}    # update every major version
+NX_VERSION=${NX_SETUP_VERSIONS:-"22.5.2"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^21.0.0"}
+TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.9 <6.0"}
+FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"15.7.0"}
+NODE_VERSION=${NODE_SETUP_VERSION:-"24"}
 
-echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
+echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - node: $NODE_VERSION - from source branch $SOURCE_BRANCH"
+
+# - Package Versions
+# These versions should match those in dbx-component's package.json
+DEP__SHARP_VERSION=^0.34.5
+DEP__ZONE_JS_VERSION=^0.16.0
+DEP__JEST_VERSION=30.2.0
+DEP__JEST_ENVIRONMENT_JSDOM_VERSION=30.2.0
+DEP__JEST_PRESET_ANGULAR_VERSION=16.0.0
+DEP__TS_JEST_VERSION=29.4.6
+DEP__FIREBASE_VERSION=^12.0.0
+DEP__FIREBASE_ADMIN_VERSION=^13.0.0
+DEP__FIREBASE_FUNCTIONS_VERSION=^7.0.0
+DEP__FIREBASE_FUNCTIONS_TEST_VERSION=3.4.1
+DEP__PRETTIER_VERSION=3.8.1
+DEP__PRETTY_QUICK_VERSION=^4.2.2
+DEP__MAILGUN_JS_VERSION=^12.0.0
+DEP__RXJS_VERSION=^7.8.0
+DEP__MAPBOX_GL_VERSION=^3.10.0
+DEP__NGX_MAPBOX_GL_VERSION=^14.0.0
+DEP__NG_WEB_APIS_GEOLOCATION_VERSION=^5.1.0
+DEP__NG_WEB_APIS_COMMON_VERSION=^5.1.0
+DEP__ZIP_JS_VERSION=^2.8.11
+DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION=^1.0.2
+DEP__UIROUTER_RX_VERSION=^1.0.0
+DEP__UIROUTER_CORE_VERSION=^6.1.2
+DEP__UIROUTER_ANGULAR_VERSION=21.0.0
+DEP__NGBRACKET_NGX_LAYOUT_VERSION=^21.0.0
+DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0
+DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
+DEP__JEST_DATE_VERSION=^1.1.4
+DEP__JEST_JUNIT_VERSION=^16.0.0
+DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
@@ -206,7 +239,7 @@ npm install -D @nx/nest@$NX_VERSION
 npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
 echo "Installing app-server dependencies"
-npm install --force sharp@^0.34.4
+npm install --force sharp@$DEP__SHARP_VERSION
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
@@ -217,7 +250,7 @@ echo "Installing angular@$ANGULAR_VERSION...";
 rm -r node_modules
 rm package-lock.json
 npm install -D --force typescript@$TYPESCRIPT_VERSION @nx/angular@$NX_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
-npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
+npm install --force zone.js@$DEP__ZONE_JS_VERSION @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."
@@ -291,7 +324,7 @@ echo "Updating firebase.json config..."
 # npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '/api/**', function: 'api' }, { source: '**', destination: '/index.html' }] }";
 
 # Functions
-npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs22', engines: { node: '22' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
+npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs$NODE_VERSION', engines: { node: '$NODE_VERSION' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
 
 # Firestore
 npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
@@ -397,7 +430,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
+npm install -D husky prettier@$DEP__PRETTIER_VERSION pretty-quick@$DEP__PRETTY_QUICK_VERSION @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -419,7 +452,7 @@ git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
 echo "Adding jest configurations..."
-npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@14.1.1 ts-jest@^29.3.2 jest-date@^1.1.4 jest-junit@^16.0.0
+npm install -D jest@$DEP__JEST_VERSION jest-environment-jsdom@$DEP__JEST_ENVIRONMENT_JSDOM_VERSION jest-preset-angular@$DEP__JEST_PRESET_ANGULAR_VERSION ts-jest@$DEP__TS_JEST_VERSION jest-date@$DEP__JEST_DATE_VERSION jest-junit@$DEP__JEST_JUNIT_VERSION
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
@@ -453,10 +486,10 @@ git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install --force mailgun.js@^12.0.0 rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/zoom@$DBX_COMPONENTS_VERSION_ZOOM @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install --force mailgun.js@$DEP__MAILGUN_JS_VERSION rxjs@$DEP__RXJS_VERSION firebase@$DEP__FIREBASE_VERSION firebase-admin@$DEP__FIREBASE_ADMIN_VERSION firebase-functions@$DEP__FIREBASE_FUNCTIONS_VERSION @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/zoom@$DBX_COMPONENTS_VERSION_ZOOM @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
 
 # install mapbox dependencies
-npm install --force mapbox-gl ngx-mapbox-gl@git+https://git@github.com/dereekb/ngx-mapbox-gl#e55fbfa2f334348f0ff6b4705776c958c67ffbb5 @ng-web-apis/geolocation @ng-web-apis/common
+npm install --force mapbox-gl@$DEP__MAPBOX_GL_VERSION ngx-mapbox-gl@$DEP__NGX_MAPBOX_GL_VERSION @ng-web-apis/geolocation@$DEP__NG_WEB_APIS_GEOLOCATION_VERSION @ng-web-apis/common@$DEP__NG_WEB_APIS_COMMON_VERSION
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -469,7 +502,7 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing angular dependencies"
-npm install --force @zip.js/zip.js @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.1.1 @uirouter/angular@^15.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#32c69f7009db3a9b85148705c00e923d5a858807 @ngbracket/ngx-layout@^18.0.0 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
+npm install --force @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @angular/fire@$DEP__ANGULAR_FIRE_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
@@ -494,7 +527,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION @ngrx/store-devtools@18.1.1 @ngx-formly/schematics@6.3.12 @firebase/rules-unit-testing@^4.0.1 firebase-functions-test@^3.4.1 envfile env-cmd
+npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION @ngrx/store-devtools@$DEP__NGRX_STORE_DEVTOOLS_VERSION @firebase/rules-unit-testing@$DEP__FIREBASE_RULES_UNIT_TESTING_VERSION firebase-functions-test@$DEP__FIREBASE_FUNCTIONS_TEST_VERSION envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"

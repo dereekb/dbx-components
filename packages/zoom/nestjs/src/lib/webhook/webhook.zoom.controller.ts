@@ -1,5 +1,5 @@
 import { RawBody, type RawBodyBuffer } from '@dereekb/nestjs';
-import { Controller, Post, Req, Res } from '@nestjs/common';
+import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ZoomWebhookService } from './webhook.zoom.service';
 
@@ -7,7 +7,7 @@ import { ZoomWebhookService } from './webhook.zoom.service';
 export class ZoomWebhookController {
   readonly zoomWebhookService: ZoomWebhookService;
 
-  constructor(zoomWebhookService: ZoomWebhookService) {
+  constructor(@Inject(ZoomWebhookService) zoomWebhookService: ZoomWebhookService) {
     this.zoomWebhookService = zoomWebhookService;
   }
 
