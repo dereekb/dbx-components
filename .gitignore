@@ -79,3 +79,5 @@ service_account.json
 # Apps Package.json
 /apps/demo-api/package.json
 setup/.tmp
+
+vitest.config.*.timestamp*

@@ -22,10 +22,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/util/test", "{projectRoot}/.reports/jest/util-test.junit.xml"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/util/test/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/util/test"
       }
     }
   }
