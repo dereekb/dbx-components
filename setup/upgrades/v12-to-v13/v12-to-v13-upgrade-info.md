@@ -70,8 +70,8 @@ You'll need to specify the following overrides in `package.json`:
 - `date-fns-tz` supports date-fns v4, so we don't need to update it yet.
 - In the future, we will also remove `date-fns-tz` and replace it with `date-fns/tz`.
 
-#### ngx-material-intl-tel-input
-- Replaced `ngx-mat-intl-tel-input` with `ngx-material-intl-tel-input`  that hasn't been updated in a while.
+#### ngx-mat-input-tel
+- Replaced `ngx-mat-intl-tel-input` with `ngx-mat-input-tel`, as someone else has forked the original package and updated it for Angular 21 with additional improvements.
 
 #### @jscutlery/semver
 - Removed. Will be using Nx Release tools from now on since Nx has updating release tooling.
