@@ -27,7 +27,7 @@ import {
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
   type StorageFileProcessingNotificationTaskData,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
+  NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING,
   delayCompletion,
   onCallReadModelParams,
   type DownloadStorageFileParams,
@@ -988,7 +988,7 @@ demoApiFunctionContextFactory((f) => {
 
                           expect(metadata).toBeDefined();
                           expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
-                          expect(notification.tpr).toEqual([STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING]);
+                          expect(notification.tpr).toEqual([NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING]);
                           expect(notification.d).toBe(true); // marked as done now
                         });
 

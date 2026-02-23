@@ -225,6 +225,9 @@ You'll need to specify the following overrides in `package.json`:
 - `StorageFileProcessingNotificationTaskCheckpoint` type and related constants
 - Typo function: `filterDisallowedFirestoreItemPageIteratorInputContraints`
 - `dontStoreIfValue` property (deprecated)
+- `StorageFileProcessingNotificationTaskCheckpoint` replaced with  `NotificationTaskSubtaskCheckpoint`
+- `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING` replaced with `NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING`
+- `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP` replaced with `NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP`
 
 #### @dereekb/firebase-server
 
