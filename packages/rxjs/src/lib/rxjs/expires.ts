@@ -1,8 +1,5 @@
-import { type Milliseconds, type DateOrUnixDateTimeMillisecondsNumber } from '@dereekb/util';
+import { type Milliseconds, type DateOrUnixDateTimeMillisecondsNumber, expirationDetails, type Expires } from '@dereekb/util';
 import { filter, map, type MonoTypeOperatorFunction, type Observable, type OperatorFunction, skipWhile, switchMap, takeWhile } from 'rxjs';
-import { hasExpired, toExpires, type Expires, timeHasExpired } from './expires';
-
-// TODO: Deprecate and move to @dereekb/rxjs
 
 /**
  * Creates a new Expires object at the current time on emission that will expire in the set amount of time.
@@ -11,28 +8,32 @@ import { hasExpired, toExpires, type Expires, timeHasExpired } from './expires';
  * @returns
  */
 export function toExpiration<T>(expiresIn: number): OperatorFunction<T, Expires> {
-  return map(() => toExpires(new Date(), expiresIn));
+  return map(() => {
+    const now = new Date();
+    const expirationDate = expirationDetails({ expiresFromDate: now, expiresIn }).getExpirationDate();
+    return { expiresAt: expirationDate };
+  });
 }
 
 /**
  * Filters further emissions once the input is expired.
  */
 export function skipExpired<T extends Expires>(): MonoTypeOperatorFunction<T> {
-  return filter((expires) => !hasExpired(expires));
+  return filter((expires) => !expirationDetails({ expires }).hasExpired());
 }
 
 /**
  * Skips the input date or timenumber until expiration occurs.
  */
 export function skipUntilExpiration(expiresIn?: number): MonoTypeOperatorFunction<DateOrUnixDateTimeMillisecondsNumber> {
-  return filter((x) => timeHasExpired(x, expiresIn));
+  return filter((x) => expirationDetails({ expiresFromDate: x, expiresIn }).hasExpired());
 }
 
 /**
  * Skips the input date or timenumber after expiration occurs.
  */
 export function skipAfterExpiration(expiresIn?: number): MonoTypeOperatorFunction<DateOrUnixDateTimeMillisecondsNumber> {
-  return filter((x) => !timeHasExpired(x, expiresIn));
+  return filter((x) => !expirationDetails({ expiresFromDate: x, expiresIn }).hasExpired());
 }
 
 /**
@@ -42,8 +43,8 @@ export function skipUntilTimeElapsedAfterLastEmission<T>(watch: Observable<unkno
   return (observable: Observable<T>) => {
     return watch.pipe(
       switchMap(() => {
-        const expires = toExpires(new Date(), takeFor);
-        return observable.pipe(takeWhile(() => !hasExpired(expires)));
+        const details = expirationDetails({ expiresFromDate: new Date(), expiresIn: takeFor });
+        return observable.pipe(takeWhile(() => !details.hasExpired()));
       })
     );
   };
@@ -56,8 +57,8 @@ export function takeAfterTimeElapsedSinceLastEmission<T>(watch: Observable<unkno
   return (observable: Observable<T>) => {
     return watch.pipe(
       switchMap(() => {
-        const expires = toExpires(new Date(), skipFor);
-        return observable.pipe(skipWhile(() => !hasExpired(expires)));
+        const details = expirationDetails({ expiresFromDate: new Date(), expiresIn: skipFor });
+        return observable.pipe(skipWhile(() => !details.hasExpired()));
       })
     );
   };

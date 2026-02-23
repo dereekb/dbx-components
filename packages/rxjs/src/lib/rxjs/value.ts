@@ -323,16 +323,3 @@ export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<numbe
 export function emitAfterDelay<T>(value: T, delayTime: number): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => obs.pipe(switchMap((x) => of(value).pipe(delay(delayTime), startWith(x))));
 }
-
-// MARK: Compat
-/**
- * @deprecated use switchMapFilterMaybe instead.
- */
-export const switchMapMaybeObs = switchMapFilterMaybe;
-
-/**
- * Skips all initial maybe values, and then returns all values after the first non-null/undefined value is returned.
- *
- * @deprecated use skipAllInitialMaybe instead.
- */
-export const skipFirstMaybe = skipAllInitialMaybe;

@@ -46,14 +46,3 @@ export function arrayValueFromFinishedLoadingState<L extends ListLoadingState>()
     return obs.pipe(valueFromFinishedLoadingState<L>(() => [] as LoadingStateValue<L>));
   };
 }
-
-// MARK: Compat
-/**
- * @deprecated use isListLoadingStateWithEmptyValue instead.
- */
-export const listLoadingStateIsEmpty = isListLoadingStateWithEmptyValue;
-
-/**
- * @deprecated use mapIsListLoadingStateWithEmptyValue instead.
- */
-export const isListLoadingStateEmpty = mapIsListLoadingStateWithEmptyValue;

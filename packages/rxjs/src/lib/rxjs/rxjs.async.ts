@@ -1,7 +1,7 @@
 import { build, type CachedFactoryWithInput, cachedGetter, type Destroyable, type Maybe } from '@dereekb/util';
 import { throttleTime, distinctUntilChanged, BehaviorSubject, type Observable, type Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
-import { skipFirstMaybe } from './value';
+import { skipAllInitialMaybe } from './value';
 
 /**
  * Default amount of throttle in milliseconds used by AsyncPusher.
@@ -59,7 +59,7 @@ export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T
   const _subject = new BehaviorSubject<Maybe<T>>(undefined);
   const _sub = new SubscriptionObject();
 
-  let obs: Observable<T> = _subject.pipe(skipFirstMaybe(), throttleTime(throttle, undefined, { leading: false, trailing: true })) as unknown as Observable<T>;
+  let obs: Observable<T> = _subject.pipe(skipAllInitialMaybe(), throttleTime(throttle, undefined, { leading: false, trailing: true })) as unknown as Observable<T>;
 
   if (distinct) {
     obs = obs.pipe(distinctUntilChanged());

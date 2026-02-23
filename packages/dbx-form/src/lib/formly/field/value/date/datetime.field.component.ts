@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
@@ -504,7 +504,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.valueInSystemTimezone$.pipe(skipFirstMaybe())).pipe(
+  readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.valueInSystemTimezone$.pipe(skipAllInitialMaybe())).pipe(
     map((x: Maybe<Date>) => (x ? startOfDay(x) : null)),
     distinctUntilChanged<Maybe<Date>>(isSameDateDay),
     shareReplay(1)
@@ -859,7 +859,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         switchMap(([currentValue, valueFactory]) => {
           return this.timeOutput$.pipe(
             throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }),
-            skipFirstMaybe(),
+            skipAllInitialMaybe(),
             distinctUntilChanged(isSameDateHoursAndMinutes),
             map((x) => valueFactory(x)),
             filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x, currentValue))

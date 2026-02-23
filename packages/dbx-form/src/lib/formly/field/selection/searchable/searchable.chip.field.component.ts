@@ -5,7 +5,7 @@ import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/ma
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
+import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/rxjs';
 import { PrimativeKey } from '@dereekb/util';
 import { SearchableValueFieldDisplayValue } from './searchable';
 import { MatIconModule } from '@angular/material/icon';

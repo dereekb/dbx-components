@@ -1,13 +1,13 @@
 import { failTest } from '@dereekb/util/test';
-import { skipFirstMaybe } from './value';
+import { skipAllInitialMaybe } from './value';
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, of, Subject, finalize, tap } from 'rxjs';
 import { preventComplete } from './rxjs';
 
-describe('skipFirstMaybe()', () => {
+describe('skipAllInitialMaybe()', () => {
   it('should not skip a first non-maybe value', (done) => {
     const subject = new BehaviorSubject<Maybe<1>>(undefined);
-    const obs = subject.pipe(skipFirstMaybe());
+    const obs = subject.pipe(skipAllInitialMaybe());
 
     obs.subscribe((x) => {
       expect(x).toBe(1);
@@ -25,7 +25,7 @@ describe('skipFirstMaybe()', () => {
     const subject = new Subject<Maybe<1>>();
     const obs = subject.pipe(
       tap(() => count++),
-      skipFirstMaybe()
+      skipAllInitialMaybe()
     );
 
     obs.subscribe(() => {
