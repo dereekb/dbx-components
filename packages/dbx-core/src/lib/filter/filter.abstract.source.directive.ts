@@ -75,12 +75,4 @@ export abstract class AbstractFilterSourceDirective<F = unknown> implements Filt
   setInitialFilterTakesPriority(initialFilterTakesPriority: boolean) {
     this._defaultFilterSource.setInitialFilterTakesPriority(initialFilterTakesPriority);
   }
-
-  // MARK: Deprecated
-  /**
-   * @deprecated use setInitialFilterTakesPriority() instead.
-   */
-  set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
-    this.setInitialFilterTakesPriority(initialFilterTakesPriority);
-  }
 }

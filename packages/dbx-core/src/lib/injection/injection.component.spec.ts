@@ -3,7 +3,6 @@ import { DbxInjectionComponent } from './injection.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, Type, ViewChild, OnDestroy } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { DbxInjectionComponentModule } from './injection.component.module';
 import { type Maybe } from '@dereekb/util';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
@@ -51,7 +50,7 @@ class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponen
 describe('DbxInjectionComponent', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule, DbxInjectionComponentModule],
+      imports: [BrowserModule, DbxInjectionComponent],
       declarations: [TestInjectionComponentContent, TestInjectionComponentWithElement, TestInjectionComponentWithAttribute],
       providers: []
     }).compileComponents();
