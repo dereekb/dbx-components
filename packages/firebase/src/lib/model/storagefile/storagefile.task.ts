@@ -67,19 +67,3 @@ export function storageFileProcessingNotificationTaskTemplate(input: StorageFile
 
 // MARK: All Tasks
 export const ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE];
-
-// MARK: Compat
-/**
- * @deprecated Use NotificationTaskSubtaskCheckpoint instead.
- */
-export type StorageFileProcessingNotificationTaskCheckpoint = NotificationTaskSubtaskCheckpoint;
-
-/**
- * @deprecated Use NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING instead.
- */
-export const STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING: StorageFileProcessingNotificationTaskCheckpoint = NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING;
-
-/**
- * @deprecated Use NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP instead.
- */
-export const STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP: StorageFileProcessingNotificationTaskCheckpoint = NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP;

@@ -8,11 +8,9 @@ import { DemoAuthErrorComponent } from './container/error.component';
 import { DEMO_AUTH_STATES } from './demo.auth.router';
 import { DemoAuthLoginComponent } from './container/login.component';
 import { DemoAuthLoginViewComponent } from './container/login.view.component';
-import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 
 @NgModule({
   imports: [
-    DbxFirebaseLoginModule,
     UIRouterModule.forChild({
       states: DEMO_AUTH_STATES
     }),

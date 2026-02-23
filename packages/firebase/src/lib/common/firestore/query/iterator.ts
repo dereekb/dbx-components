@@ -543,9 +543,3 @@ export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPag
   const snapshotIteration: InternalFirestoreItemPageIterationInstance<T> = factory.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
   return _firestoreItemPageIterationWithSnapshotIteration(snapshotIteration);
 }
-
-// MARK: Compat
-/**
- * @deprecated Use filterDisallowedFirestoreItemPageIteratorInputConstraints instead. Mispelling.
- */
-export const filterDisallowedFirestoreItemPageIteratorInputContraints = filterDisallowedFirestoreItemPageIteratorInputConstraints;

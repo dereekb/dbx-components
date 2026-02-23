@@ -1,3 +1,1 @@
-export * from './call';
-export * from './event';
-export * from './schedule';
+// v1 functions have been removed. Use v2 instead.

@@ -269,9 +269,3 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
 
   return service;
 }
-
-// MARK: Compat
-/**
- * @deprecated use notificationTemplateTypeInfoRecord instead.
- */
-export const notificationTemplateTypeDetailsRecord = notificationTemplateTypeInfoRecord;
