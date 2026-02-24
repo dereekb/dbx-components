@@ -161,6 +161,30 @@ async function updateTsConfigSpec(projectRoot) {
 }
 
 /**
+ * Update test-setup.ts for Angular projects to include reflect-metadata
+ */
+async function updateAngularTestSetup(projectRoot) {
+  const testSetupPath = join(projectRoot, 'src', 'test-setup.ts');
+
+  try {
+    console.log(`Updating ${testSetupPath} for Angular...`);
+    let content = await readFile(testSetupPath, 'utf-8');
+
+    // Check if reflect-metadata import already exists
+    if (!content.includes("import 'reflect-metadata'")) {
+      // Add reflect-metadata import at the top
+      content = `import 'reflect-metadata';\n${content}`;
+      await writeFile(testSetupPath, content, 'utf-8');
+      console.log(`Added reflect-metadata import to test-setup.ts`);
+    } else {
+      console.log(`reflect-metadata import already present in test-setup.ts`);
+    }
+  } catch (error) {
+    console.warn(`Could not update ${testSetupPath}:`, error.message);
+  }
+}
+
+/**
  * Migrate a single project from Jest to Vitest
  */
 async function migrateProject(projectName, projectDetails) {
@@ -213,6 +237,10 @@ async function migrateProject(projectName, projectDetails) {
     return;
   }
 
+  // Delete vite.config.mts if it was generated (we only need vitest.config.mts)
+  const viteConfigPath = join(projectRoot, 'vite.config.mts');
+  await deleteFileIfExists(viteConfigPath);
+
   // Replace vitest.config.mts with custom configuration
   const vitestConfigPath = join(projectRoot, 'vitest.config.mts');
   console.log(`Updating ${vitestConfigPath}...`);
@@ -221,10 +249,13 @@ async function migrateProject(projectName, projectDetails) {
   const vitestConfig = generateVitestConfig(projectName, projectRoot, appTestType, isAngular);
   await writeFile(vitestConfigPath, vitestConfig, 'utf-8');
 
-  // Delete test-setup.ts if not angular
+  // Delete test-setup.ts if not angular, otherwise update it
   if (!isAngular) {
     const testSetupPath = join(projectRoot, 'src', 'test-setup.ts');
     await deleteFileIfExists(testSetupPath);
+  } else {
+    // Update Angular test-setup.ts to include reflect-metadata
+    await updateAngularTestSetup(projectRoot);
   }
 
   // Update tsconfig.spec.json to include vitest.setup.typings.ts

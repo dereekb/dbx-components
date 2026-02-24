@@ -203,6 +203,9 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 - `router/layout/list/list.module.ts`
 - `router/layout/navbar/navbar.module.ts`
 
+**BREAKING CHANGE: DateFormatFromToPipe**
+- Renamed the `DateFromPlusToPipe` to `DateFromToTimePipe`
+
 **BREAKING CHANGE: DbxSetStyleDirective**
 - Now has a new mode - by default sets style to self (not global/body)
 - Use the new mode parameter to control where styles are applied

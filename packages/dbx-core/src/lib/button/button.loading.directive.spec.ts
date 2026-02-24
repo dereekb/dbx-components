@@ -10,8 +10,7 @@ import { callbackTest } from '@dereekb/util/test';
 describe('DbxLoadingButton', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [DbxCoreButtonModule],
-      declarations: [TestDbxLoadingButtonDirectiveComponent]
+      imports: []
     }).compileComponents();
   });
 
@@ -53,7 +52,9 @@ describe('DbxLoadingButton', () => {
     <div>
       <button dbxButton [dbxLoadingButton]="context"></button>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxButtonDirective, DbxLoadingButtonDirective]
 })
 class TestDbxLoadingButtonDirectiveComponent {
   context = new SimpleLoadingContext(false);

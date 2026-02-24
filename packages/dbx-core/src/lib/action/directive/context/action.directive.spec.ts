@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { first, of, tap } from 'rxjs';
+import { delay, filter, first, map, of, tap, throwError, timer } from 'rxjs';
 import { WorkUsingObservable } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionDirective } from './action.directive';
@@ -107,10 +107,6 @@ describe('DbxActionDirective', () => {
           });
         })
       );
-
-      describe('with observable return', () => {
-        // TODO
-      });
     });
   });
 });

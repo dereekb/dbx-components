@@ -16,7 +16,8 @@ const CUSTOM_CONTENT = 'Custom Content';
 @Component({
   template: `
     <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
-  `
+  `,
+  standalone: true
 })
 class TestInjectionContent implements OnDestroy {
   destroyed = false;
@@ -30,7 +31,8 @@ class TestInjectionContent implements OnDestroy {
   selector: 'test-existing-content',
   template: `
     <span id="${EXISTING_CONTENT_ID}">${EXISTING_CONTENT}</span>
-  `
+  `,
+  standalone: true
 })
 class TestExistingInjectionContent implements OnDestroy {
   destroyed = false;
@@ -46,7 +48,9 @@ class TestExistingInjectionContent implements OnDestroy {
       <test-existing-content></test-existing-content>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DbxInjectionContextDirective, TestExistingInjectionContent]
 })
 class TestInjectionContextDirective<T = any> {
   readonly injectionContextDirective = viewChild.required<DbxInjectionContextDirective<T>>(DbxInjectionContextDirective);
@@ -55,8 +59,7 @@ class TestInjectionContextDirective<T = any> {
 describe('DbxInjectionContextDirective', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule, DbxInjectionContextDirective],
-      declarations: [TestInjectionContent, TestExistingInjectionContent, TestInjectionContextDirective],
+      imports: [BrowserModule],
       providers: []
     }).compileComponents();
   });

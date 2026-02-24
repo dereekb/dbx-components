@@ -8,11 +8,11 @@ import { formatToTimeString, toJsDate } from '@dereekb/date';
  * Pipe that takes in a date and number of minutes and outputs a formatted date.
  */
 @Pipe({
-  name: 'dateFromPlusTo',
+  name: 'dateFormatFromTo',
   standalone: true,
   pure: true
 })
-export class DateFromToTimePipe implements PipeTransform {
+export class DateFormatFromToPipe implements PipeTransform {
   private readonly locale = inject(LOCALE_ID);
 
   static formatFromTo(input: Maybe<DateOrDateString>, format: string, minutes: number, locale: string): Maybe<string> {
@@ -27,6 +27,6 @@ export class DateFromToTimePipe implements PipeTransform {
   }
 
   transform(input: Maybe<DateOrDateString>, format: string, minutes: number): Maybe<string> {
-    return DateFromToTimePipe.formatFromTo(input, format, minutes, this.locale);
+    return DateFormatFromToPipe.formatFromTo(input, format, minutes, this.locale);
   }
 }
