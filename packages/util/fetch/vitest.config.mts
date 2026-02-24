@@ -4,5 +4,7 @@ export default createVitestConfig({
   type: 'node',
   pathFromRoot: __dirname,
   projectName: 'util-fetch',
-  testTimeout: 30000
+  test: {
+    testTimeout: 30000
+  }
 });

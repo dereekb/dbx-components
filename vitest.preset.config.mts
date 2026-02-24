@@ -12,32 +12,26 @@ export interface DbxComponentsVitestPresetConfigOptions {
   readonly type: 'angular' | 'firebase' | 'nestjs' | 'node';
   readonly pathFromRoot: string;
   readonly projectName: string;
+
   /**
    * Additional project-specific setup files to include.
    */
   readonly projectSpecificSetupFiles?: string[];
+
   /**
    * Additional model path ignore patterns.
    */
   readonly modelPathIgnorePatterns?: string[];
-  /**
-   * Test timeout in milliseconds.
-   */
-  readonly testTimeout?: number;
-  /**
-   * Maximum number of workers to use for running tests.
-   */
-  readonly maxWorkers?: number;
-
-  /**
-   * Maximum number of tests to run concurrently.
-   */
-  readonly maxConcurrency?: number;
 
   /**
    * Optional prefix for the junit file name.
    */
   readonly junitFilePrefix?: string;
+
+  /**
+   * Overrides the test configuration directly.
+   */
+  readonly test?: Partial<Omit<VitestTestConfig, 'environment' | 'include' | 'exclude' | 'setupFiles' | 'reporters' | 'coverage' | 'name' | 'env' | 'coverage'>>;
 
   /**
    * Optional function to configure the environment.
@@ -46,7 +40,7 @@ export interface DbxComponentsVitestPresetConfigOptions {
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, testTimeout, maxWorkers, maxConcurrency, junitFilePrefix } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitFilePrefix } = options;
 
   const currentPath = __dirname;
   const relativePath = path.relative(currentPath, pathFromRoot);
@@ -114,23 +108,21 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         }
       },
       test: {
-        env,
-        name: projectName,
         passWithNoTests: true,
         watch: false,
         globals: true,
+        ...testConfig,
+        env,
+        name: projectName,
         environment,
         include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
         exclude,
         setupFiles,
         reporters,
-        maxConcurrency,
-        maxWorkers,
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const
-        },
-        testTimeout
+        }
       }
     };
   });
