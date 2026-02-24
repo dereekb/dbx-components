@@ -50,7 +50,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/nestjs", "{projectRoot}/.reports/jest/nestjs.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/nestjs", "{projectRoot}/.reports/junit/nestjs.junit.xml"],
       "options": {
         "jestConfig": "packages/nestjs/jest.config.ts"
       }

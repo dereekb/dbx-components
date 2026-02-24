@@ -24,7 +24,7 @@
     },
     "run-tests": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/test", "{projectRoot}/.reports/jest/firebase-server-test.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/test", "{projectRoot}/.reports/junit/firebase-server-test.junit.xml"],
       "options": {
         "jestConfig": "packages/firebase-server/test/jest.config.ts"
       }

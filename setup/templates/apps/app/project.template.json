@@ -99,7 +99,7 @@
       "executor": "@nx/jest:jest",
       "outputs": [
         "{workspaceRoot}/coverage/ANGULAR_APP_FOLDER",
-        "{projectRoot}/.reports/jest/ANGULAR_APP_NAME.junit.xml"
+        "{projectRoot}/.reports/junit/ANGULAR_APP_NAME.junit.xml"
       ],
       "options": {
         "jestConfig": "ANGULAR_APP_FOLDER/jest.config.ts"

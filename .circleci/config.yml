@@ -68,7 +68,7 @@ jobs:
           at: ~/code
       - run:
           name: run vitest
-          command: npx nx vitest test
+          command: npx nx test vitest
       - run:
           name: run util tests
           command: npx nx run-all-tests util
@@ -88,7 +88,7 @@ jobs:
           name: run date tests world
           command: npx nx test-timezones-world date
       - store_test_results:
-          path: ~/code/.reports/jest/
+          path: ~/code/.reports/junit
   # Runs tests for the projects that do not require the firebase emulators and are more complex (nestjs, angular)
   test-with-node-complex:
     <<: *defaults
@@ -121,7 +121,7 @@ jobs:
           name: run zoom tests
           command: npx nx run-all-tests zoom
       - store_test_results:
-          path: ~/code/.reports/jest/
+          path: ~/code/.reports/junit/
   # Runs tests for the projects that require the firebase emulators.
   test-with-node-firebase:
     <<: *defaults
@@ -156,7 +156,7 @@ jobs:
           paths:
             - ~/.cache/firebase
       - store_test_results:
-          path: ~/code/.reports/jest/
+          path: ~/code/.reports/junit/
   # Runs tests for the projects that require the firebase emulators.
   test-setup-script:
     <<: *defaults

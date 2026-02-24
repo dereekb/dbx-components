@@ -217,7 +217,7 @@ export function testContextBuilder<I, F extends TestContextFixture<I>, C>(builde
       }
 
       // add tests
-      useContextFixture({
+      useTestContextFixture({
         fixture,
         /**
          * Build tests by passing the fixture to the testing functions.
@@ -247,7 +247,7 @@ export interface UseContextFixture<C extends TestContextFixture<I>, I> {
 /**
  * Creates a test context and configurations that will initialize an instance
  */
-export function useContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
+export function useTestContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;
 
   let clearInstance: TestContextFixtureClearInstanceFunction;

@@ -70,7 +70,7 @@ module.exports = {
         [
           'jest-junit',
           {
-            outputDirectory: `${rootPath}/.reports/jest`
+            outputDirectory: `${rootPath}/.reports/junit`
           }
         ]
       ]

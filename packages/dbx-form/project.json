@@ -42,7 +42,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-form", "{projectRoot}/.reports/jest/dbx-form.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-form", "{projectRoot}/.reports/junit/dbx-form.junit.xml"],
       "options": {
         "jestConfig": "packages/dbx-form/jest.config.ts",
         "tsConfig": "packages/dbx-form/tsconfig.spec.json"

@@ -42,7 +42,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/jest/dbx-web.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/junit/dbx-web.junit.xml"],
       "options": {
         "jestConfig": "packages/dbx-web/jest.config.ts",
         "tsConfig": "packages/dbx-web/tsconfig.spec.json"

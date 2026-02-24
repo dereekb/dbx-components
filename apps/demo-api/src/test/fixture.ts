@@ -17,7 +17,7 @@ import {
   ModelTestContextInstance,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
-import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
+import { JestBuildTestsWithContextFunction, TestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
@@ -101,7 +101,7 @@ export interface DemoApiContext {
 }
 
 // MARK: Admin
-export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextFixture<F, JestTestContextFixture<F>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextFixture<F, TestContextFixture<F>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
   get serverActionsContext() {
     return this.instance.serverActionsContext;
   }
@@ -238,7 +238,7 @@ export const demoApiContextFactory = (buildTests: JestBuildTestsWithContextFunct
 };
 
 // MARK: Admin Function
-export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, TestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
   get storageContext() {
     return this.instance.storageContext;
   }

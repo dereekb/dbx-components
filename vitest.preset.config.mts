@@ -102,7 +102,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     const env = configureEnv?.();
 
     // https://vitest.dev/guide/reporters.html#junit-reporter
-    const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { includeConsoleOutput: false, outputFile: `${currentPath}/.reports/vitest/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
+    const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { includeConsoleOutput: false, outputFile: `${currentPath}/.reports/junit/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
 
     return {
       root: pathFromRoot,

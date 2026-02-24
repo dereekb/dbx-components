@@ -340,7 +340,7 @@ Example for demo-api:
 ```
     "run-tests": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/junit/demo-api.junit.xml"],
       "options": {
         "jestConfig": "apps/demo-api/jest.config.ts"
       }
@@ -380,3 +380,5 @@ Update `nx.json` to use the new `test` target configuration. Example:
       "cache": true
     }
 ```
+
+You can remove the jest preset from `nx.json` after jest is removed entirely.

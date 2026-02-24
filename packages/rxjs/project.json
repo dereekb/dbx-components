@@ -48,7 +48,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/rxjs", "{projectRoot}/.reports/jest/rxjs.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/rxjs", "{projectRoot}/.reports/junit/rxjs.junit.xml"],
       "options": {
         "jestConfig": "packages/rxjs/jest.config.ts"
       }

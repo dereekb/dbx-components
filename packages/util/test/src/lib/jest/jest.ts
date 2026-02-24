@@ -1,4 +1,4 @@
-import { type TestFixtureInstance, type TestFixture, type TestContextFixtureClearInstanceFunction, type TestContextFixture, AbstractTestContextFixture, AbstractChildTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextBuilderFunction, type TestContextBuilderConfig, testContextBuilder, type UseContextFixture, useContextFixture } from '../shared/shared';
+import { type TestFixtureInstance, type TestFixture, type TestContextFixtureClearInstanceFunction, type TestContextFixture, AbstractTestContextFixture, AbstractChildTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextBuilderFunction, type TestContextBuilderConfig, testContextBuilder, type UseContextFixture, useTestContextFixture } from '../shared/shared';
 
 /**
  * @deprecated Use TestFixtureInstance from shared instead. This is kept for backwards compatibility.
@@ -63,4 +63,4 @@ export type UseJestContextFixture<C extends TestContextFixture<I>, I> = UseConte
 /**
  * @deprecated Use useContextFixture from shared instead. This is kept for backwards compatibility.
  */
-export const useJestContextFixture = useContextFixture;
+export const useJestContextFixture = useTestContextFixture;
