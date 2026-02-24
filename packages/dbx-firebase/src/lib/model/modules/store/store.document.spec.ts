@@ -5,6 +5,7 @@ import { isLoadingStateLoading, SubscriptionObject } from '@dereekb/rxjs';
 import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { TestBed } from '@angular/core/testing';
+import { callbackTest } from '@dereekb/util/test';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
@@ -41,16 +42,19 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
     describe('loading a document', () => {
       describe('setId', () => {
-        it('should load the document with the input id.', (done) => {
-          const id = 'test';
+        it(
+          'should load the document with the input id.',
+          callbackTest((done) => {
+            const id = 'test';
 
-          store.setId(id);
+            store.setId(id);
 
-          sub.subscription = store.document$.pipe(first()).subscribe((document) => {
-            expect(document).toBeDefined();
-            done();
-          });
-        });
+            sub.subscription = store.document$.pipe(first()).subscribe((document) => {
+              expect(document).toBeDefined();
+              done();
+            });
+          })
+        );
       });
 
       describe('setRef', () => {
@@ -61,53 +65,68 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
           ref = doc.documentRef;
         });
 
-        it('should load the document with the input ref.', (done) => {
-          store.setRef(ref);
+        it(
+          'should load the document with the input ref.',
+          callbackTest((done) => {
+            store.setRef(ref);
 
-          sub.subscription = store.document$.pipe(first()).subscribe((document) => {
-            expect(document).toBeDefined();
-            expect(document.documentRef.path).toBe(ref.path);
+            sub.subscription = store.document$.pipe(first()).subscribe((document) => {
+              expect(document).toBeDefined();
+              expect(document.documentRef.path).toBe(ref.path);
+              done();
+            });
+          })
+        );
+      });
+
+      it(
+        'should not load anything if neither id nor ref are set.',
+        callbackTest((done) => {
+          const sub: SubscriptionObject = new SubscriptionObject();
+
+          sub.subscription = store.document$.pipe(timeout({ first: 100, with: () => of(false) }), first()).subscribe((result) => {
+            expect(result).toBe(false);
+            sub.destroy();
+            store.ngOnDestroy();
+
+            store.state$.pipe();
             done();
           });
-        });
-      });
-
-      it('should not load anything if neither id nor ref are set.', (done) => {
-        const sub: SubscriptionObject = new SubscriptionObject();
-
-        sub.subscription = store.document$.pipe(timeout({ first: 100, with: () => of(false) }), first()).subscribe((result) => {
-          expect(result).toBe(false);
-          sub.destroy();
-          store.ngOnDestroy();
-
-          store.state$.pipe();
-          done();
-        });
-      });
+        })
+      );
     });
 
     describe('reading the document', () => {
       describe('before loading the document', () => {
-        it('documentLoadingState$ should be loading.', (done) => {
-          sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
-            expect(isLoadingStateLoading(x)).toBe(true);
-            done();
-          });
-        });
+        it(
+          'documentLoadingState$ should be loading.',
+          callbackTest((done) => {
+            sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
+              expect(isLoadingStateLoading(x)).toBe(true);
+              done();
+            });
+          })
+        );
 
-        it('snapshotLoadingState$ should be loading.', (done) => {
-          sub.subscription = store.snapshotLoadingState$.pipe(first()).subscribe((x) => {
-            expect(isLoadingStateLoading(x)).toBe(true);
-            done();
-          });
-        });
+        it(
+          'snapshotLoadingState$ should be loading.',
+          callbackTest((done) => {
+            sub.subscription = store.snapshotLoadingState$.pipe(first()).subscribe((x) => {
+              expect(isLoadingStateLoading(x)).toBe(true);
+              done();
+            });
+          })
+        );
 
-        it('dataLoadingState$ should be loading.', (done) => {
-          sub.subscription = store.dataLoadingState$.pipe(first()).subscribe((x) => {
-            expect(isLoadingStateLoading(x)).toBe(true);
-            done();
-          });
-        });
+        it(
+          'dataLoadingState$ should be loading.',
+          callbackTest((done) => {
+            sub.subscription = store.dataLoadingState$.pipe(first()).subscribe((x) => {
+              expect(isLoadingStateLoading(x)).toBe(true);
+              done();
+            });
+          })
+        );
       });
 
       // TODO: The jest environment must be set to node for the firebase components to work, but setting the environment to jest causes issues with ngzone somehow.
@@ -126,7 +145,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
         store.setRef(testDoc.documentRef);
       });
 
-      it('documentLoadingState$ should have a document.', (done) => {
+      it('documentLoadingState$ should have a document.', callbackTest((done) => {
 
         sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
           expect(isLoadingStateLoading(x)).toBe(false);
@@ -135,9 +154,9 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
           done();
         });
 
-      });
+      }));
 
-      it('snapshotLoadingState$ should have a snapshot.', (done) => {
+      it('snapshotLoadingState$ should have a snapshot.', callbackTest((done) => {
 
         sub.subscription = store.snapshotLoadingState$.pipe(filter(x => !isLoadingStateLoading(x)), first()).subscribe((x) => {
           expect(isLoadingStateLoading(x)).toBe(false);
@@ -146,7 +165,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
           done();
         });
 
-      });
+      }));
 
       describe('document does not exists', () => {
 
@@ -154,16 +173,16 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
           await testDoc.accessor.delete();
         });
 
-        it('should not exist', (done) => {
+        it('should not exist', callbackTest((done) => {
 
           sub.subscription = store.exists$.pipe(first()).subscribe((exists) => {
             expect(exists).toBe(false);
             done();
           });
 
-        });
+        }));
 
-        it('dataLoadingState$ should return an error state.', (done) => {
+        it('dataLoadingState$ should return an error state.', callbackTest((done) => {
 
           sub.subscription = store.dataLoadingState$.pipe(filter(x => !isLoadingStateLoading(x)), first()).subscribe({
             next: (state) => {
@@ -172,22 +191,22 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
             }
           });
 
-        });
+        }));
 
       });
 
       describe('document exists', () => {
 
-        it('should exist', (done) => {
+        it('should exist', callbackTest((done) => {
 
           sub.subscription = store.exists$.pipe(first()).subscribe((exists) => {
             expect(exists).toBe(true);
             done();
           });
 
-        });
+        }));
 
-        it('dataLoadingState$ should return a success state', (done) => {
+        it('dataLoadingState$ should return a success state', callbackTest((done) => {
 
           sub.subscription = store.dataLoadingState$.pipe(filter(x => !isLoadingStateLoading(x)), first()).subscribe({
             next: (state) => {
@@ -197,7 +216,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
             }
           });
 
-        });
+        }));
 
       });
 

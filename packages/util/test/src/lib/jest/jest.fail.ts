@@ -4,11 +4,8 @@
  * Since fail() was silently removed, we redefine it.
  */
 
+import { TestDoneCallback, failWithTestDoneCallback, TestProvidesCallbackWithDone, TestProvidesCallback } from '../shared';
 import {
-  type TestDoneCallback,
-  failWithTestDoneCallback,
-  type TestProvidesCallbackWithDone,
-  type TestProvidesCallback,
   ExpectedFailError,
   failSuccessfullyError,
   failSuccessfully,

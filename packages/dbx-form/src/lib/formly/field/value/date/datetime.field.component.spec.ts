@@ -3,6 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
 import { timeOnlyField } from '../../value/date/datetime.field';
 import { first } from 'rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxDateTimeFieldComponent', () => {
   beforeEach(async () => {
@@ -46,15 +47,18 @@ describe('DbxDateTimeFieldComponent', () => {
         form.detectFormChanges(fixture);
       });
 
-      it('should have set the time properly.', (done) => {
-        form
-          .getValue()
-          .pipe(first())
-          .subscribe(({ date: dateValue }) => {
-            expect(dateValue).toBeSameMinuteAs(date);
-            done();
-          });
-      });
+      it(
+        'should have set the time properly.',
+        callbackTest((done) => {
+          form
+            .getValue()
+            .pipe(first())
+            .subscribe(({ date: dateValue }) => {
+              expect(dateValue).toBeSameMinuteAs(date);
+              done();
+            });
+        })
+      );
     });
   });
 });

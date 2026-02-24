@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { first, Subject } from 'rxjs';
 import { onMatchDelta } from './delta';
-import { failWithJestDoneCallback } from '@dereekb/util/test';
+import { failWithJestDoneCallback, callbackTest } from '@dereekb/util/test';
 import { tapAfterTimeout } from './timeout';
 
 describe('onMatchDelta', () => {

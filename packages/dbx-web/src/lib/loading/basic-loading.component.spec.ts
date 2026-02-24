@@ -8,6 +8,7 @@ import { ErrorInput } from '@dereekb/util';
 import { LoadingComponentState, DbxBasicLoadingComponent } from './basic-loading.component';
 import { DbxErrorComponent } from '../error/error.component';
 import { filter, first } from 'rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxBasicLoadingComponent', () => {
   beforeEach(async () => {
@@ -59,15 +60,18 @@ describe('DbxBasicLoadingComponent', () => {
       fixture.destroy();
     });
 
-    it('should display the content while not loading.', (done) => {
-      waitForComponentToHaveContent(() => {
-        expect(component.loadingSignal()).toBe(false);
-        const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
-        expect(testContent).not.toBeNull();
-        expect(testContent.textContent).toBe(TEST_CONTENT);
-        done();
-      });
-    });
+    it(
+      'should display the content while not loading.',
+      callbackTest((done) => {
+        waitForComponentToHaveContent(() => {
+          expect(component.loadingSignal()).toBe(false);
+          const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
+          expect(testContent).not.toBeNull();
+          expect(testContent.textContent).toBe(TEST_CONTENT);
+          done();
+        });
+      })
+    );
 
     describe('and loading', () => {
       beforeEach(async () => {
@@ -75,52 +79,61 @@ describe('DbxBasicLoadingComponent', () => {
         fixture.detectChanges();
       });
 
-      it('should not display the content.', (done) => {
-        waitForComponentToBeLoading(() => {
-          const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
-          expect(testContentQueryResult).toBeNull();
-          done();
-        });
-      });
-
-      it('should display the loading progress view.', (done) => {
-        const injector = TestBed.inject(Injector);
-
-        waitForComponentToBeLoading(() => {
-          runInInjectionContext(injector, () => {
-            toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
-              .pipe(
-                filter((x) => x),
-                first()
-              )
-              .subscribe((hasNoCustomLoading) => {
-                expect(hasNoCustomLoading).toBe(true);
-                const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
-                expect(loadingProgressQueryResult).not.toBeNull();
-                done();
-              });
+      it(
+        'should not display the content.',
+        callbackTest((done) => {
+          waitForComponentToBeLoading(() => {
+            const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
+            expect(testContentQueryResult).toBeNull();
+            done();
           });
-        });
-      });
+        })
+      );
 
-      it('should not detect custom loading content (that does not exist).', (done) => {
-        const injector = TestBed.inject(Injector);
+      it(
+        'should display the loading progress view.',
+        callbackTest((done) => {
+          const injector = TestBed.inject(Injector);
 
-        waitForComponentToBeLoading(() => {
-          fixture.detectChanges();
-          runInInjectionContext(injector, () => {
-            toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
-              .pipe(
-                filter((x) => x),
-                first()
-              )
-              .subscribe((hasNoCustomLoading) => {
-                expect(hasNoCustomLoading).toBe(true);
-                done();
-              });
+          waitForComponentToBeLoading(() => {
+            runInInjectionContext(injector, () => {
+              toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
+                .pipe(
+                  filter((x) => x),
+                  first()
+                )
+                .subscribe((hasNoCustomLoading) => {
+                  expect(hasNoCustomLoading).toBe(true);
+                  const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
+                  expect(loadingProgressQueryResult).not.toBeNull();
+                  done();
+                });
+            });
           });
-        });
-      });
+        })
+      );
+
+      it(
+        'should not detect custom loading content (that does not exist).',
+        callbackTest((done) => {
+          const injector = TestBed.inject(Injector);
+
+          waitForComponentToBeLoading(() => {
+            fixture.detectChanges();
+            runInInjectionContext(injector, () => {
+              toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
+                .pipe(
+                  filter((x) => x),
+                  first()
+                )
+                .subscribe((hasNoCustomLoading) => {
+                  expect(hasNoCustomLoading).toBe(true);
+                  done();
+                });
+            });
+          });
+        })
+      );
     });
 
     describe('and error', () => {
@@ -133,40 +146,49 @@ describe('DbxBasicLoadingComponent', () => {
         fixture.detectChanges();
       });
 
-      it('should not display the content.', (done) => {
-        waitForComponentToHaveError(() => {
-          const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
-          expect(testContentQueryResult).toBeNull();
-          done();
-        });
-      });
-
-      it('should display the error view.', (done) => {
-        waitForComponentToHaveError(() => {
-          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
-          expect(errorComponentQueryResult).not.toBeNull();
-          done();
-        });
-      });
-
-      it('should not detect custom error content (that does not exist).', (done) => {
-        const injector = TestBed.inject(Injector);
-
-        waitForComponentToHaveError(() => {
-          fixture.detectChanges();
-          runInInjectionContext(injector, () => {
-            toObservable(fixture.componentInstance.component()?.hasNoCustomErrorSignal!)
-              .pipe(
-                filter((x) => x),
-                first()
-              )
-              .subscribe((hasNoCustomError) => {
-                expect(hasNoCustomError).toBe(true);
-                done();
-              });
+      it(
+        'should not display the content.',
+        callbackTest((done) => {
+          waitForComponentToHaveError(() => {
+            const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
+            expect(testContentQueryResult).toBeNull();
+            done();
           });
-        });
-      });
+        })
+      );
+
+      it(
+        'should display the error view.',
+        callbackTest((done) => {
+          waitForComponentToHaveError(() => {
+            const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
+            expect(errorComponentQueryResult).not.toBeNull();
+            done();
+          });
+        })
+      );
+
+      it(
+        'should not detect custom error content (that does not exist).',
+        callbackTest((done) => {
+          const injector = TestBed.inject(Injector);
+
+          waitForComponentToHaveError(() => {
+            fixture.detectChanges();
+            runInInjectionContext(injector, () => {
+              toObservable(fixture.componentInstance.component()?.hasNoCustomErrorSignal!)
+                .pipe(
+                  filter((x) => x),
+                  first()
+                )
+                .subscribe((hasNoCustomError) => {
+                  expect(hasNoCustomError).toBe(true);
+                  done();
+                });
+            });
+          });
+        })
+      );
     });
   });
 
@@ -193,32 +215,38 @@ describe('DbxBasicLoadingComponent', () => {
       fixture.destroy();
     });
 
-    it('should display the custom error content on error.', (done) => {
-      waitForComponentToHaveError(() => {
-        const customError: HTMLElement = fixture.debugElement.query(By.css('#test-error')).nativeElement;
-        expect(customError).not.toBeNull();
-        expect(customError.textContent).toBe(CUSTOM_ERROR_CONTENT);
-        done();
-      });
-    });
-
-    it('should detect the custom error content.', (done) => {
-      waitForComponentToHaveError(() => {
-        const injector = TestBed.inject(Injector);
-
-        runInInjectionContext(injector, () => {
-          toObservable(component.component()?.hasNoCustomErrorSignal!)
-            .pipe(
-              filter((x) => !x),
-              first()
-            )
-            .subscribe((hasNoCustomError) => {
-              expect(hasNoCustomError).toBe(false);
-              done();
-            });
+    it(
+      'should display the custom error content on error.',
+      callbackTest((done) => {
+        waitForComponentToHaveError(() => {
+          const customError: HTMLElement = fixture.debugElement.query(By.css('#test-error')).nativeElement;
+          expect(customError).not.toBeNull();
+          expect(customError.textContent).toBe(CUSTOM_ERROR_CONTENT);
+          done();
         });
-      });
-    });
+      })
+    );
+
+    it(
+      'should detect the custom error content.',
+      callbackTest((done) => {
+        waitForComponentToHaveError(() => {
+          const injector = TestBed.inject(Injector);
+
+          runInInjectionContext(injector, () => {
+            toObservable(component.component()?.hasNoCustomErrorSignal!)
+              .pipe(
+                filter((x) => !x),
+                first()
+              )
+              .subscribe((hasNoCustomError) => {
+                expect(hasNoCustomError).toBe(false);
+                done();
+              });
+          });
+        });
+      })
+    );
   });
 
   describe('with custom loading', () => {
@@ -239,33 +267,39 @@ describe('DbxBasicLoadingComponent', () => {
       fixture.destroy();
     });
 
-    it('should display the custom loading content while loading.', (done) => {
-      waitForComponentToBeLoading(() => {
-        const customLoading: HTMLElement = fixture.debugElement.query(By.css('#custom-loading')).nativeElement;
-        expect(customLoading).not.toBeNull();
-        expect(customLoading.textContent).toBe(CUSTOM_LOADING_CONTENT);
-        done();
-      });
-    });
-
-    it('should detect the custom loading content.', (done) => {
-      waitForComponentToBeLoading(() => {
-        fixture.detectChanges();
-        const injector = TestBed.inject(Injector);
-
-        runInInjectionContext(injector, () => {
-          toObservable(component.component()?.hasNoCustomLoadingSignal!)
-            .pipe(
-              filter((x) => !x),
-              first()
-            )
-            .subscribe((hasNoCustomLoading) => {
-              expect(hasNoCustomLoading).toBe(false);
-              done();
-            });
+    it(
+      'should display the custom loading content while loading.',
+      callbackTest((done) => {
+        waitForComponentToBeLoading(() => {
+          const customLoading: HTMLElement = fixture.debugElement.query(By.css('#custom-loading')).nativeElement;
+          expect(customLoading).not.toBeNull();
+          expect(customLoading.textContent).toBe(CUSTOM_LOADING_CONTENT);
+          done();
         });
-      });
-    });
+      })
+    );
+
+    it(
+      'should detect the custom loading content.',
+      callbackTest((done) => {
+        waitForComponentToBeLoading(() => {
+          fixture.detectChanges();
+          const injector = TestBed.inject(Injector);
+
+          runInInjectionContext(injector, () => {
+            toObservable(component.component()?.hasNoCustomLoadingSignal!)
+              .pipe(
+                filter((x) => !x),
+                first()
+              )
+              .subscribe((hasNoCustomLoading) => {
+                expect(hasNoCustomLoading).toBe(false);
+                done();
+              });
+          });
+        });
+      })
+    );
   });
 });
 

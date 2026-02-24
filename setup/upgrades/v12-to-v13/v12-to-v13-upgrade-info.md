@@ -302,3 +302,10 @@ Now run `nx g @nx/vitest:configuration --project=demo-api --testEnvironment=node
 
 #### util-test changes
 With the addition of Vitest, the `util-test` package has been updated to support Vitest. Since vitest and jest are similar, the utilities are mostly the same.
+
+#### Removal of done callback tests
+Vitest does not support the `done` callback in tests. If you have any tests that use the `done` callback, you will need to remove it and use the promise-based approach instead.
+
+You can use the `convert-callback-tests.js` script in the root of your project to convert your tests. 
+
+Run it with the `--dry-run` flag to see what changes would be made.

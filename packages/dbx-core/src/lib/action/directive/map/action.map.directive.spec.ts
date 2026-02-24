@@ -6,6 +6,7 @@ import { DbxCoreActionModule } from '../../action.module';
 import { DbxActionDirective } from '../context/action.directive';
 import { DbxActionContextMapDirective } from './action.map.directive';
 import { DbxActionMapSourceDirective } from './action.map.source.directive';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxActionContextMapDirective', () => {
   beforeEach(async () => {
@@ -64,12 +65,15 @@ describe('DbxActionContextMapDirective', () => {
       expect(dbxActionFromMap.key).toBeDefined();
     });
 
-    it('should provide a source from the map.', (done) => {
-      dbxActionFromMap.store$.subscribe((store) => {
-        expect(store).toBeDefined();
-        done();
-      });
-    });
+    it(
+      'should provide a source from the map.',
+      callbackTest((done) => {
+        dbxActionFromMap.store$.subscribe((store) => {
+          expect(store).toBeDefined();
+          done();
+        });
+      })
+    );
   });
 });
 

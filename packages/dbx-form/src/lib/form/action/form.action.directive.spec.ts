@@ -5,6 +5,7 @@ import { DbxActionFormDirective } from './form.action.directive';
 import { FORM_TEST_PROVIDERS } from '../../../test/test.formly';
 import { DbxTestDbxFormComponent } from '../../../test/test.formly.component';
 import { filter, first, switchMap } from 'rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('FormActionDirective', () => {
   beforeEach(async () => {
@@ -54,20 +55,23 @@ describe('FormActionDirective', () => {
         });
     });
 
-    it('should provide the value when triggered.', (done) => {
-      directive.trigger();
+    it(
+      'should provide the value when triggered.',
+      callbackTest((done) => {
+        directive.trigger();
 
-      directive.sourceInstance.triggered$
-        .pipe(
-          filter((x) => x),
-          switchMap(() => directive.sourceInstance.valueReady$),
-          first()
-        )
-        .subscribe((valueReady) => {
-          expect(valueReady).toBeDefined();
-          done();
-        });
-    });
+        directive.sourceInstance.triggered$
+          .pipe(
+            filter((x) => x),
+            switchMap(() => directive.sourceInstance.valueReady$),
+            first()
+          )
+          .subscribe((valueReady) => {
+            expect(valueReady).toBeDefined();
+            done();
+          });
+      })
+    );
   });
 
   describe('when form is invalid', () => {
@@ -75,18 +79,21 @@ describe('FormActionDirective', () => {
       form.setInvalidTextForTest(fixture);
     });
 
-    it('isModifiedAndCanTrigger$ should be false.', (done) => {
-      form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
-        expect(isComplete).toBe(false);
-      });
+    it(
+      'isModifiedAndCanTrigger$ should be false.',
+      callbackTest((done) => {
+        form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
+          expect(isComplete).toBe(false);
+        });
 
-      directive.trigger();
+        directive.trigger();
 
-      directive.sourceInstance.isModifiedAndCanTrigger$.pipe(first()).subscribe((canTrigger) => {
-        expect(canTrigger).toBe(false);
-        done();
-      });
-    });
+        directive.sourceInstance.isModifiedAndCanTrigger$.pipe(first()).subscribe((canTrigger) => {
+          expect(canTrigger).toBe(false);
+          done();
+        });
+      })
+    );
   });
 
   // todo: test dbxActionFormDisabledOnWorking

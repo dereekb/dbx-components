@@ -1,4 +1,90 @@
-import { type PromiseOrValue } from '@dereekb/util';
+import { type PromiseOrValue, PromiseReference, promiseReference } from '@dereekb/util';
+
+// MARK: Test Done Callback
+/**
+ * A done callback function used by test frameworks to signal that a test has completed.
+ *
+ * Most modern test frameworks have deprecated the "done" callback in favor of async/await.
+ */
+export type TestDoneCallback = ((...args: any[]) => any) & {
+  /**
+   * NOTE: Not available in all test frameworks, but here for legacy purposes.
+   *
+   * @param error
+   */
+  fail(error?: string | { message: string }): any;
+};
+
+/**
+ * Passes the error to the TestDoneCallback.
+ * @param done
+ * @param e
+ */
+export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = new Error('failed test')) {
+  if (done.fail != null) {
+    done.fail(e as Error);
+  } else {
+    done(e);
+  }
+}
+
+export type TestProvidesCallbackWithDone = (cb: TestDoneCallback) => void | undefined;
+export type TestProvidesCallback = TestProvidesCallbackWithDone | (() => Promise<unknown>);
+
+export type TestDoneCallbackRef = Omit<TestDoneCallback, 'fail'> & {
+  readonly _promise: PromiseReference<void>;
+  readonly done: TestDoneCallback;
+};
+
+/**
+ * Creates a new TestDoneCallbackRef.
+ *
+ * Used to create a promise reference that can be used to assert that a test function was called.
+ */
+export function testDoneCallbackRef(): TestDoneCallbackRef {
+  const _promise = promiseReference<void>();
+
+  const done: TestDoneCallback = (e?: any) => {
+    if (e) {
+      _promise.reject(e);
+    } else {
+      _promise.resolve();
+    }
+  };
+
+  done.fail = done;
+
+  return {
+    _promise,
+    done
+  };
+}
+
+/**
+ * Wraps a callback-based test (using done) for Vitest compatibility.
+ * Converts the callback pattern to a Promise-based pattern.
+ *
+ * @example
+ *
+ * // Before (Jasmine/Jest style):
+ * it('test name', (done) => {
+ *   // async test code
+ *   done();
+ * });
+ *
+ * // After (Vitest compatible):
+ * it('test name', callbackTest((done) => {
+ *   // async test code
+ *   done();
+ * }));
+ */
+export function callbackTest(testFn: TestProvidesCallbackWithDone): () => Promise<void> {
+  return async () => {
+    const done = testDoneCallbackRef();
+    testFn(done.done);
+    return done._promise.promise;
+  };
+}
 
 /**
  * A fixture instance that is generated new for each test run.

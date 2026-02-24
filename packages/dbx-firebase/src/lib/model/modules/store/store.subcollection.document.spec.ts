@@ -5,6 +5,7 @@ import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseDocumentWithParentStore } from './store.subcollection.document';
 import { TestBed } from '@angular/core/testing';
+import { callbackTest } from '@dereekb/util/test';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
@@ -54,26 +55,32 @@ describe('AbstractDbxFirebaseDocumentWithParentStore', () => {
         store.setParentStore(parentStore);
       });
 
-      it('should not load while a parent is not set.', (done) => {
-        sub.subscription = store.document$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
-          expect(result).toBe(false);
-          done();
-        });
-      });
+      it(
+        'should not load while a parent is not set.',
+        callbackTest((done) => {
+          sub.subscription = store.document$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+            expect(result).toBe(false);
+            done();
+          });
+        })
+      );
 
       describe('with parent loaded', () => {
         beforeEach(() => {
           parentStore.setId('test');
         });
 
-        it('should load the document.', (done) => {
-          store.setId('test');
+        it(
+          'should load the document.',
+          callbackTest((done) => {
+            store.setId('test');
 
-          sub.subscription = store.document$.pipe(first()).subscribe((iteration) => {
-            expect(iteration).toBeDefined();
-            done();
-          });
-        });
+            sub.subscription = store.document$.pipe(first()).subscribe((iteration) => {
+              expect(iteration).toBeDefined();
+              done();
+            });
+          })
+        );
       });
     });
   });

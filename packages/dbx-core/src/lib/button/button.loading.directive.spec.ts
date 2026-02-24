@@ -5,6 +5,7 @@ import { filter } from 'rxjs';
 import { DbxButtonDirective } from './button.directive';
 import { DbxLoadingButtonDirective } from './button.loading.directive';
 import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingButton', () => {
   beforeEach(async () => {
@@ -33,15 +34,18 @@ describe('DbxLoadingButton', () => {
     expect(((testComponent.loadingButtonDirective() as any)._loadingEffectSub as SubscriptionObject).hasSubscription).toBe(true);
   });
 
-  it('should set the button to working when loading is true.', (done) => {
-    testComponent.context.setLoading(true);
+  it(
+    'should set the button to working when loading is true.',
+    callbackTest((done) => {
+      testComponent.context.setLoading(true);
 
-    testComponent.context.stream$.pipe(filter((x) => Boolean(x.loading))).subscribe((x) => {
-      expect(x.loading).toBe(true);
-      expect(button.workingSignal()).toBe(true);
-      done();
-    });
-  });
+      testComponent.context.stream$.pipe(filter((x) => Boolean(x.loading))).subscribe((x) => {
+        expect(x.loading).toBe(true);
+        expect(button.workingSignal()).toBe(true);
+        done();
+      });
+    })
+  );
 });
 
 @Component({

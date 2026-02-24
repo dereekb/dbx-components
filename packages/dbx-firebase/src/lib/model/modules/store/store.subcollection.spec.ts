@@ -5,6 +5,7 @@ import { filter, first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseCollectionWithParentStore } from './store.subcollection';
 import { TestBed } from '@angular/core/testing';
+import { callbackTest } from '@dereekb/util/test';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
@@ -53,12 +54,15 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
         store.setParentStore(parentStore);
       });
 
-      it('should not load while a parent is not set.', (done) => {
-        sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
-          expect(result).toBe(false);
-          done();
-        });
-      });
+      it(
+        'should not load while a parent is not set.',
+        callbackTest((done) => {
+          sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+            expect(result).toBe(false);
+            done();
+          });
+        })
+      );
 
       describe('with parent loaded', () => {
         beforeEach(() => {
@@ -66,24 +70,30 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
         });
 
         describe('with no constraints set', () => {
-          it('should not load the iterator.', (done) => {
-            sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
-              expect(result).toBe(false);
-              done();
-            });
-          });
+          it(
+            'should not load the iterator.',
+            callbackTest((done) => {
+              sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+                expect(result).toBe(false);
+                done();
+              });
+            })
+          );
 
           describe('with waitForNonNullConstraints set to false', () => {
             beforeEach(() => {
               store.setWaitForNonNullConstraints(false);
             });
 
-            it('should load the iterator.', (done) => {
-              sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
-                expect(iteration).toBeDefined();
-                done();
-              });
-            });
+            it(
+              'should load the iterator.',
+              callbackTest((done) => {
+                sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
+                  expect(iteration).toBeDefined();
+                  done();
+                });
+              })
+            );
           });
         });
 
@@ -92,12 +102,15 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
             store.setConstraints([]);
           });
 
-          it('should load the iterator.', (done) => {
-            sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
-              expect(iteration).toBeDefined();
-              done();
-            });
-          });
+          it(
+            'should load the iterator.',
+            callbackTest((done) => {
+              sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
+                expect(iteration).toBeDefined();
+                done();
+              });
+            })
+          );
         });
       });
     });
@@ -108,25 +121,31 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
         store.setSourceMode('group');
       });
 
-      it('should not load while a collection group is not set.', (done) => {
-        store.setCollectionGroup(undefined);
-        sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
-          expect(result).toBe(false);
-          done();
-        });
-      });
+      it(
+        'should not load while a collection group is not set.',
+        callbackTest((done) => {
+          store.setCollectionGroup(undefined);
+          sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+            expect(result).toBe(false);
+            done();
+          });
+        })
+      );
 
       describe('with waitForNonNullConstraints set to false', () => {
         beforeEach(() => {
           store.setWaitForNonNullConstraints(false);
         });
 
-        it('should provide a firestoreIteration$', (done) => {
-          sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
-            expect(result).toBeDefined();
-            done();
-          });
-        });
+        it(
+          'should provide a firestoreIteration$',
+          callbackTest((done) => {
+            sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
+              expect(result).toBeDefined();
+              done();
+            });
+          })
+        );
       });
 
       describe('with non-null constraint set', () => {
@@ -134,12 +153,15 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
           store.setConstraints([]);
         });
 
-        it('should provide a firestoreIteration$', (done) => {
-          sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
-            expect(result).toBeDefined();
-            done();
-          });
-        });
+        it(
+          'should provide a firestoreIteration$',
+          callbackTest((done) => {
+            sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
+              expect(result).toBeDefined();
+              done();
+            });
+          })
+        );
       });
     });
 
@@ -149,29 +171,35 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
           parentStore.setId('test');
         });
 
-        it('should change when the parent store changes.', (done) => {
-          store.loader$.pipe(first()).subscribe((initialLoader) => {
+        it(
+          'should change when the parent store changes.',
+          callbackTest((done) => {
+            store.loader$.pipe(first()).subscribe((initialLoader) => {
+              store.setParentStore(parentStore);
+
+              sub.subscription = store.loader$.pipe(filter((x) => x !== initialLoader)).subscribe((loader) => {
+                expect(loader).toBeDefined();
+                done();
+              });
+            });
+          })
+        );
+
+        it(
+          'should change when the loaded parent changes.',
+          callbackTest((done) => {
             store.setParentStore(parentStore);
 
-            sub.subscription = store.loader$.pipe(filter((x) => x !== initialLoader)).subscribe((loader) => {
-              expect(loader).toBeDefined();
-              done();
+            store.loader$.pipe(first()).subscribe((initialLoader) => {
+              parentStore.setId('secondtest');
+
+              sub.subscription = store.loader$.pipe(filter((x) => x !== initialLoader)).subscribe((loader) => {
+                expect(loader).toBeDefined();
+                done();
+              });
             });
-          });
-        });
-
-        it('should change when the loaded parent changes.', (done) => {
-          store.setParentStore(parentStore);
-
-          store.loader$.pipe(first()).subscribe((initialLoader) => {
-            parentStore.setId('secondtest');
-
-            sub.subscription = store.loader$.pipe(filter((x) => x !== initialLoader)).subscribe((loader) => {
-              expect(loader).toBeDefined();
-              done();
-            });
-          });
-        });
+          })
+        );
       });
     });
   });

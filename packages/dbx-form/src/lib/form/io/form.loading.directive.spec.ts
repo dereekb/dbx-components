@@ -4,6 +4,7 @@ import { first, Observable, of } from 'rxjs';
 import { LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFormLoadingSourceDirective } from './form.loading.directive';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxFormLoadingPairSourceDirective', () => {
   beforeEach(async () => {
@@ -39,20 +40,23 @@ describe('DbxFormLoadingPairSourceDirective', () => {
     expect(testComponent.directive).toBeDefined();
   });
 
-  it('should pass the value of the observable to the form', (done) => {
-    const TEST_VALUE = 'TEST VALUE';
-    testComponent.source = of(successResult({ text: TEST_VALUE, invalidField: 0 }));
-    form.detectFormChanges(fixture);
+  it(
+    'should pass the value of the observable to the form',
+    callbackTest((done) => {
+      const TEST_VALUE = 'TEST VALUE';
+      testComponent.source = of(successResult({ text: TEST_VALUE, invalidField: 0 }));
+      form.detectFormChanges(fixture);
 
-    form
-      .getValue()
-      .pipe(first())
-      .subscribe((value) => {
-        expect(value.text).toBe(TEST_VALUE);
-        expect((value as any).invalidField).toBeUndefined();
-        done();
-      });
-  });
+      form
+        .getValue()
+        .pipe(first())
+        .subscribe((value) => {
+          expect(value.text).toBe(TEST_VALUE);
+          expect((value as any).invalidField).toBeUndefined();
+          done();
+        });
+    })
+  );
 });
 
 @Component({

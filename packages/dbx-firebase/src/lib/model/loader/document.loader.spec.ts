@@ -1,3 +1,4 @@
+import { callbackTest } from '@dereekb/util/test';
 /**
  * @jest-environment node
  */
@@ -45,44 +46,53 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
 
       describe('setters', () => {
         describe('observables', () => {
-          it('should set documents using an observable', (done) => {
-            const itemsSubject = new Subject<MockItemDocument[]>();
+          it(
+            'should set documents using an observable',
+            callbackTest((done) => {
+              const itemsSubject = new Subject<MockItemDocument[]>();
 
-            instance.setDocuments(itemsSubject);
+              instance.setDocuments(itemsSubject);
 
+              sub.subscription = instance.data$.pipe(first()).subscribe((x) => {
+                expect(x).toBeDefined();
+                expect(x.length).toBe(items.length);
+                done();
+              });
+
+              itemsSubject.next(items);
+              itemsSubject.complete();
+            })
+          );
+        });
+      });
+
+      describe('accessors', () => {
+        it(
+          'data$ should return the current iteration.',
+          callbackTest((done) => {
             sub.subscription = instance.data$.pipe(first()).subscribe((x) => {
               expect(x).toBeDefined();
               expect(x.length).toBe(items.length);
               done();
             });
+          })
+        );
 
-            itemsSubject.next(items);
-            itemsSubject.complete();
-          });
-        });
-      });
-
-      describe('accessors', () => {
-        it('data$ should return the current iteration.', (done) => {
-          sub.subscription = instance.data$.pipe(first()).subscribe((x) => {
-            expect(x).toBeDefined();
-            expect(x.length).toBe(items.length);
-            done();
-          });
-        });
-
-        it('pageLoadingState$ should return the current state.', (done) => {
-          sub.subscription = instance.pageLoadingState$
-            .pipe(
-              filter((x) => isLoadingStateFinishedLoading(x)),
-              first()
-            )
-            .subscribe((x) => {
-              expect(x).toBeDefined();
-              expect(x.value?.length).toBe(items.length);
-              done();
-            });
-        });
+        it(
+          'pageLoadingState$ should return the current state.',
+          callbackTest((done) => {
+            sub.subscription = instance.pageLoadingState$
+              .pipe(
+                filter((x) => isLoadingStateFinishedLoading(x)),
+                first()
+              )
+              .subscribe((x) => {
+                expect(x).toBeDefined();
+                expect(x.value?.length).toBe(items.length);
+                done();
+              });
+          })
+        );
       });
     });
   });

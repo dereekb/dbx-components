@@ -1,6 +1,7 @@
 import { authorizedTestWithMockItemCollection, type MockItem, type MockItemDocument, type MockItemFirestoreCollection } from '@dereekb/firebase/test';
 import { first } from 'rxjs';
 import { AbstractDbxFirebaseCollectionStore } from './store.collection';
+import { callbackTest } from '@dereekb/util/test';
 
 export class TestDbxFirebaseCollectionStore extends AbstractDbxFirebaseCollectionStore<MockItem, MockItemDocument> {
   constructor(firestoreCollection: MockItemFirestoreCollection) {
@@ -24,31 +25,37 @@ describe('AbstractDbxFirebaseCollectionStore', () => {
     describe('loader$', () => {
       describe('collectionMode', () => {
         describe('query', () => {
-          it('should return the loader.', (done) => {
-            store.loader$.pipe(first()).subscribe((loader) => {
-              expect(loader).toBeDefined();
+          it(
+            'should return the loader.',
+            callbackTest((done) => {
+              store.loader$.pipe(first()).subscribe((loader) => {
+                expect(loader).toBeDefined();
 
-              loader.collectionMode$.pipe(first()).subscribe((mode) => {
-                expect(mode).toBe('query');
-                done();
+                loader.collectionMode$.pipe(first()).subscribe((mode) => {
+                  expect(mode).toBe('query');
+                  done();
+                });
               });
-            });
-          });
+            })
+          );
         });
 
         describe('references', () => {
-          it('should return the loader.', (done) => {
-            store.setCollectionMode('references');
+          it(
+            'should return the loader.',
+            callbackTest((done) => {
+              store.setCollectionMode('references');
 
-            store.loader$.pipe(first()).subscribe((loader) => {
-              expect(loader).toBeDefined();
+              store.loader$.pipe(first()).subscribe((loader) => {
+                expect(loader).toBeDefined();
 
-              loader.collectionMode$.pipe(first()).subscribe((mode) => {
-                expect(mode).toBe('references');
-                done();
+                loader.collectionMode$.pipe(first()).subscribe((mode) => {
+                  expect(mode).toBe('references');
+                  done();
+                });
               });
-            });
-          });
+            })
+          );
         });
       });
     });

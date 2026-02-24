@@ -1,3 +1,4 @@
+import { callbackTest } from '@dereekb/util/test';
 /**
  * @jest-environment node
  */
@@ -26,19 +27,25 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
 
     describe('accessors', () => {
       function describeAccessorTests() {
-        it('firestoreIteration$ should return the current iteration.', (done) => {
-          sub.subscription = instance.firestoreIteration$.pipe(first()).subscribe((x) => {
-            expect(x).toBeDefined();
-            done();
-          });
-        });
+        it(
+          'firestoreIteration$ should return the current iteration.',
+          callbackTest((done) => {
+            sub.subscription = instance.firestoreIteration$.pipe(first()).subscribe((x) => {
+              expect(x).toBeDefined();
+              done();
+            });
+          })
+        );
 
-        it('should return the current accumulator.', (done) => {
-          sub.subscription = instance.accumulator$.pipe(first()).subscribe((x) => {
-            expect(x).toBeDefined();
-            done();
-          });
-        });
+        it(
+          'should return the current accumulator.',
+          callbackTest((done) => {
+            sub.subscription = instance.accumulator$.pipe(first()).subscribe((x) => {
+              expect(x).toBeDefined();
+              done();
+            });
+          })
+        );
       }
 
       describe('with constraints set', () => {
@@ -63,31 +70,37 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
         instance.setCollection(undefined);
       });
 
-      it('firestoreIteration$ should not emit anything.', (done) => {
-        sub.subscription = instance.firestoreIteration$
-          .pipe(
-            map(() => false),
-            timeout({ first: 200, with: () => of(true) }),
-            first()
-          )
-          .subscribe((x) => {
-            expect(x).toBe(true);
-            done();
-          });
-      });
+      it(
+        'firestoreIteration$ should not emit anything.',
+        callbackTest((done) => {
+          sub.subscription = instance.firestoreIteration$
+            .pipe(
+              map(() => false),
+              timeout({ first: 200, with: () => of(true) }),
+              first()
+            )
+            .subscribe((x) => {
+              expect(x).toBe(true);
+              done();
+            });
+        })
+      );
 
-      it('accumulator$ should not emit anything.', (done) => {
-        sub.subscription = instance.accumulator$
-          .pipe(
-            map(() => false),
-            timeout({ first: 200, with: () => of(true) }),
-            first()
-          )
-          .subscribe((x) => {
-            expect(x).toBe(true);
-            done();
-          });
-      });
+      it(
+        'accumulator$ should not emit anything.',
+        callbackTest((done) => {
+          sub.subscription = instance.accumulator$
+            .pipe(
+              map(() => false),
+              timeout({ first: 200, with: () => of(true) }),
+              first()
+            )
+            .subscribe((x) => {
+              expect(x).toBe(true);
+              done();
+            });
+        })
+      );
     });
   });
 });

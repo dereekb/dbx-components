@@ -8,6 +8,7 @@ import { DbxCoreButtonModule } from '../button.module';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { DbxButtonDirective } from '../button.directive';
 import { type Maybe } from '@dereekb/util';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('Action Button', () => {
   beforeEach(async () => {
@@ -38,14 +39,17 @@ describe('Action Button', () => {
     });
 
     describe('on click', () => {
-      it('should trigger action', (done) => {
-        testComponent.button!.clickButton();
+      it(
+        'should trigger action',
+        callbackTest((done) => {
+          testComponent.button!.clickButton();
 
-        testComponent.directive!.sourceInstance.triggered$.subscribe((triggered) => {
-          expect(triggered).toBe(true);
-          done();
-        });
-      });
+          testComponent.directive!.sourceInstance.triggered$.subscribe((triggered) => {
+            expect(triggered).toBe(true);
+            done();
+          });
+        })
+      );
 
       it('button should be working.', () => {
         testComponent.button!.clickButton();
@@ -84,14 +88,17 @@ describe('Action Button', () => {
       expect(testComponent.buttonDirective).toBeDefined();
     });
 
-    it('should trigger action on click', (done) => {
-      testComponent.button!.clickButton();
+    it(
+      'should trigger action on click',
+      callbackTest((done) => {
+        testComponent.button!.clickButton();
 
-      testComponent.directive!.sourceInstance.triggered$.subscribe((triggered) => {
-        expect(triggered).toBe(true);
-        done();
-      });
-    });
+        testComponent.directive!.sourceInstance.triggered$.subscribe((triggered) => {
+          expect(triggered).toBe(true);
+          done();
+        });
+      })
+    );
   });
 });
 

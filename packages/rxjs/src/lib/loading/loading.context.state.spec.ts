@@ -1,6 +1,7 @@
 import { loadingStateContext, type MutableLoadingStateContext, SubscriptionObject } from '@dereekb/rxjs';
 import { isLoadingStateLoading, successResult } from './loading.state';
 import { delay, first, timeout, of } from 'rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('loadingStateContext()', () => {
   describe('context', () => {
@@ -15,23 +16,29 @@ describe('loadingStateContext()', () => {
     });
 
     describe('no state observable.', () => {
-      it('should return a loading state stream.', (done) => {
-        context.stream$.pipe(first()).subscribe({
-          next: ({ loading }) => {
-            expect(loading).toBe(true);
-          },
-          complete: done
-        });
-      });
+      it(
+        'should return a loading state stream.',
+        callbackTest((done) => {
+          context.stream$.pipe(first()).subscribe({
+            next: ({ loading }) => {
+              expect(loading).toBe(true);
+            },
+            complete: done
+          });
+        })
+      );
 
-      it('loading$ should return true.', (done) => {
-        context.loading$.pipe(first()).subscribe({
-          next: (loading) => {
-            expect(loading).toBe(true);
-          },
-          complete: done
-        });
-      });
+      it(
+        'loading$ should return true.',
+        callbackTest((done) => {
+          context.loading$.pipe(first()).subscribe({
+            next: (loading) => {
+              expect(loading).toBe(true);
+            },
+            complete: done
+          });
+        })
+      );
     });
 
     describe('long loading state', () => {
@@ -47,23 +54,29 @@ describe('loadingStateContext()', () => {
         sub.destroy();
       });
 
-      it('loading$ should return true without waiting for the delay.', (done) => {
-        sub.subscription = context.loading$.pipe(timeout({ first: 100 }), first()).subscribe({
-          next: (loading) => {
-            expect(loading).toBe(true);
-          },
-          complete: done
-        });
-      });
+      it(
+        'loading$ should return true without waiting for the delay.',
+        callbackTest((done) => {
+          sub.subscription = context.loading$.pipe(timeout({ first: 100 }), first()).subscribe({
+            next: (loading) => {
+              expect(loading).toBe(true);
+            },
+            complete: done
+          });
+        })
+      );
 
-      it('valueAfterLoaded$ should wait for the delay.', (done) => {
-        sub.subscription = context.valueAfterLoaded$.pipe(timeout({ first: 100, with: () => of(value) }), first()).subscribe({
-          next: (result) => {
-            expect(result).toBe(value);
-          },
-          complete: done
-        });
-      });
+      it(
+        'valueAfterLoaded$ should wait for the delay.',
+        callbackTest((done) => {
+          sub.subscription = context.valueAfterLoaded$.pipe(timeout({ first: 100, with: () => of(value) }), first()).subscribe({
+            next: (result) => {
+              expect(result).toBe(value);
+            },
+            complete: done
+          });
+        })
+      );
     });
 
     describe('finished state', () => {
@@ -73,23 +86,29 @@ describe('loadingStateContext()', () => {
         context.setStateObs(of(successResult(value)));
       });
 
-      it('loading$ should return false.', (done) => {
-        context.loading$.pipe(first()).subscribe({
-          next: (loading) => {
-            expect(loading).toBe(false);
-          },
-          complete: done
-        });
-      });
+      it(
+        'loading$ should return false.',
+        callbackTest((done) => {
+          context.loading$.pipe(first()).subscribe({
+            next: (loading) => {
+              expect(loading).toBe(false);
+            },
+            complete: done
+          });
+        })
+      );
 
-      it('value$ should return false.', (done) => {
-        context.value$.pipe(first()).subscribe({
-          next: (result) => {
-            expect(result).toBe(value);
-          },
-          complete: done
-        });
-      });
+      it(
+        'value$ should return false.',
+        callbackTest((done) => {
+          context.value$.pipe(first()).subscribe({
+            next: (result) => {
+              expect(result).toBe(value);
+            },
+            complete: done
+          });
+        })
+      );
     });
   });
 
