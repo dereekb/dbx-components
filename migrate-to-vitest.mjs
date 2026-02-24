@@ -81,7 +81,7 @@ async function extractAppTestType(jestConfigPath) {
 /**
  * Generate the vitest config content
  */
-function generateVitestConfig(projectName, appTestType, includeSetupFiles = false) {
+function generateVitestConfig(projectName, projectRoot, appTestType, includeSetupFiles = false) {
   const config = {
     type: appTestType || 'node',
     pathFromRoot: '__dirname',
@@ -94,7 +94,11 @@ function generateVitestConfig(projectName, appTestType, includeSetupFiles = fals
 
   const configStr = JSON.stringify(config, null, 2).replace('"__dirname"', '__dirname');
 
-  return `import { createVitestConfig } from '../../vitest.preset.config.mjs';
+  // Calculate the correct import path based on project depth
+  const relativePathToRoot = calculateRelativePathToRoot(projectRoot);
+  const importPath = `${relativePathToRoot}vitest.preset.config.mjs`;
+
+  return `import { createVitestConfig } from '${importPath}';
 
 export default createVitestConfig(${configStr});
 `;
@@ -214,7 +218,7 @@ async function migrateProject(projectName, projectDetails) {
   console.log(`Updating ${vitestConfigPath}...`);
 
   const isAngular = appTestType === 'angular';
-  const vitestConfig = generateVitestConfig(projectName, appTestType, isAngular);
+  const vitestConfig = generateVitestConfig(projectName, projectRoot, appTestType, isAngular);
   await writeFile(vitestConfigPath, vitestConfig, 'utf-8');
 
   // Delete test-setup.ts if not angular
@@ -225,6 +229,12 @@ async function migrateProject(projectName, projectDetails) {
 
   // Update tsconfig.spec.json to include vitest.setup.typings.ts
   await updateTsConfigSpec(projectRoot);
+
+  // Delete jest.config.ts if it exists
+  if (jestConfigPath) {
+    const fullJestConfigPath = join(projectRoot, jestConfigPath.replace(projectRoot + '/', ''));
+    await deleteFileIfExists(fullJestConfigPath);
+  }
 
   console.log(`✓ Successfully migrated ${projectName}`);
 }

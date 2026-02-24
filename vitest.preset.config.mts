@@ -116,6 +116,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
       test: {
         env,
         name: projectName,
+        passWithNoTests: true,
         watch: false,
         globals: true,
         environment,

@@ -173,6 +173,14 @@ You'll need to specify the following overrides in `package.json`:
 **Removed deprecated properties:**
 - `initialFilterTakesPriority` setter from filter.abstract.source.directive
 
+### @dereekb/nestjs/mailgun
+
+The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally created/exported from `@dereekb/firebase-server`, but was needed in the `@dereekb/nestjs/mailgun` package. It has been renamed and moved.
+
+**BREAKING CHANGE: MailgunRecipientBatchSendTargetEntityKeyRecipientLookup**
+- `NotificationMessageEntityKeyRecipientLookup` type has been renamed to `MailgunRecipientBatchSendTargetEntityKeyRecipientLookup`
+- `notificationMessageEntityKeyRecipientLookup` function has been renamed to `mailgunRecipientBatchSendTargetEntityKeyRecipientLookup`
+
 #### @dereekb/dbx-web
 
 **Deleted 11 deprecated NgModule files:**

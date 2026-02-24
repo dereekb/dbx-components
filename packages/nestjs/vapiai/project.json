@@ -23,10 +23,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/nestjs/vapiai"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/nestjs/vapiai/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/nestjs/vapiai"
       }
     }
   }

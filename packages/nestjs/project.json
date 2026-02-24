@@ -48,13 +48,6 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/nestjs", "{projectRoot}/.reports/junit/nestjs.junit.xml"],
-      "options": {
-        "jestConfig": "packages/nestjs/jest.config.ts"
-      }
-    },
     "run-all-tests": {
       "executor": "nx:run-commands",
       "options": {
@@ -92,6 +85,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/nestjs && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/nestjs"
       }
     }
   }
