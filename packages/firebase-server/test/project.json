@@ -22,16 +22,16 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server-test'"
       }
     },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/test", "{projectRoot}/.reports/junit/firebase-server-test.junit.xml"],
-      "options": {
-        "jestConfig": "packages/firebase-server/test/jest.config.ts"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/firebase-server/test"
+      }
     }
   }
 }

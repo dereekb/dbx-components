@@ -37,10 +37,18 @@ export interface DbxComponentsVitestPresetConfigOptions {
    * Optional function to configure the environment.
    */
   readonly configureEnv?: () => ReturnType<typeof loadEnv>;
+
+  /**
+   * Configures the JUnit reporter.
+   */
+  readonly junitConfig?: () => {
+    suiteName?: string;
+    outputFilePrefix?: string;
+  };
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitFilePrefix } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig } = options;
 
   const currentPath = __dirname;
   const relativePath = path.relative(currentPath, pathFromRoot);
@@ -49,6 +57,8 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   const pathToRoot = Array.from({ length: relativePath.split('/').length }, () => '..').join('/');
 
   let environment: VitestTestConfig['environment'] = 'node';
+
+  let maxWorkers: number | undefined;
 
   const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
 
@@ -68,6 +78,12 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
       break;
     case 'firebase':
       environment = 'node';
+      /**
+       * Prevents concurrency issues with firebase-admin when using the emulator.
+       *
+       * Tests can encounter strange issues if run in parallel: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
+       */
+      maxWorkers = 1;
       setupFileNames.push('vitest.setup.firebase.ts');
       break;
     case 'nestjs':
@@ -94,9 +110,10 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   return defineConfig(() => {
     const env = configureEnv?.();
+    const { suiteName, outputFilePrefix: junitFilePrefix } = junitConfig?.() ?? {};
 
     // https://vitest.dev/guide/reporters.html#junit-reporter
-    const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { includeConsoleOutput: false, outputFile: `${currentPath}/.reports/junit/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
+    const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { suiteName, includeConsoleOutput: false, outputFile: `${currentPath}/.reports/junit/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
 
     return {
       root: pathFromRoot,
@@ -111,6 +128,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         passWithNoTests: true,
         watch: false,
         globals: true,
+        maxWorkers,
         ...testConfig,
         env,
         name: projectName,

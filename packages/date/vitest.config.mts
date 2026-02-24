@@ -1,8 +1,4 @@
-import { loadEnv } from 'vite';
 import { createVitestConfig } from '../../vitest.preset.config.mjs';
-
-const env = loadEnv('test', process.cwd());
-const imported = import.meta.env;
 
 // Allow our tests to also include a custom timezone.
 // Example command using this: "TZ=america/chicago nx test date"
@@ -16,5 +12,8 @@ export default createVitestConfig({
   configureEnv: () => ({
     TZ: timezone
   }),
-  junitFilePrefix: `${timezoneKey}.` // e.g. "america-chicago.date.junit.xml"
+  junitConfig: () => ({
+    suiteName: timezone,
+    outputFilePrefix: `${timezoneKey}.`
+  })
 });
