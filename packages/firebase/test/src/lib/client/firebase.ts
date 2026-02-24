@@ -125,7 +125,10 @@ export const firebaseRulesUnitTestBuilder = testContextBuilder<RulesUnitTestTest
     return new RulesUnitTestTestFirebaseInstance(drivers, rulesTestEnv, rulesTestContext);
   },
   teardownInstance: async (instance, config) => {
-    await instance.rulesTestEnvironment.cleanup(); // Cleanup
+    await instance.rulesTestEnvironment.cleanup().catch((e) => {
+      console.warn('firebaseRulesUnitTestBuilder(): Failed to cleanup rules test environment', e);
+      throw e;
+    });
   }
 });
 

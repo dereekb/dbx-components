@@ -192,28 +192,31 @@ describe('DbxInjectionContextDirective', () => {
           })
         );
 
-        it('should forward any error thrown in "use()".', (done) => {
-          directive
-            .showContext({
-              config: {
-                componentClass: TestInjectionContent
-              },
-              use: () => {
-                throw new Error('hello world' + i); // throw an error
-              }
-            })
-            .then(
-              () => {
-                failDueToSuccess();
-              },
-              (e) => {
-                expect(e).toBeDefined();
-                done();
-              }
-            );
+        it(
+          'should forward any error thrown in "use()".',
+          callbackTest((done) => {
+            directive
+              .showContext({
+                config: {
+                  componentClass: TestInjectionContent
+                },
+                use: () => {
+                  throw new Error('hello world' + i); // throw an error
+                }
+              })
+              .then(
+                () => {
+                  failDueToSuccess();
+                },
+                (e) => {
+                  expect(e).toBeDefined();
+                  done();
+                }
+              );
 
-          fixture.detectChanges();
-        });
+            fixture.detectChanges();
+          })
+        );
       });
 
       describe('resetContext()', () => {
