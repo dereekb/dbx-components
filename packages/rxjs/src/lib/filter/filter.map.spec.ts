@@ -2,8 +2,6 @@ import { filter, first, of, Subject, timeout } from 'rxjs';
 import { FilterMap } from './filter.map';
 import { callbackTest } from '@dereekb/util/test';
 
-jest.setTimeout(1000);
-
 interface TestFilter {
   test?: boolean;
 }

@@ -46,17 +46,17 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/rxjs", "{projectRoot}/.reports/junit/rxjs.junit.xml"],
-      "options": {
-        "jestConfig": "packages/rxjs/jest.config.ts"
-      }
-    },
     "publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/rxjs && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/rxjs"
       }
     }
   }

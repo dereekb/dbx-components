@@ -21,29 +21,35 @@ describe('boolean operators', () => {
     const from = true;
     const to = false;
 
-    it('should emit when "true" becomes "false"', (done) => {
-      sub.subscription = subject.pipe(onTrueToFalse(), first()).subscribe((value) => {
-        expect(value).toBe(to);
-        done();
-      });
+    it(
+      'should emit when "true" becomes "false"',
+      callbackTest((done) => {
+        sub.subscription = subject.pipe(onTrueToFalse(), first()).subscribe((value) => {
+          expect(value).toBe(to);
+          done();
+        });
 
-      subject.next(from);
-      subject.next(to);
-    });
+        subject.next(from);
+        subject.next(to);
+      })
+    );
   });
 
   describe('onFalseToTrue', () => {
     const from = false;
     const to = true;
 
-    it('should emit when "false" becomes "true"', (done) => {
-      sub.subscription = subject.pipe(onFalseToTrue(), first()).subscribe((value) => {
-        expect(value).toBe(to);
-        done();
-      });
+    it(
+      'should emit when "false" becomes "true"',
+      callbackTest((done) => {
+        sub.subscription = subject.pipe(onFalseToTrue(), first()).subscribe((value) => {
+          expect(value).toBe(to);
+          done();
+        });
 
-      subject.next(from);
-      subject.next(to);
-    });
+        subject.next(from);
+        subject.next(to);
+      })
+    );
   });
 });

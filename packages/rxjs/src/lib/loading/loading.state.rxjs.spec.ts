@@ -5,8 +5,6 @@ import { type LoadingState, beginLoading, errorResult, isLoadingStateWithError, 
 import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
-jest.setTimeout(1000);
-
 describe('mapLoadingStateValueWithOperator()', () => {
   it(
     'should map successful values',

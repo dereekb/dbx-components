@@ -64,6 +64,8 @@ export function testDoneCallbackRef(): TestDoneCallbackRef {
  * Wraps a callback-based test (using done) for Vitest compatibility.
  * Converts the callback pattern to a Promise-based pattern.
  *
+ * This also supports calling the input test with async, but still only returns when done is called.
+ *
  * @example
  *
  * // Before (Jasmine/Jest style):
@@ -78,10 +80,10 @@ export function testDoneCallbackRef(): TestDoneCallbackRef {
  *   done();
  * }));
  */
-export function callbackTest(testFn: TestProvidesCallbackWithDone): () => Promise<void> {
+export function callbackTest(testFn: TestProvidesCallbackWithDone | ((cb: TestDoneCallback) => PromiseOrValue<void | undefined>)): () => Promise<void> {
   return async () => {
     const done = testDoneCallbackRef();
-    testFn(done.done);
+    await testFn(done.done);
     return done._promise.promise;
   };
 }
