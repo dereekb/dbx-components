@@ -254,7 +254,7 @@ npm install --force zone.js@$DEP__ZONE_JS_VERSION @angular/core@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."
-npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --simpleName=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"

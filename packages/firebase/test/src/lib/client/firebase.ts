@@ -4,8 +4,9 @@ import { testContextBuilder } from '@dereekb/util/test';
 import { type TestEnvironmentConfig, initializeTestEnvironment, type RulesTestEnvironment, type RulesTestContext, type TokenOptions, type EmulatorConfig } from '@firebase/rules-unit-testing';
 import { firebaseFirestoreClientDrivers, type FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, type Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
-import { makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type TestingFirebaseStorageDrivers } from '../common';
+import { makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestingFirebaseStorageDrivers } from '../common/storage/storage';
 import { TestFirebaseContextFixture, type TestFirebaseInstance } from '../common/firebase.instance';
+import { TestFirebaseStorageInstance } from '../common/storage/storage.instance';
 
 export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 
