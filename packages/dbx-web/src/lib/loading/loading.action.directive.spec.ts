@@ -1,23 +1,20 @@
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core'; // Updated imports
-import { DbxLoadingModule } from './loading.module';
+import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core';
+import { DbxLoadingComponent } from './loading.component';
+import { DbxActionLoadingContextDirective } from './loading.action.directive';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { DbxErrorComponent } from '../error';
 import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
-import { DbxActionModule } from '../action/action.module';
 import { filter, first } from 'rxjs';
-import { toObservable } from '@angular/core/rxjs-interop'; // Added import
+import { toObservable } from '@angular/core/rxjs-interop';
 import { Maybe } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxActionLoadingContextDirective', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [DbxLoadingModule, DbxActionModule],
-      declarations: [LoadingComponent]
-    }).compileComponents();
+    await TestBed.configureTestingModule({}).compileComponents();
   });
 
   // Updated waitForState to work with signals
@@ -126,6 +123,8 @@ const TEST_CONTENT = 'Content';
       </dbx-loading>
     </div>
   `,
+  standalone: true,
+  imports: [DbxLoadingComponent, DbxActionLoadingContextDirective, DbxActionDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class LoadingComponent {

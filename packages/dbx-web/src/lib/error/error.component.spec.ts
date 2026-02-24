@@ -1,14 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { ErrorInput } from '@dereekb/util';
-import { DbxReadableErrorModule } from './error.module';
+import { DbxErrorComponent } from './error.component';
 
 describe('ReadableErrorComponent', () => {
   beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxReadableErrorModule],
-      declarations: [ErrorComponent]
-    }).compileComponents();
+    TestBed.configureTestingModule({}).compileComponents();
   });
 
   it('should render', () => {
@@ -21,7 +18,9 @@ describe('ReadableErrorComponent', () => {
 @Component({
   template: `
     <dbx-error [error]="error"></dbx-error>
-  `
+  `,
+  standalone: true,
+  imports: [DbxErrorComponent]
 })
 class ErrorComponent {
   error?: ErrorInput;

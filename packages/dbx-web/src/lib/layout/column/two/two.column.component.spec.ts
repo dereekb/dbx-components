@@ -1,14 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { DbxTwoColumnLayoutModule } from './two.column.module';
+import { DbxTwoColumnComponent } from './two.column.component';
 import { provideTwoColumnsContext } from './two.column.store';
 
 describe('DbxTwoColumnComponent', () => {
   beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxTwoColumnLayoutModule],
-      declarations: [TwoColumnsTestComponent]
-    }).compileComponents();
+    TestBed.configureTestingModule({}).compileComponents();
   });
 
   let fixture: ComponentFixture<TwoColumnsTestComponent>;
@@ -36,6 +33,8 @@ describe('DbxTwoColumnComponent', () => {
       </div>
     </dbx-two-column>
   `,
+  standalone: true,
+  imports: [DbxTwoColumnComponent],
   providers: provideTwoColumnsContext()
 })
 class TwoColumnsTestComponent {}

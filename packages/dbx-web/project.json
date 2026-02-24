@@ -40,14 +40,6 @@
       },
       "defaultConfiguration": "production"
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/junit/dbx-web.junit.xml"],
-      "options": {
-        "jestConfig": "packages/dbx-web/jest.config.ts",
-        "tsConfig": "packages/dbx-web/tsconfig.spec.json"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
@@ -55,6 +47,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-web && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/dbx-web"
       }
     }
   }

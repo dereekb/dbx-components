@@ -1,23 +1,22 @@
 import { provideDbxRouterWebUiRouterProviderConfig } from './../../provider/uirouter/uirouter.router.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, Input, viewChild } from '@angular/core';
-import { By, BrowserModule } from '@angular/platform-browser';
+import { Component, input, viewChild } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { DbxRouterAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
 import { delay, filter, first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
+import { vi } from 'vitest';
 
-jest.setTimeout(1000);
+vi.setConfig({ testTimeout: 1000 });
 
 describe('AnchorComponent', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule, NoopAnimationsModule, DbxRouterAnchorModule, UIRouterModule.forRoot()],
-      declarations: [TestViewComponent],
+      imports: [NoopAnimationsModule, UIRouterModule.forRoot()],
       providers: [provideDbxRouterWebUiRouterProviderConfig(), { provide: APP_BASE_HREF, useValue: '/' }]
     }).compileComponents();
   });
@@ -45,7 +44,7 @@ describe('AnchorComponent', () => {
       it(
         'should display the disabled version.',
         callbackTest((done) => {
-          testComponent.disabled = true;
+          fixture.componentRef.setInput('disabled', true);
           fixture.detectChanges();
 
           testComponent
@@ -72,11 +71,11 @@ describe('AnchorComponent', () => {
     beforeEach(async () => {
       clicked = false;
 
-      testComponent.anchor = {
+      fixture.componentRef.setInput('anchor', {
         onClick: () => {
           clicked = true;
         }
-      };
+      });
 
       fixture.detectChanges();
     });
@@ -140,9 +139,9 @@ describe('AnchorComponent', () => {
 
   describe('with sref config', () => {
     beforeEach(async () => {
-      testComponent.anchor = {
+      fixture.componentRef.setInput('anchor', {
         ref: 'test'
-      };
+      });
 
       fixture.detectChanges();
       fixture.detectChanges();
@@ -185,9 +184,9 @@ describe('AnchorComponent', () => {
 
   describe('with href config', () => {
     beforeEach(async () => {
-      testComponent.anchor = {
+      fixture.componentRef.setInput('anchor', {
         url: 'https://google.com'
-      };
+      });
       fixture.detectChanges();
     });
 
@@ -232,17 +231,16 @@ const CUSTOM_CONTENT = 'Custom Content';
 
 @Component({
   template: `
-    <dbx-anchor [anchor]="anchor" [disabled]="disabled">
+    <dbx-anchor [anchor]="anchor()" [disabled]="disabled()">
       <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
     </dbx-anchor>
-  `
+  `,
+  standalone: true,
+  imports: [DbxAnchorComponent]
 })
 class TestViewComponent {
   readonly anchorComponent = viewChild.required(DbxAnchorComponent);
 
-  @Input()
-  public disabled?: boolean;
-
-  @Input()
-  public anchor?: ClickableAnchor;
+  readonly disabled = input<boolean>();
+  readonly anchor = input<ClickableAnchor>();
 }

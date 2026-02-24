@@ -12,10 +12,7 @@ import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxBasicLoadingComponent', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [DbxLoadingModule],
-      declarations: [BasicLoadingWithContentComponent, BasicLoadingWithCustomErrorComponent, BasicLoadingWithCustomLoadingComponent]
-    }).compileComponents();
+    await TestBed.configureTestingModule({}).compileComponents();
   });
 
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
@@ -119,7 +116,6 @@ describe('DbxBasicLoadingComponent', () => {
           const injector = TestBed.inject(Injector);
 
           waitForComponentToBeLoading(() => {
-            fixture.detectChanges();
             runInInjectionContext(injector, () => {
               toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
                 .pipe(
@@ -174,7 +170,6 @@ describe('DbxBasicLoadingComponent', () => {
           const injector = TestBed.inject(Injector);
 
           waitForComponentToHaveError(() => {
-            fixture.detectChanges();
             runInInjectionContext(injector, () => {
               toObservable(fixture.componentInstance.component()?.hasNoCustomErrorSignal!)
                 .pipe(
@@ -283,7 +278,6 @@ describe('DbxBasicLoadingComponent', () => {
       'should detect the custom loading content.',
       callbackTest((done) => {
         waitForComponentToBeLoading(() => {
-          fixture.detectChanges();
           const injector = TestBed.inject(Injector);
 
           runInInjectionContext(injector, () => {
@@ -315,6 +309,8 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
       </div>
     </dbx-basic-loading>
   `,
+  standalone: true,
+  imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class BasicLoadingWithContentComponent {
@@ -332,6 +328,8 @@ class BasicLoadingWithContentComponent {
       </div>
     </dbx-basic-loading>
   `,
+  standalone: true,
+  imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class BasicLoadingWithCustomErrorComponent {
@@ -348,6 +346,8 @@ class BasicLoadingWithCustomErrorComponent {
       </div>
     </dbx-basic-loading>
   `,
+  standalone: true,
+  imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class BasicLoadingWithCustomLoadingComponent {

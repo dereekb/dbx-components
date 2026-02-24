@@ -1,10 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIRouterModule } from '@uirouter/angular';
 import { ClickableAnchorLink, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { APP_BASE_HREF } from '@angular/common';
-import { BrowserModule } from '@angular/platform-browser';
 import { DbxNavbarComponent } from './navbar.component';
 import { provideDbxRouterWebUiRouterProviderConfig } from '../../provider/uirouter/uirouter.router.providers';
 import { provideDbxScreenMediaService } from '../../../screen/screen.providers';
@@ -12,8 +11,7 @@ import { provideDbxScreenMediaService } from '../../../screen/screen.providers';
 describe('NavbarComponent', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule, NoopAnimationsModule, DbxNavbarComponent, UIRouterModule.forRoot()],
-      declarations: [TestViewComponent],
+      imports: [NoopAnimationsModule, UIRouterModule.forRoot()],
       providers: [{ provide: APP_BASE_HREF, useValue: '/' }, provideDbxScreenMediaService(), provideDbxUIRouterService(), provideDbxRouterWebUiRouterProviderConfig()]
     }).compileComponents();
   });
@@ -29,11 +27,12 @@ describe('NavbarComponent', () => {
 
   describe('with anchors', () => {
     beforeEach(async () => {
-      testComponent.anchors = [
+      fixture.componentRef.setInput('anchors', [
         {
-          title: 'Test'
+          title: 'Test',
+          ref: 'test'
         }
-      ];
+      ]);
 
       fixture.detectChanges();
     });
@@ -48,10 +47,11 @@ describe('NavbarComponent', () => {
 
 @Component({
   template: `
-    <dbx-navbar [anchors]="anchors"></dbx-navbar>
-  `
+    <dbx-navbar [anchors]="anchors()"></dbx-navbar>
+  `,
+  standalone: true,
+  imports: [DbxNavbarComponent]
 })
 class TestViewComponent {
-  @Input()
-  public anchors?: ClickableAnchorLink[];
+  readonly anchors = input<ClickableAnchorLink[]>();
 }

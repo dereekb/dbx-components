@@ -14,10 +14,7 @@ import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingComponent', () => {
   beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxLoadingModule],
-      declarations: [TestLoadingComponent]
-    }).compileComponents();
+    TestBed.configureTestingModule({}).compileComponents();
   });
 
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
@@ -147,6 +144,8 @@ const TEST_CONTENT = 'Content';
       </div>
     </dbx-loading>
   `,
+  standalone: true,
+  imports: [DbxLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestLoadingComponent {

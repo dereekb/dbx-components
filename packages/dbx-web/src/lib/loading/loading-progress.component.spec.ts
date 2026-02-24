@@ -1,13 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { DbxLoadingModule } from './loading.module';
+import { DbxLoadingProgressComponent } from './loading-progress.component';
 
 describe('DbxLoadingProgress', () => {
   beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxLoadingModule],
-      declarations: [LoadingProgressSpinnerComponent, LoadingProgressLinearComponent]
-    }).compileComponents();
+    TestBed.configureTestingModule({}).compileComponents();
   });
 
   describe('with spinner', () => {
@@ -44,7 +41,9 @@ describe('DbxLoadingProgress', () => {
 @Component({
   template: `
     <dbx-loading-progress [text]="text"></dbx-loading-progress>
-  `
+  `,
+  standalone: true,
+  imports: [DbxLoadingProgressComponent]
 })
 class LoadingProgressSpinnerComponent {
   text?: string;
@@ -53,7 +52,9 @@ class LoadingProgressSpinnerComponent {
 @Component({
   template: `
     <dbx-loading-progress [linear]="true" [text]="text"></dbx-loading-progress>
-  `
+  `,
+  standalone: true,
+  imports: [DbxLoadingProgressComponent]
 })
 class LoadingProgressLinearComponent {
   text?: string;
