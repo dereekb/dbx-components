@@ -68,6 +68,7 @@ export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = Firesto
  */
 export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]> {
   const newDocumentFn = make.newDocument ?? (() => documentAccessor.newDocument());
+
   return performMakeLoop({
     count: make.count,
     make: async (i: number) => {

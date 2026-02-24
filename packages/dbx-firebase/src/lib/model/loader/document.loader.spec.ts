@@ -30,6 +30,8 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
       let items: MockItemDocument[];
 
       beforeEach(async () => {
+        console.log('a');
+
         items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
           count: 5,
           init: (i) => {
@@ -41,6 +43,8 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
           }
         });
 
+        console.log('b');
+
         instance.setDocuments(items);
       });
 
@@ -51,6 +55,8 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
             callbackTest((done) => {
               const itemsSubject = new Subject<MockItemDocument[]>();
 
+              console.log('a');
+
               instance.setDocuments(itemsSubject);
 
               sub.subscription = instance.data$.pipe(first()).subscribe((x) => {
@@ -58,6 +64,8 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
                 expect(x.length).toBe(items.length);
                 done();
               });
+
+              console.log('itemsSubject.next(items)');
 
               itemsSubject.next(items);
               itemsSubject.complete();

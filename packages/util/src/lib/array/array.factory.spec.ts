@@ -13,7 +13,7 @@ describe('arrayFactory', () => {
   });
 
   it('should call factory with index for FactoryWithIndex', () => {
-    const factory = jest.fn((index) => `item-${index}`);
+    const factory = vi.fn((index) => `item-${index}`);
     const arrayFactoryFn = arrayFactory(factory);
 
     const result = arrayFactoryFn(3);
@@ -37,7 +37,7 @@ describe('arrayFactory', () => {
 
 describe('arrayInputFactory', () => {
   it('should transform each input value using the provided factory', () => {
-    const factory = jest.fn((x: number) => x * 2);
+    const factory = vi.fn((x: number) => x * 2);
     const inputFactoryFn = arrayInputFactory(factory);
 
     const result = inputFactoryFn([1, 2, 3]);

@@ -1,0 +1,1 @@
+import '@dereekb/vitest/extend';

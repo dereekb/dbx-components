@@ -8,11 +8,11 @@ Set of notes relevant to setting up an Nx environment, similar to this one.
 
 Be sure to include the `--buildable` and `--publishable` flags if relevant.
 
-Example: `nx g @nx/node:library firebase --buildable --publishable --importPath @dereekb/firebase`
+Example: `nx g @nx/js:lib firebase --buildable --publishable --importPath @dereekb/firebase --directory=packages/firebase`
 
 ### Creating a child NodeJS Library
 
-Example: `nx generate @nx/node:library --name=fetch --buildable --publishable --importPath @dereekb/util/fetch --directory=packages/util`
+Example: `nx generate @nx/js:library --name=fetch --buildable --publishable --importPath @dereekb/util/fetch --directory=packages/util`
 
 This example will end up as a child of @dereekb/util.
 

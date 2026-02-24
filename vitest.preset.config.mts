@@ -24,10 +24,18 @@ export interface DbxComponentsVitestPresetConfigOptions {
    * Test timeout in milliseconds.
    */
   readonly testTimeout?: number;
+  /**
+   * Maximum number of workers to use for running tests.
+   */
+  readonly maxWorkers?: number;
+  /**
+   * Maximum number of tests to run concurrently.
+   */
+  readonly maxConcurrency?: number;
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, testTimeout } = options;
+  const { type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, testTimeout, maxWorkers, maxConcurrency } = options;
 
   const currentPath = __dirname;
   const relativePath = path.relative(currentPath, pathFromRoot);
@@ -81,7 +89,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   }
 
   // https://vitest.dev/guide/reporters.html#junit-reporter
-  const junitReporter: VitestTestConfig['reporters'] = ['junit', {}];
+  const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { includeConsoleOutput: false, outputFile: `${currentPath}/.reports/jest/${projectName}.xml` }]];
 
   return defineConfig(() => ({
     root: pathFromRoot,
@@ -100,7 +108,9 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
       include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       exclude,
       setupFiles,
-      reporters: [junitReporter] as any[],
+      reporters,
+      maxConcurrency,
+      maxWorkers,
       coverage: {
         reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
         provider: 'v8' as const

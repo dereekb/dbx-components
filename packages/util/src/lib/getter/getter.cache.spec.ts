@@ -6,7 +6,7 @@ describe('cachedGetter()', () => {
     let cached: ReturnType<typeof cachedGetter<string>>;
 
     beforeEach(() => {
-      mockGetter = jest.fn(() => 'initial_value');
+      mockGetter = vi.fn(() => 'initial_value');
       cached = cachedGetter(mockGetter);
     });
 

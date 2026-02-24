@@ -310,7 +310,15 @@ import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone/index.mjs';
 setupZoneTestEnv();
 ```
 
+Additionally, you'll have to add the following to the `compilerOptions` in each .spec.ts file:
 
+```json
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
+  }
+```
 
 #### Install Vitest
 Run `nx add @nx/vitest` to add Vitest to the project.

@@ -21,7 +21,7 @@ describe('mapGetterFactory()', () => {
       i += 1;
       return i;
     };
-    const mapFn = jest.fn((x: number) => x.toString());
+    const mapFn = vi.fn((x: number) => x.toString());
 
     const factory = mapGetterFactory(mapFn);
     const mappedGetter = factory(inputGetter);
@@ -53,7 +53,7 @@ describe('mapGetter()', () => {
       i += 1;
       return i;
     };
-    const mapFn = jest.fn((x: number) => x * 10);
+    const mapFn = vi.fn((x: number) => x * 10);
 
     const mappedGetter = mapGetter(inputGetter, mapFn);
 
