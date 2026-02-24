@@ -115,6 +115,48 @@ async function deleteFileIfExists(filePath) {
 }
 
 /**
+ * Calculate relative path from project root to workspace root
+ */
+function calculateRelativePathToRoot(projectRoot) {
+  // Count the depth (number of directories)
+  const depth = projectRoot.split('/').filter(Boolean).length;
+  // Generate the appropriate number of "../"
+  return '../'.repeat(depth);
+}
+
+/**
+ * Update tsconfig.spec.json to include vitest.setup.typings.ts
+ */
+async function updateTsConfigSpec(projectRoot) {
+  const tsconfigPath = join(projectRoot, 'tsconfig.spec.json');
+
+  try {
+    console.log(`Updating ${tsconfigPath}...`);
+    const tsconfig = await readJsonFile(tsconfigPath);
+
+    // Calculate relative path to workspace root
+    const relativePathToRoot = calculateRelativePathToRoot(projectRoot);
+    const vitestSetupPath = `${relativePathToRoot}vitest.setup.typings.ts`;
+
+    // Ensure include array exists
+    if (!tsconfig.include) {
+      tsconfig.include = [];
+    }
+
+    // Add vitest.setup.typings.ts if not already present
+    if (!tsconfig.include.includes(vitestSetupPath)) {
+      tsconfig.include.push(vitestSetupPath);
+      await writeJsonFile(tsconfigPath, tsconfig);
+      console.log(`Added ${vitestSetupPath} to tsconfig.spec.json`);
+    } else {
+      console.log(`${vitestSetupPath} already in tsconfig.spec.json`);
+    }
+  } catch (error) {
+    console.warn(`Could not update ${tsconfigPath}:`, error.message);
+  }
+}
+
+/**
  * Migrate a single project from Jest to Vitest
  */
 async function migrateProject(projectName, projectDetails) {
@@ -180,6 +222,9 @@ async function migrateProject(projectName, projectDetails) {
     const testSetupPath = join(projectRoot, 'src', 'test-setup.ts');
     await deleteFileIfExists(testSetupPath);
   }
+
+  // Update tsconfig.spec.json to include vitest.setup.typings.ts
+  await updateTsConfigSpec(projectRoot);
 
   console.log(`✓ Successfully migrated ${projectName}`);
 }

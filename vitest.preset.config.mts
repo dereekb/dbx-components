@@ -3,7 +3,7 @@ import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, ViteUserConfigFn } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-import { PluginOption } from 'vite';
+import { loadEnv, PluginOption } from 'vite';
 import path from 'path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
@@ -33,10 +33,20 @@ export interface DbxComponentsVitestPresetConfigOptions {
    * Maximum number of tests to run concurrently.
    */
   readonly maxConcurrency?: number;
+
+  /**
+   * Optional prefix for the junit file name.
+   */
+  readonly junitFilePrefix?: string;
+
+  /**
+   * Optional function to configure the environment.
+   */
+  readonly configureEnv?: () => ReturnType<typeof loadEnv>;
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, testTimeout, maxWorkers, maxConcurrency } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, testTimeout, maxWorkers, maxConcurrency, junitFilePrefix } = options;
 
   const currentPath = __dirname;
   const relativePath = path.relative(currentPath, pathFromRoot);
@@ -88,34 +98,39 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     exclude.push(...modelPathIgnorePatterns);
   }
 
-  // https://vitest.dev/guide/reporters.html#junit-reporter
-  const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { includeConsoleOutput: false, outputFile: `${currentPath}/.reports/jest/${projectName}.junit.xml` }]];
+  return defineConfig(() => {
+    const env = configureEnv?.();
 
-  return defineConfig(() => ({
-    root: pathFromRoot,
-    cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,
-    plugins,
-    server: {
-      fs: {
-        strict: false
-      }
-    },
-    test: {
-      name: projectName,
-      watch: false,
-      globals: true,
-      environment,
-      include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-      exclude,
-      setupFiles,
-      reporters,
-      maxConcurrency,
-      maxWorkers,
-      coverage: {
-        reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
-        provider: 'v8' as const
+    // https://vitest.dev/guide/reporters.html#junit-reporter
+    const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { includeConsoleOutput: false, outputFile: `${currentPath}/.reports/vitest/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
+
+    return {
+      root: pathFromRoot,
+      cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,
+      plugins,
+      server: {
+        fs: {
+          strict: false
+        }
       },
-      testTimeout
-    }
-  }));
+      test: {
+        env,
+        name: projectName,
+        watch: false,
+        globals: true,
+        environment,
+        include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+        exclude,
+        setupFiles,
+        reporters,
+        maxConcurrency,
+        maxWorkers,
+        coverage: {
+          reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
+          provider: 'v8' as const
+        },
+        testTimeout
+      }
+    };
+  });
 }

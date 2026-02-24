@@ -6,12 +6,12 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
     },
     "./extend": {
-      "types": "./dist/extend.d.ts",
-      "default": "./dist/extend.js"
+      "types": "./src/extend.d.ts",
+      "default": "./src/extend.js"
     }
   }
 }

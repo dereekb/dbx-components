@@ -367,3 +367,16 @@ Remove all instances of `jest.setTimeout(30000);` from your test files. Instead,
 Tests that use `jest.` should be updated to use `vi.` instead. 
 
 For example, `jest.fn()` to `vi.fn()`.
+
+#### Updating nx.json
+
+Update `nx.json` to use the new `test` target configuration. Example:
+
+```json
+"test": {
+      "dependsOn": ["build"],
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"],
+      "cache": true
+    }
+```

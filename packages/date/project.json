@@ -55,65 +55,63 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/date/jest.config.ts"
+        "reportsDirectory": "../../coverage/packages/date"
       }
     },
     "test-skip-build": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml"],
-      "options": {
-        "jestConfig": "packages/date/jest.config.ts"
-      }
+      "executor": "@nx/vitest:test",
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/vitest/utc.date.junit.xml"],
+      "cache": false
     },
     "test-timezones-usa": {
-      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml", "{projectRoot}/.reports/jest/america-new_york.date.junit.xml", "{projectRoot}/.reports/jest/america-chicago.date.junit.xml", "{projectRoot}/.reports/jest/america-denver.date.junit.xml", "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml", "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/vitest/utc.date.junit.xml", "{projectRoot}/.reports/vitest/america-new_york.date.junit.xml", "{projectRoot}/.reports/vitest/america-chicago.date.junit.xml", "{projectRoot}/.reports/vitest/america-denver.date.junit.xml", "{projectRoot}/.reports/vitest/america-los_angeles.date.junit.xml", "{projectRoot}/.reports/vitest/america-anchorage.date.junit.xml"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
-            "command": "TZ=America/New_York && echo $TZ && nx test-skip-build date"
+            "command": "TZ=America/New_York && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Chicago && echo $TZ && nx test-skip-build date"
+            "command": "TZ=America/Chicago && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Denver && echo $TZ && nx test-skip-build date"
+            "command": "TZ=America/Denver && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Los_Angeles && echo $TZ && nx test-skip-build date"
+            "command": "TZ=America/Los_Angeles && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Anchorage && echo $TZ && nx test-skip-build date"
+            "command": "TZ=America/Anchorage && echo $TZ && TZ=$TZ nx test-skip-build date"
           }
         ],
         "parallel": false
       }
     },
     "test-timezones-world": {
-      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml", "{projectRoot}/.reports/jest/asia-tokyo.date.junit.xml", "{projectRoot}/.reports/jest/asia-singapore.date.junit.xml", "{projectRoot}/.reports/jest/europe-dublin.date.junit.xml", "{projectRoot}/.reports/jest/pacific-auckland.date.junit.xml", "{projectRoot}/.reports/jest/pacific-kiritimati.date.junit.xml", "{projectRoot}/.reports/jest/pacific-niue.date.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/vitest/utc.date.junit.xml", "{projectRoot}/.reports/vitest/asia-tokyo.date.junit.xml", "{projectRoot}/.reports/vitest/asia-singapore.date.junit.xml", "{projectRoot}/.reports/vitest/europe-dublin.date.junit.xml", "{projectRoot}/.reports/vitest/pacific-auckland.date.junit.xml", "{projectRoot}/.reports/vitest/pacific-kiritimati.date.junit.xml", "{projectRoot}/.reports/vitest/pacific-niue.date.junit.xml"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
-            "command": "TZ=Asia/Tokyo && echo $TZ && nx test-skip-build date"
+            "command": "TZ=Asia/Tokyo && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=Asia/Singapore && echo $TZ && nx test-skip-build date"
+            "command": "TZ=Asia/Singapore && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=Europe/Dublin && echo $TZ && nx test-skip-build date"
+            "command": "TZ=Europe/Dublin && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Auckland && echo $TZ && nx test-skip-build date"
+            "command": "TZ=Pacific/Auckland && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Kiritimati && echo $TZ && nx test-skip-build date"
+            "command": "TZ=Pacific/Kiritimati && echo $TZ && TZ=$TZ nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Niue && echo $TZ && nx test-skip-build date"
+            "command": "TZ=Pacific/Niue && echo $TZ && TZ=$TZ nx test-skip-build date"
           }
         ],
         "parallel": false
@@ -122,15 +120,15 @@
     "test-timezones-local": {
       "outputs": [
         "{workspaceRoot}/coverage/packages/date",
-        "{projectRoot}/.reports/jest/utc.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-chicago.date.junit.xml",
-        "{projectRoot}/.reports/jest/pacific-auckland.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-new_york.date.junit.xml",
-        "{projectRoot}/.reports/jest/asia-tokyo.date.junit.xml",
-        "{projectRoot}/.reports/jest/asia-singapore.date.junit.xml",
-        "{projectRoot}/.reports/jest/europe-dublic.date.junit.xml"
+        "{projectRoot}/.reports/vitest/utc.date.junit.xml",
+        "{projectRoot}/.reports/vitest/america-chicago.date.junit.xml",
+        "{projectRoot}/.reports/vitest/pacific-auckland.date.junit.xml",
+        "{projectRoot}/.reports/vitest/america-anchorage.date.junit.xml",
+        "{projectRoot}/.reports/vitest/america-los_angeles.date.junit.xml",
+        "{projectRoot}/.reports/vitest/america-new_york.date.junit.xml",
+        "{projectRoot}/.reports/vitest/asia-tokyo.date.junit.xml",
+        "{projectRoot}/.reports/vitest/asia-singapore.date.junit.xml",
+        "{projectRoot}/.reports/vitest/europe-dublic.date.junit.xml"
       ],
       "executor": "nx:run-commands",
       "options": {

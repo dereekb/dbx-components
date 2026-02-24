@@ -112,6 +112,13 @@ echo ""
 echo "Step 1 complete: All vitest.setup.*.ts files created"
 echo ""
 
+# 1.5: Create vitest.setup.typings.ts
+echo "Creating vitest.setup.typings.ts..."
+cat > vitest.setup.typings.ts << 'EOF'
+import '@dereekb/vitest/extend';
+EOF
+echo "✓ Created vitest.setup.typings.ts"
+
 # Step 2: Create Shared Vitest Configuration Builder
 echo "Step 2: Creating shared vitest.config.mts..."
 echo ""

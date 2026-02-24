@@ -3,8 +3,8 @@
 import 'vitest';
 import { expect } from 'vitest';
 
-import type { AllDateMatchers } from './matcher.date';
-import { allDateMatchers } from './matcher.date';
+import type { AllDateMatchers } from './lib/matcher.date';
+import { allDateMatchers } from './lib/matcher.date';
 
 expect.extend(allDateMatchers);
 
