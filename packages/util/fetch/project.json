@@ -41,10 +41,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/util/fetch", "{projectRoot}/.reports/jest/util-fetch.junit.xml"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/util/fetch/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/util/fetch"
       }
     }
   }

@@ -342,7 +342,7 @@ Example for demo-api:
 Now run `nx g @nx/vitest:configuration --project=demo-api --testEnvironment=node --testTarget=run-tests` to add Vitest to the project.
 
 #### util-test changes
-With the addition of Vitest, the `util-test` package has been updated to support Vitest. Since vitest and jest are similar, the utilities are mostly the same.
+With the addition of Vitest, the `util-test` package has been updated to support Vitest. Since vitest and jest are similar, the utilities are mostly the same. The Jest prefix has been removed however.
 
 #### Removal of done callback tests
 Vitest does not support the `done` callback in tests. If you have any tests that use the `done` callback, you will need to remove it and use the promise-based approach instead.
@@ -350,3 +350,12 @@ Vitest does not support the `done` callback in tests. If you have any tests that
 You can use the `convert-callback-tests.js` script in the root of your project to convert your tests. 
 
 Run it with the `--dry-run` flag to see what changes would be made.
+
+#### Removal of jest.setTimeout
+
+Remove all instances of `jest.setTimeout(30000);` from your test files. Instead, add a `testTimeout` property to the `createVitestConfig` function in your `vitest.config.mts` file.
+
+#### Replacing jest with vi
+Tests that use `jest.` should be updated to use `vi.` instead. 
+
+For example, `jest.fn()` to `vi.fn()`.

@@ -51,7 +51,7 @@
     },
     "@nx/jest:jest": {
       "cache": true,
-      "inputs": ["default", "^production"],
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.ts", "{workspaceRoot}/jest.setup.*.ts"],
       "options": {
         "passWithNoTests": true
       },
@@ -68,7 +68,13 @@
     },
     "@nx/vitest:test": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
     }
   },
   "generators": {

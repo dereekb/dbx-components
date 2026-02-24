@@ -7,8 +7,6 @@ import { FetchRequestFactoryError } from './error';
 
 const testFetch: FetchService = fetchApiFetchService;
 
-jest.setTimeout(30000);
-
 describe('fetchService()', () => {
   it('should have the defined service items.', () => {
     expect(testFetch.fetchRequestFactory).toBeDefined();

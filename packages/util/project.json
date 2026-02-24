@@ -64,13 +64,6 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/util", "{projectRoot}/.reports/jest/util.junit.xml"],
-      "options": {
-        "jestConfig": "packages/util/jest.config.ts"
-      }
-    },
     "run-all-tests": {
       "executor": "nx:run-commands",
       "options": {
@@ -96,6 +89,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/util && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/util"
       }
     }
   }
