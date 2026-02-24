@@ -100,7 +100,6 @@ export class ModelRelationUtility {
       const { included: modModify } = separateValues(mods, mask);
 
       const modifiedResults = this._modifyCollectionWithoutMask(currentModify, change, modModify, config);
-
       return this._mergeMaskResults(current, currentRetain, modifiedResults, readKey);
     } else {
       return this._modifyCollectionWithoutMask(current, change, mods, config);

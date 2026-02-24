@@ -1,6 +1,16 @@
 import { waitForMs } from '../promise';
 import { timePeriodCounter, makeTimer, TimerCancelledError, toggleTimerRunning, approximateTimerEndDate } from './time';
 import { callbackTest } from '@dereekb/util/test';
+import { allDateMatchers, AllDateMatchers } from '@dereekb/vitest';
+
+// Extend Vitest Matchers
+beforeAll(() => {
+  expect.extend(allDateMatchers);
+});
+
+declare module 'vitest' {
+  interface Matchers<T = any> extends AllDateMatchers {}
+}
 
 describe('timePeriodCounter()', () => {
   it('should create a new counter.', () => {

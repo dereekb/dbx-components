@@ -1,5 +1,15 @@
 import { addMilliseconds } from './date';
 import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails, isUnderThreshold, calculateExpirationDate } from './expires';
+import { allDateMatchers, AllDateMatchers } from '@dereekb/vitest';
+
+// Extend Vitest Matchers
+beforeAll(() => {
+  expect.extend(allDateMatchers);
+});
+
+declare module 'vitest' {
+  interface Matchers<T = any> extends AllDateMatchers {}
+}
 
 describe('expirationDetails()', () => {
   describe('hasExpired()', () => {

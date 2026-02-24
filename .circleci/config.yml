@@ -67,6 +67,9 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run:
+          name: run vitest
+          command: npx nx vitest test
+      - run:
           name: run util tests
           command: npx nx run-all-tests util
       - run:

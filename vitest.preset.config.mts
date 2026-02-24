@@ -28,6 +28,7 @@ export interface DbxComponentsVitestPresetConfigOptions {
    * Maximum number of workers to use for running tests.
    */
   readonly maxWorkers?: number;
+
   /**
    * Maximum number of tests to run concurrently.
    */
@@ -45,7 +46,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   let environment: VitestTestConfig['environment'] = 'node';
 
-  const plugins: PluginOption[] = [nxViteTsPaths()];
+  const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
 
   /**
    * Path is relative to the execution directory.
@@ -70,7 +71,6 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
       setupFileNames.push('vitest.setup.nestjs.ts');
       break;
     case 'node':
-      plugins.push(nxCopyAssetsPlugin(['*.md']));
       environment = 'node';
       setupFileNames.push('vitest.setup.node.ts');
       break;

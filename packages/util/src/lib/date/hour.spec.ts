@@ -2,6 +2,16 @@ import { startOfDay } from 'date-fns';
 import { range } from '../array/array.number';
 import { MINUTES_IN_HOUR } from './date';
 import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToHoursAndMinutes, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, hoursAndMinutesToString, isMinuteOfDay, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
+import { allDateMatchers, AllDateMatchers } from '@dereekb/vitest';
+
+// Extend Vitest Matchers
+beforeAll(() => {
+  expect.extend(allDateMatchers);
+});
+
+declare module 'vitest' {
+  interface Matchers<T = any> extends AllDateMatchers {}
+}
 
 describe('fractionalHoursToMinutes()', () => {
   it('should convert the fractional hours to minutes.', () => {
