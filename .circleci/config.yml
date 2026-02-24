@@ -133,7 +133,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
           key: firebase-cache-
       - run:

@@ -264,12 +264,53 @@ You'll need to specify the following overrides in `package.json`:
 **Removed deprecated types:**
 - `DbxFirebaseOptions` type removed
 
-### Migrating to Vitest
+### Updating circleci.yaml
+Update the `openjdk` version to `21` in the `config.yml` file.
+
+Replace:
+
+```yaml
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
+```
+
+With:
+
+```yaml
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
+```
+
+### Migrating (Partially) to Vitest
 Jest still has some issues with the ESM node environment, which caused an issue while trying to utilize a non-esm package within a test that utilized `sharp`. Unfortunately, `sharp` still has no progress towards moving to ESM, but there was a workaround, that requires the use of `mlly` and `import.meta.url`. The issue is that Jest messes with the ESM environment where `import.meta.url` is not available, which caused the workaround to fail.
 
 Vitest does not have this issue, so `demo-api` is being migrated to use Vitest.
 
-There is a migration guide here: https://vitest.dev/guide/migration.html#jest
+There is a brief migration guide here: https://vitest.dev/guide/migration.html#jest
+
+However, there are still various problems with Angular 21 in vitest (and even jest).
+
+#### Angular 21 Jest Updates
+There's an issue with Angular 21 + Jest: 
+
+https://github.com/nrwl/nx/issues/33777
+
+The workaround requires two changes:
+Update `jest.preset.ts` to make sure that `jest-preset-angular` uses the ESM preset:
+
+```typescript
+transform = {
+      '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$', useESM: true }]
+    };
+```
+
+Update `jest.setup.angular.ts` to use the following:
+
+```typescript
+import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone/index.mjs';
+
+setupZoneTestEnv();
+```
+
+
 
 #### Install Vitest
 Run `nx add @nx/vitest` to add Vitest to the project.

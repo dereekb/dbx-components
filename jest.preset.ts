@@ -26,7 +26,7 @@ switch (appTestType) {
     snapshotSerializers = jestPresetAngularSerializers;
     testEnvironment = `${rootPath}/jest.environment.jsdom.ts`; // 'jsdom';
     transform = {
-      '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$' }]
+      '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$', useESM: true }]
     };
     break;
   case 'firebase':

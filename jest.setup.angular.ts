@@ -1,4 +1,6 @@
-import 'jest-preset-angular/setup-jest';
+import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone/index.mjs';
+
+setupZoneTestEnv();
 
 /**
  * Must be imported here so the Reflect functionality is available in the Jest instance.
