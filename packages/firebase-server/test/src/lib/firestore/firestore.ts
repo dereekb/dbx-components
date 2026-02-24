@@ -1,6 +1,6 @@
 import { Firestore } from '@google-cloud/firestore';
 import { type TestFirestoreContext, TestFirestoreInstance, TestFirestoreContextFixture, type TestingFirestoreDrivers, makeTestingFirestoreDrivers } from '@dereekb/firebase/test';
-import { jestTestContextBuilder } from '@dereekb/util/test';
+import { testContextBuilder } from '@dereekb/util/test';
 import { googleCloudFirestoreDrivers } from '@dereekb/firebase-server';
 import { firestoreContextFactory } from '@dereekb/firebase';
 
@@ -34,7 +34,7 @@ let COUNTER = 0;
  *
  * If you need all of Firebase (firebase-admin library), look at adminFirebaseAdminTestBuilder() instead.
  */
-export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleCloudTestFirestoreInstance, GoogleCloudTestFirestoreContextFixture, GoogleCloudTestFirestoreConfig>({
+export const googleCloudTestFirestoreBuilder = testContextBuilder<GoogleCloudTestFirestoreInstance, GoogleCloudTestFirestoreContextFixture, GoogleCloudTestFirestoreConfig>({
   buildConfig: (input?: Partial<GoogleCloudTestFirestoreConfig>) => {
     const config: GoogleCloudTestFirestoreConfig = {
       host: input?.host ?? 'localhost',

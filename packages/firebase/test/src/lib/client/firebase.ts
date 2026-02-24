@@ -1,6 +1,6 @@
 import { makeTestingFirestoreDrivers, type TestFirestoreContext, type TestingFirestoreDrivers } from '../common/firestore/firestore';
 import { type Maybe, cachedGetter } from '@dereekb/util';
-import { jestTestContextBuilder } from '@dereekb/util/test';
+import { testContextBuilder } from '@dereekb/util/test';
 import { type TestEnvironmentConfig, initializeTestEnvironment, type RulesTestEnvironment, type RulesTestContext, type TokenOptions, type EmulatorConfig } from '@firebase/rules-unit-testing';
 import { firebaseFirestoreClientDrivers, type FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, type Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
@@ -94,7 +94,7 @@ export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseCont
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firebaseRulesUnitTestBuilder = jestTestContextBuilder<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
+export const firebaseRulesUnitTestBuilder = testContextBuilder<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
   buildConfig: (input?: Partial<RulesUnitTestingConfig>) => {
     const config: RulesUnitTestingConfig = {
       testEnvironment: input?.testEnvironment ?? {},

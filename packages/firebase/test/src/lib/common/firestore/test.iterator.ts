@@ -3,6 +3,7 @@ import { type QueryDocumentSnapshot, makeDocuments, type FirestoreItemPageIterat
 import { filter, first, from, switchMap } from 'rxjs';
 import { mockItemWithValue, type MockItemCollectionFixture, type MockItemDocument, type MockItem } from '../mock';
 import { arrayContainsDuplicateValue } from '@dereekb/util';
+import { callbackTest } from '@dereekb/util/test';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -38,30 +39,36 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
 
     describe('filter', () => {
       describe('limit', () => {
-        it('should use the input limit for page size.', (done) => {
-          const limit = 4;
+        it(
+          'should use the input limit for page size.',
+          callbackTest((done) => {
+            const limit = 4;
 
-          const iteration = firestoreIteration({ limit });
+            const iteration = firestoreIteration({ limit });
 
-          sub.subscription = iteration.latestState$.subscribe((x) => {
-            const results = x.value!;
-            expect(results.length).toBe(limit);
-            done();
-          });
-        });
+            sub.subscription = iteration.latestState$.subscribe((x) => {
+              const results = x.value!;
+              expect(results.length).toBe(limit);
+              done();
+            });
+          })
+        );
       });
 
       describe('constraint', () => {
-        it('should use the constraints', (done) => {
-          const iteration = firestoreIteration({ constraints: mockItemWithValue('0') });
+        it(
+          'should use the constraints',
+          callbackTest((done) => {
+            const iteration = firestoreIteration({ constraints: mockItemWithValue('0') });
 
-          sub.subscription = iteration.latestState$.subscribe((x) => {
-            const results = x.value!;
-            expect(results.length).toBe(1);
-            expect(results[0].id).toBe(items[0].documentRef.id);
-            done();
-          });
-        });
+            sub.subscription = iteration.latestState$.subscribe((x) => {
+              const results = x.value!;
+              expect(results.length).toBe(1);
+              expect(results[0].id).toBe(items[0].documentRef.id);
+              done();
+            });
+          })
+        );
       });
     });
 
@@ -78,46 +85,55 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
       });
 
       describe('latestState$', () => {
-        it('should load the first state when subscribed to for the first time.', (done) => {
-          sub.subscription = iteration.latestState$.subscribe((latestState) => {
-            const page = latestState.page;
-            expect(page).toBe(0);
-
-            const values = latestState.value!;
-            expect(values.length).toBe(limit);
-            done();
-          });
-        });
-      });
-
-      describe('currentState$', () => {
-        it('should load the first items when subscribed to for the first time.', (done) => {
-          sub.subscription = iteration.currentState$.pipe(filter((x) => Boolean(x.value))).subscribe((currentState) => {
-            const page = currentState.page;
-            expect(page).toBe(0);
-
-            const values = currentState.value!;
-            expect(values.length).toBe(limit);
-            done();
-          });
-        });
-      });
-
-      describe('nextPage()', () => {
-        it('should load the next page and return when the page has finished loading.', (done) => {
-          iteration.nextPage().then(() => {
-            const nextPageResult = from(iteration.nextPage());
-
-            sub.subscription = nextPageResult.pipe(switchMap((x) => iteration.currentState$)).subscribe((latestState) => {
+        it(
+          'should load the first state when subscribed to for the first time.',
+          callbackTest((done) => {
+            sub.subscription = iteration.latestState$.subscribe((latestState) => {
               const page = latestState.page;
-              expect(page).toBe(1);
+              expect(page).toBe(0);
 
               const values = latestState.value!;
               expect(values.length).toBe(limit);
               done();
             });
-          });
-        });
+          })
+        );
+      });
+
+      describe('currentState$', () => {
+        it(
+          'should load the first items when subscribed to for the first time.',
+          callbackTest((done) => {
+            sub.subscription = iteration.currentState$.pipe(filter((x) => Boolean(x.value))).subscribe((currentState) => {
+              const page = currentState.page;
+              expect(page).toBe(0);
+
+              const values = currentState.value!;
+              expect(values.length).toBe(limit);
+              done();
+            });
+          })
+        );
+      });
+
+      describe('nextPage()', () => {
+        it(
+          'should load the next page and return when the page has finished loading.',
+          callbackTest((done) => {
+            iteration.nextPage().then(() => {
+              const nextPageResult = from(iteration.nextPage());
+
+              sub.subscription = nextPageResult.pipe(switchMap((x) => iteration.currentState$)).subscribe((latestState) => {
+                const page = latestState.page;
+                expect(page).toBe(1);
+
+                const values = latestState.value!;
+                expect(values.length).toBe(limit);
+                done();
+              });
+            });
+          })
+        );
       });
 
       describe('with accumulator', () => {
@@ -143,43 +159,49 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
           });
 
           describe('flattenAccumulatorResultItemArray()', () => {
-            it(`should aggregate the array of results into a single array.`, (done) => {
-              const pagesToLoad = 2;
+            it(
+              `should aggregate the array of results into a single array.`,
+              callbackTest((done) => {
+                const pagesToLoad = 2;
 
-              // load up to page 2
-              iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
-                expect(page).toBe(pagesToLoad - 1);
+                // load up to page 2
+                iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                  expect(page).toBe(pagesToLoad - 1);
 
-                const obs = flattenAccumulatorResultItemArray(accumulator);
+                  const obs = flattenAccumulatorResultItemArray(accumulator);
 
-                accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
-                  expect(values.length).toBe(pagesToLoad * limit);
-                  expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
+                  accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
+                    expect(values.length).toBe(pagesToLoad * limit);
+                    expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
 
-                  // should not be a query snapshot
-                  expect(values[0].ref).toBeDefined();
+                    // should not be a query snapshot
+                    expect(values[0].ref).toBeDefined();
 
-                  done();
+                    done();
+                  });
                 });
-              });
-            });
+              })
+            );
           });
 
           describe('accumulatorCurrentPageListLoadingState()', () => {
-            it('should return a loading state for the current page.', (done) => {
-              const obs = accumulatorCurrentPageListLoadingState(accumulator);
+            it(
+              'should return a loading state for the current page.',
+              callbackTest((done) => {
+                const obs = accumulatorCurrentPageListLoadingState(accumulator);
 
-              accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
-                const value = state.value;
+                accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
+                  const value = state.value;
 
-                expect(isLoadingStateFinishedLoading(state)).toBe(true);
-                expect(value).toBeDefined();
-                expect(Array.isArray(value)).toBe(true);
-                expect(Array.isArray(value![0])).toBe(true);
+                  expect(isLoadingStateFinishedLoading(state)).toBe(true);
+                  expect(value).toBeDefined();
+                  expect(Array.isArray(value)).toBe(true);
+                  expect(Array.isArray(value![0])).toBe(true);
 
-                done();
-              });
-            });
+                  done();
+                });
+              })
+            );
           });
         });
 
@@ -191,79 +213,91 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
           });
 
           describe('flattenAccumulatorResultItemArray()', () => {
-            it(`should aggregate the array of results into a single array.`, (done) => {
-              const pagesToLoad = 2;
+            it(
+              `should aggregate the array of results into a single array.`,
+              callbackTest((done) => {
+                const pagesToLoad = 2;
 
-              // load up to page 2
-              iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
-                expect(page).toBe(pagesToLoad - 1);
+                // load up to page 2
+                iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                  expect(page).toBe(pagesToLoad - 1);
 
-                const obs = flattenAccumulatorResultItemArray(itemAccumulator);
+                  const obs = flattenAccumulatorResultItemArray(itemAccumulator);
 
-                accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
-                  expect(values.length).toBe(pagesToLoad * limit);
-                  expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
-                  done();
+                  accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
+                    expect(values.length).toBe(pagesToLoad * limit);
+                    expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
+                    done();
+                  });
                 });
-              });
-            });
+              })
+            );
           });
 
           describe('flattenAccumulatorResultItemArray()', () => {
-            it(`should aggregate the array of results into a single array of the items.`, (done) => {
-              const pagesToLoad = 2;
+            it(
+              `should aggregate the array of results into a single array of the items.`,
+              callbackTest((done) => {
+                const pagesToLoad = 2;
 
-              // load up to page 2
-              iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
-                expect(page).toBe(pagesToLoad - 1);
+                // load up to page 2
+                iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                  expect(page).toBe(pagesToLoad - 1);
 
-                const obs = flattenAccumulatorResultItemArray(itemAccumulator);
+                  const obs = flattenAccumulatorResultItemArray(itemAccumulator);
 
-                accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
-                  expect(values.length).toBe(pagesToLoad * limit);
-                  expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
+                  accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
+                    expect(values.length).toBe(pagesToLoad * limit);
+                    expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
 
-                  // should not be a query snapshot
-                  expect((values[0] as unknown as QueryDocumentSnapshot<MockItem>).ref).not.toBeDefined();
+                    // should not be a query snapshot
+                    expect((values[0] as unknown as QueryDocumentSnapshot<MockItem>).ref).not.toBeDefined();
 
-                  done();
+                    done();
+                  });
                 });
-              });
-            });
+              })
+            );
           });
 
           describe('accumulatorFlattenPageListLoadingState()', () => {
-            it('should return a loading state for the current page with all items in a single array.', (done) => {
-              const obs = accumulatorFlattenPageListLoadingState(itemAccumulator);
+            it(
+              'should return a loading state for the current page with all items in a single array.',
+              callbackTest((done) => {
+                const obs = accumulatorFlattenPageListLoadingState(itemAccumulator);
 
-              accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
-                const value = state.value;
+                accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
+                  const value = state.value;
 
-                expect(isLoadingStateFinishedLoading(state)).toBe(true);
-                expect(value).toBeDefined();
-                expect(Array.isArray(value)).toBe(true);
-                expect(Array.isArray(value![0])).toBe(false);
+                  expect(isLoadingStateFinishedLoading(state)).toBe(true);
+                  expect(value).toBeDefined();
+                  expect(Array.isArray(value)).toBe(true);
+                  expect(Array.isArray(value![0])).toBe(false);
 
-                done();
-              });
-            });
+                  done();
+                });
+              })
+            );
           });
 
           describe('accumulatorCurrentPageListLoadingState()', () => {
-            it('should return a loading state for the current page.', (done) => {
-              const obs = accumulatorCurrentPageListLoadingState(itemAccumulator);
+            it(
+              'should return a loading state for the current page.',
+              callbackTest((done) => {
+                const obs = accumulatorCurrentPageListLoadingState(itemAccumulator);
 
-              accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
-                const value = state.value;
+                accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
+                  const value = state.value;
 
-                expect(isLoadingStateFinishedLoading(state)).toBe(true);
-                expect(value).toBeDefined();
-                expect(Array.isArray(value)).toBe(true);
-                expect(Array.isArray(value![0])).toBe(true);
+                  expect(isLoadingStateFinishedLoading(state)).toBe(true);
+                  expect(value).toBeDefined();
+                  expect(Array.isArray(value)).toBe(true);
+                  expect(Array.isArray(value![0])).toBe(true);
 
-                done();
-              });
-            });
+                  done();
+                });
+              })
+            );
           });
         });
       });

@@ -1,9 +1,9 @@
-import { type JestTestContextFactory } from '@dereekb/util/test';
+import { type TestContextFactory } from '@dereekb/util/test';
 import { firebaseRulesUnitTestBuilder, type RulesUnitTestFirebaseTestingContextFixture } from './firebase';
 
 export const TESTING_AUTHORIZED_FIREBASE_USER_ID = '0';
 
-export type FirebaseTestContextFactory = JestTestContextFactory<RulesUnitTestFirebaseTestingContextFixture>;
+export type FirebaseTestContextFactory = TestContextFactory<RulesUnitTestFirebaseTestingContextFixture>;
 
 export const authorizedFirebaseFactory: FirebaseTestContextFactory = firebaseRulesUnitTestBuilder({
   testEnvironment: {

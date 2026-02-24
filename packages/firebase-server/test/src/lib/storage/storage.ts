@@ -1,6 +1,6 @@
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { type TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirebaseStorageContextFixture, type TestingFirebaseStorageDrivers, makeTestingFirebaseStorageDrivers } from '@dereekb/firebase/test';
-import { jestTestContextBuilder } from '@dereekb/util/test';
+import { testContextBuilder } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers } from '@dereekb/firebase-server';
 import { type FirebaseStorage, firebaseStorageContextFactory } from '@dereekb/firebase';
 
@@ -34,7 +34,7 @@ let COUNTER = 0;
  *
  * If you need all of Firebase (firebase-admin library), look at adminFirebaseAdminTestBuilder() instead.
  */
-export const googleCloudTestFirebaseStorageBuilder = jestTestContextBuilder<GoogleCloudTestFirebaseStorageInstance, GoogleCloudTestFirebaseStorageContextFixture, GoogleCloudTestFirebaseStorageConfig>({
+export const googleCloudTestFirebaseStorageBuilder = testContextBuilder<GoogleCloudTestFirebaseStorageInstance, GoogleCloudTestFirebaseStorageContextFixture, GoogleCloudTestFirebaseStorageConfig>({
   buildConfig: (input?: Partial<GoogleCloudTestFirebaseStorageConfig>) => {
     const config: GoogleCloudTestFirebaseStorageConfig = {
       host: input?.host ?? 'localhost',

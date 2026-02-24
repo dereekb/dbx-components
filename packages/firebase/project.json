@@ -64,13 +64,6 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
       }
     },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase", "{projectRoot}/.reports/junit/firebase.junit.xml"],
-      "options": {
-        "jestConfig": "packages/firebase/jest.config.ts"
-      }
-    },
     "run-all-tests": {
       "executor": "nx:run-commands",
       "options": {
@@ -92,6 +85,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/firebase && npm publish --access public"
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/firebase"
       }
     }
   }

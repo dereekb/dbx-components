@@ -4,7 +4,7 @@ import { type Firestore } from '@google-cloud/firestore';
 import { type Auth } from 'firebase-admin/auth';
 import { type FeaturesList } from 'firebase-functions-test/lib/features';
 import { type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type TestFirestoreContext, type TestFirestoreInstance } from '@dereekb/firebase/test';
-import { AbstractJestTestContextFixture, jestTestContextBuilder, type JestTestContextFactory, type TestContextFixture } from '@dereekb/util/test';
+import { AbstractJestTestContextFixture, testContextBuilder, type TestContextFactory, type TestContextFixture } from '@dereekb/util/test';
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { type FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
 import { type Maybe, cachedGetter } from '@dereekb/util';
@@ -124,7 +124,7 @@ export function setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(use: boo
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseAdminTestContextInstance, FirebaseAdminFunctionTestContextFixture, FirebaseAdminFunctionTestConfig>({
+export const firebaseAdminFunctionTestBuilder = testContextBuilder<FirebaseAdminTestContextInstance, FirebaseAdminFunctionTestContextFixture, FirebaseAdminFunctionTestConfig>({
   buildConfig: (input?: Partial<FirebaseAdminFunctionTestConfig>) => {
     const config: FirebaseAdminFunctionTestConfig = {
       ...input,
@@ -167,5 +167,5 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
   }
 });
 
-export type FirebaseAdminFunctionTestContextFactory = JestTestContextFactory<FirebaseAdminFunctionTestContextFixture>;
+export type FirebaseAdminFunctionTestContextFactory = TestContextFactory<FirebaseAdminFunctionTestContextFixture>;
 export const firebaseAdminFunctionTestContextFactory: FirebaseAdminFunctionTestContextFactory = firebaseAdminFunctionTestBuilder({});

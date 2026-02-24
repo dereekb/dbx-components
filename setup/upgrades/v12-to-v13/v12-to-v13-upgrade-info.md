@@ -100,6 +100,14 @@ You'll need to specify the following overrides in `package.json`:
 - `DateOrUnixDateTimeNumber` replaced with `DateOrUnixDateTimeMillisecondsNumber`
 - `UnixDateTimeMillisecondsNumber` replaced with `UnixDateTimeNumber`
 
+#### @dereekb/util/test
+
+**BREAKING CHANGE: Test Context Builder**
+- `jestTestContextBuilder` has been renamed to `testContextBuilder`
+- `AbstractJestTestContextFixture` has been renamed to `AbstractTestContextFixture`
+- `AbstractChildJestTestContextFixture` has been renamed to `AbstractChildTestContextFixture`
+- `JestTestContextFactory` has been renamed to `TestContextFactory`
+
 #### @dereekb/date
 
 **Removed DST-unsafe deprecated functions:**
