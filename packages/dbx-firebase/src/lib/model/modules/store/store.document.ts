@@ -37,7 +37,7 @@ import { linkDocumentStoreToParentContextStores } from './store.document.context
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {
   protected constructor(@Inject(null) @Optional() initialState?: C) {
     super(initialState);
-    linkDocumentStoreToParentContextStores(this);
+    // linkDocumentStoreToParentContextStores(this);
   }
 
   // MARK: Effects
@@ -127,7 +127,6 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly documentLoadingState$: Observable<LoadingState<D>> = this.currentDocument$.pipe(
     map((x) => (x ? successResult(x) : beginLoading<D>())),
-    tapLog('documentLoadingState$'),
     shareReplay(1)
   );
 

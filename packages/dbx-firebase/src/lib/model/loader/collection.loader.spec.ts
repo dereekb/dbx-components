@@ -15,7 +15,7 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
     let sub: SubscriptionObject;
 
     beforeEach(() => {
-      const firestoreCollection = f.instance.firestoreCollection;
+      const firestoreCollection = f.instance.mockItemCollection;
       sub = new SubscriptionObject();
       instance = dbxFirebaseCollectionLoaderInstanceWithCollection(firestoreCollection);
     });

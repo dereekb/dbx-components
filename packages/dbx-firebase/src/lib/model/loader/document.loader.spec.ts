@@ -16,7 +16,7 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
     let sub: SubscriptionObject;
 
     beforeEach(() => {
-      const firestoreCollection = f.instance.firestoreCollection;
+      const firestoreCollection = f.instance.mockItemCollection;
       sub = new SubscriptionObject();
       instance = dbxFirebaseDocumentLoaderInstanceWithAccessor(firestoreCollection.documentAccessor());
     });
@@ -30,7 +30,7 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
       let items: MockItemDocument[];
 
       beforeEach(async () => {
-        items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+        items = await makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
           count: 5,
           init: (i) => {
             return {

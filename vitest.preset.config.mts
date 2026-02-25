@@ -29,6 +29,13 @@ export interface DbxComponentsVitestPresetConfigOptions {
   readonly junitFilePrefix?: string;
 
   /**
+   * Whether or not firebase is used.
+   *
+   * Will also assert that the firebase environment is properly configured at runtime.
+   */
+  readonly requiresFirebaseEnvironment?: boolean;
+
+  /**
    * Overrides the test configuration directly.
    */
   readonly test?: Partial<Omit<VitestTestConfig, 'environment' | 'include' | 'exclude' | 'setupFiles' | 'reporters' | 'coverage' | 'name' | 'env' | 'coverage'>>;
@@ -48,7 +55,7 @@ export interface DbxComponentsVitestPresetConfigOptions {
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment } = options;
 
   const currentPath = __dirname;
   const relativePath = path.relative(currentPath, pathFromRoot);
@@ -67,6 +74,8 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
    */
   const setupFileNames: string[] = [];
 
+  let usesFirebase = requiresFirebaseEnvironment ?? false;
+
   switch (type) {
     case 'angular':
       plugins.push(angular(), nxCopyAssetsPlugin(['*.md']));
@@ -78,12 +87,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
       break;
     case 'firebase':
       environment = 'node';
-      /**
-       * Prevents concurrency issues with firebase-admin when using the emulator.
-       *
-       * Tests can encounter strange issues if run in parallel: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
-       */
-      maxWorkers = 1;
+      usesFirebase = true;
       setupFileNames.push('vitest.setup.firebase.ts');
       break;
     case 'nestjs':
@@ -97,6 +101,17 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   }
 
   const setupFiles: VitestTestConfig['setupFiles'] = setupFileNames.map((fileName) => path.join(pathToRoot, fileName));
+
+  if (usesFirebase) {
+    /**
+     * Prevents concurrency issues with firebase-admin when using the emulator.
+     *
+     * Tests can encounter strange issues if run in parallel: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
+     */
+    maxWorkers = 1;
+
+    // TODO: Also check that Firebase is currently running via env variables
+  }
 
   if (projectSpecificSetupFiles) {
     setupFiles.push(...projectSpecificSetupFiles);

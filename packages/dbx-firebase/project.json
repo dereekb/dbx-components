@@ -40,14 +40,6 @@
       },
       "defaultConfiguration": "production"
     },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/junit/dbx-firebase.junit.xml"],
-      "options": {
-        "jestConfig": "packages/dbx-firebase/jest.config.ts",
-        "tsConfig": "packages/dbx-firebase/tsconfig.spec.json"
-      }
-    },
     "watch": {
       "executor": "nx:run-commands",
       "options": {
@@ -68,6 +60,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/dbx-firebase"
       }
     }
   }

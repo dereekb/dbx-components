@@ -9,8 +9,12 @@ export class MockItemCollectionFixtureInstance {
   readonly collections: MockItemCollections;
 
   get collection(): CollectionReference<MockItem> {
-    return this.firestoreCollection.collection;
+    return this.mockItemCollection.collection;
   }
+
+  /**
+   * @deprecated Use mockItemCollection instead.
+   */
   get firestoreCollection(): MockItemFirestoreCollection {
     return this.collections.mockItemCollection;
   }
