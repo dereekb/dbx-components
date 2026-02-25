@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext } from '@angular/core';
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
@@ -13,9 +13,9 @@ import { DbxLoadingComponent } from './loading.component';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingComponent', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({}).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
     const injector = TestBed.inject(Injector);

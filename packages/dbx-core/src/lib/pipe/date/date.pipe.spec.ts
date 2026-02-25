@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DateFormatFromToPipe } from './dateformatfromto.pipe';
 import { DateFormatDistancePipe } from './dateformatdistance.pipe';
@@ -8,8 +8,12 @@ import { ToJsDatePipe } from './tojsdate.pipe';
 import { ToMinutesPipe } from './tominutes.pipe';
 
 describe('Date Pipe Test Component', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({}).compileComponents();
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   let testComponent: DatePipesTestComponent;

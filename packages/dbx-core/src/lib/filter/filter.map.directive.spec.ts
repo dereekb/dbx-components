@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxFilterMapSourceConnectorDirective } from './filter.map.connector.directive';
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
@@ -6,11 +6,9 @@ import { DbxFilterMapDirective } from './filter.map.directive';
 import { DbxCoreFilterModule } from './filter.module';
 
 describe('dbxFilterMapDirective', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: []
-    }).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   let testComponent: TestDbxFilterMapDirectiveComponent;
   let fixture: ComponentFixture<TestDbxFilterMapDirectiveComponent>;
@@ -23,6 +21,7 @@ describe('dbxFilterMapDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
+    TestBed.resetTestingModule();
   });
 
   it('should be created', () => {

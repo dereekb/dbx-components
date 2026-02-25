@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Injectable, Injector, inject } from '@angular/core';
 import { newWithInjector } from './injector';
 
@@ -18,10 +18,14 @@ class TestInjectableClassC {
 }
 
 describe('newWithInjector()', () => {
-  beforeEach(async () => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       providers: [TestInjectableClassA, TestInjectableClassB]
-    }).compileComponents();
+    });
+  }));
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   it('should inject a new instance of class B that is different from the already provided value in the root', () => {

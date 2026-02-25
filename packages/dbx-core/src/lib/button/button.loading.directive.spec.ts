@@ -1,5 +1,5 @@
 import { DbxCoreButtonModule } from './button.module';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { filter } from 'rxjs';
 import { DbxButtonDirective } from './button.directive';
@@ -8,11 +8,9 @@ import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingButton', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: []
-    }).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   let testComponent: TestDbxLoadingButtonDirectiveComponent;
   let fixture: ComponentFixture<TestDbxLoadingButtonDirectiveComponent>;
@@ -23,6 +21,10 @@ describe('DbxLoadingButton', () => {
     testComponent = fixture.componentInstance;
     button = testComponent.buttonDirective();
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   it('should be created', () => {

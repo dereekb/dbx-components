@@ -382,6 +382,23 @@ Run it with the `--dry-run` flag to see what changes would be made.
 
 Remove all instances of `jest.setTimeout(30000);` from your test files. Instead, add a `testTimeout` property to the `createVitestConfig` function in your `vitest.config.mts` file.
 
+#### Updating Angular Tests
+Each call should end up in a waitForAsync function call. This handles zone.js properly and makes sure the TestBed is properly configured. You can also remove empty arrays in the configuration. If there are no imports, you can also remove compileComponents().
+
+Every test that uses TestBed should look similar to this:
+
+```typescript
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
+```
+
+```typescript
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+```
+
 #### Replacing jest with vi
 Tests that use `jest.` should be updated to use `vi.` instead. 
 

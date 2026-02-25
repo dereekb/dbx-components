@@ -1,12 +1,12 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { ErrorInput } from '@dereekb/util';
 import { DbxErrorComponent } from './error.component';
 
 describe('ReadableErrorComponent', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({}).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   it('should render', () => {
     // TODO

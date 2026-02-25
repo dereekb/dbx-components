@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
 import { DbxFormFormlyDateFieldModule } from '../../value/date/date.field.module';
@@ -7,11 +7,11 @@ import { first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxDateTimeFieldComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS, DbxFormFormlyDateFieldModule]
     }).compileComponents();
-  });
+  }));
 
   let form: DbxTestDbxFormComponent<{ date: Date }>;
 
@@ -28,6 +28,7 @@ describe('DbxDateTimeFieldComponent', () => {
 
   afterEach(() => {
     fixture.destroy();
+    TestBed.resetTestingModule();
   });
 
   describe('time only mode', () => {

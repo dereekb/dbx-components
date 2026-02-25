@@ -1,12 +1,12 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbxTwoColumnComponent } from './two.column.component';
 import { provideTwoColumnsContext } from './two.column.store';
 
 describe('DbxTwoColumnComponent', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({}).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   let fixture: ComponentFixture<TwoColumnsTestComponent>;
   let component: TwoColumnsTestComponent;

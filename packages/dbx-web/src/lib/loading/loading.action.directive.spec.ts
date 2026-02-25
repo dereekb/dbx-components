@@ -1,5 +1,5 @@
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core';
 import { DbxLoadingComponent } from './loading.component';
 import { DbxActionLoadingContextDirective } from './loading.action.directive';
@@ -11,11 +11,14 @@ import { filter, first } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Maybe } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 describe('DbxActionLoadingContextDirective', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({}).compileComponents();
-  });
+  let sub = new SubscriptionObject();
+
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   // Updated waitForState to work with signals
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
@@ -23,7 +26,7 @@ describe('DbxActionLoadingContextDirective', () => {
 
     return (component: DbxBasicLoadingComponent) => {
       return (checkFn: () => void) => {
-        runInInjectionContext(injector, () => {
+        sub.subscription = runInInjectionContext(injector, () => {
           // Use runInInjectionContext
           toObservable(component.stateSignal) // Use stateSignal and toObservable
             .pipe(
@@ -63,8 +66,24 @@ describe('DbxActionLoadingContextDirective', () => {
     });
 
     afterEach(() => {
+      sub.destroy();
       fixture.destroy();
+      TestBed.resetTestingModule();
     });
+
+    it(
+      'should display error if state is error.',
+      callbackTest((done) => {
+        dbxActionContextStoreSourceInstance.reject(new Error());
+        fixture.detectChanges();
+
+        waitForComponentToHaveError(() => {
+          const errorQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
+          expect(errorQueryResult).not.toBeNull();
+          done();
+        });
+      })
+    );
 
     it(
       'should display the content if state is idle.',
@@ -90,20 +109,6 @@ describe('DbxActionLoadingContextDirective', () => {
         waitForComponentToBeLoading(() => {
           const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
           expect(loadingProgressQueryResult).not.toBeNull();
-          done();
-        });
-      })
-    );
-
-    it(
-      'should display error if state is error.',
-      callbackTest((done) => {
-        dbxActionContextStoreSourceInstance.reject(new Error());
-        fixture.detectChanges();
-
-        waitForComponentToHaveError(() => {
-          const errorQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
-          expect(errorQueryResult).not.toBeNull();
           done();
         });
       })

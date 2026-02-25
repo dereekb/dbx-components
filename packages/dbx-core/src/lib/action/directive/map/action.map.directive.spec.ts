@@ -1,19 +1,15 @@
 import { DbxActionFromMapDirective } from './action.map.key.directive';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild, model } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbxCoreActionModule } from '../../action.module';
 import { DbxActionDirective } from '../context/action.directive';
 import { DbxActionContextMapDirective } from './action.map.directive';
 import { DbxActionMapSourceDirective } from './action.map.source.directive';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxActionContextMapDirective', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule]
-    }).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   let testComponent: TestDbxActionContextMapDirectiveComponent;
 
@@ -43,6 +39,7 @@ describe('DbxActionContextMapDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
+    TestBed.resetTestingModule();
   });
 
   describe('DbxActionMapSourceDirective', () => {
@@ -95,6 +92,6 @@ class TestDbxActionContextMapDirectiveComponent {
   readonly map = viewChild.required(DbxActionContextMapDirective);
   readonly dbxActionMapSource = viewChild.required(DbxActionMapSourceDirective);
   readonly dbxActionFromMap = viewChild.required(DbxActionFromMapDirective);
-  readonly aAction = viewChild.required<DbxActionDirective<number, number>>('a', { read: DbxActionDirective });
-  readonly bAction = viewChild.required<DbxActionDirective<number, number>>('b', { read: DbxActionDirective });
+  readonly aAction = viewChild.required<string, DbxActionDirective<number, number>>('a', { read: DbxActionDirective });
+  readonly bAction = viewChild.required<string, DbxActionDirective<number, number>>('b', { read: DbxActionDirective });
 }

@@ -1,25 +1,23 @@
 import { provideDbxRouterWebUiRouterProviderConfig } from './../../provider/uirouter/uirouter.router.providers';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, input, viewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
 import { delay, filter, first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 import { vi } from 'vitest';
+import { provideUIRouter } from '@uirouter/angular';
 
 vi.setConfig({ testTimeout: 1000 });
 
 describe('AnchorComponent', () => {
-  beforeEach(async () => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, UIRouterModule.forRoot()],
-      providers: [provideDbxRouterWebUiRouterProviderConfig(), { provide: APP_BASE_HREF, useValue: '/' }]
-    }).compileComponents();
-  });
+      providers: [provideUIRouter(), provideDbxRouterWebUiRouterProviderConfig(), { provide: APP_BASE_HREF, useValue: '/' }]
+    });
+  }));
 
   let testComponent: TestViewComponent;
   let fixture: ComponentFixture<TestViewComponent>;

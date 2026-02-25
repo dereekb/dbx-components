@@ -1,6 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbxCoreActionModule } from '../../action/action.module';
 import { DbxActionDirective } from '../../action/directive/context/action.directive';
 import { DbxActionButtonDirective } from './action.button.directive';
@@ -11,10 +10,14 @@ import { type Maybe } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('Action Button', () => {
-  beforeEach(async () => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [DbxCoreActionModule, DbxCoreButtonModule, NoopAnimationsModule]
+      imports: [DbxCoreActionModule, DbxCoreButtonModule]
     }).compileComponents();
+  }));
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   let directive: Maybe<DbxActionDirective<number, number>>;

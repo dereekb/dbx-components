@@ -2,15 +2,18 @@ import { canReadyValue, ActionContextStore } from './action.store';
 import { of, first, timeout } from 'rxjs';
 import { containsStringAnyCase } from '@dereekb/util';
 import { isLoadingStateInErrorState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType } from '@dereekb/rxjs';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('ActionContextStore', () => {
   let contextStore: ActionContextStore;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({}).compileComponents();
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
+
+  beforeEach(() => {
     const injector = TestBed.inject(Injector);
 
     runInInjectionContext(injector, () => {
@@ -20,6 +23,7 @@ describe('ActionContextStore', () => {
 
   afterEach(() => {
     contextStore.ngOnDestroy();
+    TestBed.resetTestingModule();
   });
 
   describe('trigger()', () => {

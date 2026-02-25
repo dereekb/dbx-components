@@ -1,11 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 
 describe('DbxLoadingProgress', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({}).compileComponents();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({});
+  }));
 
   describe('with spinner', () => {
     let fixture: ComponentFixture<LoadingProgressSpinnerComponent>;

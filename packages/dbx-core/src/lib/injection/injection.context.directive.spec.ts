@@ -1,7 +1,7 @@
 import { failDueToSuccess, callbackTest } from '@dereekb/util/test';
 import { DbxInjectionContextDirective } from './injection.context.directive';
 import { ChangeDetectionStrategy, Component, OnDestroy, Type, viewChild } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { waitForMs } from '@dereekb/util';
 
@@ -57,11 +57,14 @@ class TestInjectionContextDirective<T = any> {
 }
 
 describe('DbxInjectionContextDirective', () => {
-  beforeEach(async () => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule],
-      providers: []
+      imports: [BrowserModule]
     }).compileComponents();
+  }));
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   buildTestsWithClass(TestInjectionContextDirective, 'element');

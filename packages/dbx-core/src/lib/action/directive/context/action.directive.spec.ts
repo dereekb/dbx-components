@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { delay, filter, first, map, of, tap, throwError, timer } from 'rxjs';
 import { SubscriptionObject, WorkUsingObservable } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -20,13 +20,16 @@ describe('DbxActionDirective', () => {
 
   afterEach(() => {
     sub.destroy(); // clean up our subscriptions
+    TestBed.resetTestingModule();
   });
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
       imports: [TestActionContextDirectiveComponent]
     });
+  }));
 
+  beforeEach(() => {
     fixture = TestBed.createComponent(TestActionContextDirectiveComponent);
     testComponent = fixture.componentInstance;
     testComponent.handlerFunctionSignal.set(() => of(0));

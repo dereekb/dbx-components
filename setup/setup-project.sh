@@ -88,6 +88,7 @@ DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
 DEP__JEST_DATE_VERSION=^1.1.4
 DEP__JEST_JUNIT_VERSION=^16.0.0
 DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
+DEP__NGX_FORMLY_VERSION=^14.0.0
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest

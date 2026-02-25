@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from './form.action.directive';
@@ -8,11 +8,11 @@ import { filter, first, switchMap } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('FormActionDirective', () => {
-  beforeEach(async () => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS, DbxCoreActionModule]
     }).compileComponents();
-  });
+  }));
 
   let directive: DbxActionDirective<number, number>;
   let form: DbxTestDbxFormComponent;
@@ -31,6 +31,7 @@ describe('FormActionDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
+    TestBed.resetTestingModule();
   });
 
   it('should be created', () => {

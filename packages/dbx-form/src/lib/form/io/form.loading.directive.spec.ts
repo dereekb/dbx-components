@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, signal, viewChild } from '@angular/core';
 import { first, Observable, of } from 'rxjs';
 import { LoadingState, successResult } from '@dereekb/rxjs';
@@ -8,11 +8,11 @@ import { callbackTest } from '@dereekb/util/test';
 import { type Maybe } from '@dereekb/util';
 
 describe('DbxFormLoadingPairSourceDirective', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS]
     }).compileComponents();
-  });
+  }));
 
   let directive: DbxFormLoadingSourceDirective;
   let form: DbxTestDbxFormComponent;
@@ -33,6 +33,7 @@ describe('DbxFormLoadingPairSourceDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
+    TestBed.resetTestingModule();
   });
 
   it('should be created', () => {
