@@ -1,5 +1,6 @@
 import { parseISO8601DayStringToUTCDate, range, isOddNumber, type RangeInput, MS_IN_MINUTE, type TimezoneString, MINUTES_IN_HOUR, MS_IN_HOUR } from '@dereekb/util';
 import { addDays, addHours, addMilliseconds, addMinutes, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { shiftDateCellTimingToTimezoneFunction, type DateCell, type DateCellTiming, dateCellTiming, dateCellTimingStart, type DateCellTimingStartsAt, type FullDateCellTiming, isValidDateCellTiming, dateCellTimingFinalStartsAtEvent } from './date.cell';
 import {
   dateCellDayTimingInfoFactory,
@@ -666,11 +667,11 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
     describe('daylight savings change', () => {
       describe('America/Chicago', () => {
         const timezone = 'America/Chicago';
-        const normallInstance = dateTimezoneUtcNormal(timezone);
+        const normalInstance = dateTimezoneUtcNormal(timezone);
 
         describe('one second before midnight', () => {
-          const startsAt = normallInstance.startOfDayInTargetTimezone('2023-03-11'); // timezone offset changes going into the next day.
-          const theNextDay = normallInstance.startOfDayInTargetTimezone('2023-03-12');
+          const startsAt = normalInstance.startOfDayInTargetTimezone('2023-03-11'); // timezone offset changes going into the next day.
+          const theNextDay = normalInstance.startOfDayInTargetTimezone('2023-03-12');
           const oneSecondBeforeNextDay = addMilliseconds(theNextDay, -(1 + MS_IN_HOUR)); // normallInstance.transformDateInTimezoneNormal(theNextDay, (x) => );
 
           it('should properly round the index down.', () => {
@@ -691,7 +692,9 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
             const factory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
             const result = factory(dstDay);
 
-            expect(formatToISO8601DayStringForSystem(dstDay)).toBe('2023-03-13');
+            // Format the date in the factory's configured timezone (Chicago), not the system timezone
+            const dstDayInChicago = formatInTimeZone(dstDay, timezone, 'yyyy-MM-dd');
+            expect(dstDayInChicago).toBe('2023-03-13');
             expect(result).toBe(2); // 2 days later
           });
         });

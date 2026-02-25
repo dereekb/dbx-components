@@ -17,7 +17,7 @@
     "@ngx-formly/material": "^6.0.0",
     "@dereekb/date": "*",
     "@ngbracket/ngx-layout": "^21.0.0",
-    "ngx-material-intl-tel-input": "^21.0.0",
+    "ngx-mat-input-tel": "^21.0.0",
     "@dereekb/model": "*",
     "@angular/platform-browser": "^21.0.0",
     "@angular/material-date-fns-adapter": "^21.0.0",

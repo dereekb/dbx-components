@@ -165,19 +165,20 @@ async function updateTsConfigSpec(projectRoot) {
  */
 async function updateAngularTestSetup(projectRoot) {
   const testSetupPath = join(projectRoot, 'src', 'test-setup.ts');
+  const relativePathToRoot = calculateRelativePathToRoot(projectRoot + 'src/');
+  const importSetupAngularPath = `${relativePathToRoot}vitest.setup.angular`;
 
   try {
+    const expectedContent = `import '${importSetupAngularPath}';`;
     console.log(`Updating ${testSetupPath} for Angular...`);
     let content = await readFile(testSetupPath, 'utf-8');
 
     // Check if reflect-metadata import already exists
-    if (!content.includes("import 'reflect-metadata'")) {
-      // Add reflect-metadata import at the top
-      content = `import 'reflect-metadata';\n${content}`;
-      await writeFile(testSetupPath, content, 'utf-8');
-      console.log(`Added reflect-metadata import to test-setup.ts`);
+    if (!content.includes(expectedContent)) {
+      await writeFile(testSetupPath, expectedContent, 'utf-8');
+      console.log(`Updated test-setup.ts`);
     } else {
-      console.log(`reflect-metadata import already present in test-setup.ts`);
+      console.log(`test-setup.ts was already configured`);
     }
   } catch (error) {
     console.warn(`Could not update ${testSetupPath}:`, error.message);

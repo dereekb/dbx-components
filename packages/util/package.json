@@ -35,7 +35,8 @@
   "peerDependencies": {
     "make-error": "*",
     "ts-essentials": "*",
-    "extra-set": "*"
+    "extra-set": "*",
+    "fast-content-type-parse": "*"
   },
   "devDependencies": {
     "date-fns": "*"

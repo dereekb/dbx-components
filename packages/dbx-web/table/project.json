@@ -21,16 +21,15 @@
       },
       "defaultConfiguration": "production"
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/table"],
-      "options": {
-        "jestConfig": "packages/dbx-web/table/jest.config.ts",
-        "tsConfig": "packages/dbx-web/table/tsconfig.spec.json"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/dbx-web/table"
+      }
     }
   }
 }
