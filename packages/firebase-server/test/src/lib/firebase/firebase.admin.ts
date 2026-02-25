@@ -154,7 +154,7 @@ export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends Fi
 }
 
 /**
- * A JestTestContextBuilderFunction for building firebase test context factories using firebase-admin.
+ * A TestContextBuilderFunction for building firebase test context factories using firebase-admin.
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
@@ -188,7 +188,7 @@ export const firebaseAdminTestContextFactory: FirebaseAdminTestContextFactory = 
 
 // MARK: Firestore Context
 /**
- * Convenience function to build a JestTestFirestoreContextFactory from a FirebaseAdminTestContextFactory.
+ * Convenience function to build a TestFirestoreContextFactory from a FirebaseAdminTestContextFactory.
  *
  * This is useful for composing child tests that will benefit from the firestore testing context, but want the full app available.
  *
@@ -207,7 +207,7 @@ export function firebaseAdminFirestoreContextWithFixture(f: TestContextFixture<F
     /**
      * Build tests by passing the fixture to the testing functions.
      *
-     * This will inject all tests and sub Jest lifecycle items.
+     * This will inject all tests and sub testing lifecycle items.
      */
     buildTests,
     initInstance: () => f.instance.getTestFirestoreInstance()

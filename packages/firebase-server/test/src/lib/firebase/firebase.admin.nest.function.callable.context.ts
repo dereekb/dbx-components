@@ -1,4 +1,4 @@
-import { useJestFunctionFixture, useJestFunctionMapFixture } from '@dereekb/util/test';
+import { useTestFunctionFixture, useTestFunctionMapFixture } from '@dereekb/util/test';
 import { type FirebaseAdminFunctionNestTestContext, wrapCallableRequestForNestTestsGetter, type WrapCallableRequestForNestTestsInput } from './firebase.admin.nest.function';
 import { mapObjectMap } from '@dereekb/util';
 import { type WrappedCallableRequest } from './firebase.function';
@@ -48,7 +48,7 @@ export function callableRequestTest<I, T extends CallableRequestTestConfigMapObj
   if (isCallableRequestTestSingleConfig(config)) {
     const { f, fn } = config;
 
-    useJestFunctionFixture<WrappedCallableRequest<I>>(
+    useTestFunctionFixture<WrappedCallableRequest<I>>(
       {
         fn: () => {
           const x = wrapCallableRequestForNestTestsGetter(f, fn)();
@@ -66,7 +66,7 @@ export function callableRequestTest<I, T extends CallableRequestTestConfigMapObj
       fns[`${key}${CallableRequestTestMultipleFixtureSuffix}`] = mappedFns[key];
     });
 
-    useJestFunctionMapFixture(
+    useTestFunctionMapFixture(
       {
         fns
       },

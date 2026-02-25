@@ -28,7 +28,7 @@ export class GoogleCloudTestFirestoreContextFixture extends TestFirestoreContext
 let COUNTER = 0;
 
 /**
- * A JestTestContextBuilderFunction for building firestore test context factories using @google-cloud/firestore. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
+ * A TestContextBuilderFunction for building firestore test context factories using @google-cloud/firestore. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
  *
  * This is used to build a @google-cloud/firestore Firestore instance for testing and point it to the emulators.
  *

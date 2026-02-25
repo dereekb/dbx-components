@@ -1,9 +1,4 @@
 import { callbackTest } from '@dereekb/util/test';
-/**
- * @jest-environment node
- */
-// use the node environment, as the jsdom environment breaks for tests that use the firestore.
-
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { authorizedTestWithMockItemCollection, type MockItem, type MockItemDocument } from '@dereekb/firebase/test';
 import { first, map, of, timeout } from 'rxjs';

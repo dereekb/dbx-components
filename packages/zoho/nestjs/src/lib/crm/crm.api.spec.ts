@@ -54,8 +54,6 @@ interface TestContact extends ZohoCrmRecord, ZohoCrmTagArrayRef {
 const TEST_CONTACT_FIELDS: ZohoCrmCommaSeparateFieldNames = 'Parent_Id,Owner,Created_Time,Note_Title';
 const TEST_CONTACT_FIELDS_ARRAY: ZohoCrmFieldName[] = ['Parent_Id', 'Owner', 'Created_Time', 'Note_Title'];
 
-jest.setTimeout(12000);
-
 @Module(appZohoCrmModuleMetadata({}))
 export class TestZohoCrmModule {}
 

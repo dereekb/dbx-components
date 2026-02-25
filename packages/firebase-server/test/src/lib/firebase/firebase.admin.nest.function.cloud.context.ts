@@ -1,4 +1,4 @@
-import { useJestFunctionFixture, useJestFunctionMapFixture } from '@dereekb/util/test';
+import { useTestFunctionFixture, useTestFunctionMapFixture } from '@dereekb/util/test';
 import { type FirebaseAdminFunctionNestTestContext, wrapCloudFunctionForNestTestsGetter, type WrapCloudFunctionForNestTestsInput } from './firebase.admin.nest.function';
 import { type WrappedCloudFunction } from './firebase.function';
 import { mapObjectMap } from '@dereekb/util';
@@ -49,7 +49,7 @@ export function cloudFunctionTest<I extends object, T extends CloudFunctionTestC
   if (isCloudFunctionTestSingleConfig(config)) {
     const { f, fn } = config;
 
-    useJestFunctionFixture<CloudFunctionTestWrappedCloudFunction<I>>(
+    useTestFunctionFixture<CloudFunctionTestWrappedCloudFunction<I>>(
       {
         fn: () => {
           const x = wrapCloudFunctionForNestTestsGetter(f, fn)();
@@ -67,7 +67,7 @@ export function cloudFunctionTest<I extends object, T extends CloudFunctionTestC
       fns[`${key}CloudFn`] = mappedFns[key];
     });
 
-    useJestFunctionMapFixture(
+    useTestFunctionMapFixture(
       {
         fns
       },

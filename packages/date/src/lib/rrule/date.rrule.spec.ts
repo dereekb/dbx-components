@@ -1,7 +1,9 @@
 import { type CalendarDate, calendarDateFactory, calendarDateForDateDurationSpan, type DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
 import { addMinutes, addDays, addHours } from 'date-fns';
 import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
-import { type RRuleStringLineSet } from './date.rrule.parse';
+import { DateRRuleParseUtility, type RRuleStringLineSet } from './date.rrule.parse';
+import { parseString } from 'rrule/dist/esm/parsestring';
+import { TimezoneString } from '@dereekb/util';
 
 describe('DateRRuleUtility', () => {
   describe('DateRRuleInstance', () => {
@@ -343,8 +345,6 @@ describe('DateRRuleUtility', () => {
     });
   });
 
-  // TODO: Can add test back once "import { parseString } from 'rrule/dist/esm/parsestring';" works in jest.
-  /*
   describe('toRRuleOptions', () => {
     describe('examples', () => {
       describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
@@ -379,5 +379,4 @@ describe('DateRRuleUtility', () => {
       });
     });
   });
-  */
 });

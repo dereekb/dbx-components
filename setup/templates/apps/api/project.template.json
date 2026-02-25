@@ -85,16 +85,14 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME'",
-        "color": true
+        "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME'"
       }
     },
     "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/API_APP_FOLDER", "{projectRoot}/.reports/junit/API_APP_NAME.junit.xml"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "API_APP_FOLDER/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "../../coverage/API_APP_FOLDER"
       }
     },
     "watch": {

@@ -17,11 +17,6 @@ export class ExpectedHttpErrorWithSpecificServerErrorCode extends BaseError {
 }
 
 /**
- * @deprecated Use ExpectedHttpErrorWithSpecificServerErrorCode from shared instead. This is kept for backwards compatibility.
- */
-export class JestExpectedHttpErrorWithSpecificServerErrorCode extends ExpectedHttpErrorWithSpecificServerErrorCode {}
-
-/**
  * Creates a ExpectFailAssertionFunction that asserts the encountered error is of the expected type using the instanceof keyword.
  *
  * Throws a ExpectedErrorOfSpecificTypeError if the input is not a HttpsError.
@@ -45,6 +40,12 @@ export function expectFailAssertHttpErrorServerErrorCode(expectedCode: string): 
     return true;
   };
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use ExpectedHttpErrorWithSpecificServerErrorCode from shared instead. This is kept for backwards compatibility.
+ */
+export class JestExpectedHttpErrorWithSpecificServerErrorCode extends ExpectedHttpErrorWithSpecificServerErrorCode {}
 
 /**
  * @deprecated Use expectFailAssertHttpErrorServerErrorCode from shared instead. This is kept for backwards compatibility.

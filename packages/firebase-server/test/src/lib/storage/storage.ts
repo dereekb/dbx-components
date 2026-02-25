@@ -28,7 +28,7 @@ export class GoogleCloudTestFirebaseStorageContextFixture extends TestFirebaseSt
 let COUNTER = 0;
 
 /**
- * A JestTestContextBuilderFunction for building firebase storage test context factories using @google-cloud/storage. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
+ * A TestContextBuilderFunction for building firebase storage test context factories using @google-cloud/storage. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
  *
  * This is used to build a @google-cloud/storage FirebaseStorage instance for testing and point it to the emulators.
  *

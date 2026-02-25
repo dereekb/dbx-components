@@ -110,7 +110,6 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
      * Tests can encounter strange issues if run in parallel: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
      */
     maxWorkers = 1;
-
     // TODO: Also check that Firebase is currently running via env variables
   }
 

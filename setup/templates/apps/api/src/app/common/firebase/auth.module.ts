@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { firebaseServerAuthModuleMetadata, FIREBASE_AUTH_TOKEN } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 import { APP_CODE_PREFIXApiAuthService } from './auth.service';
@@ -14,4 +14,4 @@ import { MailgunService, MailgunServiceModule } from '@dereekb/nestjs/mailgun';
     }
   })
 )
-export class APP_CODE_PREFIXApiAuthModule {}
+export class APP_CODE_PREFIXApiAuthModule { }

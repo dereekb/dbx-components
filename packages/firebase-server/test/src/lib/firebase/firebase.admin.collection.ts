@@ -128,7 +128,7 @@ export interface ModelTestContextDocumentRefParams<D extends FirestoreDocument<a
 export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>> = { f: PF } & (C | ModelTestContextDocumentRefParams);
 
 /**
- * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
+ * Creates a new Test Context that has a random user for authorization for use in firebase server tests.
  */
 export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(
   config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>

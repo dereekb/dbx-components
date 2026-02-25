@@ -142,7 +142,7 @@ ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
 # other config
 LINTER="eslint"
-UNIT_TEST_RUNNER="jest"
+UNIT_TEST_RUNNER="vitest"
 
 # - Setup Details
 NX_CLOUD_CONFIG_TYPE="yes"
@@ -451,21 +451,19 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.hu
 git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
-# add jest setup/configurations
-echo "Adding jest configurations..."
-npm install -D jest@$DEP__JEST_VERSION jest-environment-jsdom@$DEP__JEST_ENVIRONMENT_JSDOM_VERSION jest-preset-angular@$DEP__JEST_PRESET_ANGULAR_VERSION ts-jest@$DEP__TS_JEST_VERSION jest-date@$DEP__JEST_DATE_VERSION jest-junit@$DEP__JEST_JUNIT_VERSION
-rm jest.preset.js
+# add vitest setup/configurations
+echo "Adding vitest configurations..."
+# npm install -D jest@$DEP__JEST_VERSION jest-environment-jsdom@$DEP__JEST_ENVIRONMENT_JSDOM_VERSION 
+# rm vitest.preset.config.mts
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.environment.jsdom.ts -o jest.environment.jsdom.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.resolver.js -o jest.resolver.js
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.angular.ts -o jest.setup.angular.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.firebase.ts -o jest.setup.firebase.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.nestjs.ts -o jest.setup.nestjs.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.node.ts -o jest.setup.node.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.typings.ts -o jest.setup.typings.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.preset.config.mts -o vitest.preset.config.mts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.angular.ts -o vitest.setup.angular.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.firebase.ts -o vitest.setup.firebase.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.nestjs.ts -o vitest.setup.nestjs.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.node.ts -o vitest.setup.node.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.typings.ts -o vitest.setup.typings.ts
 
-# add env files to ensure that jest CI tests export properly.
+# add env files to ensure that vitest CI tests export properly.
 echo "Adding env files..."
 mkdir tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/.env -o tmp/env.tmp
@@ -483,7 +481,7 @@ echo "Make build rely on parent build"
 npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true }";
 
 git add --all
-git commit --no-verify -m "checkpoint: added jest configurations"
+git commit --no-verify -m "checkpoint: added vitest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
@@ -616,7 +614,7 @@ download_app_components_file () {
 
 rm $ANGULAR_COMPONENTS_FOLDER/eslint.config.mjs
 download_app_components_file "eslint.config.mjs"
-download_app_components_file "jest.config.ts"
+download_app_components_file "vitest.config.mts"
 download_app_components_file "tsconfig.spec.json"
 
 rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
@@ -657,8 +655,12 @@ download_firebase_components_file () {
 
 rm $FIREBASE_COMPONENTS_FOLDER/eslint.config.mjs
 download_firebase_components_file "eslint.config.mjs"
-download_firebase_components_file "jest.config.ts"
+download_firebase_components_file "vitest.config.mts"
 download_firebase_components_file "tsconfig.spec.json"
+
+# Vitest Setup File
+rm $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
+echo "import '../../../vitest.setup.firebase'" > $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
 
 ## Lib Folder
 rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
@@ -726,7 +728,7 @@ download_angular_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-download_angular_ts_file "jest.config.ts"
+download_angular_ts_file "vitest.config.mts"
 download_angular_ts_file "tsconfig.spec.json"
 
 download_angular_ts_file "src/styles.scss"
@@ -741,6 +743,10 @@ rm $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
 sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/proxy.conf.prod.json
 rm $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
+
+# Vitest Setup File
+rm $ANGULAR_APP_FOLDER/src/test-setup.ts
+echo "import '../../../vitest.setup.firebase'" > $ANGULAR_APP_FOLDER/src/test-setup.ts
 
 # lib
 mkdir $ANGULAR_APP_FOLDER/src/lib
@@ -817,7 +823,7 @@ rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
 
 # add the setup file config
-download_api_ts_file "jest.config.ts"
+download_api_ts_file "vitest.config.mts"
 download_api_ts_file "tsconfig.spec.json"
 
 # Test Folder

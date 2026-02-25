@@ -50,7 +50,7 @@ export interface FirebaseAdminFunctionTestConfig {
    *
    * If false, your tests may need to be run in serial rather than parallel to avoid cross-test contamination.
    *
-   * @deprecated Is false by default to allow a new app to be defined each time. Usage of the singleton does not make sense. Remove later, and require that tests be run in serial if jest isn't behaving.
+   * @deprecated Is false by default to allow a new app to be defined each time. Usage of the singleton does not make sense. Remove later, and require that tests be run in serial if testing framework isn't behaving.
    */
   useFunctionSingletonContext: boolean;
 }
@@ -120,7 +120,7 @@ export function setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(use: boo
 }
 
 /**
- * A JestTestContextBuilderFunction for building firebase test context factories using firebase-admin.
+ * A TestContextBuilderFunction for building firebase test context factories using firebase-admin.
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */

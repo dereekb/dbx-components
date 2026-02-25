@@ -3,11 +3,6 @@ import { type DemoFirebaseServerActionsContext } from '../../firebase/action.con
 import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
-
-// Sharp is still not ESM compatable, so we use this
-// https://github.com/lovell/sharp/issues/2981#issuecomment-1324895139
-import { createCommonJS } from 'mlly';
-const { __dirname, __filename } = createCommonJS(import.meta.url); // NOTE: Jest is causing problems here, so we're going to replace jest and move to vitest...
 import sharp from 'sharp';
 
 export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): StorageFileInitializeFromUploadService {

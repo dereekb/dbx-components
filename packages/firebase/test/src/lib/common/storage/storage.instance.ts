@@ -25,4 +25,10 @@ export class TestFirebaseStorageContextFixture<F extends TestFirebaseStorageInst
   }
 }
 
-export type JestTestFirebaseStorageContextFactory = TestContextFactory<TestFirebaseStorageContextFixture>;
+export type TestFirebaseStorageContextFactory = TestContextFactory<TestFirebaseStorageContextFixture>;
+
+// MARK: Compat
+/**
+ * @deprecated Use TestFirebaseStorageContextFactory instead.
+ */
+export type JestTestFirebaseStorageContextFactory = TestFirebaseStorageContextFactory;

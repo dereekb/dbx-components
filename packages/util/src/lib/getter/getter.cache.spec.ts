@@ -1,8 +1,9 @@
+import { Mock } from 'vitest';
 import { cachedGetter } from './getter.cache';
 
 describe('cachedGetter()', () => {
   describe('with a simple Getter (no input)', () => {
-    let mockGetter: jest.Mock<string, []>;
+    let mockGetter: Mock<() => string>;
     let cached: ReturnType<typeof cachedGetter<string>>;
 
     beforeEach(() => {

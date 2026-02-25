@@ -354,36 +354,7 @@ There is a brief migration guide here: https://vitest.dev/guide/migration.html#j
 However, there are still various problems with Angular 21 in vitest (and even jest).
 
 #### Angular 21 Jest Updates
-There's an issue with Angular 21 + Jest: 
-
-https://github.com/nrwl/nx/issues/33777
-
-The workaround requires two changes:
-Update `jest.preset.ts` to make sure that `jest-preset-angular` uses the ESM preset:
-
-```typescript
-transform = {
-      '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$', useESM: true }]
-    };
-```
-
-Update `jest.setup.angular.ts` to use the following:
-
-```typescript
-import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone/index.mjs';
-
-setupZoneTestEnv();
-```
-
-Additionally, you'll have to add the following to the `compilerOptions` in each .spec.ts file:
-
-```json
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
-  }
-```
+There's an issue with Angular 21 + Jest (https://github.com/nrwl/nx/issues/33777), so as a result, we are moving off of Jest. This requires a few changes but is mostly minimal.
 
 #### Install Vitest
 Run `nx add @nx/vitest` to add Vitest to the project.
@@ -499,6 +470,12 @@ Update `nx.json` to use the new `test` target configuration. Example:
 ```
 
 You can remove the jest preset from `nx.json` after jest is removed entirely.
+
+#### Updating .env Files
+Update all project-specific `.env` files to remove the use of `JEST_SUITE_NAME` and `JEST_JUNIT_OUTPUT_NAME` environment variables as they are no longer needed.
+
+#### Updating tsconfig.lib.json
+Update `tsconfig.lib.json` to no longer reference "jest.config.ts".
 
 #### Removing Jest
 - Remove all the remaining jest related dependencies from `package.json`.

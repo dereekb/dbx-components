@@ -37,14 +37,14 @@ import { convertToArray, promiseDelay, Maybe } from '@dereekb/util';
 ```
 
 ### Test: `@dereekb/util/test`
-Jest testing utilities and helpers.
+Testing utilities and helpers. Support for Jest and Vitest.
 
 ```typescript
 import { itShouldFail, wrapFunction } from '@dereekb/util/test';
 ```
 
 **Key Exports:**
-- `itShouldFail()` - Jest test expecting failure
+- `itShouldFail()` - Vitest Test expecting failure
 - `wrapFunction()` - Wrap functions for testing
 - `testFunctionWithValue()` - Test function execution
 - `expectFail()` - Expect error throwing

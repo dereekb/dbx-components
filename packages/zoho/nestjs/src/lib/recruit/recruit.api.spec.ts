@@ -54,8 +54,6 @@ interface TestCandidate extends ZohoRecruitRecord {
   Associated_Tags?: string[];
 }
 
-jest.setTimeout(12000);
-
 @Module(appZohoRecruitModuleMetadata({}))
 export class TestZohoRecruitModule {}
 

@@ -1,7 +1,7 @@
 import type { ExpectationResult, Matchers, MatcherState } from '@vitest/expect';
 import { isBefore, isAfter, isSameSecond, isSameMinute, isSameHour, isSameDay, isSameWeek, isSameMonth, isSameQuarter, isSameYear, getDay } from 'date-fns';
 
-// Vitest implemenation of matchers from jest-date
+// Vitest implemenation of matchers from the jest-date package.
 
 export type DateMatcherTypeWithExpected<T extends (this: MatcherState, input: Date, expected: Date) => ExpectationResult> = T extends (this: MatcherState, input: any, expected: infer B) => ExpectationResult ? (expected: B) => ExpectationResult : never;
 export type DateMatcherTypeWithoutExpected<T extends (this: MatcherState, input: Date) => ExpectationResult> = T extends (this: MatcherState, input: any) => ExpectationResult ? () => ExpectationResult : never;

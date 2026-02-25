@@ -161,6 +161,48 @@ async function updateTsConfigSpec(projectRoot) {
 }
 
 /**
+ * Update tsconfig.lib.json to remove "jest.config.ts" from the exclude array
+ * and "jest" from compilerOptions.types
+ */
+async function updateTsConfigLib(projectRoot) {
+  const tsconfigPath = join(projectRoot, 'tsconfig.lib.json');
+
+  try {
+    console.log(`Updating ${tsconfigPath}...`);
+    const tsconfig = await readJsonFile(tsconfigPath);
+    let modified = false;
+
+    // Remove "jest.config.ts" from exclude
+    if (tsconfig.exclude && Array.isArray(tsconfig.exclude)) {
+      const excludeIndex = tsconfig.exclude.indexOf('jest.config.ts');
+      if (excludeIndex !== -1) {
+        tsconfig.exclude.splice(excludeIndex, 1);
+        console.log(`Removed "jest.config.ts" from tsconfig.lib.json exclude`);
+        modified = true;
+      }
+    }
+
+    // Remove "jest" from compilerOptions.types
+    if (tsconfig.compilerOptions?.types && Array.isArray(tsconfig.compilerOptions.types)) {
+      const typesIndex = tsconfig.compilerOptions.types.indexOf('jest');
+      if (typesIndex !== -1) {
+        tsconfig.compilerOptions.types.splice(typesIndex, 1);
+        console.log(`Removed "jest" from tsconfig.lib.json compilerOptions.types`);
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      await writeJsonFile(tsconfigPath, tsconfig);
+    } else {
+      console.log(`tsconfig.lib.json already clean`);
+    }
+  } catch (error) {
+    console.warn(`Could not update ${tsconfigPath}:`, error.message);
+  }
+}
+
+/**
  * Update test-setup.ts for Angular projects to include reflect-metadata
  */
 async function updateAngularTestSetup(projectRoot) {
@@ -261,6 +303,9 @@ async function migrateProject(projectName, projectDetails) {
 
   // Update tsconfig.spec.json to include vitest.setup.typings.ts
   await updateTsConfigSpec(projectRoot);
+
+  // Update tsconfig.lib.json to remove jest references
+  await updateTsConfigLib(projectRoot);
 
   // Delete jest.config.ts if it exists
   if (jestConfigPath) {

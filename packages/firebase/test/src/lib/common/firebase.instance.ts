@@ -38,4 +38,10 @@ export class TestFirebaseContextFixture<F extends TestFirebaseInstance = TestFir
   }
 }
 
-export type JestTestFirebaseContextFactory = TestContextFactory<TestFirebaseContextFixture>;
+export type TestFirebaseContextFactory = TestContextFactory<TestFirebaseContextFixture>;
+
+// MARK: Compat
+/**
+ * @deprecated Use TestFirebaseContextFactory instead.
+ */
+export type JestTestFirebaseContextFactory = TestFirebaseContextFactory;

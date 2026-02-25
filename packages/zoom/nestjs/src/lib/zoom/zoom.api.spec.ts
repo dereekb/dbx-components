@@ -19,8 +19,6 @@ interface TestCandidate {
   Last_Name: string;
 }
 
-jest.setTimeout(12000);
-
 @Module(
   appZoomOAuthModuleMetadata({
     exports: [ZoomOAuthAccessTokenCacheService],

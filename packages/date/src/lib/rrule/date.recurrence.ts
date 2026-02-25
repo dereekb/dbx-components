@@ -2,10 +2,8 @@ import { Exclude, Expose, Type } from 'class-transformer';
 import { type CalendarDate, type DateRange } from '../date';
 import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { DateRRuleParseUtility, type RRuleLines, type RRuleStringLineSet } from './date.rrule.parse';
-import { type TimezoneString as UtilTimezoneString } from '@dereekb/util';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
-
-export type TimezoneString = UtilTimezoneString; // TEMPORARY: weird issue with importing primative types with jest.
+import { TimezoneString } from '@dereekb/util';
 
 export interface RecurrenceModel {
   recur?: ModelRecurrenceInfo;
