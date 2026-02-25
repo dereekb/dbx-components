@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
     UIRouterModule.forChild({
       states: STATES
     })
-  ],
-  declarations: [RootAppLayoutComponent],
+  ]
 })
 export class RootAppModule { }

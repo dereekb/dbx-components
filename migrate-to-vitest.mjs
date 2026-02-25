@@ -166,7 +166,7 @@ async function updateTsConfigSpec(projectRoot) {
 async function updateAngularTestSetup(projectRoot) {
   const testSetupPath = join(projectRoot, 'src', 'test-setup.ts');
   const relativePathToRoot = calculateRelativePathToRoot(projectRoot + 'src/');
-  const importSetupAngularPath = `${relativePathToRoot}vitest.setup.angular`;
+  const importSetupAngularPath = `${relativePathToRoot}../vitest.setup.angular`;
 
   try {
     const expectedContent = `import '${importSetupAngularPath}';`;

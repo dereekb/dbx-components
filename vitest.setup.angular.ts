@@ -1,4 +1,5 @@
-import 'reflect-metadata';
+import './vitest.setup.firebase';
+
 import '@angular/compiler';
 import '@analogjs/vitest-angular/setup-zone';
 
@@ -12,8 +13,8 @@ getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting())
  *
  * Fix for lack of structure clone in JSDOM
  */
-import structuredClone from '@ungap/structured-clone';
-(global as any).structuredClone = structuredClone;
+// import structuredClone from '@ungap/structured-clone';
+// (global as any).structuredClone = structuredClone;
 
 /**
  * Must add TextEncoder/TextDecoder to the globals since it is not available in JSDOM by default.
@@ -46,21 +47,16 @@ import ResizeObserver from 'resize-observer-polyfill';
 (global as any).ResizeObserver = ResizeObserver;
 
 // https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
-var window: any;
-
-if (window) {
-  // only use in jsdom environment
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(), // Deprecated
-      removeListener: vi.fn(), // Deprecated
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn()
-    }))
-  });
-}
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // Deprecated
+    removeListener: vi.fn(), // Deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  }))
+});

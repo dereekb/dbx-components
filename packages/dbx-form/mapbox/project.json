@@ -22,16 +22,15 @@
       "defaultConfiguration": "production",
       "dependsOn": []
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/mapbox"],
-      "options": {
-        "jestConfig": "packages/dbx-form/mapbox/jest.config.ts",
-        "tsConfig": "packages/dbx-form/mapbox/tsconfig.spec.json"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/dbx-form/mapbox"
+      }
     }
   }
 }

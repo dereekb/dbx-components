@@ -10,8 +10,7 @@ import { callbackTest } from '@dereekb/util/test';
 describe('FormActionDirective', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [...FORM_TEST_PROVIDERS, DbxCoreActionModule],
-      declarations: [TestDbxActionFormDirectiveComponent, DbxTestDbxFormComponent]
+      imports: [...FORM_TEST_PROVIDERS, DbxCoreActionModule]
     }).compileComponents();
   });
 
@@ -24,11 +23,10 @@ describe('FormActionDirective', () => {
   beforeEach(async () => {
     fixture = TestBed.createComponent(TestDbxActionFormDirectiveComponent);
     testComponent = fixture.componentInstance;
+    fixture.detectChanges();
 
     directive = testComponent.directive();
     form = testComponent.form();
-
-    fixture.detectChanges();
   });
 
   afterEach(() => {
@@ -36,24 +34,26 @@ describe('FormActionDirective', () => {
   });
 
   it('should be created', () => {
-    expect(testComponent.formDirective).toBeDefined();
+    expect(testComponent.formDirective()).toBeDefined();
   });
 
   describe('when form valid', () => {
-    beforeEach((done) => {
-      // set the text value
-      form.setTextForTest('text value', fixture);
+    beforeEach(
+      callbackTest((done) => {
+        // set the text value
+        form.setTextForTest('text value', fixture);
 
-      // wait until it is marked as complete
-      form.context.stream$
-        .pipe(
-          filter((x) => x.isComplete),
-          first()
-        )
-        .subscribe(() => {
-          done();
-        });
-    });
+        // wait until it is marked as complete
+        form.context.stream$
+          .pipe(
+            filter((x) => x.isComplete),
+            first()
+          )
+          .subscribe(() => {
+            done();
+          });
+      })
+    );
 
     it(
       'should provide the value when triggered.',
@@ -104,7 +104,8 @@ describe('FormActionDirective', () => {
     <dbx-action>
       <dbx-test-dbx-form dbxActionForm></dbx-test-dbx-form>
     </dbx-action>
-  `
+  `,
+  imports: [DbxTestDbxFormComponent, DbxActionFormDirective, DbxCoreActionModule]
 })
 class TestDbxActionFormDirectiveComponent {
   readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);

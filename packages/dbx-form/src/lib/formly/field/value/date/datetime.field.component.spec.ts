@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
+import { DbxFormFormlyDateFieldModule } from '../../value/date/date.field.module';
 import { timeOnlyField } from '../../value/date/datetime.field';
 import { first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
@@ -8,8 +9,7 @@ import { callbackTest } from '@dereekb/util/test';
 describe('DbxDateTimeFieldComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [...FORM_TEST_PROVIDERS],
-      declarations: [TestDbxActionFormDirectiveComponent, DbxTestDbxFormComponent]
+      imports: [...FORM_TEST_PROVIDERS, DbxFormFormlyDateFieldModule]
     }).compileComponents();
   });
 
@@ -21,8 +21,9 @@ describe('DbxDateTimeFieldComponent', () => {
   beforeEach(async () => {
     fixture = TestBed.createComponent(TestDbxActionFormDirectiveComponent);
     testComponent = fixture.componentInstance;
-    form = testComponent.form;
     fixture.detectChanges();
+
+    form = testComponent.form();
   });
 
   afterEach(() => {
@@ -68,9 +69,9 @@ describe('DbxDateTimeFieldComponent', () => {
     <div>
       <dbx-test-dbx-form></dbx-test-dbx-form>
     </div>
-  `
+  `,
+  imports: [DbxTestDbxFormComponent]
 })
 class TestDbxActionFormDirectiveComponent {
-  @ViewChild(DbxTestDbxFormComponent, { static: true })
-  form!: DbxTestDbxFormComponent<{ date: Date }>;
+  readonly form = viewChild.required<DbxTestDbxFormComponent<{ date: Date }>>(DbxTestDbxFormComponent);
 }

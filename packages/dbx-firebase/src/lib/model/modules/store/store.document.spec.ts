@@ -21,8 +21,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
     beforeEach(async () => {
       await TestBed.configureTestingModule({
-        imports: [],
-        declarations: []
+        imports: []
       }).compileComponents();
 
       const injector = TestBed.inject(Injector);

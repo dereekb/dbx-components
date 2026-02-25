@@ -2,10 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["jest", "node"],
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
+    "types": ["jest", "node"]
   },
   "include": ["**/*.spec.ts", "**/*.d.ts", "../../jest.setup.typings.ts", "jest.config.ts"]
 }
