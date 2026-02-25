@@ -22,10 +22,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/model"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/firebase-server/model/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/firebase-server/model"
       }
     }
   }
