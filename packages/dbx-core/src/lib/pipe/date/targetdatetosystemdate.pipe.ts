@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
-import { TimezoneString, dateTimezoneUtcNormal } from '@dereekb/date';
+import { TimezoneString, type Maybe } from '@dereekb/util';
+import { dateTimezoneUtcNormal } from '@dereekb/date';
 
 /**
  * Converts the input date and timezone to a system date that represents that date/time.

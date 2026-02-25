@@ -130,6 +130,8 @@ You'll need to specify the following overrides in `package.json`:
 - `hasExpired`
 - `getExpiration`
 
+- `TimezoneString` is no longer exported. Import from `@dereekb/util` instead.
+
 **Note:** RxJS expiration operators have been migrated to `@dereekb/rxjs/expires`. The `date/expires.rxjs` module now re-exports from the new location with deprecation notices.
 
 #### @dereekb/rxjs
