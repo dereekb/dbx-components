@@ -31,16 +31,15 @@
       },
       "defaultConfiguration": "production"
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/components/demo-components"],
-      "options": {
-        "jestConfig": "components/demo-components/jest.config.ts",
-        "tsConfig": "components/demo-components/tsconfig.spec.json"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/components/demo-components"
+      }
     }
   }
 }

@@ -28,13 +28,6 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/components/demo-firebase"],
-      "options": {
-        "jestConfig": "components/demo-firebase/jest.config.ts"
-      }
-    },
     "watch": {
       "executor": "nx:run-commands",
       "options": {
@@ -46,6 +39,13 @@
       "outputs": ["{workspaceRoot}/coverage/components/demo-firebase", "{projectRoot}/.reports/junit/firebase.junit.xml"],
       "options": {
         "jestConfig": "components/demo-firebase/jest.config.ts"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/components/demo-firebase"
       }
     }
   }
