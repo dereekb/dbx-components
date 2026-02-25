@@ -3,7 +3,7 @@ import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseModelEntitiesPopoverButtonConfig } from '@dereekb/dbx-firebase';
-import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxAnchorListComponent, DbxColorDirective } from '@dereekb/dbx-web';
+import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 import { AsyncPipe } from '@angular/common';
 

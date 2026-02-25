@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, model } from '@angular/core';
-import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { NgTemplateOutlet } from '@angular/common';
+import { cleanLoadingContext } from '@dereekb/dbx-core';
 import { DbxLoadingComponent } from '../../loading';
 import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';

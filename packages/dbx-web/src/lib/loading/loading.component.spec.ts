@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext } from '@angular/core';
-import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { ValuesLoadingContext } from '@dereekb/rxjs';

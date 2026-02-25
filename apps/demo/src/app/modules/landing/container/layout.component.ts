@@ -1,7 +1,7 @@
 import { ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
-import { DbxSetStyleDirective, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent } from '@dereekb/dbx-web';
+import { DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
 import { MatDivider } from '@angular/material/divider';

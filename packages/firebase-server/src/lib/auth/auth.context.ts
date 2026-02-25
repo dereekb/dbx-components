@@ -1,6 +1,6 @@
 import { type FirebaseAuthToken } from '@dereekb/firebase';
 import type * as admin from 'firebase-admin';
-import { AuthData } from '../type';
+import { type AuthData } from '../type';
 
 export interface AuthDataRef {
   readonly auth?: AuthData;

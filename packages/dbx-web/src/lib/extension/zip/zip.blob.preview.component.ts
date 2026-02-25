@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, Signal, signal } from '@angular/core';
-import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { JsonPipe, NgTemplateOutlet } from '@angular/common';
+import { cleanLoadingContext } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { ZipReader, BlobReader, Entry, FileEntry } from '@zip.js/zip.js';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -9,7 +8,7 @@ import { distinctUntilChanged, map, Observable, of, shareReplay, switchMap } fro
 import { LoadingState, loadingStateFromObs, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { dbxZipBlobPreviewEntryTreeFromEntries, DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
 import { DbxZipPreviewEntryListComponent } from './zip.blob.preview.list.component';
-import { DbxBarHeaderComponent, DbxListEmptyContentComponent, DbxListTitleGroupData, DbxListTitleGroupDirective, DbxListTitleGroupTitleDelegate, DbxSpacerDirective, DbxValueListItemModifierDirective } from '../../layout';
+import { DbxBarHeaderComponent, DbxListTitleGroupData, DbxListTitleGroupDirective, DbxListTitleGroupTitleDelegate, DbxSpacerDirective, DbxValueListItemModifierDirective } from '../../layout';
 import { AnchorForValueFunction, DbxListItemAnchorModifierDirective } from '../../router';
 import { DbxEmbedComponent } from '../../interaction';
 import { MatToolbarModule } from '@angular/material/toolbar';

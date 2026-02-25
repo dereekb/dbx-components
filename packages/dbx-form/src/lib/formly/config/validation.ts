@@ -1,5 +1,5 @@
 import { type FieldTypeConfig } from '@ngx-formly/core';
-import { ValidationMessageOption } from '../type';
+import { type ValidationMessageOption } from '../type';
 
 export function minLengthValidationMessage(err: unknown, field: FieldTypeConfig) {
   return `Should have atleast ${field.props.minLength} characters.`;

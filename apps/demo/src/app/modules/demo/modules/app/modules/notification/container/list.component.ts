@@ -2,11 +2,11 @@ import { AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyC
 import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { NotificationItem } from '@dereekb/firebase';
-import { DbxRouteModelIdDirective, DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
-import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective, DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
+import { DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
+import { DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
-import { DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, ProfileDocumentStore } from 'demo-components';
+import { ProfileDocumentStore } from 'demo-components';
 import { UIView } from '@uirouter/angular';
 import { AsyncPipe } from '@angular/common';
 

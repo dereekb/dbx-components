@@ -1,5 +1,5 @@
-import { Maybe, type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeMillisecondsNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
-import { VapiChatMessage, type VapiAssistantId, type VapiCostsItem, type VapiTranscriptRef } from '../vapiai.type';
+import { type DollarAmount, type ISO8601DateStringUTCFull, type JSONEncodedString, type UnixDateTimeMillisecondsNumber, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type VapiChatMessage, type VapiAssistantId, type VapiCostsItem, type VapiTranscriptRef } from '../vapiai.type';
 import { type Vapi } from '@vapi-ai/server-sdk';
 
 export type BaseVapiPayloadCall = Required<Pick<Vapi.Call, 'id' | 'orgId' | 'createdAt' | 'updatedAt' | 'type' | 'monitor' | 'transport' | 'status' | 'assistantId' | 'assistantOverrides'>>;

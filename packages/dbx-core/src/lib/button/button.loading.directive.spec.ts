@@ -1,4 +1,3 @@
-import { DbxCoreButtonModule } from './button.module';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { filter } from 'rxjs';

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Injector } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverDirective, DbxListEmptyContentComponent, DbxPopoverConfigSizing, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverKey, DbxPopoverScrollContentDirective, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, DbxPopoverConfigSizing, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverKey, DbxPopoverScrollContentDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesComponent } from './model.entities.component';
 import { Observable } from 'rxjs';
 import { LoadingState } from '@dereekb/rxjs';

@@ -29,7 +29,7 @@ FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                         # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                                 # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 FIREBASE_STAGING_PROJECT_ID=${6:-"$FIREBASE_PROJECT_ID-staging"} # example: gethapier-staging
 
-# Example: ./setup-project.sh gethapierapp gethapier getHapier 9300
+# Example: ./setup-project.sh gethapierapp gethapier getHapier 9300 ~/Desktop/gethapier
 
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n

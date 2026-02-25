@@ -1719,7 +1719,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       };
 
       // iterate through all notification items that need to be synced
-      // eslint-disable-next-line no-constant-condition
+
       while (notificationLoopCount < maxLoops) {
         const sendQueuedNotificationsResults = await sendQueuedNotifications();
 
@@ -1796,7 +1796,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
       let notificationWeeksUpdated: number = 0;
 
       // iterate through all Notification items that need to be cleaned up
-      // eslint-disable-next-line no-constant-condition
+
       while (true) {
         const cleanupSentNotificationsResults = await cleanupSentNotifications();
 

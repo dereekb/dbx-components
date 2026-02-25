@@ -16,7 +16,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';

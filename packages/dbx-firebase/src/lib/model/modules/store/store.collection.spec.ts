@@ -1,4 +1,4 @@
-import { authorizedTestWithMockItemCollection, MockItemCollections, type MockItem, type MockItemDocument, type MockItemFirestoreCollection } from '@dereekb/firebase/test';
+import { authorizedTestWithMockItemCollection, MockItemCollections, type MockItem, type MockItemDocument } from '@dereekb/firebase/test';
 import { first } from 'rxjs';
 import { AbstractDbxFirebaseCollectionStore } from './store.collection';
 import { callbackTest } from '@dereekb/util/test';

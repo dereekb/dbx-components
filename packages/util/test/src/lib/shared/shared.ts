@@ -1,4 +1,4 @@
-import { type PromiseOrValue, PromiseReference, promiseReference } from '@dereekb/util';
+import { type PromiseOrValue, type PromiseReference, promiseReference } from '@dereekb/util';
 
 // MARK: Test Done Callback
 /**

@@ -1,4 +1,4 @@
-import { type Maybe, type MaybeNot, type WebsitePath } from '@dereekb/util';
+import { type Maybe, type MaybeNot } from '@dereekb/util';
 
 export interface ZohoModel {}
 

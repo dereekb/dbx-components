@@ -4,7 +4,7 @@
  * Since fail() was silently removed, we redefine it.
  */
 
-import { TestDoneCallback, failWithTestDoneCallback, TestProvidesCallbackWithDone, TestProvidesCallback } from '../shared';
+import { type TestDoneCallback, failWithTestDoneCallback, type TestProvidesCallbackWithDone, type TestProvidesCallback } from '../shared';
 import {
   ExpectedFailError,
   failSuccessfullyError,
@@ -23,10 +23,7 @@ import {
   type ShouldFailProvidesCallbackWithDone,
   type ShouldFailProvidesCallbackWithResult,
   type ShouldFailProvidesCallback,
-  shouldFail,
-  itShouldFail,
-  type FakeDoneHandler,
-  fakeDoneHandler
+  type FakeDoneHandler
 } from '../shared/shared.fail';
 
 // MARK: Types

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { startOfSecond, addSeconds, startOfMinute, addMinutes, startOfHour, addHours, startOfDay, addDays, startOfWeek, addWeeks, startOfMonth, addMonths, startOfQuarter, addQuarters, startOfYear, addYears } from 'date-fns';
-import { AllDateMatchers, allDateMatchers } from './matcher.date';
+import { type AllDateMatchers, allDateMatchers } from './matcher.date';
 
 // Extend Vitest Matchers
 beforeAll(() => {

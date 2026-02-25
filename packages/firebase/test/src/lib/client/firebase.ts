@@ -6,7 +6,7 @@ import { firebaseFirestoreClientDrivers, type FirebaseStorage, firebaseStorageCl
 import { setLogLevel } from 'firebase/firestore';
 import { makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestingFirebaseStorageDrivers } from '../common/storage/storage';
 import { TestFirebaseContextFixture, type TestFirebaseInstance } from '../common/firebase.instance';
-import { TestFirebaseStorageInstance } from '../common/storage/storage.instance';
+import { type TestFirebaseStorageInstance } from '../common/storage/storage.instance';
 
 export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 

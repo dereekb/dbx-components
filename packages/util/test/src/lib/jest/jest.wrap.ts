@@ -1,4 +1,4 @@
-import { AbstractWrappedFixtureWithInstance, type WrapTestContextConfig, wrapTestContextFactory, type InstanceWrapTestContextConfig, instanceWrapTestContextFactory, TestWrappedContextFactoryBuilder } from '../shared/shared.wrap';
+import { type AbstractWrappedFixtureWithInstance, type WrapTestContextConfig, wrapTestContextFactory, type InstanceWrapTestContextConfig, instanceWrapTestContextFactory, type TestWrappedContextFactoryBuilder } from '../shared/shared.wrap';
 
 /**
  * @deprecated Use TestWrappedContextFactoryBuilder from shared instead. This is kept for backwards compatibility.

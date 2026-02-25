@@ -4,7 +4,7 @@
 
 import { type Building, isPromise, promiseReference, type PromiseReference, type PromiseOrValue, build, type ClassType, type Maybe, type ClassLikeType } from '@dereekb/util';
 import { BaseError } from 'make-error';
-import { failWithTestDoneCallback, testDoneCallbackRef, TestProvidesCallbackWithDone, type TestDoneCallback } from './shared';
+import { failWithTestDoneCallback, testDoneCallbackRef, type TestProvidesCallbackWithDone, type TestDoneCallback } from './shared';
 
 // MARK: Errors
 /**

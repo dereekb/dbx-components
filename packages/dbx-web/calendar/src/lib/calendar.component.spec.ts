@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { DbxCalendarComponent } from './calendar.component';
 import { DbxCalendarStore } from './calendar.store';
 

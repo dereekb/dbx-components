@@ -3,7 +3,7 @@ import { addMinutes, addDays, addHours } from 'date-fns';
 import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { DateRRuleParseUtility, type RRuleStringLineSet } from './date.rrule.parse';
 import { parseString } from 'rrule/dist/esm/parsestring';
-import { TimezoneString } from '@dereekb/util';
+import { type TimezoneString } from '@dereekb/util';
 
 describe('DateRRuleUtility', () => {
   describe('DateRRuleInstance', () => {

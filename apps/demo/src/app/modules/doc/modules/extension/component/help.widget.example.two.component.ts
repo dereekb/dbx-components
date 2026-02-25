@@ -1,5 +1,4 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
 import { DbxHelpContextKey } from '@dereekb/dbx-web';
 
 export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO: DbxHelpContextKey = 'example-two';

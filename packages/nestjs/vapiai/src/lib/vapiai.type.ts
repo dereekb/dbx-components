@@ -1,4 +1,4 @@
-import { Maybe, MaybeSo } from '@dereekb/util';
+import { type MaybeSo } from '@dereekb/util';
 import { type Vapi } from '@vapi-ai/server-sdk';
 
 /**

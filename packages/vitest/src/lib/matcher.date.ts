@@ -1,4 +1,4 @@
-import type { ExpectationResult, Matchers, MatcherState } from '@vitest/expect';
+import type { ExpectationResult, MatcherState } from '@vitest/expect';
 import { isBefore, isAfter, isSameSecond, isSameMinute, isSameHour, isSameDay, isSameWeek, isSameMonth, isSameQuarter, isSameYear, getDay } from 'date-fns';
 
 // Vitest implemenation of matchers from the jest-date package.

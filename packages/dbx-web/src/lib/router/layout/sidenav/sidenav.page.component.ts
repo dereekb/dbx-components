@@ -4,7 +4,6 @@ import { DbxSidenavComponent } from './sidenav.component';
 import { type Maybe } from '@dereekb/util';
 import { DbxBarColor } from '../../../layout/bar/bar';
 import { SideNavDisplayMode } from './sidenav';
-import { NgClass } from '@angular/common';
 import { DbxSidenavPagebarComponent } from './sidenav.pagebar.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 

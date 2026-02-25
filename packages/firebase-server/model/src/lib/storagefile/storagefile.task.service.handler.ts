@@ -1,6 +1,5 @@
 import {
   type StorageFileProcessingNotificationTaskData,
-  type StorageFilePurpose,
   type StorageFileProcessingSubtaskMetadata,
   type NotificationTaskServiceHandleNotificationTaskResult,
   type StorageFileProcessingSubtask,

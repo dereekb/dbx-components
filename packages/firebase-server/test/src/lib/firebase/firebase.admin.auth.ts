@@ -8,8 +8,8 @@ import { decode as decodeJwt } from 'jsonwebtoken';
 import { type CallableContextOptions, type ContextOptions, type WrappedFunction, type WrappedScheduledFunction, type WrappedV2Function } from 'firebase-functions-test/lib/main';
 import { type WrappedBlockingFunction, type WrappedBlockingFunctionWithHandler, type WrappedCallableRequest, type WrappedCallableRequestOutput, type WrappedCallableRequestParams, type WrappedCloudFunction, type WrappedCloudFunctionV1 } from './firebase.function';
 import { type ScheduledEvent } from 'firebase-functions/scheduler';
-import { AuthData } from '@dereekb/firebase-server';
-import { AuthBlockingEvent } from 'firebase-functions/identity';
+import { type AuthData } from '@dereekb/firebase-server';
+import { type AuthBlockingEvent } from 'firebase-functions/identity';
 
 // gen 1
 export type CallCloudFunction = WrappedCloudFunctionV1<any> | WrappedBlockingFunctionWithHandler<any, any> | WrappedBlockingFunction | WrappedV2Function<any> | WrappedCloudFunctionV1<any>;

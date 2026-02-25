@@ -3,7 +3,7 @@ import { type CalendarDate, type DateRange } from '../date';
 import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { DateRRuleParseUtility, type RRuleLines, type RRuleStringLineSet } from './date.rrule.parse';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
-import { TimezoneString } from '@dereekb/util';
+import { type TimezoneString } from '@dereekb/util';
 
 export interface RecurrenceModel {
   recur?: ModelRecurrenceInfo;

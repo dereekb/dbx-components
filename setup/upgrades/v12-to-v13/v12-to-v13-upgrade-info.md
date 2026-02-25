@@ -482,3 +482,8 @@ Update `tsconfig.lib.json` to no longer reference "jest.config.ts".
 #### Removing Jest
 - Remove all the remaining jest related dependencies from `package.json`.
 - Remove related setup files from the root of the project.
+
+### ESLint Updates
+- .eslintignore has been deprecated. Update project appropriately to define ignores inline.
+
+You can update `nx.json` to remove the `.eslintignore` input from the `lint` target inputs. Additionally remove the `.eslintrc.json` if it is still there.

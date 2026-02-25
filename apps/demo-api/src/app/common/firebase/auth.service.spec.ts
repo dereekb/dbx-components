@@ -1,6 +1,4 @@
-import { type DemoApiAuthClaims } from 'demo-firebase';
-import { demoApiFunctionContextFactory, demoAuthorizedUserContext } from './../../../test/fixture';
-import { type DemoApiFirebaseServerAuthUserContext } from './auth.service';
+import { demoApiFunctionContextFactory } from './../../../test/fixture';
 
 demoApiFunctionContextFactory((f) => {
   it('should', () => {

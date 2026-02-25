@@ -30,8 +30,7 @@ import {
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, OperatorFunction, throttleTime } from 'rxjs';
-import MapboxGl from 'mapbox-gl';
-import { MapEventType, MapEvents, Map } from 'mapbox-gl';
+import MapboxGl, { MapEventType, MapEvents, Map } from 'mapbox-gl';
 import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxEventData, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';

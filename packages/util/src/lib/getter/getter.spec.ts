@@ -199,7 +199,7 @@ describe('protectedFactory()', () => {
     const protFactory = protectedFactory(originalFactory);
 
     // Call the protected factory with an argument, which should be ignored
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const result = (protFactory as any)('some ignored argument');
 
     expect(originalFactory).toHaveBeenCalledTimes(1);

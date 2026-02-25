@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { DbxMapboxInjectionComponent } from './mapbox.injection.component';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 import { BrowserModule } from '@angular/platform-browser';

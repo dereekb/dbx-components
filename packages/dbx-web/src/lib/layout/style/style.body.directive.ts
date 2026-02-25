@@ -1,4 +1,4 @@
-import { Directive, Renderer2, inject, signal } from '@angular/core';
+import { Directive, Renderer2, inject } from '@angular/core';
 import { DbxStyleService } from './style.service';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { delay } from 'rxjs';

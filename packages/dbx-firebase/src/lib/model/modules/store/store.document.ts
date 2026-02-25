@@ -26,12 +26,11 @@ import {
   FIRESTORE_PERMISSION_DENIED_ERROR_CODE,
   isClientFirebaseError
 } from '@dereekb/firebase';
-import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading, tapLog } from '@dereekb/rxjs';
+import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
 import { DbxFirebaseDocumentStore } from './store';
-import { linkDocumentStoreToParentContextStores } from './store.document.context.store.link';
 
 @Injectable()
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {

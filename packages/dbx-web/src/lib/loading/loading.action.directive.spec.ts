@@ -14,7 +14,7 @@ import { callbackTest } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 
 describe('DbxActionLoadingContextDirective', () => {
-  let sub = new SubscriptionObject();
+  const sub = new SubscriptionObject();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({});

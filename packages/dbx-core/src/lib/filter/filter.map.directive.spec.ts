@@ -3,7 +3,6 @@ import { Component, viewChild } from '@angular/core';
 import { DbxFilterMapSourceConnectorDirective } from './filter.map.connector.directive';
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { DbxFilterMapDirective } from './filter.map.directive';
-import { DbxCoreFilterModule } from './filter.module';
 
 describe('dbxFilterMapDirective', () => {
   beforeEach(waitForAsync(() => {

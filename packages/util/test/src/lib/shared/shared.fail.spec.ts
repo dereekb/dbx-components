@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { BaseError } from 'make-error';
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, ExpectedFailError, shouldFail, failDueToSuccess, UnexpectedSuccessFailureError, expectFail, ExpectedErrorOfSpecificTypeError, expectFailAssertErrorType } from './shared.fail';
-import { testDoneCallbackRef, TestProvidesCallback, TestDoneCallback } from './shared';
+import { failSuccessfully, expectSuccessfulFail, ExpectedFailError, shouldFail, failDueToSuccess, UnexpectedSuccessFailureError, expectFail, ExpectedErrorOfSpecificTypeError, expectFailAssertErrorType } from './shared.fail';
+import { testDoneCallbackRef, type TestProvidesCallback, type TestDoneCallback } from './shared';
 
 class TestError extends BaseError {}
 

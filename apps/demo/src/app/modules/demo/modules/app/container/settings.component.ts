@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFileUploadComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDocumentStoreDirective, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
+import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { makeUserAvatarFileStoragePath } from 'demo-firebase';
