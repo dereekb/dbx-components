@@ -88,6 +88,13 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
       }
     },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/demo-api"
+      }
+    },
     "watch": {
       "executor": "nx:run-commands",
       "options": {
@@ -121,13 +128,6 @@
           }
         ],
         "parallel": false
-      }
-    },
-    "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "../../coverage/apps/demo-api"
       }
     }
   }

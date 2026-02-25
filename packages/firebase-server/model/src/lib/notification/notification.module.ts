@@ -1,4 +1,4 @@
-import { Global, Module, type ModuleMetadata } from '@nestjs/common';
+import { Global, Inject, Module, type ModuleMetadata } from '@nestjs/common';
 import { NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, notificationInitServerActions, NotificationInitServerActions, type NotificationInitServerActionsContextConfig } from './notification.action.init.service';
 import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, type BaseNotificationServerActionsContext, NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, notificationServerActions, NotificationServerActions, type NotificationServerActionsContext } from './notification.action.service';
 import { NotificationTemplateService } from './notification.config.service';
@@ -97,7 +97,7 @@ export function appNotificationModuleMetadata(config: ProvideAppNotificationMeta
  */
 @Module({})
 export abstract class AbstractAppNotificationModule {
-  constructor(mutableNotificationExpediteService: MutableNotificationExpediteService, actions: NotificationServerActions) {
+  constructor(@Inject(MutableNotificationExpediteService) mutableNotificationExpediteService: MutableNotificationExpediteService, @Inject(NotificationServerActions) actions: NotificationServerActions) {
     mutableNotificationExpediteService.setNotificationServerActions(actions);
   }
 }

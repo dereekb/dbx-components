@@ -16,7 +16,7 @@ import {
   ModelTestContextInstance,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
-import { JestBuildTestsWithContextFunction, TestContextFixture } from '@dereekb/util/test';
+import { BuildTestsWithContextFunction, TestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { APP_CODE_PREFIXApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
@@ -200,7 +200,7 @@ const _APP_CODE_PREFIX_CAMELApiContextFactory = firebaseAdminNestContextFactory(
   makeInstance: (instance, nest) => new APP_CODE_PREFIXApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
 });
 
-export const APP_CODE_PREFIX_CAMELApiContextFactory = (buildTests: JestBuildTestsWithContextFunction<APP_CODE_PREFIXApiContextFixture>) => {
+export const APP_CODE_PREFIX_CAMELApiContextFactory = (buildTests: BuildTestsWithContextFunction<APP_CODE_PREFIXApiContextFixture>) => {
   initAPP_CODE_PREFIXApiTestEnvironment();
   return _APP_CODE_PREFIX_CAMELApiContextFactory(buildTests as any);
 };
@@ -315,7 +315,7 @@ const _APP_CODE_PREFIX_CAMELApiFunctionContextFactory = firebaseAdminFunctionNes
   makeInstance: (instance, nest) => new APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)
 });
 
-export const APP_CODE_PREFIX_CAMELApiFunctionContextFactory = (buildTests: JestBuildTestsWithContextFunction<APP_CODE_PREFIXApiFunctionContextFixture>) => {
+export const APP_CODE_PREFIX_CAMELApiFunctionContextFactory = (buildTests: BuildTestsWithContextFunction<APP_CODE_PREFIXApiFunctionContextFixture>) => {
   initAPP_CODE_PREFIXApiTestEnvironment();
   return _APP_CODE_PREFIX_CAMELApiFunctionContextFactory(buildTests as any);
 };

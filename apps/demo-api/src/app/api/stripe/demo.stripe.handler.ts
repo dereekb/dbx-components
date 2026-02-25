@@ -1,6 +1,6 @@
 import { StripeWebhookService, StripeApi } from '@dereekb/nestjs/stripe';
 import { catchAllHandlerKey } from '@dereekb/util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class DemoApiStripeExampleService {
 
   private readonly logger = new Logger('DemoApiStripeExampleService');
 
-  constructor(stripeApi: StripeApi, stripeWebhookService: StripeWebhookService) {
+  constructor(@Inject(StripeApi) stripeApi: StripeApi, @Inject(StripeWebhookService) stripeWebhookService: StripeWebhookService) {
     this._stripeApi = stripeApi;
     this._stripeWebhookService = stripeWebhookService;
 

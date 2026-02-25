@@ -1,4 +1,4 @@
-import { AbstractJestTestContextFixture, type TestContextFactory } from '@dereekb/util/test';
+import { AbstractTestContextFixture, type TestContextFactory } from '@dereekb/util/test';
 import { type FirebaseStorage, type Firestore } from '@dereekb/firebase';
 import { type TestFirestoreContext } from './firestore/firestore';
 import { type TestFirestoreInstance } from './firestore/firestore.instance';
@@ -20,7 +20,7 @@ export class TestFirebaseInstance implements TestFirestoreInstance, TestFirebase
   }
 }
 
-export class TestFirebaseContextFixture<F extends TestFirebaseInstance = TestFirebaseInstance> extends AbstractJestTestContextFixture<F> {
+export class TestFirebaseContextFixture<F extends TestFirebaseInstance = TestFirebaseInstance> extends AbstractTestContextFixture<F> {
   get firestore(): Firestore {
     return this.instance.firestore;
   }

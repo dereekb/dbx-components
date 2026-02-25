@@ -17,7 +17,7 @@ import {
   ModelTestContextInstance,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
-import { JestBuildTestsWithContextFunction, TestContextFixture } from '@dereekb/util/test';
+import { BuildTestsWithContextFunction, TestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
@@ -232,7 +232,7 @@ const _demoApiContextFactory = firebaseAdminNestContextFactory({
   makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
 });
 
-export const demoApiContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiContextFixture>) => {
+export const demoApiContextFactory = (buildTests: BuildTestsWithContextFunction<DemoApiContextFixture>) => {
   initDemoApiTestEnvironment();
   return _demoApiContextFactory(buildTests as any);
 };
@@ -369,7 +369,7 @@ const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
   makeInstance: (instance, nest) => new DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)
 });
 
-export const demoApiFunctionContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiFunctionContextFixture>) => {
+export const demoApiFunctionContextFactory = (buildTests: BuildTestsWithContextFunction<DemoApiFunctionContextFixture>) => {
   initDemoApiTestEnvironment();
   return _demoApiFunctionContextFactory(buildTests as any);
 };

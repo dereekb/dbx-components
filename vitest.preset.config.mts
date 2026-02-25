@@ -7,6 +7,7 @@ import { loadEnv, PluginOption } from 'vite';
 import path from 'path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
+type SequenceHooks = NonNullable<VitestTestConfig['sequence']>['hooks'];
 
 export interface DbxComponentsVitestPresetConfigOptions {
   readonly type: 'angular' | 'firebase' | 'nestjs' | 'node';
@@ -123,6 +124,13 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     exclude.push(...modelPathIgnorePatterns);
   }
 
+  /**
+   * Keep Jest behavior of running beforeEach/afterEach in order.
+   *
+   * See: https://vitest.dev/guide/migration.html#hooks
+   */
+  const jestSequenceHooksBehavior: SequenceHooks = 'stack';
+
   return defineConfig(() => {
     const env = configureEnv?.();
     const { suiteName, outputFilePrefix: junitFilePrefix } = junitConfig?.() ?? {};
@@ -155,6 +163,10 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const
+        },
+        sequence: {
+          ...testConfig?.sequence,
+          hooks: jestSequenceHooksBehavior
         }
       }
     };

@@ -1,6 +1,6 @@
 import { createParamDecorator, type ExecutionContext, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { type Request } from 'express';
-import * as rawbody from 'raw-body';
+import rawbody from 'raw-body';
 import { parse as parseQueryString, type ParsedUrlQuery } from 'querystring';
 
 export type RawBodyBuffer = Buffer;

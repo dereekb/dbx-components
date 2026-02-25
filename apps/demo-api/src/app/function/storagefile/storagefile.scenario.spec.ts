@@ -7,7 +7,7 @@ import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/uti
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import sharp from 'sharp';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {

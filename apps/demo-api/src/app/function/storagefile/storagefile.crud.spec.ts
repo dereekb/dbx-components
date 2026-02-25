@@ -53,7 +53,7 @@ import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, sl
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {

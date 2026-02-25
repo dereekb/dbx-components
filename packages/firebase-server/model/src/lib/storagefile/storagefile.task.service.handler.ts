@@ -38,7 +38,7 @@ import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/n
 import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig, type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
-import * as archiver from 'archiver';
+import archiver from 'archiver';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.

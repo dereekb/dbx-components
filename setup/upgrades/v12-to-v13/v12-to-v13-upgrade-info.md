@@ -104,6 +104,7 @@ You'll need to specify the following overrides in `package.json`:
 
 **BREAKING CHANGE: Test Context Builder**
 - `jestTestContextBuilder` has been renamed to `testContextBuilder`
+- `AbstractJestTestContextFixture
 - `AbstractJestTestContextFixture` has been renamed to `AbstractTestContextFixture`
 - `AbstractChildJestTestContextFixture` has been renamed to `AbstractChildTestContextFixture`
 - `JestTestContextFactory` has been renamed to `TestContextFactory`
@@ -298,7 +299,52 @@ With:
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
 ```
 
-### Migrating (Partially) to Vitest
+### Updating tsconfig.base.json
+Now using `bundler` for `moduleResolution`. This has some ramifications, which is why we are now using Vitest instead of Jest.
+
+#### Replacing `import * as` with `import`
+For all packages, you should replace `import * as` with `import`.
+
+For example:
+
+```typescript
+import * as _ from 'lodash';
+```
+
+Should be replaced with:
+
+```typescript
+import _ from 'lodash';
+```
+
+You may also have to update the types access.
+
+For example:
+
+```typescript
+import * as MapboxGl from 'mapbox-gl';
+
+
+export interface TypedMapboxListenerPair<T extends keyof MapboxGl.MapEventType> {
+  type: T;
+  listener: (ev: MapboxGl.MapEventType[T] & MapboxEventData) => void;
+}
+```
+
+Should be replaced with:
+
+```typescript
+import { MapEventType } from 'mapbox-gl';
+
+export interface TypedMapboxListenerPair<T extends keyof MapEventType> {
+  type: T;
+  listener: (ev: MapEventType[T] & MapboxEventData) => void;
+}
+```
+
+The only place this wasn't updated was where this was being used correctly for Ngrx's reducers. declared within our app.
+
+### Migrating to Vitest
 Jest still has some issues with the ESM node environment, which caused an issue while trying to utilize a non-esm package within a test that utilized `sharp`. Unfortunately, `sharp` still has no progress towards moving to ESM, but there was a workaround, that requires the use of `mlly` and `import.meta.url`. The issue is that Jest messes with the ESM environment where `import.meta.url` is not available, which caused the workaround to fail.
 
 Vitest does not have this issue, so `demo-api` is being migrated to use Vitest.
@@ -404,6 +450,41 @@ Tests that use `jest.` should be updated to use `vi.` instead.
 
 For example, `jest.fn()` to `vi.fn()`.
 
+#### Jest BeforeEach/AfterEach Hooks Note
+As mentioned in the Jest->Vitest migration guide, `beforeEach` and `afterEach` hooks are called in Parallel by default. If you have any tests that rely on the order of execution of these hooks, you will need to update them to use the `sequence.hooks = 'list'` option.
+
+The `vitest.preset.config.ts` file is already configured to use the `sequence.hooks = 'list'` option.
+
+#### Update NestJS Injectable Decorator
+- Update NestJS Injectable decorator to use `@Inject()` when injecting services.
+
+During testing we found that if you don't use `@Inject()` when injecting services, the services won't be properly initialized as during building, the import is being seen as a "type" instead of as a "class"
+
+I.E. At runtime it understands this:
+
+```typescript
+import { type MyService } from './my.service';
+
+@Injectable()
+export class MyClass {
+  constructor(myService: MyService) {}
+}
+
+```
+
+vs the correct:
+
+```typescript
+import { MyService } from './my.service';
+
+@Injectable()
+export class MyClass {
+  constructor(myService: MyService) {}
+}
+```
+
+By explicitly using `@Inject(MyService)` you ensure that the class itself is referenced instead of being stripped out during the build process.
+
 #### Updating nx.json
 
 Update `nx.json` to use the new `test` target configuration. Example:
@@ -418,3 +499,7 @@ Update `nx.json` to use the new `test` target configuration. Example:
 ```
 
 You can remove the jest preset from `nx.json` after jest is removed entirely.
+
+#### Removing Jest
+- Remove all the remaining jest related dependencies from `package.json`.
+- Remove related setup files from the root of the project.

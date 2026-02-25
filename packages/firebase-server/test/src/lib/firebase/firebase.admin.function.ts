@@ -4,7 +4,7 @@ import { type Firestore } from '@google-cloud/firestore';
 import { type Auth } from 'firebase-admin/auth';
 import { type FeaturesList } from 'firebase-functions-test/lib/features';
 import { type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type TestFirestoreContext, type TestFirestoreInstance } from '@dereekb/firebase/test';
-import { AbstractJestTestContextFixture, testContextBuilder, type TestContextFactory, type TestContextFixture } from '@dereekb/util/test';
+import { AbstractTestContextFixture, testContextBuilder, type TestContextFactory, type TestContextFixture } from '@dereekb/util/test';
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { type FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
 import { type Maybe, cachedGetter } from '@dereekb/util';
@@ -59,7 +59,7 @@ export type FirebaseAdminFunctionTestContext = FirebaseAdminTestContext;
 
 export interface FullFirebaseAdminFunctionTestContext extends FirebaseAdminFunctionTestContext, TestContextFixture<FirebaseAdminFunctionTestContextInstance> {}
 
-export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
+export class FirebaseAdminFunctionTestContextFixture extends AbstractTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
     return this.instance.app;
