@@ -656,7 +656,7 @@ download_firebase_components_file "vitest.config.mts"
 download_firebase_components_file "tsconfig.spec.json"
 
 # Vitest Setup File
-rm $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
+rm $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts || true
 echo "import '../../../vitest.setup.firebase'" > $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
 
 ## Lib Folder
@@ -742,7 +742,7 @@ sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/prox
 rm $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
 
 # Vitest Setup File
-rm $ANGULAR_APP_FOLDER/src/test-setup.ts
+rm $ANGULAR_APP_FOLDER/src/test-setup.ts || true
 echo "import '../../../vitest.setup.firebase'" > $ANGULAR_APP_FOLDER/src/test-setup.ts
 
 # lib
