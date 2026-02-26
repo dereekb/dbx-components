@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxActionDirective } from '../../action/directive/context/action.directive';
 import { DbxActionButtonDirective } from './action.button.directive';
@@ -6,7 +6,7 @@ import { DbxActionButtonTriggerDirective } from './action.button.trigger.directi
 import { DbxButtonDirective } from '../button.directive';
 import { type Maybe } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
-import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 describe('Action Button', () => {
   const sub = new SubscriptionObject();

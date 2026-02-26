@@ -1,4 +1,4 @@
-import { TestBed, waitForAsync } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { Injectable, Injector, inject } from '@angular/core';
 import { newWithInjector } from './injector';
 

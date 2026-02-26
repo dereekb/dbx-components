@@ -1,4 +1,4 @@
-import { EnvironmentProviders, inject, makeEnvironmentProviders, provideAppInitializer, type Provider } from '@angular/core';
+import { type EnvironmentProviders, inject, makeEnvironmentProviders, provideAppInitializer, type Provider } from '@angular/core';
 import { DbxFirebaseAnalyticsUserEventsListenerService } from './analytics.user.events.service';
 
 /**

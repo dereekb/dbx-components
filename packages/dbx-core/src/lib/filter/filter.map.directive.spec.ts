@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxFilterMapSourceConnectorDirective } from './filter.map.connector.directive';
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';

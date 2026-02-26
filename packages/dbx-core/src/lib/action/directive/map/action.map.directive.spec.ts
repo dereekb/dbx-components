@@ -1,5 +1,5 @@
 import { DbxActionFromMapDirective } from './action.map.key.directive';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, viewChild, model } from '@angular/core';
 import { DbxActionDirective } from '../context/action.directive';
 import { DbxActionContextMapDirective } from './action.map.directive';
