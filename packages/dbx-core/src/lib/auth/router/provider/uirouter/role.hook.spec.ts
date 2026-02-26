@@ -1,5 +1,6 @@
 import { first, firstValueFrom, of } from 'rxjs';
 import { hasAuthRoleDecisionPipe, type HasAuthRoleStateData } from './role.hook';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('hasAuthRoleDecisionPipe()', () => {
   const authRoleA = 'a';
@@ -10,23 +11,29 @@ describe('hasAuthRoleDecisionPipe()', () => {
       authRoles: [authRoleA]
     };
 
-    it('should return true if roleA is provided.', (done) => {
-      of(new Set([authRoleA]))
-        .pipe(hasAuthRoleDecisionPipe(singleAllStateData), first())
-        .subscribe((x) => {
-          expect(x).toBe(true);
-          done();
-        });
-    });
+    it(
+      'should return true if roleA is provided.',
+      callbackTest((done) => {
+        of(new Set([authRoleA]))
+          .pipe(hasAuthRoleDecisionPipe(singleAllStateData), first())
+          .subscribe((x) => {
+            expect(x).toBe(true);
+            done();
+          });
+      })
+    );
 
-    it('should return false if roleA is not provided.', (done) => {
-      of(new Set([]))
-        .pipe(hasAuthRoleDecisionPipe(singleAllStateData), first())
-        .subscribe((x) => {
-          expect(x).toBe(false);
-          done();
-        });
-    });
+    it(
+      'should return false if roleA is not provided.',
+      callbackTest((done) => {
+        of(new Set([]))
+          .pipe(hasAuthRoleDecisionPipe(singleAllStateData), first())
+          .subscribe((x) => {
+            expect(x).toBe(false);
+            done();
+          });
+      })
+    );
   });
 
   describe('multi all configuration', () => {

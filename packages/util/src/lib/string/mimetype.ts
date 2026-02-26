@@ -183,14 +183,3 @@ export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParamete
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition
  */
 export type ContentDispositionString = 'inline' | 'attachment' | string;
-
-// MARK: Compat
-/**
- * @deprecated Use ImageFileExtension instead.
- */
-export type MimeTypeForImageTypeInputType = ImageFileExtension;
-
-/**
- * @deprecated Use mimeTypeForImageFileExtension instead.
- */
-export const mimetypeForImageType = mimeTypeForImageFileExtension;

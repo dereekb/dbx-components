@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-core/src",
   "prefix": "dbx",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
@@ -28,24 +28,16 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-core"],
       "options": {
-        "project": "packages/dbx-core/ng-package.json"
+        "project": "packages/dbx-core/ng-package.json",
+        "tsConfig": "packages/dbx-core/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-core/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-core/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-core", "{projectRoot}/.reports/jest/dbx-core.junit.xml"],
-      "options": {
-        "jestConfig": "packages/dbx-core/jest.config.ts"
-      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
@@ -54,6 +46,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-core && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/dbx-core"
       }
     }
   }

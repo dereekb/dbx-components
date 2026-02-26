@@ -1,6 +1,7 @@
 import { useAsObservable } from '@dereekb/rxjs';
 import { of } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('useAsObservable()', () => {
   let sub: SubscriptionObject;
@@ -13,21 +14,27 @@ describe('useAsObservable()', () => {
     sub.destroy();
   });
 
-  it('should use the input observable value', (done) => {
-    const value = 0;
+  it(
+    'should use the input observable value',
+    callbackTest((done) => {
+      const value = 0;
 
-    sub.subscription = useAsObservable(of(value), (x) => {
-      expect(x).toBe(value);
-      done();
-    });
-  });
+      sub.subscription = useAsObservable(of(value), (x) => {
+        expect(x).toBe(value);
+        done();
+      });
+    })
+  );
 
-  it('should use the input non-observable value', (done) => {
-    const value = 0;
+  it(
+    'should use the input non-observable value',
+    callbackTest((done) => {
+      const value = 0;
 
-    sub.subscription = useAsObservable(value, (x) => {
-      expect(x).toBe(value);
-      done();
-    });
-  });
+      sub.subscription = useAsObservable(value, (x) => {
+        expect(x).toBe(value);
+        done();
+      });
+    })
+  );
 });

@@ -68,7 +68,11 @@ export interface NumberSliderFieldConfig extends NumberFieldConfig {
    */
   readonly max: number;
   /**
-   * Whether or not to show the thumb label while sliding. Defaults to true.
+   * Whether or not to show the thumb label while sliding.
+   *
+   * Defaults to true.
+   *
+   * Corresponds to "discrete" in Material.
    */
   readonly thumbLabel?: boolean;
   /**
@@ -115,7 +119,7 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
       max,
       step,
       inverted: invertedSelectionColoring,
-      thumbLabel: inputThumbLabel ?? true,
+      discrete: inputThumbLabel ?? true,
       showTickMarks: Boolean(tickInterval),
       tickInterval,
       displayWith

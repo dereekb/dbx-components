@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ZoomApi } from './zoom.api';
 import { fileZoomOAuthAccessTokenCacheService, ZoomOAuthAccessTokenCacheService } from '../oauth/oauth.service';
 import { appZoomOAuthModuleMetadata } from '../oauth/oauth.module';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import { ZoomMeeting, ZoomServerFetchResponseError, ZoomUser } from '@dereekb/zoom';
 import { addHours } from 'date-fns';
 import { waitForMs } from '@dereekb/util';
@@ -18,8 +18,6 @@ interface TestCandidate {
   First_Name?: string; // not required
   Last_Name: string;
 }
-
-jest.setTimeout(12000);
 
 @Module(
   appZoomOAuthModuleMetadata({
@@ -104,7 +102,7 @@ describe('zoom.api', () => {
         });
 
         itShouldFail('to get a user that does not exist', async () => {
-          await expectFail(() => api.getUser({ userId: 'test_id_that_does_not_exist' }), jestExpectFailAssertErrorType(ZoomServerFetchResponseError));
+          await expectFail(() => api.getUser({ userId: 'test_id_that_does_not_exist' }), expectFailAssertErrorType(ZoomServerFetchResponseError));
         });
       });
 
@@ -184,7 +182,7 @@ describe('zoom.api', () => {
 
         describe('delete meeting', () => {
           itShouldFail('to delete a meeting that does not exist if silenceError is false', async () => {
-            await expectFail(() => api.deleteMeeting({ meetingId: MEETING_ID_THAT_DOES_NOT_EXIST, silenceError: false }), jestExpectFailAssertErrorType(ZoomServerFetchResponseError));
+            await expectFail(() => api.deleteMeeting({ meetingId: MEETING_ID_THAT_DOES_NOT_EXIST, silenceError: false }), expectFailAssertErrorType(ZoomServerFetchResponseError));
           });
 
           it('should quietly delete a meeting that does not exist if silenceError is true or undefined', async () => {

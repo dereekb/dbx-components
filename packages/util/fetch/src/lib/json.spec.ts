@@ -5,8 +5,6 @@ import { fetchApiFetchService } from './provider';
 
 const testFetch: FetchService = fetchApiFetchService;
 
-jest.setTimeout(30000);
-
 describe('fetchJson()', () => {
   // Expected result: {"statusCode":403,"message":"Forbidden"}
   const forbiddenUrlBaseUrl: WebsiteDomain = 'https://components.dereekb.com/api';
@@ -31,9 +29,11 @@ describe('fetchJson()', () => {
     });
   });
 
+  /*
   describe('fetch with intercept', () => {
     // TODO: test intercepting a json response
   });
+  */
 
   describe('GET', () => {
     const method = 'GET';

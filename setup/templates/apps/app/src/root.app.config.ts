@@ -204,7 +204,7 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: (injector: Injector) => {
         return () => {
-          
+
           // add any initialization here
 
         };
@@ -212,7 +212,5 @@ export const appConfig: ApplicationConfig = {
       deps: [Injector],
       multi: true
     }]
-
-    // provideZoneChangeDetection({ eventCoalescing: true })
   ]
 };

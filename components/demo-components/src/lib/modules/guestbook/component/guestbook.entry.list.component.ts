@@ -1,6 +1,6 @@
 import { GuestbookEntry } from 'demo-firebase';
 import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef , DbxListComponent , DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef, DbxListComponent, DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { ToJsDatePipe } from '@dereekb/dbx-core';
@@ -9,7 +9,7 @@ export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
 
 @Component({
   selector: 'demo-guestbook-entry-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent),
   standalone: true,
   imports: [DbxListComponent]

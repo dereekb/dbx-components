@@ -4,7 +4,7 @@ import { RootAppLayoutComponent } from './container/layout.component';
 export const layoutState: Ng2StateDeclaration = {
   name: 'root',
   redirectTo: 'landing',
-  component: RootAppLayoutComponent,
+  component: RootAppLayoutComponent
 };
 
 export const publicLandingFutureState: Ng2StateDeclaration = {

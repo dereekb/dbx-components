@@ -223,8 +223,8 @@ export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = y
     let current = startOfWeek(start);
 
     while (!isAfter(current, end)) {
-      const week = factory(current);
-      weeks.push(week);
+      // use yearWeekCodePairFromDate directly since current is already in target timezone form after systemDateToTargetDate
+      weeks.push(yearWeekCodeFromPair(yearWeekCodePairFromDate(current)));
       current = addWeeks(current, 1);
     }
 

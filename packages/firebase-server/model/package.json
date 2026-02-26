@@ -1,5 +1,35 @@
 {
   "name": "@dereekb/firebase-server/model",
   "version": "12.7.0",
-  "type": "commonjs"
+  "types": "./src/index.d.ts",
+  "module": "./index.esm.js",
+  "main": "./index.cjs.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/date": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/model": "*",
+    "@dereekb/firebase": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/firebase-server": "*",
+    "@dereekb/util": "*",
+    "@nestjs/common": "*",
+    "@nestjs/config": "*",
+    "archiver": "*",
+    "date-fns": "*",
+    "make-error": "*",
+    "core-js": "*"
+  }
 }

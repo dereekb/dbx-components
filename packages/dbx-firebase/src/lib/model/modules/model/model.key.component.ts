@@ -3,7 +3,6 @@ import { FirestoreModelKey, twoWayFlatFirestoreModelKey, flatFirestoreModelKey, 
 import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstance } from './model.types.service';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, of } from 'rxjs';
-import { MatIcon } from '@angular/material/icon';
 import { DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxAnchorComponent, DbxButtonComponent } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 
@@ -14,7 +13,7 @@ import { Maybe } from '@dereekb/util';
   selector: 'dbx-firebase-model-key',
   templateUrl: './model.key.component.html',
   standalone: true,
-  imports: [MatIcon, DbxDetailBlockComponent, DbxButtonComponent, DbxClickToCopyTextComponent, DbxAnchorComponent]
+  imports: [DbxDetailBlockComponent, DbxButtonComponent, DbxClickToCopyTextComponent, DbxAnchorComponent]
 })
 export class DbxFirebaseModelKeyComponent {
   readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);

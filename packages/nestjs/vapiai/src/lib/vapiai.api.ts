@@ -19,6 +19,6 @@ export class VapiAiApi {
    * @returns
    */
   getCall(callId: string) {
-    return this.vapiClient.calls.get(callId) as Promise<VapiCallWithTranscript>;
+    return this.vapiClient.calls.get({ id: callId }) as Promise<VapiCallWithTranscript>;
   }
 }

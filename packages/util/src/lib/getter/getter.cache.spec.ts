@@ -1,12 +1,13 @@
+import { type Mock } from 'vitest';
 import { cachedGetter } from './getter.cache';
 
 describe('cachedGetter()', () => {
   describe('with a simple Getter (no input)', () => {
-    let mockGetter: jest.Mock<string, []>;
+    let mockGetter: Mock<() => string>;
     let cached: ReturnType<typeof cachedGetter<string>>;
 
     beforeEach(() => {
-      mockGetter = jest.fn(() => 'initial_value');
+      mockGetter = vi.fn(() => 'initial_value');
       cached = cachedGetter(mockGetter);
     });
 

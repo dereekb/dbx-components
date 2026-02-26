@@ -1,4 +1,4 @@
-import { itShouldFail, expectFail } from '@dereekb/util/test';
+import { itShouldFail, expectFail, callbackTest } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { type Transaction, type DocumentReference, type WriteBatch, type FirestoreDocumentAccessor, makeDocuments, type FirestoreDocumentDataAccessor, type FirestoreContext, type FirestoreDocument, type RunTransaction, type FirebaseAuthUserId, type DocumentSnapshot, type FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData, type AbstractFirestoreDocument } from '@dereekb/firebase';
@@ -784,24 +784,27 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         expect(result).toBeDefined();
       });
 
-      it('should emit values on updates from the observable.', (done) => {
-        let count = 0;
+      it(
+        'should emit values on updates from the observable.',
+        callbackTest((done) => {
+          let count = 0;
 
-        sub.subscription = accessor.stream().subscribe((item) => {
-          count += 1;
+          sub.subscription = accessor.stream().subscribe((item) => {
+            count += 1;
 
-          if (count === 1) {
-            expect(c.hasDataFromUpdate(item.data() as T)).toBe(false);
-          } else if (count === 2) {
-            expect(c.hasDataFromUpdate(item.data() as T)).toBe(true);
-            done();
-          }
-        });
+            if (count === 1) {
+              expect(c.hasDataFromUpdate(item.data() as T)).toBe(false);
+            } else if (count === 2) {
+              expect(c.hasDataFromUpdate(item.data() as T)).toBe(true);
+              done();
+            }
+          });
 
-        setTimeout(() => {
-          accessor.update(c.dataForUpdate());
-        }, 100);
-      });
+          setTimeout(() => {
+            accessor.update(c.dataForUpdate());
+          }, 100);
+        })
+      );
 
       describe('in transition context', () => {
         let runTransaction: RunTransaction;

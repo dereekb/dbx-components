@@ -10,6 +10,7 @@
   .dbx-form-phone-field {
     width: 100%;
     display: flex;
+    --ngxMatInputTel-selector-opacity: 100%;
   }
 
   .dbx-form-phone-field-phone-content button.country-selector {

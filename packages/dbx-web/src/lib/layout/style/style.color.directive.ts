@@ -8,7 +8,8 @@ import { type Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxColor]',
   host: {
-    '[class]': 'cssClassSignal()'
+    '[class]': 'cssClassSignal()',
+    '[class.dbx-color]': 'true'
   },
   standalone: true
 })

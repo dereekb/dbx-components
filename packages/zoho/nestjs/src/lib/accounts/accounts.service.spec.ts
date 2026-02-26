@@ -1,5 +1,5 @@
 import { addSeconds } from 'date-fns';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from './accounts.service';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -76,7 +76,7 @@ describe('accounts.service', () => {
     describe('accessToken()', () => {
       describe('refresh token errors', () => {
         itShouldFail('with an ZohoAccountsAccessTokenError if refresh fails.', async () => {
-          await expectFail(() => api.accessToken({ refreshToken: 'invalidCode' }), jestExpectFailAssertErrorType(ZohoAccountsAccessTokenError));
+          await expectFail(() => api.accessToken({ refreshToken: 'invalidCode' }), expectFailAssertErrorType(ZohoAccountsAccessTokenError));
         });
       });
     });

@@ -178,7 +178,18 @@ export function findFirstCharacterOccurence(set: Set<string>, input: string): Ma
   return findAllCharacterOccurences(set, input, 1)[0];
 }
 
-export type SplitStringAtFirstCharacterOccurenceFunction = (input: string) => [string, string | undefined];
+/**
+ * The result of splitting a string at the first character occurence.
+ *
+ * The first element is the string before the split character(s).
+ * The second element is the string after the split character(s), or is undefined if no split occured.
+ */
+export type SplitStringAtFirstCharacterOccurenceResult = [string, string | undefined];
+
+/**
+ * Splits the input string at the configured split character(s).
+ */
+export type SplitStringAtFirstCharacterOccurenceFunction = (input: string) => SplitStringAtFirstCharacterOccurenceResult;
 
 /**
  * Splits the string into two parts at the first occurence of a string or any string in the set.

@@ -2,7 +2,7 @@ import { terminatingFactoryFromArray, arrayFactory, arrayInputFactory } from './
 
 describe('arrayFactory', () => {
   it('should create an array of the specified count with values from the factory', () => {
-    const factory = jest.fn().mockReturnValue('test-item');
+    const factory = vi.fn().mockReturnValue('test-item');
     const arrayFactoryFn = arrayFactory(factory);
 
     const result = arrayFactoryFn(3);
@@ -13,7 +13,7 @@ describe('arrayFactory', () => {
   });
 
   it('should call factory with index for FactoryWithIndex', () => {
-    const factory = jest.fn((index) => `item-${index}`);
+    const factory = vi.fn((index) => `item-${index}`);
     const arrayFactoryFn = arrayFactory(factory);
 
     const result = arrayFactoryFn(3);
@@ -25,7 +25,7 @@ describe('arrayFactory', () => {
   });
 
   it('should handle count of 0', () => {
-    const factory = jest.fn();
+    const factory = vi.fn();
     const arrayFactoryFn = arrayFactory(factory);
 
     const result = arrayFactoryFn(0);
@@ -37,7 +37,7 @@ describe('arrayFactory', () => {
 
 describe('arrayInputFactory', () => {
   it('should transform each input value using the provided factory', () => {
-    const factory = jest.fn((x: number) => x * 2);
+    const factory = vi.fn((x: number) => x * 2);
     const inputFactoryFn = arrayInputFactory(factory);
 
     const result = inputFactoryFn([1, 2, 3]);
@@ -50,7 +50,7 @@ describe('arrayInputFactory', () => {
   });
 
   it('should handle empty input array', () => {
-    const factory = jest.fn();
+    const factory = vi.fn();
     const inputFactoryFn = arrayInputFactory(factory);
 
     const result = inputFactoryFn([]);

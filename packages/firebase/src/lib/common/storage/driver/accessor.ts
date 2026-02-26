@@ -56,7 +56,7 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
   /**
    * Downloads the data as an ArrayBuffer.
    */
-  getBytes(maxDownloadSizeBytes?: number): Promise<ArrayBuffer>;
+  getBytes(maxDownloadSizeBytes?: number): Promise<Uint8Array<ArrayBufferLike>>;
   /**
    * Downloads the data as a Blob.
    *

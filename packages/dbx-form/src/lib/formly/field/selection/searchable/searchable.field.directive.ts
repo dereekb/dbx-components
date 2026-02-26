@@ -1,6 +1,6 @@
 import { ArrayOrValue, Maybe, convertMaybeToArray, lastValue, PrimativeKey, separateValues, asArray, filterUniqueValues, Configurable } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
-import { filterMaybe, SubscriptionObject, LoadingState, successResult, startWithBeginLoading, loadingStateContext, isLoadingStateInLoadingState } from '@dereekb/rxjs';
+import { filterMaybe, SubscriptionObject, LoadingState, successResult, startWithBeginLoading, isLoadingStateInLoadingState, listLoadingStateContext } from '@dereekb/rxjs';
 import { Directive, ElementRef, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
@@ -139,7 +139,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   private readonly _singleValueSyncSub = new SubscriptionObject();
 
-  readonly searchContext = loadingStateContext({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
+  readonly searchContext = listLoadingStateContext({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
   readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(
     map((x) => x?.value ?? []),
     shareReplay(1)

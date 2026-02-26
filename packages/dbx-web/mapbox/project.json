@@ -10,28 +10,27 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web/mapbox"],
       "options": {
-        "project": "packages/dbx-web/mapbox/ng-package.json"
+        "project": "packages/dbx-web/mapbox/ng-package.json",
+        "tsConfig": "packages/dbx-web/mapbox/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-web/mapbox/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-web/mapbox/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production",
       "dependsOn": []
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/mapbox"],
-      "options": {
-        "jestConfig": "packages/dbx-web/mapbox/jest.config.ts"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/dbx-web/mapbox"
+      }
     }
   }
 }

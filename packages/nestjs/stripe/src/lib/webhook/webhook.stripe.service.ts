@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Request } from 'express';
 import { stripeEventHandlerConfigurerFactory, stripeEventHandlerFactory } from './webhook.stripe';
 import { StripeApi } from '../stripe.api';
@@ -16,7 +16,7 @@ export class StripeWebhookService {
   readonly handler: Handler<Stripe.Event> = stripeEventHandlerFactory();
   readonly configure = stripeEventHandlerConfigurerFactory(this.handler);
 
-  constructor(stripeApi: StripeApi) {
+  constructor(@Inject(StripeApi) stripeApi: StripeApi) {
     this._stripeApi = stripeApi;
   }
 

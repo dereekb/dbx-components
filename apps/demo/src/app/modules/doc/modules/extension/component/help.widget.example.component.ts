@@ -1,5 +1,4 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
 import { DbxHelpContextKey } from '@dereekb/dbx-web';
 
 export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
@@ -20,7 +19,7 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
     </div>
   `,
   standalone: true,
-  imports: [MatIcon],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionHelpExampleWidgetComponent {}

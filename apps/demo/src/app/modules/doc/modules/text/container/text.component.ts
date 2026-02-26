@@ -5,6 +5,7 @@ import { UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddress
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DbxClickToCopyTextComponent } from 'packages/dbx-web/src/lib/layout/text/copy.text.component';
+import { LOREM } from '../../shared';
 
 @Component({
   templateUrl: './text.component.html',
@@ -42,9 +43,9 @@ export class DocTextTextComponent {
     url: 'https://google.com'
   };
 
-  readonly lorem = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-  et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-  ex ea commodo consequat.`;
+  readonly lorem = `COLORED TEXT: ` + LOREM;
+
+  readonly loremBg = `COLORED BACKGROUND: ` + LOREM;
 
   readonly linkify = `this feature is powered by https://linkify.js.org/`;
 

@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { type FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE, type NotificationBoxRecipient, type NotificationUser, type NotificationUserNotificationBoxRecipientConfig, firestoreDummyKey } from '@dereekb/firebase';
 import { updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
-import { jestExpectFailAssertHttpErrorServerErrorCode } from '../../../../test/src/lib/firebase/firebase.jest';
+import { expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 
 // more utils are tested in demo-api/.../notification.util.spec.ts so that it has access to authService and other configured services.
 
@@ -123,7 +123,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
                   insertingRecipientIntoNotificationBox: true,
                   removeRecipientFromNotificationBox: false
                 }),
-              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE)
+              expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE)
             );
           });
         });
@@ -216,7 +216,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
                   insertingRecipientIntoNotificationBox: false,
                   removeRecipientFromNotificationBox: false
                 }),
-              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE)
+              expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE)
             );
           });
         });

@@ -7,9 +7,3 @@ export const fetchApiFetchService: FetchService = fetchService({
   makeFetch: fetch as any,
   makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
 });
-
-// MARK: Compat
-/**
- * @deprecated use fetchApiFetchService instead. This is an alias.
- */
-export const nodeFetchService: FetchService = fetchApiFetchService;

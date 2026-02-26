@@ -14,10 +14,7 @@ export class DbxTwoColumnContextDirective {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore, { self: true });
   readonly showRight = input<Maybe<boolean>, Maybe<boolean | ''>>(undefined, { transform: isDefinedAndNotFalse });
 
-  protected readonly _showRightEffect = effect(
-    () => {
-      this.twoColumnsContextStore.setShowRightOverride(this.showRight());
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly _showRightEffect = effect(() => {
+    this.twoColumnsContextStore.setShowRightOverride(this.showRight());
+  });
 }

@@ -1,5 +1,5 @@
 import { catchAllHandlerKey } from '@dereekb/util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OpenAIApi, OpenAIWebhookEvent, OpenAIWebhookService } from '@dereekb/nestjs/openai';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class DemoApiOpenAiWebhookService {
 
   private readonly logger = new Logger('DemoApiOpenAiWebhookService');
 
-  constructor(openAiApi: OpenAIApi, openAiWebhookService: OpenAIWebhookService) {
+  constructor(@Inject(OpenAIApi) openAiApi: OpenAIApi, @Inject(OpenAIWebhookService) openAiWebhookService: OpenAIWebhookService) {
     this._openAiApi = openAiApi;
     this._openAiWebhookService = openAiWebhookService;
 

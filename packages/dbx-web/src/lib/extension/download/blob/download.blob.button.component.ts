@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { clean, DbxActionButtonDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
+import { clean, DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { type DbxButtonStyle } from '../../../button/button';
 import { DbxActionModule } from '../../../action/action.module';
-import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
 import { browserObjectUrlRef } from '@dereekb/browser';
 import { asPromise, Getter, Maybe, PromiseOrValue, safeCompareEquality } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -49,7 +48,7 @@ export interface DbxDownloadBlobButtonConfig {
     <a #downloadButton [ngClass]="{ 'pointer-disabled': !downloadReadySignal() }" e [href]="fileUrlSignal()" [attr.download]="fileNameSignal()"><dbx-button [buttonDisplay]="buttonDisplaySignal()" [buttonStyle]="buttonStyleSignal()" [working]="!downloadReadySignal()" [disabled]="!downloadReadySignal()"></dbx-button></a>
   `,
   standalone: true,
-  imports: [NgClass, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective],
+  imports: [NgClass, DbxActionModule, DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDownloadBlobButtonComponent {

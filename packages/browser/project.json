@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/browser/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
@@ -26,6 +26,7 @@
         "compiler": "babel",
         "project": "packages/browser/package.json",
         "format": ["esm", "cjs"],
+        "buildLibsFromSource": false,
         "generateExportsField": false,
         "assets": [
           {
@@ -38,7 +39,8 @@
             "input": ".",
             "output": "."
           }
-        ]
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
       "configurations": {
         "production": {
@@ -54,17 +56,17 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/browser"],
-      "options": {
-        "jestConfig": "packages/browser/jest.config.ts"
-      }
-    },
     "publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/browser && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/browser"
       }
     }
   }

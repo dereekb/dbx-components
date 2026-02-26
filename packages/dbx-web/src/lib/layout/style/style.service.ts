@@ -103,6 +103,12 @@ export class DbxStyleService implements Destroyable {
     this._config.next(asObservable(config));
   }
 
+  unsetConfig(config: ObservableOrValue<DbxStyleConfig>) {
+    if (this._config.value === config) {
+      this._config.next(undefined);
+    }
+  }
+
   destroy(): void {
     this._defaultConfig.complete();
     this._config.complete();

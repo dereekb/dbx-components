@@ -1,15 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { Component } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbxDatePipeModule } from './date.pipe.module';
+import { DateFormatFromToPipe } from './dateformatfromto.pipe';
+import { DateFormatDistancePipe } from './dateformatdistance.pipe';
+import { MinutesStringPipe } from './minutesstring.pipe';
+import { TimeDistancePipe } from './timedistance.pipe';
+import { ToJsDatePipe } from './tojsdate.pipe';
+import { ToMinutesPipe } from './tominutes.pipe';
 
 describe('Date Pipe Test Component', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxDatePipeModule, NoopAnimationsModule],
-      declarations: [DatePipesTestComponent]
-    }).compileComponents();
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   let testComponent: DatePipesTestComponent;
@@ -30,14 +34,16 @@ describe('Date Pipe Test Component', () => {
 @Component({
   template: `
     <div>
-      <p>{{ date | dateFromPlusTo: 'h:mm a':10 }}</p>
+      <p>{{ date | dateFormatFromTo: 'h:mm a' : 10 }}</p>
       <p>{{ date | dateFormatDistance }}</p>
       <p>{{ 500 | minutesString }}</p>
       <p>{{ date | timeDistance }}</p>
       <p>{{ date | toJsDate }}</p>
       <p>{{ date | toMinutes }}</p>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DateFormatFromToPipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistancePipe, ToJsDatePipe, ToMinutesPipe]
 })
 class DatePipesTestComponent {
   public date = new Date();

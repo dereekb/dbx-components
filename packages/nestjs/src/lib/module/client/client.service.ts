@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientWebAppHost, ClientWebAppUrl } from './client';
 import { ClientAppServiceConfig } from './client.config';
 
@@ -9,7 +9,7 @@ import { ClientAppServiceConfig } from './client.config';
 export class ClientAppService {
   private _config: ClientAppServiceConfig;
 
-  constructor(config: ClientAppServiceConfig) {
+  constructor(@Inject(ClientAppServiceConfig) config: ClientAppServiceConfig) {
     this._config = config;
   }
 

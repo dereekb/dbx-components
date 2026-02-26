@@ -1,5 +1,5 @@
 # NOTE: Be careful updating this file, as it is used by the setup script.
-FROM node:22.14-bookworm
+FROM node:24.13-trixie
 
 # Set the working directory in the container to /code
 WORKDIR /code

@@ -2,6 +2,7 @@ import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.pag
 import { type TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 import { mapItemIteration, type MappedItemIterationInstance } from '@dereekb/rxjs';
 import { first } from 'rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('iteration.mapped', () => {
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
@@ -26,12 +27,15 @@ describe('iteration.mapped', () => {
     });
 
     describe('latestState$', () => {
-      it('should returned the latest state with the mapped value', (done) => {
-        mappedInstance.latestState$.pipe(first()).subscribe((x) => {
-          expect(typeof x.value).toBe('string');
-          done();
-        });
-      });
+      it(
+        'should returned the latest state with the mapped value',
+        callbackTest((done) => {
+          mappedInstance.latestState$.pipe(first()).subscribe((x) => {
+            expect(typeof x.value).toBe('string');
+            done();
+          });
+        })
+      );
     });
   });
 });

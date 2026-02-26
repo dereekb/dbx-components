@@ -1,11 +1,31 @@
 {
   "name": "@dereekb/firebase/test",
   "version": "12.7.0",
-  "type": "commonjs",
+  "types": "./src/index.d.ts",
+  "module": "./index.esm.js",
+  "main": "./index.cjs.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
+    }
+  },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/firebase": "*",
     "@dereekb/date": "*",
-    "@dereekb/rxjs": "*"
+    "@dereekb/firebase": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/util": "*",
+    "@firebase/rules-unit-testing": "*",
+    "date-fns": "*",
+    "firebase": "*",
+    "rxjs": "*",
+    "core-js": "*"
   }
 }

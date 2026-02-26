@@ -1,4 +1,4 @@
-import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -70,7 +70,7 @@ demoApiFunctionContextFactory((f) => {
                     await expectFail(
                       () => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications')),
                       // should throw NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE
-                      jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                      expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
                     );
                   });
                 });

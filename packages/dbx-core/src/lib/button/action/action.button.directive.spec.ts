@@ -1,20 +1,23 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbxCoreActionModule } from '../../action/action.module';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { Component, viewChild } from '@angular/core';
 import { DbxActionDirective } from '../../action/directive/context/action.directive';
 import { DbxActionButtonDirective } from './action.button.directive';
-import { DbxCoreButtonModule } from '../button.module';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { DbxButtonDirective } from '../button.directive';
 import { type Maybe } from '@dereekb/util';
+import { callbackTest } from '@dereekb/util/test';
+import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
 
 describe('Action Button', () => {
+  const sub = new SubscriptionObject();
+
   beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxCoreActionModule, DbxCoreButtonModule, NoopAnimationsModule],
-      declarations: [TestDbxActionButtonTriggerDirectiveComponent, TestDbxActionButtonDirectiveComponent]
-    }).compileComponents();
+    await TestBed.configureTestingModule({});
+  });
+
+  afterEach(() => {
+    sub.destroy();
+    TestBed.resetTestingModule();
   });
 
   let directive: Maybe<DbxActionDirective<number, number>>;
@@ -27,42 +30,60 @@ describe('Action Button', () => {
       fixture = TestBed.createComponent(TestDbxActionButtonDirectiveComponent);
       testComponent = fixture.componentInstance;
 
-      directive = testComponent.directive;
+      await fixture.whenStable();
+
+      directive = testComponent.directive();
       expect(directive).toBeDefined();
 
       fixture.detectChanges();
     });
 
     it('should be created', () => {
-      expect(testComponent.buttonDirective).toBeDefined();
+      expect(testComponent.buttonDirective()).toBeDefined();
     });
 
     describe('on click', () => {
-      it('should trigger action', (done) => {
-        testComponent.button!.clickButton();
+      it(
+        'should trigger action',
+        callbackTest((done) => {
+          const button = testComponent.button();
+          const directive = testComponent.directive();
 
-        testComponent.directive!.sourceInstance.triggered$.subscribe((triggered) => {
-          expect(triggered).toBe(true);
-          done();
-        });
-      });
+          button.clickButton();
+          fixture.detectChanges();
+
+          sub.subscription = directive.sourceInstance.triggered$.subscribe((triggered) => {
+            expect(triggered).toBe(true);
+            done();
+          });
+        })
+      );
 
       it('button should be working.', () => {
-        testComponent.button!.clickButton();
-        expect(testComponent.button?.workingSignal()).toBe(true);
+        const button = testComponent.button();
+
+        button.clickButton();
+        fixture.detectChanges();
+        expect(button.workingSignal()).toBe(true);
       });
     });
 
     it('should stop working when the action completed.', () => {
-      testComponent.directive!.sourceInstance.trigger();
-      expect(testComponent.button?.workingSignal()).toBe(true);
+      const button = testComponent.button();
+      const directive = testComponent.directive();
 
-      testComponent.directive!.sourceInstance.readyValue(1);
+      directive.sourceInstance.trigger();
+      fixture.detectChanges();
+      expect(button.workingSignal()).toBe(true);
+
+      directive.sourceInstance.readyValue(1);
+      fixture.detectChanges();
 
       const SUCCESS_RESULT = 1;
-      testComponent.directive!.sourceInstance.resolve(SUCCESS_RESULT);
+      directive.sourceInstance.resolve(SUCCESS_RESULT);
+      fixture.detectChanges();
 
-      expect(testComponent.button?.workingSignal()).toBe(false);
+      expect(button.workingSignal()).toBe(false);
     });
   });
 
@@ -74,60 +95,62 @@ describe('Action Button', () => {
       fixture = TestBed.createComponent(TestDbxActionButtonTriggerDirectiveComponent);
       testComponent = fixture.componentInstance;
 
-      directive = testComponent.directive;
+      await fixture.whenStable();
+
+      directive = testComponent.directive();
       expect(directive).toBeDefined();
 
       fixture.detectChanges();
     });
 
     it('should be created', () => {
-      expect(testComponent.buttonDirective).toBeDefined();
+      expect(testComponent.buttonDirective()).toBeDefined();
     });
 
-    it('should trigger action on click', (done) => {
-      testComponent.button!.clickButton();
+    it(
+      'should trigger action on click',
+      callbackTest((done) => {
+        const button = testComponent.button();
+        const directive = testComponent.directive();
 
-      testComponent.directive!.sourceInstance.triggered$.subscribe((triggered) => {
-        expect(triggered).toBe(true);
-        done();
-      });
-    });
+        button.clickButton();
+        fixture.detectChanges();
+
+        sub.subscription = directive.sourceInstance.triggered$.subscribe((triggered) => {
+          expect(triggered).toBe(true);
+          done();
+        });
+      })
+    );
   });
 });
 
 @Component({
   template: `
-    <div dbxActionContext>
-      <
+    <div dbxAction>
       <button dbxButton dbxActionButtonTrigger></button>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxActionDirective, DbxButtonDirective, DbxActionButtonTriggerDirective]
 })
 class TestDbxActionButtonTriggerDirectiveComponent {
-  @ViewChild(DbxActionDirective, { static: true })
-  directive?: DbxActionDirective<number, number>;
-
-  @ViewChild(DbxActionButtonTriggerDirective, { static: true })
-  buttonDirective?: DbxActionButtonTriggerDirective;
-
-  @ViewChild(DbxButtonDirective, { static: true })
-  button?: DbxButtonDirective;
+  readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);
+  readonly buttonDirective = viewChild.required(DbxActionButtonTriggerDirective);
+  readonly button = viewChild.required(DbxButtonDirective);
 }
 
 @Component({
   template: `
-    <div dbxActionContext>
+    <div dbxAction>
       <button dbxButton dbxActionButton></button>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxActionDirective, DbxButtonDirective, DbxActionButtonDirective]
 })
 class TestDbxActionButtonDirectiveComponent {
-  @ViewChild(DbxActionDirective, { static: true })
-  directive?: DbxActionDirective<number, number>;
-
-  @ViewChild(DbxActionButtonDirective, { static: true })
-  buttonDirective?: DbxActionButtonDirective;
-
-  @ViewChild(DbxButtonDirective, { static: true })
-  button?: DbxButtonDirective;
+  readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);
+  readonly buttonDirective = viewChild.required(DbxActionButtonDirective);
+  readonly button = viewChild.required(DbxButtonDirective);
 }

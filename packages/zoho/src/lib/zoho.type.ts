@@ -1,25 +1,6 @@
-import { type Maybe, type MaybeNot, type WebsitePath } from '@dereekb/util';
+import { type Maybe, type MaybeNot } from '@dereekb/util';
 
 export interface ZohoModel {}
-
-// MARK: V1
-/**
- * General Zoho API GET request response sent by the v1 API.
- *
- * @deprecated
- */
-export interface ZohoGetApiV1Result<T> {
-  readonly response: {
-    /**
-     * Result value
-     */
-    readonly result: T;
-    /**
-     * Path to the resource.
-     */
-    readonly url: WebsitePath;
-  };
-}
 
 // MARK: DateTime
 /**

@@ -6,16 +6,34 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase/test",
         "outputPath": "dist/packages/firebase/test",
         "tsConfig": "packages/firebase/test/tsconfig.lib.json",
-        "packageJson": "packages/firebase/test/package.json",
+        "project": "packages/firebase/test/package.json",
         "main": "packages/firebase/test/src/index.ts",
-        "assets": ["packages/firebase/test/*.md"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [
+          {
+            "glob": "packages/firebase/test/*.md",
+            "input": "packages/firebase/test",
+            "output": "."
+          }
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "test": {
       "executor": "nx:run-commands",
@@ -23,16 +41,16 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-test'"
       }
     },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase/test", "{projectRoot}/.reports/jest/firebase-test.junit.xml"],
-      "options": {
-        "jestConfig": "packages/firebase/test/jest.config.ts"
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/firebase/test"
+      }
     }
   }
 }

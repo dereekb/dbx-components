@@ -1,8 +1,24 @@
 {
   "name": "@dereekb/util/test",
   "version": "12.7.0",
-  "type": "commonjs",
+  "types": "./src/index.d.ts",
+  "module": "./index.esm.js",
+  "main": "./index.cjs.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
+    }
+  },
   "peerDependencies": {
-    "@dereekb/util": "*"
+    "@dereekb/util": "*",
+    "core-js": "*"
   }
 }

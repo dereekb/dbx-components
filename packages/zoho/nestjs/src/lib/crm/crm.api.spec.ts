@@ -3,7 +3,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoCrmApi } from './crm.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import {
   ZOHO_DUPLICATE_DATA_ERROR_CODE,
   ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE,
@@ -53,8 +53,6 @@ interface TestContact extends ZohoCrmRecord, ZohoCrmTagArrayRef {
 
 const TEST_CONTACT_FIELDS: ZohoCrmCommaSeparateFieldNames = 'Parent_Id,Owner,Created_Time,Note_Title';
 const TEST_CONTACT_FIELDS_ARRAY: ZohoCrmFieldName[] = ['Parent_Id', 'Owner', 'Created_Time', 'Note_Title'];
-
-jest.setTimeout(12000);
 
 @Module(appZohoCrmModuleMetadata({}))
 export class TestZohoCrmModule {}
@@ -161,7 +159,7 @@ describe('crm.api', () => {
                       lastNameFieldMissing: 'Candidate' // invalid field
                     } as any
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
               );
             });
 
@@ -176,7 +174,7 @@ describe('crm.api', () => {
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
               );
             });
           });
@@ -271,7 +269,7 @@ describe('crm.api', () => {
                       First_Name: 'Failure'
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
               );
             });
 
@@ -288,7 +286,7 @@ describe('crm.api', () => {
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
               );
             });
           });
@@ -396,7 +394,7 @@ describe('crm.api', () => {
                         lastNameFieldMissing: 'Candidate' // invalid field
                       } as any
                     }),
-                  jestExpectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
+                  expectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
                 );
               });
             });
@@ -491,7 +489,7 @@ describe('crm.api', () => {
                         First_Name: 'Failure'
                       }
                     }),
-                  jestExpectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
+                  expectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
                 );
               });
             });
@@ -660,7 +658,7 @@ describe('crm.api', () => {
                   module: ZOHO_CRM_CONTACTS_MODULE,
                   id: NON_EXISTENT_CANDIDATE_ID
                 }),
-              jestExpectFailAssertErrorType(ZohoCrmRecordNoContentError)
+              expectFailAssertErrorType(ZohoCrmRecordNoContentError)
             );
           });
         });
@@ -762,7 +760,7 @@ describe('crm.api', () => {
                     }
                   ]
                 }),
-              jestExpectFailAssertErrorType(ZohoInvalidQueryError)
+              expectFailAssertErrorType(ZohoInvalidQueryError)
             );
           });
         });
@@ -942,7 +940,7 @@ describe('crm.api', () => {
           });
 
           itShouldFail('if a record that does not exist is referenced', async () => {
-            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
+            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS }), expectFailAssertErrorType(ZohoServerFetchResponseError));
           });
         });
 

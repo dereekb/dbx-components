@@ -135,9 +135,3 @@ export function booleanKeyArrayUtility<T>(readKey: ReadModelKeyFunction<T>) {
  * Utility for working with boolean string key arrays.
  */
 export const BooleanStringKeyArrayUtility = booleanKeyArrayUtility<BooleanStringKey>((x) => (x ? x : undefined));
-
-// MARK: Compat
-/**
- * @Deprecated use BooleanStringKeyArrayUtility instead
- */
-export const BooleanStringKeyArrayUtilityInstance = BooleanStringKeyArrayUtility;

@@ -83,21 +83,15 @@ export class DbxTwoColumnComponent {
 
   readonly cssClassSignal = toSignal(this.cssClasses$);
 
-  protected readonly _reverseSizingEffect = effect(
-    () => {
-      this.twoColumnsContextStore.setReverseSizing(this.reverseSizing());
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly _reverseSizingEffect = effect(() => {
+    this.twoColumnsContextStore.setReverseSizing(this.reverseSizing());
+  });
 
-  protected readonly _hasRightContentEffect = effect(
-    () => {
-      if (this.hasRightContent()) {
-        this.twoColumnsContextStore.setHasRight(true);
-      }
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly _hasRightContentEffect = effect(() => {
+    if (this.hasRightContent()) {
+      this.twoColumnsContextStore.setHasRight(true);
+    }
+  });
 
   viewResized(event: ResizedEvent): void {
     const totalWidth = (this._elementRef.nativeElement as HTMLElement).clientWidth;

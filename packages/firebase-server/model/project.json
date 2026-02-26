@@ -6,26 +6,38 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase-server/model",
         "outputPath": "dist/packages/firebase-server/model",
         "tsConfig": "packages/firebase-server/model/tsconfig.lib.json",
-        "packageJson": "packages/firebase-server/model/package.json",
+        "project": "packages/firebase-server/model/package.json",
         "main": "packages/firebase-server/model/src/index.ts",
-        "assets": []
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/model"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/firebase-server/model/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/firebase-server/model"
       }
     }
   }

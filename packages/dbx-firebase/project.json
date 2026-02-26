@@ -4,7 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-firebase/src",
   "prefix": "dbx",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {
@@ -29,24 +29,16 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase"],
       "options": {
-        "project": "packages/dbx-firebase/ng-package.json"
+        "project": "packages/dbx-firebase/ng-package.json",
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "packages/dbx-firebase/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "packages/dbx-firebase/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
-    },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
-      "options": {
-        "jestConfig": "packages/dbx-firebase/jest.config.ts"
-      }
     },
     "watch": {
       "executor": "nx:run-commands",
@@ -68,6 +60,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/dbx-firebase"
       }
     }
   }

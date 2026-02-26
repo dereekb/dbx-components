@@ -344,19 +344,3 @@ export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO860
   const result = parse(dayString, format, new Date());
   return startOfDay(result);
 }
-
-// MARK: Compat
-/**
- * @deprecated use toISO8601DayStringForSystem instead for clarity. Will be removed in the future.
- */
-export const toISO8601DayString = toISO8601DayStringForSystem;
-
-/**
- * @deprecated use formatToISO8601DayStringForSystem instead for clarity. Will be removed in the future.
- */
-export const formatToISO8601DayString = formatToISO8601DayStringForSystem;
-
-/**
- * @deprecated use formatToMonthDaySlashDate instead for clarity. Will be removed in the future.
- */
-export const dateShortDateStringFormat = monthDaySlashDateStringFormat;

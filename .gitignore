@@ -39,6 +39,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+/.stats
 
 # System Files
 .DS_Store
@@ -68,9 +69,10 @@ service_account.json
 # Docker
 /.cache
 
-# CI/Jest
+# CI/Testing
 /.reports
 /.tmp
+vitest.config.*.timestamp*
 
 # Nx
 .nx

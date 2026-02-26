@@ -35,6 +35,11 @@ $default-anchor-list-item-child-list-item-text-size: 14px;
     }
 
     .mat-mdc-list-item {
+      // inherit color from dbx-color-var
+      --mat-list-list-item-hover-leading-icon-color: #{theming.$dbx-color-var};
+      --mat-list-list-item-hover-trailing-icon-color: #{theming.$dbx-color-var};
+      --mat-list-list-item-hover-label-text-color: #{theming.$dbx-color-var};
+
       .mat-icon.mat-mdc-list-item-icon.mdc-list-item__start {
         // fix the icon alignment for items that are larger than the expected size
         align-self: center;

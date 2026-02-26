@@ -124,14 +124,3 @@ export const mapObjectKeysToLowercase = mapObjectKeysFunction((key) => {
 
   return nextKey;
 }) as <M extends object>(object: M) => MappedKeysToLowercaseObjectMap<M>;
-
-// MARK: Compat
-/**
- * Converts an ObjectMap into tuples.
- *
- * @deprecated use Object.entries instead.
- *
- * @param object
- * @returns
- */
-export const objectToTuples: <T>(object: ObjectMap<T>) => [string, T][] = Object.entries;

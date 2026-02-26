@@ -30,11 +30,10 @@
       "defaultConfiguration": "production"
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/ANGULAR_COMPONENTS_FOLDER", "{projectRoot}/.reports/jest/ANGULAR_COMPONENTS_NAME.junit.xml"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "ANGULAR_COMPONENTS_FOLDER/jest.config.ts",
-        "passWithNoTests": true
+        "reportsDirectory": "../../coverage/ANGULAR_COMPONENTS_FOLDER"
       }
     },
     "lint": {

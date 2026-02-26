@@ -14,18 +14,20 @@ $linear-line-height: 4px;
   .dbx-loading-progress-hint {
     padding-top: 4px;
   }
+
+  $color-value: theming.$dbx-bg-color;
+
+  .loading-progress-view {
+    background: none !important; // no background color
+    --mat-progress-spinner-active-indicator-color: #{$color-value};
+  }
+
+  .loading-progress-view.dbx-color > .mat-mdc-progress-bar {
+    --mat-progress-bar-active-indicator-color: #{$color-value};
+  }
 }
 
 @mixin color($theme-config) {
-  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main-and-secondary {
-    .mat-mdc-progress-spinner.mat-#{$color} {
-      --mdc-circular-progress-active-indicator-color: #{map.get($colorConfig, 'color')};
-    }
-
-    .mat-mdc-progress-bar.mat-#{$color} {
-      --mdc-linear-progress-active-indicator-color: #{map.get($colorConfig, 'color')};
-    }
-  }
 }
 
 @mixin typography($theme-config-or-typography-config) {

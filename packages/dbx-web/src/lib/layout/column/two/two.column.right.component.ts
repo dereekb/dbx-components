@@ -66,12 +66,9 @@ export class DbxTwoColumnRightComponent {
    */
   readonly minRightWidth = input<Maybe<number>>();
 
-  protected readonly _setMinRightWidthEffect = effect(
-    () => {
-      this.twoColumnsContextStore.setMinRightWidth(this.minRightWidth());
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly _setMinRightWidthEffect = effect(() => {
+    this.twoColumnsContextStore.setMinRightWidth(this.minRightWidth());
+  });
 
   readonly showBackSignal = computed(() => {
     const showBack = this.showBack();

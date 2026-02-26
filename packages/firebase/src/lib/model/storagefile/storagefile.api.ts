@@ -4,9 +4,9 @@ import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, ty
 import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType, IsNotEmpty, ValidateNested, IsArray } from 'class-validator';
 import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
-import { ContentDispositionString, ContentTypeMimeType, Maybe, Milliseconds, UnixDateTimeSecondsNumber } from '@dereekb/util';
-import { StorageFileId } from './storagefile.id';
-import { SendNotificationResult } from '../notification/notification.api';
+import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
+import { type StorageFileId } from './storagefile.id';
+import { type SendNotificationResult } from '../notification/notification.api';
 
 /**
  * Used for directly create a new StorageFile.

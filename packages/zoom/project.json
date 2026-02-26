@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/zoom/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["util-fetch", "!util-test"],
   "targets": {
     "build": {
@@ -45,7 +45,8 @@
             "input": ".",
             "output": "."
           }
-        ]
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
       "configurations": {
         "production": {
@@ -60,13 +61,6 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/zoom"],
-      "options": {
-        "jestConfig": "packages/zoom/jest.config.ts"
-      }
     },
     "run-all-tests": {
       "executor": "nx:run-commands",
@@ -89,6 +83,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/zoom && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/zoom"
       }
     }
   }

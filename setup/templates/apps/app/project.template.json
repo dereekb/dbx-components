@@ -96,13 +96,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/ANGULAR_APP_FOLDER",
-        "{projectRoot}/.reports/jest/ANGULAR_APP_NAME.junit.xml"
-      ],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "ANGULAR_APP_FOLDER/jest.config.ts"
+        "reportsDirectory": "../../coverage/ANGULAR_APP_FOLDER"
       }
     },
     "ci-deploy-prod": {

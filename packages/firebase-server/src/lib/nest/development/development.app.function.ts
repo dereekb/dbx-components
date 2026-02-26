@@ -2,7 +2,6 @@ import { type OnCallDevelopmentParams, type RUN_DEV_FUNCTION_APP_FUNCTION_KEY, S
 import { type CallableHttpFunction, type RunnableHttpFunction } from '../../function/type';
 import { type NestAppPromiseGetter } from '../app';
 import { type NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule';
-import { type OnCallWithNestContextFactory } from '../function/v1/call';
 import { type OnCallHandlerWithNestContextFactory } from '../function/v2/call';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { onCallDevelopmentFunction, type OnCallDevelopmentFunctionMap } from './development.function';
@@ -19,7 +18,7 @@ export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNest
   readonly secure?: boolean;
   readonly nest: NestAppPromiseGetter;
   readonly developerFunctionsMap: OnCallDevelopmentFunctionMap<N>;
-  readonly onCallFactory: OnCallWithNestContextFactory<N> | OnCallHandlerWithNestContextFactory<N>;
+  readonly onCallFactory: OnCallHandlerWithNestContextFactory<N>;
   /**
    * Whether or not to disable adding the dev schedule function. False by default.
    */

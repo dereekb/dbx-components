@@ -6,6 +6,7 @@ import { filter, first, skip } from 'rxjs';
 import { itemAccumulator, type ItemAccumulatorInstance } from './iteration.accumulator';
 import { type PageItemIteration } from './iteration';
 import { isLoadingStateFinishedLoading } from '../loading';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('iteration.rxjs', () => {
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
@@ -24,40 +25,46 @@ describe('iteration.rxjs', () => {
   });
 
   describe('flattenAccumulatorResultItemArray()', () => {
-    it(`should aggregate the array of results into a single array as it loads.`, (done) => {
-      const obs = flattenAccumulatorResultItemArray(accumulator);
-
-      obs
-        .pipe(
-          filter((x) => x.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE),
-          first()
-        )
-        .subscribe((values) => {
-          expect(Array.isArray(values)).toBe(true);
-          expect(Array.isArray(values[0])).toBe(false);
-
-          if (values.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE) {
-            done();
-          }
-        });
-
-      iteration.nextPage();
-    });
-
-    it(`should aggregate the array of results into a single array.`, (done) => {
-      const testPagesToLoad = 10;
-
-      iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
-        expect(page).toBe(testPagesToLoad - 1);
-
+    it(
+      `should aggregate the array of results into a single array as it loads.`,
+      callbackTest((done) => {
         const obs = flattenAccumulatorResultItemArray(accumulator);
 
-        obs.pipe(first()).subscribe((values) => {
-          expect(values.length).toBe(testPagesToLoad * TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE);
-          done();
+        obs
+          .pipe(
+            filter((x) => x.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE),
+            first()
+          )
+          .subscribe((values) => {
+            expect(Array.isArray(values)).toBe(true);
+            expect(Array.isArray(values[0])).toBe(false);
+
+            if (values.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE) {
+              done();
+            }
+          });
+
+        iteration.nextPage();
+      })
+    );
+
+    it(
+      `should aggregate the array of results into a single array.`,
+      callbackTest((done) => {
+        const testPagesToLoad = 10;
+
+        iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
+          expect(page).toBe(testPagesToLoad - 1);
+
+          const obs = flattenAccumulatorResultItemArray(accumulator);
+
+          obs.pipe(first()).subscribe((values) => {
+            expect(values.length).toBe(testPagesToLoad * TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE);
+            done();
+          });
         });
-      });
-    });
+      })
+    );
 
     describe('with mapping', () => {
       let accumulatorWithMapping: ItemAccumulatorInstance<string[], number[], PageItemIteration<number[]>>;
@@ -89,51 +96,57 @@ describe('iteration.rxjs', () => {
   });
 
   describe('accumulatorFlattenPageListLoadingState', () => {
-    it(`should aggregate the array of results into a single array as the value of the loading state.`, (done) => {
-      const testPagesToLoad = 10;
+    it(
+      `should aggregate the array of results into a single array as the value of the loading state.`,
+      callbackTest((done) => {
+        const testPagesToLoad = 10;
 
-      iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
-        expect(page).toBe(testPagesToLoad - 1);
+        iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
+          expect(page).toBe(testPagesToLoad - 1);
 
-        const obs = accumulatorFlattenPageListLoadingState(accumulator);
+          const obs = accumulatorFlattenPageListLoadingState(accumulator);
 
-        obs
-          .pipe(
-            filter((x) => isLoadingStateFinishedLoading(x)),
-            first()
-          )
-          .subscribe((state) => {
-            expect(isLoadingStateFinishedLoading(state)).toBe(true);
-            expect(state.value).toBeDefined();
-            expect(Array.isArray(state.value)).toBe(true);
-            expect(state.page).toBe(testPagesToLoad - 1);
-            done();
-          });
-      });
-    });
-
-    it(`should return all the values when loading.`, (done) => {
-      iteratorNextPageUntilPage(iteration, 1).then(() => {
-        const obs = accumulatorFlattenPageListLoadingState(accumulator);
-
-        obs
-          .pipe(
-            //skip the first emission, which is the first page
-            skip(1)
-          )
-          .subscribe((state) => {
-            if (!isLoadingStateFinishedLoading(state)) {
+          obs
+            .pipe(
+              filter((x) => isLoadingStateFinishedLoading(x)),
+              first()
+            )
+            .subscribe((state) => {
+              expect(isLoadingStateFinishedLoading(state)).toBe(true);
               expect(state.value).toBeDefined();
               expect(Array.isArray(state.value)).toBe(true);
-            } else {
-              expect(state.value).toBeDefined();
-              expect(Array.isArray(state.value)).toBe(true);
+              expect(state.page).toBe(testPagesToLoad - 1);
               done();
-            }
-          });
+            });
+        });
+      })
+    );
 
-        iteration.next();
-      });
-    });
+    it(
+      `should return all the values when loading.`,
+      callbackTest((done) => {
+        iteratorNextPageUntilPage(iteration, 1).then(() => {
+          const obs = accumulatorFlattenPageListLoadingState(accumulator);
+
+          obs
+            .pipe(
+              //skip the first emission, which is the first page
+              skip(1)
+            )
+            .subscribe((state) => {
+              if (!isLoadingStateFinishedLoading(state)) {
+                expect(state.value).toBeDefined();
+                expect(Array.isArray(state.value)).toBe(true);
+              } else {
+                expect(state.value).toBeDefined();
+                expect(Array.isArray(state.value)).toBe(true);
+                done();
+              }
+            });
+
+          iteration.next();
+        });
+      })
+    );
   });
 });

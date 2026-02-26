@@ -1,4 +1,4 @@
-import { type UnixDateTimeNumber } from '../date/date';
+import { type UnixDateTimeMillisecondsNumber } from '../date/date';
 
 /**
  * String representation of data that is stored.
@@ -17,7 +17,7 @@ export interface StoredData {
    * The Unix timestamp (in milliseconds) when the data was stored.
    * Undefined if the storage time is not known or not applicable.
    */
-  readonly storedAt: UnixDateTimeNumber | undefined;
+  readonly storedAt: UnixDateTimeMillisecondsNumber | undefined;
   /**
    * The actual data stored, as a string.
    */

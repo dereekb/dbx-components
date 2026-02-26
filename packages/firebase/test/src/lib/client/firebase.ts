@@ -1,11 +1,12 @@
 import { makeTestingFirestoreDrivers, type TestFirestoreContext, type TestingFirestoreDrivers } from '../common/firestore/firestore';
 import { type Maybe, cachedGetter } from '@dereekb/util';
-import { jestTestContextBuilder } from '@dereekb/util/test';
+import { testContextBuilder } from '@dereekb/util/test';
 import { type TestEnvironmentConfig, initializeTestEnvironment, type RulesTestEnvironment, type RulesTestContext, type TokenOptions, type EmulatorConfig } from '@firebase/rules-unit-testing';
 import { firebaseFirestoreClientDrivers, type FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, type Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
-import { makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type TestingFirebaseStorageDrivers } from '../common';
+import { makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestingFirebaseStorageDrivers } from '../common/storage/storage';
 import { TestFirebaseContextFixture, type TestFirebaseInstance } from '../common/firebase.instance';
+import { type TestFirebaseStorageInstance } from '../common/storage/storage.instance';
 
 export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 
@@ -90,11 +91,11 @@ export class RulesUnitTestTestFirebaseInstance implements TestFirebaseInstance, 
 export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseContextFixture<RulesUnitTestTestFirebaseInstance> {}
 
 /**
- * A JestTestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
+ * A TestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firebaseRulesUnitTestBuilder = jestTestContextBuilder<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
+export const firebaseRulesUnitTestBuilder = testContextBuilder<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
   buildConfig: (input?: Partial<RulesUnitTestingConfig>) => {
     const config: RulesUnitTestingConfig = {
       testEnvironment: input?.testEnvironment ?? {},
@@ -125,7 +126,10 @@ export const firebaseRulesUnitTestBuilder = jestTestContextBuilder<RulesUnitTest
     return new RulesUnitTestTestFirebaseInstance(drivers, rulesTestEnv, rulesTestContext);
   },
   teardownInstance: async (instance, config) => {
-    await instance.rulesTestEnvironment.cleanup(); // Cleanup
+    await instance.rulesTestEnvironment.cleanup().catch((e) => {
+      console.warn('firebaseRulesUnitTestBuilder(): Failed to cleanup rules test environment', e);
+      throw e;
+    });
   }
 });
 

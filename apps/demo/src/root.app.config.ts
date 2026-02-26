@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { APP_INITIALIZER, type ApplicationConfig, importProvidersFrom, Injector } from '@angular/core';
+import { APP_INITIALIZER, type ApplicationConfig, importProvidersFrom, Injector, provideZoneChangeDetection } from '@angular/core';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
@@ -129,6 +129,7 @@ export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebas
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZoneChangeDetection(), // dbx-components is not zoneless yet
     // formly
     importProvidersFrom(
       FormlyModule.forRoot({
@@ -262,7 +263,5 @@ export const appConfig: ApplicationConfig = {
         multi: true
       }
     ]
-
-    // provideZoneChangeDetection({ eventCoalescing: true })
   ]
 };

@@ -722,7 +722,7 @@ Text and background color classes for theming:
 - `.dbx-success` / `.dbx-success-bg` - Success color (green)
 - `.dbx-grey` / `.dbx-grey-bg` - Grey color
 - `.dbx-disabled` / `.dbx-disabled-bg` - Disabled color
-- `.dbx-bg` - Background color
+- `.dbx-default` / `.dbx-default-bg` - Default color
 
 **Example:**
 ```html

@@ -1,7 +1,7 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
-import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
   type DocumentDataWithIdAndKey,
@@ -688,7 +688,7 @@ demoApiFunctionContextFactory((f) => {
                                     ]
                                   };
 
-                                  await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
+                                  await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
                                 });
                               });
 
@@ -723,7 +723,7 @@ demoApiFunctionContextFactory((f) => {
                                     ]
                                   };
 
-                                  await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
+                                  await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
                                 });
                               });
                             });
@@ -938,7 +938,7 @@ demoApiFunctionContextFactory((f) => {
                                         insert: true
                                       };
 
-                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
                                     });
                                   });
 
@@ -967,7 +967,7 @@ demoApiFunctionContextFactory((f) => {
                                         insert: true
                                       };
 
-                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
                                     });
                                   });
 
@@ -993,7 +993,7 @@ demoApiFunctionContextFactory((f) => {
                                         insert: true
                                       };
 
-                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
                                     });
                                   });
                                 });
@@ -1092,7 +1092,7 @@ demoApiFunctionContextFactory((f) => {
                             uid: u.uid,
                             insert: true
                           }),
-                        jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE)
+                        expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE)
                       );
                     });
                   });
@@ -1156,7 +1156,7 @@ demoApiFunctionContextFactory((f) => {
                                   uid: u2.uid,
                                   insert: false
                                 }),
-                              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE)
+                              expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE)
                             );
                           });
 
@@ -1167,7 +1167,7 @@ demoApiFunctionContextFactory((f) => {
                                   uid: 'does_not_exist',
                                   insert: true
                                 }),
-                              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                              expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
                             );
                           });
 
@@ -1429,7 +1429,7 @@ demoApiFunctionContextFactory((f) => {
                                   uid: 'does_not_exist',
                                   insert: true
                                 }),
-                              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                              expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
                             );
                           });
 
@@ -1537,7 +1537,7 @@ demoApiFunctionContextFactory((f) => {
                                   uid: 'does_not_exist',
                                   insert: true
                                 }),
-                              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                              expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
                             );
                           });
 

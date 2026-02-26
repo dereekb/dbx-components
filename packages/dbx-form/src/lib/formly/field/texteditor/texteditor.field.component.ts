@@ -3,7 +3,7 @@ import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { Editor, NgxEditorModule } from 'ngx-editor';
+import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime, filter } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';

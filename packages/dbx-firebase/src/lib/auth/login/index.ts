@@ -1,4 +1,3 @@
-export * from './firebase.login.module';
 export * from './firebase.login.providers';
 export * from './login.anonymous.component';
 export * from './login.apple.component';

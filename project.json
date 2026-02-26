@@ -29,13 +29,16 @@
         "command": "./start-release.sh"
       }
     },
-    "version": {
-      "executor": "@jscutlery/semver:version",
+    "release-dry-run": {
+      "executor": "nx:run-commands",
       "options": {
-        "baseBranch": "main",
-        "tagPrefix": "v",
-        "syncVersions": true,
-        "commitMessageFormat": "release(${projectName}): v${version} release"
+        "command": "npx nx release --dry-run --verbose"
+      }
+    },
+    "release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx nx release --skip-publish --verbose"
       }
     },
     "deploy-firebase-rules": {

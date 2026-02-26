@@ -1,7 +1,7 @@
 import { environment } from './environments/environment';
 import 'reflect-metadata';
 import { onRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
 import { demoDevelopmentFunctionMap } from './app/function/model/development.functions';
 import { firebaseServerDevFunctions } from '@dereekb/firebase-server';

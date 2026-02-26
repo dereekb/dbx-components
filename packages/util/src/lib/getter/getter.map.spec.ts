@@ -4,6 +4,7 @@ import { mapGetter, mapGetterFactory } from './getter.map';
 describe('mapGetterFactory()', () => {
   it('should return a function that takes a getter and returns a new getter', () => {
     const mapFn = (x: number) => x * 2;
+
     const factory = mapGetterFactory(mapFn);
     expect(typeof factory).toBe('function');
 
@@ -21,7 +22,7 @@ describe('mapGetterFactory()', () => {
       i += 1;
       return i;
     };
-    const mapFn = jest.fn((x: number) => x.toString());
+    const mapFn = vi.fn((x: number) => x.toString());
 
     const factory = mapGetterFactory(mapFn);
     const mappedGetter = factory(inputGetter);
@@ -53,7 +54,7 @@ describe('mapGetter()', () => {
       i += 1;
       return i;
     };
-    const mapFn = jest.fn((x: number) => x * 10);
+    const mapFn = vi.fn((x: number) => x * 10);
 
     const mappedGetter = mapGetter(inputGetter, mapFn);
 

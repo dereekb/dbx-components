@@ -1,0 +1,17 @@
+{
+  "name": "@dereekb/vitest",
+  "version": "12.7.0",
+  "peerDependencies": {
+    "date-fns": "*"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./extend": {
+      "types": "./src/extend.d.ts",
+      "default": "./src/extend.js"
+    }
+  }
+}

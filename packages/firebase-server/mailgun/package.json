@@ -1,8 +1,30 @@
 {
   "name": "@dereekb/firebase-server/mailgun",
   "version": "12.7.0",
-  "type": "commonjs",
+  "types": "./src/index.d.ts",
+  "module": "./index.esm.js",
+  "main": "./index.cjs.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
+    }
+  },
   "peerDependencies": {
-    "mailgun.js": "^12.0.0"
+    "@dereekb/firebase": "*",
+    "@dereekb/firebase-server": "*",
+    "@dereekb/date": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/model": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/util": "*",
+    "core-js": "*"
   }
 }

@@ -5,6 +5,7 @@ import { BehaviorSubject, Subject, type Subscription } from 'rxjs';
 import { type DbxAnalyticsUser } from './analytics';
 import { type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
 import { type Injector } from '@angular/core';
+import { callbackTest } from '@dereekb/util/test';
 
 class TestAnalyticsServiceListener extends AbstractDbxAnalyticsServiceListener {
   readonly events = new Subject<DbxAnalyticsStreamEvent>();
@@ -52,12 +53,15 @@ describe('DbxAnalyticsService', () => {
     analyticsService.destroy();
   });
 
-  it('#sendPageView() should send a page view event', (done) => {
-    testListener.events.subscribe((event) => {
-      expect(event.type).toBe(DbxAnalyticsStreamEventType.PageView);
-      done();
-    });
+  it(
+    '#sendPageView() should send a page view event',
+    callbackTest((done) => {
+      testListener.events.subscribe((event) => {
+        expect(event.type).toBe(DbxAnalyticsStreamEventType.PageView);
+        done();
+      });
 
-    analyticsService.sendPageView();
-  });
+      analyticsService.sendPageView();
+    })
+  );
 });

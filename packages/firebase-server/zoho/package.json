@@ -1,6 +1,9 @@
 {
   "name": "@dereekb/firebase-server/zoho",
   "version": "12.7.0",
+  "types": "./src/index.d.ts",
+  "module": "./index.esm.js",
+  "main": "./index.cjs.js",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -15,6 +18,10 @@
     }
   },
   "peerDependencies": {
+    "@dereekb/date": "*",
+    "@dereekb/model": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/rxjs": "*",
     "@dereekb/firebase": "*",
     "@dereekb/util": "*",
     "@dereekb/zoho": "*"

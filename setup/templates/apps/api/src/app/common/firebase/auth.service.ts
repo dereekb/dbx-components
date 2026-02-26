@@ -2,14 +2,14 @@ import { APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE } from 'FIREBASE_COMPONENTS_NA
 import { CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, FirebaseServerAuthNewUserSetupDetails, FirebaseServerNewUserService } from '@dereekb/firebase-server';
 import { AuthClaims, AuthClaimsUpdate, AuthRoleSet } from '@dereekb/util';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { AbstractMailgunContentFirebaseServerNewUserService, NewUserMailgunContentRequest } from '@dereekb/firebase-server/mailgun';
 
 export class APP_CODE_PREFIXApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<APP_CODE_PREFIXApiAuthService> {
 
 }
 
-export class APP_CODE_PREFIXApiFirebaseServerAuthContext extends AbstractFirebaseServerAuthContext<APP_CODE_PREFIXApiFirebaseServerAuthContext, APP_CODE_PREFIXApiFirebaseServerAuthUserContext, APP_CODE_PREFIXApiAuthService>  {
+export class APP_CODE_PREFIXApiFirebaseServerAuthContext extends AbstractFirebaseServerAuthContext<APP_CODE_PREFIXApiFirebaseServerAuthContext, APP_CODE_PREFIXApiFirebaseServerAuthUserContext, APP_CODE_PREFIXApiAuthService> {
 
 }
 
@@ -24,7 +24,7 @@ export class APP_CODE_PREFIXApiFirebaseServerNewUserService extends AbstractMail
 }
 
 export class APP_CODE_PREFIXApiAuthService extends AbstractFirebaseServerAuthService<APP_CODE_PREFIXApiFirebaseServerAuthUserContext, APP_CODE_PREFIXApiFirebaseServerAuthContext> {
-  
+
   constructor(auth: admin.auth.Auth, readonly mailgunService: MailgunService) {
     super(auth);
   }

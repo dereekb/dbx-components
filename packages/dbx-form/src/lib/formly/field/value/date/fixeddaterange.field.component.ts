@@ -6,7 +6,7 @@ import { AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModu
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipAllInitialMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory } from './date.value';
 import { DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
@@ -532,7 +532,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
         switchMap(([currentValue, valueFactory]) => {
           return dateRangeSelection.pipe(
-            skipFirstMaybe(),
+            skipAllInitialMaybe(),
             distinctUntilChanged<Maybe<DateRange>>(isSameDateDayRange),
             map((x) => [x, currentValue, valueFactory] as [typeof x, typeof currentValue, typeof valueFactory])
           );

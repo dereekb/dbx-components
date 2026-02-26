@@ -1,15 +1,14 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { MailgunTemplateEmailRequest, MailgunEmailMessageSendResult, convertMailgunTemplateEmailRequestToMailgunMessageData } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 
 @Injectable()
 export class MailgunService {
-
   private readonly _mailgunApi: MailgunApi;
   private readonly _serverEnvironmentService: ServerEnvironmentService;
 
-  constructor(mailgunApi: MailgunApi, serverEnvironmentService: ServerEnvironmentService) {
+  constructor(@Inject(MailgunApi) mailgunApi: MailgunApi, @Inject(ServerEnvironmentService) serverEnvironmentService: ServerEnvironmentService) {
     this._mailgunApi = mailgunApi;
     this._serverEnvironmentService = serverEnvironmentService;
   }

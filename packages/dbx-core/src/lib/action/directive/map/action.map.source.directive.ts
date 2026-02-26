@@ -18,19 +18,16 @@ export class DbxActionMapSourceDirective implements OnDestroy {
   readonly key = input<Maybe<ActionKey>>(undefined, { alias: 'dbxActionMapSource' });
   private _currentKey: Maybe<ActionKey>;
 
-  protected readonly _keyEffect = effect(
-    () => {
-      const nextKey = this.key();
+  protected readonly _keyEffect = effect(() => {
+    const nextKey = this.key();
 
-      if (this._currentKey !== nextKey) {
-        this._removeFromToStore();
-      }
+    if (this._currentKey !== nextKey) {
+      this._removeFromToStore();
+    }
 
-      this._currentKey = nextKey;
-      this._addToStore();
-    },
-    { allowSignalWrites: true }
-  );
+    this._currentKey = nextKey;
+    this._addToStore();
+  });
 
   ngOnDestroy(): void {
     this._removeFromToStore();

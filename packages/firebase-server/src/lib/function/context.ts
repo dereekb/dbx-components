@@ -1,4 +1,4 @@
-import { type CallableContext } from 'firebase-functions/lib/common/providers/https';
+import { type CallableContext } from '../type';
 import { unauthenticatedContextHasNoAuthData } from './error';
 
 export type CallableContextWithAuthData<R extends CallableContext = CallableContext> = Omit<R, 'auth'> & Required<Pick<R, 'auth'>>;

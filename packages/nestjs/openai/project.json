@@ -4,29 +4,41 @@
   "sourceRoot": "packages/nestjs/openai/src",
   "projectType": "library",
   "tags": [],
-  "implicitDependencies": ["!util-test"],
+  "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/nestjs/openai",
         "outputPath": "dist/packages/nestjs/openai",
         "tsConfig": "packages/nestjs/openai/tsconfig.lib.json",
-        "packageJson": "packages/nestjs/openai/package.json",
+        "project": "packages/nestjs/openai/package.json",
         "main": "packages/nestjs/openai/src/index.ts",
-        "assets": ["LICENSE"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/nestjs/openai"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/nestjs/openai/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/nestjs/openai"
       }
     }
   }

@@ -2,6 +2,7 @@ export * from './array';
 export * from './boolean';
 export * from './decision';
 export * from './delta';
+export * from './expires';
 export * from './timeout';
 export * from './factory';
 export * from './getter';

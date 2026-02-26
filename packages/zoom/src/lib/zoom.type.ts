@@ -1,4 +1,4 @@
-import { type UnixDateTimeNumber } from '@dereekb/util';
+import { type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 
 /**
  * An identifier in Zoom.
@@ -23,4 +23,4 @@ export type ZoomWebhookEventTypeString = string;
 /*
  * A timestamp at which the event occurred as a Unix timestamp.
  */
-export type ZoomWebhookTimestamp = UnixDateTimeNumber;
+export type ZoomWebhookTimestamp = UnixDateTimeMillisecondsNumber;

@@ -9,8 +9,8 @@ export interface LockSetComponent {
 }
 
 export interface LockSetComponentStoreConfig {
-  parent?: Maybe<Observable<LockSetComponent>>;
-  locks?: {
+  readonly parent?: Maybe<Observable<LockSetComponent>>;
+  readonly locks?: {
     [key: string]: Observable<boolean>;
   };
 }

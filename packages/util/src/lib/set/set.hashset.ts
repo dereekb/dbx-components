@@ -30,7 +30,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
     return this._map.size;
   }
 
-  [Symbol.iterator](): IterableIterator<T> {
+  [Symbol.iterator](): MapIterator<T> {
     return this._map.values();
   }
 
@@ -98,16 +98,16 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
     });
   }
 
-  entries(): IterableIterator<[T, T]> {
+  entries(): SetIterator<[T, T]> {
     const result = this.valuesArray();
     return result.map((x) => [x, x] as [T, T]).values();
   }
 
-  keys(): IterableIterator<T> {
+  keys(): SetIterator<T> {
     return this.values();
   }
 
-  values(): IterableIterator<T> {
+  values(): SetIterator<T> {
     return this._map.values();
   }
 

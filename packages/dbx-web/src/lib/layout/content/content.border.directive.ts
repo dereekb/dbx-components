@@ -13,6 +13,6 @@ import { DbxThemeColor } from '../style/style';
   standalone: true
 })
 export class DbxContentBorderDirective {
-  readonly color = input<DbxThemeColor>('background');
+  readonly color = input<DbxThemeColor>('default');
   readonly classConfig = computed(() => `dbx-content-border-${this.color()}`);
 }

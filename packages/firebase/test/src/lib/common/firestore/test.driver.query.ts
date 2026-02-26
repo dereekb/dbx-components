@@ -1,5 +1,5 @@
 import { startOfDay, addDays, addHours } from 'date-fns';
-import { expectFail, itShouldFail } from '@dereekb/util/test';
+import { callbackTest, expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
 import {
@@ -691,72 +691,78 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 sub.destroy();
               });
 
-              it('should emit when the query results update (an item is added).', (done) => {
-                const itemsToAdd = 1;
+              it(
+                'should emit when the query results update (an item is added).',
+                callbackTest((done) => {
+                  const itemsToAdd = 1;
 
-                let addCompleted = false;
-                let addSeen = false;
+                  let addCompleted = false;
+                  let addSeen = false;
 
-                function tryComplete() {
-                  if (addSeen && addCompleted) {
-                    done();
+                  function tryComplete() {
+                    if (addSeen && addCompleted) {
+                      done();
+                    }
                   }
-                }
 
-                sub.subscription = querySubItems()
-                  .streamDocs()
-                  .pipe(filter((x) => x.docs.length > allSubItems.length))
-                  .subscribe((results) => {
-                    addSeen = true;
-                    expect(results.docs.length).toBe(allSubItems.length + itemsToAdd);
+                  sub.subscription = querySubItems()
+                    .streamDocs()
+                    .pipe(filter((x) => x.docs.length > allSubItems.length))
+                    .subscribe((results) => {
+                      addSeen = true;
+                      expect(results.docs.length).toBe(allSubItems.length + itemsToAdd);
+                      tryComplete();
+                    });
+
+                  // add one item
+                  makeDocuments(f.instance.mockItemSubItemCollection(parentA).documentAccessor(), {
+                    count: itemsToAdd,
+                    init: (i) => {
+                      return {
+                        value: i
+                      };
+                    }
+                  }).then(() => {
+                    addCompleted = true;
                     tryComplete();
                   });
+                })
+              );
 
-                // add one item
-                makeDocuments(f.instance.mockItemSubItemCollection(parentA).documentAccessor(), {
-                  count: itemsToAdd,
-                  init: (i) => {
-                    return {
-                      value: i
-                    };
+              it(
+                'should emit when the query results update (an item is removed).',
+                callbackTest((done) => {
+                  const itemsToRemove = 1;
+
+                  let deleteCompleted = false;
+                  let deleteSeen = false;
+
+                  function tryComplete() {
+                    if (deleteSeen && deleteCompleted) {
+                      done();
+                    }
                   }
-                }).then(() => {
-                  addCompleted = true;
-                  tryComplete();
-                });
-              });
 
-              it('should emit when the query results update (an item is removed).', (done) => {
-                const itemsToRemove = 1;
+                  sub.subscription = querySubItems()
+                    .streamDocs()
+                    .pipe(filter((x) => x.docs.length < allSubItems.length))
+                    .subscribe((results) => {
+                      deleteSeen = true;
+                      expect(results.docs.length).toBe(allSubItems.length - itemsToRemove);
+                      tryComplete();
+                    });
 
-                let deleteCompleted = false;
-                let deleteSeen = false;
+                  allSubItems[0].accessor.exists().then((exists) => {
+                    expect(exists).toBe(true);
 
-                function tryComplete() {
-                  if (deleteSeen && deleteCompleted) {
-                    done();
-                  }
-                }
-
-                sub.subscription = querySubItems()
-                  .streamDocs()
-                  .pipe(filter((x) => x.docs.length < allSubItems.length))
-                  .subscribe((results) => {
-                    deleteSeen = true;
-                    expect(results.docs.length).toBe(allSubItems.length - itemsToRemove);
-                    tryComplete();
+                    // remove one item
+                    return allSubItems[0].accessor.delete().then(() => {
+                      deleteCompleted = true;
+                      tryComplete();
+                    });
                   });
-
-                allSubItems[0].accessor.exists().then((exists) => {
-                  expect(exists).toBe(true);
-
-                  // remove one item
-                  return allSubItems[0].accessor.delete().then(() => {
-                    deleteCompleted = true;
-                    tryComplete();
-                  });
-                });
-              });
+                })
+              );
             });
           });
         });
@@ -870,77 +876,83 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           sub.destroy();
         });
 
-        it('should emit when the query results update (an item is added).', (done) => {
-          const itemsToAdd = 1;
+        it(
+          'should emit when the query results update (an item is added).',
+          callbackTest((done) => {
+            const itemsToAdd = 1;
 
-          let addCompleted = false;
-          let addSeen = false;
+            let addCompleted = false;
+            let addSeen = false;
 
-          function tryComplete() {
-            if (addSeen && addCompleted) {
-              done();
-            }
-          }
-
-          sub.subscription = queryDocument()
-            .streamDocs()
-            .pipe(filter((documents) => documents.length > items.length))
-            .subscribe((documents) => {
-              addSeen = true;
-              expect(documents.length).toBe(items.length + itemsToAdd);
-              tryComplete();
-            });
-
-          // add one item
-          waitForMs(10).then(() =>
-            makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
-              count: itemsToAdd,
-              init: (i) => {
-                return {
-                  value: `${i + items.length}`,
-                  test: true
-                };
+            function tryComplete() {
+              if (addSeen && addCompleted) {
+                done();
               }
-            }).then(() => {
-              addCompleted = true;
-              tryComplete();
-            })
-          );
-        });
-
-        it('should emit when the query results update (an item is removed).', (done) => {
-          const itemsToRemove = 1;
-
-          let deleteCompleted = false;
-          let deleteSeen = false;
-
-          function tryComplete() {
-            if (deleteSeen && deleteCompleted) {
-              done();
             }
-          }
 
-          sub.subscription = queryDocument()
-            .streamDocs()
-            .pipe(skip(1))
-            .subscribe((documents) => {
-              deleteSeen = true;
-              expect(documents.length).toBe(items.length - itemsToRemove);
-              tryComplete();
-            });
-
-          waitForMs(10).then(() =>
-            items[0].exists().then((exists) => {
-              expect(exists).toBe(true);
-
-              // remove one item
-              return items[0].accessor.delete().then(() => {
-                deleteCompleted = true;
+            sub.subscription = queryDocument()
+              .streamDocs()
+              .pipe(filter((documents) => documents.length > items.length))
+              .subscribe((documents) => {
+                addSeen = true;
+                expect(documents.length).toBe(items.length + itemsToAdd);
                 tryComplete();
               });
-            })
-          );
-        });
+
+            // add one item
+            waitForMs(10).then(() =>
+              makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+                count: itemsToAdd,
+                init: (i) => {
+                  return {
+                    value: `${i + items.length}`,
+                    test: true
+                  };
+                }
+              }).then(() => {
+                addCompleted = true;
+                tryComplete();
+              })
+            );
+          })
+        );
+
+        it(
+          'should emit when the query results update (an item is removed).',
+          callbackTest((done) => {
+            const itemsToRemove = 1;
+
+            let deleteCompleted = false;
+            let deleteSeen = false;
+
+            function tryComplete() {
+              if (deleteSeen && deleteCompleted) {
+                done();
+              }
+            }
+
+            sub.subscription = queryDocument()
+              .streamDocs()
+              .pipe(skip(1))
+              .subscribe((documents) => {
+                deleteSeen = true;
+                expect(documents.length).toBe(items.length - itemsToRemove);
+                tryComplete();
+              });
+
+            waitForMs(10).then(() =>
+              items[0].exists().then((exists) => {
+                expect(exists).toBe(true);
+
+                // remove one item
+                return items[0].accessor.delete().then(() => {
+                  deleteCompleted = true;
+                  tryComplete();
+                });
+              })
+            );
+          })
+        );
       });
 
       describe('streamDocSnapshotDataPairs()', () => {
@@ -954,89 +966,95 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           sub.destroy();
         });
 
-        it('should emit when the query results update (an item is added).', (done) => {
-          const itemsToAdd = 1;
+        it(
+          'should emit when the query results update (an item is added).',
+          callbackTest((done) => {
+            const itemsToAdd = 1;
 
-          let addCompleted = false;
-          let addSeen = false;
+            let addCompleted = false;
+            let addSeen = false;
 
-          function tryComplete() {
-            if (addSeen && addCompleted) {
-              done();
-            }
-          }
-
-          sub.subscription = queryDocument()
-            .streamDocSnapshotDataPairs()
-            .pipe(filter((documents) => documents.length > items.length))
-            .subscribe((documents) => {
-              addSeen = true;
-              expect(documents.length).toBe(items.length + itemsToAdd);
-
-              documents.forEach((x) => {
-                // validate each document returned
-                expect(x.data).toBeDefined();
-                expect(x.document).toBeDefined();
-                expect(x.document instanceof MockItemDocument).toBe(true);
-                expect(x.snapshot).toBeDefined();
-                expect(x.snapshot.data()).toBeDefined();
-                expect(x.snapshot.ref).toBeDefined();
-                expect(x.snapshot.id).toBe(x.document.id);
-              });
-
-              tryComplete();
-            });
-
-          // add one item
-          waitForMs(10).then(() =>
-            makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
-              count: itemsToAdd,
-              init: (i) => {
-                return {
-                  value: `${i + items.length}`,
-                  test: true
-                };
+            function tryComplete() {
+              if (addSeen && addCompleted) {
+                done();
               }
-            }).then(() => {
-              addCompleted = true;
-              tryComplete();
-            })
-          );
-        });
-
-        it('should emit when the query results update (an item is removed).', (done) => {
-          const itemsToRemove = 1;
-
-          let deleteCompleted = false;
-          let deleteSeen = false;
-
-          function tryComplete() {
-            if (deleteSeen && deleteCompleted) {
-              done();
             }
-          }
 
-          sub.subscription = queryDocument()
-            .streamDocs()
-            .pipe(skip(1))
-            .subscribe((documents) => {
-              deleteSeen = true;
-              expect(documents.length).toBe(items.length - itemsToRemove);
-              tryComplete();
-            });
+            sub.subscription = queryDocument()
+              .streamDocSnapshotDataPairs()
+              .pipe(filter((documents) => documents.length > items.length))
+              .subscribe((documents) => {
+                addSeen = true;
+                expect(documents.length).toBe(items.length + itemsToAdd);
 
-          waitForMs(10).then(() =>
-            items[0].exists().then((exists) => {
-              expect(exists).toBe(true);
+                documents.forEach((x) => {
+                  // validate each document returned
+                  expect(x.data).toBeDefined();
+                  expect(x.document).toBeDefined();
+                  expect(x.document instanceof MockItemDocument).toBe(true);
+                  expect(x.snapshot).toBeDefined();
+                  expect(x.snapshot.data()).toBeDefined();
+                  expect(x.snapshot.ref).toBeDefined();
+                  expect(x.snapshot.id).toBe(x.document.id);
+                });
 
-              // remove one item
-              return items[0].accessor.delete().then(() => {
-                deleteCompleted = true;
                 tryComplete();
               });
-            })
-          );
-        });
+
+            // add one item
+            waitForMs(10).then(() =>
+              makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+                count: itemsToAdd,
+                init: (i) => {
+                  return {
+                    value: `${i + items.length}`,
+                    test: true
+                  };
+                }
+              }).then(() => {
+                addCompleted = true;
+                tryComplete();
+              })
+            );
+          })
+        );
+
+        it(
+          'should emit when the query results update (an item is removed).',
+          callbackTest((done) => {
+            const itemsToRemove = 1;
+
+            let deleteCompleted = false;
+            let deleteSeen = false;
+
+            function tryComplete() {
+              if (deleteSeen && deleteCompleted) {
+                done();
+              }
+            }
+
+            sub.subscription = queryDocument()
+              .streamDocs()
+              .pipe(skip(1))
+              .subscribe((documents) => {
+                deleteSeen = true;
+                expect(documents.length).toBe(items.length - itemsToRemove);
+                tryComplete();
+              });
+
+            waitForMs(10).then(() =>
+              items[0].exists().then((exists) => {
+                expect(exists).toBe(true);
+
+                // remove one item
+                return items[0].accessor.delete().then(() => {
+                  deleteCompleted = true;
+                  tryComplete();
+                });
+              })
+            );
+          })
+        );
       });
     });
 
@@ -1058,77 +1076,83 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           sub.destroy();
         });
 
-        it('should emit when the query results update (an item is added).', (done) => {
-          const itemsToAdd = 1;
+        it(
+          'should emit when the query results update (an item is added).',
+          callbackTest((done) => {
+            const itemsToAdd = 1;
 
-          let addCompleted = false;
-          let addSeen = false;
+            let addCompleted = false;
+            let addSeen = false;
 
-          function tryComplete() {
-            if (addSeen && addCompleted) {
-              done();
-            }
-          }
-
-          sub.subscription = query()
-            .streamDocs()
-            .pipe(filter((x) => x.docs.length > items.length))
-            .subscribe((results) => {
-              addSeen = true;
-              expect(results.docs.length).toBe(items.length + itemsToAdd);
-              tryComplete();
-            });
-
-          // add one item
-          waitForMs(10).then(() =>
-            makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
-              count: itemsToAdd,
-              init: (i) => {
-                return {
-                  value: `${i + items.length}`,
-                  test: true
-                };
+            function tryComplete() {
+              if (addSeen && addCompleted) {
+                done();
               }
-            }).then(() => {
-              addCompleted = true;
-              tryComplete();
-            })
-          );
-        });
-
-        it('should emit when the query results update (an item is removed).', (done) => {
-          const itemsToRemove = 1;
-
-          let deleteCompleted = false;
-          let deleteSeen = false;
-
-          function tryComplete() {
-            if (deleteSeen && deleteCompleted) {
-              done();
             }
-          }
 
-          sub.subscription = query()
-            .streamDocs()
-            .pipe(skip(1))
-            .subscribe((results) => {
-              deleteSeen = true;
-              expect(results.docs.length).toBe(items.length - itemsToRemove);
-              tryComplete();
-            });
-
-          waitForMs(10).then(() =>
-            items[0].accessor.exists().then((exists) => {
-              expect(exists).toBe(true);
-
-              // remove one item
-              return items[0].accessor.delete().then(() => {
-                deleteCompleted = true;
+            sub.subscription = query()
+              .streamDocs()
+              .pipe(filter((x) => x.docs.length > items.length))
+              .subscribe((results) => {
+                addSeen = true;
+                expect(results.docs.length).toBe(items.length + itemsToAdd);
                 tryComplete();
               });
-            })
-          );
-        });
+
+            // add one item
+            waitForMs(10).then(() =>
+              makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+                count: itemsToAdd,
+                init: (i) => {
+                  return {
+                    value: `${i + items.length}`,
+                    test: true
+                  };
+                }
+              }).then(() => {
+                addCompleted = true;
+                tryComplete();
+              })
+            );
+          })
+        );
+
+        it(
+          'should emit when the query results update (an item is removed).',
+          callbackTest((done) => {
+            const itemsToRemove = 1;
+
+            let deleteCompleted = false;
+            let deleteSeen = false;
+
+            function tryComplete() {
+              if (deleteSeen && deleteCompleted) {
+                done();
+              }
+            }
+
+            sub.subscription = query()
+              .streamDocs()
+              .pipe(skip(1))
+              .subscribe((results) => {
+                deleteSeen = true;
+                expect(results.docs.length).toBe(items.length - itemsToRemove);
+                tryComplete();
+              });
+
+            waitForMs(10).then(() =>
+              items[0].accessor.exists().then((exists) => {
+                expect(exists).toBe(true);
+
+                // remove one item
+                return items[0].accessor.delete().then(() => {
+                  deleteCompleted = true;
+                  tryComplete();
+                });
+              })
+            );
+          })
+        );
       });
 
       describe('constraint', () => {
@@ -1143,17 +1167,20 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
             expect(result.docs.length).toBe(limitCount);
           });
 
-          it('should limit the streamed results.', (done) => {
-            const limitCount = 2;
-            const resultObs = query(limit(limitCount)).streamDocs();
+          it(
+            'should limit the streamed results.',
+            callbackTest((done) => {
+              const limitCount = 2;
+              const resultObs = query(limit(limitCount)).streamDocs();
 
-            from(resultObs)
-              .pipe(first())
-              .subscribe((results) => {
-                expect(results.docs.length).toBe(limitCount);
-                done();
-              });
-          });
+              from(resultObs)
+                .pipe(first())
+                .subscribe((results) => {
+                  expect(results.docs.length).toBe(limitCount);
+                  done();
+                });
+            })
+          );
 
           it('should limit the number of items counted.', async () => {
             const limitCount = 2;
@@ -1195,17 +1222,20 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
             await expectFail(() => query(limitToLast(limitCount)).getDocs());
           });
 
-          it('should stream results.', (done) => {
-            const limitCount = 2;
-            const resultObs = query(orderBy('value'), limitToLast(limitCount)).streamDocs();
+          it(
+            'should stream results.',
+            callbackTest((done) => {
+              const limitCount = 2;
+              const resultObs = query(orderBy('value'), limitToLast(limitCount)).streamDocs();
 
-            from(resultObs)
-              .pipe(first())
-              .subscribe((results) => {
-                expect(results.docs.length).toBe(limitCount);
-                done();
-              });
-          });
+              from(resultObs)
+                .pipe(first())
+                .subscribe((results) => {
+                  expect(results.docs.length).toBe(limitCount);
+                  done();
+                });
+            })
+          );
 
           it('should limit the number of items counted.', async () => {
             const limitCount = 2;

@@ -1,22 +1,24 @@
-import { Injectable, Injector, runInInjectionContext } from '@angular/core';
-import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from '@dereekb/firebase/test';
+import { inject, Injectable, Injector } from '@angular/core';
+import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemCollections } from '@dereekb/firebase/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseDocumentWithParentStore } from './store.subcollection.document';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
+import { callbackTest } from '@dereekb/util/test';
+import { newWithInjector } from '@dereekb/dbx-core';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
-  constructor(firestoreCollection: MockItemFirestoreCollection) {
-    super({ firestoreCollection });
+  constructor() {
+    super({ firestoreCollection: inject(MockItemCollections).mockItemCollection });
   }
 }
 
 @Injectable()
 export class TestDbxFirebaseDocumentWithParentStore extends AbstractDbxFirebaseDocumentWithParentStore<MockItemSubItem, MockItem, MockItemSubItemDocument, MockItemDocument> {
-  constructor(collectionFactory: MockItemSubItemFirestoreCollectionFactory) {
-    super({ collectionFactory });
+  constructor() {
+    super({ collectionFactory: inject(MockItemCollections).mockItemSubItemCollectionFactory });
   }
 }
 
@@ -26,27 +28,30 @@ describe('AbstractDbxFirebaseDocumentWithParentStore', () => {
     let parentStore: TestDbxFirebaseDocumentStore;
     let store: TestDbxFirebaseDocumentWithParentStore;
 
-    beforeEach(async () => {
-      await TestBed.configureTestingModule({
-        imports: [],
-        declarations: []
-      }).compileComponents();
+    beforeEach(waitForAsync(() => {
+      TestBed.configureTestingModule({
+        providers: [
+          {
+            provide: MockItemCollections,
+            useValue: f.instance.collections
+          }
+        ]
+      });
+    }));
 
+    beforeEach(() => {
       const injector = TestBed.inject(Injector);
 
-      const firestoreCollection = f.instance.firestoreCollection;
-
-      runInInjectionContext(injector, () => {
-        parentStore = new TestDbxFirebaseDocumentStore(firestoreCollection);
-        store = new TestDbxFirebaseDocumentWithParentStore(f.instance.mockItemSubItemCollection);
-        sub = new SubscriptionObject();
-      });
+      store = newWithInjector(TestDbxFirebaseDocumentWithParentStore, injector);
+      parentStore = newWithInjector(TestDbxFirebaseDocumentStore, injector);
+      sub = new SubscriptionObject();
     });
 
     afterEach(() => {
       parentStore._destroyNow();
       store._destroyNow();
       sub.destroy();
+      TestBed.resetTestingModule();
     });
 
     describe('with parent store', () => {
@@ -54,26 +59,32 @@ describe('AbstractDbxFirebaseDocumentWithParentStore', () => {
         store.setParentStore(parentStore);
       });
 
-      it('should not load while a parent is not set.', (done) => {
-        sub.subscription = store.document$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
-          expect(result).toBe(false);
-          done();
-        });
-      });
+      it(
+        'should not load while a parent is not set.',
+        callbackTest((done) => {
+          sub.subscription = store.document$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+            expect(result).toBe(false);
+            done();
+          });
+        })
+      );
 
       describe('with parent loaded', () => {
         beforeEach(() => {
           parentStore.setId('test');
         });
 
-        it('should load the document.', (done) => {
-          store.setId('test');
+        it(
+          'should load the document.',
+          callbackTest((done) => {
+            store.setId('test');
 
-          sub.subscription = store.document$.pipe(first()).subscribe((iteration) => {
-            expect(iteration).toBeDefined();
-            done();
-          });
-        });
+            sub.subscription = store.document$.pipe(first()).subscribe((iteration) => {
+              expect(iteration).toBeDefined();
+              done();
+            });
+          })
+        );
       });
     });
   });

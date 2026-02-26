@@ -3,11 +3,7 @@ import { type FetchService, mergeRequestHeaders, mergeRequestInits } from './fet
 import { fetchApiFetchService } from './provider';
 import { FetchRequestFactoryError } from './error';
 
-// TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.
-
 const testFetch: FetchService = fetchApiFetchService;
-
-jest.setTimeout(30000);
 
 describe('fetchService()', () => {
   it('should have the defined service items.', () => {

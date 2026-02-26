@@ -9,6 +9,9 @@ import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
+import { DbxColorDirective } from '../../../layout/style/style.color.directive';
+import { DbxThemeColor } from '../../../layout/style/style';
+import { ThemePalette } from '@angular/material/core';
 
 export interface DbxSidenavSidebarState {
   readonly mode: SideNavDisplayMode;
@@ -24,7 +27,7 @@ export interface DbxSidenavSidebarState {
   exportAs: 'sidenav',
   template: `
     <mat-sidenav-container class="dbx-sidenav" [ngClass]="sizeCssClassSignal()">
-      <mat-sidenav class="dbx-sidenav-nav" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
+      <mat-sidenav [dbxColor]="color()" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
         <ng-content select="[top]"></ng-content>
         <dbx-anchor-list class="dbx-sidenav-anchor-list" [anchors]="anchors()"></dbx-anchor-list>
         <span class="spacer"></span>
@@ -36,13 +39,14 @@ export interface DbxSidenavSidebarState {
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
-  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
+  imports: [NgClass, DbxColorDirective, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective {
   private readonly _screenMediaService = inject(DbxScreenMediaService);
 
+  readonly color = input<ThemePalette | DbxThemeColor>(undefined);
   readonly sidenav = viewChild.required<MatSidenav>(MatSidenav);
 
   readonly anchors = input<Maybe<ClickableAnchorLinkTree[]>>();

@@ -1,9 +1,8 @@
 import { DbxInjectionTemplateConfig, DbxInjectionComponentConfig } from './injection';
 import { DbxInjectionComponent } from './injection.component';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, Input, Type, ViewChild, OnDestroy } from '@angular/core';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { Component, Type, viewChild, OnDestroy, ChangeDetectionStrategy, model } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { DbxInjectionComponentModule } from './injection.component.module';
 import { type Maybe } from '@dereekb/util';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
@@ -22,39 +21,41 @@ class TestInjectionComponentContent implements OnDestroy {
   }
 }
 
-@Component({})
+@Component({
+  template: ''
+})
 abstract class TestInjectionComponent<T = any> {
-  @Input()
-  config?: DbxInjectionComponentConfig<TestInjectionComponentContent>;
-
-  @Input()
-  template?: DbxInjectionTemplateConfig<TestInjectionComponentContent>;
-
-  @ViewChild(DbxInjectionComponent, { static: true })
-  injectedComponent?: DbxInjectionComponent<T>;
+  readonly config = model<Maybe<DbxInjectionComponentConfig<TestInjectionComponentContent>>>();
+  readonly template = model<Maybe<DbxInjectionTemplateConfig<TestInjectionComponentContent>>>();
+  readonly injectedComponent = viewChild.required(DbxInjectionComponent<T>);
 }
 
 @Component({
   template: `
-    <div dbxInjection [config]="config" [template]="template"></div>
-  `
+    <div dbxInjection [config]="config()" [template]="template()"></div>
+  `,
+  imports: [DbxInjectionComponent]
 })
 class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<T> {}
 
 @Component({
   template: `
-    <dbx-injection [config]="config" [template]="template"></dbx-injection>
-  `
+    <dbx-injection [config]="config()" [template]="template()"></dbx-injection>
+  `,
+  imports: [DbxInjectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> {}
 
 describe('DbxInjectionComponent', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule, DbxInjectionComponentModule],
-      declarations: [TestInjectionComponentContent, TestInjectionComponentWithElement, TestInjectionComponentWithAttribute],
-      providers: []
+      imports: [BrowserModule, DbxInjectionComponent]
     }).compileComponents();
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   buildTestsWithComponentClass(TestInjectionComponentWithElement, 'element');
@@ -73,9 +74,9 @@ describe('DbxInjectionComponent', () => {
 
       describe('with config', () => {
         beforeEach(async () => {
-          testComponent.config = {
+          testComponent.config.set({
             componentClass: TestInjectionComponentContent
-          };
+          });
 
           fixture.detectChanges();
         });
@@ -93,12 +94,12 @@ describe('DbxInjectionComponent', () => {
         it('should show destroy the content when config is cleared.', () => {
           let instance: Maybe<TestInjectionComponentContent>;
 
-          testComponent.config = {
+          testComponent.config.set({
             componentClass: TestInjectionComponentContent,
-            init: (x) => {
+            init: (x: TestInjectionComponentContent) => {
               instance = x;
             }
-          };
+          });
 
           fixture.detectChanges();
 
@@ -106,7 +107,7 @@ describe('DbxInjectionComponent', () => {
           expect((instance as TestInjectionComponentContent).destroyed).toBe(false);
 
           // clear the item
-          testComponent.config = undefined;
+          testComponent.config.set(undefined);
 
           fixture.detectChanges();
 

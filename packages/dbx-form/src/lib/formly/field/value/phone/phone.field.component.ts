@@ -12,11 +12,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
-import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
+import { NgxMatInputTelComponent } from 'ngx-mat-input-tel';
 
 export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
   readonly preferredCountries?: Maybe<string[]>;
   readonly onlyCountries?: Maybe<string[]>;
+  /**
+   * Whether or not to enable the search feature. True by default.
+   */
+  readonly enableSearch?: boolean;
   /**
    * Whether or not to allow adding an extension. False by default.
    */
@@ -27,7 +31,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 @Component({
   templateUrl: 'phone.field.component.html',
-  imports: [CommonModule, MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatIntlTelInputComponent],
+  imports: [CommonModule, MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatInputTelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -46,6 +50,10 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
     phone: this.phoneCtrl,
     extension: this.extensionCtrl
   });
+
+  get enableSearch(): boolean {
+    return this.props.enableSearch ?? true;
+  }
 
   get preferredCountries(): string[] {
     return this.props.preferredCountries ?? DEFAULT_PREFERRED_COUNTRIES;

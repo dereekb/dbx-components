@@ -10,7 +10,7 @@ import { isE164PhoneNumber } from '../../../../validator/phone';
 export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, InternationalPhoneFormlyFieldProps {}
 
 export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig<InternationalPhoneFormlyFieldProps> {
-  const { key = 'phone', label = 'Phone Number', preferredCountries, onlyCountries, allowExtension: inputAllowExtension } = config;
+  const { key = 'phone', label = 'Phone Number', preferredCountries, enableSearch, onlyCountries, allowExtension: inputAllowExtension } = config;
   const allowExtension = inputAllowExtension ?? false;
 
   const fieldConfig = formlyField({
@@ -18,9 +18,10 @@ export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}):
     type: 'intphone',
     ...propsAndConfigForFieldConfig(config, {
       label,
-      allowExtension,
       preferredCountries,
-      onlyCountries
+      onlyCountries,
+      enableSearch,
+      allowExtension
     }),
     ...validatorsForFieldConfig({
       validators: [isE164PhoneNumber(allowExtension)]
@@ -31,8 +32,8 @@ export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}):
 }
 
 export interface WrappedPhoneAndLabelFieldConfig {
-  phoneField?: Partial<InternationalPhoneFieldConfig>;
-  labelField?: TextFieldConfig;
+  readonly phoneField?: Partial<InternationalPhoneFieldConfig>;
+  readonly labelField?: TextFieldConfig;
 }
 
 /**
@@ -62,7 +63,7 @@ export function wrappedPhoneAndLabelField({ phoneField: phone, labelField: label
 }
 
 export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, WrappedPhoneAndLabelFieldConfig {
-  key?: string;
+  readonly key?: string;
 }
 
 export function phoneAndLabelSectionField({ key, header = 'Phone Number', hint, phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {

@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
-import { DbxFirebaseDocumentStore } from './store';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 import { Configurable, Maybe, separateValues, sortByNumberFunction } from '@dereekb/util';
 import { combineLatest, distinctUntilChanged, first, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { isSameDate } from '@dereekb/date';
-
+import { DbxFirebaseDocumentStore } from './store';
 /**
  * A unique number for a store entry.
  */

@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase-server/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["zoho", "util", "!util-test", "!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {
@@ -31,14 +31,29 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
       "options": {
+        "importPath": "@dereekb/firebase-server",
         "outputPath": "dist/packages/firebase-server",
         "tsConfig": "packages/firebase-server/tsconfig.lib.json",
-        "packageJson": "packages/firebase-server/package.json",
+        "project": "packages/firebase-server/package.json",
         "main": "packages/firebase-server/src/index.ts",
-        "assets": ["packages/firebase-server/*.md", "LICENSE"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [
+          {
+            "glob": "packages/firebase-server/*.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
       }
     },
     "lint": {
@@ -49,13 +64,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server'"
-      }
-    },
-    "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server", "{projectRoot}/.reports/jest/firebase-server.junit.xml"],
-      "options": {
-        "jestConfig": "packages/firebase-server/jest.config.ts"
       }
     },
     "run-all-tests": {
@@ -85,6 +93,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/firebase-server && npm publish --access public"
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/firebase-server"
       }
     }
   }

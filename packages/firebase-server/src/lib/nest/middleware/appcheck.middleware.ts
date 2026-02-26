@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { ForbiddenException, Inject, Injectable, Logger, Optional, type NestMiddleware } from '@nestjs/common';
 import { type Request } from 'firebase-functions/v2/https';
 import { type Response } from 'express';

@@ -5,7 +5,7 @@ import type { DbxThemeColor } from '../layout';
 /**
  * DbxButton display type
  */
-export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
+export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'tonal' | 'icon';
 
 /**
  * DbxButton style configuration

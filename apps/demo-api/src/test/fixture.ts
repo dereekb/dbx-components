@@ -17,7 +17,7 @@ import {
   ModelTestContextInstance,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
-import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
+import { BuildTestsWithContextFunction, TestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
@@ -69,6 +69,7 @@ import { markStorageFileForDeleteTemplate, NotificationExpediteService, Notifica
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 import { assertSnapshotData } from '@dereekb/firebase-server';
+import { AuthBlockingEvent } from 'firebase-functions/identity';
 
 // MARK: Demo Api Testing Fixture
 @Module({
@@ -100,7 +101,7 @@ export interface DemoApiContext {
 }
 
 // MARK: Admin
-export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextFixture<F, JestTestContextFixture<F>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextFixture<F, TestContextFixture<F>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
   get serverActionsContext() {
     return this.instance.serverActionsContext;
   }
@@ -231,13 +232,13 @@ const _demoApiContextFactory = firebaseAdminNestContextFactory({
   makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
 });
 
-export const demoApiContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiContextFixture>) => {
+export const demoApiContextFactory = (buildTests: BuildTestsWithContextFunction<DemoApiContextFixture>) => {
   initDemoApiTestEnvironment();
   return _demoApiContextFactory(buildTests as any);
 };
 
 // MARK: Admin Function
-export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, TestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
   get storageContext() {
     return this.instance.storageContext;
   }
@@ -368,7 +369,7 @@ const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
   makeInstance: (instance, nest) => new DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)
 });
 
-export const demoApiFunctionContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiFunctionContextFixture>) => {
+export const demoApiFunctionContextFactory = (buildTests: BuildTestsWithContextFunction<DemoApiFunctionContextFixture>) => {
   initDemoApiTestEnvironment();
   return _demoApiFunctionContextFactory(buildTests as any);
 };
@@ -409,8 +410,8 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
     makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance),
     initUser: async (instance) => {
       const userRecord = await instance.loadUserRecord();
-      const fn = instance.testContext.fnWrapper.wrapCloudFunction(initUserOnCreate(instance.nestAppPromiseGetter));
-      await instance.callEventCloudFunction(fn, userRecord);
+      const fn = instance.testContext.fnWrapper.wrapBlockingFunction(initUserOnCreate(instance.nestAppPromiseGetter));
+      await instance.callAuthBlockingFunction(fn, userRecord, 'google.firebase.auth.user.create');
     }
   });
 

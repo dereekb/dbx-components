@@ -102,9 +102,3 @@ export function firebaseServerActionsTransformFactory(options?: FirebaseServerAc
     defaultValidationOptions
   });
 }
-
-// MARK: Compat
-/**
- * @deprecated mispelling. Use FIREBASE_SERVER_VALIDATION_ERROR_CODE instead.
- */
-export const FIRESTBASE_SERVER_VALIDATION_ERROR_CODE = FIREBASE_SERVER_VALIDATION_ERROR_CODE;

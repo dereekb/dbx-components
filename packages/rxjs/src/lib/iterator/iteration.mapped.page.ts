@@ -40,9 +40,3 @@ export function mappedPageItemIteration<O, I = unknown, M extends PageLoadingSta
     nextPage
   };
 }
-
-// MARK: Compat
-/**
- * @deprecated use mappedPageItemIteration instead.
- */
-export const mapPageItemIteration = mappedPageItemIteration;

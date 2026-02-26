@@ -3,7 +3,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import {
   ZOHO_DUPLICATE_DATA_ERROR_CODE,
   ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE,
@@ -53,8 +53,6 @@ interface TestCandidate extends ZohoRecruitRecord {
   Last_Name: string;
   Associated_Tags?: string[];
 }
-
-jest.setTimeout(12000);
 
 @Module(appZohoRecruitModuleMetadata({}))
 export class TestZohoRecruitModule {}
@@ -161,7 +159,7 @@ describe('recruit.api', () => {
                       lastNameFieldMissing: 'Candidate' // invalid field
                     } as any
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
+                expectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
               );
             });
 
@@ -176,7 +174,7 @@ describe('recruit.api', () => {
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudDuplicateDataError)
+                expectFailAssertErrorType(ZohoRecruitRecordCrudDuplicateDataError)
               );
             });
           });
@@ -271,7 +269,7 @@ describe('recruit.api', () => {
                       First_Name: 'Failure'
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudNoMatchingRecordError)
+                expectFailAssertErrorType(ZohoRecruitRecordCrudNoMatchingRecordError)
               );
             });
 
@@ -288,7 +286,7 @@ describe('recruit.api', () => {
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoRecruitRecordCrudDuplicateDataError)
+                expectFailAssertErrorType(ZohoRecruitRecordCrudDuplicateDataError)
               );
             });
           });
@@ -396,7 +394,7 @@ describe('recruit.api', () => {
                         lastNameFieldMissing: 'Candidate' // invalid field
                       } as any
                     }),
-                  jestExpectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
+                  expectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
                 );
               });
             });
@@ -491,7 +489,7 @@ describe('recruit.api', () => {
                         First_Name: 'Failure'
                       }
                     }),
-                  jestExpectFailAssertErrorType(ZohoRecruitRecordCrudNoMatchingRecordError)
+                  expectFailAssertErrorType(ZohoRecruitRecordCrudNoMatchingRecordError)
                 );
               });
             });
@@ -660,7 +658,7 @@ describe('recruit.api', () => {
                   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                   id: NON_EXISTENT_CANDIDATE_ID
                 }),
-              jestExpectFailAssertErrorType(ZohoRecruitRecordNoContentError)
+              expectFailAssertErrorType(ZohoRecruitRecordNoContentError)
             );
           });
         });
@@ -752,7 +750,7 @@ describe('recruit.api', () => {
                     }
                   ]
                 }),
-              jestExpectFailAssertErrorType(ZohoInvalidQueryError)
+              expectFailAssertErrorType(ZohoInvalidQueryError)
             );
           });
         });
@@ -932,7 +930,7 @@ describe('recruit.api', () => {
           });
 
           itShouldFail('if a record that does not exist is referenced', async () => {
-            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_RECRUIT_CANDIDATES_MODULE }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
+            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_RECRUIT_CANDIDATES_MODULE }), expectFailAssertErrorType(ZohoServerFetchResponseError));
           });
         });
 

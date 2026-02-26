@@ -1,5 +1,4 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
 import { DbxButtonComponent, DbxHelpContextKey } from '@dereekb/dbx-web';
 
 export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
@@ -13,7 +12,7 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
     <dbx-button icon="live_help">Ask Support</dbx-button>
   `,
   standalone: true,
-  imports: [MatIcon, DbxButtonComponent],
+  imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionHelpExampleWidgetHeaderComponent {}

@@ -1,7 +1,7 @@
 import { isTestNodeEnv } from '@dereekb/nestjs';
 import { type ArrayOrValue, asArray, type EmailAddress, type EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, type NameEmailPair, overrideInObject, objectIsEmpty, type EmailParticipantString, addToSet, forEachInIterable, type Maybe, MAP_IDENTITY } from '@dereekb/util';
-import { type APIResponse } from 'mailgun.js/Types/Common/ApiResponse';
-import { type CustomFile, type CustomFileData, type MailgunMessageData, type MessagesSendResult } from 'mailgun.js/Types/Messages/Messages';
+import { type CustomFile, type CustomFileData, type MailgunMessageData, type MessagesSendResult } from 'node_modules/mailgun.js/Types/Types/Messages/Messages';
+import { type APIResponse } from 'node_modules/mailgun.js/Types/Types/Common/ApiResponse';
 
 export type MailgunSenderDomainString = EmailAddressDomain;
 export type MailgunTemplateKey = string;

@@ -129,7 +129,7 @@ describe('objectCopyFactory()', () => {
 
   it('should use the provided copyFunction', () => {
     const original = { a: 1 };
-    const customCopyFunction = jest.fn((obj) => ({ ...obj, copied: true }));
+    const customCopyFunction = vi.fn((obj) => ({ ...obj, copied: true }));
     const factory = objectCopyFactory(original, customCopyFunction);
     const copy = factory();
 
@@ -156,7 +156,7 @@ describe('asObjectCopyFactory()', () => {
 
   it('should use the provided copyFunction when creating a new factory', () => {
     const original = { a: 1 };
-    const customCopyFunction = jest.fn((obj) => ({ ...obj, copied: true }));
+    const customCopyFunction = vi.fn((obj) => ({ ...obj, copied: true }));
     const factory = asObjectCopyFactory(original, customCopyFunction);
     const copy = factory();
 
@@ -195,11 +195,11 @@ describe('makeGetter()', () => {
 describe('protectedFactory()', () => {
   it('should return a factory that calls the original factory without arguments', () => {
     const originalValue = 'original factory result';
-    const originalFactory = jest.fn(() => originalValue);
+    const originalFactory = vi.fn(() => originalValue);
     const protFactory = protectedFactory(originalFactory);
 
     // Call the protected factory with an argument, which should be ignored
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const result = (protFactory as any)('some ignored argument');
 
     expect(originalFactory).toHaveBeenCalledTimes(1);
