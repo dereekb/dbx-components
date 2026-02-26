@@ -305,7 +305,7 @@ workflows:
             - test-with-node-basic
             - test-with-node-complex
             - test-with-node-firebase
-            - test-setup-script
+            # - test-setup-script   # prepare for v13.0.0
           filters:
             branches:
               only: release
