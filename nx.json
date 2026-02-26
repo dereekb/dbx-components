@@ -12,18 +12,12 @@
     "@angular-devkit/build-angular:application": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"],
-      "options": {
-        "buildLibsFromSource": false
-      }
+      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
     },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"],
-      "options": {
-        "buildLibsFromSource": false
-      }
+      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
     },
     "build": {
       "dependsOn": ["^build"],
