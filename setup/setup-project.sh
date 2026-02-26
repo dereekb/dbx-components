@@ -748,6 +748,7 @@ download_angular_ts_file "eslint.config.mjs"
 download_angular_ts_file "vitest.config.mts"
 download_angular_ts_file "tsconfig.app.json"
 download_angular_ts_file "tsconfig.spec.json"
+download_angular_ts_file "tsconfig.editor.json"
 
 download_angular_ts_file "src/styles.scss"
 download_angular_ts_file "src/main.ts"
