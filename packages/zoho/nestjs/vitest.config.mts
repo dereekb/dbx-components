@@ -5,6 +5,6 @@ export default createVitestConfig({
   pathFromRoot: __dirname,
   projectName: 'zoho-nestjs',
   test: {
-    testTimeout: 12000
+    testTimeout: 20000
   }
 });

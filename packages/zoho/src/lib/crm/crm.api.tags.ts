@@ -64,6 +64,39 @@ export function zohoCrmCreateTagsForModule(context: ZohoCrmContext) {
       });
 }
 
+// MARK: Delete Tag
+export interface ZohoCrmDeleteTagRequest {
+  readonly id: ZohoCrmTagId;
+}
+
+export interface ZohoCrmDeleteTagResponseSuccessEntry extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta {
+  readonly details: {
+    readonly id: ZohoCrmTagId;
+  };
+}
+
+export interface ZohoCrmDeleteTagResponse {
+  readonly tags: ZohoCrmDeleteTagResponseSuccessEntry;
+}
+
+export type ZohoCrmDeleteTagResult = ZohoCrmDeleteTagResponseSuccessEntry;
+
+export type ZohoCrmDeleteTagFunction = (input: ZohoCrmDeleteTagRequest) => Promise<ZohoCrmDeleteTagResult>;
+
+/**
+ * Deletes a single tag by ID.
+ *
+ * Note: A tag cannot be deleted if it is associated with any configuration (e.g. Workflow Rules).
+ *
+ * https://www.zoho.com/crm/developer/docs/api/v8/delete-tag.html
+ *
+ * @param context
+ * @returns
+ */
+export function zohoCrmDeleteTag(context: ZohoCrmContext): ZohoCrmDeleteTagFunction {
+  return (input: ZohoCrmDeleteTagRequest) => context.fetchJson<ZohoCrmDeleteTagResponse>(`/v8/settings/tags/${input.id}`, zohoCrmApiFetchJsonInput('DELETE')).then((x) => x.tags);
+}
+
 // MARK: Get Tags
 export interface ZohoCrmGetTagsRequest extends ZohoCrmModuleNameRef, ZohoCrmGetRecordsPageFilter {
   readonly my_tags?: string;
