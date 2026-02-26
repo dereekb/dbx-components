@@ -37,6 +37,7 @@
         "project": "packages/util/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": false,
+        "external": "all",
         "assets": [
           {
             "glob": "packages/util/README.md",

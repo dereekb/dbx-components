@@ -16,6 +16,7 @@
         "main": "packages/firebase-server/test/src/index.ts",
         "format": ["esm", "cjs"],
         "generateExportsField": false,
+        "external": "all",
         "assets": []
       },
       "configurations": {

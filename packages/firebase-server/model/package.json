@@ -17,5 +17,13 @@
       },
       "default": "./index.cjs.js"
     }
+  },
+  "peerDependencies": {
+    "@dereekb/date": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/model": "*",
+    "@dereekb/firebase": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/util": "*"
   }
 }

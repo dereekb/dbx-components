@@ -1,7 +1,6 @@
 {
   "name": "@dereekb/firebase-server/test",
   "version": "12.7.0",
-  "type": "commonjs",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -17,5 +16,13 @@
       },
       "default": "./index.cjs.js"
     }
+  },
+  "peerDependencies": {
+    "@dereekb/date": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/model": "*",
+    "@dereekb/firebase": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/util": "*"
   }
 }

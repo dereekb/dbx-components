@@ -19,6 +19,12 @@
     }
   },
   "peerDependencies": {
-    "mailgun.js": "^12.0.0"
+    "mailgun.js": "^12.0.0",
+    "@dereekb/date": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/model": "*",
+    "@dereekb/firebase": "*",
+    "@dereekb/nestjs": "*",
+    "@dereekb/util": "*"
   }
 }

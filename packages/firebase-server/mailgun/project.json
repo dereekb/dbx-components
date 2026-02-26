@@ -17,6 +17,7 @@
         "main": "packages/firebase-server/mailgun/src/index.ts",
         "format": ["esm", "cjs"],
         "generateExportsField": false,
+        "external": "all",
         "assets": []
       },
       "configurations": {

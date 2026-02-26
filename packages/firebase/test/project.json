@@ -17,6 +17,7 @@
         "main": "packages/firebase/test/src/index.ts",
         "format": ["esm", "cjs"],
         "generateExportsField": false,
+        "external": "all",
         "assets": [
           {
             "glob": "packages/firebase/test/*.md",
