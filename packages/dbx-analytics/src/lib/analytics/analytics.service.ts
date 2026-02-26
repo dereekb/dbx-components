@@ -1,5 +1,5 @@
 import { Observable, Subject, BehaviorSubject, of, Subscription, first, shareReplay, switchMap, distinctUntilChanged } from 'rxjs';
-import { Inject, Injectable, Optional, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { DbxAnalyticsEvent, DbxAnalyticsEventData, DbxAnalyticsEventName, DbxAnalyticsUser, NewUserAnalyticsEventData, DbxUserAnalyticsEvent } from './analytics';
 import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';

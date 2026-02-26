@@ -1,5 +1,5 @@
 import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeArrayValues } from '@dereekb/util';
-import { Inject, Injectable, InjectionToken, Optional, Type, inject } from '@angular/core';
+import { Injectable, InjectionToken, Type, inject } from '@angular/core';
 import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from './login';
 import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
 import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from './login.password';

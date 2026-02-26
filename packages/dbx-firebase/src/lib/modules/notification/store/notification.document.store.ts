@@ -1,4 +1,4 @@
-import { Injectable, Optional, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store/store.document.crud';
 import { AbstractDbxFirebaseDocumentWithParentStore } from '../../../model/modules/store/store.subcollection.document';
 import { NotificationBoxDocumentStore } from './notificationbox.document.store';

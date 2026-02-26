@@ -1,4 +1,4 @@
-import { inject, Inject, Injectable, Optional, Type } from '@angular/core';
+import { inject, Injectable, Type } from '@angular/core';
 import { ArrayOrValue, Maybe, asArray, cachedGetter, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 

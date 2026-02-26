@@ -12,9 +12,10 @@
     },
     "lint-fix-all": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "description": "",
-        "command": "npx nx run-many --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix"
+        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix"
       }
     },
     "start-release": {

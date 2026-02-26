@@ -29,6 +29,11 @@
       "inputs": ["production", "^production"],
       "cache": true
     },
+    "run-many": {
+      "options": {
+        "tui": false
+      }
+    },
     "run-all-tests": {
       "dependsOn": ["build"],
       "inputs": ["default", "^default", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
@@ -57,7 +62,7 @@
       "cache": true
     },
     "@nx/eslint:lint": {
-      "cache": true,
+      "cache": false,
       "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"]
     },
     "@nx/vitest:test": {

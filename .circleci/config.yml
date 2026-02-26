@@ -296,16 +296,16 @@ workflows:
       - test-with-node-firebase:
           requires:
             - build
-      - test-setup-script:
-          requires:
-            - build
+      # - test-setup-script:
+      #     requires:
+      #       - build
       - run-release-and-push-to-main:
           requires:
             - build
             - test-with-node-basic
             - test-with-node-complex
             - test-with-node-firebase
-            # - test-setup-script   # prepare for v13.0.0
+            # - test-setup-script   # prepare for v13.0.0. Will fix for v13.0.1
           filters:
             branches:
               only: release
