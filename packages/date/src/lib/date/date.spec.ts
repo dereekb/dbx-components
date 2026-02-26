@@ -164,35 +164,60 @@ wrapDateTests(() => {
         const timezoneInstance = dateTimezoneUtcNormal(timezone);
 
         /**
-         * Finds the DST fall-back date for the current timezone in the given year.
-         * Returns the date string (YYYY-MM-DD) of the day when clocks fall back, or undefined if none.
+         * Finds the DST transition dates for the current timezone in the given year.
+         * Returns both the spring-forward and fall-back date strings, or undefined if the timezone has no DST.
          *
-         * Dublin for instance goes back on Oct 27th 2024, and
+         * Spring forward: clocks jump ahead (offset decreases), typically in the first half of the year.
+         * Fall back: clocks go back (offset increases), typically in the second half of the year.
          */
-        function findFallBackDateString(year: number): string | undefined {
-          for (let month = 7; month < 12; month++) {
+        function findDstTransitionDates(year: number): { springForward: string; fallBack: string; springForwardGapStartLocalHour: number } | undefined {
+          let springForward: string | undefined;
+          let springForwardGapStartLocalHour = -1;
+          let fallBack: string | undefined;
+
+          for (let month = 0; month < 12; month++) {
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             for (let day = 1; day <= daysInMonth; day++) {
               const current = new Date(year, month, day);
               const next = new Date(year, month, day + 1);
-              // Fall back = timezone offset increases (clocks go back)
-              if (next.getTimezoneOffset() > current.getTimezoneOffset()) {
-                return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+              if (next.getTimezoneOffset() < current.getTimezoneOffset()) {
+                // Spring forward = offset decreases (clocks jump ahead)
+                springForward = dateString;
+
+                // Find the local hour where the gap starts
+                for (let hour = 0; hour < 24; hour++) {
+                  const h = new Date(year, month, day, hour);
+                  const hNext = new Date(year, month, day, hour + 1);
+                  if (hNext.getTimezoneOffset() < h.getTimezoneOffset()) {
+                    springForwardGapStartLocalHour = hour + 1;
+                    break;
+                  }
+                }
+              } else if (next.getTimezoneOffset() > current.getTimezoneOffset()) {
+                // Fall back = offset increases (clocks go back)
+                fallBack = dateString;
               }
             }
           }
+
+          if (springForward && fallBack) {
+            return { springForward, fallBack, springForwardGapStartLocalHour };
+          }
+
           return undefined;
         }
 
-        const fallBackDateString = findFallBackDateString(2024);
+        const dstDates = findDstTransitionDates(2024);
 
-        if (fallBackDateString) {
-          const midnight = timezoneInstance.startOfDayInTargetTimezone(fallBackDateString);
+        if (dstDates) {
+          // Fall back tests
+          const fallBackMidnight = timezoneInstance.startOfDayInTargetTimezone(dstDates.fallBack);
+          const timezoneFirstHourBeforeShift = addHours(fallBackMidnight, 1); // 1AM
+          const timezoneShiftTime = addHours(fallBackMidnight, 2); // 2AM, second 1AM after rollback
 
-          const timezoneFirstHourBeforeShift = addHours(midnight, 1); // 1AM
-          const timezoneShiftTime = addHours(midnight, 2); // 2AM, second 1AM after rollback
-
-          describe(`fall-back date: ${fallBackDateString}`, () => {
+          describe(`fall-back date: ${dstDates.fallBack}`, () => {
             describe('date-fns: set()', () => {
               it('should erraneously roll the hour back', () => {
                 const result = setDateValues(timezoneFirstHourBeforeShift, {
@@ -225,6 +250,54 @@ wrapDateTests(() => {
                 const oneHundredMs = 100;
                 const result = roundDateToUnixDateTimeNumber(new Date(timezoneShiftTime.getTime() + oneHundredMs), 'second', 'floor');
                 expect(new Date(result)).toBeSameSecondAs(timezoneShiftTime);
+              });
+            });
+          });
+
+          // Spring forward tests
+          const springMidnight = timezoneInstance.startOfDayInTargetTimezone(dstDates.springForward);
+          const gapStartLocalHour = dstDates.springForwardGapStartLocalHour;
+
+          // addHours operates in UTC. During spring forward, the gap hour is skipped:
+          // addHours(midnight, gapStartLocalHour) gives the first valid UTC instant after the gap
+          const timezoneFirstHourAfterSpring = addHours(springMidnight, gapStartLocalHour);
+
+          describe(`spring-forward date: ${dstDates.springForward}`, () => {
+            describe('date-fns: set()', () => {
+              it('should erroneously resolve gap time forward when setting hours to the gap', () => {
+                // Take a valid time after the gap and try to set its hour to the gap hour
+                const validTimeAfterGap = addHours(springMidnight, gapStartLocalHour + 1);
+                const result = setDateValues(validTimeAfterGap, { hours: gapStartLocalHour, minutes: 0 });
+
+                // JavaScript resolves the non-existent local time forward past the gap
+                expect(result).toBeSameSecondAs(timezoneFirstHourAfterSpring);
+              });
+            });
+
+            describe('Date.setHours()', () => {
+              it('should erroneously resolve gap time forward when setting hours to the gap', () => {
+                const validTimeAfterGap = addHours(springMidnight, gapStartLocalHour + 1);
+                const result = new Date(new Date(validTimeAfterGap).setHours(gapStartLocalHour, 0, 0, 0));
+
+                expect(result).toBeSameSecondAs(timezoneFirstHourAfterSpring);
+              });
+            });
+
+            describe('function', () => {
+              it('should properly round down the hour after spring forward', () => {
+                const result = roundDateToUnixDateTimeNumber(new Date(timezoneFirstHourAfterSpring.getTime() + MS_IN_MINUTE), 'hour', 'floor');
+                expect(new Date(result)).toBeSameSecondAs(timezoneFirstHourAfterSpring);
+              });
+
+              it('should properly round down the minute after spring forward', () => {
+                const result = roundDateToUnixDateTimeNumber(new Date(timezoneFirstHourAfterSpring.getTime() + MS_IN_SECOND), 'minute', 'floor');
+                expect(new Date(result)).toBeSameSecondAs(timezoneFirstHourAfterSpring);
+              });
+
+              it('should properly round down the second after spring forward', () => {
+                const oneHundredMs = 100;
+                const result = roundDateToUnixDateTimeNumber(new Date(timezoneFirstHourAfterSpring.getTime() + oneHundredMs), 'second', 'floor');
+                expect(new Date(result)).toBeSameSecondAs(timezoneFirstHourAfterSpring);
               });
             });
           });
