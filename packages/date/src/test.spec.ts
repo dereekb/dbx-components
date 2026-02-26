@@ -6,8 +6,6 @@ import { guessCurrentTimezone } from './lib';
 export function wrapDateTests(fn: () => void) {
   const timezone = guessCurrentTimezone();
 
-  console.log('timezone', timezone);
-
   describe(`${timezone}`, () => {
     fn();
   });

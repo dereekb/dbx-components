@@ -34,6 +34,7 @@ import { type DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeInd
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { type DateCellRangeOrDateRange, type DateCellRange, type DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
 import { dateCellDayOfWeekFactory } from './date.cell.week';
+import { formatToISO8601DayStringForUTC } from './date.format';
 import { isSameDateRange } from './date.range';
 import { dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance } from './date.timezone';
 import { type YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
@@ -476,7 +477,9 @@ export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput)
     start = normalInstance.startOfDayInTargetTimezone(startInSystemTimezone); // ensure the start of the day is set/matches the timezone.
   } else {
     if (inputStartsAt != null) {
-      start = normalInstance.startOfDayInTargetTimezone(inputStartsAt);
+      // use ISO day string path to avoid system-timezone-dependent startOfDay; matches dateCellTiming behavior
+      const startsAtInTarget = normalInstance.baseDateToTargetDate(inputStartsAt);
+      start = normalInstance.startOfDayInTargetTimezone(formatToISO8601DayStringForUTC(startsAtInTarget));
     } else if (inputEnd != null) {
       start = normalInstance.startOfDayInTargetTimezone(inputEnd); // start on the same day as the end date
     } else {
@@ -755,7 +758,7 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
   // derive the startsAt time for the range. If not provided, defaults to inputStart, or midnight today in the target timezone.
-  const startsAt: Date = inputStartsAt != null ? inputStartsAt : inputStart ?? normalInstance.startOfDayInTargetTimezone();
+  const startsAt: Date = inputStartsAt != null ? inputStartsAt : (inputStart ?? normalInstance.startOfDayInTargetTimezone());
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);
 
   const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt); // convert to the system date
