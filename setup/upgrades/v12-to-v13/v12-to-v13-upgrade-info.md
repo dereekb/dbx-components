@@ -1,6 +1,28 @@
 # dbx-components v12 to v13 upgrade info
 - Update Nx to v22
 - Update Angular to v21
+- Move to Vitest, Removal of Jest
+
+## Overview
+This has been a big effort, and with the help of Claude, we were able to make the update in only a few days.
+
+This update was a fairly big effort and should solidify the foundation that dbx-components is going forward.
+
+### Angular 21
+The last update from v11 to v12 we took a big step towards moving towards Zoneless. 
+
+Since some of our dependencies still require zone.js, we will continue to use it for now, but a majority of the library supports a zoneless environment.
+
+Luckily most of the dependencies we rely on are still being maintained or have been updated to support Angular 21.
+
+### Removal of Jest
+Jest has been a source of issues since the amount of packages using ESM have increased. During the upgrade from v11 to v12 we ran into issues with Jest's ESM imports, and on this go around there wasn't enough duct tape to fix it unfortunately. With Angular 21 officially going to Vitest, and Vitest being a solid testing framework with a very similar API to Jest, we made the move to Vitest. 
+
+The straw that broken the camel's back was Sharp not being loaded properly in the `demo-api` tests, nor were there any other workarounds to fix it as Sharp doesn't support ESM but Jest didn't know how to import it.
+
+Moving to Vitest appears to be worth it. Time improvements aside, we redesigned the `vitest.preset.config.mts` file to be shared by all projects. We're happy with how it turned out.
+
+Additionally, we added `@dereekb/vitest` as a new package since matchers from the `jest-time` package are used extensively in our codebase.
 
 ## Migrations
 We are jumping from Nx version 20 to version 22. It is important to run two independent migrations to ensure everything gets up to date properly.
@@ -492,3 +514,9 @@ Update `tsconfig.lib.json` to no longer reference "jest.config.ts".
 - .eslintignore has been deprecated. Update project appropriately to define ignores inline.
 
 You can update `nx.json` to remove the `.eslintignore` input from the `lint` target inputs. Additionally remove the `.eslintrc.json` if it is still there.
+
+## Firebase Updates
+- Updated to Node.js 24
+- Updated to Firebase 12
+
+No major issues in updating Firebase. The majority of the codebase changes were due to the ESM imports.

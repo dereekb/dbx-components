@@ -19,6 +19,11 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
     },
+    "@nx/webpack:webpack": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"],
@@ -31,7 +36,6 @@
       "cache": true
     },
     "test": {
-      "dependsOn": ["build"],
       "inputs": ["default", "^default", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
       "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"],
       "cache": true
@@ -65,13 +69,6 @@
           "ci": true,
           "codeCoverage": true
         }
-      }
-    },
-    "@nx/webpack:webpack": {
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "options": {
-        "buildLibsFromSource": false
       }
     },
     "@nx/js:tsc": {

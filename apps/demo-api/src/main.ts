@@ -9,8 +9,6 @@ import { onCallWithDemoNestContext } from './app/function/function';
 
 const app = admin.initializeApp();
 
-console.log('main?');
-
 const { server, nest } = initNestServer(app, { environment });
 
 export const api = onRequest({}, server);

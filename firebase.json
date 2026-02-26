@@ -27,9 +27,9 @@
   },
   "functions": {
     "source": "dist/apps/demo-api",
-    "runtime": "nodejs22",
+    "runtime": "nodejs24",
     "engines": {
-      "node": "22"
+      "node": "24"
     },
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   },

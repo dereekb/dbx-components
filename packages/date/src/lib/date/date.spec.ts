@@ -255,18 +255,20 @@ wrapDateTests(() => {
           });
 
           // Spring forward tests
-          const springMidnight = timezoneInstance.startOfDayInTargetTimezone(dstDates.springForward);
           const gapStartLocalHour = dstDates.springForwardGapStartLocalHour;
+          const [sfYear, sfMonth, sfDay] = dstDates.springForward.split('-').map(Number);
 
-          // addHours operates in UTC. During spring forward, the gap hour is skipped:
-          // addHours(midnight, gapStartLocalHour) gives the first valid UTC instant after the gap
-          const timezoneFirstHourAfterSpring = addHours(springMidnight, gapStartLocalHour);
+          // Use native Date constructor to compute the spring forward transition moment.
+          // startOfDayInTargetTimezone can use the wrong DST offset on the transition date
+          // for southern hemisphere timezones (e.g. Pacific/Auckland), so we avoid it here.
+          // Creating a Date at the gap hour causes JavaScript to resolve it to the first valid time after the gap.
+          const timezoneFirstHourAfterSpring = new Date(sfYear, sfMonth - 1, sfDay, gapStartLocalHour, 0, 0, 0);
 
           describe(`spring-forward date: ${dstDates.springForward}`, () => {
             describe('date-fns: set()', () => {
               it('should erroneously resolve gap time forward when setting hours to the gap', () => {
                 // Take a valid time after the gap and try to set its hour to the gap hour
-                const validTimeAfterGap = addHours(springMidnight, gapStartLocalHour + 1);
+                const validTimeAfterGap = addHours(timezoneFirstHourAfterSpring, 1);
                 const result = setDateValues(validTimeAfterGap, { hours: gapStartLocalHour, minutes: 0 });
 
                 // JavaScript resolves the non-existent local time forward past the gap
@@ -276,7 +278,7 @@ wrapDateTests(() => {
 
             describe('Date.setHours()', () => {
               it('should erroneously resolve gap time forward when setting hours to the gap', () => {
-                const validTimeAfterGap = addHours(springMidnight, gapStartLocalHour + 1);
+                const validTimeAfterGap = addHours(timezoneFirstHourAfterSpring, 1);
                 const result = new Date(new Date(validTimeAfterGap).setHours(gapStartLocalHour, 0, 0, 0));
 
                 expect(result).toBeSameSecondAs(timezoneFirstHourAfterSpring);
