@@ -94,6 +94,14 @@ $big-button-height: 46px; // 33% bigger
 
   .mdc-button.dbx-base-button.dbx-color {
     // default button
+    &.dbx-default {
+      color: var(--mat-button-text-label-text-color, var(--mat-sys-primary));
+
+      &.mat-mdc-button-disabled {
+        color: var(--mat-button-text-disabled-label-text-color, var(--mat-sys-on-surface));
+      }
+    }
+
     &:not(.dbx-default) {
       background: none;
       --mat-button-text-label-text-color: #{$color-value};
@@ -103,6 +111,10 @@ $big-button-height: 46px; // 33% bigger
     }
 
     // raised buttons
+    &.mat-mdc-raised-button.dbx-default {
+      color: var(--mat-button-protected-label-text-color, var(--mat-sys-primary));
+    }
+
     &.mat-mdc-raised-button:not(.dbx-default) {
       background: var(--mat-button-protected-container-color);
 
@@ -119,6 +131,10 @@ $big-button-height: 46px; // 33% bigger
     }
 
     // stroked/outlined buttons
+    &.mat-mdc-outlined-button.dbx-default {
+      color: var(--mat-button-outlined-label-text-color, var(--mat-sys-primary));
+    }
+
     &.mat-mdc-outlined-button:not(.dbx-default) {
       --mat-button-outlined-container-color: #{$contrast-value};
       --mat-button-outlined-label-text-color: #{$color-value};
@@ -129,6 +145,10 @@ $big-button-height: 46px; // 33% bigger
     }
 
     // flat buttons
+    &.mat-mdc-unelevated-button.dbx-default {
+      color: var(--mat-button-filled-label-text-color, var(--mat-sys-primary));
+    }
+
     &.mat-mdc-unelevated-button:not(.dbx-default) {
       background: var(--mat-button-filled-container-color);
 
@@ -143,7 +163,11 @@ $big-button-height: 46px; // 33% bigger
     }
 
     // icon buttons
-    &.mat-mdc-icon-button {
+    &.mat-mdc-icon-button.dbx-default {
+      color: var(--mat-icon-button-icon-color, var(--mat-sys-primary));
+    }
+
+    &.mat-mdc-icon-button:not(.dbx-default) {
       background: none;
 
       --mat-icon-button-icon-color: #{$color-value};
@@ -152,6 +176,10 @@ $big-button-height: 46px; // 33% bigger
     }
 
     // tonal buttons
+    &.mat-mdc-tonal-button.dbx-default {
+      color: var(--mat-button-tonal-label-text-color, var(--mat-sys-primary));
+    }
+
     &.mat-mdc-tonal-button:not(.dbx-default) {
       background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
 
