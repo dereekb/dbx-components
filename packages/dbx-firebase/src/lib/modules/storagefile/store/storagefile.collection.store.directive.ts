@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
 import { StorageFileCollectionStore } from './storagefile.collection.store';
 import { StorageFile, StorageFileDocument } from '@dereekb/firebase';
@@ -9,8 +9,8 @@ import { StorageFile, StorageFileDocument } from '@dereekb/firebase';
   standalone: true
 })
 export class DbxFirebaseStorageFileCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<StorageFile, StorageFileDocument, StorageFileCollectionStore> {
-  constructor(store: StorageFileCollectionStore) {
-    super(store);
+  constructor() {
+    super(inject(StorageFileCollectionStore));
     this.setConstraints([]);
   }
 }

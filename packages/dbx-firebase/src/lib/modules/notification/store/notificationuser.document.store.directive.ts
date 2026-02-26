@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '../../../model/modules/store';
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
 import { NotificationUser, NotificationUserDocument } from '@dereekb/firebase';
@@ -9,7 +9,7 @@ import { NotificationUser, NotificationUserDocument } from '@dereekb/firebase';
   standalone: true
 })
 export class DbxFirebaseNotificationUserDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<NotificationUser, NotificationUserDocument, NotificationUserDocumentStore> {
-  constructor(store: NotificationUserDocumentStore) {
-    super(store);
+  constructor() {
+    super(inject(NotificationUserDocumentStore));
   }
 }

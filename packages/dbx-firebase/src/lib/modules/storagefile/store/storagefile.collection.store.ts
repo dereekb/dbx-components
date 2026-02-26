@@ -6,8 +6,8 @@ import { StorageFileFirestoreCollections, StorageFile, StorageFileDocument, Stor
 export class StorageFileCollectionStore extends AbstractDbxFirebaseCollectionStore<StorageFile, StorageFileDocument> {
   readonly storageFileFunctions = inject(StorageFileFunctions);
 
-  constructor(collections: StorageFileFirestoreCollections) {
-    super({ firestoreCollection: collections.storageFileCollection });
+  constructor() {
+    super({ firestoreCollection: inject(StorageFileFirestoreCollections).storageFileCollection });
   }
 
   readonly initializeAllStorageFilesFromUpload = firebaseCollectionStoreCreateFunction(this, this.storageFileFunctions.storageFile.createStorageFile.allFromUpload);

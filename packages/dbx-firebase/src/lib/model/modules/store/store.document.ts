@@ -31,12 +31,15 @@ import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
 import { DbxFirebaseDocumentStore } from './store';
+import { linkDocumentStoreToParentContextStores } from './store.document.context.store.link';
 
 @Injectable()
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {
+  // NOTE: Injection does not occur here, but we need @Injectable to compile properly for Angular usage
+  // eslint-disable-next-line @angular-eslint/prefer-inject
   protected constructor(@Inject(null) @Optional() initialState?: C) {
     super(initialState);
-    // linkDocumentStoreToParentContextStores(this);
+    linkDocumentStoreToParentContextStores(this);
   }
 
   // MARK: Effects

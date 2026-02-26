@@ -112,10 +112,11 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   private _userIdEventSub = new SubscriptionObject();
   private _loggerSub = new SubscriptionObject();
 
-  constructor(@Optional() @Inject(DbxAnalyticsUserSource) userSource?: Maybe<DbxAnalyticsUserSource>) {
+  constructor() {
     this._init();
-
+    let userSource: Maybe<DbxAnalyticsUserSource> = inject(DbxAnalyticsUserSource, { optional: true });
     userSource = userSource || this._config.userSource;
+
     if (userSource) {
       this.setUserSource(userSource);
     }

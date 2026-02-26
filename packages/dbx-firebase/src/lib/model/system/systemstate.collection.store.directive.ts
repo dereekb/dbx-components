@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { SystemState, SystemStateDocument } from '@dereekb/firebase';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../modules/store/store.collection.directive';
 import { SystemStateCollectionStore } from './systemstate.collection.store';
@@ -8,7 +8,7 @@ import { SystemStateCollectionStore } from './systemstate.collection.store';
   providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseSystemStateCollectionStoreDirective, SystemStateCollectionStore)
 })
 export class DbxFirebaseSystemStateCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<SystemState, SystemStateDocument, SystemStateCollectionStore> {
-  constructor(store: SystemStateCollectionStore) {
-    super(store);
+  constructor() {
+    super(inject(SystemStateCollectionStore));
   }
 }

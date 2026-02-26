@@ -10,8 +10,9 @@ import { isSameDate } from '@dereekb/date';
 export class NotificationDocumentStore extends AbstractDbxFirebaseDocumentWithParentStore<Notification, NotificationBox, NotificationDocument, NotificationBoxDocument> {
   readonly notificationFunctions = inject(NotificationFunctions);
 
-  constructor(collections: NotificationFirestoreCollections, @Optional() parent: NotificationBoxDocumentStore) {
-    super({ collectionFactory: collections.notificationCollectionFactory, firestoreCollectionLike: collections.notificationCollectionGroup });
+  constructor() {
+    super({ collectionFactory: inject(NotificationFirestoreCollections).notificationCollectionFactory, firestoreCollectionLike: inject(NotificationFirestoreCollections).notificationCollectionGroup });
+    const parent = inject(NotificationBoxDocumentStore, { optional: true });
 
     if (parent) {
       this.setParentStore(parent);

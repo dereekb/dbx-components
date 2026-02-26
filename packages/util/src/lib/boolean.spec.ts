@@ -150,6 +150,15 @@ describe('invertMaybeBoolean', () => {
 });
 
 describe('stringToBoolean()', () => {
+  describe('boolean values', () => {
+    it('should return true for true', () => {
+      expect(stringToBoolean(true)).toBe(true);
+    });
+    it('should return false for false', () => {
+      expect(stringToBoolean(false)).toBe(false);
+    });
+  });
+
   describe('truthy values', () => {
     it('should return true for "true"', () => {
       expect(stringToBoolean('true')).toBe(true);

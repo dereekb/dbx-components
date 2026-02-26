@@ -25,6 +25,8 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   protected lockSetDestroyDelayMs = 2000;
   protected lockSetDestroyTimeoutMs: Maybe<number>;
 
+  // NOTE: Injection does not occur here, but we need @Injectable to compile properly for Angular usage
+  // eslint-disable-next-line @angular-eslint/prefer-inject
   protected constructor(@Inject(null) @Optional() protected readonly initialState?: S) {
     super(initialState);
   }
