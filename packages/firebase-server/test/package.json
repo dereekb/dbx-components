@@ -25,7 +25,7 @@
     "@dereekb/firebase-server": "12.7.0",
     "@dereekb/nestjs": "12.7.0",
     "@dereekb/util": "12.7.0",
-    "@google-cloud/firestore": "^8.0.0",
+    "@google-cloud/firestore": "^7.0.0",
     "@google-cloud/storage": "^7.0.0",
     "@nestjs/testing": "^11.0.0",
     "firebase-admin": "^13.0.0",

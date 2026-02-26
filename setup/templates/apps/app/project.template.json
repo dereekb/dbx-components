@@ -33,7 +33,7 @@
           "includePaths": ["packages", ""]
         },
         "styles": [
-          "mapbox-gl/dist/mapbox-gl.css",
+          "node_modules/mapbox-gl/dist/mapbox-gl.css",
           "ANGULAR_APP_FOLDER/src/styles.scss"
         ],
         "scripts": []

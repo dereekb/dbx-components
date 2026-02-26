@@ -211,8 +211,38 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Flat Button',
     buttonColor: 'ok',
-    barColor: 'success',
+    barColor: 'ok',
     buttonType: 'flat',
+    mode: 'indeterminate',
+    disabled: false
+  };
+
+  barButtonConfig5: DbxProgressButtonConfig = {
+    working: false,
+    text: 'Flat Button',
+    buttonColor: 'warn',
+    barColor: 'warn',
+    buttonType: 'flat',
+    mode: 'indeterminate',
+    disabled: false
+  };
+
+  barButtonConfig6: DbxProgressButtonConfig = {
+    working: false,
+    text: 'Stroked Button',
+    buttonColor: 'success',
+    barColor: 'success',
+    buttonType: 'stroked',
+    mode: 'indeterminate',
+    disabled: false
+  };
+
+  barButtonConfig7: DbxProgressButtonConfig = {
+    working: false,
+    text: 'Tonal Button',
+    buttonColor: 'ok',
+    barColor: 'notice',
+    buttonType: 'tonal',
     mode: 'indeterminate',
     disabled: false
   };
@@ -237,6 +267,9 @@ export class DocInteractionButtonComponent {
   clickBar3 = this.activateAndDeactivate('barButtonConfig2');
   clickBar4 = this.activateAndDeactivate('barButtonConfig3');
   clickBar5 = this.activateAndDeactivate('barButtonConfig4');
+  clickBar6 = this.activateAndDeactivate('barButtonConfig5');
+  clickBar7 = this.activateAndDeactivate('barButtonConfig6');
+  clickBar8 = this.activateAndDeactivate('barButtonConfig7');
 
   constructor() {
     this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));

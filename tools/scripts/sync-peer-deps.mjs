@@ -13,6 +13,12 @@ import { resolve, relative } from 'path';
 import { glob } from 'glob';
 
 const ROOT_DIR = resolve(import.meta.dirname, '..', '..');
+
+if (process.env.SKIP_SYNC_PEER_DEPS === 'true') {
+  console.log('SKIP_SYNC_PEER_DEPS is set, skipping.');
+  process.exit(0);
+}
+
 const DRY_RUN = process.argv.includes('--dry-run');
 const SKIP_INTERNAL = process.argv.includes('--skip-internal');
 

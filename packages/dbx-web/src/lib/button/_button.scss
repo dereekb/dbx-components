@@ -93,6 +93,10 @@ $big-button-height: 46px; // 33% bigger
   $disabled-contrast-value: theming.$dbx-disabled-color-contrast;
 
   .mdc-button.dbx-base-button.dbx-color {
+    .mat-mdc-progress-bar {
+      --mat-progress-bar-active-indicator-color: #{$color-value};
+    }
+
     // default button
     &.dbx-default {
       color: var(--mat-button-text-label-text-color, var(--mat-sys-primary));
@@ -177,9 +181,10 @@ $big-button-height: 46px; // 33% bigger
     // tonal buttons
     &.mat-mdc-tonal-button.dbx-default {
       color: var(--mat-button-tonal-label-text-color, var(--mat-sys-primary));
+      background: rgb(from var(--mat-button-tonal-label-text-color) r g b / calc(alpha * 0.06));
     }
 
-    &.mat-mdc-tonal-button {
+    &.mat-mdc-tonal-button:not(.dbx-default) {
       background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
 
       --mat-button-tonal-container-color: color-mix(in srgb, #{$color-value} 12%, transparent);

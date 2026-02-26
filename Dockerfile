@@ -23,7 +23,8 @@ COPY ./package-lock.json .
 
 # Install project dependencies to /code/node_modules. 
 # This is done to prevent node_modules system package conflicts
-RUN npm ci
+# scripts are not needed?
+RUN IS_DOCKER_INSTALL=true npm ci
 
 # Copy the development certificate and trust it (Uncomment if the firebase.crt needs to be accessed via Java or the system. NODE_EXTRA_CA_CERTS is used for nodejs certs)
 # COPY ./docker/nginx/certs/firebase.crt /usr/local/share/ca-certificates/firebase.crt
