@@ -115,7 +115,7 @@
   "useInferencePlugins": false,
   "defaultBase": "main",
   "release": {
-    "projects": ["tag:publishable"],
+    "projects": ["packages/*", "apps/*", "components/*"],
     "projectsRelationship": "fixed",
     "version": {
       "conventionalCommits": true

@@ -1,9 +1,11 @@
 /**
- * Syncs peerDependencies in all packages/ package.json files:
- * - @dereekb/* dependencies are set to "*"
+ * Syncs peerDependencies in all packages/ package.json files to match
+ * the versions in the root package.json.
+ *
+ * - @dereekb/* dependencies are set to the root package.json version (use --skip-internal to leave them unchanged)
  * - All other dependencies are matched to the version in the root package.json
  *
- * Usage: node tools/scripts/sync-peer-deps.mjs [--dry-run]
+ * Usage: node tools/scripts/sync-peer-deps.mjs [--dry-run] [--skip-internal]
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -12,9 +14,11 @@ import { glob } from 'glob';
 
 const ROOT_DIR = resolve(import.meta.dirname, '..', '..');
 const DRY_RUN = process.argv.includes('--dry-run');
+const SKIP_INTERNAL = process.argv.includes('--skip-internal');
 
 // Read root package.json to build version map
 const rootPkg = JSON.parse(readFileSync(resolve(ROOT_DIR, 'package.json'), 'utf-8'));
+const rootVersion = rootPkg.version;
 const rootVersions = {
   ...rootPkg.dependencies,
   ...rootPkg.devDependencies
@@ -42,10 +46,10 @@ for (const pkgPath of packageFiles) {
 
   for (const [dep, currentVersion] of Object.entries(pkg.peerDependencies)) {
     if (dep.startsWith('@dereekb/')) {
-      // @dereekb packages always use "*"
-      if (currentVersion !== '*') {
-        updates.push({ dep, from: currentVersion, to: '*' });
-        pkg.peerDependencies[dep] = '*';
+      // Set @dereekb packages to the root package.json version unless --skip-internal
+      if (!SKIP_INTERNAL && currentVersion !== rootVersion) {
+        updates.push({ dep, from: currentVersion, to: rootVersion });
+        pkg.peerDependencies[dep] = rootVersion;
         changed = true;
       }
     } else {
