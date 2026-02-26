@@ -14,9 +14,9 @@
       "default": "./index.cjs.js"
     }
   },
-  "dependencies": {},
   "peerDependencies": {
-    "rxjs": "^7.5.0",
+    "rxjs": "*",
+    "core-js": "*",
     "@dereekb/util": "*"
   }
 }

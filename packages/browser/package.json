@@ -17,7 +17,8 @@
   "peerDependencies": {
     "@dereekb/util": "*",
     "@dereekb/rxjs": "*",
-    "rxjs": "^7.4.0"
+    "rxjs": "*",
+    "core-js": "*"
   },
   "dependencies": {}
 }

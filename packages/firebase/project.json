@@ -33,6 +33,7 @@
         "compiler": "babel",
         "project": "packages/firebase/package.json",
         "format": ["esm", "cjs"],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
         "generateExportsField": false,
         "assets": [
           {

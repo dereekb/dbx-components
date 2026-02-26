@@ -38,7 +38,8 @@
             "input": ".",
             "output": "."
           }
-        ]
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
       "configurations": {
         "production": {

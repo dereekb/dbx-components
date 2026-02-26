@@ -7,16 +7,28 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/nestjs/vapiai",
         "outputPath": "dist/packages/nestjs/vapiai",
         "tsConfig": "packages/nestjs/vapiai/tsconfig.lib.json",
-        "packageJson": "packages/nestjs/vapiai/package.json",
+        "project": "packages/nestjs/vapiai/package.json",
         "main": "packages/nestjs/vapiai/src/index.ts",
-        "assets": ["LICENSE"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

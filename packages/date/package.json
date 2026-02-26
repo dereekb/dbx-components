@@ -17,13 +17,14 @@
   "peerDependencies": {
     "@dereekb/util": "*",
     "@dereekb/rxjs": "*",
-    "date-fns": "^3.0.0",
-    "date-fns-tz": "^3.0.0",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.0",
-    "rxjs": "^7.4.0",
-    "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
-    "@vvo/tzdb": "^6.0.0"
+    "date-fns": "*",
+    "date-fns-tz": "*",
+    "class-transformer": "*",
+    "class-validator": "*",
+    "rxjs": "*",
+    "rrule": "*",
+    "@vvo/tzdb": "*",
+    "core-js": "*"
   },
   "dependencies": {}
 }

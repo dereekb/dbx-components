@@ -24,7 +24,8 @@
             "input": "packages/firebase/test",
             "output": "."
           }
-        ]
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
       "configurations": {
         "production": {

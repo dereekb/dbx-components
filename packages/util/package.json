@@ -16,8 +16,15 @@
     },
     "./test": {
       "types": "./test/src/index.d.ts",
-      "main": "./test/src/index.js",
-      "require": "./test/src/index.js"
+      "module": "./test/index.esm.js",
+      "main": "./test/index.cjs.js",
+      "node": {
+        "require": "./test/index.cjs.js"
+      },
+      "browser": {
+        "require": "./test/index.cjs.js",
+        "import": "./test/index.esm.js"
+      }
     },
     "./fetch": {
       "types": "./fetch/src/index.d.ts",
@@ -36,7 +43,8 @@
     "make-error": "*",
     "ts-essentials": "*",
     "extra-set": "*",
-    "fast-content-type-parse": "*"
+    "fast-content-type-parse": "*",
+    "core-js": "*"
   },
   "devDependencies": {
     "date-fns": "*"

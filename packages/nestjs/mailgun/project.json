@@ -7,16 +7,28 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/nestjs/mailgun",
         "outputPath": "dist/packages/nestjs/mailgun",
         "tsConfig": "packages/nestjs/mailgun/tsconfig.lib.json",
-        "packageJson": "packages/nestjs/mailgun/package.json",
+        "project": "packages/nestjs/mailgun/package.json",
         "main": "packages/nestjs/mailgun/src/index.ts",
-        "assets": ["LICENSE"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

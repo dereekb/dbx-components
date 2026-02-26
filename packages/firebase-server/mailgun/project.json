@@ -18,7 +18,8 @@
         "format": ["esm", "cjs"],
         "generateExportsField": false,
         "external": "all",
-        "assets": []
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
       "configurations": {
         "production": {

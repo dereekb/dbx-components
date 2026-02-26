@@ -1,7 +1,6 @@
 {
   "name": "@dereekb/firebase-server/model",
   "version": "12.7.0",
-  "type": "commonjs",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -30,6 +29,7 @@
     "@nestjs/config": "*",
     "archiver": "*",
     "date-fns": "*",
-    "make-error": "*"
+    "make-error": "*",
+    "core-js": "*"
   }
 }

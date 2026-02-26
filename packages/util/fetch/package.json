@@ -20,6 +20,7 @@
   "peerDependencies": {
     "@dereekb/util": "*",
     "make-error": "*",
-    "fast-content-type-parse": "*"
+    "fast-content-type-parse": "*",
+    "core-js": "*"
   }
 }

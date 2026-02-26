@@ -4,7 +4,7 @@
   "sourceRoot": "packages/nestjs/src",
   "projectType": "library",
   "tags": ["publishable"],
-  "implicitDependencies": ["!util-test"],
+  "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -34,14 +34,38 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/nestjs",
         "outputPath": "dist/packages/nestjs",
         "tsConfig": "packages/nestjs/tsconfig.lib.json",
-        "packageJson": "packages/nestjs/package.json",
+        "project": "packages/nestjs/package.json",
         "main": "packages/nestjs/src/index.ts",
-        "assets": ["packages/nestjs/*.md", "LICENSE"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [
+          {
+            "glob": "packages/nestjs/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
       }
     },
     "lint": {
