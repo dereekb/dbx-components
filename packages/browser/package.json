@@ -15,10 +15,10 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/rxjs": "*",
-    "rxjs": "*",
-    "core-js": "*"
+    "@dereekb/util": "12.7.0",
+    "@dereekb/rxjs": "12.7.0",
+    "rxjs": "^7.8.0",
+    "core-js": "^3.0.0"
   },
   "dependencies": {}
 }

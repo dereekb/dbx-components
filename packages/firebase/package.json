@@ -27,16 +27,16 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/rxjs": "*",
-    "@dereekb/model": "*",
-    "@dereekb/date": "*",
-    "rxjs": "*",
-    "firebase": "*",
-    "class-transformer": "*",
-    "class-validator": "*",
-    "ts-essentials": "*",
-    "date-fns": "*",
-    "core-js": "*"
+    "@dereekb/util": "12.7.0",
+    "@dereekb/rxjs": "12.7.0",
+    "@dereekb/model": "12.7.0",
+    "@dereekb/date": "12.7.0",
+    "rxjs": "^7.8.0",
+    "firebase": "^12.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "ts-essentials": "^10.0.0",
+    "date-fns": "^4.0.0",
+    "core-js": "^3.0.0"
   }
 }

@@ -73,12 +73,12 @@
     }
   },
   "peerDependencies": {
-    "@nestjs/common": "*",
-    "express": "*",
-    "raw-body": "*",
-    "body-parser": "*",
-    "@nestjs/config": "*",
-    "@dereekb/util": "*"
+    "@nestjs/common": "^11.0.0",
+    "express": "^5.0.0",
+    "raw-body": "^3.0.0",
+    "body-parser": "^2.0.0",
+    "@nestjs/config": "^4.0.0",
+    "@dereekb/util": "12.7.0"
   },
   "dependencies": {}
 }

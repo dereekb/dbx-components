@@ -18,18 +18,18 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "*",
-    "@dereekb/rxjs": "*",
-    "@dereekb/model": "*",
-    "@dereekb/firebase": "*",
-    "@dereekb/nestjs": "*",
-    "@dereekb/firebase-server": "*",
-    "@dereekb/util": "*",
-    "@nestjs/common": "*",
-    "@nestjs/config": "*",
-    "archiver": "*",
-    "date-fns": "*",
-    "make-error": "*",
-    "core-js": "*"
+    "@dereekb/date": "12.7.0",
+    "@dereekb/rxjs": "12.7.0",
+    "@dereekb/model": "12.7.0",
+    "@dereekb/firebase": "12.7.0",
+    "@dereekb/nestjs": "12.7.0",
+    "@dereekb/firebase-server": "12.7.0",
+    "@dereekb/util": "12.7.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.0",
+    "archiver": "^7.0.0",
+    "date-fns": "^4.0.0",
+    "make-error": "^1.3.0",
+    "core-js": "^3.0.0"
   }
 }

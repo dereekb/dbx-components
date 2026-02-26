@@ -2,7 +2,7 @@
   "name": "@dereekb/vitest",
   "version": "12.7.0",
   "peerDependencies": {
-    "date-fns": "*"
+    "date-fns": "^4.0.0"
   },
   "exports": {
     ".": {

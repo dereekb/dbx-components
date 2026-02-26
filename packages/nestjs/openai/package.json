@@ -18,11 +18,11 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/date": "*",
-    "@dereekb/nestjs": "*",
-    "@dereekb/model": "*",
-    "@dereekb/rxjs": "*",
-    "core-js": "*"
+    "@dereekb/util": "12.7.0",
+    "@dereekb/date": "12.7.0",
+    "@dereekb/nestjs": "12.7.0",
+    "@dereekb/model": "12.7.0",
+    "@dereekb/rxjs": "12.7.0",
+    "core-js": "^3.0.0"
   }
 }

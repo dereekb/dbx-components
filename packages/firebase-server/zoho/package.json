@@ -18,12 +18,12 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "*",
-    "@dereekb/model": "*",
-    "@dereekb/nestjs": "*",
-    "@dereekb/rxjs": "*",
-    "@dereekb/firebase": "*",
-    "@dereekb/util": "*",
-    "@dereekb/zoho": "*"
+    "@dereekb/date": "12.7.0",
+    "@dereekb/model": "12.7.0",
+    "@dereekb/nestjs": "12.7.0",
+    "@dereekb/rxjs": "12.7.0",
+    "@dereekb/firebase": "12.7.0",
+    "@dereekb/util": "12.7.0",
+    "@dereekb/zoho": "12.7.0"
   }
 }

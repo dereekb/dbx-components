@@ -15,16 +15,16 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/rxjs": "*",
-    "date-fns": "*",
-    "date-fns-tz": "*",
-    "class-transformer": "*",
-    "class-validator": "*",
-    "rxjs": "*",
-    "rrule": "*",
-    "@vvo/tzdb": "*",
-    "core-js": "*"
+    "@dereekb/util": "12.7.0",
+    "@dereekb/rxjs": "12.7.0",
+    "date-fns": "^4.0.0",
+    "date-fns-tz": "^3.2.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "rxjs": "^7.8.0",
+    "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
+    "@vvo/tzdb": "^6.0.0",
+    "core-js": "^3.0.0"
   },
   "dependencies": {}
 }
