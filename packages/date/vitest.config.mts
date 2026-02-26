@@ -15,5 +15,10 @@ export default createVitestConfig({
   junitConfig: () => ({
     suiteName: timezone,
     outputFilePrefix: `${timezoneKey}.`
-  })
+  }),
+  test: {
+    // can run all tests in parallel
+    maxWorkers: 10,
+    maxConcurrency: 10
+  }
 });

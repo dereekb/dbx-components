@@ -4,37 +4,16 @@ import { dateCellTiming, type DateCellDurationSpan } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
 import { dateTimezoneUtcNormal } from './date.timezone';
 import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, type YearWeekCode, type YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone, yearWeekCodePair, startOfWeekForYearWeekCode } from './date.week';
+import { wrapDateTests } from '../../test.spec';
 
-describe('yearWeekCodeForDateRange()', () => {
-  const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000'); // date in current timezone
-
-  it('should generate the year week codes for the date range.', () => {
-    const totalWeeks = 3;
-    const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
-    const result = yearWeekCodeForDateRange(range);
-    expect(result.length).toBe(totalWeeks);
-    expect(result[0]).toBe(yearWeekCode(2022, 1));
-    expect(result[1]).toBe(yearWeekCode(2022, 2));
-    expect(result[2]).toBe(yearWeekCode(2022, 3));
-  });
-
-  it('should generate the year week codes for a single day date range.', () => {
-    const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
-    const result = yearWeekCodeForDateRange(range);
-    expect(result.length).toBe(1);
-    expect(result[0]).toBe(yearWeekCode(2022, 1));
-  });
-});
-
-describe('yearWeekCodeForDateRangeInTimezone()', () => {
-  describe('UTC', () => {
-    const timezone = UTC_TIMEZONE_STRING;
-    const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000Z'); // date in UTC
+wrapDateTests(() => {
+  describe('yearWeekCodeForDateRange()', () => {
+    const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000'); // date in current timezone
 
     it('should generate the year week codes for the date range.', () => {
       const totalWeeks = 3;
       const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
-      const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+      const result = yearWeekCodeForDateRange(range);
       expect(result.length).toBe(totalWeeks);
       expect(result[0]).toBe(yearWeekCode(2022, 1));
       expect(result[1]).toBe(yearWeekCode(2022, 2));
@@ -43,322 +22,346 @@ describe('yearWeekCodeForDateRangeInTimezone()', () => {
 
     it('should generate the year week codes for a single day date range.', () => {
       const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
-      const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+      const result = yearWeekCodeForDateRange(range);
       expect(result.length).toBe(1);
       expect(result[0]).toBe(yearWeekCode(2022, 1));
     });
   });
-});
 
-describe('yearWeekCodeFactory()', () => {
-  describe('_normal', () => {
-    it('should apply the expected offset.', () => {
-      const systemDate = new Date(2022, 0, 2); // first second of the day date with an offset equal to the current.
-      const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
+  describe('yearWeekCodeForDateRangeInTimezone()', () => {
+    describe('UTC', () => {
+      const timezone = UTC_TIMEZONE_STRING;
+      const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000Z'); // date in UTC
 
-      const systemTimezoneOffset = systemDate.getTimezoneOffset();
-      const systemDateAsUtc = addMinutes(systemDate, -systemTimezoneOffset);
+      it('should generate the year week codes for the date range.', () => {
+        const totalWeeks = 3;
+        const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
+        const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+        expect(result.length).toBe(totalWeeks);
+        expect(result[0]).toBe(yearWeekCode(2022, 1));
+        expect(result[1]).toBe(yearWeekCode(2022, 2));
+        expect(result[2]).toBe(yearWeekCode(2022, 3));
+      });
 
-      expect(systemDateAsUtc).toBeSameSecondAs(utcDate);
-
-      const factory = yearWeekCodeFactory();
-      const viaNormal = factory._normal.targetDateToBaseDate(utcDate);
-
-      expect(viaNormal).toBeSameSecondAs(systemDate);
+      it('should generate the year week codes for a single day date range.', () => {
+        const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
+        const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+        expect(result.length).toBe(1);
+        expect(result[0]).toBe(yearWeekCode(2022, 1));
+      });
     });
   });
 
-  describe('function', () => {
-    describe('number input', () => {
-      it('should create the YearWeekCode', () => {
-        const result = yearWeekCode(2022, 1);
-        expect(result).toBe(202201);
+  describe('yearWeekCodeFactory()', () => {
+    describe('_normal', () => {
+      it('should apply the expected offset.', () => {
+        const systemDate = new Date(2022, 0, 2); // first second of the day date with an offset equal to the current.
+        const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
+
+        const systemTimezoneOffset = systemDate.getTimezoneOffset();
+        const systemDateAsUtc = addMinutes(systemDate, -systemTimezoneOffset);
+
+        expect(systemDateAsUtc).toBeSameSecondAs(utcDate);
+
+        const factory = yearWeekCodeFactory();
+        const viaNormal = factory._normal.targetDateToBaseDate(utcDate);
+
+        expect(viaNormal).toBeSameSecondAs(systemDate);
       });
     });
 
-    describe('date', () => {
-      describe('using system timezone', () => {
+    describe('function', () => {
+      describe('number input', () => {
         it('should create the YearWeekCode', () => {
-          const date1 = new Date(2005, 0, 1);
-          const resultA = yearWeekCode(date1); // Jan 1st is a Saturday, week 1
-          expect(resultA).toBe(200501);
-
-          const date2 = new Date(2005, 0, 2);
-          const resultB = yearWeekCode(date2); // Jan 2nd is a Sunday, week 2
-          expect(resultB).toBe(200502);
+          const result = yearWeekCode(2022, 1);
+          expect(result).toBe(202201);
         });
       });
 
+      describe('date', () => {
+        describe('using system timezone', () => {
+          it('should create the YearWeekCode', () => {
+            const date1 = new Date(2005, 0, 1);
+            const resultA = yearWeekCode(date1); // Jan 1st is a Saturday, week 1
+            expect(resultA).toBe(200501);
+
+            const date2 = new Date(2005, 0, 2);
+            const resultB = yearWeekCode(date2); // Jan 2nd is a Sunday, week 2
+            expect(resultB).toBe(200502);
+          });
+        });
+
+        describe('with timezone', () => {
+          const expected2022YearWeekCode1 = yearWeekCode(2022, 1);
+          const expected2022YearWeekCode2 = yearWeekCode(2022, 2);
+
+          const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000Z'); // date in utc.
+          const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
+
+          describe('system', () => {
+            const factory = yearWeekCodeFactory(); // defaults to the system when no timezone specified
+
+            it('should return the job week', () => {
+              const result = factory(utc2022Week2StartDate);
+              const day = getDay(utc2022Week2StartDate); // gets the day relative to the current timezone
+
+              if (day === Day.SATURDAY) {
+                expect(result).toBe(expected2022YearWeekCode1);
+              } else {
+                expect(result).toBe(expected2022YearWeekCode2);
+              }
+            });
+          });
+
+          describe('UTC', () => {
+            const factory = yearWeekCodeFactory({ timezone: UTC_TIMEZONE_STRING });
+
+            describe('2017', () => {
+              const expected2017YearWeekCode1 = yearWeekCode(2017, 1);
+              const utc2017Week1StartDate = new Date('2017-01-01T00:00:00.000Z'); // date in utc.
+
+              it('should return job week 1', () => {
+                const result = factory(utc2017Week1StartDate);
+                expect(result).toBe(expected2017YearWeekCode1);
+              });
+            });
+
+            it('should return job week 1', () => {
+              const result = factory(utc2022Week1StartDate);
+              expect(result).toBe(expected2022YearWeekCode1);
+            });
+
+            it('should return job week 2', () => {
+              const result = factory(utc2022Week2StartDate);
+              expect(result).toBe(expected2022YearWeekCode2);
+            });
+          });
+
+          describe('America/Denver', () => {
+            const factory = yearWeekCodeFactory({ timezone: 'America/Denver' });
+
+            // still Jan 1st in America/Denver on the UTC Week2StartDate
+            it('should return job week 1', () => {
+              const result = factory(utc2022Week2StartDate);
+              expect(result).toBe(expected2022YearWeekCode1);
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('yearWeekCodeForMonthFactory()', () => {
+    describe('function', () => {
       describe('with timezone', () => {
         const expected2022YearWeekCode1 = yearWeekCode(2022, 1);
         const expected2022YearWeekCode2 = yearWeekCode(2022, 2);
+        const expected2022YearWeekCode3 = yearWeekCode(2022, 3);
+        const expected2022YearWeekCode4 = yearWeekCode(2022, 4);
+        const expected2022YearWeekCode5 = yearWeekCode(2022, 5);
 
         const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000Z'); // date in utc.
-        const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
+        const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z');
 
         describe('system', () => {
-          const factory = yearWeekCodeFactory(); // defaults to the system when no timezone specified
+          const factory = yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory()); // defaults to the system when no timezone specified
 
-          it('should return the job week', () => {
+          it('should return the job weeks for the month', () => {
             const result = factory(utc2022Week2StartDate);
-            const day = getDay(utc2022Week2StartDate); // gets the day relative to the current timezone
-
-            if (day === Day.SATURDAY) {
-              expect(result).toBe(expected2022YearWeekCode1);
-            } else {
-              expect(result).toBe(expected2022YearWeekCode2);
-            }
+            expect(result.length).toBe(6);
+            expect(result).toContain(expected2022YearWeekCode1);
+            expect(result).toContain(expected2022YearWeekCode2);
+            expect(result).toContain(expected2022YearWeekCode3);
+            expect(result).toContain(expected2022YearWeekCode4);
+            expect(result).toContain(expected2022YearWeekCode5);
           });
         });
 
         describe('UTC', () => {
-          const factory = yearWeekCodeFactory({ timezone: UTC_TIMEZONE_STRING });
+          const factory = yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory({ timezone: UTC_TIMEZONE_STRING }));
 
-          describe('2017', () => {
-            const expected2017YearWeekCode1 = yearWeekCode(2017, 1);
-            const utc2017Week1StartDate = new Date('2017-01-01T00:00:00.000Z'); // date in utc.
-
-            it('should return job week 1', () => {
-              const result = factory(utc2017Week1StartDate);
-              expect(result).toBe(expected2017YearWeekCode1);
-            });
-          });
-
-          it('should return job week 1', () => {
+          it('should return the job weeks for the month when starting from week 1', () => {
             const result = factory(utc2022Week1StartDate);
-            expect(result).toBe(expected2022YearWeekCode1);
+            expect(result.length).toBe(6);
+            expect(result).toContain(expected2022YearWeekCode1);
+            expect(result).toContain(expected2022YearWeekCode2);
+            expect(result).toContain(expected2022YearWeekCode3);
+            expect(result).toContain(expected2022YearWeekCode4);
+            expect(result).toContain(expected2022YearWeekCode5);
           });
 
-          it('should return job week 2', () => {
+          it('should return the job weeks for the month', () => {
             const result = factory(utc2022Week2StartDate);
-            expect(result).toBe(expected2022YearWeekCode2);
+            expect(result.length).toBe(6);
+            expect(result).toContain(expected2022YearWeekCode1);
+            expect(result).toContain(expected2022YearWeekCode2);
+            expect(result).toContain(expected2022YearWeekCode3);
+            expect(result).toContain(expected2022YearWeekCode4);
+            expect(result).toContain(expected2022YearWeekCode5);
           });
         });
 
         describe('America/Denver', () => {
-          const factory = yearWeekCodeFactory({ timezone: 'America/Denver' });
+          const factory = yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory({ timezone: 'America/Denver' }));
 
-          // still Jan 1st in America/Denver on the UTC Week2StartDate
-          it('should return job week 1', () => {
+          it('should return the job weeks for the month', () => {
             const result = factory(utc2022Week2StartDate);
-            expect(result).toBe(expected2022YearWeekCode1);
+            expect(result.length).toBe(6);
+            expect(result).toContain(expected2022YearWeekCode1);
+            expect(result).toContain(expected2022YearWeekCode2);
+            expect(result).toContain(expected2022YearWeekCode3);
+            expect(result).toContain(expected2022YearWeekCode4);
+            expect(result).toContain(expected2022YearWeekCode5);
           });
         });
       });
     });
   });
-});
 
-describe('yearWeekCodeForMonthFactory()', () => {
-  describe('function', () => {
-    describe('with timezone', () => {
-      const expected2022YearWeekCode1 = yearWeekCode(2022, 1);
-      const expected2022YearWeekCode2 = yearWeekCode(2022, 2);
-      const expected2022YearWeekCode3 = yearWeekCode(2022, 3);
-      const expected2022YearWeekCode4 = yearWeekCode(2022, 4);
-      const expected2022YearWeekCode5 = yearWeekCode(2022, 5);
+  describe('yearWeekCodeIndex()', () => {
+    it('should return the expected index', () => {
+      const weekIndex = 2;
+      const input = yearWeekCode(2022, weekIndex);
 
-      const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000Z'); // date in utc.
-      const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z');
+      const result = yearWeekCodeIndex(input);
+      expect(result).toBe(weekIndex);
+    });
+  });
 
-      describe('system', () => {
-        const factory = yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory()); // defaults to the system when no timezone specified
+  describe('yearWeekCodeDateFactory()', () => {
+    const expected2022YearWeekCode1 = yearWeekCode(2022, 1);
+    const expected2022YearWeekCode2 = yearWeekCode(2022, 2);
 
-        it('should return the job weeks for the month', () => {
-          const result = factory(utc2022Week2StartDate);
-          expect(result.length).toBe(6);
-          expect(result).toContain(expected2022YearWeekCode1);
-          expect(result).toContain(expected2022YearWeekCode2);
-          expect(result).toContain(expected2022YearWeekCode3);
-          expect(result).toContain(expected2022YearWeekCode4);
-          expect(result).toContain(expected2022YearWeekCode5);
+    describe('function', () => {
+      describe('with timezone', () => {
+        describe('UTC', () => {
+          const utc2022Week1StartDate = new Date('2021-12-26T00:00:00Z');
+          const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z');
+          const factory = yearWeekCodeDateFactory({ timezone: UTC_TIMEZONE_STRING });
+
+          it('should return the date for week 1.', () => {
+            const result = factory(expected2022YearWeekCode1);
+            expect(result).toBeSameSecondAs(utc2022Week1StartDate);
+          });
+
+          it('should return the date for week 2.', () => {
+            const result = factory(expected2022YearWeekCode2);
+            expect(result).toBeSameSecondAs(utc2022Week2StartDate);
+          });
+        });
+
+        describe('America/Denver', () => {
+          const denver2022Week1StartDate = new Date('2021-12-26T07:00:00Z');
+          const denver2022Week2StartDate = new Date('2022-01-02T07:00:00Z'); // midnight UTC date in America/Denver
+          const factory = yearWeekCodeDateFactory({ timezone: 'America/Denver' });
+
+          it('should return the date for week 1.', () => {
+            const result = factory(expected2022YearWeekCode1);
+            expect(result).toBeSameSecondAs(denver2022Week1StartDate);
+          });
+
+          it('should return the date for week 2.', () => {
+            const result = factory(expected2022YearWeekCode2);
+            expect(result).toBeSameSecondAs(denver2022Week2StartDate);
+          });
+        });
+
+        describe('Europe/Amsterdam', () => {
+          const amsterdam2022Week1StartDate = new Date('2021-12-25T23:00:00.000Z');
+          const amsterdam2022Week2StartDate = new Date('2022-01-01T23:00:00.000Z'); // midnight UTC date in Europe/Amsterdam
+          const factory = yearWeekCodeDateFactory({ timezone: 'Europe/Amsterdam' });
+
+          it('should return the date for week 1.', () => {
+            const result = factory(expected2022YearWeekCode1);
+            expect(result).toBeSameSecondAs(amsterdam2022Week1StartDate);
+          });
+
+          it('should return the date for week 2.', () => {
+            const result = factory(expected2022YearWeekCode2);
+            expect(result).toBeSameSecondAs(amsterdam2022Week2StartDate);
+          });
         });
       });
 
-      describe('UTC', () => {
-        const factory = yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory({ timezone: UTC_TIMEZONE_STRING }));
+      describe('scenario', () => {
+        describe('2023-10-08T15:00:00.000Z', () => {
+          const timezone = 'America/Chicago';
+          const normal = dateTimezoneUtcNormal({ timezone });
+          const startOfWeekDate = normal.startOfDayInTargetTimezone('2023-10-08');
 
-        it('should return the job weeks for the month when starting from week 1', () => {
-          const result = factory(utc2022Week1StartDate);
-          expect(result.length).toBe(6);
-          expect(result).toContain(expected2022YearWeekCode1);
-          expect(result).toContain(expected2022YearWeekCode2);
-          expect(result).toContain(expected2022YearWeekCode3);
-          expect(result).toContain(expected2022YearWeekCode4);
-          expect(result).toContain(expected2022YearWeekCode5);
-        });
+          it('should convert the date to a yearWeekCode then back.', () => {
+            const yearWeekCode = yearWeekCodeFactory({ timezone })(startOfWeekDate);
+            expect(yearWeekCode).toBe(202341);
 
-        it('should return the job weeks for the month', () => {
-          const result = factory(utc2022Week2StartDate);
-          expect(result.length).toBe(6);
-          expect(result).toContain(expected2022YearWeekCode1);
-          expect(result).toContain(expected2022YearWeekCode2);
-          expect(result).toContain(expected2022YearWeekCode3);
-          expect(result).toContain(expected2022YearWeekCode4);
-          expect(result).toContain(expected2022YearWeekCode5);
-        });
-      });
+            const pair = yearWeekCodePair(yearWeekCode);
+            expect(pair.year).toBe(2023);
+            expect(pair.week).toBe(41);
 
-      describe('America/Denver', () => {
-        const factory = yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory({ timezone: 'America/Denver' }));
+            const date = yearWeekCodeDateFactory({ timezone })(yearWeekCode);
+            expect(date).toBeSameSecondAs(startOfWeekDate);
 
-        it('should return the job weeks for the month', () => {
-          const result = factory(utc2022Week2StartDate);
-          expect(result.length).toBe(6);
-          expect(result).toContain(expected2022YearWeekCode1);
-          expect(result).toContain(expected2022YearWeekCode2);
-          expect(result).toContain(expected2022YearWeekCode3);
-          expect(result).toContain(expected2022YearWeekCode4);
-          expect(result).toContain(expected2022YearWeekCode5);
+            // test startOfWeekForYearWeekCode()
+            const date2 = startOfWeekForYearWeekCode(yearWeekCode, timezone);
+            expect(date2).toBeSameSecondAs(startOfWeekDate);
+          });
         });
       });
     });
   });
-});
 
-describe('yearWeekCodeIndex()', () => {
-  it('should return the expected index', () => {
-    const weekIndex = 2;
-    const input = yearWeekCode(2022, weekIndex);
+  describe('yearWeekCodeGroupFactory()', () => {
+    const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
+    const weekTiming = dateCellTiming({ startsAt, duration: 60 }, 30); // Sunday-Saturday
 
-    const result = yearWeekCodeIndex(input);
-    expect(result).toBe(weekIndex);
-  });
-});
-
-describe('yearWeekCodeDateFactory()', () => {
-  const expected2022YearWeekCode1 = yearWeekCode(2022, 1);
-  const expected2022YearWeekCode2 = yearWeekCode(2022, 2);
-
-  describe('function', () => {
-    describe('with timezone', () => {
-      describe('UTC', () => {
-        const utc2022Week1StartDate = new Date('2021-12-26T00:00:00Z');
-        const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z');
-        const factory = yearWeekCodeDateFactory({ timezone: UTC_TIMEZONE_STRING });
-
-        it('should return the date for week 1.', () => {
-          const result = factory(expected2022YearWeekCode1);
-          expect(result).toBeSameSecondAs(utc2022Week1StartDate);
-        });
-
-        it('should return the date for week 2.', () => {
-          const result = factory(expected2022YearWeekCode2);
-          expect(result).toBeSameSecondAs(utc2022Week2StartDate);
-        });
-      });
-
-      describe('America/Denver', () => {
-        const denver2022Week1StartDate = new Date('2021-12-26T07:00:00Z');
-        const denver2022Week2StartDate = new Date('2022-01-02T07:00:00Z'); // midnight UTC date in America/Denver
-        const factory = yearWeekCodeDateFactory({ timezone: 'America/Denver' });
-
-        it('should return the date for week 1.', () => {
-          const result = factory(expected2022YearWeekCode1);
-          expect(result).toBeSameSecondAs(denver2022Week1StartDate);
-        });
-
-        it('should return the date for week 2.', () => {
-          const result = factory(expected2022YearWeekCode2);
-          expect(result).toBeSameSecondAs(denver2022Week2StartDate);
-        });
-      });
-
-      describe('Europe/Amsterdam', () => {
-        const amsterdam2022Week1StartDate = new Date('2021-12-25T23:00:00.000Z');
-        const amsterdam2022Week2StartDate = new Date('2022-01-01T23:00:00.000Z'); // midnight UTC date in Europe/Amsterdam
-        const factory = yearWeekCodeDateFactory({ timezone: 'Europe/Amsterdam' });
-
-        it('should return the date for week 1.', () => {
-          const result = factory(expected2022YearWeekCode1);
-          expect(result).toBeSameSecondAs(amsterdam2022Week1StartDate);
-        });
-
-        it('should return the date for week 2.', () => {
-          const result = factory(expected2022YearWeekCode2);
-          expect(result).toBeSameSecondAs(amsterdam2022Week2StartDate);
-        });
-      });
+    const weekDaysAndWeekends = dateCellTimingExpansionFactory({
+      timing: weekTiming
     });
 
-    describe('scenario', () => {
-      describe('2023-10-08T15:00:00.000Z', () => {
-        const timezone = 'America/Chicago';
-        const normal = dateTimezoneUtcNormal({ timezone });
-        const startOfWeekDate = normal.startOfDayInTargetTimezone('2023-10-08');
-
-        it('should convert the date to a yearWeekCode then back.', () => {
-          const yearWeekCode = yearWeekCodeFactory({ timezone })(startOfWeekDate);
-          expect(yearWeekCode).toBe(202341);
-
-          const pair = yearWeekCodePair(yearWeekCode);
-          expect(pair.year).toBe(2023);
-          expect(pair.week).toBe(41);
-
-          const date = yearWeekCodeDateFactory({ timezone })(yearWeekCode);
-          expect(date).toBeSameSecondAs(startOfWeekDate);
-
-          // test startOfWeekForYearWeekCode()
-          const date2 = startOfWeekForYearWeekCode(yearWeekCode, timezone);
-          expect(date2).toBeSameSecondAs(startOfWeekDate);
-        });
-      });
-    });
-  });
-});
-
-describe('yearWeekCodeGroupFactory()', () => {
-  const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
-  const weekTiming = dateCellTiming({ startsAt, duration: 60 }, 30); // Sunday-Saturday
-
-  const weekDaysAndWeekends = dateCellTimingExpansionFactory({
-    timing: weekTiming
-  });
-
-  describe('function', () => {
-    describe('yearWeekCode values', () => {
-      const groupFactory = yearWeekCodeGroupFactory<YearWeekCode | YearWeekCodeString>({
-        dateReader: (x) => x
-      });
-
-      it('should group the input number values by week.', () => {
-        const dates = [202202, 202203];
-        const groups = groupFactory(dates);
-
-        expect(groups.length).toBe(2);
-        expect(groups[0].week).toBe(202202);
-        expect(groups[1].week).toBe(202203);
-      });
-
-      it('should group the input string values by week.', () => {
-        const dates = [202202, 202203].map(String);
-        const groups = groupFactory(dates);
-
-        expect(groups.length).toBe(2);
-        expect(groups[0].week).toBe(202202);
-        expect(groups[1].week).toBe(202203);
-      });
-    });
-
-    describe('timezone', () => {
-      describe('UTC', () => {
-        const groupFactory = yearWeekCodeGroupFactory<DateCellDurationSpan>({
-          yearWeekCodeFactory: { timezone: 'UTC' },
-          dateReader: (x) => x.startsAt
+    describe('function', () => {
+      describe('yearWeekCode values', () => {
+        const groupFactory = yearWeekCodeGroupFactory<YearWeekCode | YearWeekCodeString>({
+          dateReader: (x) => x
         });
 
-        it('should group the input values by week.', () => {
-          const dateCellForRange = {
-            i: 0,
-            to: 13 // 2 weeks
-          };
-
-          const dates = weekDaysAndWeekends([dateCellForRange]);
+        it('should group the input number values by week.', () => {
+          const dates = [202202, 202203];
           const groups = groupFactory(dates);
 
           expect(groups.length).toBe(2);
           expect(groups[0].week).toBe(202202);
           expect(groups[1].week).toBe(202203);
+        });
+
+        it('should group the input string values by week.', () => {
+          const dates = [202202, 202203].map(String);
+          const groups = groupFactory(dates);
+
+          expect(groups.length).toBe(2);
+          expect(groups[0].week).toBe(202202);
+          expect(groups[1].week).toBe(202203);
+        });
+      });
+
+      describe('timezone', () => {
+        describe('UTC', () => {
+          const groupFactory = yearWeekCodeGroupFactory<DateCellDurationSpan>({
+            yearWeekCodeFactory: { timezone: 'UTC' },
+            dateReader: (x) => x.startsAt
+          });
+
+          it('should group the input values by week.', () => {
+            const dateCellForRange = {
+              i: 0,
+              to: 13 // 2 weeks
+            };
+
+            const dates = weekDaysAndWeekends([dateCellForRange]);
+            const groups = groupFactory(dates);
+
+            expect(groups.length).toBe(2);
+            expect(groups[0].week).toBe(202202);
+            expect(groups[1].week).toBe(202203);
+          });
         });
       });
     });

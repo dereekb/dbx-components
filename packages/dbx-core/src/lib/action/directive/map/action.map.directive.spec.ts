@@ -7,9 +7,9 @@ import { DbxActionMapSourceDirective } from './action.map.source.directive';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxActionContextMapDirective', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   let testComponent: TestDbxActionContextMapDirectiveComponent;
 
