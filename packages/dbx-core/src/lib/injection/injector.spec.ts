@@ -18,11 +18,11 @@ class TestInjectableClassC {
 }
 
 describe('newWithInjector()', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [TestInjectableClassA, TestInjectableClassB]
     });
-  }));
+  });
 
   afterEach(() => {
     TestBed.resetTestingModule();

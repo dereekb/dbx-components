@@ -165,6 +165,9 @@ You'll need to specify the following overrides in `package.json`:
 
 #### @dereekb/dbx-core
 
+**BREAKING CHANGE: DbxActionDirective**
+- `DbxActionDirective` no longer has the selector `dbxActionContext`. Use `dbxAction` or `dbx-action` instead.
+
 **Deleted 10 deprecated NgModule files:**
 - `auth/auth.module.ts`
 - `context/context.module.ts`
@@ -402,9 +405,11 @@ Run it with the `--dry-run` flag to see what changes would be made.
 Remove all instances of `jest.setTimeout(30000);` from your test files. Instead, add a `testTimeout` property to the `createVitestConfig` function in your `vitest.config.mts` file.
 
 #### Updating Angular Tests
-Each call should end up in a waitForAsync function call. This handles zone.js properly and makes sure the TestBed is properly configured. You can also remove empty arrays in the configuration. If there are no imports, you can also remove compileComponents().
+Some tests might need to use the `waitForAsync` function call if `zone.js` is being used. This handles zone.js properly and makes sure the TestBed is properly configured. You can also remove empty arrays in the configuration. If there are no imports, you can also remove compileComponents().
 
-Every test that uses TestBed should look similar to this:
+All of `dbx-core` is zoneless capable. There are several libraries that are not, such as `ngx-formly`. If you are testing a form that uses `ngx-formly`, you should use the `waitForAsync` function call. If you use `waitForAsync` in the wrong context, then the tests may hang. Try removing `waitForAsync` first, and if the tests fail, then add it back. Conversly, if your tests seem to be failing randomly then try adding `waitForAsync` if it is not there.
+
+Every test that uses TestBed and initializes a `zone.js` related element should look similar to this:
 
 ```typescript
   beforeEach(waitForAsync(() => {

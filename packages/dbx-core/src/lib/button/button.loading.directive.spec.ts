@@ -7,9 +7,9 @@ import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingButton', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   let testComponent: TestDbxLoadingButtonDirectiveComponent;
   let fixture: ComponentFixture<TestDbxLoadingButtonDirectiveComponent>;

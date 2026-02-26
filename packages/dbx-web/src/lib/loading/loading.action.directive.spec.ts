@@ -120,7 +120,7 @@ const TEST_CONTENT = 'Content';
 
 @Component({
   template: `
-    <div dbxActionContext>
+    <div dbxAction>
       <dbx-loading dbxActionLoadingContext [text]="text()" [show]="show()">
         <div>
           <p id="test-content">${TEST_CONTENT}</p>

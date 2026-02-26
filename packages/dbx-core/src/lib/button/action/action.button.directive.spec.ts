@@ -1,22 +1,22 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
-import { DbxCoreActionModule } from '../../action/action.module';
 import { DbxActionDirective } from '../../action/directive/context/action.directive';
 import { DbxActionButtonDirective } from './action.button.directive';
-import { DbxCoreButtonModule } from '../button.module';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { DbxButtonDirective } from '../button.directive';
 import { type Maybe } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
+import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
 
 describe('Action Button', () => {
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [DbxCoreActionModule, DbxCoreButtonModule]
-    }).compileComponents();
-  }));
+  const sub = new SubscriptionObject();
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({});
+  });
 
   afterEach(() => {
+    sub.destroy();
     TestBed.resetTestingModule();
   });
 
@@ -29,6 +29,8 @@ describe('Action Button', () => {
     beforeEach(async () => {
       fixture = TestBed.createComponent(TestDbxActionButtonDirectiveComponent);
       testComponent = fixture.componentInstance;
+
+      await fixture.whenStable();
 
       directive = testComponent.directive();
       expect(directive).toBeDefined();
@@ -44,9 +46,13 @@ describe('Action Button', () => {
       it(
         'should trigger action',
         callbackTest((done) => {
-          testComponent.button()!.clickButton();
+          const button = testComponent.button();
+          const directive = testComponent.directive();
 
-          testComponent.directive()!.sourceInstance.triggered$.subscribe((triggered) => {
+          button.clickButton();
+          fixture.detectChanges();
+
+          sub.subscription = directive.sourceInstance.triggered$.subscribe((triggered) => {
             expect(triggered).toBe(true);
             done();
           });
@@ -54,21 +60,30 @@ describe('Action Button', () => {
       );
 
       it('button should be working.', () => {
-        testComponent.button()!.clickButton();
-        expect(testComponent.button()?.workingSignal()).toBe(true);
+        const button = testComponent.button();
+
+        button.clickButton();
+        fixture.detectChanges();
+        expect(button.workingSignal()).toBe(true);
       });
     });
 
     it('should stop working when the action completed.', () => {
-      testComponent.directive()!.sourceInstance.trigger();
-      expect(testComponent.button()?.workingSignal()).toBe(true);
+      const button = testComponent.button();
+      const directive = testComponent.directive();
 
-      testComponent.directive()!.sourceInstance.readyValue(1);
+      directive.sourceInstance.trigger();
+      fixture.detectChanges();
+      expect(button.workingSignal()).toBe(true);
+
+      directive.sourceInstance.readyValue(1);
+      fixture.detectChanges();
 
       const SUCCESS_RESULT = 1;
-      testComponent.directive()!.sourceInstance.resolve(SUCCESS_RESULT);
+      directive.sourceInstance.resolve(SUCCESS_RESULT);
+      fixture.detectChanges();
 
-      expect(testComponent.button()?.workingSignal()).toBe(false);
+      expect(button.workingSignal()).toBe(false);
     });
   });
 
@@ -79,6 +94,8 @@ describe('Action Button', () => {
     beforeEach(async () => {
       fixture = TestBed.createComponent(TestDbxActionButtonTriggerDirectiveComponent);
       testComponent = fixture.componentInstance;
+
+      await fixture.whenStable();
 
       directive = testComponent.directive();
       expect(directive).toBeDefined();
@@ -93,9 +110,13 @@ describe('Action Button', () => {
     it(
       'should trigger action on click',
       callbackTest((done) => {
-        testComponent.button()!.clickButton();
+        const button = testComponent.button();
+        const directive = testComponent.directive();
 
-        testComponent.directive()!.sourceInstance.triggered$.subscribe((triggered) => {
+        button.clickButton();
+        fixture.detectChanges();
+
+        sub.subscription = directive.sourceInstance.triggered$.subscribe((triggered) => {
           expect(triggered).toBe(true);
           done();
         });
@@ -106,7 +127,7 @@ describe('Action Button', () => {
 
 @Component({
   template: `
-    <div dbxActionContext>
+    <div dbxAction>
       <button dbxButton dbxActionButtonTrigger></button>
     </div>
   `,
@@ -121,7 +142,7 @@ class TestDbxActionButtonTriggerDirectiveComponent {
 
 @Component({
   template: `
-    <div dbxActionContext>
+    <div dbxAction>
       <button dbxButton dbxActionButton></button>
     </div>
   `,

@@ -5,9 +5,9 @@ import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { DbxFilterMapDirective } from './filter.map.directive';
 
 describe('dbxFilterMapDirective', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   let testComponent: TestDbxFilterMapDirectiveComponent;
   let fixture: ComponentFixture<TestDbxFilterMapDirectiveComponent>;

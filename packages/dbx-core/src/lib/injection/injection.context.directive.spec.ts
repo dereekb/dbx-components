@@ -57,11 +57,11 @@ class TestInjectionContextDirective<T = any> {
 }
 
 describe('DbxInjectionContextDirective', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [BrowserModule]
     }).compileComponents();
-  }));
+  });
 
   afterEach(() => {
     TestBed.resetTestingModule();

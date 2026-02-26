@@ -8,9 +8,9 @@ import { ToJsDatePipe } from './tojsdate.pipe';
 import { ToMinutesPipe } from './tominutes.pipe';
 
 describe('Date Pipe Test Component', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   afterEach(() => {
     TestBed.resetTestingModule();

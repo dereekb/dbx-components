@@ -48,11 +48,11 @@ class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<
 class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> {}
 
 describe('DbxInjectionComponent', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [BrowserModule, DbxInjectionComponent]
     }).compileComponents();
-  }));
+  });
 
   afterEach(() => {
     TestBed.resetTestingModule();

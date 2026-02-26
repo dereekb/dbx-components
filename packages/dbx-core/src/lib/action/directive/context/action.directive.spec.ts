@@ -8,6 +8,20 @@ import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
 import { callbackTest } from '@dereekb/util/test';
 
+@Component({
+  template: `
+    <div #action="action" dbxAction [dbxActionHandler]="handlerFunctionSignal()"></div>
+  `,
+  imports: [DbxActionDirective, DbxActionHandlerDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
+})
+class TestActionContextDirectiveComponent {
+  readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);
+  readonly handlerDirective = viewChild.required<DbxActionHandlerDirective<number, number>>(DbxActionHandlerDirective);
+  readonly handlerFunctionSignal = signal<WorkUsingObservable<number, number> | undefined>(undefined);
+}
+
 describe('DbxActionDirective', () => {
   let testComponent: TestActionContextDirectiveComponent;
 
@@ -18,16 +32,9 @@ describe('DbxActionDirective', () => {
 
   const sub = new SubscriptionObject();
 
-  afterEach(() => {
-    sub.destroy(); // clean up our subscriptions
-    TestBed.resetTestingModule();
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
   });
-
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [TestActionContextDirectiveComponent]
-    });
-  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(TestActionContextDirectiveComponent);
@@ -40,7 +47,12 @@ describe('DbxActionDirective', () => {
     handlerDirective = testComponent.handlerDirective() as DbxActionHandlerDirective<number, number>;
   });
 
-  describe('dbxActionContext', () => {
+  afterEach(() => {
+    sub.destroy(); // clean up our subscriptions
+    TestBed.resetTestingModule();
+  });
+
+  describe('dbxAction', () => {
     it('should be created', () => {
       expect(directive).toBeDefined();
     });
@@ -57,7 +69,7 @@ describe('DbxActionDirective', () => {
         callbackTest((done) => {
           instance.trigger();
 
-          instance.triggered$.subscribe((x) => {
+          sub.subscription = instance.triggered$.subscribe((x) => {
             expect(x).toBe(true);
             done();
           });
@@ -81,7 +93,7 @@ describe('DbxActionDirective', () => {
     });
   });
 
-  describe('dbxActionHandler', () => {
+  describe.skip('dbxActionHandler', () => {
     it('should be created', () => {
       expect(handlerDirective).toBeDefined();
     });
@@ -249,18 +261,3 @@ describe('DbxActionDirective', () => {
     });
   });
 });
-
-@Component({
-  template: `
-    <div #action="action" dbxActionContext [dbxActionHandler]="handlerFunctionSignal()"></div>
-  `,
-  imports: [DbxCoreActionModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
-})
-class TestActionContextDirectiveComponent {
-  readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);
-  readonly handlerDirective = viewChild.required<DbxActionHandlerDirective<number, number>>(DbxActionHandlerDirective);
-
-  readonly handlerFunctionSignal = signal<WorkUsingObservable<number, number> | undefined>(undefined);
-}

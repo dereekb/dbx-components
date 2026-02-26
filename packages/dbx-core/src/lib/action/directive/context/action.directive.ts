@@ -5,10 +5,10 @@ import { DbxActionContextBaseSource } from '../../action.holder';
 import { clean } from '../../../rxjs/clean';
 
 /**
- * Provides an DbxActionContext.
+ * Provides an DbxAction/DbxActionContext.
  */
 @Directive({
-  selector: 'dbx-action,[dbxAction],dbx-action-context,[dbxActionContext]',
+  selector: 'dbx-action,[dbxAction]',
   exportAs: 'action,dbxAction',
   providers: provideActionStoreSource(DbxActionDirective),
   standalone: true

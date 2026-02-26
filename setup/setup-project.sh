@@ -48,10 +48,10 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.7.0"}    # update every major version
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"13.0.0"}    # update every major version
 NX_VERSION=${NX_SETUP_VERSIONS:-"22.5.2"}
 ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^21.0.0"}
-TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.9 <6.0"}
+TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-"^5.9.3"}
 FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"15.7.0"}
 NODE_VERSION=${NODE_SETUP_VERSION:-"24"}
 
@@ -61,10 +61,6 @@ echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VE
 # These versions should match those in dbx-component's package.json
 DEP__SHARP_VERSION=^0.34.5
 DEP__ZONE_JS_VERSION=^0.16.0
-DEP__JEST_VERSION=30.2.0
-DEP__JEST_ENVIRONMENT_JSDOM_VERSION=30.2.0
-DEP__JEST_PRESET_ANGULAR_VERSION=16.0.0
-DEP__TS_JEST_VERSION=29.4.6
 DEP__FIREBASE_VERSION=^12.0.0
 DEP__FIREBASE_ADMIN_VERSION=^13.0.0
 DEP__FIREBASE_FUNCTIONS_VERSION=^7.0.0
@@ -85,8 +81,6 @@ DEP__UIROUTER_ANGULAR_VERSION=21.0.0
 DEP__NGBRACKET_NGX_LAYOUT_VERSION=^21.0.0
 DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0
 DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
-DEP__JEST_DATE_VERSION=^1.1.4
-DEP__JEST_JUNIT_VERSION=^16.0.0
 DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
 DEP__NGX_FORMLY_VERSION=^14.0.0
 
@@ -142,7 +136,11 @@ ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
 # other config
 LINTER="eslint"
+
 UNIT_TEST_RUNNER="vitest"
+ANGULAR_UNIT_TEST_RUNNER="vitest-angular" # Specific test runner for Angular
+NODE_UNIT_TEST_RUNNER="none" # Vitest is currently unsupported in the generator...
+NEST_UNIT_TEST_RUNNER="none" # Vitest is currently unsupported in the generator...
 
 # - Setup Details
 NX_CLOUD_CONFIG_TYPE="yes"
@@ -237,7 +235,7 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
 npm install -D @nx/nest@$NX_VERSION
-npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$NEST_UNIT_TEST_RUNNER
 
 echo "Installing app-server dependencies"
 npm install --force sharp@$DEP__SHARP_VERSION
@@ -255,7 +253,7 @@ npm install --force zone.js@$DEP__ZONE_JS_VERSION @angular/core@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."
-npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$ANGULAR_UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
@@ -263,7 +261,7 @@ git commit --no-verify -m "checkpoint: added angular components package"
 # Add Firebase Component
 echo "Creating firebase components package..."
 npm install -D @nx/node@$NX_VERSION
-npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --directory=$FIREBASE_COMPONENTS_FOLDER --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --directory=$FIREBASE_COMPONENTS_FOLDER --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME --linter=$LINTER --unitTestRunner=$NODE_UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
@@ -453,7 +451,6 @@ git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add vitest setup/configurations
 echo "Adding vitest configurations..."
-# npm install -D jest@$DEP__JEST_VERSION jest-environment-jsdom@$DEP__JEST_ENVIRONMENT_JSDOM_VERSION 
 # rm vitest.preset.config.mts
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.preset.config.mts -o vitest.preset.config.mts

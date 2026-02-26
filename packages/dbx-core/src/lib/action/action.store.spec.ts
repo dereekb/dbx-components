@@ -2,23 +2,21 @@ import { canReadyValue, ActionContextStore } from './action.store';
 import { of, first, timeout } from 'rxjs';
 import { containsStringAnyCase } from '@dereekb/util';
 import { isLoadingStateInErrorState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType } from '@dereekb/rxjs';
-import { TestBed, waitForAsync } from '@angular/core/testing';
-import { Injector, runInInjectionContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { Injector } from '@angular/core';
 import { callbackTest } from '@dereekb/util/test';
+import { newWithInjector } from '../injection/injector';
 
 describe('ActionContextStore', () => {
   let contextStore: ActionContextStore;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   beforeEach(() => {
     const injector = TestBed.inject(Injector);
-
-    runInInjectionContext(injector, () => {
-      contextStore = new ActionContextStore();
-    });
+    contextStore = newWithInjector(ActionContextStore, injector);
   });
 
   afterEach(() => {

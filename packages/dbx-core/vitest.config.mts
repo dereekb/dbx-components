@@ -4,5 +4,8 @@ export default createVitestConfig({
   type: 'angular',
   pathFromRoot: __dirname,
   projectName: 'dbx-core',
-  projectSpecificSetupFiles: ['src/test-setup.ts']
+  projectSpecificSetupFiles: ['src/test-setup.ts'],
+  test: {
+    maxWorkers: 1
+  }
 });
