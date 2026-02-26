@@ -26,6 +26,7 @@
         "compiler": "babel",
         "project": "packages/browser/package.json",
         "format": ["esm", "cjs"],
+        "buildLibsFromSource": false,
         "generateExportsField": false,
         "assets": [
           {

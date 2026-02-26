@@ -44,6 +44,6 @@ export interface TestFilter {
 })
 class TestDbxFilterMapDirectiveComponent {
   readonly filterMap = viewChild.required<DbxFilterMapDirective<TestFilter>>(DbxFilterMapDirective);
-  readonly filterMapSourceConnector = viewChild.required<DbxFilterMapDirective<TestFilter>>(DbxFilterMapSourceConnectorDirective);
-  readonly filterMapSourcer = viewChild.required<DbxFilterMapDirective<TestFilter>>(DbxFilterMapSourceDirective);
+  readonly filterMapSourceConnector = viewChild.required<DbxFilterMapSourceConnectorDirective<TestFilter>>(DbxFilterMapSourceConnectorDirective);
+  readonly filterMapSourcer = viewChild.required<DbxFilterMapSourceDirective<TestFilter>>(DbxFilterMapSourceDirective);
 }

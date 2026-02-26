@@ -175,7 +175,7 @@ then
   DBX_COMPONENTS_VERSION_NESTJS_MAILGUN=$CI_DIST_PATH/nestjs/mailgun
   DBX_COMPONENTS_VERSION_RXJS=$CI_DIST_PATH/rxjs
   DBX_COMPONENTS_VERSION_UTIL=$CI_DIST_PATH/util
-
+  DBX_COMPONENTS_VERSION_VITEST=$CI_DIST_PATH/vitest
 else
   DBX_COMPONENTS_VERSION_BROWSER=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_DATE=$DBX_COMPONENTS_VERSION
@@ -191,6 +191,7 @@ else
   DBX_COMPONENTS_VERSION_NESTJS=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_RXJS=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_UTIL=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_VITEST=$DBX_COMPONENTS_VERSION
 
   # Log into Firebase
   echo "First log into Firebase if you're are not already logged in already."
@@ -471,18 +472,21 @@ sed -e "s/APP_ID/$ANGULAR_COMPONENTS_NAME/g" tmp/env.tmp > $ANGULAR_COMPONENTS_F
 sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS_FOLDER/.env
 
 # make build-base and run-tests cacheable in nx cloud
-echo "Making tests cacheable in nx cloud..."
+echo "nx.json: Making tests cacheable in nx cloud..."
 npx --yes json -I -f nx.json -e "this.targetDefaults['build-base'] = { cache: true }";
 
-echo "Make build rely on parent build"
+echo "nx.json: Make build rely on parent build"
 npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true }";
+
+echo "nx.json: Add vitest configuration"
+npx --yes json -I -f nx.json -e "this.targetDefaults['@nx/vitest:test'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'], configurations: { ci: { ci: true, codeCoverage: true } } }";
 
 git add --all
 git commit --no-verify -m "checkpoint: added vitest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install --force mailgun.js@$DEP__MAILGUN_JS_VERSION rxjs@$DEP__RXJS_VERSION firebase@$DEP__FIREBASE_VERSION firebase-admin@$DEP__FIREBASE_ADMIN_VERSION firebase-functions@$DEP__FIREBASE_FUNCTIONS_VERSION @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/zoom@$DBX_COMPONENTS_VERSION_ZOOM @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install --force mailgun.js@$DEP__MAILGUN_JS_VERSION rxjs@$DEP__RXJS_VERSION firebase@$DEP__FIREBASE_VERSION firebase-admin@$DEP__FIREBASE_ADMIN_VERSION firebase-functions@$DEP__FIREBASE_FUNCTIONS_VERSION @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/zoom@$DBX_COMPONENTS_VERSION_ZOOM @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL @dereekb/vitest@$DBX_COMPONENTS_VERSION_VITEST
 
 # install mapbox dependencies
 npm install --force mapbox-gl@$DEP__MAPBOX_GL_VERSION ngx-mapbox-gl@$DEP__NGX_MAPBOX_GL_VERSION @ng-web-apis/geolocation@$DEP__NG_WEB_APIS_GEOLOCATION_VERSION @ng-web-apis/common@$DEP__NG_WEB_APIS_COMMON_VERSION
@@ -502,6 +506,7 @@ npm install --force @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewpor
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_VITEST"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_BROWSER"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_DATE"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_ANALYTICS"
@@ -609,10 +614,16 @@ download_app_components_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-rm $ANGULAR_COMPONENTS_FOLDER/eslint.config.mjs
+rm $ANGULAR_COMPONENTS_FOLDER/eslint.config.mjs || true
+rm $ANGULAR_COMPONENTS_FOLDER/tsconfig.json || true
+rm $ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json || true
+rm $ANGULAR_COMPONENTS_FOLDER/tsconfig.spec.json || true
 download_app_components_file "eslint.config.mjs"
 download_app_components_file "vitest.config.mts"
+download_app_components_file "tsconfig.json"
+download_app_components_file "tsconfig.lib.json"
 download_app_components_file "tsconfig.spec.json"
+
 
 rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $ANGULAR_COMPONENTS_FOLDER/src/index.ts
@@ -650,9 +661,14 @@ download_firebase_components_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-rm $FIREBASE_COMPONENTS_FOLDER/eslint.config.mjs
+rm $FIREBASE_COMPONENTS_FOLDER/eslint.config.mjs || true
+rm $FIREBASE_COMPONENTS_FOLDER/tsconfig.json || true
+rm $FIREBASE_COMPONENTS_FOLDER/tsconfig.lib.json || true
+rm $FIREBASE_COMPONENTS_FOLDER/tsconfig.spec.json || true
 download_firebase_components_file "eslint.config.mjs"
 download_firebase_components_file "vitest.config.mts"
+download_firebase_components_file "tsconfig.json"
+download_firebase_components_file "tsconfig.lib.json"
 download_firebase_components_file "tsconfig.spec.json"
 
 # Vitest Setup File
@@ -725,7 +741,12 @@ download_angular_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
+rm $ANGULAR_APP_FOLDER/eslint.config.mjs || true
+rm $ANGULAR_APP_FOLDER/tsconfig.app.json || true
+rm $ANGULAR_APP_FOLDER/tsconfig.spec.json || true
+download_angular_ts_file "eslint.config.mjs"
 download_angular_ts_file "vitest.config.mts"
+download_angular_ts_file "tsconfig.app.json"
 download_angular_ts_file "tsconfig.spec.json"
 
 download_angular_ts_file "src/styles.scss"
@@ -820,8 +841,13 @@ rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
 
 # add the setup file config
+rm $API_APP_FOLDER/eslint.config.mjs || true
+rm $API_APP_FOLDER/tsconfig.app.json || true
+rm $API_APP_FOLDER/tsconfig.spec.json || true
+download_api_ts_file "eslint.config.mjs"
 download_api_ts_file "vitest.config.mts"
 download_api_ts_file "tsconfig.spec.json"
+download_api_ts_file "tsconfig.app.json"
 
 # Test Folder
 mkdir $API_APP_FOLDER/src/test

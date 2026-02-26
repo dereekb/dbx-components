@@ -14,7 +14,6 @@
     }
   ],
   "compilerOptions": {
-    "target": "ES2022",
     "forceConsistentCasingInFileNames": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,

@@ -61,5 +61,5 @@
       "@dereekb/vitest": ["packages/vitest/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp", "setup"]
+  "exclude": ["node_modules", "tmp", "setup", "dist"]
 }

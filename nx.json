@@ -12,12 +12,18 @@
     "@angular-devkit/build-angular:application": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
+      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"],
+      "options": {
+        "buildLibsFromSource": false
+      }
     },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
+      "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"],
+      "options": {
+        "buildLibsFromSource": false
+      }
     },
     "build": {
       "dependsOn": ["^build"],
@@ -58,6 +64,7 @@
     },
     "@nx/vitest:test": {
       "cache": true,
+      "dependsOn": ["build"],
       "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
       "configurations": {
         "ci": {
@@ -66,10 +73,26 @@
         }
       }
     },
+    "@nx/webpack:webpack": {
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "options": {
+        "buildLibsFromSource": false
+      }
+    },
     "@nx/js:tsc": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "options": {
+        "buildLibsFromSource": false
+      }
+    },
+    "@nx/rollup:rollup": {
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "options": {
+        "buildLibsFromSource": false
+      }
     }
   },
   "generators": {

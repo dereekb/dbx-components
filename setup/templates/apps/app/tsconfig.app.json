@@ -3,14 +3,15 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
+      "segment-analytics",
+      "node"
     ]
   },
-  "include": [
+  "files": [
+    "src/main.ts"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
     "vite.config.ts",
     "vite.config.mts",
     "vitest.config.ts",
@@ -23,10 +24,6 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "src/**/*.d.ts",
-    "../../vitest.setup.typings.ts"
-  ],
-  "files": [
     "src/test-setup.ts"
   ]
 }
