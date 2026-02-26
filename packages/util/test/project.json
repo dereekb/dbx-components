@@ -13,9 +13,16 @@
         "tsConfig": "packages/util/test/tsconfig.lib.json",
         "packageJson": "packages/util/test/package.json",
         "main": "packages/util/test/src/index.ts",
-        "assets": ["packages/util/test/*.md"]
+        "generateExportsField": false,
+        "assets": [
+          {
+            "glob": "packages/util/test/*.md",
+            "input": "packages/util/test",
+            "output": "."
+          }
+        ]
       },
-      "dependsOn": []
+      "dependsOn": ["^build-base"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",

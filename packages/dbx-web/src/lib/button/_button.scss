@@ -102,6 +102,7 @@ $big-button-height: 46px; // 33% bigger
       }
     }
 
+    // default button
     &:not(.dbx-default) {
       background: none;
       --mat-button-text-label-text-color: #{$color-value};
@@ -122,8 +123,6 @@ $big-button-height: 46px; // 33% bigger
       --mat-button-protected-label-text-color: #{$contrast-value};
       --mat-button-protected-state-layer-color: #{$contrast-value};
       --mat-button-protected-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
-
-      // --mdc-circular-progress-active-indicator-color: #{$color-value};
 
       &.mat-mdc-button-disabled {
         background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
@@ -180,13 +179,22 @@ $big-button-height: 46px; // 33% bigger
       color: var(--mat-button-tonal-label-text-color, var(--mat-sys-primary));
     }
 
-    &.mat-mdc-tonal-button:not(.dbx-default) {
+    &.mat-mdc-tonal-button {
       background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
 
       --mat-button-tonal-container-color: color-mix(in srgb, #{$color-value} 12%, transparent);
       --mat-button-tonal-label-text-color: #{$contrast-value};
       --mat-button-tonal-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
       --mat-button-tonal-state-layer-color: #{$contrast-value};
+    }
+
+    &.dbx-default.mat-mdc-button-disabled {
+      &.mat-mdc-raised-button,
+      &.mat-mdc-unelevated-button,
+      &.mat-mdc-outlined-button,
+      &.mat-mdc-tonal-button {
+        color: var(--mat-button-text-disabled-label-text-color, var(--mat-sys-on-surface));
+      }
     }
   }
 }

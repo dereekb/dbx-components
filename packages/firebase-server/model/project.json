@@ -13,6 +13,7 @@
         "tsConfig": "packages/firebase-server/model/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/model/package.json",
         "main": "packages/firebase-server/model/src/index.ts",
+        "generateExportsField": false,
         "assets": []
       },
       "dependsOn": []

@@ -13,9 +13,16 @@
         "tsConfig": "packages/firebase/test/tsconfig.lib.json",
         "packageJson": "packages/firebase/test/package.json",
         "main": "packages/firebase/test/src/index.ts",
-        "assets": ["packages/firebase/test/*.md"]
+        "generateExportsField": false,
+        "assets": [
+          {
+            "glob": "packages/firebase/test/*.md",
+            "input": "packages/firebase/test",
+            "output": "."
+          }
+        ]
       },
-      "dependsOn": []
+      "dependsOn": ["^build-base"]
     },
     "test": {
       "executor": "nx:run-commands",

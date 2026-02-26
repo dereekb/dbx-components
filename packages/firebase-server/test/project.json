@@ -12,9 +12,10 @@
         "tsConfig": "packages/firebase-server/test/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/test/package.json",
         "main": "packages/firebase-server/test/src/index.ts",
+        "generateExportsField": false,
         "assets": []
       },
-      "dependsOn": []
+      "dependsOn": ["^build-base"]
     },
     "test": {
       "executor": "nx:run-commands",
