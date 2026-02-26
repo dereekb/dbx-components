@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
+import { inject, type EnvironmentProviders, makeEnvironmentProviders, provideAppInitializer, type Provider } from '@angular/core';
 import { AppNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { DbxFirebaseNotificationTemplateService } from './service/notification.template.service';
 import { DbxFirebaseNotificationItemWidgetService } from './service/notificationitem.widget.service';
@@ -29,7 +29,7 @@ export interface ProvideDbxFirebaseNotificationsConfig {
 export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotificationsConfig): EnvironmentProviders {
   const { appNotificationTemplateTypeInfoRecordService } = config;
 
-  const providers: Provider[] = [
+  const providers: (EnvironmentProviders | Provider)[] = [
     {
       provide: AppNotificationTemplateTypeInfoRecordService,
       useValue: appNotificationTemplateTypeInfoRecordService
@@ -43,23 +43,18 @@ export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotifi
       useClass: DbxFirebaseNotificationTemplateService
     },
     // service initialization
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (dbxFirebaseNotificationItemWidgetService: DbxFirebaseNotificationItemWidgetService) => {
-        return () => {
-          // register the default widget
-          if (config.defaultNotificationItemWidget !== false) {
-            const widget = config.defaultNotificationItemWidget ?? DbxFirebaseNotificationItemDefaultViewComponent;
+    provideAppInitializer(() => {
+      const dbxFirebaseNotificationItemWidgetService = inject(DbxFirebaseNotificationItemWidgetService);
 
-            dbxFirebaseNotificationItemWidgetService.registerDefaultWidget({
-              componentClass: widget
-            });
-          }
-        };
-      },
-      deps: [DbxFirebaseNotificationItemWidgetService],
-      multi: true
-    }
+      // register the default widget
+      if (config.defaultNotificationItemWidget !== false) {
+        const widget = config.defaultNotificationItemWidget ?? DbxFirebaseNotificationItemDefaultViewComponent;
+
+        dbxFirebaseNotificationItemWidgetService.registerDefaultWidget({
+          componentClass: widget
+        });
+      }
+    })
   ];
 
   return makeEnvironmentProviders(providers);

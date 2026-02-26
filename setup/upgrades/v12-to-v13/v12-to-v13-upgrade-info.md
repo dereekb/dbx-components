@@ -520,3 +520,15 @@ You can update `nx.json` to remove the `.eslintignore` input from the `lint` tar
 - Updated to Firebase 12
 
 No major issues in updating Firebase. The majority of the codebase changes were due to the ESM imports.
+
+### Angular 21 Updates
+- You can use replace the use of `APP_INITIALIZER` with `provideAppInitializer()`.
+
+Example:
+
+```typescript
+provideAppInitializer(() => {
+  const service = inject(DbxMapboxService);
+
+});
+```
