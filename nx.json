@@ -9,7 +9,7 @@
     "packageManager": "npm"
   },
   "targetDefaults": {
-    "@angular-devkit/build-angular:application": {
+    "@nx/angular:application": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
@@ -115,7 +115,7 @@
   "useInferencePlugins": false,
   "defaultBase": "main",
   "release": {
-    "projects": ["packages/*", "apps/*", "components/*"],
+    "projects": ["apps/*", "packages/*", "components/*"],
     "projectsRelationship": "fixed",
     "version": {
       "conventionalCommits": true
