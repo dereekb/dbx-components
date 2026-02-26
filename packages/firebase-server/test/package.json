@@ -22,7 +22,17 @@
     "@dereekb/rxjs": "*",
     "@dereekb/model": "*",
     "@dereekb/firebase": "*",
+    "@dereekb/firebase-server": "*",
     "@dereekb/nestjs": "*",
-    "@dereekb/util": "*"
+    "@dereekb/util": "*",
+    "@google-cloud/firestore": "*",
+    "@google-cloud/storage": "*",
+    "@nestjs/testing": "*",
+    "firebase-admin": "*",
+    "firebase-functions": "*",
+    "firebase-functions-test": "*",
+    "core-js": "*",
+    "jsonwebtoken": "*",
+    "make-error": "*"
   }
 }

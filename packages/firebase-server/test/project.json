@@ -9,6 +9,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "rollupConfig": "packages/firebase-server/test/rollup.config.ts",
         "importPath": "@dereekb/firebase-server/test",
         "outputPath": "dist/packages/firebase-server/test",
         "tsConfig": "packages/firebase-server/test/tsconfig.lib.json",
@@ -23,9 +24,7 @@
         "production": {
           "optimization": true,
           "sourceMap": false,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false
+          "extractLicenses": true
         }
       }
     },

@@ -18,9 +18,13 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/firebase": "*",
     "@dereekb/date": "*",
-    "@dereekb/rxjs": "*"
+    "@dereekb/firebase": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/util": "*",
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "date-fns": "^4.0.0",
+    "firebase": "^12.0.0",
+    "rxjs": "^7.8.0"
   }
 }

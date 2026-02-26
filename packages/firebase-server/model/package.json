@@ -24,6 +24,12 @@
     "@dereekb/model": "*",
     "@dereekb/firebase": "*",
     "@dereekb/nestjs": "*",
-    "@dereekb/util": "*"
+    "@dereekb/firebase-server": "*",
+    "@dereekb/util": "*",
+    "@nestjs/common": "*",
+    "@nestjs/config": "*",
+    "archiver": "*",
+    "date-fns": "*",
+    "make-error": "*"
   }
 }
