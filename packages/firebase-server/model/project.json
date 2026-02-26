@@ -6,17 +6,28 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase-server/model",
         "outputPath": "dist/packages/firebase-server/model",
         "tsConfig": "packages/firebase-server/model/tsconfig.lib.json",
-        "packageJson": "packages/firebase-server/model/package.json",
+        "project": "packages/firebase-server/model/package.json",
         "main": "packages/firebase-server/model/src/index.ts",
+        "format": ["esm", "cjs"],
         "generateExportsField": false,
         "assets": []
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

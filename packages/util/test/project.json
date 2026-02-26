@@ -6,23 +6,34 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/util/test",
         "outputPath": "dist/packages/util/test",
         "tsConfig": "packages/util/test/tsconfig.lib.json",
-        "packageJson": "packages/util/test/package.json",
+        "project": "packages/util/test/package.json",
         "main": "packages/util/test/src/index.ts",
+        "format": ["esm", "cjs"],
         "generateExportsField": false,
         "assets": [
           {
-            "glob": "packages/util/test/*.md",
-            "input": "packages/util/test",
+            "glob": "LICENSE",
+            "input": ".",
             "output": "."
           }
         ]
       },
-      "dependsOn": ["^build-base"]
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

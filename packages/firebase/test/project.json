@@ -6,13 +6,16 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase/test",
         "outputPath": "dist/packages/firebase/test",
         "tsConfig": "packages/firebase/test/tsconfig.lib.json",
-        "packageJson": "packages/firebase/test/package.json",
+        "project": "packages/firebase/test/package.json",
         "main": "packages/firebase/test/src/index.ts",
+        "format": ["esm", "cjs"],
         "generateExportsField": false,
         "assets": [
           {
@@ -22,7 +25,15 @@
           }
         ]
       },
-      "dependsOn": ["^build-base"]
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
     },
     "test": {
       "executor": "nx:run-commands",
