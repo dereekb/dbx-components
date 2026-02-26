@@ -19,6 +19,8 @@ export default createVitestConfig({
   test: {
     // can run all tests in parallel
     maxWorkers: 10,
-    maxConcurrency: 10
+    maxConcurrency: 10,
+    // recurrence tests can take longer on circleci and timeout with the default while tests are running in parallel
+    testTimeout: 10000
   }
 });

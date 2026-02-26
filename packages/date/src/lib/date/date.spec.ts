@@ -163,15 +163,36 @@ wrapDateTests(() => {
         const timezone = requireCurrentTimezone();
         const timezoneInstance = dateTimezoneUtcNormal(timezone);
 
-        if (timezoneInstance.targetTimezoneExperiencesDaylightSavings(new Date('2024-11-03T00:00:00.000Z'))) {
-          const midnight = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+        /**
+         * Finds the DST fall-back date for the current timezone in the given year.
+         * Returns the date string (YYYY-MM-DD) of the day when clocks fall back, or undefined if none.
+         *
+         * Dublin for instance goes back on Oct 27th 2024, and
+         */
+        function findFallBackDateString(year: number): string | undefined {
+          for (let month = 7; month < 12; month++) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+              const current = new Date(year, month, day);
+              const next = new Date(year, month, day + 1);
+              // Fall back = timezone offset increases (clocks go back)
+              if (next.getTimezoneOffset() > current.getTimezoneOffset()) {
+                return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              }
+            }
+          }
+          return undefined;
+        }
+
+        const fallBackDateString = findFallBackDateString(2024);
+
+        if (fallBackDateString) {
+          const midnight = timezoneInstance.startOfDayInTargetTimezone(fallBackDateString);
 
           const timezoneFirstHourBeforeShift = addHours(midnight, 1); // 1AM
           const timezoneShiftTime = addHours(midnight, 2); // 2AM, second 1AM after rollback
 
-          describe('nov 3 2024', () => {
-            // America/Chicago
-
+          describe(`fall-back date: ${fallBackDateString}`, () => {
             describe('date-fns: set()', () => {
               it('should erraneously roll the hour back', () => {
                 const result = setDateValues(timezoneFirstHourBeforeShift, {
