@@ -86,7 +86,7 @@ DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
 DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
 DEP__NGX_FORMLY_VERSION=^14.0.0
 DEP__FIREBASE_TOOLS_VERSION=15.8.0
-DEP__RXFIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
+DEP__RXFIRE_VERSION=git+https://git@github.com/dereekb/rxfire#606da27059f8fce2563d6e5a79ec4c7d0843a942
 DEP__ANGULAR_CALENDAR_VERSION=^0.32.0
 DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38
 DEP__NX_VITEST_VERSION=$NX_VERSION
@@ -512,7 +512,7 @@ install_local_peer_deps() {
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing angular dependencies"
 npx --yes json -I -f package.json -e "this.overrides = { \"@angular/fire\": { \"rxfire\": \"$DEP__RXFIRE_VERSION\", \"firebase-tools\": \"$DEP__FIREBASE_TOOLS_VERSION\" } };"; # Set the overrides to allow angular/fire to deal
-npm install --force angular-calendar@$DEP__ANGULAR_CALENDAR_VERSION @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npm install --force @angular/fire@$DEP__ANGULAR_FIRE_VERSION angular-calendar@$DEP__ANGULAR_CALENDAR_VERSION @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
@@ -973,7 +973,6 @@ download_api_ts_file "src/environments/environment.prod.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api"
-
 
 # Final checks
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];

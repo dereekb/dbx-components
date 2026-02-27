@@ -24,6 +24,11 @@ Moving to Vitest appears to be worth it. Time improvements aside, we redesigned 
 
 Additionally, we added `@dereekb/vitest` as a new package since matchers from the `jest-time` package are used extensively in our codebase.
 
+### Removal Of Babel
+We noticed we still had some `.babelrc` files in the codebase, but babel usage doesn't appear necessary anymore.
+
+We updated `@dereekb/util` to use `swc` for transpiling, but the rest of the app has a reliance on `reflect-metadata`, so we still use `tsc` for building the rest of the project.
+
 ## Migrations
 We are jumping from Nx version 20 to version 22. It is important to run two independent migrations to ensure everything gets up to date properly.
 
@@ -113,7 +118,7 @@ You'll need to specify the following overrides in `package.json`:
 - `MimeTypeForImageTypeInputType` and `mimetypeForImageType` removed
 - `PromiseAsyncTaskFn` type alias removed
 - `FetchPageResults` type alias removed
-- `nodeFetchService` constant alias removed
+- `nodeFetchService` constant alias removed. Use `fetchApiFetchService` instead.
 - `filterNullAndUndefinedValues` option removed from fetch.url
 - `flattenTrees` function removed - `FlattenTreeFunction` now supports arrays directly
 - `PageCalculator` class and file completely removed
@@ -578,3 +583,96 @@ provideAppInitializer(() => {
 
 });
 ```
+
+## Updated Release Process
+
+In v12, releases were handled by `@jscutlery/semver`. In v13, we migrated to Nx Release (see [nx-release-migration.md](nx-release-migration.md) for that initial migration). However, Nx Release's built-in conventional commit analysis has issues with our branching strategy — develop gets force-merged onto main as a single release commit, which causes `main..develop` to include the full diverged history and produce incorrect version bumps (e.g. major instead of patch).
+
+To fix this, we now use a custom release script that combines:
+- **`conventional-recommended-bump`** (from the `conventional-changelog` ecosystem) for version calculation
+- **`conventional-changelog`** for changelog generation
+- **Nx Release programmatic API** for applying version bumps and publishing
+
+### How It Works
+
+The script uses the `-dev` git tags (e.g. `v13.0.0-dev`) as the comparison anchor. These tags live on the `develop` branch and mark exactly where the last release prep happened. Commits after the `-dev` tag are what's new. The stable tag (e.g. `v13.0.0`) is used for calculating the next version number with `semver.inc()`.
+
+The Angular preset from `conventional-changelog` determines the bump type:
+- `feat:` commits → minor bump
+- `fix:`, `refactor:`, `build:`, etc. → patch bump
+- Breaking changes (`feat!:`, `BREAKING CHANGE:`) → major bump
+
+### New Dependencies
+
+Add these to `devDependencies` in `package.json`:
+
+```json
+"conventional-changelog": "^7.1.1",
+"conventional-recommended-bump": "^11.2.0",
+```
+
+### Release Script
+
+The release script is at `tools/scripts/release.mjs`. It handles the full release pipeline:
+
+1. Finds the last stable tag and its `-dev` counterpart
+2. Analyzes commits since the `-dev` tag to determine the bump type
+3. Uses Nx `releaseVersion()` to bump all `package.json` files across the monorepo
+4. Uses `ConventionalChangelog` to generate/update the root `CHANGELOG.md`
+5. Optionally publishes via Nx `releasePublish()`
+
+```bash
+# Dry run (default) — preview the next version and changes
+node tools/scripts/release.mjs
+
+# Actual release — applies version bumps and updates CHANGELOG.md
+node tools/scripts/release.mjs --dry-run=false
+
+# Explicit version override (skips commit analysis)
+node tools/scripts/release.mjs --version 13.0.1 --dry-run=false
+
+# Verbose output
+node tools/scripts/release.mjs --verbose
+
+# Skip npm publish step
+node tools/scripts/release.mjs --skip-publish
+```
+
+### nx.json Configuration
+
+The `release` block in `nx.json` is still used by the Nx Release programmatic API for version bumping. Key changes from the initial migration:
+
+- **`release.git`** has been split into **`release.version.git`** and **`release.changelog.git`** — the Nx programmatic API requires this separation
+- **`release.version.git`** has `commit`, `tag`, and `stageChanges` all set to `false` since the script handles versioning only; git operations are done separately by the release workflow
+- **`release.changelog`** config is retained but the script generates the root changelog directly with `conventional-changelog` instead of using Nx's changelog generation, which avoids the same history traversal issue
+- **Per-project changelogs** (`projectChangelogs`) have been removed — only the root `CHANGELOG.md` is maintained
+
+### Workspace project.json Targets
+
+The release targets in the root `project.json` now use the custom script:
+
+```json
+"release-dry-run": {
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "node tools/scripts/release.mjs --skip-publish --verbose"
+  }
+},
+"release": {
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "node tools/scripts/release.mjs --dry-run=false --skip-publish --verbose"
+  }
+}
+```
+
+Run them with:
+
+```bash
+npx nx release-dry-run    # preview
+npx nx release            # apply changes
+```
+
+### Per-Package CHANGELOG.md Files Removed
+
+Per-package `CHANGELOG.md` files under `packages/` have been deleted. Only the root `CHANGELOG.md` is maintained going forward. This simplifies the release process and avoids the history traversal issues that caused incorrect changelogs in sub-packages.
