@@ -74,7 +74,9 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
 }
 
 /**
- * Merges all input objects into one. The order of overrides is kept, so the right-most item in the array will have priority over all objects before it.
+ * Merges all input objects into one.
+ *
+ * The order of overrides is kept, so the right-most item in the array will have priority over all objects before it.
  *
  * @param objects
  */
