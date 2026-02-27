@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { first, Subject } from 'rxjs';
 import { onMatchDelta } from './delta';
-import { failWithJestDoneCallback } from '@dereekb/util/test';
+import { callbackTest, failWithTestDoneCallback } from '@dereekb/util/test';
 import { tapAfterTimeout } from './timeout';
 
 describe('onMatchDelta', () => {
@@ -22,70 +22,79 @@ describe('onMatchDelta', () => {
   });
 
   describe('requireConsecutive=true', () => {
-    it('should emit if the prevous value is equal to "from" and the current value is equal to "to".', (done) => {
-      sub.subscription = subject
-        .pipe(
-          onMatchDelta({
-            from,
-            to,
-            requireConsecutive: true
-          }),
-          first()
-        )
-        .subscribe((value) => {
-          expect(value).toBe(to);
-          done();
-        });
+    it(
+      'should emit if the prevous value is equal to "from" and the current value is equal to "to".',
+      callbackTest((done) => {
+        sub.subscription = subject
+          .pipe(
+            onMatchDelta({
+              from,
+              to,
+              requireConsecutive: true
+            }),
+            first()
+          )
+          .subscribe((value) => {
+            expect(value).toBe(to);
+            done();
+          });
 
-      subject.next(from);
-      subject.next(to);
-    });
+        subject.next(from);
+        subject.next(to);
+      })
+    );
 
-    it('should not emit if the prevous value is not equal to "from" and the current value is equal to "to".', (done) => {
-      sub.subscription = subject
-        .pipe(
-          onMatchDelta({
-            from,
-            to,
-            requireConsecutive: true
-          }),
-          first(),
-          tapAfterTimeout(1000, () => done())
-        )
-        .subscribe(() => {
-          failWithJestDoneCallback(done);
-        });
+    it(
+      'should not emit if the prevous value is not equal to "from" and the current value is equal to "to".',
+      callbackTest((done) => {
+        sub.subscription = subject
+          .pipe(
+            onMatchDelta({
+              from,
+              to,
+              requireConsecutive: true
+            }),
+            first(),
+            tapAfterTimeout(1000, () => done())
+          )
+          .subscribe(() => {
+            failWithTestDoneCallback(done);
+          });
 
-      subject.next(from);
-      subject.next(2);
-      subject.next(to);
-    });
+        subject.next(from);
+        subject.next(2);
+        subject.next(to);
+      })
+    );
   });
 
   describe('requireConsecutive=false', () => {
-    it('should should emit once the target "from" value has been seen once followed by the "to" value at any time.', (done) => {
-      sub.subscription = subject
-        .pipe(
-          onMatchDelta({
-            from,
-            to,
-            requireConsecutive: false
-          }),
-          first(),
-          tapAfterTimeout(1000, () => failWithJestDoneCallback(done))
-        )
-        .subscribe((value) => {
-          expect(value).toBe(to);
-          done();
-        });
+    it(
+      'should should emit once the target "from" value has been seen once followed by the "to" value at any time.',
+      callbackTest((done) => {
+        sub.subscription = subject
+          .pipe(
+            onMatchDelta({
+              from,
+              to,
+              requireConsecutive: false
+            }),
+            first(),
+            tapAfterTimeout(1000, () => failWithTestDoneCallback(done))
+          )
+          .subscribe((value) => {
+            expect(value).toBe(to);
+            done();
+          });
 
-      subject.next(from);
-      subject.next(2);
-      subject.next(3);
-      subject.next(4);
-      subject.next(5);
-      subject.next(6);
-      subject.next(to);
-    });
+        subject.next(from);
+        subject.next(2);
+        subject.next(3);
+        subject.next(4);
+        subject.next(5);
+        subject.next(6);
+        subject.next(to);
+      })
+    );
   });
 });

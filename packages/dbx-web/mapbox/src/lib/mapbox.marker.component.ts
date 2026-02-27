@@ -108,7 +108,7 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     switch (presentation) {
       case 'chip':
       case 'chip-small':
-        cssClasses = ['dbx-mapbox-marker-chip', 'dbx-chip', 'mat-standard-chip', 'dbx-bg'];
+        cssClasses = ['dbx-mapbox-marker-chip', 'dbx-chip', 'mat-standard-chip', 'dbx-default-bg'];
 
         if (presentation === 'chip-small') {
           cssClasses.push('dbx-chip-small');

@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails, slashPathSubPathMatcher, slashPathFolderFactory, slashPathPathMatcher } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails, slashPathSubPathMatcher, slashPathFolderFactory, slashPathPathMatcher, SlashPathPathMatcherPartCode } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {
@@ -608,7 +608,198 @@ describe('slashPathSubPathMatcher()', () => {
     });
 
     describe('complex paths configuration', () => {
-      // TODO: ...
+      describe('SlashPathPathMatcherPartCode matchers', () => {
+        const { WILDCARD } = SlashPathPathMatcherPartCode;
+
+        it('should match any segment with WILDCARD', () => {
+          const matcher = slashPathSubPathMatcher({ basePath: ['data', WILDCARD, 'files'] });
+          const result = matcher('data/anything/files/test.txt');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['test.txt']);
+        });
+
+        it('should match multiple wildcards in sequence', () => {
+          const matcher = slashPathSubPathMatcher({ basePath: [WILDCARD, WILDCARD, 'files'] });
+          const result = matcher('a/b/files/test.txt');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['test.txt']);
+        });
+
+        it('should match wildcard at end of base path', () => {
+          const matcher = slashPathSubPathMatcher({ basePath: ['data', 'users', WILDCARD] });
+          const result = matcher('data/users/john/profile.json');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['profile.json']);
+        });
+      });
+
+      describe('SlashPathPathMatcherFunction matchers', () => {
+        it('should match using custom function', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: ['api', (part: string) => part.startsWith('v'), 'users']
+          });
+          const result = matcher('api/v2/users/123.json');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['123.json']);
+        });
+
+        it('should not match when custom function returns false', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: ['api', (part: string) => part.startsWith('v'), 'users']
+          });
+          const result = matcher('api/auth/users/123.json');
+
+          expect(result.matchesBasePath).toBe(false);
+          expect(result.subPathParts).toBeNull();
+        });
+
+        it('should match with multiple custom functions', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: [(part: string) => part.length === 4, (part: string) => part.includes('-'), 'data']
+          });
+          const result = matcher('2024/test-1/data/file.txt');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['file.txt']);
+        });
+
+        it('should match numeric IDs with custom function', () => {
+          const isNumeric = (part: string) => /^\d+$/.test(part);
+          const matcher = slashPathSubPathMatcher({
+            basePath: ['users', isNumeric, 'documents']
+          });
+
+          const result1 = matcher('users/12345/documents/resume.pdf');
+          expect(result1.matchesBasePath).toBe(true);
+          expect(result1.subPathParts).toEqual(['resume.pdf']);
+
+          const result2 = matcher('users/john/documents/resume.pdf');
+          expect(result2.matchesBasePath).toBe(false);
+        });
+      });
+
+      describe('boolean matchers', () => {
+        it('should match all parts when using true', () => {
+          const matcher = slashPathSubPathMatcher({ basePath: [true, true, 'files'] });
+          const result = matcher('anything/goes/files/test.txt');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['test.txt']);
+        });
+
+        it('should never match when using false', () => {
+          const matcher = slashPathSubPathMatcher({ basePath: ['data', false, 'files'] });
+          const result = matcher('data/anything/files/test.txt');
+
+          expect(result.matchesBasePath).toBe(false);
+          expect(result.subPathParts).toBeNull();
+        });
+
+        it('should support mix of true and string matchers', () => {
+          const matcher = slashPathSubPathMatcher({ basePath: [true, 'users', true] });
+          const result = matcher('api/users/active/profile.json');
+
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['profile.json']);
+        });
+      });
+
+      describe('combined matcher types', () => {
+        const { WILDCARD } = SlashPathPathMatcherPartCode;
+
+        it('should combine string, WILDCARD, function, and boolean matchers', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: [
+              'projects', // string literal
+              WILDCARD, // any project id
+              (part: string) => part.startsWith('branch-'), // branch folders
+              true, // any subfolder
+              'src' // source folder
+            ]
+          });
+
+          const result = matcher('projects/my-app/branch-feature/components/src/Button.tsx');
+          expect(result.matchesBasePath).toBe(true);
+          expect(result.subPathParts).toEqual(['Button.tsx']);
+        });
+
+        it('should fail when any combined matcher does not match', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: ['projects', WILDCARD, (part: string) => part.startsWith('branch-'), true, 'src']
+          });
+
+          const result = matcher('projects/my-app/main/components/src/Button.tsx');
+          expect(result.matchesBasePath).toBe(false);
+        });
+
+        it('should handle complex real-world path pattern', () => {
+          const isYear = (part: string) => /^20\d{2}$/.test(part);
+          const isMonth = (part: string) => /^(0[1-9]|1[0-2])$/.test(part);
+
+          const matcher = slashPathSubPathMatcher({
+            basePath: [
+              'archives', // base folder
+              isYear, // year (2000-2099)
+              isMonth, // month (01-12)
+              WILDCARD, // day or category
+              true, // any subfolder
+              'reports' // reports folder
+            ]
+          });
+
+          const validResult = matcher('archives/2024/03/15/financial/reports/summary.pdf');
+          expect(validResult.matchesBasePath).toBe(true);
+          expect(validResult.subPathParts).toEqual(['summary.pdf']);
+
+          const invalidYear = matcher('archives/1999/03/15/financial/reports/summary.pdf');
+          expect(invalidYear.matchesBasePath).toBe(false);
+
+          const invalidMonth = matcher('archives/2024/13/15/financial/reports/summary.pdf');
+          expect(invalidMonth.matchesBasePath).toBe(false);
+        });
+
+        it('should combine all matcher types in nested path structure', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: [
+              'api', // string
+              (part: string) => Boolean(part.match(/^v\d+$/)), // version pattern (v1, v2, etc)
+              WILDCARD, // resource type
+              (part: string) => part.length > 0, // non-empty segment
+              true, // any action
+              false // this will never match
+            ]
+          });
+
+          // Should never match because last matcher is false
+          const result = matcher('api/v1/users/123/edit/confirm');
+          expect(result.matchesBasePath).toBe(false);
+        });
+
+        it('should support folder paths in combination with other matchers', () => {
+          const matcher = slashPathSubPathMatcher({
+            basePath: [
+              'storage/uploads/', // folder path (expanded to 'storage', 'uploads')
+              WILDCARD, // any user id
+              (part: string) => ['images', 'videos', 'documents'].includes(part), // specific media types
+              true // any filename
+            ]
+          });
+
+          const imageResult = matcher('storage/uploads/user123/images/photo.jpg');
+          expect(imageResult.matchesBasePath).toBe(true);
+          expect(imageResult.subPathParts).toEqual([]);
+
+          const videoResult = matcher('storage/uploads/user456/videos/clip.mp4');
+          expect(videoResult.matchesBasePath).toBe(true);
+
+          const invalidType = matcher('storage/uploads/user789/audio/song.mp3');
+          expect(invalidType.matchesBasePath).toBe(false);
+        });
+      });
     });
   });
 });

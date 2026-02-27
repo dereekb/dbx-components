@@ -86,14 +86,6 @@ export interface LoadingStateContextConfig<T = unknown, S extends LoadingState<T
    * @returns the event to emit
    */
   readonly loadingEventForLoadingPair?: Maybe<(state: S, config: LoadingEventForLoadingPairConfigInput) => E>;
-
-  // MARK: Compat
-  /**
-   * Alias for showLoadingOnUndefinedValue.
-   *
-   * @deprecated Use showLoadingOnUndefinedValue instead.
-   */
-  readonly showLoadingOnNoValue?: Maybe<boolean>;
 }
 
 export type LoadingEventForLoadingPairConfigInput = Pick<LoadingStateContextConfig, 'showLoadingOnUndefinedValue'>;
@@ -132,7 +124,7 @@ export type LoadingStateContextInput<T = unknown, S extends LoadingState<T> = Lo
 export function loadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(input?: LoadingStateContextInput<T, S, E>): MutableLoadingStateContext<T, S, E> {
   const _config: Maybe<LoadingStateContextConfig<T, S, E>> = input && isObservable(input) ? { obs: input } : input;
   const loadingEventForLoadingPair = _config?.loadingEventForLoadingPair ?? DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION;
-  const showLoadingOnUndefinedValue = _config?.showLoadingOnUndefinedValue ?? _config?.showLoadingOnNoValue ?? false;
+  const showLoadingOnUndefinedValue = _config?.showLoadingOnUndefinedValue ?? false;
 
   const _stateStream = new BehaviorSubject<Maybe<Observable<Maybe<S>>>>(_config?.obs);
 

@@ -31,7 +31,7 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
 
       if (callFn) {
         const { specifier, modelType } = request.data;
-        preAssert({ call, crud: 'call', request, modelType, specifier });
+        preAssert({ call, request, modelType, specifier });
         return callFn(request);
       } else {
         throw onCallModelUnknownCallTypeError(call);
@@ -87,7 +87,7 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
     if (crudFn) {
       const specifier = request.data.specifier;
       assertRequestRequiresAuthForFunction(crudFn, request);
-      preAssert({ call: callType, crud: crudType, request, modelType, specifier });
+      preAssert({ call: callType, request, modelType, specifier });
       return crudFn({
         ...request,
         specifier,

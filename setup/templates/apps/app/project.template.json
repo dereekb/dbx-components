@@ -14,7 +14,7 @@
       }
     },
     "build-base": {
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@nx/angular:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "ANGULAR_APP_DIST_FOLDER",
@@ -33,7 +33,7 @@
           "includePaths": ["packages", ""]
         },
         "styles": [
-          "mapbox-gl/dist/mapbox-gl.css",
+          "node_modules/mapbox-gl/dist/mapbox-gl.css",
           "ANGULAR_APP_FOLDER/src/styles.scss"
         ],
         "scripts": []
@@ -67,7 +67,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@nx/angular:dev-server",
       "configurations": {
         "production": {
           "buildTarget": "ANGULAR_APP_NAME:build-base:production",
@@ -96,13 +96,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/ANGULAR_APP_FOLDER",
-        "{projectRoot}/.reports/jest/ANGULAR_APP_NAME.junit.xml"
-      ],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "ANGULAR_APP_FOLDER/jest.config.ts"
+        "reportsDirectory": "../../coverage/ANGULAR_APP_FOLDER"
       }
     },
     "ci-deploy-prod": {

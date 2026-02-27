@@ -1,6 +1,6 @@
-import { Injectable, InjectionToken, Inject, inject, Optional } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { AbstractAsyncWindowLoadedService } from '@dereekb/browser';
-import { Maybe, poll } from '@dereekb/util';
+import { poll } from '@dereekb/util';
 
 export const PRELOAD_SEGMENT_TOKEN = new InjectionToken<string>('DbxAnalyticsSegmentApiServicePreload');
 
@@ -30,7 +30,8 @@ export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedServ
   static readonly SEGMENT_API_WINDOW_KEY = 'analytics';
   static readonly SEGMENT_READY_KEY = 'SegmentReady';
 
-  constructor(@Optional() @Inject(PRELOAD_SEGMENT_TOKEN) preload?: Maybe<boolean>) {
+  constructor() {
+    const preload = inject(PRELOAD_SEGMENT_TOKEN, { optional: true });
     super(DbxAnalyticsSegmentApiService.SEGMENT_API_WINDOW_KEY, undefined, 'Segment', preload);
   }
 

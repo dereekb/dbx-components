@@ -1,6 +1,7 @@
 import { Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
 import { asyncPusher, type AsyncPusher, asyncPusherCache } from './rxjs.async';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('async pusher', () => {
   let pusher: AsyncPusher<number>;
@@ -29,47 +30,56 @@ describe('async pusher', () => {
     });
 
     describe('function', () => {
-      it('should return an observable that emits the value.', (done) => {
-        const pusher = asyncPusher<number>();
-
-        const obs = pusher(10);
-        sub.subscription = obs.subscribe((value) => {
-          expect(value).toBe(10);
-          done();
-        });
-      });
-
-      it('should return an observable that throttles values.', (done) => {
-        const pusher = asyncPusher<number>();
-
-        const obs = pusher(10);
-        pusher(20);
-        pusher(30);
-        pusher(40);
-
-        const expectedValue = 50;
-        pusher(expectedValue);
-
-        sub.subscription = obs.subscribe((value) => {
-          expect(value).toBe(expectedValue);
-          done();
-        });
-      });
-
-      describe('watchForCleanup()', () => {
-        it('should call destroy when the input observable completes.', (done) => {
+      it(
+        'should return an observable that emits the value.',
+        callbackTest((done) => {
           const pusher = asyncPusher<number>();
 
-          const subjectToWatchForCleanup = new Subject();
-          pusher.watchForCleanup(subjectToWatchForCleanup);
-          subjectToWatchForCleanup.complete();
-
-          sub.subscription = pusher._subject.subscribe({
-            complete: () => {
-              done();
-            }
+          const obs = pusher(10);
+          sub.subscription = obs.subscribe((value) => {
+            expect(value).toBe(10);
+            done();
           });
-        });
+        })
+      );
+
+      it(
+        'should return an observable that throttles values.',
+        callbackTest((done) => {
+          const pusher = asyncPusher<number>();
+
+          const obs = pusher(10);
+          pusher(20);
+          pusher(30);
+          pusher(40);
+
+          const expectedValue = 50;
+          pusher(expectedValue);
+
+          sub.subscription = obs.subscribe((value) => {
+            expect(value).toBe(expectedValue);
+            done();
+          });
+        })
+      );
+
+      describe('watchForCleanup()', () => {
+        it(
+          'should call destroy when the input observable completes.',
+          callbackTest((done) => {
+            const pusher = asyncPusher<number>();
+
+            const subjectToWatchForCleanup = new Subject();
+            pusher.watchForCleanup(subjectToWatchForCleanup);
+            subjectToWatchForCleanup.complete();
+
+            sub.subscription = pusher._subject.subscribe({
+              complete: () => {
+                done();
+              }
+            });
+          })
+        );
       });
     });
   });
@@ -85,19 +95,22 @@ describe('async pusher', () => {
       expect(pusher.watchForCleanup).toBeDefined();
     });
 
-    it('should create a cache that contains the AsyncPusher and', (done) => {
-      const cache = asyncPusherCache<number>();
+    it(
+      'should create a cache that contains the AsyncPusher and',
+      callbackTest((done) => {
+        const cache = asyncPusherCache<number>();
 
-      const subjectToWatchForCleanup = new Subject();
-      pusher = cache(subjectToWatchForCleanup);
+        const subjectToWatchForCleanup = new Subject();
+        pusher = cache(subjectToWatchForCleanup);
 
-      subjectToWatchForCleanup.complete();
+        subjectToWatchForCleanup.complete();
 
-      sub.subscription = pusher._subject.subscribe({
-        complete: () => {
-          done();
-        }
-      });
-    });
+        sub.subscription = pusher._subject.subscribe({
+          complete: () => {
+            done();
+          }
+        });
+      })
+    );
   });
 });

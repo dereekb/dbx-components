@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { demoApiFunctionContextFactory } from '../../../test/fixture';
-import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { onCallCreateModelParams, notificationIdentity, type OnCallCreateModelResult, DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE } from '@dereekb/firebase';
 import { guestbookIdentity, profileIdentity } from 'demo-firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
@@ -11,7 +11,7 @@ demoApiFunctionContextFactory((f) => {
       itShouldFail('to call createGuestbook without auth', async () => {
         const params = {};
 
-        await expectFail(() => demoCallModelWrappedFn(onCallCreateModelParams(guestbookIdentity, params), {}), jestExpectFailAssertHttpErrorServerErrorCode(DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE));
+        await expectFail(() => demoCallModelWrappedFn(onCallCreateModelParams(guestbookIdentity, params), {}), expectFailAssertHttpErrorServerErrorCode(DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE));
       });
 
       it('should allow calling createProfilewithout auth', async () => {

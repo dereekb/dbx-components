@@ -1,6 +1,6 @@
 import { type Minutes, type Hours, type Days, type Maybe, DATE_NOW_VALUE } from '@dereekb/util';
-import { addMinutes, isBefore } from 'date-fns';
-import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from './date';
+import { addDays, addMinutes, isBefore, isPast } from 'date-fns';
+import { daysToMinutes, isAfter, roundDownToMinute, copyHoursAndMinutesToDate } from './date';
 import { type DateRange, clampDateRangeToDateRange, clampDateToDateRange } from './date.range';
 import { type LogicalDate, dateFromLogicalDate } from './date.logical';
 
@@ -154,7 +154,21 @@ export class LimitDateTimeInstance {
     result = clampDateToDateRange(date, dateRange);
 
     if (this._config.takeNextUpcomingTime) {
-      result = takeNextUpcomingTime(result, this._config.roundDownToMinute ?? false);
+      // Inline implementation of deprecated takeNextUpcomingTime
+      // Copy hours/minutes from result to today, then add a day if it's in the past
+      const roundDownToMinute = this._config.roundDownToMinute ?? false;
+      result = copyHoursAndMinutesToDate(
+        {
+          hours: result.getHours(),
+          minutes: result.getMinutes(),
+          roundDownToMinute
+        },
+        new Date()
+      );
+
+      if (isPast(result)) {
+        result = addDays(result, 1);
+      }
     } else if (this._config.roundDownToMinute) {
       result = roundDownToMinute(result);
     }

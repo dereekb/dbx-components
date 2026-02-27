@@ -12,7 +12,7 @@
   <div class="dbx-zip-blob-preview-content">
     @switch (mode()) {
       @case ('view_directory') {
-        <dbx-zip-preview-file-entry-list [state$]="listEntriesState$" [dbxListTitleGroup]="listTitleGroupDelegate" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeEntryAnchor"></dbx-zip-preview-file-entry-list>
+        <dbx-zip-preview-file-entry-list [state]="listEntriesState$" [dbxListTitleGroup]="listTitleGroupDelegate" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeEntryAnchor"></dbx-zip-preview-file-entry-list>
       }
       @case ('view_entry') {
         <dbx-embed class="dbx-zip-blob-preview-content-embed" [blob]="selectedFileEntryBlobSignal()"></dbx-embed>

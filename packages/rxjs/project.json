@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/rxjs/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["publishable"],
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
@@ -39,24 +39,25 @@
             "input": ".",
             "output": "."
           }
-        ]
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/rxjs", "{projectRoot}/.reports/jest/rxjs.junit.xml"],
-      "options": {
-        "jestConfig": "packages/rxjs/jest.config.ts"
-      }
-    },
     "publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/rxjs && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/rxjs"
       }
     }
   }

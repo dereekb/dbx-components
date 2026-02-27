@@ -1,5 +1,5 @@
 import { catchAllHandlerKey } from '@dereekb/util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UntypedZoomWebhookEvent, ZoomApi, ZoomWebhookService } from '@dereekb/zoom/nestjs';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class DemoApiZoomWebhookService {
 
   private readonly logger = new Logger('DemoApiZoomWebhookService');
 
-  constructor(zoomApi: ZoomApi, zoomWebhookService: ZoomWebhookService) {
+  constructor(@Inject(ZoomApi) zoomApi: ZoomApi, @Inject(ZoomWebhookService) zoomWebhookService: ZoomWebhookService) {
     this._zoomApi = zoomApi;
     this._zoomWebhookService = zoomWebhookService;
 

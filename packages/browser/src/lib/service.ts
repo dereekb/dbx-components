@@ -1,6 +1,6 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here. Proper typing with Window requires using the dynamic strings _windowKey and _callbackKey.
-import { type Maybe, type Destroyable } from '@dereekb/util';
+import { type Maybe, type Destroyable, stringToBoolean } from '@dereekb/util';
 import { filterMaybe, tapFirst } from '@dereekb/rxjs';
 import { type Observable, BehaviorSubject, switchMap, shareReplay, from, firstValueFrom } from 'rxjs';
 
@@ -43,12 +43,12 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * @param windowKey
    * @param callbackKey
    */
-  constructor(windowKey: string, callbackKey?: string, serviceName?: Maybe<string>, preload?: Maybe<boolean>) {
+  constructor(windowKey: string, callbackKey?: string, serviceName?: Maybe<string>, preload?: Maybe<boolean | string>) {
     this._windowKey = windowKey;
     this._callbackKey = callbackKey;
     this._serviceName = serviceName ?? windowKey;
 
-    if (preload) {
+    if (stringToBoolean(preload)) {
       // Begin loading the service immediately.
       setTimeout(() => this.loadService().catch());
     }

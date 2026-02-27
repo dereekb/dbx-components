@@ -1,4 +1,4 @@
-import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, userProfileStorageFileGroupId, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
@@ -27,7 +27,7 @@ import {
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
   type StorageFileProcessingNotificationTaskData,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
-  STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING,
+  NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING,
   delayCompletion,
   onCallReadModelParams,
   type DownloadStorageFileParams,
@@ -53,7 +53,7 @@ import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, sl
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -394,7 +394,7 @@ demoApiFunctionContextFactory((f) => {
                     pathString: 'non-existant.txt'
                   });
 
-                  await expectFail(() => instance(), jestExpectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_DOES_NOT_EXIST_ERROR_CODE));
+                  await expectFail(() => instance(), expectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_DOES_NOT_EXIST_ERROR_CODE));
                 });
               });
 
@@ -418,7 +418,7 @@ demoApiFunctionContextFactory((f) => {
                     pathString: unknownFileStoragePath.pathString
                   });
 
-                  await expectFail(() => instance(), jestExpectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE));
+                  await expectFail(() => instance(), expectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE));
                 });
               });
 
@@ -517,7 +517,7 @@ demoApiFunctionContextFactory((f) => {
                       pathString: testFileStoragePath.pathString // only provide the path string for the default bucket
                     });
 
-                    await expectFail(() => instance(), jestExpectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE));
+                    await expectFail(() => instance(), expectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE));
 
                     // gets deleted
                     fileExists = await testFile.exists();
@@ -629,7 +629,7 @@ demoApiFunctionContextFactory((f) => {
                   key: storageFile.key
                 };
 
-                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
+                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), expectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
               });
             });
 
@@ -641,7 +641,7 @@ demoApiFunctionContextFactory((f) => {
                   key: storageFile.key
                 };
 
-                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
+                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), expectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
               });
             });
 
@@ -656,7 +656,7 @@ demoApiFunctionContextFactory((f) => {
                     key: sf.documentKey
                   };
 
-                  await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE));
+                  await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), expectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE));
                 });
               });
             });
@@ -988,7 +988,7 @@ demoApiFunctionContextFactory((f) => {
 
                           expect(metadata).toBeDefined();
                           expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]); // all subtasks completed
-                          expect(notification.tpr).toEqual([STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING]);
+                          expect(notification.tpr).toEqual([NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING]);
                           expect(notification.d).toBe(true); // marked as done now
                         });
 
@@ -1204,7 +1204,7 @@ demoApiFunctionContextFactory((f) => {
                   expect(storageFile.gs).toBeFalsy();
 
                   const instance = await f.storageFileServerActions.syncStorageFileWithGroups({ key: sf.documentKey });
-                  await expectFail(() => instance(sf.document), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE));
+                  await expectFail(() => instance(sf.document), expectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE));
                 });
               });
             });
@@ -1227,7 +1227,7 @@ demoApiFunctionContextFactory((f) => {
                       expect(storageFileGroup.s).toBe(true);
 
                       const instance = await f.storageFileServerActions.regenerateStorageFileGroupContent({ key: sfg.documentKey });
-                      await expectFail(() => instance(sfg.document), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE));
+                      await expectFail(() => instance(sfg.document), expectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION_ERROR_CODE));
                     });
 
                     describe('regenerateAllStorageFileGroupContent()', () => {

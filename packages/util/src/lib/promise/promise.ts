@@ -456,7 +456,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           currentParellelTaskKeys.delete(key);
           const waitingForKey = waitingConcurrentTasks.get(key);
 
-          // eslint-disable-next-line no-constant-condition
           while (true) {
             const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
 
@@ -528,6 +527,3 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }
-
-// MARK: Compat
-export type PromiseAsyncTaskFn<T, K = unknown> = PerformAsyncTaskFn<T, K>;

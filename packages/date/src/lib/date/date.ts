@@ -1,4 +1,4 @@
-import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, isBefore as isBeforeDate, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay, set as setDateValues } from 'date-fns';
+import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, isAfter as isAfterDate, isBefore as isBeforeDate, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay, set as setDateValues } from 'date-fns';
 import {
   type DayOfWeekNameFunction,
   type DateOrDateString,
@@ -20,9 +20,9 @@ import {
   type DayOfWeek,
   dayOfWeek,
   sortNumbersAscendingFunction,
-  type UnixDateTimeNumber,
+  type UnixDateTimeMillisecondsNumber,
   MS_IN_SECOND,
-  type DateOrUnixDateTimeNumber,
+  type DateOrUnixDateTimeMillisecondsNumber,
   type DateHourMinuteOrSecond,
   type FloorOrCeilRounding
 } from '@dereekb/util';
@@ -125,11 +125,11 @@ export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Ma
  * @param input
  * @returns
  */
-export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeNumber): Date {
-  return isDate(input) ? (input as Date) : parseJsDateString(input as string) ?? new Date(input);
+export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeMillisecondsNumber): Date {
+  return isDate(input) ? (input as Date) : (parseJsDateString(input as string) ?? new Date(input));
 }
 
-export function parseJsDateString(input: ISO8601DateString | UTCDateString | UnixDateTimeNumber): Maybe<Date> {
+export function parseJsDateString(input: ISO8601DateString | UTCDateString | UnixDateTimeMillisecondsNumber): Maybe<Date> {
   const date = typeof input === 'string' && isISO8601DateString(input) ? parseISO(input as string) : new Date(input);
   return isValid(date) ? date : undefined;
 }
@@ -226,59 +226,6 @@ export function utcDayForDate(date: Date): Date {
 }
 
 /**
- * Takes the next occuring time of the input date's hours/minutes.
- *
- * For example, if it is currently 9PM:
- * - if 10PM on any day is passed then 9PM the next day will be returned.
- * - if 11PM on any day is passed, 11PM today will be returned.
- *
- * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
- */
-export function takeNextUpcomingTime(date: Date, roundDownToMinute?: boolean): Date {
-  date = copyHoursAndMinutesFromDateToToday(date, roundDownToMinute);
-
-  if (isPast(date)) {
-    date = addDays(date, 1);
-  }
-
-  return date;
-}
-
-/**
- * Creates a new date and copies the hours/minutes from the previous date and applies them to a date for today.
- *
- * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
- */
-export function copyHoursAndMinutesFromDateToToday(fromDate: Date, roundDownToMinute?: boolean): Date {
-  return copyHoursAndMinutesFromDate(new Date(), fromDate, roundDownToMinute);
-}
-
-/**
- * Copies the hours/minutes from now to the target date.
- *
- * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
- */
-export function copyHoursAndMinutesFromNow(target: Date, roundDownToMinute?: boolean): Date {
-  return copyHoursAndMinutesFromDate(target, new Date(), roundDownToMinute);
-}
-
-/**
- * Creates a new date and copies the hours/minutes from the input date to the target date.
- *
- * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
- */
-export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, roundDownToMinute?: boolean): Date {
-  return copyHoursAndMinutesToDate(
-    {
-      hours: fromDate.getHours(),
-      minutes: fromDate.getMinutes(),
-      roundDownToMinute
-    },
-    target
-  );
-}
-
-/**
  * Creates a new date using UTC and copies the hours/minutes from the input date using the UTC values to the target date.
  */
 export function copyHoursAndMinutesFromUTCDate(target: Date, fromDate: Date, roundDownToMinute?: boolean): Date {
@@ -329,12 +276,12 @@ export function roundDateDownTo(date: Date, roundToUnit: DateHourMinuteOrSecond)
 }
 
 export function roundDateTo(date: Date, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): Date;
-export function roundDateTo(unixDateTimeNumber: UnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): UnixDateTimeNumber;
-export function roundDateTo(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): DateOrUnixDateTimeNumber {
+export function roundDateTo(unixDateTimeNumber: UnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): UnixDateTimeMillisecondsNumber;
+export function roundDateTo(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): DateOrUnixDateTimeMillisecondsNumber {
   return typeof date === 'number' ? roundDateToUnixDateTimeNumber(date, roundToUnit, roundType) : roundDateTo(date, roundToUnit, roundType);
 }
 
-export function roundDateToDate(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): Date {
+export function roundDateToDate(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): Date {
   return new Date(roundDateToUnixDateTimeNumber(date, roundToUnit, roundType));
 }
 
@@ -346,7 +293,7 @@ export function roundDateToDate(date: DateOrUnixDateTimeNumber, roundToUnit: Dat
  * @param roundType
  * @returns
  */
-export function roundDateToUnixDateTimeNumber(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): UnixDateTimeNumber {
+export function roundDateToUnixDateTimeNumber(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): UnixDateTimeMillisecondsNumber {
   const inputTimeUnrounded = typeof date === 'number' ? date : date.getTime();
 
   let roundAmount: number = 0;

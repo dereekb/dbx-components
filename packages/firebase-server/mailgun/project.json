@@ -6,26 +6,38 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase-server/mailgun",
         "outputPath": "dist/packages/firebase-server/mailgun",
         "tsConfig": "packages/firebase-server/mailgun/tsconfig.lib.json",
-        "packageJson": "packages/firebase-server/mailgun/package.json",
+        "project": "packages/firebase-server/mailgun/package.json",
         "main": "packages/firebase-server/mailgun/src/index.ts",
-        "assets": []
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/mailgun"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/firebase-server/mailgun/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/firebase-server/mailgun"
       }
     }
   }

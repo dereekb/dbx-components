@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/browser",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -15,9 +15,10 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "@dereekb/rxjs": "*",
-    "rxjs": "^7.4.0"
+    "@dereekb/util": "13.0.0",
+    "@dereekb/rxjs": "13.0.0",
+    "rxjs": "^7.8.0",
+    "core-js": "^3.0.0"
   },
   "dependencies": {}
 }

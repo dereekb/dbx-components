@@ -28,7 +28,8 @@ import {
   zohoCrmDownloadAttachmentForRecord,
   zohoCrmUploadAttachmentForRecord,
   zohoCrmDeleteAttachmentFromRecord,
-  zohoCrmRemoveTagsFromRecords
+  zohoCrmRemoveTagsFromRecords,
+  zohoCrmDeleteTag
 } from '@dereekb/zoho';
 import { ZohoCrmServiceConfig } from './crm.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -146,6 +147,10 @@ export class ZohoCrmApi {
 
   get createTagsForModule() {
     return zohoCrmCreateTagsForModule(this.crmContext);
+  }
+
+  get deleteTag() {
+    return zohoCrmDeleteTag(this.crmContext);
   }
 
   get getTagsForModule() {

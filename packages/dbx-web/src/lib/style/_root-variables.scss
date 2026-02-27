@@ -143,7 +143,7 @@
     #{theming.$dbx-disabled-color-var}: $disabled-color;
     #{theming.$dbx-disabled-color-contrast-var}: $disabled-color-contrast;
 
-    #{theming.$dbx-bg-color-var}: $background-color;
-    #{theming.$dbx-bg-color-contrast-var}: $background-color-contrast;
+    #{theming.$dbx-default-color-var}: $background-color;
+    #{theming.$dbx-default-color-contrast-var}: $background-color-contrast;
   }
 }

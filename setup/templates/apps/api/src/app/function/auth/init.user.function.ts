@@ -1,5 +1,5 @@
 import { UserRecord } from 'firebase-admin/auth';
-import * as functions from 'firebase-functions/v1';
+import functions from 'firebase-functions/v1';
 import { onGen1EventWithAPP_CODE_PREFIXNestContext } from '../function';
 
 export const initUserOnCreate = onGen1EventWithAPP_CODE_PREFIXNestContext<UserRecord>((withNest) =>

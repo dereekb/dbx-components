@@ -1,4 +1,4 @@
-import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, type Maybe, type ContentDispositionString, type ContentTypeMimeType } from '@dereekb/util';
+import { type ArrayOrValue, type DateOrUnixDateTimeMillisecondsNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, type Maybe, type ContentDispositionString, type ContentTypeMimeType } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
 // MARK: Storage
@@ -59,11 +59,11 @@ export interface StorageSignedDownloadUrlConfig {
    *
    * Defaults to one hour if not specified.
    */
-  readonly expiresAt?: string | DateOrUnixDateTimeNumber;
+  readonly expiresAt?: string | DateOrUnixDateTimeMillisecondsNumber;
   /**
    * The time the url will become accessible.
    */
-  readonly accessibleAt?: string | DateOrUnixDateTimeNumber;
+  readonly accessibleAt?: string | DateOrUnixDateTimeMillisecondsNumber;
   readonly version?: 'v2' | 'v4';
   readonly virtualHostedStyle?: boolean;
   readonly cname?: string;

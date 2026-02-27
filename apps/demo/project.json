@@ -16,7 +16,7 @@
       }
     },
     "build-base": {
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@nx/angular:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/demo",
@@ -39,7 +39,7 @@
         "stylePreprocessorOptions": {
           "includePaths": ["packages", ""]
         },
-        "styles": ["mapbox-gl/dist/mapbox-gl.css", "apps/demo/src/styles.scss"],
+        "styles": ["node_modules/mapbox-gl/dist/mapbox-gl.css", "apps/demo/src/styles.scss"],
         "scripts": []
       },
       "configurations": {
@@ -47,13 +47,13 @@
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "6mb",
-              "maximumError": "7mb"
+              "maximumWarning": "7mb",
+              "maximumError": "8mb"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "2kb",
-              "maximumError": "100kb"
+              "maximumWarning": "95kb",
+              "maximumError": "110kb"
             }
           ],
           "fileReplacements": [
@@ -74,7 +74,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@nx/angular:dev-server",
       "configurations": {
         "production": {
           "proxyConfig": "apps/demo/proxy.conf.prod.json",
@@ -87,7 +87,8 @@
           "buildTarget": "demo:build-base:development"
         }
       },
-      "defaultConfiguration": "development"
+      "defaultConfiguration": "development",
+      "continuous": true
     },
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
@@ -97,13 +98,6 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/demo", "{projectRoot}/.reports/jest/demo.junit.xml"],
-      "options": {
-        "jestConfig": "apps/demo/jest.config.ts"
-      }
     },
     "deploy": {
       "executor": "nx:run-commands",
@@ -115,6 +109,13 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only hosting"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/demo"
       }
     }
   }

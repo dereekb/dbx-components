@@ -1,6 +1,6 @@
 import { type PromiseOrValue, type Maybe, randomNumber } from '@dereekb/util';
 import { type FetchPage, FetchPageLimitReachedError, type FetchPageResultInfo, type FetchPageResult, fetchPageFactory } from './fetch.page';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 
 interface FetchPageTestRequestObject {
   filter: object;
@@ -93,7 +93,7 @@ describe('fetchPageFactory()', () => {
 
             expect(secondPage.isAtMaxPage).toBe(true);
 
-            await expectFail(() => secondPage.fetchNext(), jestExpectFailAssertErrorType(FetchPageLimitReachedError));
+            await expectFail(() => secondPage.fetchNext(), expectFailAssertErrorType(FetchPageLimitReachedError));
           });
         });
       });

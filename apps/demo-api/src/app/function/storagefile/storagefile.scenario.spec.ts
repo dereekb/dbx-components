@@ -6,8 +6,8 @@ import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, ty
 import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import * as sharp from 'sharp';
-import * as AdmZip from 'adm-zip';
+import sharp from 'sharp';
+import AdmZip from 'adm-zip';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {

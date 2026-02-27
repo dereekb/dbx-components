@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, type EnvironmentProviders, type Provider, makeEnvironmentProviders } from '@angular/core';
+import { inject, type EnvironmentProviders, makeEnvironmentProviders, provideAppInitializer, type Provider } from '@angular/core';
 import { DbxFirebaseDevelopmentWidgetService, DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN } from './development.widget.service';
 import { DbxFirebaseDevelopmentService, DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN } from './development.service';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
@@ -43,7 +43,7 @@ export function provideDbxFirebaseDevelopment(config: ProvideDbxFirebaseDevelopm
     entries.push(developmentFirebaseServerSchedulerWidgetEntry());
   }
 
-  const providers: Provider[] = [
+  const providers: (EnvironmentProviders | Provider)[] = [
     // config
     {
       provide: DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN,
@@ -58,17 +58,11 @@ export function provideDbxFirebaseDevelopment(config: ProvideDbxFirebaseDevelopm
     DbxFirebaseDevelopmentSchedulerService,
     DbxFirebaseDevelopmentWidgetService,
     // service initialization
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (scheduler: DbxFirebaseDevelopmentSchedulerService) => {
-        return () => {
-          // initialize the scheduler
-          scheduler.init();
-        };
-      },
-      deps: [DbxFirebaseDevelopmentSchedulerService],
-      multi: true
-    }
+    provideAppInitializer(() => {
+      const scheduler = inject(DbxFirebaseDevelopmentSchedulerService);
+      // initialize the scheduler
+      scheduler.init();
+    })
   ];
 
   return makeEnvironmentProviders(providers);

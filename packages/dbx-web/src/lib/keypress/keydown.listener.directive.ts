@@ -11,23 +11,13 @@ import { type Maybe } from '@dereekb/util';
 export class DbxWindowKeyDownListenerDirective {
   readonly dbxWindowKeyDownListener = output<KeyboardEvent>();
 
-  /**
-   * @deprecated Use dbxWindowKeyDownEnabled instead.
-   */
-  readonly appWindowKeyDownEnabled = input<Maybe<boolean>>();
-
-  /**
-   * @deprecated Use dbxWindowKeyDownFilter instead.
-   */
-  readonly appWindowKeyDownFilter = input<Maybe<string[]>>();
-
   readonly dbxWindowKeyDownEnabled = input<Maybe<boolean>>();
   readonly dbxWindowKeyDownFilter = input<Maybe<string[]>>();
 
-  readonly isEnabledSignal = computed(() => this.dbxWindowKeyDownEnabled() ?? this.appWindowKeyDownEnabled());
+  readonly isEnabledSignal = this.dbxWindowKeyDownEnabled;
 
   readonly keysFilterSignal = computed(() => {
-    const filterOnKeys = this.dbxWindowKeyDownFilter() ?? this.appWindowKeyDownFilter();
+    const filterOnKeys = this.dbxWindowKeyDownFilter();
     let filter: Maybe<Set<string>>;
 
     if (filterOnKeys) {

@@ -310,7 +310,7 @@ Directives organized by purpose for quick lookup:
 
 **Purpose**: Creates and provides the root ActionContextStore for all child directives.
 
-**Selectors**: `dbx-action`, `[dbxAction]`, `dbx-action-context`, `[dbxActionContext]`
+**Selectors**: `dbx-action`, `[dbxAction]`, `dbx-action-context`, `[dbxAction]`
 
 **Export As**: `action`, `dbxAction`
 

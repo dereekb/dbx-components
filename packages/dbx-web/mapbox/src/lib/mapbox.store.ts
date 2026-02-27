@@ -30,7 +30,7 @@ import {
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, OperatorFunction, throttleTime } from 'rxjs';
-import * as MapboxGl from 'mapbox-gl';
+import MapboxGl, { MapEventType, MapEvents, Map } from 'mapbox-gl';
 import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxEventData, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -47,9 +47,9 @@ export interface StringMapboxListenerPair {
   listener: (ev: MapboxEventData) => void;
 }
 
-export interface TypedMapboxListenerPair<T extends keyof MapboxGl.MapEventType> {
+export interface TypedMapboxListenerPair<T extends keyof MapEventType> {
   type: T;
-  listener: (ev: MapboxGl.MapEventType[T] & MapboxEventData) => void;
+  listener: (ev: MapEventType[T] & MapboxEventData) => void;
 }
 
 export interface DbxMapboxMarginCalculationSizing {
@@ -177,7 +177,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
               const listenerPairs: StringMapboxListenerPair[] = [];
 
-              function addListener<T extends keyof MapboxGl.MapEvents>(type: T, listener: Parameters<typeof map.on<T>>[2]) {
+              function addListener<T extends keyof MapEvents>(type: T, listener: Parameters<typeof map.on<T>>[2]) {
                 map.on<T>(type, listener);
                 listenerPairs.push({ type, listener } as StringMapboxListenerPair);
               }
@@ -601,7 +601,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly mapService$ = this.currentMapService$.pipe(filterMaybe());
 
-  readonly currentMapInstance$: Observable<Maybe<MapboxGl.Map>> = this.currentMapService$.pipe(
+  readonly currentMapInstance$: Observable<Maybe<Map>> = this.currentMapService$.pipe(
     switchMap((currentMapService: Maybe<MapService>) => {
       if (currentMapService) {
         return currentMapService.mapLoaded$.pipe(
@@ -1087,27 +1087,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly clearDrawerContent = this.updater((state) => setDrawerContent(state, undefined));
   readonly setDrawerContent = this.updater(setDrawerContent);
-
-  // MARK: Compat
-  /**
-   * @deprecated use drawerContent$ instead.
-   */
-  readonly content$ = this.drawerContent$;
-
-  /**
-   * @deprecated use hasDrawerContent$ instead.
-   */
-  readonly hasContent$ = this.hasDrawerContent$;
-
-  /**
-   * @deprecated use clearDrawerContent instead.
-   */
-  readonly clearContent = this.updater((state) => setDrawerContent(state, undefined));
-
-  /**
-   * @deprecated use setDrawerContent instead.
-   */
-  readonly setContent = this.updater(setDrawerContent);
 }
 
 function setDrawerContent(state: DbxMapboxStoreState, drawerContent: Maybe<DbxInjectionComponentConfig<unknown>>) {

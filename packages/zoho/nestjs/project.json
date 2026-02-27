@@ -6,26 +6,38 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/zoho/nestjs",
         "outputPath": "dist/packages/zoho/nestjs",
         "tsConfig": "packages/zoho/nestjs/tsconfig.lib.json",
-        "packageJson": "packages/zoho/nestjs/package.json",
+        "project": "packages/zoho/nestjs/package.json",
         "main": "packages/zoho/nestjs/src/index.ts",
-        "assets": ["packages/zoho/nestjs/*.md"]
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
       },
-      "dependsOn": []
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/zoho/nestjs"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/zoho/nestjs/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/zoho/nestjs"
       }
     }
   }

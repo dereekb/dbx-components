@@ -12,12 +12,12 @@
       "options": {
         "importPath": "@dereekb/firebase-server/zoho",
         "outputPath": "dist/packages/firebase-server/zoho",
-        "main": "packages/firebase-server/zoho/src/index.ts",
         "tsConfig": "packages/firebase-server/zoho/tsconfig.lib.json",
-        "compiler": "babel",
         "project": "packages/firebase-server/zoho/package.json",
+        "main": "packages/firebase-server/zoho/src/index.ts",
         "format": ["esm", "cjs"],
         "generateExportsField": false,
+        "external": "all",
         "assets": [
           {
             "glob": "packages/firebase-server/zoho/README.md",
@@ -29,7 +29,15 @@
             "input": ".",
             "output": "."
           }
-        ]
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
       }
     },
     "lint": {
@@ -37,10 +45,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/zoho"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "packages/firebase-server/zoho/jest.config.ts"
+        "reportsDirectory": "../../../coverage/packages/firebase-server/zoho"
       }
     }
   }

@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, type EnvironmentProviders, type Provider, type Type, makeEnvironmentProviders } from '@angular/core';
+import { inject, type EnvironmentProviders, makeEnvironmentProviders, provideAppInitializer, type Provider, type Type } from '@angular/core';
 import { type FirebaseLoginMethodType } from './login';
 import { type DbxFirebaseAuthLoginPasswordConfig } from './login.password';
 import { DbxFirebaseAuthLoginService, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN } from './login.service';
@@ -39,7 +39,7 @@ export interface ProvideDbxFirebaseLoginConfig {
 export function provideDbxFirebaseLogin(config: ProvideDbxFirebaseLoginConfig): EnvironmentProviders {
   const { termsOfServiceUrls: loginTerms, enabledLoginMethods, loginTermsComponentClass, passwordConfig } = config;
 
-  const providers: Provider[] = [
+  const providers: (EnvironmentProviders | Provider)[] = [
     // Default login providers
     {
       provide: DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN,
@@ -52,21 +52,14 @@ export function provideDbxFirebaseLogin(config: ProvideDbxFirebaseLoginConfig): 
     },
     DbxFirebaseAuthLoginService,
     // service initialization
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) => {
-        return () => {
-          // initialize the scheduler
-          if (enabledLoginMethods === true) {
-            dbxFirebaseAuthLoginService.setEnableAll();
-          } else {
-            dbxFirebaseAuthLoginService.enable(enabledLoginMethods);
-          }
-        };
-      },
-      deps: [DbxFirebaseAuthLoginService],
-      multi: true
-    }
+    provideAppInitializer(() => {
+      const dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+      if (enabledLoginMethods === true) {
+        dbxFirebaseAuthLoginService.setEnableAll();
+      } else {
+        dbxFirebaseAuthLoginService.enable(enabledLoginMethods);
+      }
+    })
   ];
 
   // Terms component

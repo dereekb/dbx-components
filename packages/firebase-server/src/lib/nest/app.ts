@@ -2,7 +2,7 @@ import { type ClassType, type Getter, asGetter, makeGetter, pushItemOrArrayItems
 import { type DynamicModule, type FactoryProvider, type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider, type Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
+import express from 'express';
 import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import type * as admin from 'firebase-admin';
 import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';

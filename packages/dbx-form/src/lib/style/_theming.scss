@@ -1,9 +1,204 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'node_modules/@angular/material/core/theming/theming';
+
 @forward '@angular/material' show m2-define-light-theme, m2-define-dark-theme, m2-define-palette, m2-get-contrast-color-from-palette, m2-get-color-from-palette, m2-get-color-config, m2-get-typography-config, m2-get-density-config, elevation;
 
-@forward 'node_modules/@angular/material/core/theming/theming' show private-is-theme-object, private-check-duplicate-theme-styles, $theme-ignore-duplication-warnings;
+@forward 'node_modules/@angular/material/core/theming/theming' show private-is-theme-object;
 
 @forward 'node_modules/@angular/material/core/typography/typography-utils';
 
 @forward './config';
 @forward './variables';
 @forward './mixin';
+
+// NOTE: This was removed in Angular Material 21. We moved it here for continued usage.
+// Removed here:
+// https://github.com/angular/components/commit/ca83d31065c8b7cef0f8f0b69321d59839f4ad74
+
+// These variable are not intended to be overridden externally. They use `!default` to
+// avoid being reset every time this file is imported.
+$_emitted-color: () !default;
+$_emitted-typography: () !default;
+$_emitted-density: () !default;
+$_emitted-base: () !default;
+
+//
+// Private APIs
+//
+
+$private-internal-name: _mat-theming-internals-do-not-access;
+
+// Checks if configurations that have been declared in the given theme have been generated
+// before. If so, warnings will be reported. This should notify developers in case duplicate
+// styles are accidentally generated due to wrong usage of the all-theme mixins.
+//
+// Additionally, this mixin controls the default value for the density configuration. By
+// default, density styles are generated at scale zero. If the same density styles would be
+// generated a second time though, the default value will change to avoid duplicate styles.
+//
+// The mixin keeps track of all configurations in a list that is scoped to the specified
+// id. This is necessary because a given theme can be passed to multiple disjoint theme mixins
+// (e.g. `all-component-themes` and `all-legacy-component-themes`) without causing any
+// style duplication.
+@mixin private-check-duplicate-theme-styles($theme-or-color-config, $id) {
+  // TODO(mmalerba): use get-theme-version for this check when its moved out of experimental.
+  @if map.get($theme-or-color-config, $private-internal-name, theme-version) == 1 {
+    @include _check-duplicate-theme-styles-v1($theme-or-color-config, $id) {
+      // Optionally, consumers of this mixin can wrap contents inside so that nested
+      // duplicate style checks do not report another warning. e.g. if developers include
+      // the `all-component-themes` mixin twice, only the top-level duplicate styles check
+      // should report a warning. Not all individual components should report a warning too.
+      $orig-mat-theme-ignore-duplication-warnings: $theme-ignore-duplication-warnings;
+      $theme-ignore-duplication-warnings: true !global;
+      @content;
+      $theme-ignore-duplication-warnings: $orig-mat-theme-ignore-duplication-warnings !global;
+    }
+  } @else {
+    @include _check-duplicate-theme-styles-v0($theme-or-color-config, $id) {
+      // Optionally, consumers of this mixin can wrap contents inside so that nested
+      // duplicate style checks do not report another warning. e.g. if developers include
+      // the `all-component-themes` mixin twice, only the top-level duplicate styles check
+      // should report a warning. Not all individual components should report a warning too.
+      $orig-mat-theme-ignore-duplication-warnings: $theme-ignore-duplication-warnings;
+      $theme-ignore-duplication-warnings: true !global;
+      @content;
+      $theme-ignore-duplication-warnings: $orig-mat-theme-ignore-duplication-warnings !global;
+    }
+  }
+}
+
+// Checks for duplicate styles in a `theme-version: 1` style theme.
+@mixin _check-duplicate-theme-styles-v1($theme-or-color-config, $id) {
+  $color-settings: _strip-empty-settings(
+    (
+      theme-type: map.get($theme-or-color-config, $private-internal-name, theme-type),
+      color-tokens: map.get($theme-or-color-config, $private-internal-name, color-tokens)
+    )
+  );
+  $typography-settings: _strip-empty-settings(
+    (
+      typography-tokens: map.get($theme-or-color-config, $private-internal-name, typography-tokens)
+    )
+  );
+  $density-settings: _strip-empty-settings(
+    (
+      density-scale: map.get($theme-or-color-config, $private-internal-name, density-scale),
+      density-tokens: map.get($theme-or-color-config, $private-internal-name, density-tokens)
+    )
+  );
+  $base-settings: _strip-empty-settings(
+    (
+      base-tokens: map.get($theme-or-color-config, $private-internal-name, base-tokens)
+    )
+  );
+  $previous-color-settings: map.get($_emitted-color, $id) or ();
+  $previous-typography-settings: map.get($_emitted-typography, $id) or ();
+  $previous-density-settings: map.get($_emitted-density, $id) or ();
+  $previous-base-settings: map.get($_emitted-base, $id) or ();
+
+  // Check if the color configuration has been generated before.
+  @if $color-settings != null {
+    @if list.index($previous-color-settings, $color-settings) != null and not $theme-ignore-duplication-warnings {
+      @warn 'The same color styles are generated multiple times. ' + $_duplicate-warning;
+    }
+    $previous-color-settings: list.append($previous-color-settings, $color-settings);
+  }
+
+  // Check if the typography configuration has been generated before.
+  @if $typography-settings != null {
+    @if list.index($previous-typography-settings, $typography-settings) != null and not $theme-ignore-duplication-warnings {
+      @warn 'The same typography styles are generated multiple times. ' + $_duplicate-warning;
+    }
+    $previous-typography-settings: list.append($previous-typography-settings, $typography-settings);
+  }
+
+  // Check if the density configuration has been generated before.
+  @if $density-settings != null {
+    @if list.index($previous-density-settings, $density-settings) != null and not $theme-ignore-duplication-warnings {
+      @warn 'The same density styles are generated multiple times. ' + $_duplicate-warning;
+    }
+    $previous-density-settings: list.append($previous-density-settings, $density-settings);
+  }
+
+  // Check if the base configuration has been generated before.
+  @if $base-settings != null {
+    @if list.index($previous-base-settings, $base-settings) != null and not $theme-ignore-duplication-warnings {
+      @warn 'The same base theme styles are generated multiple times. ' + $_duplicate-warning;
+    }
+    $previous-base-settings: list.append($previous-base-settings, $base-settings);
+  }
+
+  $_emitted-color: map.set($_emitted-color, $id, $previous-color-settings) !global;
+  $_emitted-density: map.set($_emitted-density, $id, $previous-density-settings) !global;
+  $_emitted-typography: map.set($_emitted-typography, $id, $previous-typography-settings) !global;
+  $_emitted-base: map.set($_emitted-base, $id, $previous-base-settings) !global;
+
+  @content;
+}
+
+// Checks for duplicate styles in a `theme-version: 0` style theme.
+@mixin _check-duplicate-theme-styles-v0($theme-or-color-config, $id) {
+  $theme: theming.private-legacy-get-theme($theme-or-color-config);
+  $color-config: map.get($theme, $private-internal-name, m2-config, color) or theming.private-get-color-config($theme);
+  $density-config: map.get($theme, $private-internal-name, m2-config, density) or theming.private-get-density-config($theme);
+  $typography-config: map.get($theme, $private-internal-name, m2-config, typography) or theming.private-get-typography-config($theme);
+  // Lists of previous `color`, `density` and `typography` configurations.
+  $previous-color: map.get($_emitted-color, $id) or ();
+  $previous-typography: map.get($_emitted-typography, $id) or ();
+  $previous-density: map.get($_emitted-density, $id) or ();
+  // Whether duplicate legacy density styles would be generated.
+  $duplicate-legacy-density: false;
+
+  // Check if the color configuration has been generated before.
+  @if $color-config != null {
+    @if list.index($previous-color, $color-config) != null and not $theme-ignore-duplication-warnings {
+      @warn 'The same color styles are generated multiple times. ' + $_duplicate-warning;
+    }
+    $previous-color: list.append($previous-color, $color-config);
+  }
+
+  // Check if the typography configuration has been generated before.
+  @if $typography-config != null {
+    @if list.index($previous-typography, $typography-config) != null and not $theme-ignore-duplication-warnings {
+      @warn 'The same typography styles are generated multiple times. ' + $_duplicate-warning;
+    }
+    $previous-typography: list.append($previous-typography, $typography-config);
+  }
+
+  // Check if the density configuration has been generated before.
+  @if $density-config != null {
+    @if list.index($previous-density, $density-config) != null {
+      // Only report a warning if density styles would be duplicated for non-legacy theme
+      // definitions. For legacy themes, we have compatibility logic that avoids duplication
+      // of default density styles. We don't want to report a warning in those cases.
+      @if private-is-legacy-constructed-theme($theme) {
+        $duplicate-legacy-density: true;
+      } @else if not $theme-ignore-duplication-warnings {
+        @warn 'The same density styles are generated multiple times. ' + $_duplicate-warning;
+      }
+    }
+    $previous-density: list.append($previous-density, $density-config);
+  }
+
+  $_emitted-color: map.merge(
+    $_emitted-color,
+    (
+      $id: $previous-color
+    )
+  ) !global;
+  $_emitted-density: map.merge(
+    $_emitted-density,
+    (
+      $id: $previous-density
+    )
+  ) !global;
+  $_emitted-typography: map.merge(
+    $_emitted-typography,
+    (
+      $id: $previous-typography
+    )
+  ) !global;
+
+  @content;
+}

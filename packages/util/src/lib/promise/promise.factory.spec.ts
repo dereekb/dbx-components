@@ -1,4 +1,4 @@
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import { BaseError } from 'make-error';
 import { tryWithPromiseFactoriesFunction } from './promise.factory';
 import { type Maybe } from '../value/maybe.type';
@@ -72,7 +72,7 @@ describe('tryWithPromiseFactoriesFunction()', () => {
 
     describe('throwErrors=true', () => {
       itShouldFail('when encountering an error', async () => {
-        await expectFail(() => instance(TRIGGER_ERROR_VALUE, { throwErrors: true }), jestExpectFailAssertErrorType(TestError));
+        await expectFail(() => instance(TRIGGER_ERROR_VALUE, { throwErrors: true }), expectFailAssertErrorType(TestError));
       });
     });
   });

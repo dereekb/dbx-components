@@ -1,4 +1,4 @@
-import { Injectable, Optional, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store/store.document.crud';
 import { AbstractDbxFirebaseDocumentWithParentStore } from '../../../model/modules/store/store.subcollection.document';
 import { NotificationBoxDocumentStore } from './notificationbox.document.store';
@@ -10,8 +10,9 @@ import { isSameDate } from '@dereekb/date';
 export class NotificationDocumentStore extends AbstractDbxFirebaseDocumentWithParentStore<Notification, NotificationBox, NotificationDocument, NotificationBoxDocument> {
   readonly notificationFunctions = inject(NotificationFunctions);
 
-  constructor(collections: NotificationFirestoreCollections, @Optional() parent: NotificationBoxDocumentStore) {
-    super({ collectionFactory: collections.notificationCollectionFactory, firestoreCollectionLike: collections.notificationCollectionGroup });
+  constructor() {
+    super({ collectionFactory: inject(NotificationFirestoreCollections).notificationCollectionFactory, firestoreCollectionLike: inject(NotificationFirestoreCollections).notificationCollectionGroup });
+    const parent = inject(NotificationBoxDocumentStore, { optional: true });
 
     if (parent) {
       this.setParentStore(parent);

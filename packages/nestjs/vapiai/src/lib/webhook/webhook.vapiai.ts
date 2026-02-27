@@ -1,5 +1,5 @@
 import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, type Maybe } from '@dereekb/util';
-import { type AssistantRequestPayload, type EndOfCallReportPayload, type FunctionCallPayload, type HangPayload, type SpeechUpdatePayload, type StatusUpdatePayload, type TranscriptPayload, type VapiPayload, type VapiPayloadType, type VapiResponse } from './webhook.vapiai.types';
+import { type AssistantRequestPayload, type EndOfCallReportPayload, type FunctionCallPayload, type HangPayload, type StatusUpdatePayload, type VapiPayload, type VapiPayloadType, type VapiResponse } from './webhook.vapiai.types';
 
 export type VapiAiWebhookEventType = VapiPayloadType | string;
 
@@ -58,14 +58,6 @@ export interface VapiAiEventHandlerConfigurer extends HandlerBindAccessor<Untype
   readonly handleFunctionCall: VapiAiHandlerMappedSetFunction<FunctionCallPayload>;
   readonly handleEndOfCallReport: VapiAiHandlerMappedSetFunction<EndOfCallReportPayload>;
   readonly handleHang: VapiAiHandlerMappedSetFunction<HangPayload>;
-  /**
-   * @deprecated
-   */
-  readonly handleSpeechUpdate: VapiAiHandlerMappedSetFunction<SpeechUpdatePayload>;
-  /**
-   * @deprecated
-   */
-  readonly handleTranscript: VapiAiHandlerMappedSetFunction<TranscriptPayload>;
 }
 
 export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<VapiAiEventHandlerConfigurer, UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult>({
@@ -79,9 +71,7 @@ export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<Vapi
       handleStatusUpdate: fnWithKey('status-update'),
       handleFunctionCall: fnWithKey('function-call'),
       handleEndOfCallReport: fnWithKey('end-of-call-report'),
-      handleHang: fnWithKey('hang'),
-      handleSpeechUpdate: fnWithKey('speech-update'),
-      handleTranscript: fnWithKey('transcript')
+      handleHang: fnWithKey('hang')
     };
 
     return configurer;

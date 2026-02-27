@@ -3,7 +3,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoCrmApi } from './crm.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import {
   ZOHO_DUPLICATE_DATA_ERROR_CODE,
   ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE,
@@ -24,7 +24,8 @@ import {
   ZOHO_CRM_TAG_NAME_MAX_LENGTH,
   ZohoCrmTagArrayRef,
   ZohoCrmFieldName,
-  ZohoCrmCommaSeparateFieldNames
+  ZohoCrmCommaSeparateFieldNames,
+  ZohoCrmTagId
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
@@ -53,8 +54,6 @@ interface TestContact extends ZohoCrmRecord, ZohoCrmTagArrayRef {
 
 const TEST_CONTACT_FIELDS: ZohoCrmCommaSeparateFieldNames = 'Parent_Id,Owner,Created_Time,Note_Title';
 const TEST_CONTACT_FIELDS_ARRAY: ZohoCrmFieldName[] = ['Parent_Id', 'Owner', 'Created_Time', 'Note_Title'];
-
-jest.setTimeout(12000);
 
 @Module(appZohoCrmModuleMetadata({}))
 export class TestZohoCrmModule {}
@@ -161,7 +160,7 @@ describe('crm.api', () => {
                       lastNameFieldMissing: 'Candidate' // invalid field
                     } as any
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
               );
             });
 
@@ -176,7 +175,7 @@ describe('crm.api', () => {
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
               );
             });
           });
@@ -271,7 +270,7 @@ describe('crm.api', () => {
                       First_Name: 'Failure'
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
               );
             });
 
@@ -288,7 +287,7 @@ describe('crm.api', () => {
                       Email: TEST_CANDIDATE_EMAIL_ADDRESS
                     }
                   }),
-                jestExpectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
+                expectFailAssertErrorType(ZohoCrmRecordCrudDuplicateDataError)
               );
             });
           });
@@ -396,7 +395,7 @@ describe('crm.api', () => {
                         lastNameFieldMissing: 'Candidate' // invalid field
                       } as any
                     }),
-                  jestExpectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
+                  expectFailAssertErrorType(ZohoCrmRecordCrudMandatoryFieldNotFoundError)
                 );
               });
             });
@@ -491,7 +490,7 @@ describe('crm.api', () => {
                         First_Name: 'Failure'
                       }
                     }),
-                  jestExpectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
+                  expectFailAssertErrorType(ZohoCrmRecordCrudNoMatchingRecordError)
                 );
               });
             });
@@ -660,7 +659,7 @@ describe('crm.api', () => {
                   module: ZOHO_CRM_CONTACTS_MODULE,
                   id: NON_EXISTENT_CANDIDATE_ID
                 }),
-              jestExpectFailAssertErrorType(ZohoCrmRecordNoContentError)
+              expectFailAssertErrorType(ZohoCrmRecordNoContentError)
             );
           });
         });
@@ -762,7 +761,7 @@ describe('crm.api', () => {
                     }
                   ]
                 }),
-              jestExpectFailAssertErrorType(ZohoInvalidQueryError)
+              expectFailAssertErrorType(ZohoInvalidQueryError)
             );
           });
         });
@@ -942,7 +941,7 @@ describe('crm.api', () => {
           });
 
           itShouldFail('if a record that does not exist is referenced', async () => {
-            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
+            await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_CRM_CONTACTS_MODULE, fields: TEST_CONTACT_FIELDS }), expectFailAssertErrorType(ZohoServerFetchResponseError));
           });
         });
 
@@ -974,43 +973,67 @@ describe('crm.api', () => {
     });
 
     describe('tags', () => {
+      /**
+       * This tag should always exist.
+       */
       const TEST_TAG_NAME = `Test Tag`;
 
+      /**
+       * This tag gets added/removed.
+       */
+      const TEST_CREATE_TAG_NAME = `Create Tag`;
+
+      async function deleteCreateTag() {
+        // look up the tag by name to get its ID, then delete if it exists
+        const tagsResult = await api.getTagsForModule({ module: ZOHO_CRM_CONTACTS_MODULE });
+        const existingTag = tagsResult.data.find((t) => t.name === TEST_CREATE_TAG_NAME);
+
+        if (existingTag) {
+          await api.deleteTag({ id: existingTag.id });
+        }
+      }
+
       describe('createTagsForModule()', () => {
-        it('should create a new tag', async () => {
-          const randomId = randomNumber(100000000000000);
-
-          const result = await api.createTagsForModule({
-            module: ZOHO_CRM_CONTACTS_MODULE,
-            tags: {
-              name: `Test ${randomId}`.substring(0, ZOHO_CRM_TAG_NAME_MAX_LENGTH)
-            }
+        describe('tag does not exist', () => {
+          beforeEach(async () => {
+            await deleteCreateTag();
           });
 
-          expect(result.errorItems).toHaveLength(0);
-          expect(result.successItems).toHaveLength(1);
-        });
+          it('should create a new tag', async () => {
+            const result = await api.createTagsForModule({
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              tags: {
+                name: TEST_CREATE_TAG_NAME
+              }
+            });
 
-        it(`should return an error item if the tag name is longer than ${ZOHO_CRM_TAG_NAME_MAX_LENGTH} characters`, async () => {
-          const result = await api.createTagsForModule({
-            module: ZOHO_CRM_CONTACTS_MODULE,
-            tags: {
-              name: 'A'.repeat(ZOHO_CRM_TAG_NAME_MAX_LENGTH + 1)
-            }
+            expect(result.errorItems).toHaveLength(0);
+            expect(result.successItems).toHaveLength(1);
           });
 
-          expect(result.errorItems).toHaveLength(1);
-          expect(result.successItems).toHaveLength(0);
+          it(`should return an error item if the tag name is longer than ${ZOHO_CRM_TAG_NAME_MAX_LENGTH} characters`, async () => {
+            const result = await api.createTagsForModule({
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              tags: {
+                name: 'A'.repeat(ZOHO_CRM_TAG_NAME_MAX_LENGTH + 1)
+              }
+            });
+
+            expect(result.errorItems).toHaveLength(1);
+            expect(result.successItems).toHaveLength(0);
+          });
         });
 
         describe('tag exists', () => {
           beforeEach(async () => {
-            await api.createTagsForModule({
-              module: ZOHO_CRM_CONTACTS_MODULE,
-              tags: {
-                name: TEST_TAG_NAME
-              }
-            });
+            await api
+              .createTagsForModule({
+                module: ZOHO_CRM_CONTACTS_MODULE,
+                tags: {
+                  name: TEST_TAG_NAME
+                }
+              })
+              .catch(() => {});
           });
 
           it('should return a duplicateErrorItems in the result when attempting to create a duplicate tag', async () => {
@@ -1105,34 +1128,59 @@ describe('crm.api', () => {
             });
           });
 
-          it('should create a new tag and add it to the record if the tag is unknown', async () => {
-            const result = await api.addTagsToRecords({
-              module: ZOHO_CRM_CONTACTS_MODULE,
-              tag_names: `UNKNOWN_TAG_${randomNumber(99999999, 'floor')}`,
-              ids: testRecordId
+          describe('tag does not exist', () => {
+            beforeEach(async () => {
+              await deleteCreateTag();
             });
 
-            expect(result.errorItems).toHaveLength(0);
-            expect(result.successItems).toHaveLength(1);
+            it('should create a new tag and add it to the record if the tag does not exist', async () => {
+              const result = await api.addTagsToRecords({
+                module: ZOHO_CRM_CONTACTS_MODULE,
+                tag_names: TEST_CREATE_TAG_NAME,
+                ids: testRecordId
+              });
+
+              expect(result.errorItems).toHaveLength(0);
+              expect(result.successItems).toHaveLength(1);
+            });
+          });
+        });
+
+        describe('deleteTag()', () => {
+          const TEST_DELETE_TAG_NAME = `Delete Tag`;
+
+          let deleteTagId: ZohoCrmTagId;
+
+          beforeEach(async () => {
+            const createTags = await api.createTagsForModule({
+              module: ZOHO_CRM_CONTACTS_MODULE,
+              tags: {
+                name: TEST_DELETE_TAG_NAME
+              }
+            });
+
+            const { successItems, duplicateErrorItems } = createTags;
+            deleteTagId = (successItems[0] ?? duplicateErrorItems[0])?.result.details.id;
+          });
+
+          it('should delete a tag', async () => {
+            const result = await api.deleteTag({ id: deleteTagId });
+            expect(result).toBeDefined();
           });
         });
 
         describe('removeTagsFromRecords()', () => {
-          describe('tag exists', () => {
-            beforeEach(async () => {
-              await api.createTagsForModule({
-                module: ZOHO_CRM_CONTACTS_MODULE,
-                tags: {
-                  name: TEST_TAG_NAME
-                }
-              });
-            });
+          /**
+           * This tag gets added/removed.
+           */
+          const TEST_REMOVE_TAG_NAME = `Remove Tag`;
 
+          describe('tag exists', () => {
             describe('record is tagged', () => {
               beforeEach(async () => {
                 await api.addTagsToRecords({
                   module: ZOHO_CRM_CONTACTS_MODULE,
-                  tag_names: TEST_TAG_NAME,
+                  tag_names: TEST_REMOVE_TAG_NAME,
                   ids: testRecordId
                 });
               });
@@ -1140,7 +1188,7 @@ describe('crm.api', () => {
               it('should remove a tag from a record', async () => {
                 const result = await api.removeTagsFromRecords({
                   module: ZOHO_CRM_CONTACTS_MODULE,
-                  tag_names: TEST_TAG_NAME,
+                  tag_names: TEST_REMOVE_TAG_NAME,
                   ids: testRecordId
                 });
 
@@ -1153,7 +1201,7 @@ describe('crm.api', () => {
                 });
 
                 expect(record.Tag).toBeDefined();
-                expect(record.Tag?.map((tag) => tag.name)).not.toContain(TEST_TAG_NAME);
+                expect(record.Tag?.map((tag) => tag.name)).not.toContain(TEST_REMOVE_TAG_NAME);
               });
             });
           });

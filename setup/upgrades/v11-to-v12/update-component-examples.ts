@@ -2,7 +2,7 @@
 //// DbxAnchorComponent
 //// ───────────────────────────────────────────────────────────────────────────────
 //// ========== Before ==========
-import { skipFirstMaybe } from '@dereekb/rxjs';
+import { skipAllInitialMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild, OnDestroy, HostListener, inject } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -51,7 +51,7 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
   private readonly dbNgxRouterWebProviderConfig = inject(DbxRouterWebProviderConfig);
 
   private readonly _templateRef = new BehaviorSubject<Maybe<TemplateRef<unknown>>>(undefined);
-  readonly templateRef$ = this._templateRef.pipe(skipFirstMaybe(), shareReplay(1));
+  readonly templateRef$ = this._templateRef.pipe(skipAllInitialMaybe(), shareReplay(1));
 
   @Input()
   public block?: boolean;
@@ -107,7 +107,7 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
 }
 
 //// ========== After ==========
-import { skipFirstMaybe } from '@dereekb/rxjs';
+import { skipAllInitialMaybe } from '@dereekb/rxjs';
 import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -166,7 +166,7 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
   readonly block = input<Maybe<boolean>>();
 
   readonly templateRef = viewChild<string, Maybe<TemplateRef<unknown>>>('content', { read: TemplateRef });
-  readonly templateRef$ = toObservable(this.templateRef).pipe(skipFirstMaybe(), shareReplay(1));
+  readonly templateRef$ = toObservable(this.templateRef).pipe(skipAllInitialMaybe(), shareReplay(1));
 
   readonly selectedClassSignal = computed(() => (this.selectedSignal() ? 'dbx-anchor-selected' : ''));
 
@@ -217,7 +217,7 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
   standalone: true
 })
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  
+
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   private readonly _triggerEnabled = new BehaviorSubject<boolean>(true);
@@ -1038,7 +1038,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   providers: provideDbxButton(DbxButtonDirective),
   standalone: true
 })
-export class DbxButtonDirective extends AbstractDbxButtonDirective {}
+export class DbxButtonDirective extends AbstractDbxButtonDirective { }
 
 //// ========== After =========
 import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';

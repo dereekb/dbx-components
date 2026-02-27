@@ -1,6 +1,6 @@
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { type TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirebaseStorageContextFixture, type TestingFirebaseStorageDrivers, makeTestingFirebaseStorageDrivers } from '@dereekb/firebase/test';
-import { jestTestContextBuilder } from '@dereekb/util/test';
+import { testContextBuilder } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers } from '@dereekb/firebase-server';
 import { type FirebaseStorage, firebaseStorageContextFactory } from '@dereekb/firebase';
 
@@ -28,13 +28,13 @@ export class GoogleCloudTestFirebaseStorageContextFixture extends TestFirebaseSt
 let COUNTER = 0;
 
 /**
- * A JestTestContextBuilderFunction for building firebase storage test context factories using @google-cloud/storage. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
+ * A TestContextBuilderFunction for building firebase storage test context factories using @google-cloud/storage. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
  *
  * This is used to build a @google-cloud/storage FirebaseStorage instance for testing and point it to the emulators.
  *
  * If you need all of Firebase (firebase-admin library), look at adminFirebaseAdminTestBuilder() instead.
  */
-export const googleCloudTestFirebaseStorageBuilder = jestTestContextBuilder<GoogleCloudTestFirebaseStorageInstance, GoogleCloudTestFirebaseStorageContextFixture, GoogleCloudTestFirebaseStorageConfig>({
+export const googleCloudTestFirebaseStorageBuilder = testContextBuilder<GoogleCloudTestFirebaseStorageInstance, GoogleCloudTestFirebaseStorageContextFixture, GoogleCloudTestFirebaseStorageConfig>({
   buildConfig: (input?: Partial<GoogleCloudTestFirebaseStorageConfig>) => {
     const config: GoogleCloudTestFirebaseStorageConfig = {
       host: input?.host ?? 'localhost',

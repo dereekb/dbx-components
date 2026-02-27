@@ -2,6 +2,7 @@ import { type DocumentSnapshot } from 'firebase/firestore';
 import { first } from 'rxjs';
 import { type MockItem, type MockItemDocument, type MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from '@dereekb/firebase/test';
 import { type FirestoreDocumentAccessor } from '../../common';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('FirestoreDocumentDataAccessor', () => {
   authorizedTestWithMockItemCollection((f) => {
@@ -27,19 +28,22 @@ describe('FirestoreDocumentDataAccessor', () => {
     });
 
     describe('stream()', () => {
-      it('should return a document snapshot even if the item does not exist.', (done) => {
-        const document = documentAccessor.newDocument();
-        expect(document).toBeDefined();
+      it(
+        'should return a document snapshot even if the item does not exist.',
+        callbackTest((done) => {
+          const document = documentAccessor.newDocument();
+          expect(document).toBeDefined();
 
-        document.accessor
-          .stream()
-          .pipe(first())
-          .subscribe((snapshot) => {
-            expect(snapshot).toBeDefined();
-            expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(false);
-            done();
-          });
-      });
+          document.accessor
+            .stream()
+            .pipe(first())
+            .subscribe((snapshot) => {
+              expect(snapshot).toBeDefined();
+              expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(false);
+              done();
+            });
+        })
+      );
     });
 
     describe('after creation', () => {
@@ -50,16 +54,19 @@ describe('FirestoreDocumentDataAccessor', () => {
       });
 
       describe('stream()', () => {
-        it('should return the document snapshot.', (done) => {
-          document.accessor
-            .stream()
-            .pipe(first())
-            .subscribe((snapshot) => {
-              expect(snapshot).toBeDefined();
-              expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(true);
-              done();
-            });
-        });
+        it(
+          'should return the document snapshot.',
+          callbackTest((done) => {
+            document.accessor
+              .stream()
+              .pipe(first())
+              .subscribe((snapshot) => {
+                expect(snapshot).toBeDefined();
+                expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(true);
+                done();
+              });
+          })
+        );
       });
 
       describe('get()', () => {

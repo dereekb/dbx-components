@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
 import { NotificationUserCollectionStore } from './notificationuser.collection.store';
 import { NotificationUser, NotificationUserDocument } from '@dereekb/firebase';
@@ -9,7 +9,7 @@ import { NotificationUser, NotificationUserDocument } from '@dereekb/firebase';
   standalone: true
 })
 export class DbxFirebaseNotificationUserCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<NotificationUser, NotificationUserDocument, NotificationUserCollectionStore> {
-  constructor(store: NotificationUserCollectionStore) {
-    super(store);
+  constructor() {
+    super(inject(NotificationUserCollectionStore));
   }
 }

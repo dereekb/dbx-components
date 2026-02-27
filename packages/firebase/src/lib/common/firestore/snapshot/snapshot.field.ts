@@ -239,13 +239,6 @@ export interface OptionalOneTypeFirestoreFieldConfig<T> extends OptionalFirestor
    * This is ignored if defaultReadValue is not set or if dontStoreIf is provided.
    */
   readonly dontStoreDefaultReadValue?: boolean;
-  // MARK: Deprecated
-  /**
-   * Removes the value from the object if the stored value would equal this value.
-   *
-   * @deprecated use dontStoreIf instead.
-   */
-  readonly dontStoreIfValue?: T;
 }
 
 /**
@@ -313,8 +306,8 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMa
 
   if (config) {
     const inputConfig = (config ?? {}) as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
-    const { dontStoreDefaultReadValue, dontStoreValueIf: inputDontStoreValueIf, dontStoreIfValue: inputDontStoreIfValue, transformData: inputTransformData } = inputConfig; // might be defined.
-    const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf = inputDontStoreIfValue, transformFromData, transformToData } = inputConfig as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
+    const { dontStoreDefaultReadValue, dontStoreValueIf: inputDontStoreValueIf, transformData: inputTransformData } = inputConfig; // might be defined.
+    const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf, transformFromData, transformToData } = inputConfig as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
 
     const transformData = inputTransformData ?? passThrough;
     const transformFrom = (transformFromData ?? transformData) as MapFunction<D, V>;

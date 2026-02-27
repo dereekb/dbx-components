@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, Signal } f
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
-import { AsyncPipe } from '@angular/common';
 import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, DbxHelpWidgetEntryData, DbxHelpWidgetServiceEntry } from './help.widget';
 import { getValueFromGetter, Maybe } from '@dereekb/util';
 import { DbxHelpWidgetService } from './help.widget.service';
@@ -10,7 +9,7 @@ import { DbxHelpWidgetService } from './help.widget.service';
 @Component({
   selector: 'dbx-help-view-list-entry',
   templateUrl: './help.view.list.entry.component.html',
-  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon, AsyncPipe],
+  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

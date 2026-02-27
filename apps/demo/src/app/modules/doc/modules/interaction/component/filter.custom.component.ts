@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AbstractFilterSourceDirective, provideFilterSourceDirective, DbxActionDirective } from '@dereekb/dbx-core';
+import { AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
 import { DocInteractionTestFilter } from './filter';
 import { DbxContentContainerDirective, DbxFilterWrapperComponent } from '@dereekb/dbx-web';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './filter.custom.form.component';
@@ -12,6 +12,6 @@ const DEFAULT_FILTER_VALUE: DocInteractionTestFilter = {};
   templateUrl: './filter.custom.component.html',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterCustomFilterComponent, () => DEFAULT_FILTER_VALUE)],
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DbxActionDirective, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
+  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestFilterCustomFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {}

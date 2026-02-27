@@ -27,12 +27,9 @@ export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends Firesto
   readonly triggered$: Observable<boolean> = this._watcher.triggered$;
   readonly trigger$: Observable<void> = this._watcher.trigger$;
 
-  protected readonly modeEffect = effect(
-    () => {
-      this._watcher.setMode(this.mode());
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly modeEffect = effect(() => {
+    this._watcher.setMode(this.mode());
+  });
 
   get store() {
     return this._watcher.store;

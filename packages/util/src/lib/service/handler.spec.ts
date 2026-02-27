@@ -87,8 +87,8 @@ describe('handler()', () => {
       });
 
       it('should prefer specific key handler over catch-all', async () => {
-        const specificFn = jest.fn().mockReturnValue(true);
-        const catchAllFn = jest.fn().mockReturnValue(true);
+        const specificFn = vi.fn().mockReturnValue(true);
+        const catchAllFn = vi.fn().mockReturnValue(true);
 
         handler.set('specific', specificFn);
         handler.set(catchAllHandlerKey(), catchAllFn);
@@ -100,7 +100,7 @@ describe('handler()', () => {
       });
 
       it('should handle array of keys', async () => {
-        const fn = jest.fn().mockReturnValue(true);
+        const fn = vi.fn().mockReturnValue(true);
         handler.set(['key1', 'key2'], fn);
 
         await handler(1); // key is '1', should not match
@@ -141,7 +141,7 @@ describe('handler()', () => {
 
     it('should handle undefined key from readKey function', async () => {
       const customHandler = makeHandler(() => undefined);
-      const catchAllFn = jest.fn().mockReturnValue(true);
+      const catchAllFn = vi.fn().mockReturnValue(true);
 
       customHandler.set(catchAllHandlerKey(), catchAllFn);
 
@@ -158,8 +158,8 @@ describe('handlerFactory()', () => {
     const handler1 = factory();
     const handler2 = factory();
 
-    const fn1 = jest.fn().mockReturnValue(true);
-    const fn2 = jest.fn().mockReturnValue(true);
+    const fn1 = vi.fn().mockReturnValue(true);
+    const fn2 = vi.fn().mockReturnValue(true);
 
     handler1.set('1', fn1);
     handler2.set('1', fn2);
@@ -177,7 +177,7 @@ describe('handlerFactory()', () => {
     const factory = handlerFactory<number, CustomKey>((x: number) => (x === 1 ? 'A' : 'B'));
     const handler = factory();
 
-    const fn = jest.fn().mockReturnValue(true);
+    const fn = vi.fn().mockReturnValue(true);
     handler.set('A', fn);
 
     await handler(1);
@@ -186,7 +186,7 @@ describe('handlerFactory()', () => {
 
   it('should handle void return from handler as true', async () => {
     const handler = makeHandler((x: number) => String(x));
-    const fn = jest.fn(); // returns undefined
+    const fn = vi.fn(); // returns undefined
 
     handler.set('1', fn);
     const result = await handler(1);

@@ -1,5 +1,5 @@
 import { convertMailgunTemplateEmailRequestToMailgunMessageData, convertMailgunRecipientsToStrings, DEFAULT_RECIPIENT_VARIABLE_PREFIX } from './mailgun';
-import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipientBatchSendTarget, notificationMessageEntityKeyRecipientLookup, type NotificationMessageEntityKeyRecipientLookup } from './mailgun.util';
+import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, type MailgunRecipientBatchSendTargetEntityKeyRecipientLookup, expandMailgunRecipientBatchSendTargetRequestFactory, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, type MailgunRecipientBatchSendTarget } from './mailgun.util';
 
 const senderEmail = 'sender@dereekb.com';
 const replyToEmail = 'test.support@dereekb.com';
@@ -1580,7 +1580,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       });
     });
 
-    describe('with NotificationMessageEntityKeyRecipientLookup', () => {
+    describe('with MailgunRecipientBatchSendTargetEntityKeyRecipientLookup', () => {
       const key1 = 'PRIMARY_SENDER';
       const key2 = 'SYSTEM_SENDER';
       const ccKey = 'CC_RECIPIENT';
@@ -1594,7 +1594,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
       recipientsMap.set(key2, recipient2);
       recipientsMap.set(ccKey, ccRecipient);
 
-      const notificationMessageEntityKeyRecipientLookup: NotificationMessageEntityKeyRecipientLookup = {
+      const mailgunRecipientBatchSendTargetEntityKeyRecipientLookup: MailgunRecipientBatchSendTargetEntityKeyRecipientLookup = {
         recipientsMap,
         getRecipientOrDefaultForKey: (key: string | undefined | null, defaultRecipient?: any) => {
           if (!key) return defaultRecipient;
@@ -1623,7 +1623,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
         });
 
         const requests = factory([recipient]);
@@ -1655,7 +1655,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
         });
 
         const requests = factory([recipient]);
@@ -1684,7 +1684,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
         });
 
         const requests = factory([recipient]);
@@ -1713,7 +1713,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup,
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup,
           overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients: true
         });
 
@@ -1745,7 +1745,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
         });
 
         const requests = factory([recipient]);
@@ -1771,7 +1771,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
         });
 
         const requests = factory([recipient]);
@@ -1799,7 +1799,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
           request: baseRequest,
           useSubjectFromRecipientUserVariables: false,
-          notificationMessageEntityKeyRecipientLookup
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
         });
 
         const requests = factory([recipient]);
@@ -1843,7 +1843,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
             request: baseRequest,
             useSubjectFromRecipientUserVariables: true,
-            notificationMessageEntityKeyRecipientLookup
+            mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
           });
 
           const requests = factory([recipientA, recipientB, recipientC]);
@@ -1893,7 +1893,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
             request: baseRequest,
             useSubjectFromRecipientUserVariables: true,
-            notificationMessageEntityKeyRecipientLookup
+            mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
           });
 
           const requests = factory([recipientA, recipientB, recipientC]);
@@ -1946,7 +1946,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
             request: baseRequest,
             useSubjectFromRecipientUserVariables: true,
-            notificationMessageEntityKeyRecipientLookup
+            mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
           });
 
           const requests = factory([recipientA, recipientB, recipientC]);
@@ -1993,7 +1993,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
             request: baseRequest,
             useSubjectFromRecipientUserVariables: true,
-            notificationMessageEntityKeyRecipientLookup
+            mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
           });
 
           const requests = factory([recipientA, recipientB]);
@@ -2030,7 +2030,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
             request: baseRequest,
             useSubjectFromRecipientUserVariables: true,
-            notificationMessageEntityKeyRecipientLookup
+            mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
           });
 
           const requests = factory([recipientA, recipientB]);
@@ -2075,7 +2075,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
             request: baseRequest,
             useSubjectFromRecipientUserVariables: true,
-            notificationMessageEntityKeyRecipientLookup
+            mailgunRecipientBatchSendTargetEntityKeyRecipientLookup
           });
 
           const requests = factory([recipientA, recipientB, recipientC]);
@@ -2098,7 +2098,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
   });
 });
 
-describe('NotificationMessageEntityKeyRecipientLookup', () => {
+describe('MailgunRecipientBatchSendTargetEntityKeyRecipientLookup', () => {
   const key1 = 'PRIMARY_SENDER';
   const key2 = 'SYSTEM_SENDER';
   const unknownKey = 'user-unknown';
@@ -2108,14 +2108,14 @@ describe('NotificationMessageEntityKeyRecipientLookup', () => {
   const defaultRecipient = { name: 'Default', email: 'default@example.com' };
 
   let recipientsMap: Map<string, typeof recipient1>;
-  let lookup: NotificationMessageEntityKeyRecipientLookup;
+  let lookup: MailgunRecipientBatchSendTargetEntityKeyRecipientLookup;
 
   beforeEach(() => {
     recipientsMap = new Map();
     recipientsMap.set(key1, recipient1);
     recipientsMap.set(key2, recipient2);
 
-    lookup = notificationMessageEntityKeyRecipientLookup({ recipientsMap });
+    lookup = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup({ recipientsMap });
   });
 
   describe('getRecipientOrDefaultForKey()', () => {

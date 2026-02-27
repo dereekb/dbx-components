@@ -1,6 +1,7 @@
 import { SubscriptionObject } from './subscription';
 import { LockSet } from './lock';
 import { filter, first, of } from 'rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('LockSet', () => {
   let lockSet: LockSet;
@@ -17,66 +18,78 @@ describe('LockSet', () => {
   });
 
   describe('addLock', () => {
-    it('should add a lock to the lock set with the given key.', (done) => {
-      const key = 'test';
+    it(
+      'should add a lock to the lock set with the given key.',
+      callbackTest((done) => {
+        const key = 'test';
 
-      sub.subscription = lockSet.locks$
-        .pipe(
-          filter((x) => x.size > 0),
-          first()
-        )
-        .subscribe((locks) => {
-          expect(locks.get(key)).toBeDefined();
-          expect(locks.size).toBe(1);
-          done();
-        });
+        sub.subscription = lockSet.locks$
+          .pipe(
+            filter((x) => x.size > 0),
+            first()
+          )
+          .subscribe((locks) => {
+            expect(locks.get(key)).toBeDefined();
+            expect(locks.size).toBe(1);
+            done();
+          });
 
-      lockSet.addLock(key, of(true));
-    });
+        lockSet.addLock(key, of(true));
+      })
+    );
   });
 
   describe('isLocked$', () => {
-    it('should not be locked if no observables are provided.', (done) => {
-      sub.subscription = lockSet.isLocked$.pipe().subscribe((isLocked) => {
-        expect(isLocked).toBe(false);
-        done();
-      });
-    });
-
-    it('should be locked if any child observable is true.', (done) => {
-      const key = 'test';
-
-      lockSet.addLock(key, of(true));
-      lockSet.addLock(key + 'b', of(false));
-      lockSet.addLock(key + 'c', of(false));
-
-      lockSet.locks$
-        .pipe(
-          filter((x) => x.size > 2),
-          first()
-        )
-        .subscribe((locks) => {
-          expect(locks.size).toBe(3);
-
-          sub.subscription = lockSet.isLocked$.pipe().subscribe((isLocked) => {
-            expect(isLocked).toBe(true);
-            done();
-          });
+    it(
+      'should not be locked if no observables are provided.',
+      callbackTest((done) => {
+        sub.subscription = lockSet.isLocked$.pipe().subscribe((isLocked) => {
+          expect(isLocked).toBe(false);
+          done();
         });
-    });
+      })
+    );
 
-    it('should not be locked if all child observables are false.', (done) => {
-      const key = 'test';
+    it(
+      'should be locked if any child observable is true.',
+      callbackTest((done) => {
+        const key = 'test';
 
-      lockSet.addLock(key, of(false));
-      lockSet.addLock(key + 'b', of(false));
-      lockSet.addLock(key + 'c', of(false));
+        lockSet.addLock(key, of(true));
+        lockSet.addLock(key + 'b', of(false));
+        lockSet.addLock(key + 'c', of(false));
 
-      sub.subscription = lockSet.isLocked$.pipe(first()).subscribe((isLocked) => {
-        expect(isLocked).toBe(false);
-        done();
-      });
-    });
+        lockSet.locks$
+          .pipe(
+            filter((x) => x.size > 2),
+            first()
+          )
+          .subscribe((locks) => {
+            expect(locks.size).toBe(3);
+
+            sub.subscription = lockSet.isLocked$.pipe().subscribe((isLocked) => {
+              expect(isLocked).toBe(true);
+              done();
+            });
+          });
+      })
+    );
+
+    it(
+      'should not be locked if all child observables are false.',
+      callbackTest((done) => {
+        const key = 'test';
+
+        lockSet.addLock(key, of(false));
+        lockSet.addLock(key + 'b', of(false));
+        lockSet.addLock(key + 'c', of(false));
+
+        sub.subscription = lockSet.isLocked$.pipe(first()).subscribe((isLocked) => {
+          expect(isLocked).toBe(false);
+          done();
+        });
+      })
+    );
   });
 
   describe('setParentLockSet', () => {
@@ -86,22 +99,25 @@ describe('LockSet', () => {
       parentLockSet = new LockSet();
     });
 
-    it('should add the lockset as a child of the input parent lock set.', (done) => {
-      parentLockSet.locks$.pipe(first()).subscribe((locks) => {
-        expect(locks.size).toBe(0);
+    it(
+      'should add the lockset as a child of the input parent lock set.',
+      callbackTest((done) => {
+        parentLockSet.locks$.pipe(first()).subscribe((locks) => {
+          expect(locks.size).toBe(0);
 
-        lockSet.setParentLockSet(parentLockSet);
+          lockSet.setParentLockSet(parentLockSet);
 
-        sub.subscription = parentLockSet.locks$
-          .pipe(
-            filter((x) => x.size > 0),
-            first()
-          )
-          .subscribe((locks) => {
-            expect(locks.size).toBe(1);
-            done();
-          });
-      });
-    });
+          sub.subscription = parentLockSet.locks$
+            .pipe(
+              filter((x) => x.size > 0),
+              first()
+            )
+            .subscribe((locks) => {
+              expect(locks.size).toBe(1);
+              done();
+            });
+        });
+      })
+    );
   });
 });

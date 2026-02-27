@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '../../../model/modules/store';
 import { NotificationSummaryDocumentStore } from './notificationsummary.document.store';
 import { NotificationSummary, NotificationSummaryDocument } from '@dereekb/firebase';
@@ -9,7 +9,7 @@ import { NotificationSummary, NotificationSummaryDocument } from '@dereekb/fireb
   standalone: true
 })
 export class DbxFirebaseNotificationSummaryDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<NotificationSummary, NotificationSummaryDocument, NotificationSummaryDocumentStore> {
-  constructor(store: NotificationSummaryDocumentStore) {
-    super(store);
+  constructor() {
+    super(inject(NotificationSummaryDocumentStore));
   }
 }

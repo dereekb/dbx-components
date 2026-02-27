@@ -296,9 +296,3 @@ export function approximateTimerEndDate(timer: Timer): Maybe<Date> {
     return null;
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated use makeTimer instead of timer.
- */
-export const timer = makeTimer;

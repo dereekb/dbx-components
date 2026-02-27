@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional, Type } from '@angular/core';
+import { inject, Injectable, Type } from '@angular/core';
 import { ArrayOrValue, Maybe, asArray, cachedGetter, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 
@@ -59,7 +59,8 @@ export class DbxFirebaseModelEntitiesWidgetService {
     return new Map<FirestoreModelIdentity, number>(mapIterable(this._entries.values(), (entry) => [entry.identity, entry.sortPriority ?? -1]));
   });
 
-  constructor(@Optional() @Inject(DbxFirebaseModelEntitiesWidgetServiceConfig) initialConfig?: DbxFirebaseModelEntitiesWidgetServiceConfig) {
+  constructor() {
+    const initialConfig = inject(DbxFirebaseModelEntitiesWidgetServiceConfig, { optional: true });
     this._commonComponentClass = initialConfig?.commonComponentClass;
     this._debugComponentClass = initialConfig?.debugComponentClass;
 

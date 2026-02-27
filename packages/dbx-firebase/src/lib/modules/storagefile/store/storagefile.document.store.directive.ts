@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '../../../model/modules/store';
 import { StorageFileDocumentStore } from './storagefile.document.store';
 import { StorageFile, StorageFileDocument } from '@dereekb/firebase';
@@ -9,7 +9,7 @@ import { StorageFile, StorageFileDocument } from '@dereekb/firebase';
   standalone: true
 })
 export class DbxFirebaseStorageFileDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<StorageFile, StorageFileDocument, StorageFileDocumentStore> {
-  constructor(store: StorageFileDocumentStore) {
-    super(store);
+  constructor() {
+    super(inject(StorageFileDocumentStore));
   }
 }

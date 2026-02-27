@@ -1,7 +1,7 @@
 import { type PromiseOrValue, type Maybe, type Page, randomNumberFactory, arrayFactory, reduceNumbersWithAdd } from '@dereekb/util';
 import { type FetchPageFactory, type FetchPageFactoryInputOptions, type FetchPageResult, type FetchPageResultInfo, fetchPageFactory } from './fetch.page';
 import { type IterateFetchPagesByEachItemFunction, iterateFetchPages, iterateFetchPagesByEachItem, iterateFetchPagesByItems } from './fetch.page.iterate';
-import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
+import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import { BaseError } from 'make-error';
 
 export const DEFAULT_ITEMS_PER_PAGE = 20;
@@ -65,7 +65,7 @@ describe('iterateFetchPagesByEachItem()', () => {
                 throw new TestThrownError('test');
               }
             }),
-          jestExpectFailAssertErrorType(TestThrownError)
+          expectFailAssertErrorType(TestThrownError)
         );
       });
     });

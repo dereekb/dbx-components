@@ -118,18 +118,3 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(ma
     return array;
   };
 }
-
-/**
- * Convenience function for flattening multiple trees with a single configured flatten function.
- *
- * @deprecated FlattenTreeFunction now supports an array of trees.
- *
- * @param trees
- * @param flattenFn
- * @returns
- */
-export function flattenTrees<N extends TreeNode<unknown, N>, V>(trees: ArrayOrValue<N>, flattenFn: FlattenTreeFunction<N, V>, addNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): V[] {
-  const array: V[] = [];
-  flattenFn(trees, array, addNodeFn);
-  return array;
-}

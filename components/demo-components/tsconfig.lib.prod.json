@@ -1,8 +1,7 @@
 {
   "extends": "./tsconfig.lib.json",
   "compilerOptions": {
-    "declarationMap": false,
-    "useDefineForClassFields": true
+    "declarationMap": false
   },
   "angularCompilerOptions": {
     "compilationMode": "partial"

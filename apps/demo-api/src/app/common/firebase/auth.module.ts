@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { firebaseServerAuthModuleMetadata, FIREBASE_AUTH_TOKEN } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 import { DemoApiAuthService } from './auth.service';

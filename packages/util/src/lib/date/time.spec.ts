@@ -1,5 +1,6 @@
 import { waitForMs } from '../promise';
 import { timePeriodCounter, makeTimer, TimerCancelledError, toggleTimerRunning, approximateTimerEndDate } from './time';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('timePeriodCounter()', () => {
   it('should create a new counter.', () => {
@@ -89,15 +90,18 @@ describe('makeTimer()', () => {
     expect(timer.durationRemaining).toBeGreaterThan(timerDuration / 2); // Remaining should be close to full duration
   });
 
-  it('should complete when duration elapses', (done) => {
-    const timer = makeTimer(timerDuration);
+  it(
+    'should complete when duration elapses',
+    callbackTest((done) => {
+      const timer = makeTimer(timerDuration);
 
-    setTimeout(() => {
-      expect(timer.state).toBe('complete');
-      expect(timer.durationRemaining).toBe(0);
-      done();
-    }, timerDuration + 5);
-  });
+      setTimeout(() => {
+        expect(timer.state).toBe('complete');
+        expect(timer.durationRemaining).toBe(0);
+        done();
+      }, timerDuration + 5);
+    })
+  );
 
   it('should throw TimerCancelledError if destroyed while running', async () => {
     const timer = makeTimer(timerDuration * 2, true);

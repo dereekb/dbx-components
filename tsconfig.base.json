@@ -4,7 +4,7 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -57,8 +57,9 @@
       "@dereekb/zoom": ["packages/zoom/src/index.ts"],
       "@dereekb/zoom/nestjs": ["packages/zoom/nestjs/src/index.ts"],
       "demo-components": ["components/demo-components/src/index.ts"],
-      "demo-firebase": ["components/demo-firebase/src/index.ts"]
+      "demo-firebase": ["components/demo-firebase/src/index.ts"],
+      "@dereekb/vitest": ["packages/vitest/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp", "setup"]
+  "exclude": ["node_modules", "tmp", "setup", "dist"]
 }

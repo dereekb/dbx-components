@@ -521,14 +521,3 @@ export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Ma
 export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date> {
   return input != null ? new Date(input.getTime() + (ms ?? 0)) : input;
 }
-
-// MARK: Compat
-/**
- * @deprecated use UnixDateTimeMillisecondsNumber instead.
- */
-export type UnixDateTimeNumber = UnixDateTimeMillisecondsNumber;
-
-/**
- * @deprecated use DateOrUnixDateTimeMillisecondsNumber instead.
- */
-export type DateOrUnixDateTimeNumber = DateOrUnixDateTimeMillisecondsNumber;

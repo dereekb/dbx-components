@@ -18,10 +18,14 @@ class TestInjectableClassC {
 }
 
 describe('newWithInjector()', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [TestInjectableClassA, TestInjectableClassB]
-    }).compileComponents();
+    });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
   it('should inject a new instance of class B that is different from the already provided value in the root', () => {

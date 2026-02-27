@@ -1,7 +1,7 @@
 <dbx-loading [context]="context">
   <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
   <div class="dbx-table-view" [ngClass]="tableCssClasses()">
-    <section class="dbx-table-view-table-wrapper" dbx-table-column-size #columnSize="dbxTableColumnSize" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
+    <section class="dbx-table-view-table-wrapper" dbxTableColumnSize #columnSize="dbxTableColumnSize" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
       <table class="dbx-table-view-table" mat-table [dataSource]="elementsSignal()" [trackBy]="trackElementByFunctionSignal()" multiTemplateDataRows>
         <!-- Groups -->
         <!-- Group Header column -->

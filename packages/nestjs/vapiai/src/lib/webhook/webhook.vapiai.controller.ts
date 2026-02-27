@@ -1,5 +1,5 @@
-import { RawBody, RawBodyBuffer } from '@dereekb/nestjs';
-import { Controller, Post, Req, Res } from '@nestjs/common';
+import { RawBody, type RawBodyBuffer } from '@dereekb/nestjs';
+import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { VapiAiWebhookService } from './webhook.vapiai.service';
 
@@ -7,7 +7,7 @@ import { VapiAiWebhookService } from './webhook.vapiai.service';
 export class VapiAiWebhookController {
   private readonly _vapiaiWebhookService: VapiAiWebhookService;
 
-  constructor(vapiaiWebhookService: VapiAiWebhookService) {
+  constructor(@Inject(VapiAiWebhookService) vapiaiWebhookService: VapiAiWebhookService) {
     this._vapiaiWebhookService = vapiaiWebhookService;
   }
 

@@ -85,6 +85,123 @@ $big-button-height: 46px; // 33% bigger
       margin-bottom: 6px !important;
     }
   }
+
+  // dbx-color interactions
+  $color-value: theming.$dbx-bg-color;
+  $contrast-value: theming.$dbx-color;
+  $disabled-color-value: theming.$dbx-disabled-color;
+  $disabled-contrast-value: theming.$dbx-disabled-color-contrast;
+
+  .mdc-button.dbx-base-button.dbx-color {
+    .mat-mdc-progress-bar {
+      --mat-progress-bar-active-indicator-color: #{$color-value};
+    }
+
+    // default button
+    &.dbx-default {
+      color: var(--mat-button-text-label-text-color, var(--mat-sys-primary));
+
+      &.mat-mdc-button-disabled {
+        color: var(--mat-button-text-disabled-label-text-color, var(--mat-sys-on-surface));
+      }
+    }
+
+    // default button
+    &:not(.dbx-default) {
+      background: none;
+      --mat-button-text-label-text-color: #{$color-value};
+      --mat-button-text-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
+      --mat-button-text-state-layer-color: #{$color-value};
+      --mat-progress-spinner-active-indicator-color: #{$color-value};
+    }
+
+    // raised buttons
+    &.mat-mdc-raised-button.dbx-default {
+      color: var(--mat-button-protected-label-text-color, var(--mat-sys-primary));
+    }
+
+    &.mat-mdc-raised-button:not(.dbx-default) {
+      background: var(--mat-button-protected-container-color);
+
+      --mat-button-protected-container-color: #{$color-value};
+      --mat-button-protected-label-text-color: #{$contrast-value};
+      --mat-button-protected-state-layer-color: #{$contrast-value};
+      --mat-button-protected-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
+
+      &.mat-mdc-button-disabled {
+        background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
+      }
+    }
+
+    // stroked/outlined buttons
+    &.mat-mdc-outlined-button.dbx-default {
+      color: var(--mat-button-outlined-label-text-color, var(--mat-sys-primary));
+    }
+
+    &.mat-mdc-outlined-button:not(.dbx-default) {
+      --mat-button-outlined-container-color: #{$contrast-value};
+      --mat-button-outlined-label-text-color: #{$color-value};
+      --mat-button-outlined-state-layer-color: #{$color-value};
+      --mat-button-outlined-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
+
+      --mat-progress-spinner-active-indicator-color: #{$color-value};
+    }
+
+    // flat buttons
+    &.mat-mdc-unelevated-button.dbx-default {
+      color: var(--mat-button-filled-label-text-color, var(--mat-sys-primary));
+    }
+
+    &.mat-mdc-unelevated-button:not(.dbx-default) {
+      background: var(--mat-button-filled-container-color);
+
+      --mat-button-filled-container-color: #{$color-value};
+      --mat-button-filled-label-text-color: #{$contrast-value};
+      --mat-button-filled-state-layer-color: #{$contrast-value};
+      --mat-button-filled-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
+
+      &.mat-mdc-button-disabled {
+        background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
+      }
+    }
+
+    // icon buttons
+    &.mat-mdc-icon-button.dbx-default {
+      color: var(--mat-icon-button-icon-color, var(--mat-sys-primary));
+    }
+
+    &.mat-mdc-icon-button:not(.dbx-default) {
+      background: none;
+
+      --mat-icon-button-icon-color: #{$color-value};
+      --mat-icon-button-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
+      --mat-icon-button-state-layer-color: #{$color-value};
+    }
+
+    // tonal buttons
+    &.mat-mdc-tonal-button.dbx-default {
+      color: var(--mat-button-tonal-label-text-color, var(--mat-sys-primary));
+      background: rgb(from var(--mat-button-tonal-label-text-color) r g b / calc(alpha * 0.06));
+    }
+
+    &.mat-mdc-tonal-button:not(.dbx-default) {
+      background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
+
+      --mat-button-tonal-container-color: color-mix(in srgb, #{$color-value} 12%, transparent);
+      --mat-button-tonal-label-text-color: #{$contrast-value};
+      --mat-button-tonal-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
+      --mat-button-tonal-state-layer-color: #{$contrast-value};
+    }
+
+    &.dbx-default.mat-mdc-button-disabled {
+      &.mat-mdc-raised-button,
+      &.mat-mdc-unelevated-button,
+      &.mat-mdc-outlined-button,
+      &.mat-mdc-tonal-button {
+        color: var(--mat-button-text-disabled-label-text-color, var(--mat-sys-on-surface));
+      }
+    }
+  }
 }
 
 @mixin color($theme-config) {
@@ -113,27 +230,6 @@ $big-button-height: 46px; // 33% bigger
 
     > .mat-mdc-button {
       background: #{theming.$dbx-disabled-color-contrast};
-    }
-  }
-
-  // dbx-theme colors
-  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main {
-    .dbx-base-button.mat-mdc-unelevated-button.mat-#{$color} {
-      --mdc-filled-button-container-color: #{map.get($colorConfig, 'color')};
-      --mdc-filled-button-label-text-color: #{map.get($colorConfig, 'contrast')};
-    }
-
-    .dbx-base-button.mat-mdc-outlined-button.mat-#{$color} {
-      --mdc-outlined-button-label-text-color: #{map.get($colorConfig, 'color')};
-    }
-
-    .dbx-base-button.mat-mdc-raised-button.mat-#{$color} {
-      --mdc-protected-button-container-color: #{map.get($colorConfig, 'color')};
-      --mdc-protected-button-label-text-color: #{map.get($colorConfig, 'contrast')};
-    }
-
-    .dbx-base-button.mat-mdc-button.mat-#{$color} {
-      --mdc-text-button-label-text-color: #{map.get($colorConfig, 'color')};
     }
   }
 }

@@ -122,12 +122,4 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     this._initialFilter.complete();
     this._defaultFilter.complete();
   }
-
-  // MARK: Compat
-  /**
-   * @deprecated use setInitialFilterTakesPriority instead.
-   */
-  set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
-    this.setInitialFilterTakesPriority(initialFilterTakesPriority);
-  }
 }

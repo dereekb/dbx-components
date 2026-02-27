@@ -3,6 +3,7 @@ import { beginLoading, errorResult, type LoadingState, successResult } from '@de
 import { type Maybe, readableError } from '@dereekb/util';
 import { filter, BehaviorSubject, first } from 'rxjs';
 import { WorkInstance } from './work.instance';
+import { callbackTest } from '@dereekb/util/test';
 
 const TEST_ERROR_CODE = 'test';
 
@@ -65,71 +66,83 @@ describe('WorkInstance', () => {
       expect(workInstance.hasStarted).toBe(false);
     });
 
-    it('should start working when the loading state begins loading.', (done) => {
-      workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
-      expect(workInstance.hasStarted).toBe(false);
+    it(
+      'should start working when the loading state begins loading.',
+      callbackTest((done) => {
+        workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
+        expect(workInstance.hasStarted).toBe(false);
 
-      loadingStateObs.next(beginLoading());
+        loadingStateObs.next(beginLoading());
 
-      workInstance.hasStarted$
-        .pipe(
-          filter((x) => x),
-          first()
-        )
-        .subscribe((hasStarted) => {
-          expect(hasStarted).toBe(true);
-          done();
-        });
-    });
+        workInstance.hasStarted$
+          .pipe(
+            filter((x) => x),
+            first()
+          )
+          .subscribe((hasStarted) => {
+            expect(hasStarted).toBe(true);
+            done();
+          });
+      })
+    );
 
-    it('should be marked complete if the loading state has success.', (done) => {
-      workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
-      loadingStateObs.next(successResult('test'));
-
-      workInstance.isComplete$
-        .pipe(
-          filter((x) => x),
-          first()
-        )
-        .subscribe((isComplete) => {
-          expect(isComplete).toBe(true);
-          done();
-        });
-    });
-
-    it('should be marked complete if the loading state has an error.', (done) => {
-      workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
-      loadingStateObs.next(errorResult(readableError('test', 'test')));
-
-      workInstance.isComplete$
-        .pipe(
-          filter((x) => x),
-          first()
-        )
-        .subscribe((isComplete) => {
-          expect(isComplete).toBe(true);
-          done();
-        });
-    });
-
-    it('should be marked complete if the loading state begins loading and then has success.', (done) => {
-      loadingStateObs.next(beginLoading());
-      workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
-
-      workInstance.isComplete$
-        .pipe(
-          filter((x) => x),
-          first()
-        )
-        .subscribe((isComplete) => {
-          expect(isComplete).toBe(true);
-          done();
-        });
-
-      setTimeout(() => {
+    it(
+      'should be marked complete if the loading state has success.',
+      callbackTest((done) => {
+        workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
         loadingStateObs.next(successResult('test'));
-      }, 10);
-    });
+
+        workInstance.isComplete$
+          .pipe(
+            filter((x) => x),
+            first()
+          )
+          .subscribe((isComplete) => {
+            expect(isComplete).toBe(true);
+            done();
+          });
+      })
+    );
+
+    it(
+      'should be marked complete if the loading state has an error.',
+      callbackTest((done) => {
+        workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
+        loadingStateObs.next(errorResult(readableError('test', 'test')));
+
+        workInstance.isComplete$
+          .pipe(
+            filter((x) => x),
+            first()
+          )
+          .subscribe((isComplete) => {
+            expect(isComplete).toBe(true);
+            done();
+          });
+      })
+    );
+
+    it(
+      'should be marked complete if the loading state begins loading and then has success.',
+      callbackTest((done) => {
+        loadingStateObs.next(beginLoading());
+        workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
+
+        workInstance.isComplete$
+          .pipe(
+            filter((x) => x),
+            first()
+          )
+          .subscribe((isComplete) => {
+            expect(isComplete).toBe(true);
+            done();
+          });
+
+        setTimeout(() => {
+          loadingStateObs.next(successResult('test'));
+        }, 10);
+      })
+    );
   });
 
   describe('after starting work', () => {

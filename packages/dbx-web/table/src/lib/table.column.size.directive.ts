@@ -9,7 +9,7 @@ export type DbxColumnSizeColumnValue = 'head' | 'tail' | number;
 
 @Directive({
   exportAs: 'dbxTableColumnSize',
-  selector: '[dbx-table-column-size]',
+  selector: '[dbxTableColumnSize]',
   standalone: true
 })
 export class DbxTableColumnSizeDirective {

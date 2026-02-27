@@ -56,7 +56,7 @@ describe('splitStringAtFirstCharacterOccurence()', () => {
 
   it('should return the entire input string if the character is not found', () => {
     const result = splitStringAtFirstCharacterOccurence('helloworld', '.');
-    expect(result).toEqual(['helloworld']);
+    expect(result).toEqual(['helloworld', undefined]);
   });
 });
 

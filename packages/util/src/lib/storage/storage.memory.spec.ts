@@ -125,7 +125,7 @@ describe('SHARED_MEMORY_STORAGE', () => {
   });
 
   it('should allow items to be set and retrieved.', () => {
-    // Test with a unique key to avoid interference if tests run in parallel or share context (though jest typically isolates)
+    // Test with a unique key to avoid interference if tests run in parallel or share context in testing environment.
     const uniqueKey = `shared_test_${Date.now()}`;
     SHARED_MEMORY_STORAGE.setItem(uniqueKey, 'sharedValue');
     expect(SHARED_MEMORY_STORAGE.getItem(uniqueKey)).toBe('sharedValue');

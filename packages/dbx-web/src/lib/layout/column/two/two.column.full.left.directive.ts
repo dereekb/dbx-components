@@ -14,10 +14,7 @@ export class DbxTwoColumnFullLeftDirective {
 
   readonly fullLeft = input<boolean, Maybe<boolean | ''>>(true, { alias: 'dbxTwoColumnFullLeft', transform: isNotFalse });
 
-  protected readonly _fullLeftEffect = effect(
-    () => {
-      this._twoColumnsContextStore.setFullLeft(this.fullLeft());
-    },
-    { allowSignalWrites: true }
-  );
+  protected readonly _fullLeftEffect = effect(() => {
+    this._twoColumnsContextStore.setFullLeft(this.fullLeft());
+  });
 }

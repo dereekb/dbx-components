@@ -1,5 +1,5 @@
 import { catchAllHandlerKey } from '@dereekb/util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TypeformWebhookEvent, TypeformApi, TypeformWebhookService } from '@dereekb/nestjs/typeform';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class DemoApiTypeformWebhookService {
 
   private readonly logger = new Logger('DemoApiTypeformWebhookService');
 
-  constructor(typeformApi: TypeformApi, typeformWebhookService: TypeformWebhookService) {
+  constructor(@Inject(TypeformApi) typeformApi: TypeformApi, @Inject(TypeformWebhookService) typeformWebhookService: TypeformWebhookService) {
     this._typeformApi = typeformApi;
     this._typeformWebhookService = typeformWebhookService;
 

@@ -208,7 +208,6 @@ export function initializeAllApplicableStorageFileGroupsFactory(context: Storage
         return result;
       }
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const initializeStorageFileGroupsResults = await initializeStorageFileGroups();
         initializeStorageFileGroupsResults.results.forEach((x) => {

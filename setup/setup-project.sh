@@ -29,14 +29,14 @@ FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                         # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                                 # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 FIREBASE_STAGING_PROJECT_ID=${6:-"$FIREBASE_PROJECT_ID-staging"} # example: gethapier-staging
 
-# Example: ./setup-project.sh gethapierapp gethapier getHapier 9300
+# Example: ./setup-project.sh gethapierapp gethapier getHapier 9300 ~/Desktop/gethapier
 
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 
 # - Other Configuration
-DEFAULT_SOURCE_BRANCH="develop"
+DEFAULT_SOURCE_BRANCH="develop" # main
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -48,13 +48,41 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.1.0"}    # update every major version
-NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
-ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^18.0.0"}
-TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.5.0 <5.6.0"}
-FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"^14.2.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"13.0.0"}    # update every major version
+NX_VERSION=${NX_SETUP_VERSIONS:-"22.5.2"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^21.0.0"}
+TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-"^5.9.3"}
+FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"15.7.0"}
+NODE_VERSION=${NODE_SETUP_VERSION:-"24"}
 
-echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
+echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - node: $NODE_VERSION - from source branch $SOURCE_BRANCH"
+
+# - Package Versions
+# These versions should match those in dbx-component's package.json
+DEP__SHARP_VERSION=^0.34.5
+DEP__ZONE_JS_VERSION=^0.16.0
+DEP__FIREBASE_VERSION=^12.0.0
+DEP__FIREBASE_ADMIN_VERSION=^13.0.0
+DEP__FIREBASE_FUNCTIONS_VERSION=^7.0.0
+DEP__FIREBASE_FUNCTIONS_TEST_VERSION=3.4.1
+DEP__PRETTIER_VERSION=3.8.1
+DEP__PRETTY_QUICK_VERSION=^4.2.2
+DEP__MAILGUN_JS_VERSION=^12.0.0
+DEP__RXJS_VERSION=^7.8.0
+DEP__MAPBOX_GL_VERSION=^3.10.0
+DEP__NGX_MAPBOX_GL_VERSION=^14.0.0
+DEP__NG_WEB_APIS_GEOLOCATION_VERSION=^5.1.0
+DEP__NG_WEB_APIS_COMMON_VERSION=^5.1.0
+DEP__ZIP_JS_VERSION=^2.8.11
+DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION=^1.0.2
+DEP__UIROUTER_RX_VERSION=^1.0.0
+DEP__UIROUTER_CORE_VERSION=^6.1.2
+DEP__UIROUTER_ANGULAR_VERSION=21.0.0
+DEP__NGBRACKET_NGX_LAYOUT_VERSION=^21.0.0
+DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0
+DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
+DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
+DEP__NGX_FORMLY_VERSION=^14.0.0
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
@@ -108,7 +136,11 @@ ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
 # other config
 LINTER="eslint"
-UNIT_TEST_RUNNER="jest"
+
+UNIT_TEST_RUNNER="vitest"
+ANGULAR_UNIT_TEST_RUNNER="vitest-angular" # Specific test runner for Angular
+NODE_UNIT_TEST_RUNNER="none" # Vitest is currently unsupported in the generator...
+NEST_UNIT_TEST_RUNNER="none" # Vitest is currently unsupported in the generator...
 
 # - Setup Details
 NX_CLOUD_CONFIG_TYPE="yes"
@@ -143,7 +175,7 @@ then
   DBX_COMPONENTS_VERSION_NESTJS_MAILGUN=$CI_DIST_PATH/nestjs/mailgun
   DBX_COMPONENTS_VERSION_RXJS=$CI_DIST_PATH/rxjs
   DBX_COMPONENTS_VERSION_UTIL=$CI_DIST_PATH/util
-
+  DBX_COMPONENTS_VERSION_VITEST=$CI_DIST_PATH/vitest
 else
   DBX_COMPONENTS_VERSION_BROWSER=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_DATE=$DBX_COMPONENTS_VERSION
@@ -159,6 +191,7 @@ else
   DBX_COMPONENTS_VERSION_NESTJS=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_RXJS=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_UTIL=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_VITEST=$DBX_COMPONENTS_VERSION
 
   # Log into Firebase
   echo "First log into Firebase if you're are not already logged in already."
@@ -203,10 +236,10 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
 npm install -D @nx/nest@$NX_VERSION
-npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$NEST_UNIT_TEST_RUNNER
 
 echo "Installing app-server dependencies"
-npm install --force sharp@^0.34.4
+npm install --force sharp@$DEP__SHARP_VERSION
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
@@ -217,11 +250,11 @@ echo "Installing angular@$ANGULAR_VERSION...";
 rm -r node_modules
 rm package-lock.json
 npm install -D --force typescript@$TYPESCRIPT_VERSION @nx/angular@$NX_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
-npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
+npm install --force zone.js@$DEP__ZONE_JS_VERSION @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."
-npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --simpleName=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$ANGULAR_UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
@@ -229,7 +262,7 @@ git commit --no-verify -m "checkpoint: added angular components package"
 # Add Firebase Component
 echo "Creating firebase components package..."
 npm install -D @nx/node@$NX_VERSION
-npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --directory=$FIREBASE_COMPONENTS_FOLDER --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
+npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --directory=$FIREBASE_COMPONENTS_FOLDER --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME --linter=$LINTER --unitTestRunner=$NODE_UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
@@ -291,7 +324,7 @@ echo "Updating firebase.json config..."
 # npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '/api/**', function: 'api' }, { source: '**', destination: '/index.html' }] }";
 
 # Functions
-npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs22', engines: { node: '22' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
+npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs$NODE_VERSION', engines: { node: '$NODE_VERSION' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
 
 # Firestore
 npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
@@ -397,7 +430,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
+npm install -D husky prettier@$DEP__PRETTIER_VERSION pretty-quick@$DEP__PRETTY_QUICK_VERSION @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -417,21 +450,18 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.hu
 git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
-# add jest setup/configurations
-echo "Adding jest configurations..."
-npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@14.1.1 ts-jest@^29.3.2 jest-date@^1.1.4 jest-junit@^16.0.0
-rm jest.preset.js
+# add vitest setup/configurations
+echo "Adding vitest configurations..."
+# rm vitest.preset.config.mts
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.environment.jsdom.ts -o jest.environment.jsdom.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.resolver.js -o jest.resolver.js
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.angular.ts -o jest.setup.angular.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.firebase.ts -o jest.setup.firebase.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.nestjs.ts -o jest.setup.nestjs.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.node.ts -o jest.setup.node.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.typings.ts -o jest.setup.typings.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.preset.config.mts -o vitest.preset.config.mts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.angular.ts -o vitest.setup.angular.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.firebase.ts -o vitest.setup.firebase.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.nestjs.ts -o vitest.setup.nestjs.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.node.ts -o vitest.setup.node.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.typings.ts -o vitest.setup.typings.ts
 
-# add env files to ensure that jest CI tests export properly.
+# add env files to ensure that vitest CI tests export properly.
 echo "Adding env files..."
 mkdir tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/.env -o tmp/env.tmp
@@ -442,21 +472,24 @@ sed -e "s/APP_ID/$ANGULAR_COMPONENTS_NAME/g" tmp/env.tmp > $ANGULAR_COMPONENTS_F
 sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS_FOLDER/.env
 
 # make build-base and run-tests cacheable in nx cloud
-echo "Making tests cacheable in nx cloud..."
+echo "nx.json: Making tests cacheable in nx cloud..."
 npx --yes json -I -f nx.json -e "this.targetDefaults['build-base'] = { cache: true }";
 
-echo "Make build rely on parent build"
+echo "nx.json: Make build rely on parent build"
 npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true }";
 
+echo "nx.json: Add vitest configuration"
+npx --yes json -I -f nx.json -e "this.targetDefaults['@nx/vitest:test'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'], configurations: { ci: { ci: true, codeCoverage: true } } }";
+
 git add --all
-git commit --no-verify -m "checkpoint: added jest configurations"
+git commit --no-verify -m "checkpoint: added vitest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install --force mailgun.js@^12.0.0 rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/zoom@$DBX_COMPONENTS_VERSION_ZOOM @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install --force mailgun.js@$DEP__MAILGUN_JS_VERSION rxjs@$DEP__RXJS_VERSION firebase@$DEP__FIREBASE_VERSION firebase-admin@$DEP__FIREBASE_ADMIN_VERSION firebase-functions@$DEP__FIREBASE_FUNCTIONS_VERSION @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/zoom@$DBX_COMPONENTS_VERSION_ZOOM @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL @dereekb/vitest@$DBX_COMPONENTS_VERSION_VITEST
 
 # install mapbox dependencies
-npm install --force mapbox-gl ngx-mapbox-gl@git+https://git@github.com/dereekb/ngx-mapbox-gl#e55fbfa2f334348f0ff6b4705776c958c67ffbb5 @ng-web-apis/geolocation @ng-web-apis/common
+npm install --force mapbox-gl@$DEP__MAPBOX_GL_VERSION ngx-mapbox-gl@$DEP__NGX_MAPBOX_GL_VERSION @ng-web-apis/geolocation@$DEP__NG_WEB_APIS_GEOLOCATION_VERSION @ng-web-apis/common@$DEP__NG_WEB_APIS_COMMON_VERSION
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -469,10 +502,11 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing angular dependencies"
-npm install --force @zip.js/zip.js @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.1.1 @uirouter/angular@^15.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#32c69f7009db3a9b85148705c00e923d5a858807 @ngbracket/ngx-layout@^18.0.0 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
+npm install --force @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @angular/fire@$DEP__ANGULAR_FIRE_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_VITEST"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_BROWSER"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_DATE"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_ANALYTICS"
@@ -494,7 +528,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION @ngrx/store-devtools@18.1.1 @ngx-formly/schematics@6.3.12 @firebase/rules-unit-testing@^4.0.1 firebase-functions-test@^3.4.1 envfile env-cmd
+npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION @ngrx/store-devtools@$DEP__NGRX_STORE_DEVTOOLS_VERSION @firebase/rules-unit-testing@$DEP__FIREBASE_RULES_UNIT_TESTING_VERSION firebase-functions-test@$DEP__FIREBASE_FUNCTIONS_TEST_VERSION envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -580,10 +614,16 @@ download_app_components_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-rm $ANGULAR_COMPONENTS_FOLDER/eslint.config.mjs
+rm $ANGULAR_COMPONENTS_FOLDER/eslint.config.mjs || true
+rm $ANGULAR_COMPONENTS_FOLDER/tsconfig.json || true
+rm $ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json || true
+rm $ANGULAR_COMPONENTS_FOLDER/tsconfig.spec.json || true
 download_app_components_file "eslint.config.mjs"
-download_app_components_file "jest.config.ts"
+download_app_components_file "vitest.config.mts"
+download_app_components_file "tsconfig.json"
+download_app_components_file "tsconfig.lib.json"
 download_app_components_file "tsconfig.spec.json"
+
 
 rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $ANGULAR_COMPONENTS_FOLDER/src/index.ts
@@ -621,10 +661,19 @@ download_firebase_components_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-rm $FIREBASE_COMPONENTS_FOLDER/eslint.config.mjs
+rm $FIREBASE_COMPONENTS_FOLDER/eslint.config.mjs || true
+rm $FIREBASE_COMPONENTS_FOLDER/tsconfig.json || true
+rm $FIREBASE_COMPONENTS_FOLDER/tsconfig.lib.json || true
+rm $FIREBASE_COMPONENTS_FOLDER/tsconfig.spec.json || true
 download_firebase_components_file "eslint.config.mjs"
-download_firebase_components_file "jest.config.ts"
+download_firebase_components_file "vitest.config.mts"
+download_firebase_components_file "tsconfig.json"
+download_firebase_components_file "tsconfig.lib.json"
 download_firebase_components_file "tsconfig.spec.json"
+
+# Vitest Setup File
+rm $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts || true
+echo "import '../../../vitest.setup.firebase'" > $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
 
 ## Lib Folder
 rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
@@ -692,8 +741,14 @@ download_angular_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-download_angular_ts_file "jest.config.ts"
+rm $ANGULAR_APP_FOLDER/eslint.config.mjs || true
+rm $ANGULAR_APP_FOLDER/tsconfig.app.json || true
+rm $ANGULAR_APP_FOLDER/tsconfig.spec.json || true
+download_angular_ts_file "eslint.config.mjs"
+download_angular_ts_file "vitest.config.mts"
+download_angular_ts_file "tsconfig.app.json"
 download_angular_ts_file "tsconfig.spec.json"
+download_angular_ts_file "tsconfig.editor.json"
 
 download_angular_ts_file "src/styles.scss"
 download_angular_ts_file "src/main.ts"
@@ -707,6 +762,10 @@ rm $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
 sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/proxy.conf.prod.json
 rm $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
+
+# Vitest Setup File
+rm $ANGULAR_APP_FOLDER/src/test-setup.ts || true
+echo "import '../../../vitest.setup.firebase'" > $ANGULAR_APP_FOLDER/src/test-setup.ts
 
 # lib
 mkdir $ANGULAR_APP_FOLDER/src/lib
@@ -783,8 +842,13 @@ rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
 
 # add the setup file config
-download_api_ts_file "jest.config.ts"
+rm $API_APP_FOLDER/eslint.config.mjs || true
+rm $API_APP_FOLDER/tsconfig.app.json || true
+rm $API_APP_FOLDER/tsconfig.spec.json || true
+download_api_ts_file "eslint.config.mjs"
+download_api_ts_file "vitest.config.mts"
 download_api_ts_file "tsconfig.spec.json"
+download_api_ts_file "tsconfig.app.json"
 
 # Test Folder
 mkdir $API_APP_FOLDER/src/test

@@ -623,7 +623,6 @@ export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): Fires
 
   let current = input;
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     array.push(current.collectionName);
 
@@ -814,15 +813,7 @@ export interface FirestoreModelKeyRef {
  * Instance that provides several accessors for accessing documents of a collection.
  */
 export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>
-  extends FirestoreContextReference,
-    FirestoreModelIdentityRef,
-    QueryLikeReferenceRef<T>,
-    FirestoreItemPageIterationFactory<T>,
-    FirestoreQueryFactory<T>,
-    LimitedFirestoreDocumentAccessorFactory<T, D, A>,
-    LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>,
-    LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>,
-    FirestoreCollectionQueryFactory<T, D> {}
+  extends FirestoreContextReference, FirestoreModelIdentityRef, QueryLikeReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreQueryFactory<T>, LimitedFirestoreDocumentAccessorFactory<T, D, A>, LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>, LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>, FirestoreCollectionQueryFactory<T, D> {}
 
 // MARK: FirestoreCollection
 /**

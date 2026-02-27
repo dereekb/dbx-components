@@ -1,6 +1,5 @@
 import {
   type StorageFileProcessingNotificationTaskData,
-  type StorageFilePurpose,
   type StorageFileProcessingSubtaskMetadata,
   type NotificationTaskServiceHandleNotificationTaskResult,
   type StorageFileProcessingSubtask,
@@ -38,18 +37,12 @@ import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/n
 import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig, type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
-import * as archiver from 'archiver';
+import archiver from 'archiver';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.
  */
 export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> extends NotificationTaskSubtaskInput<StorageFileProcessingNotificationTaskData<M, S>, M, S> {
-  /**
-   * The retrieved purpose.
-   *
-   * @deprecated use target instead.
-   */
-  readonly purpose: StorageFilePurpose;
   /**
    * The associated StorageFileDocument.
    */
@@ -114,14 +107,7 @@ export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M exten
  *
  * The flows behave the same way.
  */
-export type StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> =
-  | StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M, S>
-  | (Omit<NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>, 'target'> & {
-      /**
-       * @deprecated use target instead.
-       */
-      readonly purpose?: Maybe<StorageFilePurpose>;
-    });
+export type StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M, S>;
 
 export interface StorageFileProcessingNotificationTaskHandlerConfig extends Omit<NotificationTaskSubtaskNotificationTaskHandlerConfig<StorageFileProcessingPurposeSubtaskInput, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData>, 'processors'> {
   /**
@@ -159,17 +145,6 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
   const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, allStorageFileGroupProcessorConfig } = config;
   const storageFileDocumentAccessor = storageFileFirestoreCollections.storageFileCollection.documentAccessor();
   const makeFileDetailsAccessor = storedFileReaderFactory();
-
-  // COMPAT: Sets target if unset and purpose is set. Use until purpose is removed.
-  inputProcessors.forEach((x) => {
-    if (!(x as any).target) {
-      if ((x as any).purpose) {
-        (x as any).target = (x as any).purpose;
-      } else {
-        throw new Error('StorageFileProcessingPurposeSubtaskProcessorConfig must have a target or purpose.');
-      }
-    }
-  });
 
   const defaultCleanup = storageFileProcessingNotificationTaskHandlerDefaultCleanup;
   const processors = [...inputProcessors] as StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileProcessingSubtaskMetadata, StorageFileProcessingSubtask>[];
@@ -218,7 +193,6 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       const fileDetailsAccessor = makeFileDetailsAccessor(file);
 
       const input = {
-        purpose,
         target: purpose,
         loadStorageFile,
         fileDetailsAccessor,
@@ -228,12 +202,12 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       return input;
     },
     buildUpdateMetadata: (baseUpdateMetadata, input) => {
-      const { purpose } = input;
+      const { target } = input;
 
       return {
         ...baseUpdateMetadata,
-        // always re-copy the purpose/storagePath for the next run so StorageFile does not have to be reloaded
-        p: purpose,
+        // always re-copy the target/storagePath for the next run so StorageFile does not have to be reloaded
+        p: target,
         storagePath: copyStoragePath(input.fileDetailsAccessor.input)
       };
     },

@@ -1,4 +1,4 @@
-import { type ArrayOrValue, MS_IN_SECOND, type Maybe, type UnixDateTimeNumber, asArray } from '@dereekb/util';
+import { type ArrayOrValue, MS_IN_SECOND, type Maybe, type UnixDateTimeMillisecondsNumber, asArray } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchRequestFactoryError, FetchResponseError, type MakeUrlSearchParamsOptions, mergeMakeUrlSearchParamsOptions } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
@@ -169,7 +169,7 @@ export interface ZoomRateLimitHeaderDetails {
   /**
    * The time at which the rate limit will reset.
    */
-  readonly retryAfter?: UnixDateTimeNumber;
+  readonly retryAfter?: UnixDateTimeMillisecondsNumber;
   /**
    * The time at which the rate limit will reset.
    */

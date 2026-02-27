@@ -133,34 +133,3 @@ export function zohoRecruitSearchJobOpeningAssociatedCandidateRecords<T extends 
 export function zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {
   return zohoFetchPageFactory(zohoRecruitSearchJobOpeningAssociatedCandidateRecords<T>(context));
 }
-
-// MARK: Compat
-/**
- * @deprecated Use zohoRecruitAssociateCandidateRecordsWithJobOpenings instead.
- */
-export const associateCandidateRecordsWithJobOpenings = zohoRecruitAssociateCandidateRecordsWithJobOpenings;
-
-/**
- * @deprecated Use zohoRecruitSearchAssociatedRecords instead.
- */
-export const searchAssociatedRecords = zohoRecruitSearchAssociatedRecords;
-
-/**
- * @deprecated Use zohoRecruitSearchCandidateAssociatedJobOpeningRecords instead.
- */
-export const searchCandidateAssociatedJobOpeningRecords = zohoRecruitSearchCandidateAssociatedJobOpeningRecords;
-
-/**
- * @deprecated Use zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory instead.
- */
-export const searchCandidateAssociatedJobOpeningRecordsPageFactory = zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory;
-
-/**
- * @deprecated Use zohoRecruitSearchJobOpeningAssociatedCandidateRecords instead.
- */
-export const searchJobOpeningAssociatedCandidateRecords = zohoRecruitSearchJobOpeningAssociatedCandidateRecords;
-
-/**
- * @deprecated Use zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory instead.
- */
-export const searchJobOpeningAssociatedCandidateRecordsPageFactory = zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory;

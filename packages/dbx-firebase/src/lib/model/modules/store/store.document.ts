@@ -26,7 +26,7 @@ import {
   FIRESTORE_PERMISSION_DENIED_ERROR_CODE,
   isClientFirebaseError
 } from '@dereekb/firebase';
-import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading, tapLog } from '@dereekb/rxjs';
+import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
@@ -35,6 +35,8 @@ import { linkDocumentStoreToParentContextStores } from './store.document.context
 
 @Injectable()
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {
+  // NOTE: Injection does not occur here, but we need @Injectable to compile properly for Angular usage
+  // eslint-disable-next-line @angular-eslint/prefer-inject
   protected constructor(@Inject(null) @Optional() initialState?: C) {
     super(initialState);
     linkDocumentStoreToParentContextStores(this);
@@ -127,7 +129,6 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly documentLoadingState$: Observable<LoadingState<D>> = this.currentDocument$.pipe(
     map((x) => (x ? successResult(x) : beginLoading<D>())),
-    tapLog('documentLoadingState$'),
     shareReplay(1)
   );
 

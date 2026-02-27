@@ -1,6 +1,6 @@
 import { Firestore } from '@google-cloud/firestore';
 import { type TestFirestoreContext, TestFirestoreInstance, TestFirestoreContextFixture, type TestingFirestoreDrivers, makeTestingFirestoreDrivers } from '@dereekb/firebase/test';
-import { jestTestContextBuilder } from '@dereekb/util/test';
+import { testContextBuilder } from '@dereekb/util/test';
 import { googleCloudFirestoreDrivers } from '@dereekb/firebase-server';
 import { firestoreContextFactory } from '@dereekb/firebase';
 
@@ -28,13 +28,13 @@ export class GoogleCloudTestFirestoreContextFixture extends TestFirestoreContext
 let COUNTER = 0;
 
 /**
- * A JestTestContextBuilderFunction for building firestore test context factories using @google-cloud/firestore. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
+ * A TestContextBuilderFunction for building firestore test context factories using @google-cloud/firestore. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
  *
  * This is used to build a @google-cloud/firestore Firestore instance for testing and point it to the emulators.
  *
  * If you need all of Firebase (firebase-admin library), look at adminFirebaseAdminTestBuilder() instead.
  */
-export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleCloudTestFirestoreInstance, GoogleCloudTestFirestoreContextFixture, GoogleCloudTestFirestoreConfig>({
+export const googleCloudTestFirestoreBuilder = testContextBuilder<GoogleCloudTestFirestoreInstance, GoogleCloudTestFirestoreContextFixture, GoogleCloudTestFirestoreConfig>({
   buildConfig: (input?: Partial<GoogleCloudTestFirestoreConfig>) => {
     const config: GoogleCloudTestFirestoreConfig = {
       host: input?.host ?? 'localhost',

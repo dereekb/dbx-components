@@ -5,14 +5,14 @@ defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
   docker:
-    - image: cimg/node:22.14
+    - image: cimg/node:24.13
 
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
 orbs:
   nx: nrwl/nx@1.7.0
-  node: circleci/node@7.1.0
-  snyk: snyk/snyk@2.2.0
+  node: circleci/node@7.2.1
+  snyk: snyk/snyk@2.3.0
 
 jobs:
   build:
@@ -67,6 +67,9 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run:
+          name: run vitest
+          command: npx nx test vitest
+      - run:
           name: run util tests
           command: npx nx run-all-tests util
       - run:
@@ -85,7 +88,7 @@ jobs:
           name: run date tests world
           command: npx nx test-timezones-world date
       - store_test_results:
-          path: ~/code/.reports/jest/
+          path: ~/code/.reports/junit
   # Runs tests for the projects that do not require the firebase emulators and are more complex (nestjs, angular)
   test-with-node-complex:
     <<: *defaults
@@ -118,7 +121,7 @@ jobs:
           name: run zoom tests
           command: npx nx run-all-tests zoom
       - store_test_results:
-          path: ~/code/.reports/jest/
+          path: ~/code/.reports/junit/
   # Runs tests for the projects that require the firebase emulators.
   test-with-node-firebase:
     <<: *defaults
@@ -133,7 +136,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
           key: firebase-cache-
       - run:
@@ -153,7 +156,7 @@ jobs:
           paths:
             - ~/.cache/firebase
       - store_test_results:
-          path: ~/code/.reports/jest/
+          path: ~/code/.reports/junit/
   # Runs tests for the projects that require the firebase emulators.
   test-setup-script:
     <<: *defaults
@@ -164,7 +167,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
           key: firebase-cache-
       - run:
@@ -212,8 +215,8 @@ jobs:
           name: setup git
           command: git config user.email "ci@dereekb.com" && git config user.name "ci"
       - run:
-          name: build release
-          command: npx nx run --parallel=1 workspace:version
+          name: build release with nx release
+          command: npx nx release --skip-publish --verbose
       - run:
           # we grab the relevant tag names before swapping to main
           name: "setup env vars for git changes"
@@ -271,7 +274,7 @@ jobs:
       # - run: npx nx run-many -t publish-npmjs --all
       # npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
       # since these dependencies rely on eachother, they should be published in dependency order
-      - run: npx nx run util:publish-npmjs && npx nx run rxjs:publish-npmjs
+      - run: npx nx run vitest:publish-npmjs && npx nx run util:publish-npmjs && npx nx run rxjs:publish-npmjs
       - run: npx nx run date:publish-npmjs && npx nx run model:publish-npmjs && npx nx run browser:publish-npmjs
       - run: npx nx run nestjs:publish-npmjs && npx nx run firebase:publish-npmjs && npx nx run firebase-server:publish-npmjs
       - run: npx nx run zoho:publish-npmjs && npx nx run zoom:publish-npmjs
@@ -293,16 +296,16 @@ workflows:
       - test-with-node-firebase:
           requires:
             - build
-      - test-setup-script:
-          requires:
-            - build
+      # - test-setup-script:
+      #     requires:
+      #       - build
       - run-release-and-push-to-main:
           requires:
             - build
             - test-with-node-basic
             - test-with-node-complex
             - test-with-node-firebase
-            - test-setup-script
+            # - test-setup-script   # prepare for v13.0.0. Will fix for v13.0.1
           filters:
             branches:
               only: release

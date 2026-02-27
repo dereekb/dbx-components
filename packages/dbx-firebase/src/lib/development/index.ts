@@ -9,5 +9,4 @@ export * from './development.scheduler.list.component';
 export * from './development.scheduler.service';
 export * from './development.scheduler.widget.component';
 export * from './development.service';
-export * from './development.widget.service';
 export * from './development.widget';

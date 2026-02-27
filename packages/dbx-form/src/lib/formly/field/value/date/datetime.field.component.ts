@@ -1,4 +1,4 @@
-import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeArrayValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
+import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeArrayValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeMillisecondsNumber, ISO8601DayString } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction, dateTimeMinuteDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
@@ -16,7 +16,7 @@ import { toggleDisableFormControl } from '../../../../form/form';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatError, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -244,7 +244,7 @@ export const DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR = 'dateTimeFieldTimeNot
 
 @Component({
   templateUrl: 'datetime.field.component.html',
-  imports: [FlexLayoutModule, NgTemplateOutlet, MatButtonModule, NgClass, MatError, MatFormFieldModule, MatDatepickerModule, MatInputModule, FormsModule, ReactiveFormsModule, MatIconModule, MatMenuModule, MatFormFieldModule, GetValuePipe, DatePipe, DateDistancePipe, TimeDistancePipe, MatDividerModule],
+  imports: [FlexLayoutModule, NgTemplateOutlet, MatButtonModule, MatError, MatFormFieldModule, MatDatepickerModule, MatInputModule, FormsModule, ReactiveFormsModule, MatIconModule, MatMenuModule, MatFormFieldModule, GetValuePipe, DatePipe, DateDistancePipe, TimeDistancePipe, MatDividerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -340,7 +340,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly valueInSystemTimezone$: Observable<Maybe<Date>> = this.formControl$.pipe(
-    map((control) => control.valueChanges.pipe(startWith<Maybe<Date | ISO8601DayString | MinuteOfDay | UnixDateTimeNumber>>(control.value), shareReplay(1))),
+    map((control) => control.valueChanges.pipe(startWith<Maybe<Date | ISO8601DayString | MinuteOfDay | UnixDateTimeMillisecondsNumber>>(control.value), shareReplay(1))),
     combineLatestWith(this.timezoneInstance$),
     switchMap(([x, timezoneInstance]) => {
       return x.pipe(map(dbxDateTimeInputValueParseFactory(this.valueMode, timezoneInstance)));
@@ -504,7 +504,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.valueInSystemTimezone$.pipe(skipFirstMaybe())).pipe(
+  readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.valueInSystemTimezone$.pipe(skipAllInitialMaybe())).pipe(
     map((x: Maybe<Date>) => (x ? startOfDay(x) : null)),
     distinctUntilChanged<Maybe<Date>>(isSameDateDay),
     shareReplay(1)
@@ -859,7 +859,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         switchMap(([currentValue, valueFactory]) => {
           return this.timeOutput$.pipe(
             throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }),
-            skipFirstMaybe(),
+            skipAllInitialMaybe(),
             distinctUntilChanged(isSameDateHoursAndMinutes),
             map((x) => valueFactory(x)),
             filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x, currentValue))

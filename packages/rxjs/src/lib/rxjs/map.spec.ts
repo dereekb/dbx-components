@@ -1,6 +1,7 @@
 import { shareReplay, Subject, of } from 'rxjs';
 import { SubscriptionObject } from './../subscription';
 import { mapKeysIntersectionToArray } from './map';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('mapKeysIntersectionToArray()', () => {
   let sub: SubscriptionObject;
@@ -13,33 +14,36 @@ describe('mapKeysIntersectionToArray()', () => {
     sub.destroy();
   });
 
-  it('should merge the arrays if both values are present.', (done) => {
-    const subject = new Subject<string[]>();
+  it(
+    'should merge the arrays if both values are present.',
+    callbackTest((done) => {
+      const subject = new Subject<string[]>();
 
-    const numbersA = [1, 2, 3];
-    const numbersB = [4, 5, 6];
+      const numbersA = [1, 2, 3];
+      const numbersB = [4, 5, 6];
 
-    const obs = of({
-      a: numbersA,
-      b: numbersB
-    }).pipe(mapKeysIntersectionToArray(subject), shareReplay(1));
+      const obs = of({
+        a: numbersA,
+        b: numbersB
+      }).pipe(mapKeysIntersectionToArray(subject), shareReplay(1));
 
-    sub.subscription = obs.subscribe({
-      next: (value) => {
-        expect(value.length).toBe(6);
-        expect(numbersA).toContain(value[0]);
-        expect(numbersA).toContain(value[1]);
-        expect(numbersA).toContain(value[2]);
-        expect(numbersB).toContain(value[3]);
-        expect(numbersB).toContain(value[4]);
-        expect(numbersB).toContain(value[5]);
-        done();
-      },
-      complete: () => {
-        subject.complete();
-      }
-    });
+      sub.subscription = obs.subscribe({
+        next: (value) => {
+          expect(value.length).toBe(6);
+          expect(numbersA).toContain(value[0]);
+          expect(numbersA).toContain(value[1]);
+          expect(numbersA).toContain(value[2]);
+          expect(numbersB).toContain(value[3]);
+          expect(numbersB).toContain(value[4]);
+          expect(numbersB).toContain(value[5]);
+          done();
+        },
+        complete: () => {
+          subject.complete();
+        }
+      });
 
-    subject.next(['a', 'b']);
-  });
+      subject.next(['a', 'b']);
+    })
+  );
 });

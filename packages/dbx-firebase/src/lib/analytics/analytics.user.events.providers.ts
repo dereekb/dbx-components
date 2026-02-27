@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, makeEnvironmentProviders, type Provider } from '@angular/core';
+import { type EnvironmentProviders, inject, makeEnvironmentProviders, provideAppInitializer, type Provider } from '@angular/core';
 import { DbxFirebaseAnalyticsUserEventsListenerService } from './analytics.user.events.service';
 
 /**
@@ -7,19 +7,13 @@ import { DbxFirebaseAnalyticsUserEventsListenerService } from './analytics.user.
  * @returns EnvironmentProviders
  */
 export function provideDbxFirebaseAnalyticsUserEventsListenerService() {
-  const providers: Provider[] = [
+  const providers: (EnvironmentProviders | Provider)[] = [
     DbxFirebaseAnalyticsUserEventsListenerService,
     // service initialization
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (dbxFirebaseAnalyticsUserEventsListenerService: DbxFirebaseAnalyticsUserEventsListenerService) => {
-        return () => {
-          dbxFirebaseAnalyticsUserEventsListenerService.init();
-        };
-      },
-      deps: [DbxFirebaseAnalyticsUserEventsListenerService],
-      multi: true
-    }
+    provideAppInitializer(() => {
+      const service = inject(DbxFirebaseAnalyticsUserEventsListenerService);
+      service.init();
+    })
   ];
 
   return makeEnvironmentProviders(providers);

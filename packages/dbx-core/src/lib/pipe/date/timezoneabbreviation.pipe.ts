@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
-import { TimezoneString, getTimezoneAbbreviation } from '@dereekb/date';
+import { TimezoneString, type Maybe } from '@dereekb/util';
+import { getTimezoneAbbreviation } from '@dereekb/date';
 
 /**
  * Converts the input date and timezone to the proper abbreviation. Uses the input date for the context, or uses now.

@@ -1,17 +1,14 @@
-import { DbxCoreButtonModule } from './button.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { filter } from 'rxjs';
 import { DbxButtonDirective } from './button.directive';
 import { DbxLoadingButtonDirective } from './button.loading.directive';
 import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
+import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingButton', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxCoreButtonModule],
-      declarations: [TestDbxLoadingButtonDirectiveComponent]
-    }).compileComponents();
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
   });
 
   let testComponent: TestDbxLoadingButtonDirectiveComponent;
@@ -25,6 +22,10 @@ describe('DbxLoadingButton', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
   it('should be created', () => {
     expect(testComponent.loadingButtonDirective()).toBeDefined();
   });
@@ -33,15 +34,18 @@ describe('DbxLoadingButton', () => {
     expect(((testComponent.loadingButtonDirective() as any)._loadingEffectSub as SubscriptionObject).hasSubscription).toBe(true);
   });
 
-  it('should set the button to working when loading is true.', (done) => {
-    testComponent.context.setLoading(true);
+  it(
+    'should set the button to working when loading is true.',
+    callbackTest((done) => {
+      testComponent.context.setLoading(true);
 
-    testComponent.context.stream$.pipe(filter((x) => Boolean(x.loading))).subscribe((x) => {
-      expect(x.loading).toBe(true);
-      expect(button.workingSignal()).toBe(true);
-      done();
-    });
-  });
+      testComponent.context.stream$.pipe(filter((x) => Boolean(x.loading))).subscribe((x) => {
+        expect(x.loading).toBe(true);
+        expect(button.workingSignal()).toBe(true);
+        done();
+      });
+    })
+  );
 });
 
 @Component({
@@ -49,7 +53,9 @@ describe('DbxLoadingButton', () => {
     <div>
       <button dbxButton [dbxLoadingButton]="context"></button>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxButtonDirective, DbxLoadingButtonDirective]
 })
 class TestDbxLoadingButtonDirectiveComponent {
   context = new SimpleLoadingContext(false);

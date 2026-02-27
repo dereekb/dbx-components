@@ -1,5 +1,5 @@
 import { type Maybe } from '../value/maybe.type';
-import { type DateOrUnixDateTimeNumber, type Milliseconds, addMilliseconds, dateFromDateOrTimeMillisecondsNumber } from './date';
+import { type DateOrUnixDateTimeMillisecondsNumber, type Milliseconds, addMilliseconds, dateFromDateOrTimeMillisecondsNumber } from './date';
 
 // MARK: Expires
 /**
@@ -39,7 +39,7 @@ export interface ExpirationDetailsInput<T extends Expires = Expires> extends Exp
    *
    * If not defined, the expiresFromDate is considered to have never been run/set.
    */
-  expiresFromDate?: Maybe<DateOrUnixDateTimeNumber>;
+  expiresFromDate?: Maybe<DateOrUnixDateTimeMillisecondsNumber>;
   /**
    * If true, the "expiresFromDate" will default to the calculated now time when calculating the expiration.
    *
@@ -158,7 +158,7 @@ export function calculateExpirationDate(input: ExpirationDetailsInput<any>): May
  * @param now Optional override for the current time. Defaults to the current time.
  * @returns True if the threshold has not passed since the next run time, compared to now.
  */
-export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateOrUnixDateTimeNumber>, now?: Maybe<Date>): boolean {
+export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>): boolean {
   if (nextRunAt == null) {
     return false;
   }
@@ -177,7 +177,7 @@ export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateO
  * @param now - Optional override for the current time (defaults to the current time)
  * @returns True if the operation should be throttled (not enough time has passed), false otherwise
  */
-export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeNumber>, now?: Maybe<Date>) {
+export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>) {
   return !expirationDetails({ defaultExpiresFromDateToNow: false, expiresFromDate: lastRunAt ?? null, expiresIn: throttleTime }).hasExpired(now, true);
 }
 

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFileUploadComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDocumentStoreDirective, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
+import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { makeUserAvatarFileStoragePath } from 'demo-firebase';
@@ -8,7 +8,7 @@ import { map, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './settings.component.html',
-  imports: [JsonPipe, AsyncPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFileUploadComponent, DbxFirebaseStorageFileDocumentStoreDirective],
+  imports: [JsonPipe, AsyncPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent],
   standalone: true
 })
 export class DemoAppSettingsComponent {

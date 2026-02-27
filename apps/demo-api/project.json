@@ -89,10 +89,10 @@
       }
     },
     "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "jestConfig": "apps/demo-api/jest.config.ts"
+        "reportsDirectory": "../../coverage/apps/demo-api"
       }
     },
     "watch": {

@@ -1,54 +1,84 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "12.7.0",
-  "type": "commonjs",
+  "version": "13.0.0",
+  "types": "./src/index.d.ts",
+  "module": "./index.esm.js",
+  "main": "./index.cjs.js",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
-      "main": "./src/index.js",
-      "require": "./src/index.js",
-      "default": "./src/index.js"
+      "node": {
+        "require": "./index.cjs.js"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
     },
     "./stripe": {
       "types": "./stripe/src/index.d.ts",
-      "main": "./stripe/src/index.js",
-      "require": "./stripe/src/index.js",
-      "default": "./stripe/src/index.js"
+      "node": {
+        "require": "./stripe/index.cjs.js"
+      },
+      "browser": {
+        "require": "./stripe/index.cjs.js",
+        "import": "./stripe/index.esm.js"
+      },
+      "default": "./stripe/index.cjs.js"
     },
     "./mailgun": {
       "types": "./mailgun/src/index.d.ts",
-      "main": "./mailgun/src/index.js",
-      "require": "./mailgun/src/index.js",
-      "default": "./mailgun/src/index.js"
+      "node": {
+        "require": "./mailgun/index.cjs.js"
+      },
+      "browser": {
+        "require": "./mailgun/index.cjs.js",
+        "import": "./mailgun/index.esm.js"
+      },
+      "default": "./mailgun/index.cjs.js"
     },
     "./vapiai": {
       "types": "./vapiai/src/index.d.ts",
-      "main": "./vapiai/src/index.js",
-      "require": "./vapiai/src/index.js",
-      "default": "./vapiai/src/index.js"
+      "node": {
+        "require": "./vapiai/index.cjs.js"
+      },
+      "browser": {
+        "require": "./vapiai/index.cjs.js",
+        "import": "./vapiai/index.esm.js"
+      },
+      "default": "./vapiai/index.cjs.js"
     },
     "./openai": {
       "types": "./openai/src/index.d.ts",
-      "main": "./openai/src/index.js",
-      "require": "./openai/src/index.js",
-      "default": "./openai/src/index.js"
+      "node": {
+        "require": "./openai/index.cjs.js"
+      },
+      "browser": {
+        "require": "./openai/index.cjs.js",
+        "import": "./openai/index.esm.js"
+      },
+      "default": "./openai/index.cjs.js"
     },
     "./typeform": {
       "types": "./typeform/src/index.d.ts",
-      "main": "./typeform/src/index.js",
-      "require": "./typeform/src/index.js",
-      "default": "./typeform/src/index.js"
+      "node": {
+        "require": "./typeform/index.cjs.js"
+      },
+      "browser": {
+        "require": "./typeform/index.cjs.js",
+        "import": "./typeform/index.esm.js"
+      },
+      "default": "./typeform/index.cjs.js"
     }
   },
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
   "peerDependencies": {
-    "@nestjs/common": "^10.0.0",
-    "express": "4.21.2",
-    "raw-body": "2.5.2",
-    "body-parser": "1.20.3",
-    "@nestjs/config": "^3.0.0",
-    "@dereekb/util": "*"
+    "@nestjs/common": "^11.0.0",
+    "express": "^5.0.0",
+    "raw-body": "^3.0.0",
+    "body-parser": "^2.0.0",
+    "@nestjs/config": "^4.0.0",
+    "@dereekb/util": "13.0.0"
   },
   "dependencies": {}
 }

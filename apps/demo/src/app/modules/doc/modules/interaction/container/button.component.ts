@@ -51,10 +51,9 @@ export class DocInteractionButtonComponent {
     text: 'Stroked Button',
     buttonColor: 'accent',
     barColor: 'accent',
-    raised: false,
-    stroked: true,
+    buttonType: 'stroked',
     mode: 'indeterminate',
-    value: 0,
+    working: 0,
     disabled: false,
     customClass: 'some-other-class',
     buttonIcon: {
@@ -67,10 +66,9 @@ export class DocInteractionButtonComponent {
     text: 'Raised Button',
     buttonColor: 'primary',
     barColor: 'primary',
-    raised: true,
-    stroked: false,
+    buttonType: 'raised',
     mode: 'indeterminate',
-    value: 0,
+    working: 0,
     disabled: false
   };
 
@@ -78,8 +76,7 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Stroked Button',
     spinnerSize: 19,
-    raised: false,
-    stroked: true,
+    buttonType: 'stroked',
     buttonColor: 'accent',
     spinnerColor: 'accent',
     fullWidth: false,
@@ -95,8 +92,7 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Raised Button',
     spinnerSize: 19,
-    raised: true,
-    stroked: false,
+    buttonType: 'raised',
     buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
@@ -108,8 +104,6 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Default Button',
     spinnerSize: 19,
-    raised: false,
-    stroked: false,
     buttonColor: 'primary',
     spinnerColor: 'primary',
     fullWidth: false,
@@ -121,9 +115,7 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Flat Button',
     spinnerSize: 19,
-    raised: false,
-    stroked: false,
-    flat: true,
+    buttonType: 'flat',
     buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
@@ -134,10 +126,8 @@ export class DocInteractionButtonComponent {
   spinnerButtonConfig8: DbxProgressButtonConfig = {
     working: false,
     spinnerSize: 19,
-    raised: false,
-    stroked: false,
+    buttonType: 'flat',
     text: 'HELLO WORLD',
-    flat: true,
     buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
@@ -151,9 +141,6 @@ export class DocInteractionButtonComponent {
   spinnerButtonConfig4: DbxProgressButtonConfig = {
     working: false,
     spinnerSize: 25, // ignored
-    raised: false,
-    stroked: false,
-    flat: false,
     buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
@@ -206,10 +193,7 @@ export class DocInteractionButtonComponent {
     text: 'Default Button',
     buttonColor: 'primary',
     barColor: 'primary',
-    raised: false,
-    stroked: false,
     mode: 'indeterminate',
-    value: 0,
     disabled: false
   };
 
@@ -218,11 +202,8 @@ export class DocInteractionButtonComponent {
     text: 'Flat Button',
     buttonColor: 'primary',
     barColor: 'primary',
-    raised: false,
-    stroked: false,
-    flat: true,
+    buttonType: 'flat',
     mode: 'indeterminate',
-    value: 0,
     disabled: false
   };
 
@@ -230,12 +211,39 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Flat Button',
     buttonColor: 'ok',
-    barColor: 'success',
-    raised: false,
-    stroked: false,
-    flat: true,
+    barColor: 'ok',
+    buttonType: 'flat',
     mode: 'indeterminate',
-    value: 0,
+    disabled: false
+  };
+
+  barButtonConfig5: DbxProgressButtonConfig = {
+    working: false,
+    text: 'Flat Button',
+    buttonColor: 'warn',
+    barColor: 'warn',
+    buttonType: 'flat',
+    mode: 'indeterminate',
+    disabled: false
+  };
+
+  barButtonConfig6: DbxProgressButtonConfig = {
+    working: false,
+    text: 'Stroked Button',
+    buttonColor: 'success',
+    barColor: 'success',
+    buttonType: 'stroked',
+    mode: 'indeterminate',
+    disabled: false
+  };
+
+  barButtonConfig7: DbxProgressButtonConfig = {
+    working: false,
+    text: 'Tonal Button',
+    buttonColor: 'ok',
+    barColor: 'notice',
+    buttonType: 'tonal',
+    mode: 'indeterminate',
     disabled: false
   };
 
@@ -259,6 +267,9 @@ export class DocInteractionButtonComponent {
   clickBar3 = this.activateAndDeactivate('barButtonConfig2');
   clickBar4 = this.activateAndDeactivate('barButtonConfig3');
   clickBar5 = this.activateAndDeactivate('barButtonConfig4');
+  clickBar6 = this.activateAndDeactivate('barButtonConfig5');
+  clickBar7 = this.activateAndDeactivate('barButtonConfig6');
+  clickBar8 = this.activateAndDeactivate('barButtonConfig7');
 
   constructor() {
     this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));

@@ -3,7 +3,6 @@ import { DbxValueAsListItem, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLA
 import { of } from 'rxjs';
 import { DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
 import { DatePipe } from '@angular/common';
-import { DbxIconButtonComponent } from '../../button';
 import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 
 export type DbxZipPreviewEntryWithSelection = DbxValueAsListItem<DbxZipBlobPreviewEntryTreeNode>;
@@ -62,7 +61,7 @@ export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionLis
       </div>
     </div>
   `,
-  imports: [DatePipe, DbxIconButtonComponent, DbxSpacerDirective, DbxDownloadBlobButtonComponent],
+  imports: [DatePipe, DbxSpacerDirective, DbxDownloadBlobButtonComponent],
   standalone: true
 })
 export class DbxZipPreviewEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxZipPreviewEntryWithSelection> {
