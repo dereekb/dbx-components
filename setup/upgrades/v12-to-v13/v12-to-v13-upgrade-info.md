@@ -111,6 +111,7 @@ You'll need to specify the following overrides in `package.json`:
 
 **Removed deprecated type aliases and functions:**
 - `UnixTimeNumber` type alias removed - use `UnixDateTimeNumber` instead
+- `UnixDateTimeNumber` type alias removed - use `UnixDateTimeMillisecondsNumber` instead.
 - `timer` constant alias removed - use `makeTimer` instead
 - `filterMaybeValues` and `filterEmptyValues` aliases removed - use their non-aliased equivalents
 - `BooleanStringKeyArrayUtilityInstance` alias removed
@@ -125,7 +126,7 @@ You'll need to specify the following overrides in `package.json`:
 
 **BREAKING CHANGE: Date and Unix Time Types**
 - `DateOrUnixDateTimeNumber` replaced with `DateOrUnixDateTimeMillisecondsNumber`
-- `UnixDateTimeMillisecondsNumber` replaced with `UnixDateTimeNumber`
+- `UnixDateTimeNumber` replaced with `UnixDateTimeMillisecondsNumber`
 
 #### @dereekb/util/test
 
@@ -156,7 +157,6 @@ You'll need to specify the following overrides in `package.json`:
 - `toExpires`
 - `hasExpired`
 - `getExpiration`
-
 - `TimezoneString` is no longer exported. Import from `@dereekb/util` instead.
 
 **Note:** RxJS expiration operators have been migrated to `@dereekb/rxjs/expires`. The `date/expires.rxjs` module now re-exports from the new location with deprecation notices.
@@ -253,6 +253,11 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 - Deprecated inputs from `keydown.listener.directive.ts`: `appWindowKeyDownEnabled`, `appWindowKeyDownFilter`
 - Deprecated aliases from `mapbox.store.ts`: `content$`, `hasContent$`, `clearContent`, `setContent`
 - Deprecated template constants and `deprecatedInputState$` from list directives
+- Removed `DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE` and replaced with `DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE`
+- Removed `DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE` and replaced with `DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE`
+- Removed `DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE` and replaced with `DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE`
+- Renamed `dbxListGridViewDirectiveImportsAndExports` to `dbxListGridViewComponentImportsAndExports`
+- Renamed `DbxListGridViewDirectiveImportsModule` to `DbxListGridViewComponentImportsModule`
 
 #### @dereekb/dbx-form
 
@@ -276,7 +281,7 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 - `notificationTemplateTypeDetailsRecord` constant
 - `StorageFileProcessingNotificationTaskCheckpoint` type and related constants
 - Typo function: `filterDisallowedFirestoreItemPageIteratorInputContraints`
-- `dontStoreIfValue` property (deprecated)
+- `dontStoreIfValue` property removed. Use `dontStoreValueIf` instead.
 - `StorageFileProcessingNotificationTaskCheckpoint` replaced with  `NotificationTaskSubtaskCheckpoint`
 - `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING` replaced with `NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING`
 - `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP` replaced with `NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP`
@@ -297,6 +302,8 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 **Removed deprecated constants and properties:**
 - Typo constant: `FIRESTBASE_SERVER_VALIDATION_ERROR_CODE`
 - Deprecated `crud` property removed
+- Removed `NO_UID_ERROR_CODE`. Replaced with `DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE`
+- Removed `NO_AUTH_ERROR_CODE`. Replaced with `DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE`
 
 #### @dereekb/dbx-firebase
 
@@ -375,6 +382,9 @@ export interface TypedMapboxListenerPair<T extends keyof MapEventType> {
 ```
 
 The only place this wasn't updated was where this was being used correctly for Ngrx's reducers. declared within our app.
+
+#### Remove `"module": "commonjs"`
+You'll encounter the error "Option 'bundler' can only be used when 'module' is set to 'preserve' or to 'es2015' or later." otherwise.
 
 ### Migrating to Vitest
 Jest still has some issues with the ESM node environment, which caused an issue while trying to utilize a non-esm package within a test that utilized `sharp`. Unfortunately, `sharp` still has no progress towards moving to ESM, but there was a workaround, that requires the use of `mlly` and `import.meta.url`. The issue is that Jest messes with the ESM environment where `import.meta.url` is not available, which caused the workaround to fail.
@@ -510,6 +520,12 @@ Update all project-specific `.env` files to remove the use of `JEST_SUITE_NAME` 
 
 #### Updating tsconfig.lib.json
 Update `tsconfig.lib.json` to no longer reference "jest.config.ts".
+
+#### Updating tsconfig.spec.json
+Update `tsconfig.spec.json` to reference `../../vitest.setup.typings.ts`, and remove `../../jest.setup.typings.ts` if it exists.
+
+#### Adding @dereekb/vitest
+You'll need this to replace `jest-date`.
 
 #### Removing Jest
 - Remove all the remaining jest related dependencies from `package.json`.

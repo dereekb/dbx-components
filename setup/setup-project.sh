@@ -467,8 +467,8 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vit
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.angular.ts -o vitest.setup.angular.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.firebase.ts -o vitest.setup.firebase.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.nestjs.ts -o vitest.setup.nestjs.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.node.ts -o vitest.setup.node.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.typings.ts -o vitest.setup.typings.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.setup.node.ts -o vitest.setup.node.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.setup.typings.ts -o vitest.setup.typings.ts
 
 # add env files to ensure that vitest CI tests export properly.
 echo "Adding env files..."

@@ -83,15 +83,6 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
    * The function can return undefined, in which case the default preview dialog will be used.
    */
   readonly openCustomPreview?: Maybe<(downloadUrl: StorageFileDownloadUrl, embedMimeType?: Maybe<string>) => Maybe<MatDialogRef<any>>>;
-  // COMPAT
-  /**
-   * Whether or not to pre-load the download url from the source.
-   *
-   * Defaults to false.
-   *
-   * @deprecated use the preload property on the source/DbxFirebaseStorageFileDownloadButtonSource instead.
-   */
-  readonly preload?: Maybe<boolean>;
 }
 
 @Component({
@@ -174,8 +165,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   readonly preloadSignal = computed(() => {
     const preload = this.preload();
     const source = this.source();
-    const config = this.configSignal();
-    return preload ?? source?.preload ?? config.preload ?? false;
+    return preload ?? source?.preload ?? false;
   });
 
   readonly downloadUrlSignal = signal<Maybe<StorageFileDownloadUrl>>(undefined);

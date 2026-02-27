@@ -16,23 +16,33 @@ echo ""
 
 BASE_URL="https://raw.githubusercontent.com/dereekb/dbx-components/develop"
 
-# List of files to download
-FILES=(
+# Files to download from the repo root
+ROOT_FILES=(
   "vitest.preset.config.mts"
-  "vitest.setup.node.ts"
   "vitest.setup.nestjs.ts"
   "vitest.setup.firebase.ts"
   "vitest.setup.angular.ts"
-  "vitest.setup.typings.ts"
   "vitest.workspace.ts"
+)
+
+# Files to download from setup/templates
+TEMPLATE_FILES=(
+  "vitest.setup.node.ts"
+  "vitest.setup.typings.ts"
 )
 
 echo "Downloading vitest config files from dbx-components..."
 echo ""
 
-for FILE in "${FILES[@]}"; do
+for FILE in "${ROOT_FILES[@]}"; do
   echo "Downloading $FILE..."
   curl -fsSL "$BASE_URL/$FILE" -o "$FILE"
+  echo "✓ Downloaded $FILE"
+done
+
+for FILE in "${TEMPLATE_FILES[@]}"; do
+  echo "Downloading $FILE from setup/templates..."
+  curl -fsSL "$BASE_URL/setup/templates/$FILE" -o "$FILE"
   echo "✓ Downloaded $FILE"
 done
 
@@ -42,7 +52,10 @@ echo "✓ Setup complete!"
 echo "==============================================="
 echo ""
 echo "Downloaded files:"
-for FILE in "${FILES[@]}"; do
+for FILE in "${ROOT_FILES[@]}"; do
+  echo "  - $FILE"
+done
+for FILE in "${TEMPLATE_FILES[@]}"; do
   echo "  - $FILE"
 done
 echo ""

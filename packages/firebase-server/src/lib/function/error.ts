@@ -3,27 +3,17 @@ import type * as admin from 'firebase-admin';
 import { DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE, type FirebaseErrorCode } from '@dereekb/firebase';
 import { HttpsError } from 'firebase-functions/https';
 
-/**
- * @deprecated use DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE instead
- */
-export const NO_AUTH_ERROR_CODE = DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE;
-
 export function unauthenticatedContextHasNoAuthData() {
   return unauthenticatedError({
     message: 'expected auth',
-    code: NO_AUTH_ERROR_CODE
+    code: DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE
   });
 }
-
-/**
- * @deprecated use DBX_FIREBASE_SERVER_NO_UID_ERROR_CODE instead
- */
-export const NO_UID_ERROR_CODE = DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE;
 
 export function unauthenticatedContextHasNoUidError() {
   return unauthenticatedError({
     message: 'no user uid',
-    code: NO_UID_ERROR_CODE
+    code: DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE
   });
 }
 
