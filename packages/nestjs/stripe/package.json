@@ -1,28 +1,15 @@
 {
   "name": "@dereekb/nestjs/stripe",
-  "version": "12.7.0",
-  "types": "./src/index.d.ts",
-  "module": "./index.esm.js",
-  "main": "./index.cjs.js",
-  "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "default": "./index.cjs.js"
-    }
-  },
+  "version": "13.0.1",
   "peerDependencies": {
-    "@dereekb/date": "12.7.0",
-    "@dereekb/nestjs": "12.7.0",
-    "@dereekb/model": "12.7.0",
-    "@dereekb/rxjs": "12.7.0",
-    "@dereekb/util": "12.7.0",
-    "core-js": "^3.0.0"
+    "@dereekb/date": "13.0.1",
+    "@dereekb/model": "13.0.1",
+    "@dereekb/nestjs": "13.0.1",
+    "@dereekb/rxjs": "13.0.1",
+    "@dereekb/util": "13.0.1",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.0",
+    "express": "^5.0.0",
+    "stripe": "^9.1.0"
   }
 }

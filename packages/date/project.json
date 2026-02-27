@@ -23,10 +23,10 @@
         "outputPath": "dist/packages/date",
         "main": "packages/date/src/index.ts",
         "tsConfig": "packages/date/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "tsc",
         "project": "packages/date/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/date/README.md",

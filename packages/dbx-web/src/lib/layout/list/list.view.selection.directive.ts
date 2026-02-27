@@ -34,9 +34,3 @@ export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractD
     this.selectionChanged({ items });
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated use DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE instead and import DbxSelectionValueListViewComponentImportsModule
- */
-export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE;

@@ -30,11 +30,11 @@
         "outputPath": "dist/packages/firebase",
         "main": "packages/firebase/src/index.ts",
         "tsConfig": "packages/firebase/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "tsc",
         "project": "packages/firebase/package.json",
         "format": ["esm", "cjs"],
         "rollupConfig": ["rollup.visualizer.config.ts"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/firebase/README.md",

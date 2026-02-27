@@ -1,34 +1,22 @@
 {
   "name": "@dereekb/zoho",
-  "version": "13.0.0",
+  "version": "13.0.1",
   "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "default": "./index.cjs.js"
-    },
     "./nestjs": {
-      "types": "./nestjs/src/index.d.ts",
       "module": "./nestjs/index.esm.js",
-      "main": "./nestjs/index.cjs.js",
-      "node": {
-        "require": "./nestjs/index.cjs.js"
-      },
-      "browser": {
-        "require": "./nestjs/index.cjs.js",
-        "import": "./nestjs/index.esm.js"
-      }
+      "types": "./nestjs/index.d.ts",
+      "import": "./nestjs/index.cjs.mjs",
+      "default": "./nestjs/index.cjs.js"
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "13.0.0",
-    "make-error": "^1.3.0",
-    "core-js": "^3.0.0"
+    "@dereekb/util": "13.0.1",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.0",
+    "make-error": "^1.3.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.0.0",
+    "date-fns": "^4.0.0"
   }
 }

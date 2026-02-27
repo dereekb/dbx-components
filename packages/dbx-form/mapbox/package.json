@@ -1,4 +1,20 @@
 {
   "name": "@dereekb/dbx-form/mapbox",
-  "version": "12.7.0"
+  "version": "13.0.1",
+  "peerDependencies": {
+    "@angular/common": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
+    "@angular/material": "^21.0.0",
+    "@dereekb/dbx-form": "13.0.1",
+    "@dereekb/dbx-web": "13.0.1",
+    "@dereekb/rxjs": "13.0.1",
+    "@dereekb/util": "13.0.1",
+    "@ng-web-apis/geolocation": "^5.1.0",
+    "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
+    "@ngx-formly/material": "git+https://git@github.com/dereekb/ngx-formly#02e615006744374a587b5d35de3b2d137e2e05a8",
+    "mapbox-gl": "^3.10.0",
+    "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
+    "rxjs": "^7.8.0"
+  }
 }

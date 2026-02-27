@@ -5,6 +5,9 @@
     "sharedGlobals": [],
     "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/eslint.config.mjs", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/vitest.config.mts", "!{projectRoot}/src/test-setup.[jt]s", "!{projectRoot}/test-setup.[jt]s", "!{projectRoot}/cypress/**/*", "!{projectRoot}/**/*.cy.[jt]s?(x)", "!{projectRoot}/cypress.config.[jt]s"]
   },
+  "tui": {
+    "enabled": false
+  },
   "cli": {
     "packageManager": "npm"
   },
@@ -29,11 +32,7 @@
       "inputs": ["production", "^production"],
       "cache": true
     },
-    "run-many": {
-      "options": {
-        "tui": false
-      }
-    },
+    "run-many": {},
     "run-all-tests": {
       "dependsOn": ["build"],
       "inputs": ["default", "^default", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
@@ -85,7 +84,7 @@
     },
     "@nx/rollup:rollup": {
       "cache": true,
-      "inputs": ["production", "^production"],
+      "inputs": ["production", "^production", "{projectRoot}/project.json"],
       "options": {
         "buildLibsFromSource": false
       }
@@ -120,10 +119,15 @@
   "useInferencePlugins": false,
   "defaultBase": "main",
   "release": {
-    "projects": ["apps/*", "packages/*", "components/*"],
+    "projects": ["*"],
     "projectsRelationship": "fixed",
     "version": {
-      "conventionalCommits": true
+      "conventionalCommits": true,
+      "git": {
+        "commit": false,
+        "tag": false,
+        "stageChanges": false
+      }
     },
     "releaseTag": {
       "requireSemver": true
@@ -149,15 +153,15 @@
           "versionTitleDate": true
         }
       },
-      "automaticFromRef": true
-    },
-    "git": {
-      "commit": true,
-      "commitMessage": "release($workspace): v{version} release",
-      "commitArgs": "--no-verify",
-      "tag": true,
-      "tagMessage": "v{version}",
-      "stageChanges": true
+      "automaticFromRef": true,
+      "git": {
+        "commit": true,
+        "commitMessage": "release($workspace): v{version} release",
+        "commitArgs": "--no-verify",
+        "tag": false,
+        "tagMessage": "v{version}",
+        "stageChanges": true
+      }
     },
     "releaseTagPattern": "v{version}"
   }

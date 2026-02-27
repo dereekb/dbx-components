@@ -1,6 +1,6 @@
 import { LOREM } from '../../shared/lorem';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxListGridViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE, DbxListGridViewDirectiveImportsModule } from '@dereekb/dbx-web';
+import { AbstractDbxListGridViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListGridViewComponentImportsModule } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
 
@@ -25,9 +25,9 @@ export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<Do
 
 @Component({
   selector: 'doc-item-list-grid-view',
-  template: DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE,
+  template: DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DocItemListGridViewComponent),
-  imports: [DbxListGridViewDirectiveImportsModule],
+  imports: [DbxListGridViewComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

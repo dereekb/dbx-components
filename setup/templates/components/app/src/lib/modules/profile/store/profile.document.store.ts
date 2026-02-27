@@ -6,8 +6,8 @@ import { APP_CODE_PREFIXFirestoreCollections, Profile, ProfileDocument, ProfileF
 export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profile, ProfileDocument> {
   readonly profileFunctions = inject(ProfileFunctions);
 
-  constructor(collections: APP_CODE_PREFIXFirestoreCollections) {
-    super({ firestoreCollection: collections.profileCollection });
+  constructor() {
+    super({ firestoreCollection: inject(APP_CODE_PREFIXFirestoreCollections).profileCollection });
   }
 
   readonly updateProfile = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile.update);

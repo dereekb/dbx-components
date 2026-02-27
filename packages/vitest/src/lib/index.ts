@@ -1,1 +1,1 @@
-export * from './matcher.date';
+export * from './matcher.date.js';

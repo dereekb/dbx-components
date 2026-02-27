@@ -1,23 +1,24 @@
 {
   "name": "@dereekb/dbx-core",
-  "version": "13.0.0",
+  "version": "13.0.1",
   "peerDependencies": {
-    "@dereekb/util": "13.0.0",
-    "@dereekb/rxjs": "13.0.0",
-    "rxjs": "^7.8.0",
-    "@angular/core": "^21.0.0",
     "@angular/common": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/router": "^21.0.0",
+    "@dereekb/date": "13.0.1",
+    "@dereekb/rxjs": "13.0.1",
+    "@dereekb/util": "13.0.1",
     "@ngrx/component-store": "^21.0.0",
     "@ngrx/effects": "^21.0.0",
     "@ngrx/store": "^21.0.0",
     "@uirouter/core": "^6.1.2",
-    "@dereekb/date": "13.0.0",
+    "class-validator": "^0.15.1",
     "date-fns": "^4.0.0",
-    "@angular/router": "^21.0.0",
-    "class-validator": "^0.15.1"
+    "rxjs": "^7.8.0"
   },
   "dependencies": {},
   "devDependencies": {
-    "@ngrx/store-devtools": "^16.0.0"
+    "@angular/platform-browser": "^21.0.0",
+    "@ngrx/store-devtools": "^21.0.0"
   }
 }

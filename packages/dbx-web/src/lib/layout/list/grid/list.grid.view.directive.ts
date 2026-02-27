@@ -3,15 +3,15 @@ import { AbstractDbxListViewDirective } from '../list.view.directive';
 import { DbxValueListGridViewComponent, DbxValueListGridViewConfig } from './list.grid.view.component';
 import { DbxValueAsListItem } from '../list.view.value';
 
-export const DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE = '<dbx-list-grid-view [config]="config"></dbx-list-grid-view>';
+export const DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-list-grid-view [config]="config"></dbx-list-grid-view>';
 
-export const dbxListGridViewDirectiveImportsAndExports = [DbxValueListGridViewComponent];
+export const dbxListGridViewComponentImportsAndExports = [DbxValueListGridViewComponent];
 
 @NgModule({
-  exports: dbxListGridViewDirectiveImportsAndExports,
-  imports: dbxListGridViewDirectiveImportsAndExports
+  exports: dbxListGridViewComponentImportsAndExports,
+  imports: dbxListGridViewComponentImportsAndExports
 })
-export class DbxListGridViewDirectiveImportsModule {}
+export class DbxListGridViewComponentImportsModule {}
 
 /**
  * Abstract DbxListGridView implementation.

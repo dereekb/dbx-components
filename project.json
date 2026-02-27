@@ -33,13 +33,13 @@
     "release-dry-run": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx release --dry-run --verbose"
+        "command": "node tools/scripts/release.mjs --dry-run=true --skip-publish --verbose"
       }
     },
     "release": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx release --skip-publish --verbose"
+        "command": "node tools/scripts/release.mjs --dry-run=false --skip-publish --verbose"
       }
     },
     "deploy-firebase-rules": {
@@ -52,6 +52,20 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only firestore:rules,storage"
+      }
+    },
+    "update-peer-deps": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/scripts/update-peer-deps-from-imports.mjs"
+      }
+    },
+    "update-peer-deps-dry-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/scripts/update-peer-deps-from-imports.mjs --dry-run"
       }
     }
   }

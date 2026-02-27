@@ -1,9 +1,10 @@
 /**
- * Syncs peerDependencies in all packages/ package.json files to match
- * the versions in the root package.json.
+ * Syncs peerDependencies and devDependencies in all packages/ package.json files
+ * to match the versions in the root package.json.
  *
  * - @dereekb/* dependencies are set to the root package.json version (use --skip-internal to leave them unchanged)
  * - All other dependencies are matched to the version in the root package.json
+ * - For devDependencies, the existing ^ or ~ prefix is preserved unless the current value is a URL
  *
  * Usage: node tools/scripts/sync-peer-deps.mjs [--dry-run] [--skip-internal]
  */
@@ -37,39 +38,107 @@ const packageFiles = glob.sync('packages/**/package.json', {
   absolute: true
 });
 
+/**
+ * Returns true if the version string is a URL (file:, https:, git+, ssh:, etc.)
+ */
+function isUrl(version) {
+  return /^(https?:|file:|git[+:]|ssh:|link:)/.test(version) || version.includes('://');
+}
+
+/**
+ * Extracts the range prefix (^ or ~) from a version string.
+ */
+function extractPrefix(version) {
+  if (version.startsWith('^')) return '^';
+  if (version.startsWith('~')) return '~';
+  return '';
+}
+
+/**
+ * Strips the leading ^ or ~ from a version string.
+ */
+function stripPrefix(version) {
+  return version.replace(/^[\^~]/, '');
+}
+
+/**
+ * Computes the target version for a devDependency, preserving the existing
+ * ^ or ~ prefix. If the current value is a URL, the root version is used as-is.
+ */
+function resolveDevDepVersion(currentVersion, rootVer) {
+  if (isUrl(currentVersion)) {
+    return rootVer;
+  }
+
+  const prefix = extractPrefix(currentVersion);
+  const bareRoot = stripPrefix(rootVer);
+  return prefix + bareRoot;
+}
+
 let totalUpdated = 0;
 
 for (const pkgPath of packageFiles) {
   const relPath = relative(ROOT_DIR, pkgPath);
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
 
-  if (!pkg.peerDependencies || Object.keys(pkg.peerDependencies).length === 0) {
+  const hasPeerDeps = pkg.peerDependencies && Object.keys(pkg.peerDependencies).length > 0;
+  const hasDevDeps = pkg.devDependencies && Object.keys(pkg.devDependencies).length > 0;
+
+  if (!hasPeerDeps && !hasDevDeps) {
     continue;
   }
 
   let changed = false;
   const updates = [];
 
-  for (const [dep, currentVersion] of Object.entries(pkg.peerDependencies)) {
-    if (dep.startsWith('@dereekb/')) {
-      // Set @dereekb packages to the root package.json version unless --skip-internal
-      if (!SKIP_INTERNAL && currentVersion !== rootVersion) {
-        updates.push({ dep, from: currentVersion, to: rootVersion });
-        pkg.peerDependencies[dep] = rootVersion;
-        changed = true;
-      }
-    } else {
-      // Sync from root package.json
-      const rootVersion = rootVersions[dep];
-
-      if (rootVersion) {
-        if (currentVersion !== rootVersion) {
-          updates.push({ dep, from: currentVersion, to: rootVersion });
+  // Sync peerDependencies
+  if (hasPeerDeps) {
+    for (const [dep, currentVersion] of Object.entries(pkg.peerDependencies)) {
+      if (dep.startsWith('@dereekb/')) {
+        if (!SKIP_INTERNAL && currentVersion !== rootVersion) {
+          updates.push({ section: 'peerDependencies', dep, from: currentVersion, to: rootVersion });
           pkg.peerDependencies[dep] = rootVersion;
           changed = true;
         }
       } else {
-        console.warn(`  ⚠ ${relPath}: "${dep}" not found in root package.json (keeping "${currentVersion}")`);
+        const rootVer = rootVersions[dep];
+
+        if (rootVer) {
+          if (currentVersion !== rootVer) {
+            updates.push({ section: 'peerDependencies', dep, from: currentVersion, to: rootVer });
+            pkg.peerDependencies[dep] = rootVer;
+            changed = true;
+          }
+        } else {
+          console.warn(`  ⚠ ${relPath}: peerDependencies "${dep}" not found in root package.json (keeping "${currentVersion}")`);
+        }
+      }
+    }
+  }
+
+  // Sync devDependencies
+  if (hasDevDeps) {
+    for (const [dep, currentVersion] of Object.entries(pkg.devDependencies)) {
+      if (dep.startsWith('@dereekb/')) {
+        if (!SKIP_INTERNAL && currentVersion !== rootVersion) {
+          updates.push({ section: 'devDependencies', dep, from: currentVersion, to: rootVersion });
+          pkg.devDependencies[dep] = rootVersion;
+          changed = true;
+        }
+      } else {
+        const rootVer = rootVersions[dep];
+
+        if (rootVer) {
+          const newVersion = resolveDevDepVersion(currentVersion, rootVer);
+
+          if (currentVersion !== newVersion) {
+            updates.push({ section: 'devDependencies', dep, from: currentVersion, to: newVersion });
+            pkg.devDependencies[dep] = newVersion;
+            changed = true;
+          }
+        } else {
+          console.warn(`  ⚠ ${relPath}: devDependencies "${dep}" not found in root package.json (keeping "${currentVersion}")`);
+        }
       }
     }
   }
@@ -78,8 +147,8 @@ for (const pkgPath of packageFiles) {
     totalUpdated++;
     console.log(`\n${relPath}:`);
 
-    for (const { dep, from, to } of updates) {
-      console.log(`  ${dep}: "${from}" → "${to}"`);
+    for (const { section, dep, from, to } of updates) {
+      console.log(`  [${section}] ${dep}: "${from}" → "${to}"`);
     }
 
     if (!DRY_RUN) {

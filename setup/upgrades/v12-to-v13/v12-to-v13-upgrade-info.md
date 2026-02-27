@@ -24,6 +24,11 @@ Moving to Vitest appears to be worth it. Time improvements aside, we redesigned 
 
 Additionally, we added `@dereekb/vitest` as a new package since matchers from the `jest-time` package are used extensively in our codebase.
 
+### Removal Of Babel
+We noticed we still had some `.babelrc` files in the codebase, but babel usage doesn't appear necessary anymore.
+
+We updated `@dereekb/util` to use `swc` for transpiling, but the rest of the app has a reliance on `reflect-metadata`, so we still use `tsc` for building the rest of the project.
+
 ## Migrations
 We are jumping from Nx version 20 to version 22. It is important to run two independent migrations to ensure everything gets up to date properly.
 
@@ -106,6 +111,7 @@ You'll need to specify the following overrides in `package.json`:
 
 **Removed deprecated type aliases and functions:**
 - `UnixTimeNumber` type alias removed - use `UnixDateTimeNumber` instead
+- `UnixDateTimeNumber` type alias removed - use `UnixDateTimeMillisecondsNumber` instead.
 - `timer` constant alias removed - use `makeTimer` instead
 - `filterMaybeValues` and `filterEmptyValues` aliases removed - use their non-aliased equivalents
 - `BooleanStringKeyArrayUtilityInstance` alias removed
@@ -113,14 +119,14 @@ You'll need to specify the following overrides in `package.json`:
 - `MimeTypeForImageTypeInputType` and `mimetypeForImageType` removed
 - `PromiseAsyncTaskFn` type alias removed
 - `FetchPageResults` type alias removed
-- `nodeFetchService` constant alias removed
+- `nodeFetchService` constant alias removed. Use `fetchApiFetchService` instead.
 - `filterNullAndUndefinedValues` option removed from fetch.url
 - `flattenTrees` function removed - `FlattenTreeFunction` now supports arrays directly
 - `PageCalculator` class and file completely removed
 
 **BREAKING CHANGE: Date and Unix Time Types**
 - `DateOrUnixDateTimeNumber` replaced with `DateOrUnixDateTimeMillisecondsNumber`
-- `UnixDateTimeMillisecondsNumber` replaced with `UnixDateTimeNumber`
+- `UnixDateTimeNumber` replaced with `UnixDateTimeMillisecondsNumber`
 
 #### @dereekb/util/test
 
@@ -152,6 +158,8 @@ You'll need to specify the following overrides in `package.json`:
 - `hasExpired`
 - `getExpiration`
 
+These values should be replaced with using `expirationDetails({ ... })` instead.
+
 - `TimezoneString` is no longer exported. Import from `@dereekb/util` instead.
 
 **Note:** RxJS expiration operators have been migrated to `@dereekb/rxjs/expires`. The `date/expires.rxjs` module now re-exports from the new location with deprecation notices.
@@ -159,25 +167,25 @@ You'll need to specify the following overrides in `package.json`:
 #### @dereekb/rxjs
 
 **Removed deprecated loading state aliases (18 functions):**
-- `unknownLoadingStatesIsLoading`
-- `allLoadingStatesHaveFinishedLoading`
-- `loadingStateIsIdle`
-- `isSuccessLoadingState`
-- `isErrorLoadingState`
-- `loadingStateIsLoading`
-- `loadingStateHasFinishedLoading`
-- `loadingStateHasError`
-- `loadingStateHasValue`
-- `loadingStateHasFinishedLoadingWithValue`
-- `loadingStateHasFinishedLoadingWithError`
-- `loadingStatesHaveEquivalentMetadata`
-- `LoadingStateWithMaybeSoValue`
-- `updatedStateForSetLoading`
-- `updatedStateForSetValue`
-- `updatedStateForSetError`
+- `unknownLoadingStatesIsLoading` -> `isAnyLoadingStateInLoadingState`
+- `allLoadingStatesHaveFinishedLoading` -> `areAllLoadingStatesFinishedLoading`
+- `loadingStateIsIdle` -> `isLoadingStateInIdleState`
+- `isSuccessLoadingState` -> `isLoadingStateInSuccessState`
+- `isErrorLoadingState` -> `isLoadingStateInErrorState`
+- `loadingStateIsLoading` -> `isLoadingStateLoading`
+- `loadingStateHasFinishedLoading` -> `isLoadingStateFinishedLoading`
+- `loadingStateHasError` -> `isLoadingStateWithError`
+- `loadingStateHasValue` -> `isLoadingStateWithDefinedValue`
+- `loadingStateHasFinishedLoadingWithValue` -> `isLoadingStateFinishedLoadingWithDefinedValue`
+- `loadingStateHasFinishedLoadingWithError` -> `isLoadingStateFinishedLoadingWithError`
+- `loadingStatesHaveEquivalentMetadata` -> `isPageLoadingStateMetadataEqual`
+- `LoadingStateWithMaybeSoValue` -> `LoadingStateWithDefinedValue`
+- `updatedStateForSetLoading` -> `mergeLoadingStateWithLoading`
+- `updatedStateForSetValue` -> `mergeLoadingStateWithValue`
+- `updatedStateForSetError` -> `mergeLoadingStateWithError`
 
 **Removed deprecated properties:**
-- `showLoadingOnNoValue` property from loading.context.state
+- `showLoadingOnNoValue` property from loading.context.state renamed to `showLoadingOnUndefinedValue`.
 - `initialFilterTakesPriority` setter from filter.source
 
 **Removed deprecated function aliases:**
@@ -207,7 +215,7 @@ You'll need to specify the following overrides in `package.json`:
 - `AbstractLockSetSubscriptionDirective` from rxjs/rxjs.directive
 
 **Removed deprecated properties:**
-- `initialFilterTakesPriority` setter from filter.abstract.source.directive
+- `initialFilterTakesPriority` setter from filter.abstract.source.directive. Use `setInitialFilterPriority()` instead.
 
 ### @dereekb/nestjs/mailgun
 
@@ -248,6 +256,11 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 - Deprecated inputs from `keydown.listener.directive.ts`: `appWindowKeyDownEnabled`, `appWindowKeyDownFilter`
 - Deprecated aliases from `mapbox.store.ts`: `content$`, `hasContent$`, `clearContent`, `setContent`
 - Deprecated template constants and `deprecatedInputState$` from list directives
+- Removed `DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE` and replaced with `DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE`
+- Removed `DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE` and replaced with `DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE`
+- Removed `DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE` and replaced with `DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE`
+- Renamed `dbxListGridViewDirectiveImportsAndExports` to `dbxListGridViewComponentImportsAndExports`
+- Renamed `DbxListGridViewDirectiveImportsModule` to `DbxListGridViewComponentImportsModule`
 
 #### @dereekb/dbx-form
 
@@ -271,7 +284,7 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 - `notificationTemplateTypeDetailsRecord` constant
 - `StorageFileProcessingNotificationTaskCheckpoint` type and related constants
 - Typo function: `filterDisallowedFirestoreItemPageIteratorInputContraints`
-- `dontStoreIfValue` property (deprecated)
+- `dontStoreIfValue` property removed. Use `dontStoreValueIf` instead.
 - `StorageFileProcessingNotificationTaskCheckpoint` replaced with  `NotificationTaskSubtaskCheckpoint`
 - `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_PROCESSING` replaced with `NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING`
 - `STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_CHECKPOINT_CLEANUP` replaced with `NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP`
@@ -292,6 +305,8 @@ The `NotificationMessageEntityKeyRecipientLookup` type was unintentionally creat
 **Removed deprecated constants and properties:**
 - Typo constant: `FIRESTBASE_SERVER_VALIDATION_ERROR_CODE`
 - Deprecated `crud` property removed
+- Removed `NO_UID_ERROR_CODE`. Replaced with `DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE`
+- Removed `NO_AUTH_ERROR_CODE`. Replaced with `DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE`
 
 #### @dereekb/dbx-firebase
 
@@ -370,6 +385,9 @@ export interface TypedMapboxListenerPair<T extends keyof MapEventType> {
 ```
 
 The only place this wasn't updated was where this was being used correctly for Ngrx's reducers. declared within our app.
+
+#### Remove `"module": "commonjs"`
+You'll encounter the error "Option 'bundler' can only be used when 'module' is set to 'preserve' or to 'es2015' or later." otherwise.
 
 ### Migrating to Vitest
 Jest still has some issues with the ESM node environment, which caused an issue while trying to utilize a non-esm package within a test that utilized `sharp`. Unfortunately, `sharp` still has no progress towards moving to ESM, but there was a workaround, that requires the use of `mlly` and `import.meta.url`. The issue is that Jest messes with the ESM environment where `import.meta.url` is not available, which caused the workaround to fail.
@@ -506,6 +524,12 @@ Update all project-specific `.env` files to remove the use of `JEST_SUITE_NAME` 
 #### Updating tsconfig.lib.json
 Update `tsconfig.lib.json` to no longer reference "jest.config.ts".
 
+#### Updating tsconfig.spec.json
+Update `tsconfig.spec.json` to reference `../../vitest.setup.typings.ts`, and remove `../../jest.setup.typings.ts` if it exists.
+
+#### Adding @dereekb/vitest
+You'll need this to replace `jest-date`.
+
 #### Removing Jest
 - Remove all the remaining jest related dependencies from `package.json`.
 - Remove related setup files from the root of the project.
@@ -521,7 +545,53 @@ You can update `nx.json` to remove the `.eslintignore` input from the `lint` tar
 
 No major issues in updating Firebase. The majority of the codebase changes were due to the ESM imports.
 
-### Angular 21 Updates
+All gen 1 functions have been removed as Gen 2 is in pairity now.
+
+### initUserOnCreate
+The demo initUserOnCreate function has been updated to use the new Gen 2 blocking event api.
+
+Before:
+
+```typescript
+import { UserRecord } from 'firebase-admin/auth';
+import functions from 'firebase-functions/v1';
+import { onGen1EventWithAPP_CODE_PREFIXNestContext } from '../function';
+
+export const initUserOnCreate = onGen1EventWithAPP_CODE_PREFIXNestContext<UserRecord>((withNest) =>
+  functions.auth.user().onCreate(withNest(async (request) => {
+    const { nest, data } = request;
+    const uid = data.uid;
+
+    // TODO: Do something
+
+  }))
+);
+```
+
+After:
+
+```typescript
+import { type AuthBlockingEvent, beforeUserCreated } from 'firebase-functions/v2/identity';
+import { blockingEventWithAPP_CODE_PREFIXNestContext } from '../function';
+
+/**
+ * Listens for users to be created and initializes them.
+ */
+export const initUserOnCreate = blockingEventWithAPP_CODE_PREFIXNestContext<AuthBlockingEvent, void>((withNest) =>
+  beforeUserCreated(
+    withNest(async (request) => {
+      const { nest, data } = request;
+      const uid = data?.uid;
+
+      if (uid) {
+        await nest.profileActions.initProfileForUid(uid);
+      }
+    })
+  )
+);
+```
+
+## Angular 21 Updates
 - You can use replace the use of `APP_INITIALIZER` with `provideAppInitializer()`.
 
 Example:
@@ -532,3 +602,96 @@ provideAppInitializer(() => {
 
 });
 ```
+
+## Updated Release Process
+
+In v12, releases were handled by `@jscutlery/semver`. In v13, we migrated to Nx Release (see [nx-release-migration.md](nx-release-migration.md) for that initial migration). However, Nx Release's built-in conventional commit analysis has issues with our branching strategy — develop gets force-merged onto main as a single release commit, which causes `main..develop` to include the full diverged history and produce incorrect version bumps (e.g. major instead of patch).
+
+To fix this, we now use a custom release script that combines:
+- **`conventional-recommended-bump`** (from the `conventional-changelog` ecosystem) for version calculation
+- **`conventional-changelog`** for changelog generation
+- **Nx Release programmatic API** for applying version bumps and publishing
+
+### How It Works
+
+The script uses the `-dev` git tags (e.g. `v13.0.0-dev`) as the comparison anchor. These tags live on the `develop` branch and mark exactly where the last release prep happened. Commits after the `-dev` tag are what's new. The stable tag (e.g. `v13.0.0`) is used for calculating the next version number with `semver.inc()`.
+
+The Angular preset from `conventional-changelog` determines the bump type:
+- `feat:` commits → minor bump
+- `fix:`, `refactor:`, `build:`, etc. → patch bump
+- Breaking changes (`feat!:`, `BREAKING CHANGE:`) → major bump
+
+### New Dependencies
+
+Add these to `devDependencies` in `package.json`:
+
+```json
+"conventional-changelog": "^7.1.1",
+"conventional-recommended-bump": "^11.2.0",
+```
+
+### Release Script
+
+The release script is at `tools/scripts/release.mjs`. It handles the full release pipeline:
+
+1. Finds the last stable tag and its `-dev` counterpart
+2. Analyzes commits since the `-dev` tag to determine the bump type
+3. Uses Nx `releaseVersion()` to bump all `package.json` files across the monorepo
+4. Uses `ConventionalChangelog` to generate/update the root `CHANGELOG.md`
+5. Optionally publishes via Nx `releasePublish()`
+
+```bash
+# Dry run (default) — preview the next version and changes
+node tools/scripts/release.mjs
+
+# Actual release — applies version bumps and updates CHANGELOG.md
+node tools/scripts/release.mjs --dry-run=false
+
+# Explicit version override (skips commit analysis)
+node tools/scripts/release.mjs --version 13.0.1 --dry-run=false
+
+# Verbose output
+node tools/scripts/release.mjs --verbose
+
+# Skip npm publish step
+node tools/scripts/release.mjs --skip-publish
+```
+
+### nx.json Configuration
+
+The `release` block in `nx.json` is still used by the Nx Release programmatic API for version bumping. Key changes from the initial migration:
+
+- **`release.git`** has been split into **`release.version.git`** and **`release.changelog.git`** — the Nx programmatic API requires this separation
+- **`release.version.git`** has `commit`, `tag`, and `stageChanges` all set to `false` since the script handles versioning only; git operations are done separately by the release workflow
+- **`release.changelog`** config is retained but the script generates the root changelog directly with `conventional-changelog` instead of using Nx's changelog generation, which avoids the same history traversal issue
+- **Per-project changelogs** (`projectChangelogs`) have been removed — only the root `CHANGELOG.md` is maintained
+
+### Workspace project.json Targets
+
+The release targets in the root `project.json` now use the custom script:
+
+```json
+"release-dry-run": {
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "node tools/scripts/release.mjs --skip-publish --verbose"
+  }
+},
+"release": {
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "node tools/scripts/release.mjs --dry-run=false --skip-publish --verbose"
+  }
+}
+```
+
+Run them with:
+
+```bash
+npx nx release-dry-run    # preview
+npx nx release            # apply changes
+```
+
+### Per-Package CHANGELOG.md Files Removed
+
+Per-package `CHANGELOG.md` files under `packages/` have been deleted. Only the root `CHANGELOG.md` is maintained going forward. This simplifies the release process and avoids the history traversal issues that caused incorrect changelogs in sub-packages.

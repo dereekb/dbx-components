@@ -1,22 +1,8 @@
 {
   "name": "@dereekb/rxjs",
-  "version": "13.0.0",
-  "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "default": "./index.cjs.js"
-    }
-  },
+  "version": "13.0.1",
   "peerDependencies": {
     "rxjs": "^7.8.0",
-    "core-js": "^3.0.0",
-    "@dereekb/util": "13.0.0"
+    "@dereekb/util": "13.0.1"
   }
 }

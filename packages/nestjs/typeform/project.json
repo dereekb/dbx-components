@@ -17,10 +17,11 @@
         "project": "packages/nestjs/typeform/package.json",
         "main": "packages/nestjs/typeform/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [],
-        "rollupConfig": ["rollup.visualizer.config.ts"]
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "tsc"
       },
       "configurations": {
         "production": {

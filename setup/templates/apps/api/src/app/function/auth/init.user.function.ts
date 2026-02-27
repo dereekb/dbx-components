@@ -1,13 +1,18 @@
-import { UserRecord } from 'firebase-admin/auth';
-import functions from 'firebase-functions/v1';
-import { onGen1EventWithAPP_CODE_PREFIXNestContext } from '../function';
+import { type AuthBlockingEvent, beforeUserCreated } from 'firebase-functions/v2/identity';
+import { blockingEventWithAPP_CODE_PREFIXNestContext } from '../function';
 
-export const initUserOnCreate = onGen1EventWithAPP_CODE_PREFIXNestContext<UserRecord>((withNest) =>
-  functions.auth.user().onCreate(withNest(async (request) => {
-    const { nest, data } = request;
-    const uid = data.uid;
+/**
+ * Listens for users to be created and initializes them.
+ */
+export const initUserOnCreate = blockingEventWithAPP_CODE_PREFIXNestContext<AuthBlockingEvent, void>((withNest) =>
+  beforeUserCreated(
+    withNest(async (request) => {
+      const { nest, data } = request;
+      const uid = data?.uid;
 
-    // TODO: Do something
-
-  }))
+      if (uid) {
+        await nest.profileActions.initProfileForUid(uid);
+      }
+    })
+  )
 );

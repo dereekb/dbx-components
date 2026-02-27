@@ -30,10 +30,10 @@
         "outputPath": "dist/packages/zoom",
         "main": "packages/zoom/src/index.ts",
         "tsConfig": "packages/zoom/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "tsc",
         "project": "packages/zoom/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/zoom/README.md",

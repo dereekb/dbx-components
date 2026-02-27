@@ -1,8 +1,9 @@
 {
   "name": "@dereekb/vitest",
-  "version": "13.0.0",
+  "version": "13.0.1",
   "peerDependencies": {
-    "date-fns": "^4.0.0"
+    "date-fns": "^4.0.0",
+    "vitest": "4.0.18"
   },
   "exports": {
     ".": {

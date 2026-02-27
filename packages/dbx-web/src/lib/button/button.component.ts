@@ -10,16 +10,6 @@ import { NgTemplateOutlet } from '@angular/common';
 import { DbxButtonStyle, DbxButtonType } from './button';
 
 /**
- * @deprecated use DbxButtonType instead.
- */
-export enum DbxButtonDisplayType {
-  RAISED = 'raised',
-  STROKED = 'stroked',
-  FLAT = 'flag',
-  ICON_ONLY = 'icon'
-}
-
-/**
  * Complex button that supports loading states.
  */
 @Component({
