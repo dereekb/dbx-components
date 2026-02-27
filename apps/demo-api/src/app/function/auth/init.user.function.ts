@@ -3,8 +3,6 @@ import { blockingEventWithDemoNestContext } from '../function';
 
 /**
  * Listens for users to be created and initializes them.
- *
- * Migrated from v1 to v2: Now uses blocking function that runs before user creation completes.
  */
 export const initUserOnCreate = blockingEventWithDemoNestContext<AuthBlockingEvent, void>((withNest) =>
   beforeUserCreated(

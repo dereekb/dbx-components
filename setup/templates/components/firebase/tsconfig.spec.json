@@ -25,5 +25,8 @@
     "src/**/*.spec.jsx",
     "src/**/*.d.ts",
     "../../vitest.setup.typings.ts"
+  ],
+  "files": [
+    "src/test-setup.ts"
   ]
 }

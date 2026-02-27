@@ -80,9 +80,8 @@ export const onScheduleWithDemoNest = onScheduleHandlerWithNestApplicationFactor
   timeoutSeconds: 10 * SECONDS_IN_MINUTE, // 10 minute timeout default
   maxInstances: 1 // only one instance allowed for scheduled functions
 });
-export const onScheduleWithDemoNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
-export const onEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 
+export const onScheduleWithDemoNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
 export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);

@@ -521,7 +521,53 @@ You can update `nx.json` to remove the `.eslintignore` input from the `lint` tar
 
 No major issues in updating Firebase. The majority of the codebase changes were due to the ESM imports.
 
-### Angular 21 Updates
+All gen 1 functions have been removed as Gen 2 is in pairity now.
+
+### initUserOnCreate
+The demo initUserOnCreate function has been updated to use the new Gen 2 blocking event api.
+
+Before:
+
+```typescript
+import { UserRecord } from 'firebase-admin/auth';
+import functions from 'firebase-functions/v1';
+import { onGen1EventWithAPP_CODE_PREFIXNestContext } from '../function';
+
+export const initUserOnCreate = onGen1EventWithAPP_CODE_PREFIXNestContext<UserRecord>((withNest) =>
+  functions.auth.user().onCreate(withNest(async (request) => {
+    const { nest, data } = request;
+    const uid = data.uid;
+
+    // TODO: Do something
+
+  }))
+);
+```
+
+After:
+
+```typescript
+import { type AuthBlockingEvent, beforeUserCreated } from 'firebase-functions/v2/identity';
+import { blockingEventWithAPP_CODE_PREFIXNestContext } from '../function';
+
+/**
+ * Listens for users to be created and initializes them.
+ */
+export const initUserOnCreate = blockingEventWithAPP_CODE_PREFIXNestContext<AuthBlockingEvent, void>((withNest) =>
+  beforeUserCreated(
+    withNest(async (request) => {
+      const { nest, data } = request;
+      const uid = data?.uid;
+
+      if (uid) {
+        await nest.profileActions.initProfileForUid(uid);
+      }
+    })
+  )
+);
+```
+
+## Angular 21 Updates
 - You can use replace the use of `APP_INITIALIZER` with `provideAppInitializer()`.
 
 Example:

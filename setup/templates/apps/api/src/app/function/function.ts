@@ -1,6 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIXFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
-import { onCallHandlerWithNestApplicationFactory, onCallHandlerWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleHandlerWithNestApplicationFactory, onScheduleHandlerWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
+import { onCallHandlerWithNestApplicationFactory, onCallHandlerWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleHandlerWithNestApplicationFactory, onScheduleHandlerWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, ProfileServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
 import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions, StorageFileInitServerActions } from '@dereekb/firebase-server/model';
@@ -57,17 +57,13 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
 export const mapAPP_CODE_PREFIXApiNestContext = (nest: INestApplicationContext) => new APP_CODE_PREFIXApiNestContext(nest);
 export const onCallWithAPP_CODE_PREFIXNest = onCallHandlerWithNestApplicationFactory();
 export const onCallWithAPP_CODE_PREFIXNestContext = onCallHandlerWithNestContextFactory(onCallWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
+
 export const onScheduleWithAPP_CODE_PREFIXNest = onScheduleHandlerWithNestApplicationFactory();
 export const onScheduleWithAPP_CODE_PREFIXNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
-export const onEventWithAPP_CODE_PREFIXNestContext = onEventWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
+
 export const cloudEventWithAPP_CODE_PREFIXNestContext = cloudEventHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const blockingEventWithAPP_CODE_PREFIXNestContext = blockingFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const taskqueueEventWithAPP_CODE_PREFIXNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
-
-/**
- * Required for gen 1 auth events
- */
-export const onGen1EventWithAPP_CODE_PREFIXNestContext = onEventWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 
 // MARK: CRUD Functions
 export type APP_CODE_PREFIXCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;

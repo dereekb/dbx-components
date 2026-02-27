@@ -70,7 +70,9 @@ DEP__PRETTY_QUICK_VERSION=^4.2.2
 DEP__MAILGUN_JS_VERSION=^12.0.0
 DEP__RXJS_VERSION=^7.8.0
 DEP__MAPBOX_GL_VERSION=^3.10.0
-DEP__NGX_MAPBOX_GL_VERSION=^14.0.0
+DEP__NGX_FORMLY_CORE_VERSION=^14.0.0
+DEP__NGX_FORMLY_MATERIAL_VERSION=git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d
+DEP__NGX_MAPBOX_GL_VERSION=git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e
 DEP__NG_WEB_APIS_GEOLOCATION_VERSION=^5.1.0
 DEP__NG_WEB_APIS_COMMON_VERSION=^5.1.0
 DEP__ZIP_JS_VERSION=^2.8.11
@@ -83,6 +85,12 @@ DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0
 DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
 DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
 DEP__NGX_FORMLY_VERSION=^14.0.0
+DEP__FIREBASE_TOOLS_VERSION=15.8.0
+DEP__RXFIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
+DEP__ANGULAR_CALENDAR_VERSION=^0.32.0
+DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38
+DEP__NX_VITEST_VERSION=$NX_VERSION
+DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION=~2.1.2
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
@@ -452,6 +460,7 @@ git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add vitest setup/configurations
 echo "Adding vitest configurations..."
+npm install -D @nx/vitest@$DEP__NX_VITEST_VERSION @nx/vite@$DEP__NX_VITEST_VERSION @analogjs/vite-plugin-angular@$DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION
 # rm vitest.preset.config.mts
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.preset.config.mts -o vitest.preset.config.mts
@@ -502,7 +511,8 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing angular dependencies"
-npm install --force @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @angular/fire@$DEP__ANGULAR_FIRE_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npx --yes json -I -f package.json -e "this.overrides = { \"@angular/fire\": { \"rxfire\": \"$DEP__RXFIRE_VERSION\", \"firebase-tools\": \"$DEP__FIREBASE_TOOLS_VERSION\" } };"; # Set the overrides to allow angular/fire to deal
+npm install --force angular-calendar@$DEP__ANGULAR_CALENDAR_VERSION @zip.js/zip.js@$DEP__ZIP_JS_VERSION @placemarkio/geo-viewport@$DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION @uirouter/rx@$DEP__UIROUTER_RX_VERSION @uirouter/core@$DEP__UIROUTER_CORE_VERSION @uirouter/angular@$DEP__UIROUTER_ANGULAR_VERSION @ngbracket/ngx-layout@$DEP__NGBRACKET_NGX_LAYOUT_VERSION @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
@@ -528,7 +538,8 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION @ngrx/store-devtools@$DEP__NGRX_STORE_DEVTOOLS_VERSION @firebase/rules-unit-testing@$DEP__FIREBASE_RULES_UNIT_TESTING_VERSION firebase-functions-test@$DEP__FIREBASE_FUNCTIONS_TEST_VERSION envfile env-cmd
+npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION firebase-functions-test@$DEP__FIREBASE_FUNCTIONS_TEST_VERSION envfile env-cmd
+npm install --force -D @types/segment-analytics@$DEP__TYPES_SEGMENT_ANALYTICS_VERSION @ngrx/store-devtools@$DEP__NGRX_STORE_DEVTOOLS_VERSION
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -963,16 +974,17 @@ download_api_ts_file "src/environments/environment.prod.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup api"
 
+echo "Performing test build..."
+npx -y nx@$NX_VERSION build $ANGULAR_APP_NAME
+npx -y nx@$NX_VERSION build $API_APP_NAME
+npx -y nx@$NX_VERSION test $ANGULAR_APP_NAME # test only the angular app
+
 # Final checks
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
   # do not do anything in CI, as the environment is different. CI will perform other tasks.
   echo "Finished setup in CI."
 else
-  echo "Performing test build..."
-  npx -y nx@$NX_VERSION build $ANGULAR_APP_NAME
-  npx -y nx@$NX_VERSION build $API_APP_NAME
-
   echo "Completed $ANGULAR_APP_NAME project setup."
   echo "Project was created at \"$(pwd)\""
 
