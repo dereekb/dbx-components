@@ -33,7 +33,7 @@
         "compiler": "tsc",
         "project": "packages/zoom/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/zoom/README.md",

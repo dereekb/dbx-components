@@ -84,7 +84,7 @@
     },
     "@nx/rollup:rollup": {
       "cache": true,
-      "inputs": ["production", "^production"],
+      "inputs": ["production", "^production", "{projectRoot}/project.json"],
       "options": {
         "buildLibsFromSource": false
       }

@@ -2,59 +2,29 @@
   "name": "@dereekb/firebase-server",
   "version": "13.0.0",
   "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "main": "./src/index.js",
-      "require": "./src/index.js",
-      "default": "./src/index.js"
-    },
     "./test": {
-      "types": "./test/src/index.d.ts",
       "module": "./test/index.esm.js",
-      "main": "./test/index.cjs.js",
-      "node": {
-        "require": "./test/index.cjs.js"
-      },
-      "browser": {
-        "require": "./test/index.cjs.js",
-        "import": "./test/index.esm.js"
-      }
+      "types": "./test/index.d.ts",
+      "import": "./test/index.cjs.mjs",
+      "default": "./test/index.cjs.js"
     },
     "./mailgun": {
-      "types": "./mailgun/src/index.d.ts",
       "module": "./mailgun/index.esm.js",
-      "main": "./mailgun/index.cjs.js",
-      "node": {
-        "require": "./mailgun/index.cjs.js"
-      },
-      "browser": {
-        "require": "./mailgun/index.cjs.js",
-        "import": "./mailgun/index.esm.js"
-      }
+      "types": "./mailgun/index.d.ts",
+      "import": "./mailgun/index.cjs.mjs",
+      "default": "./mailgun/index.cjs.js"
     },
     "./zoho": {
-      "types": "./zoho/src/index.d.ts",
       "module": "./zoho/index.esm.js",
-      "main": "./zoho/index.cjs.js",
-      "node": {
-        "require": "./zoho/index.cjs.js"
-      },
-      "browser": {
-        "require": "./zoho/index.cjs.js",
-        "import": "./zoho/index.esm.js"
-      }
+      "types": "./zoho/index.d.ts",
+      "import": "./zoho/index.cjs.mjs",
+      "default": "./zoho/index.cjs.js"
     },
     "./model": {
-      "types": "./model/src/index.d.ts",
       "module": "./model/index.esm.js",
-      "main": "./model/index.cjs.js",
-      "node": {
-        "require": "./model/index.cjs.js"
-      },
-      "browser": {
-        "require": "./model/index.cjs.js",
-        "import": "./model/index.esm.js"
-      }
+      "types": "./model/index.d.ts",
+      "import": "./model/index.cjs.mjs",
+      "default": "./model/index.cjs.js"
     }
   },
   "main": "./src/index.js",
@@ -81,5 +51,5 @@
     "ts-essentials": "^10.0.0",
     "@google-cloud/storage": "^7.0.0"
   },
-  "dependencies": {}
+  "devDependencies": {}
 }

@@ -16,7 +16,7 @@
         "project": "packages/firebase-server/zoho/package.json",
         "main": "packages/firebase-server/zoho/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [
           {

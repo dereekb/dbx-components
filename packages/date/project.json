@@ -26,7 +26,7 @@
         "compiler": "tsc",
         "project": "packages/date/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/date/README.md",

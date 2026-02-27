@@ -157,6 +157,9 @@ You'll need to specify the following overrides in `package.json`:
 - `toExpires`
 - `hasExpired`
 - `getExpiration`
+
+These values should be replaced with using `expirationDetails({ ... })` instead.
+
 - `TimezoneString` is no longer exported. Import from `@dereekb/util` instead.
 
 **Note:** RxJS expiration operators have been migrated to `@dereekb/rxjs/expires`. The `date/expires.rxjs` module now re-exports from the new location with deprecation notices.
@@ -164,25 +167,25 @@ You'll need to specify the following overrides in `package.json`:
 #### @dereekb/rxjs
 
 **Removed deprecated loading state aliases (18 functions):**
-- `unknownLoadingStatesIsLoading`
-- `allLoadingStatesHaveFinishedLoading`
-- `loadingStateIsIdle`
-- `isSuccessLoadingState`
-- `isErrorLoadingState`
-- `loadingStateIsLoading`
-- `loadingStateHasFinishedLoading`
-- `loadingStateHasError`
-- `loadingStateHasValue`
-- `loadingStateHasFinishedLoadingWithValue`
-- `loadingStateHasFinishedLoadingWithError`
-- `loadingStatesHaveEquivalentMetadata`
-- `LoadingStateWithMaybeSoValue`
-- `updatedStateForSetLoading`
-- `updatedStateForSetValue`
-- `updatedStateForSetError`
+- `unknownLoadingStatesIsLoading` -> `isAnyLoadingStateInLoadingState`
+- `allLoadingStatesHaveFinishedLoading` -> `areAllLoadingStatesFinishedLoading`
+- `loadingStateIsIdle` -> `isLoadingStateInIdleState`
+- `isSuccessLoadingState` -> `isLoadingStateInSuccessState`
+- `isErrorLoadingState` -> `isLoadingStateInErrorState`
+- `loadingStateIsLoading` -> `isLoadingStateLoading`
+- `loadingStateHasFinishedLoading` -> `isLoadingStateFinishedLoading`
+- `loadingStateHasError` -> `isLoadingStateWithError`
+- `loadingStateHasValue` -> `isLoadingStateWithDefinedValue`
+- `loadingStateHasFinishedLoadingWithValue` -> `isLoadingStateFinishedLoadingWithDefinedValue`
+- `loadingStateHasFinishedLoadingWithError` -> `isLoadingStateFinishedLoadingWithError`
+- `loadingStatesHaveEquivalentMetadata` -> `isPageLoadingStateMetadataEqual`
+- `LoadingStateWithMaybeSoValue` -> `LoadingStateWithDefinedValue`
+- `updatedStateForSetLoading` -> `mergeLoadingStateWithLoading`
+- `updatedStateForSetValue` -> `mergeLoadingStateWithValue`
+- `updatedStateForSetError` -> `mergeLoadingStateWithError`
 
 **Removed deprecated properties:**
-- `showLoadingOnNoValue` property from loading.context.state
+- `showLoadingOnNoValue` property from loading.context.state renamed to `showLoadingOnUndefinedValue`.
 - `initialFilterTakesPriority` setter from filter.source
 
 **Removed deprecated function aliases:**
@@ -212,7 +215,7 @@ You'll need to specify the following overrides in `package.json`:
 - `AbstractLockSetSubscriptionDirective` from rxjs/rxjs.directive
 
 **Removed deprecated properties:**
-- `initialFilterTakesPriority` setter from filter.abstract.source.directive
+- `initialFilterTakesPriority` setter from filter.abstract.source.directive. Use `setInitialFilterPriority()` instead.
 
 ### @dereekb/nestjs/mailgun
 

@@ -36,7 +36,7 @@
         "compiler": "swc",
         "project": "packages/util/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [
           {

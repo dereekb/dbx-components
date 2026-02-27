@@ -16,7 +16,7 @@
         "project": "packages/firebase-server/model/package.json",
         "main": "packages/firebase-server/model/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [],
         "rollupConfig": ["rollup.visualizer.config.ts"],

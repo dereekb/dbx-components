@@ -1,19 +1,6 @@
 {
   "name": "@dereekb/date",
   "version": "13.0.0",
-  "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "default": "./index.cjs.js"
-    }
-  },
   "peerDependencies": {
     "@dereekb/util": "13.0.0",
     "@dereekb/rxjs": "13.0.0",

@@ -1,22 +1,6 @@
 {
   "name": "@dereekb/nestjs/mailgun",
   "version": "13.0.0",
-  "types": "./src/index.d.ts",
-  "module": "./index.esm.js",
-  "main": "./index.cjs.js",
-  "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "default": "./index.cjs.js"
-    }
-  },
   "peerDependencies": {
     "@dereekb/date": "13.0.0",
     "@dereekb/nestjs": "13.0.0",

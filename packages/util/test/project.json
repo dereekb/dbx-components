@@ -17,7 +17,7 @@
         "main": "packages/util/test/src/index.ts",
         "compiler": "swc",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "LICENSE",

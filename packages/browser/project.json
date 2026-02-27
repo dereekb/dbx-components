@@ -27,7 +27,7 @@
         "project": "packages/browser/package.json",
         "format": ["esm", "cjs"],
         "buildLibsFromSource": false,
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/browser/README.md",

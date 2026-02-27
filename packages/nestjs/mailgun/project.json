@@ -17,7 +17,7 @@
         "project": "packages/nestjs/mailgun/package.json",
         "main": "packages/nestjs/mailgun/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [],
         "rollupConfig": ["rollup.visualizer.config.ts"],

@@ -44,7 +44,7 @@
         "project": "packages/nestjs/package.json",
         "main": "packages/nestjs/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [
           {

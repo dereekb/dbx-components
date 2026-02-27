@@ -33,7 +33,7 @@
         "compiler": "tsc",
         "project": "packages/zoho/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/zoho/README.md",

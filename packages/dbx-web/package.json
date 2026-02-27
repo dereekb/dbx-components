@@ -22,9 +22,9 @@
     "@uirouter/angular": "21.0.0",
     "change-case-all": "^2.1.0",
     "class-validator": "^0.15.1",
+    "angular-calendar": "^0.32.0",
     "@zip.js/zip.js": "^2.8.11"
   },
-  "dependencies": {},
   "exports": {
     ".": {
       "sass": "./_index.scss"

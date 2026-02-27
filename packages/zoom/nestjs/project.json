@@ -16,7 +16,7 @@
         "project": "packages/zoom/nestjs/package.json",
         "main": "packages/zoom/nestjs/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [],
         "rollupConfig": ["rollup.visualizer.config.ts"],

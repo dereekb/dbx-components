@@ -17,7 +17,7 @@
         "compiler": "swc",
         "project": "packages/util/fetch/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "LICENSE",

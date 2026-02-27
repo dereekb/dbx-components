@@ -2,28 +2,11 @@
   "name": "@dereekb/firebase",
   "version": "13.0.0",
   "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "default": "./index.cjs.js"
-    },
     "./test": {
-      "types": "./test/src/index.d.ts",
       "module": "./test/index.esm.js",
-      "main": "./test/index.cjs.js",
-      "node": {
-        "require": "./test/index.cjs.js"
-      },
-      "browser": {
-        "require": "./test/index.cjs.js",
-        "import": "./test/index.esm.js"
-      }
+      "types": "./test/index.d.ts",
+      "import": "./test/index.cjs.mjs",
+      "default": "./test/index.cjs.js"
     }
   },
   "peerDependencies": {
@@ -37,5 +20,8 @@
     "class-validator": "^0.15.1",
     "ts-essentials": "^10.0.0",
     "date-fns": "^4.0.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0"
   }
 }

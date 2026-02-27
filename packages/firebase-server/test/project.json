@@ -15,7 +15,7 @@
         "project": "packages/firebase-server/test/package.json",
         "main": "packages/firebase-server/test/src/index.ts",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "external": "all",
         "assets": [],
         "compiler": "tsc"

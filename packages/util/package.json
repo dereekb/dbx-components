@@ -2,41 +2,17 @@
   "name": "@dereekb/util",
   "version": "13.0.0",
   "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "node": {
-        "require": "./index.cjs.js"
-      },
-      "browser": {
-        "require": "./index.cjs.js",
-        "import": "./index.esm.js"
-      },
-      "module": "./index.esm.js",
-      "main": "./index.cjs.js"
-    },
     "./test": {
-      "types": "./test/src/index.d.ts",
       "module": "./test/index.esm.js",
-      "main": "./test/index.cjs.js",
-      "node": {
-        "require": "./test/index.cjs.js"
-      },
-      "browser": {
-        "require": "./test/index.cjs.js",
-        "import": "./test/index.esm.js"
-      }
+      "types": "./test/index.d.ts",
+      "import": "./test/index.cjs.mjs",
+      "default": "./test/index.cjs.js"
     },
     "./fetch": {
-      "types": "./fetch/src/index.d.ts",
       "module": "./fetch/index.esm.js",
-      "main": "./fetch/index.cjs.js",
-      "node": {
-        "require": "./fetch/index.cjs.js"
-      },
-      "browser": {
-        "require": "./fetch/index.cjs.js",
-        "import": "./fetch/index.esm.js"
-      }
+      "types": "./fetch/index.d.ts",
+      "import": "./fetch/index.cjs.mjs",
+      "default": "./fetch/index.cjs.js"
     }
   },
   "peerDependencies": {
@@ -46,6 +22,6 @@
     "fast-content-type-parse": "^3.0.0"
   },
   "devDependencies": {
-    "date-fns": "*"
+    "date-fns": "4.0.0"
   }
 }

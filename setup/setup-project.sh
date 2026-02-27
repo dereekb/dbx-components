@@ -538,7 +538,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION firebase-functions-test@$DEP__FIREBASE_FUNCTIONS_TEST_VERSION envfile env-cmd
+npm install --force -D firebase-tools@$FIREBASE_TOOLS_VERSION firebase-functions-test@$DEP__FIREBASE_FUNCTIONS_TEST_VERSION @firebase/rules-unit-testing@$DEP__FIREBASE_RULES_UNIT_TESTING_VERSION envfile env-cmd
 npm install --force -D @types/segment-analytics@$DEP__TYPES_SEGMENT_ANALYTICS_VERSION @ngrx/store-devtools@$DEP__NGRX_STORE_DEVTOOLS_VERSION
 
 git add --all

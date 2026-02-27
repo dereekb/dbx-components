@@ -27,7 +27,7 @@
         "compiler": "swc",
         "project": "packages/rxjs/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": false,
+        "generateExportsField": true,
         "assets": [
           {
             "glob": "packages/rxjs/README.md",
