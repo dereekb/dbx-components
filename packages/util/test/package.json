@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util/test",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -18,7 +18,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "12.7.0",
+    "@dereekb/util": "13.0.0",
     "core-js": "^3.0.0"
   }
 }

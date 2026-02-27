@@ -120,7 +120,7 @@
   "useInferencePlugins": false,
   "defaultBase": "main",
   "release": {
-    "projects": ["apps/*", "packages/*", "components/*"],
+    "projects": ["*"],
     "projectsRelationship": "fixed",
     "version": {
       "conventionalCommits": true
@@ -152,12 +152,12 @@
       "automaticFromRef": true
     },
     "git": {
-      "commit": true,
+      "commit": false,
       "commitMessage": "release($workspace): v{version} release",
       "commitArgs": "--no-verify",
-      "tag": true,
+      "tag": false,
       "tagMessage": "v{version}",
-      "stageChanges": true
+      "stageChanges": false
     },
     "releaseTagPattern": "v{version}"
   }
