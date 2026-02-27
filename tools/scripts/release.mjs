@@ -12,7 +12,7 @@
  */
 
 import { createRequire } from 'module';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { ConventionalChangelog } from 'conventional-changelog';
 import { Bumper } from 'conventional-recommended-bump';
@@ -24,6 +24,25 @@ const require = createRequire(import.meta.url);
 const { releasePublish, releaseVersion } = require('nx/release');
 
 const CHANGELOG_PATH = 'CHANGELOG.md';
+
+// Type labels for the changelog (angular preset discards anything that isn't feat/fix/perf/revert by default)
+const TYPE_LABELS = {
+  feat: 'Features',
+  fix: 'Bug Fixes',
+  perf: 'Performance Improvements',
+  revert: 'Reverts',
+  refactor: 'Code Refactoring',
+  build: 'Build System',
+  docs: 'Documentation',
+  style: 'Styles',
+  test: 'Tests',
+  ci: 'Continuous Integration',
+  minor: 'Minor Changes',
+  merge: 'Merges',
+  release: 'Releases',
+  checkpoint: 'Checkpoints',
+  demo: 'Demo',
+};
 
 // -- CLI args ----------------------------------------------------------------
 
@@ -135,7 +154,39 @@ const changelogChunks = [];
 for await (const chunk of new ConventionalChangelog(process.cwd())
   .loadPreset('angular')
   .commits({ from: fromTag })
-  .context({ version: nextVersion })
+  .context({
+    version: nextVersion,
+    host: 'https://github.com',
+    owner: 'dereekb',
+    repository: 'dbx-components',
+    linkReferences: true,
+  })
+  .writer({
+    // Use "- " instead of "* " for list items
+    commitPartial: '- {{#if scope}}**{{scope}}:** {{/if}}{{#if subject}}{{subject}}{{else}}{{header}}{{/if}} ({{#if @root.linkReferences}}[{{shortHash}}]({{@root.host}}/{{@root.owner}}/{{@root.repository}}/commit/{{hash}}){{else}}{{shortHash}}{{/if}}){{#if references}}, closes{{#each references}} {{#if @root.linkReferences}}[{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}]({{@root.host}}/{{#if this.owner}}{{this.owner}}{{else}}{{@root.owner}}{{/if}}/{{#if this.repository}}{{this.repository}}{{else}}{{@root.repository}}{{/if}}/issues/{{this.issue}}){{else}}{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/if}}{{/each}}{{/if}}\n',
+    // Override the angular transform to include all commit types, not just feat/fix/perf/revert
+    transform: (commit) => {
+      const notes = commit.notes.map((note) => ({
+        ...note,
+        title: 'BREAKING CHANGES',
+      }));
+
+      const type = TYPE_LABELS[commit.type] || commit.type;
+      const scope = commit.scope === '*' ? '' : commit.scope;
+      const shortHash =
+        typeof commit.hash === 'string' ? commit.hash.substring(0, 8) : commit.shortHash;
+
+      let { subject } = commit;
+
+      if (typeof subject === 'string') {
+        subject = subject.replace(/#([0-9]+)/g, (_, issue) =>
+          `[#${issue}](https://github.com/dereekb/dbx-components/issues/${issue})`
+        );
+      }
+
+      return { notes, type, scope, shortHash, subject, references: commit.references };
+    },
+  })
   .write()) {
   changelogChunks.push(chunk);
 }
@@ -156,7 +207,29 @@ if (!dryRun) {
   console.log(`Would prepend to ${CHANGELOG_PATH} (dry run)\n`);
 }
 
-// -- Step 4: Publish (optional) ----------------------------------------------
+// -- Step 4: Stage and commit ------------------------------------------------
+
+// Build the commit message with a detailed body listing each individual commit
+const commitSubject = `release($workspace): v${nextVersion} release`;
+const commitLog = execSync(`git log ${fromTag}..HEAD --format="%s%n%n%b" --no-merges`, {
+  encoding: 'utf-8',
+}).trim();
+
+const commitMessage = commitLog ? `${commitSubject}\n\n${commitLog}` : commitSubject;
+
+if (!dryRun) {
+  console.log('Staging and committing release changes...\n');
+  execSync('git add -A', { stdio: 'inherit' });
+  execFileSync('git', ['commit', '--no-verify', '-m', commitMessage], { stdio: 'inherit' });
+  console.log('');
+} else {
+  console.log('--- Commit message ---');
+  console.log(commitMessage);
+  console.log('--- End commit message ---\n');
+}
+
+// -- Step 5: Publish (optional) ----------------------------------------------
+// Publishes using the publish-npmjs target
 
 if (skipPublish) {
   console.log('Skipping publish (--skip-publish).\n');
@@ -166,7 +239,7 @@ if (skipPublish) {
   const publishResults = await releasePublish({
     releaseGraph,
     dryRun,
-    verbose,
+    verbose
   });
 
   const allSucceeded = Object.values(publishResults).every((r) => r.code === 0);

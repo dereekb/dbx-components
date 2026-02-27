@@ -155,12 +155,12 @@
       },
       "automaticFromRef": true,
       "git": {
-        "commit": false,
+        "commit": true,
         "commitMessage": "release($workspace): v{version} release",
         "commitArgs": "--no-verify",
         "tag": false,
         "tagMessage": "v{version}",
-        "stageChanges": false
+        "stageChanges": true
       }
     },
     "releaseTagPattern": "v{version}"

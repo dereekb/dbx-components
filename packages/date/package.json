@@ -2,15 +2,18 @@
   "name": "@dereekb/date",
   "version": "13.0.0",
   "peerDependencies": {
-    "@dereekb/util": "13.0.0",
     "@dereekb/rxjs": "13.0.0",
-    "date-fns": "^4.0.0",
-    "date-fns-tz": "^3.2.0",
+    "@dereekb/util": "13.0.0",
+    "@vvo/tzdb": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "rxjs": "^7.8.0",
+    "date-fns": "^4.0.0",
+    "date-fns-tz": "^3.2.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
-    "@vvo/tzdb": "^6.0.0"
+    "rxjs": "^7.8.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@dereekb/rxjs": "13.0.0"
+  }
 }

@@ -4,6 +4,7 @@
   "peerDependencies": {
     "@dereekb/date": "13.0.0",
     "@dereekb/firebase": "13.0.0",
+    "@dereekb/model": "13.0.0",
     "@dereekb/rxjs": "13.0.0",
     "@dereekb/util": "13.0.0",
     "@firebase/rules-unit-testing": "5.0.0",
