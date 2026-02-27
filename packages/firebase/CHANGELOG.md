@@ -1,3 +1,315 @@
+# 13.0.0 (2026-02-27)
+
+### 🚀 Features
+
+- ⚠️  dbx-components v13 ([#33](https://github.com/dereekb/dbx-components/pull/33))
+- added StorageFileGroup ([#31](https://github.com/dereekb/dbx-components/pull/31))
+- added StorageFile ([#30](https://github.com/dereekb/dbx-components/pull/30))
+- added NotificationExpediteService ([bdfc0b35](https://github.com/dereekb/dbx-components/commit/bdfc0b35))
+- notification tasks ([60e99591](https://github.com/dereekb/dbx-components/commit/60e99591))
+- angular 18 ([#28](https://github.com/dereekb/dbx-components/pull/28))
+- notifications ([#27](https://github.com/dereekb/dbx-components/pull/27))
+- zoho recruit ([#26](https://github.com/dereekb/dbx-components/pull/26))
+- nx16 and Angular 16 migration ([#25](https://github.com/dereekb/dbx-components/pull/25))
+- added DbxFirebaseModelTypesService ([d711abba](https://github.com/dereekb/dbx-components/commit/d711abba))
+- added DateScheduleDayCode ([0984e331](https://github.com/dereekb/dbx-components/commit/0984e331))
+- added OnCallReadModelFunction ([4c0eeb93](https://github.com/dereekb/dbx-components/commit/4c0eeb93))
+- added SystemStateDocument ([d4a0fcf5](https://github.com/dereekb/dbx-components/commit/d4a0fcf5))
+- added DbxFirebaseDevelopmentSchedulerService ([713bac57](https://github.com/dereekb/dbx-components/commit/713bac57))
+- added firebaseServerDevFunctions() ([375e3acf](https://github.com/dereekb/dbx-components/commit/375e3acf))
+- added FirebaseServerNewUserService ([10d64dc1](https://github.com/dereekb/dbx-components/commit/10d64dc1))
+- added WebsiteFileLink ([dc58b5c3](https://github.com/dereekb/dbx-components/commit/dc58b5c3))
+- updated to angular 14 ([#15](https://github.com/dereekb/dbx-components/pull/15))
+- added Firestore Increment support ([d4dc97b9](https://github.com/dereekb/dbx-components/commit/d4dc97b9))
+- added WebsiteLink ([68eda11f](https://github.com/dereekb/dbx-components/commit/68eda11f))
+- added specifier for crud functions ([39e366e0](https://github.com/dereekb/dbx-components/commit/39e366e0))
+- added list() and list exists() ([388c5935](https://github.com/dereekb/dbx-components/commit/388c5935))
+- added DbxFirebaseStorageService ([deeaa029](https://github.com/dereekb/dbx-components/commit/deeaa029))
+- added FirebaseServerStorageService ([38bf98aa](https://github.com/dereekb/dbx-components/commit/38bf98aa))
+- added upload byte types, delete() ([655088b2](https://github.com/dereekb/dbx-components/commit/655088b2))
+- added exists(), uploadStream(), getBytes(), getStream() ([e3fe97e5](https://github.com/dereekb/dbx-components/commit/e3fe97e5))
+- added firebaseStorageContextFactory ([e9405795](https://github.com/dereekb/dbx-components/commit/e9405795))
+- added firebase storage testing/mock components ([a2524b79](https://github.com/dereekb/dbx-components/commit/a2524b79))
+- added FirebaseStorageContext ([5a30d465](https://github.com/dereekb/dbx-components/commit/5a30d465))
+- added firestoreLatLngString() ([2af3e5fc](https://github.com/dereekb/dbx-components/commit/2af3e5fc))
+- added FirestoreObjectArray ([e1050eb5](https://github.com/dereekb/dbx-components/commit/e1050eb5))
+- added firestoreSubObjectField() ([3d6fbe17](https://github.com/dereekb/dbx-components/commit/3d6fbe17))
+- added firestore key validators ([9d090db1](https://github.com/dereekb/dbx-components/commit/9d090db1))
+- added DbxFirebaseDocumentLoaderInstance ([523d1dff](https://github.com/dereekb/dbx-components/commit/523d1dff))
+- added getDocumentSnapshotsData() ([dc263409](https://github.com/dereekb/dbx-components/commit/dc263409))
+- added DbxRouteParamReader ([a8552835](https://github.com/dereekb/dbx-components/commit/a8552835))
+- added jest fail test utilities ([#13](https://github.com/dereekb/dbx-components/pull/13))
+- added getWithConverter() ([aef4b27d](https://github.com/dereekb/dbx-components/commit/aef4b27d))
+- added create to FirestoreDocumentDataAccessor ([92119754](https://github.com/dereekb/dbx-components/commit/92119754))
+- added firestoreDocumentAccessor path validation ([775c66b9](https://github.com/dereekb/dbx-components/commit/775c66b9))
+- updated firestoreModelKey() ([1459a150](https://github.com/dereekb/dbx-components/commit/1459a150))
+- added firestoreIdBatchVerifierFactory() ([182f086f](https://github.com/dereekb/dbx-components/commit/182f086f))
+- added arrayFactory() ([5a7ef131](https://github.com/dereekb/dbx-components/commit/5a7ef131))
+- added firestoreEnumArray() ([5f9e1b14](https://github.com/dereekb/dbx-components/commit/5f9e1b14))
+- added firestoreEnum() ([28e67041](https://github.com/dereekb/dbx-components/commit/28e67041))
+- added useDocumentSnapshotData ([aa329f25](https://github.com/dereekb/dbx-components/commit/aa329f25))
+- added grantFullAccessIfAuthUserRelated() ([be05e093](https://github.com/dereekb/dbx-components/commit/be05e093))
+- added UseFunction, MappedUseFunction ([84b6cbe2](https://github.com/dereekb/dbx-components/commit/84b6cbe2))
+- added grantModelRolesIfFunction and related types ([5432fab1](https://github.com/dereekb/dbx-components/commit/5432fab1))
+- updated FirebaseServerAuthUserContext to be synchronous ([92bfd849](https://github.com/dereekb/dbx-components/commit/92bfd849))
+- added FirestoreMap, FirestoreArrayMap snapshot fields ([bd23fd37](https://github.com/dereekb/dbx-components/commit/bd23fd37))
+- firestoreModeIdentity can now accept a collection name ([1e0646e5](https://github.com/dereekb/dbx-components/commit/1e0646e5))
+- added firestoreEncodedArray, firestoreUniqueArray ([4f7fc7ca](https://github.com/dereekb/dbx-components/commit/4f7fc7ca))
+- added interceptAccessorFactory() ([98335398](https://github.com/dereekb/dbx-components/commit/98335398))
+- added firestoreArray ([e8522307](https://github.com/dereekb/dbx-components/commit/e8522307))
+- added loadDocumentForId() to FirestoreDocumentAccessor ([37281454](https://github.com/dereekb/dbx-components/commit/37281454))
+- added whereDocumentId() ([7f5f5b8a](https://github.com/dereekb/dbx-components/commit/7f5f5b8a))
+- added useModel to AbstractFirebaseNestContext ([29c19402](https://github.com/dereekb/dbx-components/commit/29c19402))
+- added FirestoreDocumentStore crud functions ([7786a40f](https://github.com/dereekb/dbx-components/commit/7786a40f))
+- added onCallCreateModel ([84f7e72a](https://github.com/dereekb/dbx-components/commit/84f7e72a))
+- added OnCallDeleteModel ([358189d6](https://github.com/dereekb/dbx-components/commit/358189d6))
+- added OnCallUpdateModel ([3b60a06d](https://github.com/dereekb/dbx-components/commit/3b60a06d))
+- added ContextGrantedModelRolesReader ([6fba1cc6](https://github.com/dereekb/dbx-components/commit/6fba1cc6))
+- added InModelContextFirebaseModelServiceFactory ([9bf46973](https://github.com/dereekb/dbx-components/commit/9bf46973))
+- ⚠️  added modelType to FirestoreDocument ([deecb5df](https://github.com/dereekb/dbx-components/commit/deecb5df))
+- added AbstractFirebaseNestContext ([2f8e1a21](https://github.com/dereekb/dbx-components/commit/2f8e1a21))
+- added firebaseModelsService ([7432e551](https://github.com/dereekb/dbx-components/commit/7432e551))
+- added FirebaseModelService ([38765755](https://github.com/dereekb/dbx-components/commit/38765755))
+- added FirebaseModelsPermissionService ([9d75de40](https://github.com/dereekb/dbx-components/commit/9d75de40))
+- added loadDocumentForKey to LimitedFirestoreDocumentAccessor ([96958b89](https://github.com/dereekb/dbx-components/commit/96958b89))
+- added orderByDocumentId, startAtValue, endAtValue constraints ([c846feef](https://github.com/dereekb/dbx-components/commit/c846feef))
+- added firestore collection group support ([3b4c4cfa](https://github.com/dereekb/dbx-components/commit/3b4c4cfa))
+- added @dereekb/nestjs/stripe ([455f20e4](https://github.com/dereekb/dbx-components/commit/455f20e4))
+- setup project ([fe2ae885](https://github.com/dereekb/dbx-components/commit/fe2ae885))
+- added dbxFirebaseCollectionChangeDirective ([93a38a2b](https://github.com/dereekb/dbx-components/commit/93a38a2b))
+- added IterationQueryChangeWatcher ([f5b2474f](https://github.com/dereekb/dbx-components/commit/f5b2474f))
+- added modelConversionOptions to modelMapFunction ([2de30e07](https://github.com/dereekb/dbx-components/commit/2de30e07))
+- added modelTestContextFactory ([0a964425](https://github.com/dereekb/dbx-components/commit/0a964425))
+- added dbxFirebaseFunctionsModule ([3d1bc695](https://github.com/dereekb/dbx-components/commit/3d1bc695))
+- added dbxFirebaseCollectionWithParentStore ([b7045e76](https://github.com/dereekb/dbx-components/commit/b7045e76))
+- added dbxFirebaseDocumentStore ([43da785b](https://github.com/dereekb/dbx-components/commit/43da785b))
+- ⚠️  added firebaseQueryItemAccumulator ([1e4e0f36](https://github.com/dereekb/dbx-components/commit/1e4e0f36))
+- added dbxFirebaseModelLoaderModule ([15a8052e](https://github.com/dereekb/dbx-components/commit/15a8052e))
+- added firebase-server ([676cf9e6](https://github.com/dereekb/dbx-components/commit/676cf9e6))
+- added snapshotConverter, firestoreField ([e986026a](https://github.com/dereekb/dbx-components/commit/e986026a))
+
+### 🩹 Fixes
+
+- fixed loadDocumentsForIdsFromValues() ([424f02f3](https://github.com/dereekb/dbx-components/commit/424f02f3))
+- fixed converter issue ([de8874d4](https://github.com/dereekb/dbx-components/commit/de8874d4))
+- fixed issue with transactions in firestoreCollectionQueryFactory ([79a14563](https://github.com/dereekb/dbx-components/commit/79a14563))
+- fixed convertHttpsCallableErrorToReadableError() ([78decc85](https://github.com/dereekb/dbx-components/commit/78decc85))
+- fixed typescript import issue introduced in 4.7 ([168c8b96](https://github.com/dereekb/dbx-components/commit/168c8b96))
+- updated types for @Export() types due to jest issue ([24b2b65b](https://github.com/dereekb/dbx-components/commit/24b2b65b))
+- fixed typing issues ([f59cecf5](https://github.com/dereekb/dbx-components/commit/f59cecf5))
+- fixed modelFirebaseFunctionMapFactory() short specifier ([ae28afef](https://github.com/dereekb/dbx-components/commit/ae28afef))
+- assignValuesToPOJOFunction() now uses a copy by default ([e7f446da](https://github.com/dereekb/dbx-components/commit/e7f446da))
+- fixed primativeKeyStringDencoder() decoding ([427faf10](https://github.com/dereekb/dbx-components/commit/427faf10))
+- fixed makeSingleItemFirestoreCollection ([4b8980de](https://github.com/dereekb/dbx-components/commit/4b8980de))
+- fixed issue with ModelFirebaseCrudFunctionMapEntry for create ([a5ff2efe](https://github.com/dereekb/dbx-components/commit/a5ff2efe))
+- fixed issue with AbstractFirestoreDocument stream$ ([3752d11f](https://github.com/dereekb/dbx-components/commit/3752d11f))
+- fixed ModifyBeforeSetFirestoreDocumentDataAccessorWrapper ([68b5fff4](https://github.com/dereekb/dbx-components/commit/68b5fff4))
+- optionalFirestoreDate() ([58e170c9](https://github.com/dereekb/dbx-components/commit/58e170c9))
+- fixed function factory ([f722fb55](https://github.com/dereekb/dbx-components/commit/f722fb55))
+- fixed issue with snapshot falsy default values being ignored ([b433bc4a](https://github.com/dereekb/dbx-components/commit/b433bc4a))
+- fixed converter on loadDocument() ([1e680ac8](https://github.com/dereekb/dbx-components/commit/1e680ac8))
+- fixed documentRef not having converter configured ([308f3fa1](https://github.com/dereekb/dbx-components/commit/308f3fa1))
+- fixed model conversions ([18ac25f8](https://github.com/dereekb/dbx-components/commit/18ac25f8))
+- fixed defaults of firestore-snapshot array fields ([8d388a9a](https://github.com/dereekb/dbx-components/commit/8d388a9a))
+- fixed issue with permission.service.grant.ts declaration order ([b6074041](https://github.com/dereekb/dbx-components/commit/b6074041))
+- firestoreString now has a type specified ([ac7db1f5](https://github.com/dereekb/dbx-components/commit/ac7db1f5))
+- useAsync typings fixes with Maybe ([68f38a46](https://github.com/dereekb/dbx-components/commit/68f38a46))
+- firestoreEnum test fix ([5996b79c](https://github.com/dereekb/dbx-components/commit/5996b79c))
+- grantFullAccessIfAuthUserRelated() now takes in a document or model ([53563dd9](https://github.com/dereekb/dbx-components/commit/53563dd9))
+- documentAccessorForTransaction/WriteBatch now accepts a Maybe value ([beb17379](https://github.com/dereekb/dbx-components/commit/beb17379))
+- fixed grantFullAccessIfAuthUserRelated typings ([f83af852](https://github.com/dereekb/dbx-components/commit/f83af852))
+- updated GrantRolesOtherwiseFunction to allow returning Maybe ([552bb9c4](https://github.com/dereekb/dbx-components/commit/552bb9c4))
+- setup-project fixes ([d7003703](https://github.com/dereekb/dbx-components/commit/d7003703))
+- fixed package.json exports for util, firebase, and firebase-server ([04c1d9ab](https://github.com/dereekb/dbx-components/commit/04c1d9ab))
+- fixed createOrUpdateWithAccessor ([243d0d3d](https://github.com/dereekb/dbx-components/commit/243d0d3d))
+
+### ⚠️  Breaking Changes
+
+- dbx-components v13  ([#33](https://github.com/dereekb/dbx-components/pull/33))
+  DbxSetStyleDirective now has a new mode. By default sets to self.
+  - BREAKING CHANGE: removed dbx-bg
+  * refactor: removed unused standalone imports
+  - resolved angular NG8113 warnings about unused standalone imports
+  * refactor: updated use of dbxColor within dbx-button
+  - dbx-button now uses dbxColor to color each button
+  * refactor: updated progress buttons
+  - BREAKING CHANGE: remove deprecated options from DbxProgressButtonConfig
+  * refactor: type fixes
+  - updated ng-overlay-container version
+  * refactor: removed DateOrUnixDateTimeNumber compat
+  - BREAKING CHANGE: Replace DateOrUnixDateTimeNumber with DateOrUnixDateTimeMillisecondsNumber
+  - BREAKING CHANGE: Replace UnixDateTimeMillisecondsNumber with UnixDateTimeNumber
+  * refactor: fixed material slider property change
+  - Fixed issue where Angular Material changed the property name of thumbLabel to discrete
+  * refactor: removed @dereekb/util deprecated/compat code
+  Removed deprecated type aliases, function aliases, and compat code across the util package:
+  - date/date.unix.ts: Removed UnixTimeNumber and related deprecated function aliases
+  - date/time.ts: Removed timer constant alias (use makeTimer instead)
+  - array/array.value.ts: Removed filterMaybeValues and filterEmptyValues aliases
+  - array/array.boolean.ts: Removed BooleanStringKeyArrayUtilityInstance alias
+  - object/object.map.ts: Removed objectToTuples function (use Object.entries)
+  - string/mimetype.ts: Removed MimeTypeForImageTypeInputType and mimetypeForImageType
+  - promise/promise.ts: Removed PromiseAsyncTaskFn type alias
+  - fetch/fetch.page.ts: Removed FetchPageResults type alias
+  - fetch/provider.ts: Removed nodeFetchService constant alias
+  - fetch/fetch.url.ts: Removed deprecated filterNullAndUndefinedValues option
+  - tree/tree.flatten.ts: Removed flattenTrees function (FlattenTreeFunction now supports arrays)
+  - tree/tree.array.ts: Updated to use FlattenTreeFunction directly with arrays
+  - page/page.calculator.ts: Deleted entire file (fully deprecated PageCalculator class)
+  - page/index.ts: Removed export of deleted PageCalculator
+  * refactor: moved expires operators to rxjs
+  - date/date.ts: Removed 4 DST-unsafe deprecated functions (takeNextUpcomingTime, copyHoursAndMinutesFromDateToToday, copyHoursAndMinutesFromNow, copyHoursAndMinutesFromDate)
+  - expires/expires.ts: Removed COMPAT section with 6 deprecated functions (atleastOneNotExpired, anyHaveExpired, timeHasExpired, toExpires, hasExpired, getExpiration)
+  - date/date.format.ts: Removed deprecated formatting aliases (toISO8601DayString, formatToISO8601DayString, dateShortDateStringFormat)
+  - date/date.time.limit.ts: Updated to use non-deprecated functions
+  - loading/loading.state.ts: Removed COMPAT section with 18 deprecated aliases (unknownLoadingStatesIsLoading, allLoadingStatesHaveFinishedLoading, loadingStateIsIdle, isSuccessLoadingState, isErrorLoadingState, loadingStateIsLoading, loadingStateHasFinishedLoading, loadingStateHasError, loadingStateHasValue, loadingStateHasFinishedLoadingWithValue, loadingStateHasFinishedLoadingWithError, loadingStatesHaveEquivalentMetadata, LoadingStateWithMaybeSoValue, updatedStateForSetLoading, updatedStateForSetValue, updatedStateForSetError)
+  - loading/loading.context.state.ts: Removed deprecated showLoadingOnNoValue property
+  - loading/loading.state.list.ts: Removed listLoadingStateIsEmpty and isListLoadingStateEmpty aliases
+  - rxjs/value.ts: Removed switchMapMaybeObs and skipFirstMaybe aliases
+  - filter/filter.source.ts: Removed initialFilterTakesPriority setter
+  - iterator/iteration.mapped.page.ts: Removed mapPageItemIteration alias
+  - Updated internal usage and tests to use new function names
+  Migrated RxJS expiration operators to @dereekb/rxjs:
+  - Created rxjs/expires.ts with 6 operators reimplemented using expirationDetails()
+  - Added comprehensive test coverage (10 tests, all passing)
+  - Updated date/expires.rxjs.ts to re-export from @dereekb/rxjs with deprecation notice
+  * refactor: updated phone picker
+  - used ngx-mat-intl-tel-input as the phone input replacement
+  * refactor: removed deprecated utilities from dbx-core
+  - Deleted 10 deprecated NgModule files (pipe modules, context module, injection module, router modules, auth module)
+  - Removed 2 deprecated directive classes from rxjs/rxjs.directive.ts (AbstractSubscriptionDirective, AbstractLockSetSubscriptionDirective)
+  - Removed deprecated initialFilterTakesPriority setter from filter.abstract.source.directive.ts
+  - Updated all barrel exports and test files to use standalone components directly
+  * refactor: remove deprecated dbx-web/dbx-form code
+  @dereekb/dbx-web:
+  - Deleted 11 deprecated NgModule files
+  - Removed deprecated inputs from keydown.listener.directive.ts (appWindowKeyDownEnabled, appWindowKeyDownFilter)
+  - Removed deprecated aliases from mapbox.store.ts (content$, hasContent$, clearContent, setContent)
+  - Deleted deprecated.table.reader.cached.ts
+  - Removed deprecated template constants and deprecatedInputState$ from list directives
+  - Updated all barrel exports
+  @dereekb/dbx-form:
+  - Deleted 8 deprecated NgModule files
+  - Updated formly.providers.ts to import individual field modules
+  - Updated all barrel exports
+  - Fixed consumer code in demo app and demo-components to use new APIs
+  - Updated templates to use non-deprecated inputs
+  * refactor: removed deprecated firebase/dbx-firebase code
+  @dereekb/firebase:
+  - Removed notificationTemplateTypeDetailsRecord constant
+  - Removed StorageFileProcessingNotificationTaskCheckpoint type and related constants
+  - Removed typo function filterDisallowedFirestoreItemPageIteratorInputContraints
+  - Removed deprecated dontStoreIfValue property
+  @dereekb/dbx-firebase:
+  - Deleted 11 deprecated NgModule files
+  - Removed deprecated DbxFirebaseOptions type
+  - Updated all barrel exports
+  @dereekb/firebase-server:
+  - Completed purpose→target migration in storagefile.task.service.handler.ts
+  - Removed deprecated purpose property from StorageFileProcessingPurposeSubtaskInput
+  - Removed typo constant FIRESTBASE_SERVER_VALIDATION_ERROR_CODE
+  - Removed deprecated crud property
+  - Deleted Firebase Functions v1 files (event.ts, call.ts, schedule.ts)
+  - Updated code to use Firebase Functions v2 only
+  * refactor: updated node version
+  - updated circleci and minimum node versions
+  - removed deprecated firebase v1 functions
+  * refactor: fixed HashSet's set implementation types
+  - added deprecation details to v12-to-v13-upgrade-info.md
+  * refactor: test fixes
+  - updated AuthBlockingEvent and initUserOnCreate section
+  * checkpoint: sharp testing
+  * refactor: added vitest utils to util-test
+  * refactor: updated util-test exported classes
+  - removed Jest prefix from new exported classes/etc.
+  * checkpoint: vitest
+  * checkpoint: renamed expectFailAssertErrorType
+  - renamed jestExpectFailAssertErrorType to expectFailAssertErrorType, and deprecated jestExpectFailAssertErrorType
+  * refactor: convert callback tests for vitest
+  - vitest removes the usage of using the done callback for tests. All tests updates to reflect this change, and
+  - added convert-callback-tests.js utility
+  - updated v12-to-v13 upgrade info documentation
+  * refactor: dbx-firebase test runner fix
+  - updated openjdk-21-jre-headless for firebase tests
+  * checkpoint: updated @dereekb/util to use vitest
+  * checkpoint: added @dereekb/vitest library
+  * refactor: updated @dereekb/util tests
+  - all tests pass now running vitest
+  * refactor: added migrate-to-vitest script
+  * refactor: added @dereekb/vitest to publishing
+  - @dereekb/vitest is now being setup properly within the app (removed inline declarations from @dereekb/util tests
+  - updated @dereekb/date to use vitest
+  * refactor: test fixes
+  - updated jest output paths to be /junit instead of /jest
+  * refactor: updated @dereekb/nestjs to use vitest
+  * refactor: updated @dereekb/rxjs and @dereekb/model to vitest
+  * refactor: updated @dereekb/firebase to use vitest
+  * refactor: @dereekb/firebase test fix
+  - test files currently must be run sequentially. Concurrent running of tests will cause some weird issues to occur and the tests to fail.
+  * refactor: createVitestConfig() update
+  * refactor: updated @dereekb/firebase-server to use vitest
+  * refactor: fixed @dereekb/firebase/test test
+  * refactor: updated @dereekb/dbx-core to use vitest
+  * refactor: updated @dereekb/dbx-web to use vitest
+  * refactor: update @dereekb/dbx-web to use vitest
+  - fixed bad test in @dereekb/date
+  - added tests to @dereekb/dbx-web/mapbox, @dereekb/dbx-web/calendar, and @dereekb/dbx-web/table
+  - Updated vitest.setup.angular setup/usage.
+  * refactor: updated @dereekb/dbx-form to use vitest
+  * refactor: updated @dereekb/dbx-firebase to use vitest
+  - updated @dereekb/dbx-firebase tests
+  - removed redundant "strict" from tsconfigs
+  * refactor: updated angular test handling
+  - updated angular test setup/cleanup
+  * refactor: update demo-api to use vitest
+  * refactor: update demo to use vitest
+  * refactor: updated remaining projects to vitest
+  * checkpoint: removed jest from project
+  * checkpoint: removed jest from project
+  * refactor: updated eslint, ran linter
+  * refactor: demo-api test fix
+  - fixed removed test folder, and updated tsconfig.app.json to ignore test folder
+  * refactor: test fixes
+  - fixed regression where waitForAsync() was causing the tests to fail
+  * refactor: updated date tests
+  - date's vitest tests now run in parallel
+  - removed use of mocktest since it is available in vitest natively
+  * refactor: setup-project.sh fix
+  * refactor: date test fixes
+  1. date.week.ts — Double timezone conversion in yearWeekCodeForDateRangeFactory
+  The range factory called _normal.systemDateToTargetDate() on dates, then passed them to factory() which called systemDateToTargetDate() again. With UTC+14 the double shift crossed a day boundary, moving Dec 26 (week 1) back to Dec 25 (week 52). Fixed by using yearWeekCodePairFromDate() directly on the already-converted dates.
+  2. date.cell.schedule.ts — System-timezone-dependent startOfDay in dateCellScheduleDateRange
+  When start was absent but startsAt was present, the function passed the Date directly to startOfDayInTargetTimezone(), which uses system-local startOfDay() internally. With UTC+14 this computed the wrong calendar day. Fixed by converting to an ISO day string first (via baseDateToTargetDate + formatToISO8601DayStringForUTC), matching how dateCellTiming handles the same computation.
+  * refactor: date timezone fix
+  - fixed issue where it was assumed that DST starts at the same time globally. It does not. Dublin starts on a different day than America...
+  * fix: make DST tests timezone-agnostic
+  Previously the DST tests hardcoded Nov 3 2024 (US fall-back date), causing
+  failures in Europe/Dublin where fall-back is Oct 27. Now both spring-forward
+  and fall-back dates are discovered dynamically, and spring-forward tests are
+  added to verify roundDateToUnixDateTimeNumber and document erroneous set()/
+  setHours() behavior near the DST gap.
+  Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+  * refactor: build configuration improvements
+  - removed redundant configurations from child tsconfig.*.json files in project
+  - added "buildLibsFromSource": false to "@nx/rollup:rollup" configuration in nx.json. This should help improve build times.
+  - updated setup-project.sh
+  * refactor: build fix
+  - changed date parallel test running config as circleci is still hanging on some long running tests
+  * refactor: updated firebase config
+  * refactor: styling fix
+  * checkpoint: build fix
+  * refactor: updated subprojects to use rollup
+  - some projects were not outputting properly, causing builds to fail
+  - some projects were not using rollup. Previously they only emitted commonjs, but now can emit esm
+  * checkpoint: build output fixes
+  * checkpoint: rollup improvements
+  * checkpoint: added rollup stats, updated builds
+  - added rollup to various packages to export both ESM and CommonJS
+- added modelType to FirestoreDocument  ([deecb5df](https://github.com/dereekb/dbx-components/commit/deecb5df))
+  model type is now required on FirestoreDocument models
+- added firebaseQueryItemAccumulator  ([1e4e0f36](https://github.com/dereekb/dbx-components/commit/1e4e0f36))
+  - renamed flattenIterationResultItemArray to flattenAccumulatorResultItemArray since the input is an accumulator and not an iteration
+
 # Changelog
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).

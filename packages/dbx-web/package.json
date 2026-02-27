@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "peerDependencies": {
     "@angular/common": "^21.0.0",
     "@angular/core": "^21.0.0",
     "linkify-string": "^4.3.0",
     "@angular/material": "^21.0.0",
-    "@dereekb/rxjs": "12.7.0",
-    "@dereekb/dbx-core": "12.7.0",
-    "@dereekb/util": "12.7.0",
+    "@dereekb/rxjs": "13.0.0",
+    "@dereekb/dbx-core": "13.0.0",
+    "@dereekb/util": "13.0.0",
     "rxjs": "^7.8.0",
     "@uirouter/core": "^6.1.2",
     "@ngrx/store": "^21.0.0",

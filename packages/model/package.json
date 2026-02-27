@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/model",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -19,7 +19,7 @@
     "class-validator": "^0.14.0"
   },
   "peerDependencies": {
-    "@dereekb/util": "12.7.0",
+    "@dereekb/util": "13.0.0",
     "core-js": "^3.0.0"
   }
 }

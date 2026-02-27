@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -60,14 +60,14 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "peerDependencies": {
-    "@dereekb/firebase": "12.7.0",
-    "@dereekb/util": "12.7.0",
-    "@dereekb/date": "12.7.0",
-    "@dereekb/dbx-core": "12.7.0",
-    "@dereekb/rxjs": "12.7.0",
+    "@dereekb/firebase": "13.0.0",
+    "@dereekb/util": "13.0.0",
+    "@dereekb/date": "13.0.0",
+    "@dereekb/dbx-core": "13.0.0",
+    "@dereekb/rxjs": "13.0.0",
     "express": "^5.0.0",
-    "@dereekb/nestjs": "12.7.0",
-    "@dereekb/model": "12.7.0",
+    "@dereekb/nestjs": "13.0.0",
+    "@dereekb/model": "13.0.0",
     "firebase-functions": "^7.0.0",
     "firebase-admin": "^13.0.0",
     "@nestjs/common": "^11.0.0",

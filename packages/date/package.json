@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/date",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -15,8 +15,8 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "12.7.0",
-    "@dereekb/rxjs": "12.7.0",
+    "@dereekb/util": "13.0.0",
+    "@dereekb/rxjs": "13.0.0",
     "date-fns": "^4.0.0",
     "date-fns-tz": "^3.2.0",
     "class-transformer": "^0.5.1",

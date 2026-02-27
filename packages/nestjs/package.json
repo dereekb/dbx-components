@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -78,7 +78,7 @@
     "raw-body": "^3.0.0",
     "body-parser": "^2.0.0",
     "@nestjs/config": "^4.0.0",
-    "@dereekb/util": "12.7.0"
+    "@dereekb/util": "13.0.0"
   },
   "dependencies": {}
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/rxjs",
-  "version": "12.7.0",
+  "version": "13.0.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -17,6 +17,6 @@
   "peerDependencies": {
     "rxjs": "^7.8.0",
     "core-js": "^3.0.0",
-    "@dereekb/util": "12.7.0"
+    "@dereekb/util": "13.0.0"
   }
 }
