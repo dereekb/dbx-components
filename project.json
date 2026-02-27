@@ -33,13 +33,13 @@
     "release-dry-run": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx release --dry-run --verbose"
+        "command": "node tools/scripts/release.mjs --skip-publish --verbose"
       }
     },
     "release": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx release --skip-publish --verbose"
+        "command": "node tools/scripts/release.mjs --dry-run=false --skip-publish --verbose"
       }
     },
     "deploy-firebase-rules": {

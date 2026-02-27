@@ -58,6 +58,7 @@
     "change-case-all": "^2.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "core-js": "^3.0.0",
     "date-fns": "^4.0.0",
     "date-fns-tz": "^3.2.0",
     "express": "^5.0.0",
@@ -87,8 +88,7 @@
     "stripe": "^9.1.0",
     "ts-essentials": "^10.0.0",
     "tslib": "^2.3.0",
-    "zone.js": "^0.16.0",
-    "core-js": "^3.0.0"
+    "zone.js": "^0.16.0"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "~2.1.2",
@@ -142,6 +142,8 @@
     "adm-zip": "0.5.16",
     "angular-eslint": "21.2.0",
     "autoprefixer": "^10.4.0",
+    "conventional-changelog": "^7.1.1",
+    "conventional-recommended-bump": "^11.2.0",
     "env-cmd": "11.0.0",
     "envfile": "7.1.0",
     "eslint": "9.39.3",

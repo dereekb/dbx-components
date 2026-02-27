@@ -123,7 +123,12 @@
     "projects": ["*"],
     "projectsRelationship": "fixed",
     "version": {
-      "conventionalCommits": true
+      "conventionalCommits": true,
+      "git": {
+        "commit": false,
+        "tag": false,
+        "stageChanges": false
+      }
     },
     "releaseTag": {
       "requireSemver": true
@@ -149,15 +154,15 @@
           "versionTitleDate": true
         }
       },
-      "automaticFromRef": true
-    },
-    "git": {
-      "commit": false,
-      "commitMessage": "release($workspace): v{version} release",
-      "commitArgs": "--no-verify",
-      "tag": false,
-      "tagMessage": "v{version}",
-      "stageChanges": false
+      "automaticFromRef": true,
+      "git": {
+        "commit": false,
+        "commitMessage": "release($workspace): v{version} release",
+        "commitArgs": "--no-verify",
+        "tag": false,
+        "tagMessage": "v{version}",
+        "stageChanges": false
+      }
     },
     "releaseTagPattern": "v{version}"
   }
