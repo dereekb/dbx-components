@@ -8,8 +8,8 @@ import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profile, ProfileDocument> {
   readonly profileFunctions = inject(ProfileFunctions);
 
-  constructor(collections: DemoFirestoreCollections) {
-    super({ firestoreCollection: collections.profileCollection });
+  constructor() {
+    super({ firestoreCollection: inject(DemoFirestoreCollections).profileCollection });
   }
 
   readonly zipArchiveStorageFileKey$ = this.id$.pipe(

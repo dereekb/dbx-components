@@ -974,10 +974,6 @@ download_api_ts_file "src/environments/environment.prod.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup api"
 
-echo "Performing test build..."
-npx -y nx@$NX_VERSION build $ANGULAR_APP_NAME
-npx -y nx@$NX_VERSION build $API_APP_NAME
-npx -y nx@$NX_VERSION test $ANGULAR_APP_NAME # test only the angular app
 
 # Final checks
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
@@ -987,6 +983,11 @@ then
 else
   echo "Completed $ANGULAR_APP_NAME project setup."
   echo "Project was created at \"$(pwd)\""
+
+  echo "Performing test build..."
+  npx -y nx@$NX_VERSION build $ANGULAR_APP_NAME
+  npx -y nx@$NX_VERSION build $API_APP_NAME
+  npx -y nx@$NX_VERSION test $ANGULAR_APP_NAME # test only the angular app
 
   # Docker Checking
   echo "Performing docker cleaning and resetting...";

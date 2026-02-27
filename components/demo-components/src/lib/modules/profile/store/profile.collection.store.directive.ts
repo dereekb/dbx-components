@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';
 import { Profile, ProfileDocument } from 'demo-firebase';
 import { ProfileCollectionStore } from './profile.collection.store';
@@ -8,7 +8,7 @@ import { ProfileCollectionStore } from './profile.collection.store';
   providers: provideDbxFirebaseCollectionStoreDirective(DemoProfileCollectionStoreDirective, ProfileCollectionStore)
 })
 export class DemoProfileCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<Profile, ProfileDocument, ProfileCollectionStore> {
-  constructor(store: ProfileCollectionStore) {
-    super(store);
+  constructor() {
+    super(inject(ProfileCollectionStore));
   }
 }
