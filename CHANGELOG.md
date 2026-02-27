@@ -1,3 +1,21 @@
+## [13.0.1](https://github.com/dereekb/dbx-components/compare/v13.0.0-dev...v13.0.1) (2026-02-27)
+
+
+### Code Refactoring
+
+- fixed release, sync'd package deps ([ee13cfb8](https://github.com/dereekb/dbx-components/commit/ee13cfb8bb3fa89a52adb09eb9e15014f9024155))
+- package.json fixes ([1a352866](https://github.com/dereekb/dbx-components/commit/1a352866ec00824f285d9d9931002161ccb29ccf))
+- release fix ([14093f0e](https://github.com/dereekb/dbx-components/commit/14093f0ed44c6bd339ab0c4f2d31e68ae362733b))
+- removed babel usage ([eb68fa0f](https://github.com/dereekb/dbx-components/commit/eb68fa0fd0fc936b7e5b789725730d5face3122d))
+- setup fixes ([8b5cbf8b](https://github.com/dereekb/dbx-components/commit/8b5cbf8b09fc92f53c645966cd19dd63cf0ea69f))
+- test project fix ([9cb877ea](https://github.com/dereekb/dbx-components/commit/9cb877eafb9cb66018766d6490f6025038ec405b))
+- update force-start-release.sh ([705c9c3b](https://github.com/dereekb/dbx-components/commit/705c9c3b2e38171eebf3e4a3319229764172afee))
+- updated setup-project.sh ([e970f557](https://github.com/dereekb/dbx-components/commit/e970f55776168db8c227b3e2947f9b8496cbc964))
+- version bumping fix ([01b0f89d](https://github.com/dereekb/dbx-components/commit/01b0f89d9df6a3aeb1b1906b1c42469b548e2a82))
+
+
+
+
 # 13.0.0 (2026-02-27)
 
 ### 🚀 Features
