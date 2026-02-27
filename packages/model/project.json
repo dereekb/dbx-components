@@ -23,7 +23,7 @@
         "outputPath": "dist/packages/model",
         "main": "packages/model/src/index.ts",
         "tsConfig": "packages/model/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "tsc",
         "project": "packages/model/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": false,

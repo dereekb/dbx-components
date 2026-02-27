@@ -24,7 +24,7 @@
         "outputPath": "dist/packages/rxjs",
         "main": "packages/rxjs/src/index.ts",
         "tsConfig": "packages/rxjs/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "swc",
         "project": "packages/rxjs/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": false,

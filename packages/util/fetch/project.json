@@ -14,7 +14,7 @@
         "outputPath": "dist/packages/util/fetch",
         "main": "packages/util/fetch/src/index.ts",
         "tsConfig": "packages/util/fetch/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "swc",
         "project": "packages/util/fetch/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": false,

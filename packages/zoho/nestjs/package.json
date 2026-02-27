@@ -17,7 +17,5 @@
       "default": "./index.cjs.js"
     }
   },
-  "peerDependencies": {
-    "core-js": "^3.0.0"
-  }
+  "peerDependencies": {}
 }

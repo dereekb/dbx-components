@@ -17,7 +17,8 @@
         "format": ["esm", "cjs"],
         "generateExportsField": false,
         "external": "all",
-        "assets": []
+        "assets": [],
+        "compiler": "tsc"
       },
       "configurations": {
         "production": {

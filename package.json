@@ -58,7 +58,6 @@
     "change-case-all": "^2.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "core-js": "^3.0.0",
     "date-fns": "^4.0.0",
     "date-fns-tz": "^3.2.0",
     "express": "^5.0.0",

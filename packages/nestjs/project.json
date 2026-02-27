@@ -58,7 +58,8 @@
             "output": "."
           }
         ],
-        "rollupConfig": ["rollup.visualizer.config.ts"]
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "tsc"
       },
       "configurations": {
         "production": {

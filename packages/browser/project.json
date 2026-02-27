@@ -23,7 +23,7 @@
         "outputPath": "dist/packages/browser",
         "main": "packages/browser/src/index.ts",
         "tsConfig": "packages/browser/tsconfig.lib.json",
-        "compiler": "babel",
+        "compiler": "tsc",
         "project": "packages/browser/package.json",
         "format": ["esm", "cjs"],
         "buildLibsFromSource": false,

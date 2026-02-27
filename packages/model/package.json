@@ -19,7 +19,6 @@
     "class-validator": "^0.14.0"
   },
   "peerDependencies": {
-    "@dereekb/util": "13.0.0",
-    "core-js": "^3.0.0"
+    "@dereekb/util": "13.0.0"
   }
 }
