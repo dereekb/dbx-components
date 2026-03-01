@@ -17,9 +17,9 @@
       <dbx-content-pit>
         <dbx-linkify [text]="linkifyWithLongerUrl" [config]="truncatedLinkifyConfig"></dbx-linkify>
       </dbx-content-pit>
-      <p>Inline options can also be passed directly via config. This example enables nl2br.</p>
+      <p>Inline options can be passed directly via config. This example adds a custom class, emoji prefix, truncation, rel attribute, and title tooltip to links.</p>
       <dbx-content-pit>
-        <dbx-linkify text="Line one with www.google.com&#10;Line two with www.github.com" [config]="inlineOptionsLinkifyConfig"></dbx-linkify>
+        <dbx-linkify [text]="linkifyWithLongerUrl" [config]="inlineOptionsLinkifyConfig"></dbx-linkify>
       </dbx-content-pit>
     </doc-feature-example>
     <doc-feature-example header="dbx-text-chips" hint="Displays a number of chips within a mat-chip-set, with an optional tooltip.">

@@ -186,7 +186,7 @@ jobs:
           name: replace test project's @dereekb in node_modules with generated packages (we don't want symlinks)
           command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
       - run:
-          name: print package.json
+          name: print root package.json
           command: cd ~/setup-test/myproject && cat package.json
       - run:
           name: Try build components

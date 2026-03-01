@@ -5,32 +5,55 @@ defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
   docker:
-    - image: cimg/node:22.14
+    - image: cimg/node:24.13
 
 orbs:
   nx: nrwl/nx@1.7.0
-  node: circleci/node@7.1.0
+  node: circleci/node@7.2.1
+  snyk: snyk/snyk@2.3.0
 
 jobs:
   build:
     <<: *defaults
+    parameters:
+      persist_build_to_workspace:
+        type: boolean
+        default: true
+      scan_with_snyk:
+        type: boolean
+        default: false    # flag true if you want to scan for vulnerabilities with snyk
     environment:
+      CYPRESS_INSTALL_BINARY: 0
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
       # install node packages
       - node/install-packages
+      # scan vulnerabilities with snyk if enabled
+      # SETUP REQUIRED - Configure SNYK_TOKEN in CircleCI environment variables if using snyk
+      - when:
+          condition: << parameters.scan_with_snyk >>
+          steps:
+            - snyk/scan:
+                fail-on-issues: false
+                monitor-on-build: true
+                severity-threshold: critical
       # initialize nx
       - nx/set-shas
-      # build
-      - run: npx nx run-many --base=$NX_BASE --target=build --parallel --max-parallel=2
-      # persist builds to workspace
-      - persist_to_workspace:
-          root: ~/code
-          paths:
-            - node_modules
-            - dist
+      # builds everything in the project in order
+      - run:
+          name: build
+          command: npx nx run workspace:build-all
+      # persist builds to workspace if persist_build_to_workspace is true
+      - when:
+          condition: << parameters.persist_build_to_workspace >>
+          steps:
+            - persist_to_workspace:
+                root: ~/code
+                paths:
+                  - node_modules
+                  - dist
   # Runs tests for the projects that do not require the firebase emulators.
   test-with-node:
     <<: *defaults
@@ -50,6 +73,10 @@ jobs:
   test-with-node-firebase:
     <<: *defaults
     environment:
+      # https://github.com/firebase/firebase-tools/issues/6765
+      GCE_METADATA_HOST: 0.0.0.0
+      DETECT_GCP_RETRIES: 0
+      METADATA_SERVER_DETECTION: none
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
@@ -57,7 +84,7 @@ jobs:
       - attach_workspace:
           at: ~/code
       # install the emulator requirements
-      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       # restore the emulators cache
       - restore_cache:
           key: firebase-cache-
@@ -96,8 +123,9 @@ jobs:
           name: setup git
           command: git config user.email "$GIT_USER_EMAIL" && git config user.name "$GIT_USER_NAME"
       - run:
-          name: build release
-          command: npx nx run --parallel=1 workspace:version
+          # build the release and make a commit on develop
+          name: build release with nx release
+          command: npx nx run workspace:release
       - run:
           # we grab the relevant tag names before swapping to main
           name: "setup env vars for git changes"
@@ -176,6 +204,14 @@ jobs:
       - run:
           name: configure npmrc / npm login
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      # OPTIONAL: Run lint fix to update any npm dependencies in the projects before publishing
+      # - run:
+      #     name: Run lint fix to update any npm dependencies in the projects before building
+      #     command: ./lint-fix-all.sh || true # ignore error
+      # NOTE: npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
+      # If your packages depend on each other, publish them in dependency order instead of using run-many.
+      # Example sequential publishing:
+      # - run: npx nx run package-a:publish-npmjs && npx nx run package-b:publish-npmjs
       - run: npx nx run-many -t publish-npmjs
 # --- WORKFLOWS ---
 workflows:
@@ -202,22 +238,9 @@ workflows:
   # REMOVE IF YOU DO NOT NEED TO PUBLISH TO NPM
   publish:
     jobs:
-      - build:
-          filters:
-            branches:
-              only: main
-      - publish-to-npm:
-          requires:
-            - build
-          filters:
-            branches:
-              only: main
-  # Publishes to production
-  publish-to-production:
-    jobs:
-      # Wait for approval before deploying to firebase
-      # This prevents unnecessary deployments for smaller changes.
-      - hold-deploy-to-firebase:
+      # Wait for approval before publishing to npm
+      # Publishing may require two-factor authentication approval.
+      - hold-publish-npm:
           type: approval
           filters:
             branches:
@@ -226,9 +249,32 @@ workflows:
           filters:
             branches:
               only: main
+      - publish-to-npm:
+          requires:
+            - build
+            - hold-publish-npm
+          filters:
+            branches:
+              only: main
+  # Publishes to production
+  publish-to-production:
+    jobs:
+      # Wait for approval before deploying to firebase
+      # This prevents unnecessary deployments for smaller changes.
+      - hold-deploy-to-firebase-prod:
+          type: approval
+          filters:
+            branches:
+              only: main
+      - build:
+          filters:
+            branches:
+              only: main
+          requires:
+            - hold-deploy-to-firebase-prod
       - deploy-to-firebase-prod:
           requires:
-            - hold-deploy-to-firebase
+            - hold-deploy-to-firebase-prod
             - build
           filters:
             branches:
@@ -238,7 +284,7 @@ workflows:
     jobs:
       # Wait for approval before deploying to firebase
       # This prevents unnecessary deployments for smaller changes.
-      - hold-deploy-to-firebase:
+      - hold-deploy-to-firebase-staging:
           type: approval
           filters:
             branches:
@@ -247,9 +293,11 @@ workflows:
           filters:
             branches:
               only: main
+          requires:
+            - hold-deploy-to-firebase-staging
       - deploy-to-firebase-staging:
           requires:
-            - hold-deploy-to-firebase
+            - hold-deploy-to-firebase-staging
             - build
           filters:
             branches:

@@ -20,6 +20,9 @@ import semver from 'semver';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+const githubReponsitoryOwner = 'dereekb';
+const githubReponsitoryName = 'dbx-components';
+
 const require = createRequire(import.meta.url);
 const { releasePublish, releaseVersion } = require('nx/release');
 
@@ -157,8 +160,8 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
   .context({
     version: nextVersion,
     host: 'https://github.com',
-    owner: 'dereekb',
-    repository: 'dbx-components',
+    owner: githubReponsitoryOwner,
+    repository: githubReponsitoryName,
     linkReferences: true,
   })
   .writer({
@@ -180,7 +183,7 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
 
       if (typeof subject === 'string') {
         subject = subject.replace(/#([0-9]+)/g, (_, issue) =>
-          `[#${issue}](https://github.com/dereekb/dbx-components/issues/${issue})`
+          `[#${issue}](https://github.com/${githubReponsitoryOwner}/${githubReponsitoryName}/issues/${issue})`
         );
       }
 

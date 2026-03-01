@@ -24,7 +24,19 @@ export class DocTextTextComponent {
 
   readonly noTargetLinkifyConfig: DbxLinkifyConfig = { type: 'no-target' };
   readonly truncatedLinkifyConfig: DbxLinkifyConfig = { type: 'truncated' };
-  readonly inlineOptionsLinkifyConfig: DbxLinkifyConfig = { options: { nl2br: true, defaultProtocol: 'https', target: { url: '_blank' } } };
+  readonly inlineOptionsLinkifyConfig: DbxLinkifyConfig = {
+    options: {
+      defaultProtocol: 'https',
+      target: { url: '_blank' },
+      rel: 'noopener noreferrer',
+      className: 'dbx-primary',
+      truncate: 40,
+      format: (value, type) => (type === 'url' ? `🔗 ${value}` : value),
+      attributes: {
+        title: 'Click to visit this link'
+      }
+    }
+  };
 
   readonly fullAddress: UnitedStatesAddressWithContact = {
     name: 'John Doe',
