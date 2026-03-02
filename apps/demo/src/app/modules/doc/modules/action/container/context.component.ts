@@ -4,14 +4,14 @@ import { DbxContentContainerDirective, DbxButtonSpacerDirective, DbxContentBorde
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
-import { NgIf, NgTemplateOutlet, AsyncPipe, JsonPipe } from '@angular/common';
+import { NgTemplateOutlet, AsyncPipe, JsonPipe } from '@angular/common';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
 import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 @Component({
   templateUrl: './context.component.html',
   standalone: true,
-  imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgIf, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe]
+  imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe]
 })
 export class DocActionContextComponent {
   beginWorking(action: DbxActionDirective) {

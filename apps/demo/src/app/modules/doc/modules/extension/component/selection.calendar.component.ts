@@ -1,14 +1,14 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, input } from '@angular/core';
 import { DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateDaysComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateRangeComponent } from '@dereekb/dbx-form/calendar';
 import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent } from '@dereekb/dbx-web';
-import { NgIf, AsyncPipe, JsonPipe } from '@angular/common';
+import { AsyncPipe, JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'doc-extension-calendar-schedule-example',
   template: `
-    <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
+    <dbx-schedule-selection-calendar [config]="config()"></dbx-schedule-selection-calendar>
     <dbx-content-border>
       <dbx-content-pit>
         <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
@@ -18,26 +18,27 @@ import { NgIf, AsyncPipe, JsonPipe } from '@angular/common';
         <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansion$ | async | json }}</p>
       </dbx-content-pit>
     </dbx-content-border>
-    <dbx-subsection *ngIf="!config" header="Selector Components">
-      <dbx-subsection header="dbx-schedule-selection-calendar-date-range" hint="Component used to control and set the date range.">
-        <dbx-schedule-selection-calendar-date-range [showCustomize]="true">
-          <dbx-schedule-selection-calendar-date-dialog-button customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
-        </dbx-schedule-selection-calendar-date-range>
+    @if (!config()) {
+      <dbx-subsection header="Selector Components">
+        <dbx-subsection header="dbx-schedule-selection-calendar-date-range" hint="Component used to control and set the date range.">
+          <dbx-schedule-selection-calendar-date-range [showCustomize]="true">
+            <dbx-schedule-selection-calendar-date-dialog-button customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
+          </dbx-schedule-selection-calendar-date-range>
+        </dbx-subsection>
+        <dbx-subsection header="dbx-schedule-selection-calendar-date-days" hint="Component used to pick days in the selection.">
+          <dbx-schedule-selection-calendar-date-days></dbx-schedule-selection-calendar-date-days>
+        </dbx-subsection>
       </dbx-subsection>
-      <dbx-subsection header="dbx-schedule-selection-calendar-date-days" hint="Component used to pick days in the selection.">
-        <dbx-schedule-selection-calendar-date-days></dbx-schedule-selection-calendar-date-days>
-      </dbx-subsection>
-    </dbx-subsection>
+    }
   `,
   providers: [DbxCalendarScheduleSelectionStore],
   standalone: true,
-  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxContentPitDirective, NgIf, DbxSubSectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateDaysComponent, AsyncPipe, JsonPipe]
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateDaysComponent, AsyncPipe, JsonPipe]
 })
 export class DocExtensionCalendarScheduleSelectionComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
-  @Input()
-  config?: Maybe<DbxScheduleSelectionCalendarComponentConfig>;
+  readonly config = input<Maybe<DbxScheduleSelectionCalendarComponentConfig>>();
 
   readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
   readonly currentSelectionValueDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateCellDurationSpanExpansion$;

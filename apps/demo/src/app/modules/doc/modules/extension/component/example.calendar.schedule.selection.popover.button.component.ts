@@ -1,5 +1,5 @@
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './example.calendar.schedule.selection.popover.component';
-import { Component, ElementRef, Injector, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, Injector, inject, viewChild } from '@angular/core';
 import { DbxPopoverService, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
 
@@ -16,10 +16,9 @@ export class DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonCompon
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
   readonly injector = inject(Injector);
 
-  @ViewChild('buttonPopoverOrigin', { read: ElementRef })
-  buttonPopoverOrigin!: ElementRef;
+  readonly buttonPopoverOrigin = viewChild.required('buttonPopoverOrigin', { read: ElementRef });
 
   openPopover() {
-    DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent.openPopover(this.popoverService, { origin: this.buttonPopoverOrigin, injector: this.injector });
+    DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent.openPopover(this.popoverService, { origin: this.buttonPopoverOrigin(), injector: this.injector });
   }
 }

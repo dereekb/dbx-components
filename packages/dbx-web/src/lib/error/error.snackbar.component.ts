@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, effect } from '@ang
 import { MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
 import { ErrorInput, MS_IN_MINUTE, makeTimer, toggleTimerRunning } from '@dereekb/util';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { from } from 'rxjs';
@@ -28,7 +28,7 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
     </div>
   `,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, DbxErrorComponent],
+  imports: [MatIconModule, MatButtonModule, DbxErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorSnackbarComponent {

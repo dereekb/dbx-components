@@ -1,6 +1,6 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
 import { NgPopoverCloseEvent } from 'ng-overlay-container';
-import { ChangeDetectorRef, ElementRef, Component, ViewChild, inject, AfterViewInit } from '@angular/core';
+import { ChangeDetectorRef, ElementRef, Component, inject, AfterViewInit, viewChild } from '@angular/core';
 import { DbxPopoverService, DbxContentContainerDirective, DbxSpacerDirective } from '@dereekb/dbx-web';
 import { DocInteractionExamplePopoverComponent } from '../component/interaction.popover.component';
 import { first } from 'rxjs';
@@ -21,21 +21,19 @@ export class DocInteractionPopoverComponent implements AfterViewInit {
 
   result?: NgPopoverCloseEvent<number>;
 
-  @ViewChild('popoverOrigin', { read: ElementRef })
-  popoverOrigin!: ElementRef;
+  readonly popoverOrigin = viewChild.required('popoverOrigin', { read: ElementRef });
 
-  @ViewChild('buttonPopoverOrigin', { read: ElementRef })
-  buttonPopoverOrigin!: ElementRef;
+  readonly buttonPopoverOrigin = viewChild.required('buttonPopoverOrigin', { read: ElementRef });
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePopover(), 100);
   }
 
   openExamplePopoverOnButton(key?: string) {
-    this.openExamplePopover(key, this.buttonPopoverOrigin);
+    this.openExamplePopover(key, this.buttonPopoverOrigin());
   }
 
-  openExamplePopover(key?: string, origin = this.popoverOrigin) {
+  openExamplePopover(key?: string, origin = this.popoverOrigin()) {
     DocInteractionExamplePopoverComponent.openPopover(
       this.dbxPopoverService,
       {

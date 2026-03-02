@@ -46,38 +46,52 @@
         <p>You can install the latest version of these projects from npm. Project versioning is synchronized across all packages. The latest version is {{ latestVersion }}.</p>
         <div>
           <div class="package-list">
-            <div class="package-list-item" *ngFor="let package of packages">
-              <h4>{{ package.name }}</h4>
-              <p>{{ package.description }}</p>
-              <div *ngIf="package.packages" class="package-primary-package-list">
-                <p class="dbx-label">Primary Packages</p>
-                <ng-container *ngFor="let anchor of package.packages; let last = last">
-                  <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
-                    <dbx-anchor-content class="dbx-link d-fiflex" [anchor]="anchor"></dbx-anchor-content>
-                  </dbx-anchor>
-                  <span class="dbx-button-spacer" *ngIf="!last">,</span>
-                </ng-container>
+            @for (package of packages; track package) {
+              <div class="package-list-item">
+                <h4>{{ package.name }}</h4>
+                <p>{{ package.description }}</p>
+                @if (package.packages) {
+                  <div class="package-primary-package-list">
+                    <p class="dbx-label">Primary Packages</p>
+                    @for (anchor of package.packages; track anchor; let last = $last) {
+                      <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
+                        <dbx-anchor-content class="dbx-link d-fiflex" [anchor]="anchor"></dbx-anchor-content>
+                      </dbx-anchor>
+                      @if (!last) {
+                        <span class="dbx-button-spacer">,</span>
+                      }
+                    }
+                  </div>
+                }
+                @if (package.children) {
+                  <div class="package-child-package-list">
+                    <p class="dbx-label">Child Packages</p>
+                    @for (child of package.children; track child; let last = $last) {
+                      <div class="package-child-package">
+                        <p class="package-name">{{ child.name }}</p>
+                        <p class="dbx-hint package-description">{{ child.description }}</p>
+                        @if (!last) {
+                          <p class="dbx-button-spacer"></p>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
               </div>
-              <div *ngIf="package.children" class="package-child-package-list">
-                <p class="dbx-label">Child Packages</p>
-                <div class="package-child-package" *ngFor="let child of package.children; let last = last">
-                  <p class="package-name">{{ child.name }}</p>
-                  <p class="dbx-hint package-description">{{ child.description }}</p>
-                  <p class="dbx-button-spacer" *ngIf="!last"></p>
-                </div>
-              </div>
-            </div>
+            }
           </div>
         </div>
         <div>
           <p>Other tools this project uses:</p>
           <div class="package-primary-package-list">
-            <ng-container *ngFor="let anchor of otherPackages; let last = last">
+            @for (anchor of otherPackages; track anchor; let last = $last) {
               <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
                 <dbx-anchor-content class="dbx-link d-fiflex" [anchor]="anchor"></dbx-anchor-content>
               </dbx-anchor>
-              <span class="dbx-button-spacer" *ngIf="!last">,</span>
-            </ng-container>
+              @if (!last) {
+                <span class="dbx-button-spacer">,</span>
+              }
+            }
           </div>
         </div>
       </dbx-content-container>

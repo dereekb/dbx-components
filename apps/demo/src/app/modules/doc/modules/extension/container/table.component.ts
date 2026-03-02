@@ -12,7 +12,7 @@ import { ExampleTableData, ExampleTableGroupData } from '../component/table.item
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { NgIf, AsyncPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { DocExtensionTableGroupHeaderExampleComponent } from '../component/table.group.header.example.component';
 import { DocExtensionTableGroupFooterExampleComponent } from '../component/table.group.footer.example.component';
@@ -32,7 +32,7 @@ const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ .
 @Component({
   templateUrl: './table.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, NgIf, MatButton, AsyncPipe]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton, AsyncPipe]
 })
 export class DocExtensionTableComponent implements OnDestroy, OnInit {
   readonly exampleInput: DateRangeDayDistanceInput = {

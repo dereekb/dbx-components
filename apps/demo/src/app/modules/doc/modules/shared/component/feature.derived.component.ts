@@ -1,7 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { MatIcon } from '@angular/material/icon';
-import { NgSwitch, NgSwitchCase } from '@angular/common';
 
 export type DocFeatureDerviedType = 'integrated' | 'uses';
 
@@ -11,16 +10,20 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
     <div class="doc-feature-derived">
       <dbx-content-box class="doc-feature-derived-content" style="margin-left: 0">
         <mat-icon class="dbx-icon-spacer">star</mat-icon>
-        <ng-container [ngSwitch]="type">
-          <span *ngSwitchCase="'integrated'">
-            Derived and integrated from
-            <a [href]="url" target="_blank">{{ from }}</a>
-          </span>
-          <span *ngSwitchCase="'uses'">
-            Uses
-            <a [href]="url" target="_blank">{{ from }}</a>
-          </span>
-        </ng-container>
+        @switch (type()) {
+          @case ('integrated') {
+            <span>
+              Derived and integrated from
+              <a [href]="url()" target="_blank">{{ from() }}</a>
+            </span>
+          }
+          @case ('uses') {
+            <span>
+              Uses
+              <a [href]="url()" target="_blank">{{ from() }}</a>
+            </span>
+          }
+        }
         <div>
           <ng-content></ng-content>
         </div>
@@ -28,15 +31,12 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
     </div>
   `,
   standalone: true,
-  imports: [DbxContentBoxDirective, MatIcon, NgSwitch, NgSwitchCase]
+  imports: [DbxContentBoxDirective, MatIcon]
 })
 export class DocFeatureDerivedComponent {
-  @Input()
-  type: DocFeatureDerviedType = 'integrated';
+  readonly type = input<DocFeatureDerviedType>('integrated');
 
-  @Input()
-  from!: string;
+  readonly from = input.required<string>();
 
-  @Input()
-  url!: string;
+  readonly url = input.required<string>();
 }

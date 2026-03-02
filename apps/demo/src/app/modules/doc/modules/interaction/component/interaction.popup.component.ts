@@ -1,4 +1,4 @@
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, PopupPosition, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DocInteractionExamplePopupContentComponent } from './interaction.popup.content.component';
@@ -23,8 +23,7 @@ export interface DocInteractionPopupConfig {
 export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> {
   private readonly popupService = inject(DbxPopupService);
 
-  @ViewChild(DocInteractionExamplePopupContentComponent, { static: true })
-  content!: DocInteractionExamplePopupContentComponent;
+  readonly content = viewChild.required(DocInteractionExamplePopupContentComponent);
 
   readonly header = 'example';
 

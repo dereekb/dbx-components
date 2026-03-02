@@ -8,7 +8,9 @@
         <h4>Idle State</h4>
         <p>The first is Idle. This action is waiting for the "trigger" event.</p>
         <button mat-raised-button (click)="action.trigger()">Trigger</button>
-        <p class="dbx-warn" *ngIf="action.sourceInstance.isDisabled$ | async">The action is disabled.</p>
+        @if (action.sourceInstance.isDisabled$ | async) {
+          <p class="dbx-warn">The action is disabled.</p>
+        }
         <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
         <!-- Triggered -->
         <h4>Triggered State</h4>

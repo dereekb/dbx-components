@@ -11,9 +11,13 @@
               <dbx-mapbox-layout (drawerOpenedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [openDrawer]="open$ | async" [drawerButtonColor]="color$ | async">
                 <!-- Drawer -->
                 <mgl-map dbxMapboxMap>
-                  <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
+                  @for (marker of mapboxDemoMarkers; track marker) {
+                    <dbx-mapbox-marker [marker]="marker"></dbx-mapbox-marker>
+                  }
                   <dbx-mapbox-markers [data]="mapboxMarkersData" [markerFactory]="mapboxMarkerFactory"></dbx-mapbox-markers>
-                  <doc-extension-mapbox-markers-example *ngIf="showMarkers$ | async" [locations]="addedMapboxMarkersData$ | async"></doc-extension-mapbox-markers-example>
+                  @if (showMarkers$ | async) {
+                    <doc-extension-mapbox-markers-example [locations]="addedMapboxMarkersData$ | async"></doc-extension-mapbox-markers-example>
+                  }
                 </mgl-map>
               </dbx-mapbox-layout>
               <dbx-mapbox-menu [matMenuTriggerFor]="menu"></dbx-mapbox-menu>
@@ -57,7 +61,9 @@
             <h4>dbx-mapbox-menu</h4>
             <p>The dbx-mapbox-menu component can be used to attach a mat-menu to the DbxMapboxStoreState directive.</p>
             <p>Right Click: {{ rightClick$ | async | json }}</p>
-            <p *ngIf="menuValue">Picked Item {{ menuValue }}</p>
+            @if (menuValue) {
+              <p>Picked Item {{ menuValue }}</p>
+            }
             <mat-menu #menu="matMenu">
               <button mat-menu-item (click)="clickMenuItem(1)">Item 1</button>
               <button mat-menu-item (click)="clickMenuItem(2)">Item 2</button>

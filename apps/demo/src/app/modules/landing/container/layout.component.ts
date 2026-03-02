@@ -5,7 +5,6 @@ import { DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, D
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
 import { MatDivider } from '@angular/material/divider';
-import { NgFor, NgIf } from '@angular/common';
 
 export interface LandingItem {
   name: string;
@@ -23,7 +22,7 @@ export interface LandingItemChild {
   templateUrl: './layout.component.html',
   styleUrls: ['../landing.scss'],
   standalone: true,
-  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, NgFor, NgIf, DbxAnchorContentComponent]
+  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, DbxAnchorContentComponent]
 })
 export class LandingLayoutComponent {
   readonly docsAnchor: ClickableAnchorLink = {
