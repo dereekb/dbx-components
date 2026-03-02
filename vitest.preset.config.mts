@@ -66,6 +66,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   let environment: VitestTestConfig['environment'] = 'node';
 
+  let isolate = false;
   let maxWorkers: number | undefined;
 
   const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
@@ -85,6 +86,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         throw new Error('projectSpecificSetupFiles is required for angular projects. See https://github.com/vitest-dev/vitest/issues/2029');
       }
       environment = 'jsdom';
+      isolate = true;
       break;
     case 'firebase':
       environment = 'node';
@@ -159,6 +161,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         exclude,
         setupFiles,
         reporters,
+        isolate: testConfig?.isolate ?? isolate,
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const

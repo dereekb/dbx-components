@@ -603,6 +603,12 @@ provideAppInitializer(() => {
 });
 ```
 
+### Update `project.json`
+- Update the build executor from `@angular-devkit/build-angular:application` to `@nx/angular:application`.
+- Update update the serve executor from `@angular-devkit/build-angular:dev-server` to `@nx/angular:dev-server`.
+
+You can remove the jest preset from `nx.json` after jest is removed entirely.
+
 ### Updated `.browserslistrc`
 - Updated `.browserslistrc` to use the versions that Angular 21 supports. That is:
 
