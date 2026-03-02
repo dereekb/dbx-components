@@ -42,7 +42,13 @@ const dependenciesToPullFromRootByName = ['mailgun.js'];
 
 dependenciesToPullFromRootByName.forEach((depName) => {
   if (!rootDependencies[depName]) {
-    throw new Error(`The dependency ${depName} was not found in package.json.`);
+    let message = `The dependency ${depName} was not found in package.json.`;
+
+    if (rootDevDependencies[depName]) {
+      message += ` It was however found in devDependencies, which might be a mistake. Please resolve issue.`;
+    }
+
+    throw new Error(message);
   }
 
   dependencies[depName] = rootDependencies[depName];

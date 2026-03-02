@@ -434,7 +434,7 @@ rm .env.tmp
 
 mkdir -p ./tools/scripts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/tools/scripts/release.mjs -o tools/scripts/release.mjs.tmp
-sed -e "s:dereekb';:dereekb'; \\# TODO: Replace with your github username:g" -e "s:dbx-components:$PROJECT_NAME:g" tools/scripts/release.mjs.tmp > tools/scripts/release.mjs
+sed -e "s|dereekb';|dereekb'; # TODO: Replace with your github username|g" -e "s:dbx-components:$PROJECT_NAME:g" tools/scripts/release.mjs.tmp > tools/scripts/release.mjs
 rm tools/scripts/release.mjs.tmp
 
 echo "SECRETS=" > .env.local
