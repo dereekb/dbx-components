@@ -1,3 +1,23 @@
+## [13.0.2](https://github.com/dereekb/dbx-components/compare/v13.0.1-dev...v13.0.2) (2026-03-02)
+
+
+### Build System
+
+- lint fix ([48618689](https://github.com/dereekb/dbx-components/commit/48618689d1ee25f5bbfd76067df998f82fb835b3))
+
+
+### Code Refactoring
+
+- added DbxLinkifyService ([b6168a92](https://github.com/dereekb/dbx-components/commit/b6168a92a3746d56092087d48f75bc499282c2ec))
+- fixed DbxMapboxMapDirective ([c6ef917f](https://github.com/dereekb/dbx-components/commit/c6ef917f45fdc3e4f27600253d994577bf3026eb))
+- ran angular migration on demo application ([c8a59020](https://github.com/dereekb/dbx-components/commit/c8a59020d5c232d7f26427b62c35dcf075cbf8ce))
+- release fix ([d2bd7a02](https://github.com/dereekb/dbx-components/commit/d2bd7a020e0bc7a388970b38402fc5a611cf7702))
+- style fixes ([ec4dc6d3](https://github.com/dereekb/dbx-components/commit/ec4dc6d3e54ff19994b5bb493a06e938a57cc4b6))
+- updated setup-project.sh ([0c158987](https://github.com/dereekb/dbx-components/commit/0c158987df5b308377c5263df9d50ba105224ffc))
+
+
+
+
 ## [13.0.1](https://github.com/dereekb/dbx-components/compare/v13.0.0-dev...v13.0.1) (2026-02-27)
 
 
