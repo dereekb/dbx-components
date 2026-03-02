@@ -93,10 +93,6 @@ $big-button-height: 46px; // 33% bigger
   $disabled-contrast-value: theming.$dbx-disabled-color-contrast;
 
   .mdc-button.dbx-base-button.dbx-color {
-    .mat-mdc-progress-bar {
-      --mat-progress-bar-active-indicator-color: #{$color-value};
-    }
-
     // default button
     &.dbx-default {
       color: var(--mat-button-text-label-text-color, var(--mat-sys-primary));
@@ -113,6 +109,10 @@ $big-button-height: 46px; // 33% bigger
       --mat-button-text-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
       --mat-button-text-state-layer-color: #{$color-value};
       --mat-progress-spinner-active-indicator-color: #{$color-value};
+
+      .mat-mdc-progress-bar {
+        --mat-progress-bar-active-indicator-color: #{$color-value};
+      }
     }
 
     // raised buttons

@@ -69,7 +69,6 @@ import { markStorageFileForDeleteTemplate, NotificationExpediteService, Notifica
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { AuthBlockingEvent } from 'firebase-functions/identity';
 
 // MARK: Demo Api Testing Fixture
 @Module({

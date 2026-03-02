@@ -1,5 +1,5 @@
 import { inject, Injectable, Type } from '@angular/core';
-import { ArrayOrValue, Maybe, asArray, cachedGetter, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
+import { ArrayOrValue, Maybe, cachedGetter, filterMaybeArrayValues, mapIterable, useIterableOrValue } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 
 export interface DbxFirebaseModelEntitiesWidgetEntry {
@@ -94,9 +94,7 @@ export class DbxFirebaseModelEntitiesWidgetService {
    * @param override Whether to override existing entries (default: true)
    */
   register(entries: ArrayOrValue<DbxFirebaseModelEntitiesWidgetEntry>, override: boolean = true): void {
-    const entriesArray = asArray(entries);
-
-    entriesArray.forEach((entry) => {
+    useIterableOrValue(entries, (entry) => {
       if (override || !this._entries.has(entry.identity)) {
         this._entries.set(entry.identity, entry);
       }

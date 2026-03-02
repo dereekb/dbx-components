@@ -20,6 +20,9 @@ import semver from 'semver';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+const githubReponsitoryOwner = 'dereekb';
+const githubReponsitoryName = 'dbx-components';
+
 const require = createRequire(import.meta.url);
 const { releasePublish, releaseVersion } = require('nx/release');
 
@@ -157,8 +160,8 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
   .context({
     version: nextVersion,
     host: 'https://github.com',
-    owner: 'dereekb',
-    repository: 'dbx-components',
+    owner: githubReponsitoryOwner,
+    repository: githubReponsitoryName,
     linkReferences: true,
   })
   .writer({
@@ -180,7 +183,7 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
 
       if (typeof subject === 'string') {
         subject = subject.replace(/#([0-9]+)/g, (_, issue) =>
-          `[#${issue}](https://github.com/dereekb/dbx-components/issues/${issue})`
+          `[#${issue}](https://github.com/${githubReponsitoryOwner}/${githubReponsitoryName}/issues/${issue})`
         );
       }
 
@@ -217,15 +220,20 @@ const commitLog = execSync(`git log ${fromTag}..HEAD --format="%s%n%n%b" --no-me
 
 const commitMessage = commitLog ? `${commitSubject}\n\n${commitLog}` : commitSubject;
 
+const releaseTag = `v${nextVersion}`;
+
 if (!dryRun) {
   console.log('Staging and committing release changes...\n');
   execSync('git add -A', { stdio: 'inherit' });
   execFileSync('git', ['commit', '--no-verify', '-m', commitMessage], { stdio: 'inherit' });
-  console.log('');
+
+  console.log(`\nTagging ${releaseTag}...\n`);
+  execFileSync('git', ['tag', '-a', releaseTag, '-m', releaseTag], { stdio: 'inherit' });
 } else {
   console.log('--- Commit message ---');
   console.log(commitMessage);
   console.log('--- End commit message ---\n');
+  console.log(`Would tag: ${releaseTag}\n`);
 }
 
 // -- Step 5: Publish (optional) ----------------------------------------------

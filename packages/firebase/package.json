@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase",
-  "version": "13.0.1",
+  "version": "13.0.2",
   "exports": {
     "./test": {
       "module": "./test/index.esm.js",
@@ -10,10 +10,10 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.0.1",
-    "@dereekb/model": "13.0.1",
-    "@dereekb/rxjs": "13.0.1",
-    "@dereekb/util": "13.0.1",
+    "@dereekb/date": "13.0.2",
+    "@dereekb/model": "13.0.2",
+    "@dereekb/rxjs": "13.0.2",
+    "@dereekb/util": "13.0.2",
     "@firebase/rules-unit-testing": "5.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",

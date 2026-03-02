@@ -603,6 +603,57 @@ provideAppInitializer(() => {
 });
 ```
 
+### Updated `.browserslistrc`
+- Updated `.browserslistrc` to use the versions that Angular 21 supports. That is:
+
+```
+last 2 Chrome version
+last 1 Firefox version
+last 2 Edge major versions
+last 2 Safari major version
+last 2 iOS major versions
+Firefox ESR
+not IE 9-11
+```
+
+If you don't make this update, you might see errors like:
+
+```
+One or more browsers which are configured in the project's Browserslist configuration fall outside Angular's browser support for this version.
+Unsupported browsers:
+ios_saf 16.3, ios_saf 16.2, ios_saf 16.1, ios_saf 16.0, safari 16.3, safari 16.2, safari 16.1, safari 16.0
+```
+
+### Angular Migration Scripts
+
+#### Setting Up The Repo
+You might want to use some of the angular migration tools, such as:
+
+```npx nx g @angular/core:standalone```
+
+You can find the full list of available migrations here: https://angular.dev/reference/migrations
+
+This schematic will update all Angular files to use the new standalone configurations, but it does require the below fix to run.
+
+The dbx-components library is unaffected by these migrations in particular. However, you can resolve the issue with the following steps describe in this issue:
+
+https://github.com/nrwl/nx/issues/20172#issuecomment-1825783434
+
+The command-line steps we used are as follow:
+
+- run ```nx g @nx/plugin:plugin tools/my-plugin```. Just use the "my-plugin" name as-is, this is only temporary:
+- run ```nx generate @nx/plugin:generator tools/my-plugin/src/generators/my-generator```
+- copy the files from the `@dereekb/dbx-components` repo
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` or ```npx nx generate my-generator``` (the option depends on the generator value in `generators.json`) and answer "false" to the question
+- run ```npx nx migrate --run-migrations```. This may take a while depending on the size of the project.
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` or ```npx nx generate my-generator``` (the option depends on the generator value in `generators.json`) and answer "true" to the question to undo the generator's changes
+
+Additionally, some scripts may require that you update the `tsconfig.json` of the project you want to update, temporarily. For example, `@angular/core:cleanup-unused-imports` will not detect any files since the  uses `tsconfig.json` but our builds will be using `tsconfig.lib.json`
+
+The generator in this project sets it properly, but if you don't see any changes, double check which tsconfig is being used by the generator.
+
+(After doing this step it is a good idea to commit the changes on git before continuing)
+
 ## Updated Release Process
 
 In v12, releases were handled by `@jscutlery/semver`. In v13, we migrated to Nx Release (see [nx-release-migration.md](nx-release-migration.md) for that initial migration). However, Nx Release's built-in conventional commit analysis has issues with our branching strategy — develop gets force-merged onto main as a single release commit, which causes `main..develop` to include the full diverged history and produce incorrect version bumps (e.g. major instead of patch).

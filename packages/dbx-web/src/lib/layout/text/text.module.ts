@@ -4,7 +4,7 @@ import { DbxDetailBlockComponent } from './detail.block.component';
 import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 import { DbxIconSpacerDirective } from './icon.spacer.component';
 import { DbxLabelBlockComponent } from './label.block.component';
-import { DbxLinkifyComponent } from './linkify.component';
+import { DbxLinkifyComponent } from './linkify/linkify.component';
 import { DbxChipDirective } from './text.chip.directive';
 import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxNumberWithLimitComponent } from './number.limit.component';

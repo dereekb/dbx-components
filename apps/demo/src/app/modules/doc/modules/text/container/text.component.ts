@@ -1,6 +1,6 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
-import { Component } from '@angular/core';
+import { TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, type DbxLinkifyConfig, DbxLinkifyService, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
+import { Component, inject } from '@angular/core';
 import { UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -13,6 +13,31 @@ import { LOREM } from '../../shared';
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxNumberWithLimitComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent]
 })
 export class DocTextTextComponent {
+  private readonly dbxLinkifyService = inject(DbxLinkifyService);
+
+  constructor() {
+    this.dbxLinkifyService.register({
+      type: 'truncated',
+      options: { defaultProtocol: 'https', target: { url: '_blank' }, truncate: 30 }
+    });
+  }
+
+  readonly noTargetLinkifyConfig: DbxLinkifyConfig = { type: 'no-target' };
+  readonly truncatedLinkifyConfig: DbxLinkifyConfig = { type: 'truncated' };
+  readonly inlineOptionsLinkifyConfig: DbxLinkifyConfig = {
+    options: {
+      defaultProtocol: 'https',
+      target: { url: '_blank' },
+      rel: 'noopener noreferrer',
+      className: 'dbx-primary',
+      truncate: 40,
+      format: (value, type) => (type === 'url' ? `🔗 ${value}` : value),
+      attributes: {
+        title: 'Click to visit this link'
+      }
+    }
+  };
+
   readonly fullAddress: UnitedStatesAddressWithContact = {
     name: 'John Doe',
     phone: '123-456-7890',
@@ -48,6 +73,7 @@ export class DocTextTextComponent {
   readonly loremBg = `COLORED BACKGROUND: ` + LOREM;
 
   readonly linkify = `this feature is powered by https://linkify.js.org/`;
+  readonly linkifyWithLongerUrl = `This is the docs url: https://linkify.js.org/docs/linkify-react.html`;
 
   readonly chips: TextChip[] = [
     {

@@ -9,6 +9,18 @@
       <dbx-content-pit>
         <dbx-linkify text="www.google.com"></dbx-linkify>
       </dbx-content-pit>
+      <p>The 'no-target' type (configured in root.app.config.ts) opens links in the same tab.</p>
+      <dbx-content-pit>
+        <dbx-linkify [text]="linkify" [config]="noTargetLinkifyConfig"></dbx-linkify>
+      </dbx-content-pit>
+      <p>The 'truncated' type (registered in the component) truncates long URLs to 30 characters.</p>
+      <dbx-content-pit>
+        <dbx-linkify [text]="linkifyWithLongerUrl" [config]="truncatedLinkifyConfig"></dbx-linkify>
+      </dbx-content-pit>
+      <p>Inline options can be passed directly via config. This example adds a custom class, emoji prefix, truncation, rel attribute, and title tooltip to links.</p>
+      <dbx-content-pit>
+        <dbx-linkify [text]="linkifyWithLongerUrl" [config]="inlineOptionsLinkifyConfig"></dbx-linkify>
+      </dbx-content-pit>
     </doc-feature-example>
     <doc-feature-example header="dbx-text-chips" hint="Displays a number of chips within a mat-chip-set, with an optional tooltip.">
       <dbx-text-chips [defaultSelection]="true" [chips]="chips"></dbx-text-chips>

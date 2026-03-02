@@ -17,9 +17,21 @@ function manipulateProjectTarget(
   project: ProjectConfiguration,
   remove = false
 ) {
-  const tsconfigPath = project.root + '/tsconfig.json';
+
+  let tsConfigName = 'tsconfig.json';
+
+  // Find the tsconfig used by the build so angular has the proper target
+  Object.entries(project.targets ?? {}).forEach(([targetName, value]) => {
+    if ((targetName === 'build' || targetName === 'build-base') && (value.executor === '@nx/angular:package' || value.executor === '@nx/angular:application') && value.options?.tsConfig) {
+      const tsConfigPath = value.options.tsConfig;
+      tsConfigName = tsConfigPath.split('/').pop() ?? tsConfigPath;
+    }
+  });
+
+  const tsconfigPath = project.root + '/' + tsConfigName;
+
   if (!tree.exists(tsconfigPath)) {
-    console.error(`[${project.root}]`, `Can't find tsconfig.json`);
+    console.error(`[${project.root}]`, `Can't find ${tsConfigName}`);
     return;
   }
 

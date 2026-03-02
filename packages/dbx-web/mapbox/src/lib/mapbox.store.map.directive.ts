@@ -1,7 +1,7 @@
 import { DbxMapboxService } from './mapbox.service';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Directive, inject } from '@angular/core';
-import { MapComponent, MapService } from 'ngx-mapbox-gl';
+import { MAP_COMPONENT_INITIALIZATION_OPTIONS, MapComponent, MapService } from 'ngx-mapbox-gl';
 
 /**
  * Directive that configures a MapComponent with content from DbxMapboxService. Connects a host MapService to a parent DbxMapboxMapStore if available.
@@ -9,12 +9,11 @@ import { MapComponent, MapService } from 'ngx-mapbox-gl';
 @Directive({
   selector: '[dbxMapboxMap]',
   providers: [
-    /*    {
-          provide: MAP_COMPONENT_INITIALIZATION_OPTIONS,
-          useFactory: (dbxMapboxService: DbxMapboxService) => dbxMapboxService.initializationOptions(),
-          deps: [DbxMapboxService]
-        }
-    */
+    {
+      provide: MAP_COMPONENT_INITIALIZATION_OPTIONS,
+      useFactory: (dbxMapboxService: DbxMapboxService) => dbxMapboxService.initializationOptions(),
+      deps: [DbxMapboxService]
+    }
   ],
   standalone: true
 })

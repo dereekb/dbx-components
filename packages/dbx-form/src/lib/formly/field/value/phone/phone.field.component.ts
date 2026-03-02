@@ -6,7 +6,7 @@ import { E164PhoneNumber, E164PhoneNumberExtensionPair, Maybe, e164PhoneNumberEx
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { combineLatest, distinctUntilChanged, map, startWith } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -31,7 +31,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 @Component({
   templateUrl: 'phone.field.component.html',
-  imports: [CommonModule, MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatInputTelComponent],
+  imports: [MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatInputTelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

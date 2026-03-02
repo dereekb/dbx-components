@@ -33,7 +33,7 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MapComponent } from 'ngx-mapbox-gl';
-import { NgFor, NgIf, AsyncPipe, JsonPipe } from '@angular/common';
+import { AsyncPipe, JsonPipe } from '@angular/common';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
@@ -56,10 +56,8 @@ import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereek
     DbxMapboxLayoutVirtualResizeSyncComponent,
     MapComponent,
     DbxMapboxMapDirective,
-    NgFor,
     DbxMapboxMarkerComponent,
     DbxMapboxMarkersComponent,
-    NgIf,
     DocExtensionMapboxMarkersExampleComponent,
     DbxMapboxMenuComponent,
     MatMenuTrigger,

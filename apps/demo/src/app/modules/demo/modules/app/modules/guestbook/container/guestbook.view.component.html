@@ -3,16 +3,24 @@
     <dbx-two-block class="guestbook-view">
       <div top class="guestbook-view-header">
         <h2>{{ name$ | async }}</h2>
-        <div [ngSwitch]="guestbookEntry.exists$ | async">
-          <div *ngSwitchCase="true">
-            <p class="dbx-note">You have signed this guest book.</p>
-            <p class="dbx-note" *ngIf="guestbookEntry.unpublished$ | async">Your entry is not public.</p>
-            <dbx-button [raised]="true" color="primary" text="Edit Your Entry" (buttonClick)="openEntry()"></dbx-button>
-          </div>
-          <div *ngSwitchCase="false">
-            <p class="dbx-note">You have not created an entry in this guest book.</p>
-            <dbx-button [raised]="true" color="primary" text="Create Entry" (buttonClick)="openEntry()"></dbx-button>
-          </div>
+        <div>
+          @switch (guestbookEntry.exists$ | async) {
+            @case (true) {
+              <div>
+                <p class="dbx-note">You have signed this guest book.</p>
+                @if (guestbookEntry.unpublished$ | async) {
+                  <p class="dbx-note">Your entry is not public.</p>
+                }
+                <dbx-button [raised]="true" color="primary" text="Edit Your Entry" (buttonClick)="openEntry()"></dbx-button>
+              </div>
+            }
+            @case (false) {
+              <div>
+                <p class="dbx-note">You have not created an entry in this guest book.</p>
+                <dbx-button [raised]="true" color="primary" text="Create Entry" (buttonClick)="openEntry()"></dbx-button>
+              </div>
+            }
+          }
         </div>
       </div>
       <div class="guestbook-view-content" demoGuestbookEntryCollection [constraints]="entryConstraints" dbxFirebaseCollectionChange="auto">

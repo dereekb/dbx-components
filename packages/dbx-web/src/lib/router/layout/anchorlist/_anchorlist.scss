@@ -10,24 +10,25 @@ $anchor-list-item-active-opacity: 100%;
 
 $active-child-item-left-padding: 2px;
 
-$default-anchor-list-item-child-list-item-icon-size: 20px;
 $default-anchor-list-item-child-list-item-text-size: 14px;
+$default-mdc-list-list-item-leading-icon-size: 24px;
 
 // MARK: Mixin
 @mixin core() {
   .dbx-anchor-list.mat-mdc-nav-list {
     padding-top: 0; // no padding
-    --parent-mdc-list-list-item-leading-icon-size: var(--mdc-list-list-item-leading-icon-size);
+    --parent-mdc-list-list-item-leading-icon-size: var(--mdc-list-list-item-leading-icon-size, #{$default-mdc-list-list-item-leading-icon-size});
+    --parent-mdc-list-list-item-label-text-size: var(--mdc-list-list-item-label-text-size, #{$default-anchor-list-item-child-list-item-text-size});
 
     .mat-mdc-list-item .mat-icon.mat-mdc-list-item-icon {
-      font-size: var(--mdc-list-list-item-leading-icon-size);
-      padding-left: calc((var(--parent-mdc-list-list-item-leading-icon-size) - var(--mdc-list-list-item-leading-icon-size)) / 2); // align the icons
+      font-size: var(--mdc-list-list-item-leading-icon-size, var(--parent-mdc-list-list-item-leading-icon-size));
+      padding-left: calc((var(--parent-mdc-list-list-item-leading-icon-size) - var(--mdc-list-list-item-leading-icon-size, var(--parent-mdc-list-list-item-leading-icon-size))) / 2); // align the icons
     }
 
     .dbx-anchor-list-child {
       // text and icon size text is smaller
-      --mdc-list-list-item-leading-icon-size: var(--dbx-anchor-list-item-child-list-item-icon-size, #{$default-anchor-list-item-child-list-item-icon-size});
-      --mdc-list-list-item-label-text-size: var(--dbx-anchor-list-item-child-list-item-text-size, #{$default-anchor-list-item-child-list-item-text-size});
+      --mdc-list-list-item-leading-icon-size: var(--dbx-anchor-list-item-child-list-item-icon-size, var(--parent-mdc-list-list-item-leading-icon-size));
+      --mdc-list-list-item-label-text-size: var(--dbx-anchor-list-item-child-list-item-text-size, var(--parent-mdc-list-list-item-label-text-size));
 
       .mat-mdc-list-item .mdc-list-item__content {
         padding-left: $active-child-item-left-padding;

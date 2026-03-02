@@ -36,7 +36,6 @@ import { AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective 
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { NgIf } from '@angular/common';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -120,7 +119,7 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
 @Component({
   templateUrl: './selection.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, NgIf, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule]
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);
@@ -542,7 +541,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       anchorForValue: (fieldValue) => {
         return {
           onClick: () => {
-            (this.valueClicked = `Default anchor click: ${fieldValue.value}`), safeDetectChanges(this.cdRef);
+            ((this.valueClicked = `Default anchor click: ${fieldValue.value}`), safeDetectChanges(this.cdRef));
           }
         };
       }
@@ -560,7 +559,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
             ...x,
             anchor: {
               onClick: () => {
-                (this.valueClicked = `Per item value: ${x.value}`), safeDetectChanges(this.cdRef);
+                ((this.valueClicked = `Per item value: ${x.value}`), safeDetectChanges(this.cdRef));
               }
             }
           }))
