@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { DEFAULT_DBX_LINKIFY_STRING_TYPE, type DbxLinkifyStringType, type DbxLinkifyStringOptions } from './linkify';
-import { type ArrayOrValue, type Maybe, asArray, useIterableOrValue } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe, useIterableOrValue } from '@dereekb/util';
 
 export interface DbxLinkifyServiceEntry {
   readonly type: DbxLinkifyStringType;

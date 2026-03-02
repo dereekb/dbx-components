@@ -1,4 +1,4 @@
-import linkifyStr from 'linkify-string';
+import type linkifyStr from 'linkify-string';
 
 /**
  * The default linkify string type.
