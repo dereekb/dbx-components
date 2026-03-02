@@ -220,15 +220,20 @@ const commitLog = execSync(`git log ${fromTag}..HEAD --format="%s%n%n%b" --no-me
 
 const commitMessage = commitLog ? `${commitSubject}\n\n${commitLog}` : commitSubject;
 
+const releaseTag = `v${nextVersion}`;
+
 if (!dryRun) {
   console.log('Staging and committing release changes...\n');
   execSync('git add -A', { stdio: 'inherit' });
   execFileSync('git', ['commit', '--no-verify', '-m', commitMessage], { stdio: 'inherit' });
-  console.log('');
+
+  console.log(`\nTagging ${releaseTag}...\n`);
+  execFileSync('git', ['tag', '-a', releaseTag, '-m', releaseTag], { stdio: 'inherit' });
 } else {
   console.log('--- Commit message ---');
   console.log(commitMessage);
   console.log('--- End commit message ---\n');
+  console.log(`Would tag: ${releaseTag}\n`);
 }
 
 // -- Step 5: Publish (optional) ----------------------------------------------

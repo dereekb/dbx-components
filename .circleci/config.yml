@@ -224,7 +224,7 @@ jobs:
           command: echo -e "export DEV_TAG_ID=$(git describe --tags --abbrev=0 HEAD^)\nTAG_ID=$(git describe --tags --abbrev=0)" >> $BASH_ENV
       - run:
           # copy the commit message before we swap branches, or it will include unrelated changes. Move tag to the main branch after making the merge commit into main
-          name: merge release into main and use the release commit message, move tag from release to main
+          name: merge release into main and use the release commit message, move new tag from release to main
           command: COMMIT_MESSAGE=$(git log $DEV_TAG_ID..release --pretty=%B | cat) && echo "merging new release ($TAG_ID) into main. Adding all commits since last dev tag ($DEV_TAG_ID)" && git checkout main && git merge release --squash -Xtheirs && git commit --no-verify -m "$COMMIT_MESSAGE" && git tag -f $TAG_ID
       - run:
           name: push main to origin, push new tag to origin
