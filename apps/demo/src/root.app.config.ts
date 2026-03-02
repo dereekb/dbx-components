@@ -17,7 +17,6 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
 import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
-
 import { metaReducers, ROOT_REDUCER } from './app/state/app.state';
 
 // MARK: DbxAnalytics
