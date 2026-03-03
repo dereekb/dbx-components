@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoho",
-  "version": "13.0.2",
+  "version": "13.0.3",
   "exports": {
     "./nestjs": {
       "module": "./nestjs/index.esm.js",
@@ -10,7 +10,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "13.0.2",
+    "@dereekb/util": "13.0.3",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "make-error": "^1.3.0"
