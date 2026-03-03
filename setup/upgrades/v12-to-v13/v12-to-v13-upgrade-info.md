@@ -547,6 +547,20 @@ No major issues in updating Firebase. The majority of the codebase changes were 
 
 All gen 1 functions have been removed as Gen 2 is in pairity now.
 
+### firebase.json
+Update `firebase.json` functions to target node 24.
+
+```json
+  "functions": {
+    "source": "dist/apps/hellosubs-api",
+    "runtime": "nodejs24",
+    "engines": {
+      "node": "24"
+    },
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+```
+
 ### initUserOnCreate
 The demo initUserOnCreate function has been updated to use the new Gen 2 blocking event api.
 
@@ -602,6 +616,12 @@ provideAppInitializer(() => {
 
 });
 ```
+
+### Update `project.json`
+- Update the build executor from `@angular-devkit/build-angular:application` to `@nx/angular:application`.
+- Update update the serve executor from `@angular-devkit/build-angular:dev-server` to `@nx/angular:dev-server`.
+
+You can remove the jest preset from `nx.json` after jest is removed entirely.
 
 ### Updated `.browserslistrc`
 - Updated `.browserslistrc` to use the versions that Angular 21 supports. That is:

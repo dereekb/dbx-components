@@ -155,9 +155,11 @@ function resolveVersion(pkgName) {
  */
 function sortKeys(obj) {
   const sorted = {};
+  
   for (const key of Object.keys(obj).sort()) {
     sorted[key] = obj[key];
   }
+
   return sorted;
 }
 
@@ -169,7 +171,13 @@ function sortKeys(obj) {
 const packageFiles = glob.sync('packages/**/package.json', {
   cwd: ROOT_DIR,
   ignore: ['**/node_modules/**'],
-  absolute: true,
+  absolute: true
+});
+
+const appPackageFiles = glob.sync('apps/**/package.json', {
+  cwd: ROOT_DIR,
+  ignore: ['**/node_modules/**'],
+  absolute: true
 });
 
 if (REMOVE_UNUSED) {
@@ -178,11 +186,14 @@ if (REMOVE_UNUSED) {
 
 let totalUpdated = 0;
 
-for (const pkgPath of packageFiles) {
+const targetFiles = [...appPackageFiles, ...packageFiles];
+
+for (const pkgPath of targetFiles) {
   const relPath = relative(ROOT_DIR, pkgPath);
   const pkgDir = dirname(pkgPath);
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
   const ownPkgName = pkg.name;
+  // const isApp = pkgPath.includes('/apps/');
 
   if (!ownPkgName) continue;
 
@@ -337,7 +348,10 @@ for (const pkgPath of packageFiles) {
 
   // Sort and write
   if (!DRY_RUN) {
-    if (pkg.peerDependencies) pkg.peerDependencies = sortKeys(pkg.peerDependencies);
+    if (pkg.peerDependencies) {
+      pkg.peerDependencies = sortKeys(pkg.peerDependencies);
+    }
+
     if (pkg.devDependencies) {
       if (Object.keys(pkg.devDependencies).length === 0) {
         delete pkg.devDependencies;
@@ -345,6 +359,7 @@ for (const pkgPath of packageFiles) {
         pkg.devDependencies = sortKeys(pkg.devDependencies);
       }
     }
+
     writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
   }
 }

@@ -1,3 +1,14 @@
+## [13.0.3](https://github.com/dereekb/dbx-components/compare/v13.0.2-dev...v13.0.3) (2026-03-03)
+
+
+### Code Refactoring
+
+- sidenav fix ([b368b2eb](https://github.com/dereekb/dbx-components/commit/b368b2eb9356f770d31985f89c0095b35b4871ff))
+- updated vitest config ([39ff2d2c](https://github.com/dereekb/dbx-components/commit/39ff2d2c400af6ce0c6f1e71d9be39f67411b908))
+
+
+
+
 ## [13.0.2](https://github.com/dereekb/dbx-components/compare/v13.0.1-dev...v13.0.2) (2026-03-02)
 
 

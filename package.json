@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.0.2",
+  "version": "13.0.3",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal 2>&1 /dev/null; fi",
@@ -25,9 +25,9 @@
     "@angular/platform-browser-dynamic": "^21.0.0",
     "@angular/router": "^21.0.0",
     "@bobbyquantum/ngx-editor": "21.0.0-beta.1",
-    "@google-cloud/firestore": "^7.0.0",
-    "@google-cloud/pubsub": "^5.0.0",
-    "@google-cloud/storage": "^7.0.0",
+    "@google-cloud/firestore": "^7.11.6",
+    "@google-cloud/pubsub": "^5.3.0",
+    "@google-cloud/storage": "^7.19.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
