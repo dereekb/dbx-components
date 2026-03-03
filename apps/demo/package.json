@@ -1,6 +1,36 @@
 {
+  "name": "demo",
   "version": "13.0.2",
   "engines": {
     "node": ">=24.0.0"
+  },
+  "peerDependencies": {
+    "@angular/common": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/material": "^21.0.0",
+    "@angular/platform-browser": "^21.0.0",
+    "@dereekb/browser": "13.0.2",
+    "@dereekb/date": "13.0.2",
+    "@dereekb/dbx-analytics": "13.0.2",
+    "@dereekb/dbx-core": "13.0.2",
+    "@dereekb/dbx-firebase": "13.0.2",
+    "@dereekb/dbx-form": "13.0.2",
+    "@dereekb/dbx-web": "13.0.2",
+    "@dereekb/firebase": "13.0.2",
+    "@dereekb/rxjs": "13.0.2",
+    "@dereekb/util": "13.0.2",
+    "@ngbracket/ngx-layout": "^21.0.0",
+    "@ngrx/effects": "^21.0.0",
+    "@ngrx/store": "^21.0.0",
+    "@ngrx/store-devtools": "^21.0.0",
+    "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
+    "@ngx-formly/material": "git+https://git@github.com/dereekb/ngx-formly#02e615006744374a587b5d35de3b2d137e2e05a8",
+    "@uirouter/angular": "21.0.0",
+    "angular-calendar": "^0.32.0",
+    "change-case-all": "^2.1.0",
+    "date-fns": "^4.0.0",
+    "ng-overlay-container": "^21.0.0",
+    "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
+    "rxjs": "^7.8.0"
   }
 }

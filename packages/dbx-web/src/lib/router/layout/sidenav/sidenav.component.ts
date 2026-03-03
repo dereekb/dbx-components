@@ -1,14 +1,14 @@
 import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, effect } from '@angular/core';
 import { MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
-import { AbstractTransitionWatcherDirective, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, cleanSubscription, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { SideNavDisplayMode } from './sidenav';
 import { NgClass } from '@angular/common';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
+import { distinctUntilChanged, map, Observable, shareReplay, Subscription } from 'rxjs';
 import { DbxColorDirective } from '../../../layout/style/style.color.directive';
 import { DbxThemeColor } from '../../../layout/style/style';
 import { ThemePalette } from '@angular/material/core';
@@ -44,6 +44,7 @@ export interface DbxSidenavSidebarState {
   standalone: true
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective {
+  private readonly _sidenavSub = cleanSubscription();
   private readonly _screenMediaService = inject(DbxScreenMediaService);
 
   readonly color = input<ThemePalette | DbxThemeColor>(undefined);
@@ -80,40 +81,46 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective {
   readonly disableBackdropSignal = computed(() => this.modeSignal() !== SideNavDisplayMode.MOBILE);
   readonly sizeCssClassSignal = computed(() => `dbx-sidenav-${this.modeSignal()}`);
 
-  readonly stateSignal = computed(() => {
-    const mode = this.modeSignal();
+  readonly state$ = this.mode$.pipe(
+    map((mode) => {
+      let drawer: MatDrawerMode = 'over';
+      let open: boolean = true;
 
-    let drawer: MatDrawerMode = 'over';
-    let open: boolean = false;
+      switch (mode) {
+        case SideNavDisplayMode.MOBILE:
+          drawer = 'over';
+          open = false;
+          break;
+        case SideNavDisplayMode.ICON:
+        case SideNavDisplayMode.FULL:
+          drawer = 'side';
+          open = true; // always show
+          break;
+      }
 
-    switch (mode) {
-      case SideNavDisplayMode.MOBILE:
-        drawer = 'over';
-        open = false;
-        break;
-      case SideNavDisplayMode.ICON:
-      case SideNavDisplayMode.FULL:
-        drawer = 'side';
-        open = true;
-        break;
-    }
+      return {
+        mode,
+        drawer,
+        open
+      };
+    }),
+    distinctUntilChanged((a, b) => a.mode === b.mode && a.drawer === b.drawer && a.open === b.open),
+    shareReplay(1)
+  );
 
-    return {
-      mode,
-      drawer,
-      open
-    };
-  });
+  readonly stateSignal = toSignal(this.state$);
+  readonly drawerSignal = computed(() => this.stateSignal()?.drawer ?? 'over');
 
-  readonly drawerSignal = computed(() => this.stateSignal().drawer);
-
-  protected readonly _stateSignalToggleEffect = effect(() => {
-    const state = this.stateSignal();
-
-    if (state.open != null) {
-      this._toggleNav(state.open, true);
-    }
-  });
+  ngOnInit() {
+    // wait until the child sidenav has initialized
+    this._sidenavSub.setSub(
+      this.state$.subscribe((state) => {
+        if (state?.open != null) {
+          this._toggleNav(state.open, true);
+        }
+      })
+    );
+  }
 
   protected updateForSuccessfulTransition(): void {
     this.closeNav();
@@ -130,7 +137,7 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective {
   private _toggleNav(toggleOpen?: Maybe<boolean>, forced = false): void {
     toggleOpen = toggleOpen ?? !this.sidenav().opened;
 
-    const mode = this.stateSignal().mode;
+    const mode = this.stateSignal()?.mode;
 
     let open: Maybe<boolean>;
 

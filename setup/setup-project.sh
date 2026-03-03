@@ -557,7 +557,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/set
 sed -e "s/CI_GIT_USER_EMAIL/$CI_GIT_USER_EMAIL/g" -e "s/CI_GIT_USER_NAME/$CI_GIT_USER_NAME/g" -e "s/ANGULAR_APP_NAME/$ANGULAR_APP_NAME/g"  -e "s/API_APP_NAME/$API_APP_NAME/g" -e "s/E2E_APP_NAME/$E2E_APP_NAME/g" .circleci/config.yml.tmp > .circleci/config.yml
 rm .circleci/config.yml.tmp
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/make-api-package.js -o make-api-package.js.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/make-api-package.js -o make-api-package.js.tmp
 sed -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" make-api-package.js.tmp > make-api-package.js
 rm make-api-package.js.tmp
 

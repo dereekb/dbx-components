@@ -78,6 +78,5 @@ vitest.config.*.timestamp*
 .nx
 .VSCodeCounter
 
-# Apps Package.json
-/apps/demo-api/package.json
+# Setup
 setup/.tmp

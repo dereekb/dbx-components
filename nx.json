@@ -25,7 +25,7 @@
     "@nx/webpack:webpack": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production", "{projectRoot}/package.json", "{projectRoot}/**/*.ts", "{projectRoot}/*.config.*"]
     },
     "build": {
       "dependsOn": ["^build"],

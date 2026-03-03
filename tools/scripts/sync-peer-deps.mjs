@@ -38,6 +38,12 @@ const packageFiles = glob.sync('packages/**/package.json', {
   absolute: true
 });
 
+const appPackageFiles = glob.sync('apps/**/package.json', {
+  cwd: ROOT_DIR,
+  ignore: ['**/node_modules/**'],
+  absolute: true
+});
+
 /**
  * Returns true if the version string is a URL (file:, https:, git+, ssh:, etc.)
  */
@@ -77,7 +83,9 @@ function resolveDevDepVersion(currentVersion, rootVer) {
 
 let totalUpdated = 0;
 
-for (const pkgPath of packageFiles) {
+const targetFiles = [...appPackageFiles, ...packageFiles];
+
+for (const pkgPath of targetFiles) {
   const relPath = relative(ROOT_DIR, pkgPath);
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
 

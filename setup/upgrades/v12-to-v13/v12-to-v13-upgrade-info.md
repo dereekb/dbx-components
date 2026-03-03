@@ -547,6 +547,20 @@ No major issues in updating Firebase. The majority of the codebase changes were 
 
 All gen 1 functions have been removed as Gen 2 is in pairity now.
 
+### firebase.json
+Update `firebase.json` functions to target node 24.
+
+```json
+  "functions": {
+    "source": "dist/apps/hellosubs-api",
+    "runtime": "nodejs24",
+    "engines": {
+      "node": "24"
+    },
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+```
+
 ### initUserOnCreate
 The demo initUserOnCreate function has been updated to use the new Gen 2 blocking event api.
 
