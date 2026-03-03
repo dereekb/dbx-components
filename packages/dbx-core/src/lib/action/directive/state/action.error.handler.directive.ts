@@ -2,7 +2,7 @@ import { map, tap, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, inject, input } from '@angular/core';
 import { ReadableError, type Maybe } from '@dereekb/util';
-import { cleanSubscription } from '../../../rxjs';
+import { cleanSubscription, cleanSubscriptionWithLockSet } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -25,8 +25,9 @@ export class DbxActionErrorHandlerDirective<T, O> {
   readonly errorFunction$ = toObservable(this.dbxActionErrorHandler).pipe(filterMaybe(), shareReplay(1));
 
   constructor() {
-    cleanSubscription(
-      this.errorFunction$
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.errorFunction$
         .pipe(
           switchMap((errorFunction) =>
             this.source.error$.pipe(
@@ -39,6 +40,6 @@ export class DbxActionErrorHandlerDirective<T, O> {
           )
         )
         .subscribe()
-    );
+    });
   }
 }

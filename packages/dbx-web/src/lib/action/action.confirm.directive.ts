@@ -2,7 +2,7 @@ import { Directive, OnDestroy, OnInit, inject, input } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
+import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -25,21 +25,19 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
   selector: '[dbxActionConfirm]',
   standalone: true
 })
-export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
+export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   readonly dbxActionConfirm = input<Maybe<DbxActionConfirmConfig<T>>, Maybe<DbxActionConfirmConfig<T> | ''>>(undefined, { transform: transformEmptyStringInputToUndefined });
 
-  private readonly _sourceSub = new SubscriptionObject();
-
-  ngOnInit(): void {
-    this._sourceSub.subscription = this.source.triggered$.subscribe(() => {
-      this.showDialog();
+  constructor() {
+    super();
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.source.triggered$.subscribe(() => {
+        this.showDialog();
+      })
     });
-  }
-
-  ngOnDestroy(): void {
-    this._sourceSub.destroy();
   }
 
   protected getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig> {

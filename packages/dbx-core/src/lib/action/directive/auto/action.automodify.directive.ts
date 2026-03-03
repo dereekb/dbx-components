@@ -1,5 +1,5 @@
 import { Directive, inject, input } from '@angular/core';
-import { cleanSubscription } from '../../../rxjs';
+import { cleanSubscription, cleanSubscriptionWithLockSet } from '../../../rxjs';
 import { distinctUntilChanged, filter, switchMap, Observable, EMPTY } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { isNotFalse } from '@dereekb/util';
@@ -28,10 +28,11 @@ export class DbxActionAutoModifyDirective<T, O> {
   );
 
   constructor() {
-    cleanSubscription(
-      this.markAsModified$.subscribe(() => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.markAsModified$.subscribe(() => {
         this.source.setIsModified(true);
       })
-    );
+    });
   }
 }

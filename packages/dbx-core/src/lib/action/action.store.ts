@@ -108,12 +108,14 @@ const INITIAL_STATE: ActionContextState = {
   actionState: DbxActionState.IDLE
 };
 
+export const ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME = 2000;
+
 @Injectable()
 export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
   readonly lockSet = cleanLockSet({
     onLockSetDestroy: () => super.ngOnDestroy(),
     destroyLocksetTiming: {
-      delayTime: 2000
+      delayTime: ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME
     }
   });
 

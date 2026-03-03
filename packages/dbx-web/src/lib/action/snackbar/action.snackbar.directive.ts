@@ -1,5 +1,5 @@
 import { Directive, OnInit, inject, input } from '@angular/core';
-import { cleanSubscription, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
+import { cleanSubscription, cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
 import { DbxActionSnackbarService } from './action.snackbar.service';
@@ -21,7 +21,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> implements OnI
   readonly dbxActionSnackbarUndo = input<Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>>();
   readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>, Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> | ''>(undefined, { transform: transformEmptyStringInputToUndefined });
 
-  protected readonly _sub = cleanSubscription();
+  protected readonly _sub = cleanSubscriptionWithLockSet({ lockSet: this.source.lockSet });
 
   ngOnInit(): void {
     this._sub.setSub(
