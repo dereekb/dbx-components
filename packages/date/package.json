@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/date",
-  "version": "13.0.3",
+  "version": "13.0.4",
   "peerDependencies": {
-    "@dereekb/rxjs": "13.0.3",
-    "@dereekb/util": "13.0.3",
+    "@dereekb/rxjs": "13.0.4",
+    "@dereekb/util": "13.0.4",
     "@vvo/tzdb": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -14,6 +14,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dereekb/rxjs": "13.0.3"
+    "@dereekb/rxjs": "13.0.4"
   }
 }

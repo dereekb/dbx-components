@@ -2,7 +2,7 @@ import { map, tap, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { cleanSubscription } from '../../../rxjs';
+import { cleanSubscriptionWithLockSet } from '../../../rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -25,8 +25,9 @@ export class DbxActionSuccessHandlerDirective<T, O> {
   readonly successFunction$ = toObservable(this.dbxActionSuccessHandler).pipe(filterMaybe(), shareReplay(1));
 
   constructor() {
-    cleanSubscription(
-      this.successFunction$
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.successFunction$
         .pipe(
           switchMap((successFunction) =>
             this.source.success$.pipe(
@@ -38,6 +39,6 @@ export class DbxActionSuccessHandlerDirective<T, O> {
           )
         )
         .subscribe()
-    );
+    });
   }
 }

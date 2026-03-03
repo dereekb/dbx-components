@@ -1,3 +1,18 @@
+## [13.0.4](https://github.com/dereekb/dbx-components/compare/v13.0.3-dev...v13.0.4) (2026-03-03)
+
+
+### Build System
+
+- lint fix ([a6f03496](https://github.com/dereekb/dbx-components/commit/a6f034962b8054b66f9c50f887c267bf94614d73))
+
+
+### Code Refactoring
+
+- fixed early destroy on components ([a5f3a4c3](https://github.com/dereekb/dbx-components/commit/a5f3a4c3fbe585a8d95b03f635966c7ed7107813))
+
+
+
+
 ## [13.0.3](https://github.com/dereekb/dbx-components/compare/v13.0.2-dev...v13.0.3) (2026-03-03)
 
 

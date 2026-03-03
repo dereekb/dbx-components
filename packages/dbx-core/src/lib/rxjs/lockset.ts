@@ -1,6 +1,6 @@
 import { DestroyRef, inject } from '@angular/core';
 import { type DestroyOnNextUnlockConfig, LockSet, SubscriptionObject } from '@dereekb/rxjs';
-import { type DestroyFunction, type GetterOrValue, getValueFromGetter, type Maybe } from '@dereekb/util';
+import { type Configurable, type DestroyFunction, type GetterOrValue, getValueFromGetter, type Maybe } from '@dereekb/util';
 import { cleanSubscription } from './subscription';
 import { type Unsubscribable } from 'rxjs';
 
@@ -19,6 +19,8 @@ export interface CleanLockSetConfig {
   readonly destroyLocksetTiming?: Maybe<DestroyOnNextUnlockConfig>;
 }
 
+export type CleanLockSet = LockSet & { readonly _cleanDestroy: () => void };
+
 /**
  * Creates a new LockSet that is automatically destroyed when the component is destroyed.
  *
@@ -26,16 +28,18 @@ export interface CleanLockSetConfig {
  *
  * @param onLockSetDestroy Optional callback to run when the lockset is unlocked.
  */
-export function cleanLockSet(config?: Maybe<CleanLockSetConfig>): LockSet {
+export function cleanLockSet(config?: Maybe<CleanLockSetConfig>): CleanLockSet {
   const { onDestroy, onLockSetDestroy, destroyLocksetTiming } = config ?? {};
 
   const destroyRef = inject(DestroyRef);
-  const lockSet = new LockSet();
+  const lockSet = new LockSet() as unknown as CleanLockSet;
 
-  destroyRef.onDestroy(() => {
+  function cleanDestroy() {
     onDestroy?.();
     lockSet.destroyOnNextUnlock(destroyLocksetTiming); // flag to be destroyed on the next complete unlock
-  });
+  }
+
+  destroyRef.onDestroy(() => cleanDestroy());
 
   if (onLockSetDestroy) {
     const _destroySub = cleanSubscription(
@@ -46,6 +50,7 @@ export function cleanLockSet(config?: Maybe<CleanLockSetConfig>): LockSet {
     );
   }
 
+  (lockSet as Configurable<CleanLockSet>)._cleanDestroy = cleanDestroy;
   return lockSet;
 }
 

@@ -2,9 +2,9 @@ import { Directive, inject, input } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, Observable, shareReplay, switchMap } from 'rxjs';
-import { cleanSubscription } from '../../../rxjs/subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { cleanSubscriptionWithLockSet } from '../../../rxjs';
 
 /**
  * Directive that provides a default value when triggered.
@@ -33,12 +33,13 @@ export class DbxActionValueDirective<T, O> {
   );
 
   constructor() {
-    cleanSubscription(
-      this.valueOrFunction$.pipe(switchMap((valueOrFunction) => this.source.triggered$.pipe(map(() => valueOrFunction)))).subscribe((valueOrFunction) => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.valueOrFunction$.pipe(switchMap((valueOrFunction) => this.source.triggered$.pipe(map(() => valueOrFunction)))).subscribe((valueOrFunction) => {
         const value: T = getValueFromGetter(valueOrFunction);
         this.source.readyValue(value);
       })
-    );
+    });
   }
 
   setValueOrFunction(value: Maybe<GetterOrValue<T>>) {

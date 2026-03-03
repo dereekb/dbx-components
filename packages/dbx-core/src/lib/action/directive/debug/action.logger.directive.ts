@@ -1,5 +1,5 @@
 import { Directive, inject } from '@angular/core';
-import { cleanSubscription } from '../../../rxjs';
+import { cleanSubscriptionWithLockSet } from '../../../rxjs/lockset';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
@@ -13,10 +13,11 @@ export class DbxActionContextLoggerDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
 
   constructor() {
-    cleanSubscription(
-      this.source.state$.subscribe((state) => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.source.state$.subscribe((state) => {
         console.log('dbxActionLogger - state: ', state);
       })
-    );
+    });
   }
 }

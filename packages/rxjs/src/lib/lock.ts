@@ -6,6 +6,9 @@ import { SubscriptionObject } from './subscription';
 
 export type LockKey = string;
 
+/**
+ * Called when the lock set becomes unlocked, or the unlock times out.
+ */
 export type OnLockSetUnlockedFunction = (unlocked: boolean) => void;
 export type RemoveLockFunction = () => void;
 
@@ -38,17 +41,18 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
  */
 export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayTime }: OnLockSetUnlockedConfig): Subscription {
   const timeoutTime = inputTimeout ?? MS_IN_SECOND * 50;
-  return lockSet.isUnlocked$
-    .pipe(
-      filter((x) => x),
-      delay(delayTime ?? 0),
-      timeout({
-        first: timeoutTime,
-        with: () => of(false).pipe(tap(() => console.warn('LockSet time out. Potential issue detected.')))
-      }),
-      first()
-    )
-    .subscribe(fn);
+
+  const obs = lockSet.isUnlocked$.pipe(
+    filter((x) => x),
+    delay(delayTime ?? 0),
+    timeout({
+      first: timeoutTime,
+      with: () => of(false).pipe(tap(() => console.warn('LockSet time out. Potential issue detected.')))
+    }),
+    first()
+  );
+
+  return obs.subscribe({ next: fn ?? undefined });
 }
 
 /**
@@ -58,6 +62,8 @@ export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayT
  */
 export class LockSet implements Destroyable {
   private static LOCK_SET_CHILD_INDEX_STEPPER = 0;
+
+  private _isDestroyed = false;
 
   private readonly _onDestroy = new Subject<void>();
   private readonly _locks = new BehaviorSubject<Map<LockKey, Observable<boolean>>>(new Map());
@@ -179,6 +185,10 @@ export class LockSet implements Destroyable {
   }
 
   // Cleanup
+  get isDestroyed() {
+    return this._isDestroyed;
+  }
+
   destroyOnNextUnlock(config?: Maybe<DestroyOnNextUnlockConfig['fn'] | DestroyOnNextUnlockConfig>, delayTime?: number): void {
     let fn: Maybe<OnLockSetUnlockedFunction>;
     let mergeConfig: Maybe<DestroyOnNextUnlockConfig>;
@@ -203,6 +213,7 @@ export class LockSet implements Destroyable {
   }
 
   destroy(): void {
+    this._isDestroyed = true;
     this._locks.complete();
     this._parentSub.destroy();
     this._onDestroy.next();
