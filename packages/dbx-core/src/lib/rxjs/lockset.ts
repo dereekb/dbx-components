@@ -1,6 +1,6 @@
 import { DestroyRef, inject } from '@angular/core';
 import { type DestroyOnNextUnlockConfig, LockSet, SubscriptionObject } from '@dereekb/rxjs';
-import { Configurable, type DestroyFunction, type GetterOrValue, getValueFromGetter, type Maybe } from '@dereekb/util';
+import { type Configurable, type DestroyFunction, type GetterOrValue, getValueFromGetter, type Maybe } from '@dereekb/util';
 import { cleanSubscription } from './subscription';
 import { type Unsubscribable } from 'rxjs';
 

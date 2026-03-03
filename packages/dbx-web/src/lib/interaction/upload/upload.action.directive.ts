@@ -1,5 +1,5 @@
 import { Directive, inject } from '@angular/core';
-import { cleanSubscription, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { cleanSubscription, cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { DbxFileUploadActionCompatable } from './upload.action';
 
 /**
@@ -14,16 +14,18 @@ export class DbxFileUploadActionSyncDirective {
   readonly uploadCompatable = inject<DbxFileUploadActionCompatable>(DbxFileUploadActionCompatable);
 
   constructor() {
-    cleanSubscription(
-      this.source.isWorkingOrWorkProgress$.subscribe((working) => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.source.isWorkingOrWorkProgress$.subscribe((working) => {
         this.uploadCompatable.setWorking(working);
       })
-    );
+    });
 
-    cleanSubscription(
-      this.source.isDisabled$.subscribe((disabled) => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.source.isDisabled$.subscribe((disabled) => {
         this.uploadCompatable.setDisabled(disabled);
       })
-    );
+    });
   }
 }

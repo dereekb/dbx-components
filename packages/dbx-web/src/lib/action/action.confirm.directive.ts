@@ -1,7 +1,6 @@
-import { Directive, OnDestroy, OnInit, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 

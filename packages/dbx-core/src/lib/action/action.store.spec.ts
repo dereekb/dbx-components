@@ -1,16 +1,16 @@
 import { canReadyValue, ActionContextStore, ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME } from './action.store';
-import { of, first, timeout, Subscriber, Subscription, delay } from 'rxjs';
+import { of, first, timeout, delay } from 'rxjs';
 import { containsStringAnyCase } from '@dereekb/util';
-import { isLoadingStateInErrorState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType, SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { isLoadingStateInErrorState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType, SubscriptionObject } from '@dereekb/rxjs';
 import { TestBed } from '@angular/core/testing';
-import { DestroyableInjector, Injector } from '@angular/core';
+import { Injector } from '@angular/core';
 import { callbackTest } from '@dereekb/util/test';
 import { newWithInjector } from '../injection/injector';
 
 describe('ActionContextStore', () => {
   let contextStore: ActionContextStore;
-  let cleanupSubscriptionObjectA = new SubscriptionObject();
-  let cleanupSubscriptionObjectB = new SubscriptionObject();
+  const cleanupSubscriptionObjectA = new SubscriptionObject();
+  const cleanupSubscriptionObjectB = new SubscriptionObject();
 
   beforeEach(() => {
     TestBed.configureTestingModule({});

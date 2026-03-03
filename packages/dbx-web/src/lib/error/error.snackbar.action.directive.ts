@@ -1,5 +1,5 @@
 import { Directive, inject, input } from '@angular/core';
-import { DbxActionContextStoreSourceInstance, cleanSubscription } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, cleanSubscription, cleanSubscriptionWithLockSet } from '@dereekb/dbx-core';
 import { DbxErrorSnackbarService } from './error.snackbar.service';
 import { Maybe, Milliseconds, toReadableError } from '@dereekb/util';
 import { DbxErrorSnackbarConfig } from './error.snackbar.component';
@@ -20,14 +20,15 @@ export class DbxActionSnackbarErrorDirective {
   readonly config = input<Maybe<DbxErrorSnackbarConfig> | Milliseconds | ''>(undefined, { alias: 'dbxActionSnackbarError' });
 
   constructor() {
-    cleanSubscription(
-      this.source.error$.pipe(filterMaybe()).subscribe((inputError) => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.source.error$.pipe(filterMaybe()).subscribe((inputError) => {
         const config = this.config();
         const error = toReadableError(inputError);
 
         const snackbarConfig = config ? (typeof config === 'number' ? { duration: config } : config) : undefined;
         this.dbxErrorSnackbarService.showSnackbarError(error, snackbarConfig);
       })
-    );
+    });
   }
 }

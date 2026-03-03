@@ -1,4 +1,4 @@
-import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, effect } from '@angular/core';
+import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
 import { MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { AbstractTransitionWatcherDirective, cleanSubscription, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
@@ -8,7 +8,7 @@ import { NgClass } from '@angular/common';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, map, Observable, shareReplay, Subscription } from 'rxjs';
+import { distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
 import { DbxColorDirective } from '../../../layout/style/style.color.directive';
 import { DbxThemeColor } from '../../../layout/style/style';
 import { ThemePalette } from '@angular/material/core';
@@ -43,7 +43,7 @@ export interface DbxSidenavSidebarState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxSidenavComponent extends AbstractTransitionWatcherDirective {
+export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit {
   private readonly _sidenavSub = cleanSubscription();
   private readonly _screenMediaService = inject(DbxScreenMediaService);
 

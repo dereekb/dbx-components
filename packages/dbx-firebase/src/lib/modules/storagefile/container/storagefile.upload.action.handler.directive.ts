@@ -2,7 +2,7 @@ import { Directive, effect, inject, input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseStorageFileUploadStore } from '../store/storagefile.upload.store';
 import { storageFileUploadFiles, StorageFileUploadFilesFinalResult, StorageFileUploadHandler } from './storagefile.upload.handler';
-import { clean, cleanSubscription, DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
+import { clean, cleanSubscription, cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
 import { errorResult, LoadingState, startWithBeginLoading, successResult, WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, filter, map, of, switchMap, tap, throttleTime } from 'rxjs';
@@ -101,8 +101,9 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective {
     this._dbxActionHandlerInstance.init();
 
     // trigger the action if files are available
-    cleanSubscription(
-      this.triggerOnFiles$
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.triggerOnFiles$
         .pipe(
           switchMap((triggerOnFiles) => {
             if (triggerOnFiles) {
@@ -117,17 +118,21 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective {
             this.source.trigger();
           }
         })
-    );
+    });
 
     // ready the source with files after trigger is called and files are available
-    cleanSubscription(
-      this.files$.pipe(switchMap((files) => this.source.triggered$.pipe(map(() => files)))).subscribe((files) => {
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.files$.pipe(switchMap((files) => this.source.triggered$.pipe(map(() => files)))).subscribe((files) => {
         this.source.readyValue(files);
       })
-    );
+    });
 
     // sync isWorking
-    cleanSubscription(this.uploadStore.setIsUploadHandlerWorking(this.source.isWorking$));
+    cleanSubscriptionWithLockSet({
+      lockSet: this.source.lockSet,
+      sub: this.uploadStore.setIsUploadHandlerWorking(this.source.isWorking$)
+    });
 
     // sync progress amount
     this.source.setWorkProgress(
