@@ -58,7 +58,8 @@
       "cache": true
     },
     "build-base": {
-      "cache": true
+      "cache": true,
+      "inputs": ["production", "^production"]
     },
     "@nx/eslint:lint": {
       "cache": false,
@@ -91,6 +92,12 @@
         "format": ["esm", "cjs"],
         "external": "all"
       }
+    },
+    "ci-deploy-prod": {
+      "cache": false
+    },
+    "ci-deploy-staging": {
+      "cache": false
     }
   },
   "generators": {
