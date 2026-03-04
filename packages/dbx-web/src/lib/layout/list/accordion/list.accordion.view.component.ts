@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { DbxValueListItem, DbxValueListItemConfig } from '../list.view.value';
+import { DbxValueListItem } from '../list.view.value';
 import { AbstractDbxValueListViewDirective } from '../list.view.value.directive';
 import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from '../list.view.value.component';
