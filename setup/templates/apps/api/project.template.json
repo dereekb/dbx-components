@@ -135,7 +135,7 @@
             "command": "npx nx make-env-staging API_APP_NAME --skip-nx-cache"
           },
           {
-            "command": "npx firebase --project=staging deploy --only functions"
+            "command": "npx firebase --project=staging deploy --only functions --force"
           }
         ],
         "parallel": false
@@ -157,7 +157,7 @@
             "command": "npx nx make-env-prod API_APP_NAME --skip-nx-cache"
           },
           {
-            "command": "npx firebase --project=prod deploy --only functions"
+            "command": "npx firebase --project=prod deploy --only functions --force"
           }
         ],
         "parallel": false

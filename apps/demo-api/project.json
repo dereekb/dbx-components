@@ -108,7 +108,7 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run demo-api:build:production"
+            "command": "npx nx run demo-api:build-base:production"
           },
           {
             "command": "npx nx make-env demo-api --skip-nx-cache"

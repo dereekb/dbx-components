@@ -1,3 +1,28 @@
+## [13.0.5](https://github.com/dereekb/dbx-components/compare/v13.0.4-dev...v13.0.5) (2026-03-04)
+
+
+### ai
+
+- moved skills to .claude ([ae63e335](https://github.com/dereekb/dbx-components/commit/ae63e335c520a1df5acde6fa330c0a175b66fc2e))
+
+
+### Build System
+
+- lint fix ([02bb7ce9](https://github.com/dereekb/dbx-components/commit/02bb7ce97169a7b0b58a781c9700260a9f02a433))
+
+
+### Checkpoints
+
+- accordion view ([e25b39a4](https://github.com/dereekb/dbx-components/commit/e25b39a4f0115d9018e592f3c58d88afa33402b0))
+
+
+### Code Refactoring
+
+- updated dbx-grid, dbx-accordion ([84e8bb48](https://github.com/dereekb/dbx-components/commit/84e8bb48b3dacaa74d696049d27bf339ad3fd641))
+
+
+
+
 ## [13.0.4](https://github.com/dereekb/dbx-components/compare/v13.0.3-dev...v13.0.4) (2026-03-03)
 
 

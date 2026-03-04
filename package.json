@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.0.4",
+  "version": "13.0.5",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal 2>&1 /dev/null; fi",
@@ -77,7 +77,7 @@
     "ngx-infinite-scroll": "^21.0.0",
     "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
     "ngx-mat-input-tel": "^21.0.0",
-    "openai": "^5.12.2",
+    "openai": "^6.25.0",
     "raw-body": "^3.0.0",
     "reflect-metadata": ">= 0.1.12 < 0.3.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",

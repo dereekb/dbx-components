@@ -35,6 +35,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
 import { DocItemListComponent } from '../component/item.list.component';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 import { DocItemListGridComponent } from '../component/item.list.grid.component';
+import { DocItemListAccordionComponent } from '../component/item.list.accordion.component';
 
 @Component({
   templateUrl: './list.component.html',
@@ -48,6 +49,7 @@ import { DocItemListGridComponent } from '../component/item.list.grid.component'
     DbxButtonSpacerDirective,
     DocItemListComponent,
     DocItemListGridComponent,
+    DocItemListAccordionComponent,
     DocSelectionItemListComponent,
     DocCustomItemListComponent,
     DbxValueListGridSizeDirective,
@@ -182,6 +184,17 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly customGridSize: Partial<DbxValueListGridItemViewGridSizeConfig> = {
     columns: 'repeat(auto-fill, minmax(200px, 1fr))',
     gap: '25px'
+  };
+
+  readonly docValueGroupDelegate: DbxListTitleGroupTitleDelegate<DocValue, string> = {
+    groupValueForItem: (item) => item.itemValue.icon,
+    dataForGroupValue: (value, items) => ({
+      title: pascalCase(value) + ' Group',
+      icon: value,
+      value,
+      hint: `Items with the "${value}" icon (${items.length} items).`
+    }),
+    sortGroupsByData: (a, b) => a.value.localeCompare(b.value)
   };
 
   readonly dbxListTitleGroupDelegate: DbxListTitleGroupTitleDelegate<CustomDocValue, 'click' | 'ref' | 'url' | 'plain' | 'none'> = {
