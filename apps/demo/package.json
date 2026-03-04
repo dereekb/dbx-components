@@ -29,7 +29,7 @@
     "angular-calendar": "^0.32.0",
     "change-case-all": "^2.1.0",
     "date-fns": "^4.0.0",
-    "ng-overlay-container": "git+https://git@github.com/dereekb/ng-overlay-container#f8f887afe7e1c75e4f1afe40470a4d39291707d6",
+    "ng-overlay-container": "^21.0.1",
     "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
     "rxjs": "^7.8.0"
   }
