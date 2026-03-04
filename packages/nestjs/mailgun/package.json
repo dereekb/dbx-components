@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/nestjs/mailgun",
-  "version": "13.0.3",
+  "version": "13.0.4",
   "peerDependencies": {
-    "@dereekb/date": "13.0.3",
-    "@dereekb/model": "13.0.3",
-    "@dereekb/nestjs": "13.0.3",
-    "@dereekb/rxjs": "13.0.3",
-    "@dereekb/util": "13.0.3",
+    "@dereekb/date": "13.0.4",
+    "@dereekb/model": "13.0.4",
+    "@dereekb/nestjs": "13.0.4",
+    "@dereekb/rxjs": "13.0.4",
+    "@dereekb/util": "13.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "form-data": "^4.0.0",
