@@ -1,7 +1,7 @@
 import { forwardRef, InjectionToken, type Provider, type StaticProvider, type Type } from '@angular/core';
 import { type ClickableAnchor, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { map, type Observable, of } from 'rxjs';
-import { type DecisionFunction, type Maybe } from '@dereekb/util';
+import { Configurable, type DecisionFunction, type Maybe } from '@dereekb/util';
 
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<unknown>('DbxValueListViewItem');
 
@@ -11,10 +11,25 @@ export interface DbxValueListItem<T, M = unknown> {
    * Arbitrary meta details available to the meta component.
    */
   meta?: M;
+  /**
+   * Optional icon to display for the item.
+   */
   icon?: string;
+  /**
+   * Whether the item is disabled.
+   */
   disabled?: boolean;
+  /**
+   * Whether the ripple effect is disabled.
+   */
   rippleDisabled?: boolean;
+  /**
+   * Whether the item is selected.
+   */
   selected?: boolean;
+  /**
+   * Optional anchor for the item.
+   */
   anchor?: Maybe<ClickableAnchor>;
 }
 
@@ -70,7 +85,7 @@ export function addConfigToValueListItems<T, I extends DbxValueListItem<T>, V = 
   const itemConfigs: DbxValueListItemConfig<T, I, V>[] = listItems.map((listItem: I) => {
     const anchor = listItem.anchor;
 
-    listItem.disabled = listItem.disabled || anchor?.disabled;
+    (listItem as Configurable<DbxValueListItem<T>>).disabled = listItem.disabled || anchor?.disabled;
     (listItem as DbxValueListItemConfig<T, I, V>).config = Object.assign({}, listViewConfig, {
       providers: [
         {

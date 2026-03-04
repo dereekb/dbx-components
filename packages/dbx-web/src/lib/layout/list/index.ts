@@ -1,3 +1,4 @@
+export * from './accordion';
 export * from './grid';
 export * from './meta';
 export * from './group';

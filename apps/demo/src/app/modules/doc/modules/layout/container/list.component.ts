@@ -35,6 +35,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
 import { DocItemListComponent } from '../component/item.list.component';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 import { DocItemListGridComponent } from '../component/item.list.grid.component';
+import { DocItemListAccordionComponent } from '../component/item.list.accordion.component';
 
 @Component({
   templateUrl: './list.component.html',
@@ -48,6 +49,7 @@ import { DocItemListGridComponent } from '../component/item.list.grid.component'
     DbxButtonSpacerDirective,
     DocItemListComponent,
     DocItemListGridComponent,
+    DocItemListAccordionComponent,
     DocSelectionItemListComponent,
     DocCustomItemListComponent,
     DbxValueListGridSizeDirective,
