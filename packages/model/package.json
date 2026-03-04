@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/model",
-  "version": "13.0.4",
+  "version": "13.0.5",
   "dependencies": {
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0"
   },
   "peerDependencies": {
-    "@dereekb/util": "13.0.4",
+    "@dereekb/util": "13.0.5",
     "make-error": "^1.3.0"
   }
 }
