@@ -186,6 +186,17 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
     gap: '25px'
   };
 
+  readonly docValueGroupDelegate: DbxListTitleGroupTitleDelegate<DocValue, string> = {
+    groupValueForItem: (item) => item.itemValue.icon,
+    dataForGroupValue: (value, items) => ({
+      title: pascalCase(value) + ' Group',
+      icon: value,
+      value,
+      hint: `Items with the "${value}" icon (${items.length} items).`
+    }),
+    sortGroupsByData: (a, b) => a.value.localeCompare(b.value)
+  };
+
   readonly dbxListTitleGroupDelegate: DbxListTitleGroupTitleDelegate<CustomDocValue, 'click' | 'ref' | 'url' | 'plain' | 'none'> = {
     groupValueForItem: (item) => {
       const anchor = item.anchor;

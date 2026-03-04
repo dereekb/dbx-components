@@ -97,9 +97,13 @@
         <div class="dbx-pb3" style="height: 200px">
           <doc-complex-item-list selectionMode="view" [dbxListTitleGroup]="dbxListTitleGroupDelegate" [state]="stateWithAnchors$"></doc-complex-item-list>
         </div>
+        <h4>Grid Example</h4>
+        <div class="dbx-pb3" style="height: 400px">
+          <doc-item-list-grid [dbxListTitleGroup]="docValueGroupDelegate" [state]="state$" (loadMore)="loadMore()"></doc-item-list-grid>
+        </div>
         <h4>Accordion Example</h4>
-        <div class="dbx-pb3" style="height: 200px">
-          <doc-item-list-accordion [dbxListTitleGroup]="dbxListTitleGroupDelegate" [state]="state$"></doc-item-list-accordion>
+        <div class="dbx-pb3" style="height: 400px">
+          <doc-item-list-accordion [dbxListTitleGroup]="docValueGroupDelegate" [state]="state$" (loadMore)="loadMore()"></doc-item-list-accordion>
         </div>
       </doc-feature-example>
 

@@ -1,6 +1,6 @@
 import { LOREM } from '../../shared/lorem';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective } from '@dereekb/dbx-web';
+import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxColorDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent } from '@angular/material/expansion';
@@ -42,7 +42,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
 
 @Component({
   template: `
-    <mat-expansion-panel>
+    <mat-expansion-panel [dbxAccordionHeaderHeight] [heightText]="name" [heightTextLineLength]="40">
       <mat-expansion-panel-header>
         <mat-panel-title>
           <div class="dbx-list-two-line-item">
@@ -52,7 +52,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
               </span>
               <span class="dbx-flex-bar">
                 <span class="dbx-button-spacer">
-                  <dbx-chip color="primary">Status</dbx-chip>
+                  <dbx-chip dbxColor="primary">Status</dbx-chip>
                 </span>
               </span>
             </div>
@@ -67,7 +67,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
       </ng-template>
     </mat-expansion-panel>
   `,
-  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxChipDirective],
+  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxColorDirective, DbxChipDirective],
   standalone: true
 })
 export class DocItemListAccordionItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {

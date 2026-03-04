@@ -6,8 +6,10 @@ export interface DocValue {
   icon: string;
 }
 
+const DOC_VALUE_ICONS = ['house', 'person', 'star', 'warning'];
+
 export function makeDocValues(numberToLoadPerUpdate = 50) {
-  return range(numberToLoadPerUpdate).map((x) => ({ icon: 'house', name: `${x}-${Math.random() * x}` }));
+  return range(numberToLoadPerUpdate).map((x) => ({ icon: DOC_VALUE_ICONS[x % DOC_VALUE_ICONS.length], name: `${x}-${Math.random() * x}` }));
 }
 
 export type DocValueWithSelection = DbxValueAsListItem<DocValue>;
