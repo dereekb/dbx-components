@@ -7,6 +7,15 @@ import { type Subject } from 'rxjs';
  * when the DestroyRef is destroyed in the context.
  *
  * Must be run in an Angular injection context.
+ *
+ * @example
+ * // Clean up a Destroyable object (e.g., SubscriptionObject, LockSet):
+ * const sub = new SubscriptionObject(obs$.subscribe(handler));
+ * clean(sub);
+ *
+ * @example
+ * // Clean up a destroy function directly:
+ * clean(() => resource.release());
  */
 export function clean<T extends Destroyable | DestroyFunction>(input: T): T {
   const destroyRef = inject(DestroyRef);
@@ -25,6 +34,14 @@ export function clean<T extends Destroyable | DestroyFunction>(input: T): T {
  * when the DestroyRef is destroyed in the context.
  *
  * Must be run in an Angular injection context.
+ *
+ * @example
+ * // Complete a BehaviorSubject when the component is destroyed:
+ * readonly value$ = completeOnDestroy(new BehaviorSubject<string>('initial'));
+ *
+ * @example
+ * // Complete a ReplaySubject when the component is destroyed:
+ * readonly events$ = completeOnDestroy(new ReplaySubject<Event>(1));
  */
 export function completeOnDestroy<T extends Pick<Subject<any>, 'complete' | 'error'>>(input: T): T {
   clean(() => input.complete());

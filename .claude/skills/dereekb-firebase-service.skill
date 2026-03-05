@@ -1,0 +1,23 @@
+{
+  "name": "dereekb-firebase-service",
+  "title": "@dereekb/firebase Service",
+  "version": "1.0.0",
+  "description": "Guide for integrating Firestore models into centralized service layer with role-based access control. Covers service factories, permission patterns, backend integration, and testing.",
+  "keywords": [
+    "firebase",
+    "firestore",
+    "service",
+    "roles",
+    "permissions",
+    "access-control",
+    "backend",
+    "integration",
+    "dereekb",
+    "typescript",
+    "nestjs",
+    "testing"
+  ],
+  "categories": ["backend", "database", "typescript", "security"],
+  "author": "dereekb",
+  "license": "MIT"
+}

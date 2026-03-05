@@ -78,6 +78,7 @@ export function streamFromOnSnapshot<O>(callOnSnapshot: (params: StreamDocsWithO
       error: subscriber.error.bind(subscriber),
       complete: subscriber.complete.bind(subscriber)
     });
+
     return { unsubscribe };
   });
 }

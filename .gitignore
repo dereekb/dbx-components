@@ -64,7 +64,7 @@ service_account.json
 .npmrc
 
 # Claude
-/.claude
+/.claude/settings.local.json
 
 # Docker
 /.cache

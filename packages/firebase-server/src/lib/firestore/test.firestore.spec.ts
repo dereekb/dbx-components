@@ -12,7 +12,7 @@ describe('FirestoreCollection', () => {
 
     beforeEach(() => {
       firestore = f.parent.firestore as Firestore;
-      firestoreCollection = f.instance.firestoreCollection;
+      firestoreCollection = f.instance.mockItemCollection;
     });
 
     describe('makeFirestoreCollection()', () => {

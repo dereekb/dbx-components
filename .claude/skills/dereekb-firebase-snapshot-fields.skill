@@ -1,0 +1,20 @@
+{
+  "name": "dereekb-firebase-snapshot-fields",
+  "title": "@dereekb/firebase Snapshot Fields Reference",
+  "version": "1.0.0",
+  "description": "Complete reference for all Firestore snapshot field mapping functions. Includes string, number, boolean, date, array, object, and specialized fields with configuration examples.",
+  "keywords": [
+    "firebase",
+    "firestore",
+    "snapshot",
+    "fields",
+    "converter",
+    "mapping",
+    "dereekb",
+    "typescript",
+    "reference"
+  ],
+  "categories": ["backend", "database", "typescript", "reference"],
+  "author": "dereekb",
+  "license": "MIT"
+}

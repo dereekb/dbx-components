@@ -26,8 +26,8 @@ describe('firebaseModelsService', () => {
         app: f.instance.collections
       };
 
-      firestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
-      const items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+      firestoreDocumentAccessor = f.instance.mockItemCollection.documentAccessor();
+      const items = await makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
         count: 1,
         init: (i) => {
           return {
