@@ -1,3 +1,20 @@
+## [13.0.6](https://github.com/dereekb/dbx-components/compare/v13.0.5-dev...v13.0.6) (2026-03-05)
+
+
+### Bug Fixes
+
+- removed shareReplay from document.rxjs.ts streaming functions ([2377156c](https://github.com/dereekb/dbx-components/commit/2377156cffcd4d69643a1619d5762f6f7d7b5a3e))
+
+
+### Code Refactoring
+
+- added jsdocs to dbx-core rxjs components ([ef7538e9](https://github.com/dereekb/dbx-components/commit/ef7538e939b44b6ac9766fda7149f058e6042087))
+- updated firestore document utilities, added tests ([c8c19d77](https://github.com/dereekb/dbx-components/commit/c8c19d7755c77ad9d6963fa09927fc331321b2f1))
+- updated store jsdocs, commitlint types ([5ac28a9d](https://github.com/dereekb/dbx-components/commit/5ac28a9d135fcdc3dcd0d3e25208a86a1f592867))
+
+
+
+
 ## [13.0.5](https://github.com/dereekb/dbx-components/compare/v13.0.4-dev...v13.0.5) (2026-03-04)
 
 
