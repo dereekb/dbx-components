@@ -1,5 +1,5 @@
 ---
-name: DBX Commit Messages
+name: dbx-commit-messages
 description: Guide for writing commit messages in the dbx-components workspace. Follows @commitlint/config-angular conventions with project-specific type restrictions and scope patterns.
 triggers:
   - commit message
@@ -10,7 +10,7 @@ triggers:
   - commitlint
 ---
 
-# DBX Commit Messages
+# dbx-commit-messages
 
 Guide for writing commit messages in the dbx-components workspace.
 

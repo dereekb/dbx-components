@@ -19,8 +19,8 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
     let sub: SubscriptionObject;
 
     beforeEach(async () => {
-      firestoreIteration = f.instance.firestoreCollection.firestoreIteration;
-      items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+      firestoreIteration = f.instance.mockItemCollection.firestoreIteration;
+      items = await makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
         count: testDocumentCount,
         init: (i) => {
           return {

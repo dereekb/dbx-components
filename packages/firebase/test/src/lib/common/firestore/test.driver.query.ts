@@ -56,7 +56,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
     const ODD_TAG = 'odd';
 
     beforeEach(async () => {
-      items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+      items = await makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
         count: testDocumentCount,
         init: (i) => {
           return {
@@ -773,7 +773,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
       let queryDocument: FirestoreCollectionQueryFactoryFunction<MockItem, MockItemDocument>;
 
       beforeEach(async () => {
-        queryDocument = f.instance.firestoreCollection.queryDocument;
+        queryDocument = f.instance.mockItemCollection.queryDocument;
       });
 
       describe('filter()', () => {
@@ -901,7 +901,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
             // add one item
             waitForMs(10).then(() =>
-              makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+              makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                 count: itemsToAdd,
                 init: (i) => {
                   return {
@@ -1003,7 +1003,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
             // add one item
             waitForMs(10).then(() =>
-              makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+              makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                 count: itemsToAdd,
                 init: (i) => {
                   return {
@@ -1062,7 +1062,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
       let query: FirestoreQueryFactoryFunction<MockItem>;
 
       beforeEach(async () => {
-        query = f.instance.firestoreCollection.query;
+        query = f.instance.mockItemCollection.query;
       });
 
       describe('streamDocs()', () => {
@@ -1101,7 +1101,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
             // add one item
             waitForMs(10).then(() =>
-              makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+              makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                 count: itemsToAdd,
                 init: (i) => {
                   return {
@@ -1400,7 +1400,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               const expectedNumberOfEvenValues = Math.ceil(testDocumentCount / 2);
 
               beforeEach(async () => {
-                items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+                items = await makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
                   count: testDocumentCount,
                   init: (i) => {
                     const isEven = isEvenNumber(i);

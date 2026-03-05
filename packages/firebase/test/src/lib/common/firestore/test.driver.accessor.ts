@@ -18,8 +18,8 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
     let items: MockItemDocument[];
 
     beforeEach(async () => {
-      mockItemFirestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
-      items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+      mockItemFirestoreDocumentAccessor = f.instance.mockItemCollection.documentAccessor();
+      items = await makeDocuments(f.instance.mockItemCollection.documentAccessor(), {
         count: testDocumentCount,
         init: (i) => {
           return {
@@ -48,8 +48,8 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
           dataForUpdate: () => ({ test: false }),
           hasRemainingDataFromFirstOfTwoUpdate: (data) => (data.tags?.length || 0) > 0 && data.tags?.[0] === 'a',
           hasDataFromUpdate: (data) => data.test === false,
-          loadDocumentForTransaction: (transaction, ref) => f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
-          loadDocumentForWriteBatch: (writeBatch, ref) => f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
+          loadDocumentForTransaction: (transaction, ref) => f.instance.mockItemCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
+          loadDocumentForWriteBatch: (writeBatch, ref) => f.instance.mockItemCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
         }));
 
         describe('increment()', () => {
@@ -109,7 +109,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               const update = { number: 3 };
 
               await f.parent.firestoreContext.runTransaction(async (transaction) => {
-                const itemDocumentInTransaction = await f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForId(itemDocument.id);
+                const itemDocumentInTransaction = await f.instance.mockItemCollection.documentAccessorForTransaction(transaction).loadDocumentForId(itemDocument.id);
                 const data = await itemDocumentInTransaction.snapshotData();
 
                 expect(data?.number).toBe(undefined);
@@ -128,7 +128,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               const writeBatch = f.parent.firestoreContext.batch();
 
-              const itemDocumentForWriteBatch = await f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(itemDocument.id);
+              const itemDocumentForWriteBatch = await f.instance.mockItemCollection.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(itemDocument.id);
               await itemDocumentForWriteBatch.increment(update);
               await writeBatch.commit();
 
