@@ -27,9 +27,25 @@ import { filterMaybeStrict } from '../rxjs/value';
 // TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
 /**
- * Wraps an observable output and maps the value to a LoadingState.
+ * Wraps an observable output and maps the value to a {@link LoadingState}.
+ *
+ * Emits a loading state immediately, then emits a success result when the observable emits a value,
+ * or an error result if the observable errors.
  *
  * If firstOnly is provided, it will only take the first value the observable returns.
+ *
+ * @example
+ * ```ts
+ * // Wrap a data fetch observable into a LoadingState
+ * readonly jsonContentState$ = loadingStateFromObs(this.jsonContent$);
+ *
+ * // Wrap an observable and only take the first emitted value
+ * readonly singleValueState$ = loadingStateFromObs(this.data$, true);
+ * ```
+ *
+ * @param obs - The source observable to wrap.
+ * @param firstOnly - If true, only takes the first value from the observable.
+ * @returns An observable that emits {@link LoadingState} values representing the loading lifecycle.
  */
 export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {
   if (firstOnly) {
@@ -45,7 +61,32 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
 }
 
 /**
- * Convenience function for creating a pipe that merges the multiple loading states into one.
+ * Convenience function for creating a pipe that merges multiple loading states into one.
+ *
+ * Combines two or more {@link LoadingState} observables using `combineLatest` and merges their values.
+ * If any input is still loading, the combined state is loading. If any input has an error, the error is propagated.
+ * An optional merge function can be provided to customize how the values are combined; otherwise, values are spread-merged.
+ *
+ * @example
+ * ```ts
+ * // Merge two loading states into one combined state using object spread
+ * const combined$ = combineLoadingStates(
+ *   of(successResult({ a: true })),
+ *   of(successResult({ b: true }))
+ * );
+ * // => emits LoadingState<{ a: true } & { b: true }>
+ *
+ * // Merge with a custom merge function
+ * const combined$ = combineLoadingStates(
+ *   of(successResult({ a: 1 })),
+ *   of(successResult({ b: 2 })),
+ *   (a, b) => ({ sum: a.a + b.b })
+ * );
+ * // => emits LoadingState<{ sum: number }> with value { sum: 3 }
+ * ```
+ *
+ * @param args - Two or more LoadingState observables, with an optional merge function as the last argument.
+ * @returns An observable emitting the merged {@link LoadingState}.
  */
 export function combineLoadingStates<A, B>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
 export function combineLoadingStates<A extends object, B extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn: (a: A, b: B) => O): Observable<LoadingState<O>>;
@@ -80,10 +121,27 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
 }
 
 /**
- * Combines the status of all loading states. Only emits when the LoadingStateType of the result changes, or the loading state progress.
+ * Combines the status of all loading states into a single {@link LoadingState}<boolean>.
  *
- * @param sources
- * @returns
+ * Only emits when the {@link LoadingStateType} of the result changes, or the loading state progress changes.
+ * If any source has an error, the error is propagated. If any source is still loading, the result is loading.
+ * When all sources are successful, the result value is `true`.
+ *
+ * @example
+ * ```ts
+ * const success$ = of(successResult(1));
+ * const success2$ = of(successResult(2));
+ *
+ * // All success => emits { value: true }
+ * const status$ = combineLoadingStatesStatus([success$, success2$]);
+ *
+ * // One loading => emits loading state
+ * const loading$ = of(beginLoading());
+ * const status$ = combineLoadingStatesStatus([loading$, success$]);
+ * ```
+ *
+ * @param sources - An array of LoadingState observables to combine.
+ * @returns An observable emitting a {@link LoadingState}<boolean> representing the combined status.
  */
 export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[]>(sources: readonly [...ObservableInputTuple<A>]): Observable<LoadingState<boolean>> {
   return combineLatest(sources).pipe(
@@ -111,11 +169,33 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
 }
 
 /**
- * Merges startWith() with beginLoading().
+ * Merges `startWith()` with `beginLoading()` into a single typed operator.
  *
- * Preferred over using both individually, as typing information can get lost.
+ * Preferred over using both individually, as typing information can get lost when chaining them separately.
+ * An optional partial state can be provided to include additional metadata (e.g., page info) in the initial loading state.
  *
- * @returns
+ * @example
+ * ```ts
+ * // Emit a loading state immediately before the source observable emits
+ * readonly resultsState$ = this.fetchValues().pipe(
+ *   map((values) => successResult(values)),
+ *   startWithBeginLoading(),
+ *   shareReplay(1)
+ * );
+ *
+ * // Use inside a switchMap to re-emit loading on each new search
+ * readonly searchResultsState$ = this.searchText$.pipe(
+ *   switchMap((text) =>
+ *     this.search(text).pipe(
+ *       startWithBeginLoading()
+ *     )
+ *   ),
+ *   shareReplay(1)
+ * );
+ * ```
+ *
+ * @param state - Optional partial loading state to include in the initial emission.
+ * @returns A `MonoTypeOperatorFunction` that prepends a loading state to the observable.
  */
 export function startWithBeginLoading<L extends LoadingState>(): MonoTypeOperatorFunction<L>;
 export function startWithBeginLoading<L extends LoadingState>(state?: Partial<LoadingState>): MonoTypeOperatorFunction<L>;
@@ -125,7 +205,20 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
 }
 
 /**
- * Returns the current value from the LoadingState.
+ * Returns the current value from the {@link LoadingState}, including `undefined` when still loading or no value is set.
+ *
+ * Unlike {@link valueFromLoadingState}, this operator emits for every state change, regardless of whether the value is defined.
+ *
+ * @example
+ * ```ts
+ * // Expose the current (possibly undefined) value from a loading state
+ * const currentValue$: Observable<Maybe<T>> = state$.pipe(
+ *   currentValueFromLoadingState(),
+ *   shareReplay(1)
+ * );
+ * ```
+ *
+ * @returns An `OperatorFunction` that maps each {@link LoadingState} to its current value (or undefined).
  */
 export function currentValueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
@@ -134,9 +227,21 @@ export function currentValueFromLoadingState<L extends LoadingState>(): Operator
 }
 
 /**
- * Returns the current non-null value from the LoadingState.
+ * Returns the current non-null/non-undefined value from the {@link LoadingState}.
  *
- * Equivalent to currentValueFromLoadingState() and filterMaybe().
+ * Equivalent to piping {@link currentValueFromLoadingState} and `filterMaybeStrict()`.
+ * Only emits when the value is defined, filtering out loading and error states without values.
+ *
+ * @example
+ * ```ts
+ * // Only emit when the loading state has a defined value
+ * const value$ = state$.pipe(
+ *   valueFromLoadingState(),
+ *   // only emits non-null/non-undefined values
+ * );
+ * ```
+ *
+ * @returns An `OperatorFunction` that emits only defined values from the {@link LoadingState}.
  */
 export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, MaybeSoStrict<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
@@ -148,7 +253,20 @@ export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>():
 }
 
 /**
- * Returns the error once the LoadingState has finished loading with an error.
+ * Returns the error once the {@link LoadingState} has finished loading with an error.
+ *
+ * Filters to only emit when the state contains an error, then extracts and emits the {@link ReadableError}.
+ *
+ * @example
+ * ```ts
+ * // React to errors from a loading state
+ * state$.pipe(
+ *   errorFromLoadingState(),
+ *   tap((error) => console.error('Loading failed:', error))
+ * ).subscribe();
+ * ```
+ *
+ * @returns An `OperatorFunction` that emits the {@link ReadableError} from error states.
  */
 export function errorFromLoadingState<L extends LoadingState>(): OperatorFunction<L, ReadableError> {
   return (obs: Observable<L>) => {
@@ -160,7 +278,23 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
 }
 
 /**
- * Throws an error if the LoadingState value has an error.
+ * Throws an error if the {@link LoadingState} value has an error.
+ *
+ * Passes through non-error states unchanged, but throws the error from any {@link LoadingStateWithError},
+ * converting the loading state error into an observable error that can be caught with `catchError`.
+ *
+ * @example
+ * ```ts
+ * // Convert a LoadingState observable to a Promise, throwing on error states
+ * const result = await firstValueFrom(
+ *   loadingState$.pipe(
+ *     throwErrorFromLoadingStateError(),
+ *     valueFromFinishedLoadingState()
+ *   )
+ * );
+ * ```
+ *
+ * @returns An `OperatorFunction` that passes through non-error states and throws on error states.
  */
 export function throwErrorFromLoadingStateError<L extends LoadingState>(): OperatorFunction<L, L> {
   return (obs: Observable<L>) => {
@@ -177,9 +311,28 @@ export function throwErrorFromLoadingStateError<L extends LoadingState>(): Opera
 }
 
 /**
- * Returns the value once the LoadingState has finished loading, even if an error occured or there is no value.
+ * Returns the value once the {@link LoadingState} has finished loading, even if an error occurred or there is no value.
  *
- * Can optionally specify a default value to use instead.
+ * Filters to only emit when loading is complete, then maps to the value. A default value (or getter) can be
+ * provided to use when the finished state has no value (e.g., due to an error).
+ *
+ * @example
+ * ```ts
+ * // Wait for loading to complete and emit the value
+ * const value$ = state$.pipe(
+ *   valueFromFinishedLoadingState(),
+ *   shareReplay(1)
+ * );
+ *
+ * // Provide a default value for error/empty states
+ * const items$ = itemsState$.pipe(
+ *   valueFromFinishedLoadingState(() => []),
+ *   shareReplay(1)
+ * );
+ * ```
+ *
+ * @param defaultValue - Optional default value or getter to use when the finished state has no value.
+ * @returns An `OperatorFunction` that emits the value (or default) once loading is finished.
  */
 export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue: GetterOrValue<LoadingStateValue<L>>): OperatorFunction<L, LoadingStateValue<L>>;
 export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue?: Maybe<GetterOrValue<LoadingStateValue<L>>>): OperatorFunction<L, Maybe<LoadingStateValue<L>>>;
@@ -194,9 +347,26 @@ export function valueFromFinishedLoadingState<L extends LoadingState>(defaultVal
 }
 
 /**
- * Executes a function when the piped LoadingState has the configured state.
+ * Executes a side-effect function when the piped {@link LoadingState} matches the given {@link LoadingStateType}.
  *
- * @param fn
+ * This is a tap-style operator that does not modify the stream, but calls `fn` when the state matches the specified type.
+ *
+ * @example
+ * ```ts
+ * // Log whenever the state transitions to an error
+ * state$.pipe(
+ *   tapOnLoadingStateType((state) => console.error('Error:', state.error), LoadingStateType.ERROR)
+ * ).subscribe();
+ *
+ * // Trigger an action when loading begins
+ * state$.pipe(
+ *   tapOnLoadingStateType(() => showSpinner(), LoadingStateType.LOADING)
+ * ).subscribe();
+ * ```
+ *
+ * @param fn - The side-effect function to call when the state matches.
+ * @param type - The {@link LoadingStateType} to match against.
+ * @returns A `MonoTypeOperatorFunction` that taps on matching states.
  */
 export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
 export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
@@ -218,9 +388,20 @@ export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => 
 }
 
 /**
- * Executes a function when the input state has a successful value.
+ * Executes a side-effect function when the input {@link LoadingState} has a successful value.
  *
- * @param fn
+ * This is a convenience wrapper around {@link tapOnLoadingStateType} with {@link LoadingStateType.SUCCESS}.
+ *
+ * @example
+ * ```ts
+ * // Log the successful value
+ * state$.pipe(
+ *   tapOnLoadingStateSuccess((state) => console.log('Loaded:', state.value))
+ * ).subscribe();
+ * ```
+ *
+ * @param fn - The side-effect function to call on success states.
+ * @returns A `MonoTypeOperatorFunction` that taps on successful states.
  */
 export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
 export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
@@ -230,7 +411,21 @@ export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) 
 }
 
 /**
- * Convenience function for using mapLoadingStateResults with an Observable.
+ * Convenience function for using {@link mapLoadingStateResults} with an Observable.
+ *
+ * Maps the value within a {@link LoadingState} using the provided configuration, preserving the loading/error state metadata.
+ *
+ * @example
+ * ```ts
+ * // Map a SystemState<T> loading state to just its data property
+ * readonly dataState$: Observable<LoadingState<T>> = this.systemStateLoadingState$.pipe(
+ *   mapLoadingState({ mapValue: (x: SystemState<T>) => x.data }),
+ *   shareReplay(1)
+ * );
+ * ```
+ *
+ * @param config - Configuration for mapping the loading state value.
+ * @returns An `OperatorFunction` that maps the value within the loading state.
  */
 export function mapLoadingState<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
 export function mapLoadingState<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
@@ -240,7 +435,41 @@ export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = P
 }
 
 /**
- * Convenience function for catching the loading state's error from one value to another using an arbitrary operator.
+ * Maps the value within a {@link LoadingState} using an arbitrary RxJS operator.
+ *
+ * When the state has a defined value, the value is extracted, passed through the provided operator,
+ * and the result is wrapped back into the loading state. If the operator does not emit immediately,
+ * a temporary loading state (with no value) is emitted while waiting.
+ *
+ * Error and loading states are passed through without invoking the operator.
+ *
+ * @example
+ * ```ts
+ * // Filter loading state values using a search string operator
+ * readonly state$: Observable<ListLoadingState<DocValue>> = this._values.pipe(
+ *   switchMap((x) => of(successResult(x)).pipe(startWithBeginLoading())),
+ *   mapLoadingStateValueWithOperator(
+ *     filterWithSearchString({
+ *       filter: (a) => a.name,
+ *       search$: this.search$
+ *     })
+ *   )
+ * );
+ *
+ * // Transform values using switchMap inside the operator
+ * readonly groupsState$ = this.itemsState$.pipe(
+ *   mapLoadingStateValueWithOperator(
+ *     switchMap((items) => this.viewDelegate$.pipe(
+ *       switchMap((delegate) => asObservable(delegate.groupBy(items)))
+ *     ))
+ *   ),
+ *   shareReplay(1)
+ * );
+ * ```
+ *
+ * @param operator - The RxJS operator to apply to the loading state's value.
+ * @param mapOnUndefined - If true, also applies the operator when the value is undefined (but loading is finished and no error).
+ * @returns An `OperatorFunction` that transforms the value within the loading state.
  */
 export function mapLoadingStateValueWithOperator<L extends LoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
 export function mapLoadingStateValueWithOperator<L extends PageLoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
@@ -276,7 +505,23 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
 }
 
 /**
- * Convenience function for catching an LoadingStateWithError and returning a new LoadingState.
+ * Catches a {@link LoadingStateWithError} and transforms it into a new {@link LoadingState} using the provided operator.
+ *
+ * Non-error states are passed through unchanged. When an error state is encountered, it is passed through the
+ * operator to produce a replacement state. If the operator does not emit immediately, a temporary loading state is emitted.
+ *
+ * @example
+ * ```ts
+ * // On error, return an empty list instead of propagating the error
+ * readonly notificationItemsLoadingState$ = this.store.notificationItemsLoadingState$.pipe(
+ *   catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(
+ *     map(() => successResult([]))
+ *   )
+ * );
+ * ```
+ *
+ * @param operator - The RxJS operator to apply to the error loading state.
+ * @returns A `MonoTypeOperatorFunction` that catches and transforms error states.
  */
 export function catchLoadingStateErrorWithOperator<L extends LoadingState>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
 export function catchLoadingStateErrorWithOperator<L extends PageLoadingState>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
@@ -304,6 +549,9 @@ export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoading
   };
 }
 
+/**
+ * Config for {@link distinctLoadingState}.
+ */
 export interface DistinctLoadingStateConfig<L extends LoadingState> {
   /**
    * Whether or not to pass the retained value when the next LoadingState's value (the value being considered by this DecisionFunction) is null/undefined.
@@ -325,22 +573,33 @@ export interface DistinctLoadingStateConfig<L extends LoadingState> {
   metadataComparator?: EqualityComparatorFunction<Maybe<Partial<L>>>;
 }
 
-interface DistinctLoadingStateScan<L extends LoadingState> {
-  readonly isSameValue: boolean;
-  readonly isSameLoadingStateMetadata: boolean;
-  readonly value?: Maybe<LoadingStateValue<L>>;
-  readonly current?: L;
-  readonly previous?: L;
-}
-
 /**
- * A special distinctUntilChanged-like operator for LoadingState and PageLoadingState.
+ * A special `distinctUntilChanged`-like operator for {@link LoadingState} and {@link PageLoadingState}.
  *
- * It saves the previous value and passes it through whenever the LoadingState changes.
+ * Retains the previous value and only emits when the value or loading state metadata actually changes,
+ * as determined by the provided value comparator. This prevents unnecessary re-emissions when a loading
+ * state re-emits with an equivalent value.
  *
- * @param operator
- * @param mapOnUndefined
- * @returns
+ * Accepts either a simple {@link EqualityComparatorFunction} for comparing values, or a full
+ * {@link DistinctLoadingStateConfig} for more fine-grained control over comparison behavior.
+ *
+ * @example
+ * ```ts
+ * // Filter out duplicate loading states using key-based comparison
+ * const distinct$ = values$.pipe(
+ *   distinctLoadingState(objectKeysEqualityComparatorFunction((x) => x))
+ * );
+ *
+ * // Full config with custom comparator
+ * const distinct$ = values$.pipe(
+ *   distinctLoadingState({
+ *     valueComparator: (a, b) => a?.id === b?.id,
+ *   })
+ * );
+ * ```
+ *
+ * @param config - Either a value comparator function or a full {@link DistinctLoadingStateConfig}.
+ * @returns A `MonoTypeOperatorFunction` that filters out duplicate loading states.
  */
 export function distinctLoadingState<L extends LoadingState>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
 export function distinctLoadingState<L extends PageLoadingState>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
@@ -349,6 +608,14 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
   const { compareOnUndefinedValue, valueComparator, metadataComparator: inputMetadataComparator, passRetainedValue: inputPassRetainedValue } = typeof inputConfig === 'function' ? ({ valueComparator: inputConfig } as DistinctLoadingStateConfig<L>) : inputConfig;
   const passRetainedValue = inputPassRetainedValue ?? ((x) => x !== null);
   const metadataComparator = inputMetadataComparator ?? (isPageLoadingStateMetadataEqual as EqualityComparatorFunction<Maybe<Partial<L>>>);
+
+  interface DistinctLoadingStateScan<L extends LoadingState> {
+    readonly isSameValue: boolean;
+    readonly isSameLoadingStateMetadata: boolean;
+    readonly value?: Maybe<LoadingStateValue<L>>;
+    readonly current?: L;
+    readonly previous?: L;
+  }
 
   return (obs: Observable<L>) => {
     return obs.pipe(
@@ -400,12 +667,30 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
 }
 
 /**
- * Creates a promise from a Observable that pipes loading states that resolves the value when the loading state has finished loading.
+ * Creates a Promise from an Observable of {@link LoadingState} that resolves when loading finishes.
  *
- * If the loading state returns an error, the error is thrown.
+ * Waits for the first finished loading state, then resolves with the value. If the finished state
+ * contains an error, the promise is rejected with that error.
  *
- * @param obs
- * @returns
+ * @example
+ * ```ts
+ * // Await a loading state observable as a promise
+ * const value = await promiseFromLoadingState(dataState$);
+ *
+ * // Use within a work instance to forward errors
+ * const result = await promiseFromLoadingState(
+ *   loadingStateObs.pipe(
+ *     filterMaybe(),
+ *     tap(() => this._setWorking(true))
+ *   )
+ * ).catch((e) => {
+ *   this.reject(e);
+ *   throw e;
+ * });
+ * ```
+ *
+ * @param obs - The observable emitting {@link LoadingState} values.
+ * @returns A Promise that resolves with the value or rejects with the error.
  */
 export function promiseFromLoadingState<T>(obs: Observable<LoadingState<T>>): Promise<T> {
   return firstValueFrom(obs.pipe(filter(isLoadingStateFinishedLoading))).then((x) => {

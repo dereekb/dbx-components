@@ -1,6 +1,6 @@
 import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
-import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction, filterKeysOnPOJOFunction } from './object.filter.pojo';
+import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, countPOJOKeysFunction, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction, filterKeysOnPOJOFunction, mergeObjectsFunction, valuesFromPOJO, valuesFromPOJOFunction } from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 describe('overrideInObject', () => {
@@ -26,8 +26,8 @@ describe('overrideInObject', () => {
 
     expect(target).toBe(result);
     expect(target.override).toBe(otherValues[0].override);
-    expect((target as typeof otherValues[1]).a).toBe(otherValues[1].a);
-    expect((target as typeof otherValues[1]).b).toBe(otherValues[1].b);
+    expect((target as (typeof otherValues)[1]).a).toBe(otherValues[1].a);
+    expect((target as (typeof otherValues)[1]).b).toBe(otherValues[1].b);
     expect(target.c).toBe(3);
   });
 
@@ -54,8 +54,8 @@ describe('overrideInObject', () => {
         expect(result).not.toBe(target);
         expect(target.override).toBe(false);
         expect(result.override).toBe(otherValues[0].override);
-        expect((result as typeof otherValues[1]).a).toBe(otherValues[1].a);
-        expect((result as typeof otherValues[1]).b).toBe(otherValues[1].b);
+        expect((result as (typeof otherValues)[1]).a).toBe(otherValues[1].a);
+        expect((result as (typeof otherValues)[1]).b).toBe(otherValues[1].b);
       });
     });
   });
@@ -121,7 +121,7 @@ describe('mergeObjects', () => {
     ];
 
     // keys filter can be either the string or number form
-    const result = mergeObjects<typeof otherValues[0]>(otherValues, { keysFilter: ['1', 2] });
+    const result = mergeObjects<(typeof otherValues)[0]>(otherValues, { keysFilter: ['1', 2] });
     expect(result).toBeDefined();
 
     // javascript handles the strings and numbers all the same
@@ -159,6 +159,33 @@ interface TestObject {
 
 describe('assignValuesToPOJOFunction()', () => {
   describe('function', () => {
+    describe('with default filter', () => {
+      const assignFn = assignValuesToPOJOFunction<{ v: number; ms?: Maybe<string> }>();
+
+      it('should filter undefined values by default', () => {
+        const result = assignFn({ v: 0 }, { v: 1, ms: undefined });
+
+        expect(result.v).toBe(1);
+        expect(objectHasKey(result, 'ms')).toBe(false);
+      });
+
+      it('should not filter null values by default', () => {
+        const result = assignFn({ v: 0 }, { v: 1, ms: null });
+
+        expect(result.v).toBe(1);
+        expect(result.ms).toBeNull();
+      });
+
+      it('should return a copy by default', () => {
+        const target = { v: 0 };
+        const result = assignFn(target, { v: 1 });
+
+        expect(result).not.toBe(target);
+        expect(result.v).toBe(1);
+        expect(target.v).toBe(0);
+      });
+    });
+
     describe('filter=NULL', () => {
       const assignFunction = assignValuesToPOJOFunction<TestObject>({ keysFilter: ['v', 'ms'], valueFilter: KeyValueTypleValueFilter.NULL });
 
@@ -346,6 +373,102 @@ describe('filterKeysOnPOJOFunction()', () => {
         expect(result.a).toBeUndefined();
         expect(result.b).toBeUndefined();
       });
+    });
+  });
+});
+
+describe('mergeObjectsFunction()', () => {
+  describe('with default filter', () => {
+    const merge = mergeObjectsFunction<{ a: number; b: number }>();
+
+    it('should filter out undefined values by default', () => {
+      const result = merge([
+        { a: 1, b: undefined as unknown as number },
+        { a: undefined as unknown as number, b: 2 }
+      ]);
+
+      expect(result).toBeDefined();
+      expect(result.a).toBe(1);
+      expect(result.b).toBe(2);
+    });
+
+    it('should not filter out null values by default', () => {
+      const result = merge([{ a: 1, b: null as unknown as number }]);
+
+      expect(result).toBeDefined();
+      expect(result.a).toBe(1);
+      expect(result.b).toBe(null);
+    });
+  });
+});
+
+describe('countPOJOKeysFunction()', () => {
+  describe('with default filter', () => {
+    const countFn = countPOJOKeysFunction();
+
+    it('should count all non-undefined keys by default', () => {
+      const result = countFn({ a: 1, b: undefined, c: null, d: 'test' });
+      expect(result).toBe(3);
+    });
+
+    it('should include null keys in the count by default', () => {
+      const result = countFn({ a: null, b: undefined });
+      expect(result).toBe(1);
+    });
+  });
+});
+
+describe('valuesFromPOJO()', () => {
+  describe('with default filter', () => {
+    it('should return all non-undefined values by default', () => {
+      const result = valuesFromPOJO({ a: 1, b: undefined, c: 'hello' });
+
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+      expect(result).toContain(1);
+      expect(result).toContain('hello');
+    });
+
+    it('should include null values by default', () => {
+      const result = valuesFromPOJO({ a: 1, b: null, c: undefined });
+
+      expect(result.length).toBe(2);
+      expect(result).toContain(1);
+      expect(result).toContain(null);
+    });
+  });
+
+  describe('with NULL filter', () => {
+    it('should exclude null and undefined values', () => {
+      const result = valuesFromPOJO({ a: 1, b: null, c: undefined, d: 'test' }, KeyValueTypleValueFilter.NULL);
+
+      expect(result.length).toBe(2);
+      expect(result).toContain(1);
+      expect(result).toContain('test');
+    });
+  });
+});
+
+describe('valuesFromPOJOFunction()', () => {
+  describe('with default filter', () => {
+    const getValues = valuesFromPOJOFunction();
+
+    it('should return all non-undefined values by default', () => {
+      const result = getValues({ x: 10, y: undefined, z: 'test' });
+
+      expect(result.length).toBe(2);
+      expect(result).toContain(10);
+      expect(result).toContain('test');
+    });
+
+    it('should include falsy values other than undefined', () => {
+      const result = getValues({ a: 0, b: false, c: '', d: null, e: undefined });
+
+      expect(result.length).toBe(4);
+      expect(result).toContain(0);
+      expect(result).toContain(false);
+      expect(result).toContain('');
+      expect(result).toContain(null);
     });
   });
 });
