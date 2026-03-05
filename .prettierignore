@@ -1,19 +1,20 @@
 # Add files here to ignore them from prettier formatting
 
-/dist
-/coverage
 /.angular
 /.circleci
 /.config
 /.firebase
 /.github
+/.claude
 /.husky
 /.reports
 /.vscode
+
+/dist
+/coverage
+
 /art
 /docker
-/setup
-/tools
 .commitlintrc.json
 .eslintrc.json
 *.md

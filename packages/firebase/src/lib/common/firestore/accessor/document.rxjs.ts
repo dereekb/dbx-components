@@ -1,4 +1,4 @@
-import { type Observable, combineLatest, shareReplay, map, type OperatorFunction, of } from 'rxjs';
+import { type Observable, combineLatest, map, type OperatorFunction, of } from 'rxjs';
 import { type DocumentDataWithIdAndKey, type DocumentSnapshot } from '../types';
 import { type FirestoreDocument, type FirestoreDocumentData } from './document';
 import { type FirestoreDocumentSnapshotDataPair, type FirestoreDocumentSnapshotDataPairWithData, getDataFromDocumentSnapshots, documentDataWithIdAndKey } from './document.utility';
@@ -9,7 +9,7 @@ import { MAP_IDENTITY } from '@dereekb/util';
  *
  * This function streams the latest snapshots for each document in the provided array.
  * Each time any document in the array changes, a new array containing the latest snapshots
- * of all documents is emitted. Results are shared with multiple subscribers through shareReplay.
+ * of all documents is emitted.
  *
  * If the input array is empty, an Observable that emits an empty array is returned.
  *
@@ -30,7 +30,6 @@ export function latestSnapshotsFromDocuments<D extends FirestoreDocument<any>>(d
  *
  * {@link latestSnapshotsFromDocuments} delegates to this function with an identity operator.
  *
- * The result is shared via `shareReplay(1)`.
  * Returns `of([])` for an empty input array.
  *
  * @param documents - Documents to stream from
@@ -38,7 +37,7 @@ export function latestSnapshotsFromDocuments<D extends FirestoreDocument<any>>(d
  * @returns Observable emitting an array of transformed values whenever any document changes
  */
 export function mapLatestSnapshotsFromDocuments<D extends FirestoreDocument<any>, O>(documents: D[], operator: OperatorFunction<DocumentSnapshot<FirestoreDocumentData<D>>, O>): Observable<O[]> {
-  return documents.length ? combineLatest(documents.map((x) => x.accessor.stream().pipe(operator))).pipe(shareReplay(1)) : of([]);
+  return documents.length ? combineLatest(documents.map((x) => x.accessor.stream().pipe(operator))) : of([]);
 }
 
 /**
@@ -47,7 +46,7 @@ export function mapLatestSnapshotsFromDocuments<D extends FirestoreDocument<any>
  * This function streams the latest data for each document in the provided array.
  * Each time any document in the array changes, a new array containing the latest data
  * of all documents is emitted. Document data includes both the document content and
- * metadata like document ID and key. Results are shared with multiple subscribers.
+ * metadata like document ID and key.
  *
  * Non-existent documents are filtered out of the results automatically.
  *
@@ -56,7 +55,7 @@ export function mapLatestSnapshotsFromDocuments<D extends FirestoreDocument<any>
  * @returns Observable that emits arrays of document data whenever any document changes
  */
 export function latestDataFromDocuments<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]> {
-  return latestSnapshotsFromDocuments<D>(documents).pipe(dataFromDocumentSnapshots(), shareReplay(1));
+  return latestSnapshotsFromDocuments<D>(documents).pipe(dataFromDocumentSnapshots());
 }
 
 /**
@@ -82,7 +81,6 @@ export function dataFromDocumentSnapshots<T>(): OperatorFunction<DocumentSnapsho
  * that actually changed. The `data` field has `id` and `key` fields injected via {@link documentDataWithIdAndKey},
  * and will be `undefined` for documents that don't exist in Firestore.
  *
- * The result is shared via `shareReplay(1)`.
  * Returns `of([])` for an empty input array.
  *
  * This is the streaming equivalent of {@link import('./document.utility').getDocumentSnapshotDataPairs}.
@@ -104,7 +102,7 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
             )
           )
         )
-      ).pipe(shareReplay(1))
+      )
     : of([]);
 }
 
@@ -115,7 +113,6 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
  * `data` is non-nullish (i.e., the document exists in Firestore). The filtered array may be shorter than
  * the input `documents` array and may change length over time as documents are created or deleted.
  *
- * The result is shared via `shareReplay(1)`.
  * Returns `of([])` for an empty input array.
  *
  * This is the streaming equivalent of {@link import('./document.utility').getDocumentSnapshotDataPairsWithData}.
@@ -124,8 +121,5 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
  * @returns Observable emitting snapshot-data pairs for existing documents only, whenever any document changes
  */
 export function streamDocumentSnapshotDataPairsWithData<D extends FirestoreDocument<any>>(documents: D[]): Observable<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
-  return streamDocumentSnapshotDataPairs(documents).pipe(
-    map((pairs) => pairs.filter((pair): pair is FirestoreDocumentSnapshotDataPairWithData<D> => pair.data != null)),
-    shareReplay(1)
-  );
+  return streamDocumentSnapshotDataPairs(documents).pipe(map((pairs) => pairs.filter((pair): pair is FirestoreDocumentSnapshotDataPairWithData<D> => pair.data != null)));
 }

@@ -75,7 +75,8 @@ import {
   latestDataFromDocuments,
   dataFromDocumentSnapshots,
   streamDocumentSnapshotDataPairs,
-  streamDocumentSnapshotDataPairsWithData
+  streamDocumentSnapshotDataPairsWithData,
+  streamFromOnSnapshot
 } from '@dereekb/firebase';
 import { type MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, type MockItem, type MockItemSubItemDocument, type MockItemSubItem, type MockItemSubItemDeepDocument, type MockItemSubItemDeep, type MockItemUserDocument, mockItemIdentity, type MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
@@ -108,6 +109,72 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
             test: true
           };
         }
+      });
+    });
+
+    let sub: SubscriptionObject;
+
+    beforeEach(() => {
+      sub = new SubscriptionObject();
+    });
+
+    afterEach(() => {
+      sub.destroy();
+    });
+
+    describe('query.util.ts', () => {
+      // MARK: streamFromOnSnapshot
+      describe('streamFromOnSnapshot()', () => {
+        it('should call unsubscribe when the subscriber unsubscribes', () => {
+          let unsubscribeCalled = false;
+
+          const obs = streamFromOnSnapshot(({ next }) => {
+            next('value');
+            return () => {
+              unsubscribeCalled = true;
+            };
+          });
+
+          const subscription = obs.subscribe();
+          expect(unsubscribeCalled).toBe(false);
+
+          subscription.unsubscribe();
+          expect(unsubscribeCalled).toBe(true);
+        });
+
+        it('should unsubscribe the onSnapshot listener when first() completes', () => {
+          let unsubscribeCalled = false;
+
+          const obs = streamFromOnSnapshot<string>(({ next }) => {
+            next('value');
+            return () => {
+              unsubscribeCalled = true;
+            };
+          });
+
+          // first() completes the subscriber, then RxJS tears down the source
+          const subscription = obs.pipe(first()).subscribe();
+
+          // After first() + subscribe complete synchronously, teardown should have run
+          expect(subscription.closed).toBe(true);
+          expect(unsubscribeCalled).toBe(true);
+        });
+
+        it(
+          'should unsubscribe onSnapshot listeners from document streams after subscriber unsubscribes',
+          callbackTest((done) => {
+            sub.subscription = latestSnapshotsFromDocuments(items)
+              .pipe(first())
+              .subscribe({
+                complete: () => {
+                  // With refCount: true on shareReplay, unsubscribing the last subscriber
+                  // tears down the source, which calls unsubscribe on each onSnapshot listener.
+                  // If this test completes without the "active listeners" error, the cleanup worked.
+                  done();
+                }
+              });
+          })
+        );
       });
     });
 
@@ -747,16 +814,6 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
     });
 
     describe('document.rxjs.ts', () => {
-      let sub: SubscriptionObject;
-
-      beforeEach(() => {
-        sub = new SubscriptionObject();
-      });
-
-      afterEach(() => {
-        sub.destroy();
-      });
-
       // MARK: latestSnapshotsFromDocuments
       describe('latestSnapshotsFromDocuments()', () => {
         it(
