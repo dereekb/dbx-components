@@ -109,6 +109,17 @@ Skills provide specialized knowledge and implementation guidance for specific pa
 **Key Concepts:** `LoadingState`, `LoadingStateContext`, `loadingStateFromObs`
 **Common Use:** Firebase data loading, API calls, async form submissions
 
+## Release & Git Workflow Skills
+
+### `merge-release`
+**Description:** Merge main branch changes back into develop after a release
+**Use When:** A release has been published and main needs to be merged back into develop
+**Scripts:** `start-merge-in-main.sh`, `end-merge-in-main.sh`, `make-dev-tag.sh`
+
+### `dbx-commit-messages`
+**Description:** Commit message conventions for the workspace
+**Use When:** Writing commit messages, understanding commit format rules
+
 ## Workflow Skills
 
 Workflow skills help with Nx-specific tasks and are located in `.gemini/skills/` and `.opencode/skills/` directories:
