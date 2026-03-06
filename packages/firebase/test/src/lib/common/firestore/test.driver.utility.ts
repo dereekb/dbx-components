@@ -1,17 +1,9 @@
 import { startOfDay, addDays, addHours } from 'date-fns';
-import { callbackTest, expectFail, itShouldFail } from '@dereekb/util/test';
+import { callbackTest } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { filter, first, from, skip, map as rxMap } from 'rxjs';
+import { first, map as rxMap } from 'rxjs';
 import {
-  firestoreIdBatchVerifierFactory,
-  limit,
-  orderBy,
-  startAfter,
-  startAt,
   where,
-  limitToLast,
-  endAt,
-  endBefore,
   makeDocuments,
   newDocuments,
   getDocumentSnapshots,
@@ -33,7 +25,6 @@ import {
   loadDocumentsForIdsFromValues,
   firestoreDocumentLoader,
   firestoreDocumentSnapshotPairsLoader,
-  firestoreQueryDocumentSnapshotPairsLoader,
   documentData,
   documentDataFunction,
   documentDataWithIdAndKey,
@@ -47,40 +38,16 @@ import {
   firestoreModelKeysFromDocuments,
   documentReferenceFromDocument,
   documentReferencesFromDocuments,
-  type FirestoreQueryFactoryFunction,
-  type FirestoreCollectionQueryFactoryFunction,
-  startAtValue,
-  endAtValue,
-  whereDocumentId,
-  type FirebaseAuthUserId,
-  whereDateIsBetween,
-  whereDateIsInRange,
-  whereDateIsBeforeWithSort,
-  whereDateIsOnOrAfterWithSort,
-  whereStringValueHasPrefix,
-  whereStringHasRootIdentityModelKey,
-  iterateFirestoreDocumentSnapshotPairs,
-  iterateFirestoreDocumentSnapshotBatches,
-  iterateFirestoreDocumentSnapshotPairBatches,
-  iterateFirestoreDocumentSnapshots,
-  whereDateIsOnOrBeforeWithSort,
-  whereDateIsAfterWithSort,
-  type FirestoreDocumentSnapshotDataPair,
-  type FirestoreDocumentSnapshotDataPairWithData,
-  loadAllFirestoreDocumentSnapshotPairs,
-  loadAllFirestoreDocumentSnapshot,
-  orderByDocumentId,
   latestSnapshotsFromDocuments,
   mapLatestSnapshotsFromDocuments,
-  latestDataFromDocuments,
+  streamDocumentSnapshotsData,
   dataFromDocumentSnapshots,
   streamDocumentSnapshotDataPairs,
   streamDocumentSnapshotDataPairsWithData,
   streamFromOnSnapshot
 } from '@dereekb/firebase';
-import { type MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, type MockItem, type MockItemSubItemDocument, type MockItemSubItem, type MockItemSubItemDeepDocument, type MockItemSubItemDeep, type MockItemUserDocument, mockItemIdentity, type MockItemUserKey } from '../mock';
-import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
-import { DateRangeType } from '@dereekb/date';
+import { type MockItemCollectionFixture, MockItemDocument, type MockItem } from '../mock';
+import { isEvenNumber, unique } from '@dereekb/util';
 
 /**
  * Describes utility driver tests, using a MockItemCollectionFixture.
@@ -885,12 +852,12 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
         );
       });
 
-      // MARK: latestDataFromDocuments
-      describe('latestDataFromDocuments()', () => {
+      // MARK: streamDocumentSnapshotsData
+      describe('streamDocumentSnapshotsData()', () => {
         it(
           'should emit data with id/key for all documents',
           callbackTest((done) => {
-            sub.subscription = latestDataFromDocuments(items)
+            sub.subscription = streamDocumentSnapshotsData(items)
               .pipe(first())
               .subscribe((data) => {
                 expect(data.length).toBe(testDocumentCount);
@@ -909,7 +876,7 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
         it(
           'should emit an empty array for empty input',
           callbackTest((done) => {
-            sub.subscription = latestDataFromDocuments([])
+            sub.subscription = streamDocumentSnapshotsData([])
               .pipe(first())
               .subscribe((data) => {
                 expect(data.length).toBe(0);
