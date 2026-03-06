@@ -38,6 +38,7 @@ import {
   firestoreModelKeysFromDocuments,
   documentReferenceFromDocument,
   documentReferencesFromDocuments,
+  limitedFirestoreDocumentAccessorSnapshotCache,
   latestSnapshotsFromDocuments,
   mapLatestSnapshotsFromDocuments,
   streamDocumentSnapshotsData,
@@ -775,6 +776,112 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
           expect(refs.length).toBe(testDocumentCount);
           refs.forEach((ref, i) => {
             expect(ref).toBe(items[i].documentRef);
+          });
+        });
+      });
+
+      // MARK: limitedFirestoreDocumentAccessorSnapshotCache
+      describe('limitedFirestoreDocumentAccessorSnapshotCache()', () => {
+        it('should expose the underlying accessor', () => {
+          const accessor = f.instance.mockItemCollection.documentAccessor();
+          const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+
+          expect(cache.accessor).toBe(accessor);
+        });
+
+        describe('getDocumentSnapshotDataPairForKey()', () => {
+          it('should return a snapshot data pair for an existing document', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+
+            const pair = await cache.getDocumentSnapshotDataPairForKey(items[0].key);
+
+            expect(pair.document).toBeDefined();
+            expect(pair.document.key).toBe(items[0].key);
+            expect(pair.snapshot).toBeDefined();
+            expect(pair.data).toBeDefined();
+            expect(pair.data!.id).toBe(items[0].id);
+            expect(pair.data!.key).toBe(items[0].key);
+          });
+
+          it('should return the same promise for the same key', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+
+            const promise1 = cache.getDocumentSnapshotDataPairForKey(items[0].key);
+            const promise2 = cache.getDocumentSnapshotDataPairForKey(items[0].key);
+
+            expect(promise1).toBe(promise2);
+          });
+
+          it('should return undefined data for a non-existent document', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const newDoc = newDocuments(accessor, 1)[0];
+
+            const pair = await cache.getDocumentSnapshotDataPairForKey(newDoc.key);
+
+            expect(pair.document).toBeDefined();
+            expect(pair.data).toBeUndefined();
+          });
+        });
+
+        describe('getDocumentSnapshotDataPairsForKeys()', () => {
+          it('should return pairs for all keys in order', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const keys = items.map((x) => x.key);
+
+            const pairs = await cache.getDocumentSnapshotDataPairsForKeys(keys);
+
+            expect(pairs.length).toBe(testDocumentCount);
+
+            pairs.forEach((pair, i) => {
+              expect(pair.document.key).toBe(items[i].key);
+              expect(pair.data).toBeDefined();
+              expect(pair.data!.id).toBe(items[i].id);
+            });
+          });
+
+          it('should use the cache for duplicate keys', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const key = items[0].key;
+
+            const [pair1] = await cache.getDocumentSnapshotDataPairsForKeys([key]);
+            const [pair2] = await cache.getDocumentSnapshotDataPairsForKeys([key]);
+
+            expect(pair1).toBe(pair2);
+          });
+        });
+
+        describe('getDocumentSnapshotDataPairsWithDataForKeys()', () => {
+          it('should return pairs for all existing documents', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const keys = items.map((x) => x.key);
+
+            const pairs = await cache.getDocumentSnapshotDataPairsWithDataForKeys(keys);
+
+            expect(pairs.length).toBe(testDocumentCount);
+
+            pairs.forEach((pair) => {
+              expect(pair.data).toBeDefined();
+              expect(pair.data.id).toBeDefined();
+              expect(pair.data.key).toBeDefined();
+            });
+          });
+
+          it('should filter out non-existent documents', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const newDoc = newDocuments(accessor, 1)[0];
+            const keys = [...items.map((x) => x.key), newDoc.key];
+
+            const pairs = await cache.getDocumentSnapshotDataPairsWithDataForKeys(keys);
+
+            expect(pairs.length).toBe(testDocumentCount);
+            expect(pairs.every((p) => p.data != null)).toBe(true);
           });
         });
       });
