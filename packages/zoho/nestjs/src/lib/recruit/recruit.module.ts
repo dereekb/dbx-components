@@ -9,6 +9,10 @@ import { ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Provider Factories
+/**
+ * Reads Zoho Recruit connection settings from the NestJS ConfigService
+ * and returns a validated service config.
+ */
 export function zohoRecruitServiceConfigFactory(configService: ConfigService): ZohoRecruitServiceConfig {
   const getFromConfigService = zohoConfigServiceReaderFunction(ZOHO_RECRUIT_SERVICE_NAME, configService);
 
@@ -22,6 +26,10 @@ export function zohoRecruitServiceConfigFactory(configService: ConfigService): Z
   return config;
 }
 
+/**
+ * Reads Zoho Accounts (OAuth) settings scoped to the Recruit service from
+ * the NestJS ConfigService and returns an accounts service config.
+ */
 export function zohoRecruitAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
   return zohoAccountsServiceConfigFromConfigService({
     configService,
@@ -30,6 +38,9 @@ export function zohoRecruitAccountServiceConfigFactory(configService: ConfigServ
 }
 
 // MARK: App Zoho Recruit Module
+/**
+ * Configuration for generating the application-level Zoho Recruit NestJS module metadata.
+ */
 export interface ProvideAppZohoRecruitMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
    * The ZohoRecruitModule requires the following dependencies in order to initialze properly:
@@ -41,11 +52,9 @@ export interface ProvideAppZohoRecruitMetadataConfig extends Pick<ModuleMetadata
 }
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's ZohoRecruitModule.
- *
- * @param provide
- * @param useFactory
- * @returns
+ * Generates NestJS ModuleMetadata that wires up the full Zoho Recruit stack
+ * (config, accounts, and API service) so consuming modules only need a
+ * single import. Allows merging additional imports, exports, and providers.
  */
 export function appZohoRecruitModuleMetadata(config: ProvideAppZohoRecruitMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

@@ -2,8 +2,14 @@ import { type ISO8601DateString, type UniqueModelWithId } from '@dereekb/util';
 import { type ZohoRecruitReferenceData, type ZohoRecruitParentReferenceData, type ZohoRecruitTypeId, type ZohoRecruitModuleName, type ZohoRecruitCreatedByData, type ZohoRecruitModifiedByData, type ZohoRecruitId } from './recruit';
 
 // MARK: Notes
+/**
+ * Unique identifier for a note in Zoho Recruit.
+ */
 export type ZohoRecruitNoteId = string;
 
+/**
+ * Describes whether a note action was triggered by the system rather than a user.
+ */
 export interface ZohoRecruitNoteAction {
   $is_system_action: boolean;
 }
@@ -11,6 +17,9 @@ export interface ZohoRecruitNoteAction {
 export type ZohoRecruitNoteSourceName = 'NORMAL_USER';
 export type ZohoRecruitNoteSourceType = number;
 
+/**
+ * Identifies the origin of a note, distinguishing system-generated notes from those created by normal users.
+ */
 export interface ZohoRecruitNoteSource {
   name: ZohoRecruitNoteSourceName;
   type: ZohoRecruitNoteSourceType;
@@ -18,6 +27,9 @@ export interface ZohoRecruitNoteSource {
 
 export type ZohoRecruitNoteOwnerData = ZohoRecruitReferenceData;
 
+/**
+ * Full note record data as returned by the Zoho Recruit API, including content, metadata, ownership, and permission flags.
+ */
 export interface ZohoRecruitNoteData {
   Note_Title: string;
   Note_Content: string;
@@ -41,6 +53,9 @@ export interface ZohoRecruitNoteData {
   $status: ZohoRecruitNoteStatus;
 }
 
+/**
+ * Data required to create a new note in Zoho Recruit, specifying the title, content, parent record, and target module.
+ */
 export interface NewZohoRecruitNoteData extends Pick<ZohoRecruitNoteData, 'Note_Title' | 'Note_Content'> {
   Parent_Id: Pick<ZohoRecruitParentReferenceData, 'id'> | ZohoRecruitId;
   se_module: ZohoRecruitModuleName;
@@ -49,8 +64,14 @@ export interface NewZohoRecruitNoteData extends Pick<ZohoRecruitNoteData, 'Note_
 export type ZohoRecruitNoteStatus = string; // TODO
 export type ZohoRecruitNoteFileSize = number;
 
+/**
+ * A Zoho Recruit note with its unique identifier, combining the full note data with a model identity.
+ */
 export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId {}
 
+/**
+ * Alias for a note attached to a specific Zoho Recruit record.
+ */
 export type ZohoRecruitRecordNote = ZohoRecruitNote;
 
 // MARK: Compat

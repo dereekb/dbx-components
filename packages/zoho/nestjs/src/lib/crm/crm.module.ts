@@ -9,6 +9,10 @@ import { ZOHO_CRM_SERVICE_NAME } from '@dereekb/zoho';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Provider Factories
+/**
+ * Reads Zoho CRM connection settings from the NestJS ConfigService
+ * and returns a validated service config.
+ */
 export function zohoCrmServiceConfigFactory(configService: ConfigService): ZohoCrmServiceConfig {
   const getFromConfigService = zohoConfigServiceReaderFunction(ZOHO_CRM_SERVICE_NAME, configService);
 
@@ -22,6 +26,10 @@ export function zohoCrmServiceConfigFactory(configService: ConfigService): ZohoC
   return config;
 }
 
+/**
+ * Reads Zoho Accounts (OAuth) settings scoped to the CRM service from
+ * the NestJS ConfigService and returns an accounts service config.
+ */
 export function zohoCrmAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
   return zohoAccountsServiceConfigFromConfigService({
     configService,
@@ -30,6 +38,9 @@ export function zohoCrmAccountServiceConfigFactory(configService: ConfigService)
 }
 
 // MARK: App Zoho Crm Module
+/**
+ * Configuration for generating the application-level Zoho CRM NestJS module metadata.
+ */
 export interface ProvideAppZohoCrmMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
    * The ZohoCrmModule requires the following dependencies in order to initialze properly:
@@ -41,11 +52,9 @@ export interface ProvideAppZohoCrmMetadataConfig extends Pick<ModuleMetadata, 'i
 }
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's ZohoCrmModule.
- *
- * @param provide
- * @param useFactory
- * @returns
+ * Generates NestJS ModuleMetadata that wires up the full Zoho CRM stack
+ * (config, accounts, and API service) so consuming modules only need a
+ * single import. Allows merging additional imports, exports, and providers.
  */
 export function appZohoCrmModuleMetadata(config: ProvideAppZohoCrmMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

@@ -7,8 +7,14 @@ import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 import { type ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Primary Zoho Recruit instance, providing access to the underlying context for all API operations.
+ */
 export type ZohoRecruit = ZohoRecruitContextRef;
 
+/**
+ * Configuration for building a {@link ZohoRecruitFactory}, including account credentials, rate limiting, and optional customization of the HTTP client and error logging.
+ */
 export interface ZohoRecruitFactoryConfig extends ZohoAccountsContextRef {
   /**
    * Custom ZohoRateLimitedFetchHandlerConfig
@@ -24,8 +30,14 @@ export interface ZohoRecruitFactoryConfig extends ZohoAccountsContextRef {
   logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
+/**
+ * Creates a {@link ZohoRecruit} instance from a given config, binding it to the appropriate API endpoint.
+ */
 export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
 
+/**
+ * Builds a {@link ZohoRecruitFactory} that produces configured Recruit instances with authenticated fetch, rate limiting, error interception, and automatic token refresh on invalid-token errors.
+ */
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {
   const { accountsContext } = factoryConfig;
   const accessTokenStringFactory = zohoAccessTokenStringFactory(accountsContext.loadAccessToken);

@@ -8,16 +8,28 @@ import { type FetchPage, type FetchPageFactoryOptions, makeUrlSearchParams } fro
 import { zohoFetchPageFactory, type ZohoPageResult } from '../zoho.api.page';
 
 // MARK: Create Tag
+/**
+ * Subset of tag data required when creating a new tag.
+ */
 export type ZohoCrmCreateTagData = Pick<ZohoCrmTagData, 'name'> & Partial<Pick<ZohoCrmTagData, 'color_code'>>;
 
+/**
+ * Input for creating one or more tags within a specific CRM module.
+ */
 export interface ZohoCrmCreateTagsRequest extends ZohoCrmModuleNameRef {
   readonly tags: ArrayOrValue<ZohoCrmCreateTagData>;
 }
 
+/**
+ * Raw API response from the CRM create tags endpoint.
+ */
 export interface ZohoCrmCreateTagsResponse {
   readonly tags: ZohoCrmChangeObjectResponse['data'];
 }
 
+/**
+ * Result that separates duplicate tag errors from other errors, since Zoho returns duplicates as errors rather than idempotent successes.
+ */
 export type ZohoCrmCreateTagsResult = ZohoCrmMultiRecordResult<ZohoCrmCreateTagData, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry> & {
   readonly duplicateErrorItems: ZohoCrmMultiRecordResultEntry<ZohoCrmCreateTagData, ZohoCrmChangeObjectResponseErrorEntry>[];
   readonly allErrorItems: ZohoCrmMultiRecordResultEntry<ZohoCrmCreateTagData, ZohoCrmChangeObjectResponseErrorEntry>[];
@@ -25,6 +37,9 @@ export type ZohoCrmCreateTagsResult = ZohoCrmMultiRecordResult<ZohoCrmCreateTagD
 
 export type ZohoCrmCreateTagsFunction = (input: ZohoCrmCreateTagsRequest) => Promise<ZohoCrmCreateTagsResult>;
 
+/**
+ * Creates one or more tags for a CRM module. Duplicate tag errors are separated from other errors in the result to simplify idempotent workflows.
+ */
 export function zohoCrmCreateTagsForModule(context: ZohoCrmContext) {
   return (input: ZohoCrmCreateTagsRequest) =>
     context
@@ -65,16 +80,25 @@ export function zohoCrmCreateTagsForModule(context: ZohoCrmContext) {
 }
 
 // MARK: Delete Tag
+/**
+ * Input for deleting a single tag by its ID.
+ */
 export interface ZohoCrmDeleteTagRequest {
   readonly id: ZohoCrmTagId;
 }
 
+/**
+ * Success entry returned when a tag is deleted.
+ */
 export interface ZohoCrmDeleteTagResponseSuccessEntry extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta {
   readonly details: {
     readonly id: ZohoCrmTagId;
   };
 }
 
+/**
+ * Raw API response from the CRM delete tag endpoint.
+ */
 export interface ZohoCrmDeleteTagResponse {
   readonly tags: ZohoCrmDeleteTagResponseSuccessEntry;
 }
@@ -98,14 +122,23 @@ export function zohoCrmDeleteTag(context: ZohoCrmContext): ZohoCrmDeleteTagFunct
 }
 
 // MARK: Get Tags
+/**
+ * Input for retrieving tags within a module. Supports pagination and optional filtering to only the current user's tags.
+ */
 export interface ZohoCrmGetTagsRequest extends ZohoCrmModuleNameRef, ZohoCrmGetRecordsPageFilter {
   readonly my_tags?: string;
 }
 
+/**
+ * Raw API response from the get tags endpoint. Uses `tags` instead of the standard `data` field.
+ */
 export interface ZohoCrmGetTagsResponse extends Omit<ZohoPageResult<ZohoCrmTagWithObjectDetails>, 'data'> {
   readonly tags: ZohoCrmTagWithObjectDetails[];
 }
 
+/**
+ * Normalized page result with tags in the standard `data` field.
+ */
 export type ZohoCrmGetTagsResult = ZohoPageResult<ZohoCrmTagWithObjectDetails>;
 export type ZohoCrmGetTagsFunction = (input: ZohoCrmGetTagsRequest) => Promise<ZohoCrmGetTagsResult>;
 
@@ -131,13 +164,16 @@ export function zohoCrmGetTagsForModule(context: ZohoCrmContext): ZohoCrmGetTags
 
 export type ZohoCrmGetTagsForModulePageFactory = (input: ZohoCrmGetTagsRequest, options?: Maybe<FetchPageFactoryOptions<ZohoCrmGetTagsRequest, ZohoCrmGetTagsResult>>) => FetchPage<ZohoCrmGetTagsRequest, ZohoCrmGetTagsResult>;
 
+/**
+ * Creates a page factory for iterating through all tags in a module across multiple pages.
+ */
 export function zohoCrmGetTagsForModulePageFactory(context: ZohoCrmContext): ZohoCrmGetTagsForModulePageFactory {
   return zohoFetchPageFactory(zohoCrmGetTagsForModule(context));
 }
 
 // MARK: Add Tag To Record
 /**
- * Limit enforced by Zoho Crm
+ * Maximum number of record IDs allowed per add-tags request, enforced by Zoho CRM.
  */
 export const ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED = 100;
 
@@ -173,10 +209,16 @@ export interface ZohoCrmAddTagsToRecordsResultDetails {
   readonly tags: ZohoCrmTagName[];
 }
 
+/**
+ * Success entry returned when tags are added to a record.
+ */
 export interface ZohoCrmAddTagsToRecordsSuccessEntry extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta {
   readonly details: ZohoCrmAddTagsToRecordsResultDetails;
 }
 
+/**
+ * Raw API response from the add tags endpoint.
+ */
 export type ZohoCrmAddTagsToRecordsResponse = ZohoCrmChangeObjectLikeResponse<ZohoCrmAddTagsToRecordsSuccessEntry>;
 
 /**
@@ -188,6 +230,9 @@ export type ZohoCrmAddTagsToRecordsErrorEntry = ZohoCrmChangeObjectResponseError
   readonly details: ZohoCrmAddTagsToRecordsErrorEntryDetails;
 };
 
+/**
+ * Paired result mapping the input request to per-record success or error outcomes.
+ */
 export type ZohoCrmAddTagsToRecordsResult = ZohoCrmMultiRecordResult<ZohoCrmAddTagsToRecordsRequest, ZohoCrmAddTagsToRecordsSuccessEntry, ZohoCrmAddTagsToRecordsErrorEntry>;
 
 export type ZohoCrmAddTagsToRecordsFunction = (input: ZohoCrmAddTagsToRecordsRequest) => Promise<ZohoCrmAddTagsToRecordsResult>;
@@ -209,6 +254,9 @@ export function zohoCrmAddTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTags
   };
 }
 
+/**
+ * Builds the request body for the add/remove tags endpoints, merging `tag_names` into `tags` and enforcing the max ID limit.
+ */
 export function zohoCrmAddTagsToRecordsRequestBody(input: ZohoCrmAddTagsToRecordsRequest) {
   if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
     throw new Error(`Cannot add/remove tags from more than ${ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} records at once.`);
@@ -234,17 +282,29 @@ export function zohoCrmAddTagsToRecordsRequestBody(input: ZohoCrmAddTagsToRecord
 
 // MARK: Remove Tag From Record
 /**
- * Limit enforced by Zoho Crm
+ * Maximum number of record IDs allowed per remove-tags request, enforced by Zoho CRM.
  */
 export const ZOHO_CRM_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED = 100;
 
+/**
+ * Request to remove tags from records. Uses the same shape as the add-tags request.
+ */
 export type ZohoCrmRemoveTagsFromRecordsRequest = ZohoCrmAddTagsToRecordsRequest;
+/**
+ * Details returned per record after tag removal.
+ */
 export type ZohoCrmRemoveTagsFromRecordsResultDetails = ZohoCrmAddTagsToRecordsResultDetails;
 
+/**
+ * Success entry returned when tags are removed from a record.
+ */
 export interface ZohoCrmRemoveTagsFromRecordsSuccessEntry extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta {
   readonly details: ZohoCrmRemoveTagsFromRecordsResultDetails;
 }
 
+/**
+ * Raw API response from the remove tags endpoint.
+ */
 export type ZohoCrmRemoveTagsFromRecordsResponse = ZohoCrmChangeObjectLikeResponse<ZohoCrmRemoveTagsFromRecordsSuccessEntry>;
 
 /**
@@ -256,6 +316,9 @@ export type ZohoCrmRemoveTagsFromRecordsErrorEntry = ZohoCrmChangeObjectResponse
   readonly details: ZohoCrmRemoveTagsFromRecordsErrorEntryDetails;
 };
 
+/**
+ * Paired result mapping the input request to per-record success or error outcomes.
+ */
 export type ZohoCrmRemoveTagsFromRecordsResult = ZohoCrmMultiRecordResult<ZohoCrmRemoveTagsFromRecordsRequest, ZohoCrmRemoveTagsFromRecordsSuccessEntry, ZohoCrmRemoveTagsFromRecordsErrorEntry>;
 
 export type ZohoCrmRemoveTagsFromRecordsFunction = (input: ZohoCrmRemoveTagsFromRecordsRequest) => Promise<ZohoCrmRemoveTagsFromRecordsResult>;

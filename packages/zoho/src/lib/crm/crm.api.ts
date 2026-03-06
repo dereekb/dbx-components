@@ -38,56 +38,117 @@ import { BaseError } from 'make-error';
  */
 export const ZOHO_CRM_CRUD_FUNCTION_MAX_RECORDS_LIMIT = 100;
 
+/**
+ * Paired success/error results from a multi-record update, upsert, or insert operation.
+ */
 export type ZohoCrmUpdateRecordResult<T> = ZohoCrmMultiRecordResult<T, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>;
+/**
+ * Raw API response from a record change operation containing the data array.
+ */
 export type ZohoCrmUpdateRecordResponse = ZohoCrmChangeObjectResponse;
 
+/**
+ * Record data for creation, excluding the `id` field since it is assigned by Zoho.
+ */
 export type ZohoCrmCreateRecordData<T> = Omit<T, 'id'>;
 
+/**
+ * Input for creating a single record in a CRM module.
+ */
 export interface ZohoCrmCreateSingleRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmCreateRecordData<T>;
 }
 
+/**
+ * Input for creating multiple records in a CRM module in a single API call.
+ */
 export interface ZohoCrmCreateMultiRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmCreateRecordData<T>[];
 }
 
+/**
+ * Overloaded function type that handles both single and multi-record creation.
+ */
 export type ZohoCrmCreateRecordLikeFunction = ZohoCrmCreateMultiRecordFunction & ZohoCrmCreateSingleRecordFunction;
+/**
+ * Creates a single record and resolves with the created record's details.
+ */
 export type ZohoCrmCreateSingleRecordFunction = <T>(input: ZohoCrmCreateSingleRecordInput<T>) => Promise<ZohoCrmChangeObjectDetails>;
+/**
+ * Creates multiple records and resolves with paired success/error results.
+ */
 export type ZohoCrmCreateMultiRecordFunction = <T>(input: ZohoCrmCreateMultiRecordInput<T>) => Promise<ZohoCrmUpdateRecordResult<T>>;
 
+/**
+ * Discriminated input for updating one or more records.
+ */
 export type ZohoCrmUpdateRecordInput<T> = ZohoCrmUpdateSingleRecordInput<T> | ZohoCrmUpdateMultiRecordInput<T>;
+/**
+ * Partial record data for updates, requiring the `id` to identify the target record.
+ */
 export type ZohoCrmUpdateRecordData<T> = UniqueModelWithId & Partial<T>;
 
+/**
+ * Input for updating a single record in a CRM module.
+ */
 export interface ZohoCrmUpdateSingleRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpdateRecordData<T>;
 }
 
+/**
+ * Input for updating multiple records in a CRM module in a single API call.
+ */
 export interface ZohoCrmUpdateMultiRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpdateRecordData<T>[];
 }
 
+/**
+ * Overloaded function type that handles both single and multi-record updates.
+ */
 export type ZohoCrmUpdateRecordLikeFunction = ZohoCrmUpdateMultiRecordFunction & ZohoCrmUpdateSingleRecordFunction;
+/**
+ * Updates multiple records and resolves with paired success/error results.
+ */
 export type ZohoCrmUpdateMultiRecordFunction = <T>(input: ZohoCrmUpdateMultiRecordInput<T>) => Promise<ZohoCrmUpdateRecordResult<T>>;
+/**
+ * Updates a single record and resolves with the updated record's details.
+ */
 export type ZohoCrmUpdateSingleRecordFunction = <T>(input: ZohoCrmUpdateSingleRecordInput<T>) => Promise<ZohoCrmChangeObjectDetails>;
 
+/**
+ * Record data for upsert, accepting either create data (without `id`) or update data (with `id`).
+ */
 export type ZohoCrmUpsertRecordData<T> = ZohoCrmCreateRecordData<T> | ZohoCrmUpdateRecordData<T>;
 
+/**
+ * Input for upserting a single record in a CRM module.
+ */
 export interface ZohoCrmUpsertSingleRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpsertRecordData<T>;
 }
 
+/**
+ * Input for upserting multiple records in a CRM module in a single API call.
+ */
 export interface ZohoCrmUpsertMultiRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpsertRecordData<T>[];
 }
 
+/**
+ * Overloaded function type that handles both single and multi-record upserts.
+ */
 export type ZohoCrmUpsertRecordLikeFunction = ZohoCrmUpsertMultiRecordFunction & ZohoCrmUpsertSingleRecordFunction;
+/**
+ * Upserts multiple records and resolves with paired success/error results.
+ */
 export type ZohoCrmUpsertMultiRecordFunction = <T>(input: ZohoCrmUpsertMultiRecordInput<T>) => Promise<ZohoCrmUpdateRecordResult<T>>;
+/**
+ * Upserts a single record and resolves with the record's details.
+ */
 export type ZohoCrmUpsertSingleRecordFunction = <T>(input: ZohoCrmUpsertSingleRecordInput<T>) => Promise<ZohoCrmChangeObjectDetails>;
 
 /**
- * The APIs for Insert, Upsert, and Update have the same structure.
- *
- * @returns
+ * Internal factory that produces CRUD functions for insert, upsert, and update since all three share the same request/response structure.
  */
 function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoCrmUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoCrmUpdateRecordInput<T>) =>
@@ -113,15 +174,15 @@ function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | 
 }
 
 // MARK: Insert Record
+/**
+ * Alias for the insert record function, supporting both single and multi-record creation.
+ */
 export type ZohoCrmInsertRecordFunction = ZohoCrmCreateRecordLikeFunction;
 
 /**
  * Inserts one or more records into Crm.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/insert-records.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmInsertRecord(context: ZohoCrmContext): ZohoCrmInsertRecordFunction {
   return updateRecordLikeFunction(context, '', 'POST') as ZohoCrmInsertRecordFunction;
@@ -137,30 +198,30 @@ export type ZohoCrmUpsertRecordFunction = ZohoCrmUpsertRecordLikeFunction;
  * Updates or inserts one or more records in Crm.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/upsert-records.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmUpsertRecord(context: ZohoCrmContext): ZohoCrmUpsertRecordFunction {
   return updateRecordLikeFunction(context, '/upsert', 'POST') as ZohoCrmUpsertRecordFunction;
 }
 
 // MARK: Update Record
+/**
+ * Alias for the update record function, supporting both single and multi-record updates.
+ */
 export type ZohoCrmUpdateRecordFunction = ZohoCrmUpdateRecordLikeFunction;
 
 /**
  * Updates one or more records in Crm.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/update-records.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmUpdateRecord(context: ZohoCrmContext): ZohoCrmUpdateRecordFunction {
   return updateRecordLikeFunction(context, '', 'PUT') as ZohoCrmUpdateRecordFunction;
 }
 
 // MARK: Delete Record
+/**
+ * Deletes one or more records and resolves with the success/error pairs.
+ */
 export type ZohoCrmDeleteRecordFunction = (input: ZohoCrmDeleteRecordInput) => Promise<ZohoCrmDeleteRecordResponse>;
 
 export interface ZohoCrmDeleteRecordInput extends ZohoCrmModuleNameRef {
@@ -171,23 +232,29 @@ export interface ZohoCrmDeleteRecordInput extends ZohoCrmModuleNameRef {
   readonly wf_trigger?: boolean;
 }
 
+/**
+ * Successful entry in a delete response, containing the deleted record's id.
+ */
 export interface ZohoCrmDeleteRecordResponseSuccessEntry extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta {
   readonly details: {
     readonly id: ZohoCrmRecordId;
   };
 }
 
+/**
+ * Response from a delete operation, split into success and error pairs.
+ */
 export type ZohoCrmDeleteRecordResponse = ZohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<ZohoCrmDeleteRecordResponseSuccessEntry>;
 
+/**
+ * Array of successful delete entries.
+ */
 export type ZohoCrmDeleteRecordResult = ZohoCrmChangeObjectResponseSuccessEntry[];
 
 /**
  * Deletes one or more records from the given module.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/delete-records.html
- *
- * @param context
- * @returns ZohoCrmDeleteRecordFunction
  */
 export function zohoCrmDeleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecordFunction {
   return ({ ids, module, wf_trigger }: ZohoCrmDeleteRecordInput) => {
@@ -199,22 +266,31 @@ export function zohoCrmDeleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecor
 }
 
 // MARK: Get Record By Id
+/**
+ * Input identifying a specific record by module and id.
+ */
 export interface ZohoCrmGetRecordByIdInput extends ZohoCrmModuleNameRef {
   readonly id: ZohoCrmRecordId;
 }
 
+/**
+ * Raw API response wrapping the record in a data array.
+ */
 export type ZohoCrmGetRecordByIdResponse<T = ZohoCrmRecord> = ZohoDataArrayResultRef<T>;
 
+/**
+ * The unwrapped record returned from a get-by-id call.
+ */
 export type ZohoCrmGetRecordByIdResult<T = ZohoCrmRecord> = T;
+/**
+ * Retrieves a single record by id and resolves with the unwrapped record.
+ */
 export type ZohoCrmGetRecordByIdFunction = <T = ZohoCrmRecord>(input: ZohoCrmGetRecordByIdInput) => Promise<ZohoCrmGetRecordByIdResult<T>>;
 
 /**
  * Retrieves a specific record from the given module.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/get-records.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmGetRecordById(context: ZohoCrmContext): ZohoCrmGetRecordByIdFunction {
   return <T>(input: ZohoCrmGetRecordByIdInput) =>
@@ -250,9 +326,6 @@ export type ZohoCrmGetRecordsFunction = <T = ZohoCrmRecord>(input: ZohoCrmGetRec
  * Retrieves records from the given module. Used for paginating across all records.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/get-records.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmGetRecords(context: ZohoCrmContext): ZohoCrmGetRecordsFunction {
   return ((input: ZohoCrmGetRecordsInput) => context.fetchJson<ZohoCrmGetRecordsResponse>(`/v8/${input.module}?${zohoCrmUrlSearchParamsMinusModule(input).toString()}`, zohoCrmApiFetchJsonInput('GET'))) as ZohoCrmGetRecordsFunction;
@@ -279,9 +352,6 @@ export type ZohoCrmSearchRecordsFunction = <T = ZohoCrmRecord>(input: ZohoCrmSea
  * Searches records from the given module.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/search-records.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchRecordsFunction {
   function searchRecordsUrlSearchParams<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) {
@@ -304,8 +374,14 @@ export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchReco
   return (<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoCrmSearchRecordsFunction;
 }
 
+/**
+ * Factory that creates paginated search iterators for search record queries.
+ */
 export type ZohoCrmSearchRecordsPageFactory = <T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>>) => FetchPage<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>;
 
+/**
+ * Creates a page factory for paginating through search results.
+ */
 export function zohoCrmSearchRecordsPageFactory(context: ZohoCrmContext): ZohoCrmSearchRecordsPageFactory {
   return zohoFetchPageFactory(zohoCrmSearchRecords(context));
 }
@@ -389,6 +465,9 @@ export type ZohoCrmGetEmailsForRecordRawApiResponse = Omit<ZohoCrmGetEmailsForRe
   Emails: ZohoCrmGetEmailsForRecordResponse['data'];
 };
 
+/**
+ * Retrieves emails related to a record, normalizing the Zoho API response which returns email data under an `Emails` key instead of the standard `data` key.
+ */
 export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordFunction {
   const getEmailsFactory = zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
   return (input: ZohoCrmGetEmailsForRecordRequest) =>
@@ -398,23 +477,47 @@ export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEm
     });
 }
 
+/**
+ * Factory that creates paginated iterators for fetching emails related to a record.
+ */
 export type ZohoCrmGetEmailsForRecordPageFactory = FetchPageFactory<ZohoCrmGetEmailsForRecordRequest, ZohoCrmGetEmailsForRecordResponse>;
 
+/**
+ * Creates a page factory for paginating through a record's related emails.
+ */
 export function zohoCrmGetEmailsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetEmailsForRecord(context));
 }
 
 // MARK: Attachments
+/**
+ * Request for fetching attachments, requiring fields to select from the attachment metadata.
+ */
 export type ZohoCrmGetAttachmentsForRecordRequest = ZohoCrmGetRelatedRecordsRequest & ZohoCrmGetRecordsFieldsRef;
+/**
+ * Paginated response containing attachment metadata records.
+ */
 export type ZohoCrmGetAttachmentsForRecordResponse = ZohoPageResult<ZohoCrmRecordAttachmentMetadata>;
+/**
+ * Fetches attachment metadata for a given record.
+ */
 export type ZohoCrmGetAttachmentsForRecordFunction = (input: ZohoCrmGetAttachmentsForRecordRequest) => Promise<ZohoCrmGetAttachmentsForRecordResponse>;
 
+/**
+ * Retrieves attachment metadata for a record using the related records API.
+ */
 export function zohoCrmGetAttachmentsForRecord(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordFunction {
   return zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordAttachmentMetadata>({ targetModule: ZOHO_CRM_ATTACHMENTS_MODULE });
 }
 
+/**
+ * Factory that creates paginated iterators for fetching attachments related to a record.
+ */
 export type ZohoCrmGetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoCrmGetAttachmentsForRecordRequest, ZohoCrmGetAttachmentsForRecordResponse>;
 
+/**
+ * Creates a page factory for paginating through a record's attachments.
+ */
 export function zohoCrmGetAttachmentsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetAttachmentsForRecord(context));
 }
@@ -464,9 +567,6 @@ export type ZohoCrmUploadAttachmentForRecordFunction = (input: ZohoCrmUploadAtta
  * Uploads an attachment to a record.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/upload-attachment.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmUploadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmUploadAttachmentForRecordFunction {
   return (input: ZohoCrmUploadAttachmentForRecordRequest) => {
@@ -540,9 +640,6 @@ export type ZohoCrmDownloadAttachmentForRecordFunction = (input: ZohoCrmDownload
  * Downloads an attachment from a record.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/download-attachments.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmDownloadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmDownloadAttachmentForRecordFunction {
   return (input: ZohoCrmDownloadAttachmentForRecordRequest) => context.fetch(`/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'GET' }).then(parseFetchFileResponse);
@@ -559,9 +656,6 @@ export type ZohoCrmDeleteAttachmentFromRecordFunction = (input: ZohoCrmDeleteAtt
  * Deletes an attachment from a record.
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/delete-attachments.html
- *
- * @param context
- * @returns
  */
 export function zohoCrmDeleteAttachmentFromRecord(context: ZohoCrmContext): ZohoCrmDeleteAttachmentFromRecordFunction {
   return (input: ZohoCrmDeleteAttachmentFromRecordRequest) => context.fetch(`/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'DELETE' });
@@ -612,6 +706,9 @@ export interface ZohoCrmExecuteRestApiFunctionErrorResponse {
   readonly message: string;
 }
 
+/**
+ * Thrown when a Zoho CRM serverless function returns a non-success response code.
+ */
 export class ZohoCrmExecuteRestApiFunctionError extends BaseError {
   constructor(readonly error: ZohoCrmExecuteRestApiFunctionErrorResponse) {
     super(`An error occured during the execution of the function. Code: ${error.code}, Message: ${error.message}`);
@@ -626,15 +723,12 @@ export class ZohoCrmExecuteRestApiFunctionError extends BaseError {
 export type ZohoCrmExecuteRestApiFunctionFunction = (input: ZohoCrmExecuteRestApiFunctionRequest) => Promise<ZohoCrmExecuteRestApiFunctionSuccessDetails>;
 
 /**
- * Creates a ZohoCrmExecuteRestApiFunctionFunction
+ * Creates a function that executes Zoho CRM serverless functions via the REST API.
  *
  * OAuth Details:
  * - https://www.zoho.com/crm/developer/docs/functions/serverless-fn-oauth.html#OAuth2
  * - There is no documentation for ZohoCrm specifically, but it seems to behave the same way
  * - You will need the following scopes: ZohoCrm.functions.execute.READ,ZohoCrm.functions.execute.CREATE
- *
- * @param context
- * @returns
  */
 export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmExecuteRestApiFunctionFunction {
   return (input: ZohoCrmExecuteRestApiFunctionRequest): Promise<ZohoCrmExecuteRestApiFunctionSuccessDetails> => {
@@ -659,10 +753,16 @@ export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmE
 }
 
 // MARK: Util
+/**
+ * Builds URL search params from the input objects, omitting the `module` key since it is used in the URL path rather than as a query parameter.
+ */
 export function zohoCrmUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: 'module' });
 }
 
+/**
+ * Builds URL search params from the input objects, omitting both `id` and `module` keys since they are used in the URL path.
+ */
 export function zohoCrmUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
 }
@@ -672,6 +772,9 @@ export function zohoCrmUrlSearchParamsMinusIdAndModule(...input: Maybe<object | 
  */
 export const zohoCrmUrlSearchParams = makeUrlSearchParams;
 
+/**
+ * Constructs the standard FetchJsonInput used by CRM API calls, pairing the HTTP method with an optional body.
+ */
 export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   const result = {
     method,
@@ -716,6 +819,9 @@ export type ZohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<T extends ZohoCr
   readonly errorItems: ZohoCrmChangeObjectResponseErrorEntry[];
 };
 
+/**
+ * Splits a change object response into separate success and error arrays for easier consumption by callers.
+ */
 export function zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<T extends ZohoCrmChangeObjectLikeResponseEntry>(response: ZohoCrmChangeObjectLikeResponse<T>): ZohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<T> {
   const { data } = response;
   const successItems: ZohoCrmChangeObjectLikeResponseSuccessEntryType<T>[] = [];
@@ -750,15 +856,24 @@ export interface ZohoCrmChangeObjectResponseErrorEntry extends ZohoServerErrorDa
 }
 
 // MARK: Multi-Record Results
+/**
+ * Result of a multi-record operation, grouping inputs by whether their API call succeeded or failed.
+ */
 export interface ZohoCrmMultiRecordResult<I, OS, OE> {
   readonly successItems: ZohoCrmMultiRecordResultEntry<I, OS>[];
   readonly errorItems: ZohoCrmMultiRecordResultEntry<I, OE>[];
 }
 
+/**
+ * Minimal shape required to determine whether an API result entry is a success or error.
+ */
 export interface ZohoCrmMultiRecordResultItem {
   readonly status: ZohoServerSuccessStatus | ZohoServerErrorStatus;
 }
 
+/**
+ * Pairs each input record with its corresponding API result and splits them into success/error buckets, preserving the association between what was sent and what was returned.
+ */
 export function zohoCrmMultiRecordResult<I, OS extends ZohoCrmMultiRecordResultItem, OE extends ZohoCrmMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoCrmMultiRecordResult<I, OS, OE> {
   const successItems: ZohoCrmMultiRecordResultEntry<I, OS>[] = [];
   const errorItems: ZohoCrmMultiRecordResultEntry<I, OE>[] = [];

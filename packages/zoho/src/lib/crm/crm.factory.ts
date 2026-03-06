@@ -7,8 +7,14 @@ import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 import { type ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Main Zoho CRM instance providing access to all CRM API operations through its underlying context.
+ */
 export type ZohoCrm = ZohoCrmContextRef;
 
+/**
+ * Configuration for constructing a {@link ZohoCrmFactory}, including account credentials, rate limiting, and optional transport customization.
+ */
 export interface ZohoCrmFactoryConfig extends ZohoAccountsContextRef {
   /**
    * Custom ZohoRateLimitedFetchHandlerConfig
@@ -24,8 +30,14 @@ export interface ZohoCrmFactoryConfig extends ZohoAccountsContextRef {
   logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
+/**
+ * Factory function that produces a {@link ZohoCrm} instance from a given CRM configuration.
+ */
 export type ZohoCrmFactory = (config: ZohoCrmConfig) => ZohoCrm;
 
+/**
+ * Creates a {@link ZohoCrmFactory} that wires up authenticated fetch, rate limiting, error handling, and automatic token refresh for all downstream CRM API calls.
+ */
 export function zohoCrmFactory(factoryConfig: ZohoCrmFactoryConfig): ZohoCrmFactory {
   const { accountsContext } = factoryConfig;
   const accessTokenStringFactory = zohoAccessTokenStringFactory(accountsContext.loadAccessToken);

@@ -23,21 +23,43 @@ export class ZohoRecruitRecordNoContentError extends BaseError {
   }
 }
 
+/**
+ * Base error for Zoho Recruit record CRUD operations, carrying structured error details from the API response.
+ */
 export class ZohoRecruitRecordCrudError extends ZohoServerError<ZohoServerErrorDataWithDetails> {}
 
+/**
+ * Thrown when a required field is missing from the record data submitted to Zoho Recruit.
+ */
 export class ZohoRecruitRecordCrudMandatoryFieldNotFoundError extends ZohoRecruitRecordCrudError {}
+
+/**
+ * Thrown when a record cannot be created or updated because it would produce duplicate data in Zoho Recruit.
+ */
 export class ZohoRecruitRecordCrudDuplicateDataError extends ZohoRecruitRecordCrudError {}
 
+/**
+ * Maps field names to their validation error messages, as returned by the Zoho Recruit API for invalid data submissions.
+ */
 export type ZohoRecruitRecordCrudInvalidDataErrorDetails = Record<string, string>;
 
+/**
+ * Thrown when the Zoho Recruit API rejects record data as invalid. Provides per-field error details via {@link invalidFieldDetails}.
+ */
 export class ZohoRecruitRecordCrudInvalidDataError extends ZohoRecruitRecordCrudError {
   get invalidFieldDetails(): ZohoRecruitRecordCrudInvalidDataErrorDetails {
     return this.error.details as ZohoRecruitRecordCrudInvalidDataErrorDetails;
   }
 }
 
+/**
+ * Thrown when the 'id' field in the submitted data does not match any existing Zoho Recruit record.
+ */
 export class ZohoRecruitRecordCrudNoMatchingRecordError extends ZohoRecruitRecordCrudInvalidDataError {}
 
+/**
+ * Creates a typed CRUD error subclass based on the error code returned by the Zoho Recruit API, enabling callers to catch specific failure modes.
+ */
 export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoRecruitRecordCrudError {
   let result: ZohoRecruitRecordCrudError;
 
@@ -65,6 +87,9 @@ export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails
   return result;
 }
 
+/**
+ * Returns an assertion function that throws {@link ZohoRecruitRecordNoContentError} when the data array result is empty or null, indicating the requested record does not exist.
+ */
 export function assertZohoRecruitRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecruitModuleName, recordId?: ZohoRecruitRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
     if (x == null || !x.data?.length) {
@@ -75,8 +100,14 @@ export function assertZohoRecruitRecordDataArrayResultHasContent<T>(moduleName?:
   };
 }
 
+/**
+ * Logs Zoho Recruit server errors to the console, prefixed with the 'ZohoRecruit' service label.
+ */
 export const logZohoRecruitErrorToConsole = logZohoServerErrorFunction('ZohoRecruit');
 
+/**
+ * Parses the JSON body of a failed Zoho Recruit fetch response into a structured error, returning undefined if the body cannot be parsed.
+ */
 export async function parseZohoRecruitError(responseError: FetchResponseError) {
   const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
   let result: ParsedZohoServerError | undefined;
@@ -88,6 +119,9 @@ export async function parseZohoRecruitError(responseError: FetchResponseError) {
   return result;
 }
 
+/**
+ * Converts raw Zoho Recruit error response data into a parsed error, delegating to Recruit-specific handlers for known error codes and falling back to the shared Zoho parser.
+ */
 export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;
   const error = tryFindZohoServerErrorData(errorResponseData, responseError);
@@ -106,7 +140,14 @@ export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoS
   return result;
 }
 
+/**
+ * Intercepts Zoho Recruit API responses that return HTTP 200 but contain an error payload, re-throwing them as proper errors so callers are not silently misled by a success status.
+ */
 export const interceptZohoRecruit200StatusWithErrorResponse = interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorResponseData);
+
+/**
+ * Wraps a fetch client to automatically parse Zoho Recruit error responses, log them, and invoke a custom handler (e.g., for token refresh on authentication failures).
+ */
 export const handleZohoRecruitErrorFetch = handleZohoErrorFetchFactory(parseZohoRecruitError, logZohoRecruitErrorToConsole);
 
 // MARK: Compat
