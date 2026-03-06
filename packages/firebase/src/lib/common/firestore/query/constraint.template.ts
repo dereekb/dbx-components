@@ -182,13 +182,15 @@ export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathO
 }
 
 /**
- * Searches dates that follow between the input DateRange. Excludes the end date.
+ * Creates constraints to filter documents where a date field falls within a half-open range `[start, end)`.
  *
- * Sorts in ascending order by default.
+ * The start date is inclusive and the end date is exclusive. Results are sorted by the
+ * date field in ascending order by default.
  *
- * @param field
- * @param range
- * @param sortDirection
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param range - Date range with `start` (inclusive) and `end` (exclusive) boundaries
+ * @param sortDirection - Direction to sort results (default: 'asc')
+ * @returns Array of query constraints for the date range filter and sort
  */
 export function whereDateIsBetween<T>(field: StringKeyPropertyKeys<T>, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsBetween(field: FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -249,11 +251,13 @@ export function whereDateIsOnOrAfterWithSort<T = object>(fieldPath: FieldPathOrS
 }
 
 /**
- * Searches dates that are on or before the input date. If no date is input, uses now.
+ * Creates a constraint to filter documents where a date field is less than or equal to a specified date.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * If no date is provided, defaults to the current date and time (`new Date()`).
+ *
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param date - The maximum date to include (default: current date/time)
+ * @returns A query constraint for dates on or before the specified date
  */
 export function whereDateIsOnOrBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
 export function whereDateIsOnOrBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
@@ -262,13 +266,16 @@ export function whereDateIsOnOrBefore<T = object>(fieldPath: FieldPathOrStringPa
 }
 
 /**
- * Searches dates that are on or before the input date. If no date is input, uses now.
+ * Creates constraints to filter documents where a date field is on or before a specified date, with sorting.
  *
- * Sorts in descending order by default.
+ * Combines a `<=` date comparison with an `orderBy` on the same field.
+ * Sorts in descending order by default (most recent first).
+ * If no date is provided, defaults to the current date and time.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * @param field - The date field to filter and sort on (stored as ISO string in Firestore)
+ * @param date - The maximum date to include (default: current date/time)
+ * @param sortDirection - Direction to sort results (default: 'desc')
+ * @returns Array of query constraints for filtering and sorting
  */
 export function whereDateIsOnOrBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsOnOrBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -277,11 +284,13 @@ export function whereDateIsOnOrBeforeWithSort<T = object>(fieldPath: FieldPathOr
 }
 
 /**
- * Searches dates that are on or after the input date. If no date is input, uses now.
+ * Creates a constraint to filter documents where a date field is strictly after a specified date.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * Uses a `>` comparison (exclusive). If no date is provided, defaults to the current date and time.
+ *
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param date - The exclusive lower bound date (default: current date/time)
+ * @returns A query constraint for dates strictly after the specified date
  */
 export function whereDateIsAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
 export function whereDateIsAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
@@ -290,13 +299,15 @@ export function whereDateIsAfter<T = object>(fieldPath: FieldPathOrStringPathOf<
 }
 
 /**
- * Searches dates that are on or after the input date. If no date is input, uses now.
+ * Creates constraints to filter documents where a date field is strictly after a specified date, with sorting.
  *
- * Sorts in ascending order by default.
+ * Combines a `>` date comparison with an `orderBy` on the same field.
+ * Sorts in ascending order by default. If no date is provided, defaults to the current date and time.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * @param field - The date field to filter and sort on (stored as ISO string in Firestore)
+ * @param date - The exclusive lower bound date (default: current date/time)
+ * @param sortDirection - Direction to sort results (default: 'asc')
+ * @returns Array of query constraints for filtering and sorting
  */
 export function whereDateIsAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -305,11 +316,13 @@ export function whereDateIsAfterWithSort<T = object>(fieldPath: FieldPathOrStrin
 }
 
 /**
- * Searches dates that are on or after the input date. If no date is input, uses now.
+ * Creates a constraint to filter documents where a date field is strictly before a specified date.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * Uses a `<` comparison (exclusive). If no date is provided, defaults to the current date and time.
+ *
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param date - The exclusive upper bound date (default: current date/time)
+ * @returns A query constraint for dates strictly before the specified date
  */
 export function whereDateIsBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
 export function whereDateIsBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
@@ -318,13 +331,16 @@ export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf
 }
 
 /**
- * Searches dates that are on or after the input date. If no date is input, uses now.
+ * Creates constraints to filter documents where a date field is strictly before a specified date, with sorting.
  *
- * Sorts in descending order by default.
+ * Combines a `<` date comparison with an `orderBy` on the same field.
+ * Sorts in descending order by default (most recent first).
+ * If no date is provided, defaults to the current date and time.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * @param field - The date field to filter and sort on (stored as ISO string in Firestore)
+ * @param date - The exclusive upper bound date (default: current date/time)
+ * @param sortDirection - Direction to sort results (default: 'desc')
+ * @returns Array of query constraints for filtering and sorting
  */
 export function whereDateIsBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];

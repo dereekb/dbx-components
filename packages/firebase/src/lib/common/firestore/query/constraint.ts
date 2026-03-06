@@ -31,20 +31,14 @@ export interface FirestoreQueryConstraint<T = unknown> {
 }
 
 /**
- * Creates a Firestore query constraint.
+ * Creates a {@link FirestoreQueryConstraint} with the given type identifier and data.
  *
- * @template T - Type of data stored in the constraint
- * @param type - The constraint type identifier
- * @param data - The constraint data
- * @returns A Firestore query constraint object
- */
-/**
- * Creates a Firestore query constraint.
+ * This is the low-level factory used by all constraint builder functions (e.g., {@link where},
+ * {@link limit}, {@link orderBy}). Most callers should use those typed builders instead.
  *
- * @template T - Type of data stored in the constraint
- * @param type - The constraint type identifier
- * @param data - The constraint data
- * @returns A Firestore query constraint object
+ * @param type - The constraint type identifier (e.g., 'where', 'limit')
+ * @param data - The constraint-specific configuration data
+ * @returns A typed constraint object
  */
 export function firestoreQueryConstraint<T = unknown>(type: string, data: T): FirestoreQueryConstraint<T> {
   return {
@@ -82,12 +76,9 @@ export function firestoreQueryConstraintFactory(type: string): <T = unknown>(dat
 export const FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE = 'limit';
 
 /**
- * Configuration data for a limit constraint.
- */
-/**
- * Configuration data for a limit constraint.
+ * Configuration data for a {@link limit} constraint.
  *
- * Used to specify the maximum number of documents to return in a query.
+ * Specifies the maximum number of documents to return from a query.
  */
 export interface LimitQueryConstraintData {
   /**
@@ -534,14 +525,25 @@ export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fire
 
 // MARK: Handler
 /**
- * Updates the input builder with the passed constraint value.
+ * Handler function that applies a single constraint to a query builder.
+ *
+ * Used by Firestore driver implementations to translate abstract constraints into
+ * native Firestore query operations. Each handler receives the current builder state,
+ * the constraint's data, and the full constraint object, and returns the updated builder.
+ *
+ * @param builder - The current query builder state
+ * @param data - The constraint-specific data to apply
+ * @param constraint - The full constraint object (for access to the type identifier)
+ * @returns The updated query builder with the constraint applied
  */
 export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
 
 /**
- * Map of constraint type identifiers to handler functions.
+ * Registry mapping constraint type identifiers to their handler functions.
  *
- * @template B - Type of query builder
+ * Driver implementations populate this map to define how each constraint type
+ * is translated into native Firestore query operations. Missing entries (undefined/null)
+ * indicate unsupported constraint types.
  */
 export type FirestoreQueryConstraintHandlerMap<B> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -549,7 +551,10 @@ export type FirestoreQueryConstraintHandlerMap<B> = {
 };
 
 /**
- * The full list of known firestore query constraints, and the data associated with it.
+ * Exhaustive mapping of all known constraint type identifiers to their data types.
+ *
+ * Used for type-safe handler registration in {@link FullFirestoreQueryConstraintHandlersMapping}
+ * and for compile-time verification that all constraint types are handled.
  */
 export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData;
@@ -568,7 +573,7 @@ export type FullFirestoreQueryConstraintDataMapping = {
 };
 
 /**
- * Mapping of all constraint types to their constraint objects.
+ * Mapping of all constraint type identifiers to their fully typed {@link FirestoreQueryConstraint} objects.
  */
 export type FullFirestoreQueryConstraintMapping = {
   [K in keyof FullFirestoreQueryConstraintDataMapping]: FirestoreQueryConstraint<FullFirestoreQueryConstraintDataMapping[K]>;
