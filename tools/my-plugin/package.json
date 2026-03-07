@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/my-plugin",
-  "version": "13.0.6",
+  "version": "13.0.7",
   "dependencies": {
     "@nx/devkit": "20.8.0",
     "tslib": "^2.3.0"
