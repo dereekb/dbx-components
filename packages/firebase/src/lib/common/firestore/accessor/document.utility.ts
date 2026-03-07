@@ -704,3 +704,125 @@ export function documentReferenceFromDocument<T, D extends FirestoreDocument<T>>
 export function documentReferencesFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): DocumentReference<T>[] {
   return documents.map(documentReferenceFromDocument);
 }
+
+// MARK: LimitedFirestoreDocumentAccessorSnapshotCache
+/**
+ * An in-memory snapshot cache backed by a {@link LimitedFirestoreDocumentAccessor} that deduplicates
+ * Firestore reads for the same document key within a single operation scope.
+ *
+ * The cache is keyed by {@link FirestoreModelKey} (full Firestore path) and stores the in-flight or
+ * resolved {@link FirestoreDocumentSnapshotDataPair} promises. This ensures that concurrent or repeated
+ * requests for the same document reuse a single Firestore read.
+ *
+ * Does not implement {@link LimitedFirestoreDocumentAccessor} itself — it is a higher-level abstraction
+ * that wraps an accessor to provide cached snapshot reads. The underlying accessor is exposed via
+ * the {@link accessor} property for direct use when needed.
+ *
+ * Useful in batch processing or fan-out scenarios where multiple code paths may reference the same
+ * documents and you want to avoid redundant reads without manual deduplication.
+ *
+ * @example
+ * ```typescript
+ * const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+ *
+ * // Both calls resolve from a single Firestore read
+ * const [pair1, pair2] = await Promise.all([
+ *   cache.getDocumentSnapshotDataPairForKey('users/abc123'),
+ *   cache.getDocumentSnapshotDataPairForKey('users/abc123')
+ * ]);
+ * ```
+ */
+export interface LimitedFirestoreDocumentAccessorSnapshotCache<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  /**
+   * The underlying accessor used to load documents and fetch snapshots.
+   */
+  readonly accessor: LimitedFirestoreDocumentAccessor<T, D>;
+  /**
+   * Fetches or returns the cached {@link FirestoreDocumentSnapshotDataPair} for the given key.
+   *
+   * @param key - Full Firestore document path (e.g. `'users/abc123'`)
+   * @returns The document, its snapshot, and extracted data (data may be `undefined` if the document doesn't exist)
+   */
+  getDocumentSnapshotDataPairForKey(key: FirestoreModelKey): Promise<FirestoreDocumentSnapshotDataPair<D>>;
+  /**
+   * Fetches or returns cached {@link FirestoreDocumentSnapshotDataPair}s for multiple keys.
+   *
+   * Each key is resolved independently through the cache, so previously fetched documents are not re-read.
+   *
+   * @param keys - Full Firestore document paths
+   * @returns Pairs in the same order as the input keys
+   */
+  getDocumentSnapshotDataPairsForKeys(keys: FirestoreModelKey[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]>;
+  /**
+   * Fetches or returns cached pairs for multiple keys, filtering out non-existent documents.
+   *
+   * Convenience method that delegates to {@link getDocumentSnapshotDataPairsForKeys} and removes entries
+   * where `data` is nullish, returning only {@link FirestoreDocumentSnapshotDataPairWithData} results.
+   *
+   * @param keys - Full Firestore document paths
+   * @returns Pairs for existing documents only, in their original relative order
+   */
+  getDocumentSnapshotDataPairsWithDataForKeys(keys: FirestoreModelKey[]): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]>;
+}
+
+/**
+ * Creates a {@link LimitedFirestoreDocumentAccessorSnapshotCache} that wraps the given accessor
+ * with an in-memory {@link Map} cache so that repeated loads for the same key return the cached
+ * promise instead of re-reading from Firestore.
+ *
+ * The cache stores the promise itself (not the resolved value), which means concurrent requests
+ * for the same key that arrive before the first read completes will also be deduplicated.
+ *
+ * The cache lives for the lifetime of the returned object and is never invalidated, so this is
+ * best suited for short-lived scopes (e.g. a single request or batch operation) where stale reads
+ * are acceptable.
+ *
+ * @param accessor - The accessor to wrap with caching behavior
+ * @returns A {@link LimitedFirestoreDocumentAccessorSnapshotCache} backed by the given accessor
+ *
+ * @example
+ * ```typescript
+ * const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+ *
+ * // First call reads from Firestore; second call returns cached result
+ * const pair = await cache.getDocumentSnapshotDataPairForKey('users/abc123');
+ * const samePair = await cache.getDocumentSnapshotDataPairForKey('users/abc123');
+ *
+ * // Batch fetch with automatic deduplication
+ * const pairs = await cache.getDocumentSnapshotDataPairsWithDataForKeys(['users/abc', 'users/def']);
+ *
+ * // Access the underlying accessor directly
+ * const doc = cache.accessor.loadDocumentForKey('users/xyz');
+ * ```
+ */
+export function limitedFirestoreDocumentAccessorSnapshotCache<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>): LimitedFirestoreDocumentAccessorSnapshotCache<T, D> {
+  const cache = new Map<FirestoreModelKey, Promise<FirestoreDocumentSnapshotDataPair<D>>>();
+
+  function getDocumentSnapshotDataPairForKey(key: FirestoreModelKey): Promise<FirestoreDocumentSnapshotDataPair<D>> {
+    let cached = cache.get(key);
+
+    if (!cached) {
+      const document = accessor.loadDocumentForKey(key);
+      cached = getDocumentSnapshotDataPair(document);
+      cache.set(key, cached);
+    }
+
+    return cached;
+  }
+
+  async function getDocumentSnapshotDataPairsForKeys(keys: FirestoreModelKey[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]> {
+    return Promise.all(keys.map((key) => getDocumentSnapshotDataPairForKey(key)));
+  }
+
+  async function getDocumentSnapshotDataPairsWithDataForKeys(keys: FirestoreModelKey[]): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
+    const pairs = await getDocumentSnapshotDataPairsForKeys(keys);
+    return filterMaybeArrayValues(pairs.map((pair) => (pair.data != null ? (pair as FirestoreDocumentSnapshotDataPairWithData<D>) : undefined)));
+  }
+
+  return {
+    accessor,
+    getDocumentSnapshotDataPairForKey,
+    getDocumentSnapshotDataPairsForKeys,
+    getDocumentSnapshotDataPairsWithDataForKeys
+  };
+}

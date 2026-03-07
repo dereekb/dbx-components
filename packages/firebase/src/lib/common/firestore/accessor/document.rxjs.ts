@@ -54,7 +54,7 @@ export function mapLatestSnapshotsFromDocuments<D extends FirestoreDocument<any>
  * @param documents - Array of document instances to stream data for
  * @returns Observable that emits arrays of document data whenever any document changes
  */
-export function latestDataFromDocuments<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]> {
+export function streamDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]> {
   return latestSnapshotsFromDocuments<D>(documents).pipe(dataFromDocumentSnapshots());
 }
 
@@ -123,3 +123,9 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
 export function streamDocumentSnapshotDataPairsWithData<D extends FirestoreDocument<any>>(documents: D[]): Observable<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
   return streamDocumentSnapshotDataPairs(documents).pipe(map((pairs) => pairs.filter((pair): pair is FirestoreDocumentSnapshotDataPairWithData<D> => pair.data != null)));
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use {@link streamDocumentSnapshotsData} instead.
+ */
+export const latestDataFromDocuments = streamDocumentSnapshotsData;

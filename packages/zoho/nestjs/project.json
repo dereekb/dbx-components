@@ -18,7 +18,23 @@
         "format": ["esm", "cjs"],
         "generateExportsField": true,
         "external": "all",
-        "assets": [],
+        "assets": [
+          {
+            "glob": "packages/zoho/nestjs/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "**/*.md",
+            "input": "packages/zoho/nestjs/docs",
+            "output": "docs"
+          }
+        ],
         "rollupConfig": ["rollup.visualizer.config.ts"],
         "compiler": "tsc"
       },

@@ -24,7 +24,7 @@ import {
   type KnownZohoCrmAttachmentCategoryName
 } from './crm';
 import { zohoCrmSearchRecordsCriteriaString, type ZohoCrmSearchRecordsCriteriaTreeElement } from './crm.criteria';
-import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, type WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
+import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, asArray, joinStringsWithCommas } from '@dereekb/util';
 import { assertZohoCrmRecordDataArrayResultHasContent, zohoCrmRecordCrudError } from './crm.error.api';
 import { ZOHO_SUCCESS_STATUS, ZohoServerFetchResponseDataArrayError, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
 import { type ZohoDateTimeString } from '../zoho.type';
@@ -38,56 +38,120 @@ import { BaseError } from 'make-error';
  */
 export const ZOHO_CRM_CRUD_FUNCTION_MAX_RECORDS_LIMIT = 100;
 
+/**
+ * Paired success/error results from a multi-record update, upsert, or insert operation.
+ */
 export type ZohoCrmUpdateRecordResult<T> = ZohoCrmMultiRecordResult<T, ZohoCrmChangeObjectResponseSuccessEntry, ZohoCrmChangeObjectResponseErrorEntry>;
+/**
+ * Raw API response from a record change operation containing the data array.
+ */
 export type ZohoCrmUpdateRecordResponse = ZohoCrmChangeObjectResponse;
 
+/**
+ * Record data for creation, excluding the `id` field since it is assigned by Zoho.
+ */
 export type ZohoCrmCreateRecordData<T> = Omit<T, 'id'>;
 
+/**
+ * Input for creating a single record in a CRM module.
+ */
 export interface ZohoCrmCreateSingleRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmCreateRecordData<T>;
 }
 
+/**
+ * Input for creating multiple records in a CRM module in a single API call.
+ */
 export interface ZohoCrmCreateMultiRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmCreateRecordData<T>[];
 }
 
+/**
+ * Overloaded function type that handles both single and multi-record creation.
+ */
 export type ZohoCrmCreateRecordLikeFunction = ZohoCrmCreateMultiRecordFunction & ZohoCrmCreateSingleRecordFunction;
+/**
+ * Creates a single record and resolves with the created record's details.
+ */
 export type ZohoCrmCreateSingleRecordFunction = <T>(input: ZohoCrmCreateSingleRecordInput<T>) => Promise<ZohoCrmChangeObjectDetails>;
+/**
+ * Creates multiple records and resolves with paired success/error results.
+ */
 export type ZohoCrmCreateMultiRecordFunction = <T>(input: ZohoCrmCreateMultiRecordInput<T>) => Promise<ZohoCrmUpdateRecordResult<T>>;
 
+/**
+ * Discriminated input for updating one or more records.
+ */
 export type ZohoCrmUpdateRecordInput<T> = ZohoCrmUpdateSingleRecordInput<T> | ZohoCrmUpdateMultiRecordInput<T>;
+/**
+ * Partial record data for updates, requiring the `id` to identify the target record.
+ */
 export type ZohoCrmUpdateRecordData<T> = UniqueModelWithId & Partial<T>;
 
+/**
+ * Input for updating a single record in a CRM module.
+ */
 export interface ZohoCrmUpdateSingleRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpdateRecordData<T>;
 }
 
+/**
+ * Input for updating multiple records in a CRM module in a single API call.
+ */
 export interface ZohoCrmUpdateMultiRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpdateRecordData<T>[];
 }
 
+/**
+ * Overloaded function type that handles both single and multi-record updates.
+ */
 export type ZohoCrmUpdateRecordLikeFunction = ZohoCrmUpdateMultiRecordFunction & ZohoCrmUpdateSingleRecordFunction;
+/**
+ * Updates multiple records and resolves with paired success/error results.
+ */
 export type ZohoCrmUpdateMultiRecordFunction = <T>(input: ZohoCrmUpdateMultiRecordInput<T>) => Promise<ZohoCrmUpdateRecordResult<T>>;
+/**
+ * Updates a single record and resolves with the updated record's details.
+ */
 export type ZohoCrmUpdateSingleRecordFunction = <T>(input: ZohoCrmUpdateSingleRecordInput<T>) => Promise<ZohoCrmChangeObjectDetails>;
 
+/**
+ * Record data for upsert, accepting either create data (without `id`) or update data (with `id`).
+ */
 export type ZohoCrmUpsertRecordData<T> = ZohoCrmCreateRecordData<T> | ZohoCrmUpdateRecordData<T>;
 
+/**
+ * Input for upserting a single record in a CRM module.
+ */
 export interface ZohoCrmUpsertSingleRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpsertRecordData<T>;
 }
 
+/**
+ * Input for upserting multiple records in a CRM module in a single API call.
+ */
 export interface ZohoCrmUpsertMultiRecordInput<T> extends ZohoCrmModuleNameRef {
   readonly data: ZohoCrmUpsertRecordData<T>[];
 }
 
+/**
+ * Overloaded function type that handles both single and multi-record upserts.
+ */
 export type ZohoCrmUpsertRecordLikeFunction = ZohoCrmUpsertMultiRecordFunction & ZohoCrmUpsertSingleRecordFunction;
+/**
+ * Upserts multiple records and resolves with paired success/error results.
+ */
 export type ZohoCrmUpsertMultiRecordFunction = <T>(input: ZohoCrmUpsertMultiRecordInput<T>) => Promise<ZohoCrmUpdateRecordResult<T>>;
+/**
+ * Upserts a single record and resolves with the record's details.
+ */
 export type ZohoCrmUpsertSingleRecordFunction = <T>(input: ZohoCrmUpsertSingleRecordInput<T>) => Promise<ZohoCrmChangeObjectDetails>;
 
 /**
- * The APIs for Insert, Upsert, and Update have the same structure.
+ * Shared implementation for the Insert, Upsert, and Update endpoints, which all share the same request/response structure.
  *
- * @returns
+ * When a single record is provided, the function returns the change details directly or throws on error.
+ * When multiple records are provided, it returns a paired success/error result.
  */
 function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoCrmUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoCrmUpdateRecordInput<T>) =>
@@ -113,15 +177,45 @@ function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | 
 }
 
 // MARK: Insert Record
+/**
+ * Alias for the insert record function, supporting both single and multi-record creation.
+ */
 export type ZohoCrmInsertRecordFunction = ZohoCrmCreateRecordLikeFunction;
 
 /**
- * Inserts one or more records into Crm.
+ * Creates a {@link ZohoCrmInsertRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/insert-records.html
+ * Inserts one or more records into a CRM module. When a single record is
+ * provided, returns the {@link ZohoCrmChangeObjectDetails} directly or
+ * throws on error. When multiple records are provided, returns a
+ * {@link ZohoCrmUpdateRecordResult} with paired success/error arrays.
  *
- * @param context
- * @returns
+ * Maximum of {@link ZOHO_CRM_CRUD_FUNCTION_MAX_RECORDS_LIMIT} records per call.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that inserts records into the specified module
+ *
+ * @example
+ * ```typescript
+ * const insertRecord = zohoCrmInsertRecord(context);
+ *
+ * // Single record — returns details directly or throws on error:
+ * const details = await insertRecord({
+ *   module: 'Contacts',
+ *   data: { First_Name: 'Jane', Last_Name: 'Doe', Email: 'jane@example.com' }
+ * });
+ *
+ * // Multiple records — returns paired success/error arrays:
+ * const result = await insertRecord({
+ *   module: 'Contacts',
+ *   data: [
+ *     { First_Name: 'Jane', Last_Name: 'Doe', Email: 'jane@example.com' },
+ *     { First_Name: 'John', Last_Name: 'Doe', Email: 'john@example.com' }
+ *   ]
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/insert-records.html
  */
 export function zohoCrmInsertRecord(context: ZohoCrmContext): ZohoCrmInsertRecordFunction {
   return updateRecordLikeFunction(context, '', 'POST') as ZohoCrmInsertRecordFunction;
@@ -134,60 +228,154 @@ export function zohoCrmInsertRecord(context: ZohoCrmContext): ZohoCrmInsertRecor
 export type ZohoCrmUpsertRecordFunction = ZohoCrmUpsertRecordLikeFunction;
 
 /**
- * Updates or inserts one or more records in Crm.
+ * Creates a {@link ZohoCrmUpsertRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/upsert-records.html
+ * Inserts or updates one or more records in a CRM module based on whether
+ * each record includes an `id`. Uses the `/upsert` endpoint. Single-record
+ * calls return details directly or throw; multi-record calls return paired
+ * success/error arrays.
  *
- * @param context
- * @returns
+ * Maximum of {@link ZOHO_CRM_CRUD_FUNCTION_MAX_RECORDS_LIMIT} records per call.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that upserts records in the specified module
+ *
+ * @example
+ * ```typescript
+ * const upsertRecord = zohoCrmUpsertRecord(context);
+ *
+ * // Create (no id) — returns details directly:
+ * const created = await upsertRecord({
+ *   module: 'Contacts',
+ *   data: { Email: 'new@example.com', Last_Name: 'New' }
+ * });
+ *
+ * // Update (with id) — returns details directly:
+ * const updated = await upsertRecord({
+ *   module: 'Contacts',
+ *   data: { id: existingId, First_Name: 'Updated' }
+ * });
+ *
+ * // Mixed create and update — returns paired arrays:
+ * const result = await upsertRecord({
+ *   module: 'Contacts',
+ *   data: [
+ *     { Email: 'create@example.com', Last_Name: 'Create' },
+ *     { id: existingId, First_Name: 'Update' }
+ *   ]
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/upsert-records.html
  */
 export function zohoCrmUpsertRecord(context: ZohoCrmContext): ZohoCrmUpsertRecordFunction {
   return updateRecordLikeFunction(context, '/upsert', 'POST') as ZohoCrmUpsertRecordFunction;
 }
 
 // MARK: Update Record
+/**
+ * Alias for the update record function, supporting both single and multi-record updates.
+ */
 export type ZohoCrmUpdateRecordFunction = ZohoCrmUpdateRecordLikeFunction;
 
 /**
- * Updates one or more records in Crm.
+ * Creates a {@link ZohoCrmUpdateRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/update-records.html
+ * Updates one or more existing records in a CRM module. Each record must
+ * include an `id` field. Single-record calls return details directly or throw;
+ * multi-record calls return paired success/error arrays.
  *
- * @param context
- * @returns
+ * Maximum of {@link ZOHO_CRM_CRUD_FUNCTION_MAX_RECORDS_LIMIT} records per call.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that updates records in the specified module
+ *
+ * @example
+ * ```typescript
+ * const updateRecord = zohoCrmUpdateRecord(context);
+ *
+ * // Single record — returns details directly:
+ * const details = await updateRecord({
+ *   module: 'Contacts',
+ *   data: { id: recordId, First_Name: 'Updated Name' }
+ * });
+ *
+ * // Multiple records — returns paired arrays:
+ * const result = await updateRecord({
+ *   module: 'Contacts',
+ *   data: [
+ *     { id: recordId1, First_Name: 'Updated 1' },
+ *     { id: recordId2, First_Name: 'Updated 2' }
+ *   ]
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/update-records.html
  */
 export function zohoCrmUpdateRecord(context: ZohoCrmContext): ZohoCrmUpdateRecordFunction {
   return updateRecordLikeFunction(context, '', 'PUT') as ZohoCrmUpdateRecordFunction;
 }
 
 // MARK: Delete Record
+/**
+ * Function that deletes one or more records from a module.
+ */
 export type ZohoCrmDeleteRecordFunction = (input: ZohoCrmDeleteRecordInput) => Promise<ZohoCrmDeleteRecordResponse>;
 
+/**
+ * Input for deleting records from a module.
+ */
 export interface ZohoCrmDeleteRecordInput extends ZohoCrmModuleNameRef {
   /**
    * Id or array of ids to delete.
    */
   readonly ids: ArrayOrValue<ZohoCrmRecordId>;
+  /**
+   * Whether to trigger workflow rules on deletion.
+   */
   readonly wf_trigger?: boolean;
 }
 
+/**
+ * Successful entry in a delete response, containing the deleted record's id.
+ */
 export interface ZohoCrmDeleteRecordResponseSuccessEntry extends ZohoCrmChangeObjectLikeResponseSuccessEntryMeta {
   readonly details: {
     readonly id: ZohoCrmRecordId;
   };
 }
 
+/**
+ * Response from a delete operation, split into success and error pairs.
+ */
 export type ZohoCrmDeleteRecordResponse = ZohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<ZohoCrmDeleteRecordResponseSuccessEntry>;
 
+/**
+ * Array of successful delete entries.
+ */
 export type ZohoCrmDeleteRecordResult = ZohoCrmChangeObjectResponseSuccessEntry[];
 
 /**
- * Deletes one or more records from the given module.
+ * Creates a {@link ZohoCrmDeleteRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/delete-records.html
+ * Deletes one or more records from a CRM module by their IDs. Supports
+ * an optional `wf_trigger` flag to execute workflow rules on deletion. Returns
+ * a response with separated success and error entries.
  *
- * @param context
- * @returns ZohoCrmDeleteRecordFunction
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that deletes records from the specified module
+ *
+ * @example
+ * ```typescript
+ * const deleteRecord = zohoCrmDeleteRecord(context);
+ *
+ * const result = await deleteRecord({
+ *   module: 'Contacts',
+ *   ids: contactId
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/delete-records.html
  */
 export function zohoCrmDeleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecordFunction {
   return ({ ids, module, wf_trigger }: ZohoCrmDeleteRecordInput) => {
@@ -199,22 +387,48 @@ export function zohoCrmDeleteRecord(context: ZohoCrmContext): ZohoCrmDeleteRecor
 }
 
 // MARK: Get Record By Id
+/**
+ * Input identifying a specific record by module and id.
+ */
 export interface ZohoCrmGetRecordByIdInput extends ZohoCrmModuleNameRef {
   readonly id: ZohoCrmRecordId;
 }
 
+/**
+ * Raw API response wrapping the record in a data array.
+ */
 export type ZohoCrmGetRecordByIdResponse<T = ZohoCrmRecord> = ZohoDataArrayResultRef<T>;
 
+/**
+ * The unwrapped record returned from a get-by-id call.
+ */
 export type ZohoCrmGetRecordByIdResult<T = ZohoCrmRecord> = T;
+/**
+ * Retrieves a single record by id and resolves with the unwrapped record.
+ */
 export type ZohoCrmGetRecordByIdFunction = <T = ZohoCrmRecord>(input: ZohoCrmGetRecordByIdInput) => Promise<ZohoCrmGetRecordByIdResult<T>>;
 
 /**
- * Retrieves a specific record from the given module.
+ * Creates a {@link ZohoCrmGetRecordByIdFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/get-records.html
+ * Retrieves a single record from a CRM module by its ID. The response is
+ * unwrapped from the standard data array, returning the record directly.
+ * Throws if the record is not found.
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that retrieves a record by module name and ID
+ *
+ * @example
+ * ```typescript
+ * const getRecordById = zohoCrmGetRecordById(context);
+ *
+ * const record = await getRecordById({
+ *   module: 'Contacts',
+ *   id: contactId
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/get-records.html
  */
 export function zohoCrmGetRecordById(context: ZohoCrmContext): ZohoCrmGetRecordByIdFunction {
   return <T>(input: ZohoCrmGetRecordByIdInput) =>
@@ -247,12 +461,27 @@ export type ZohoCrmGetRecordsResponse<T = ZohoCrmRecord> = ZohoPageResult<T>;
 export type ZohoCrmGetRecordsFunction = <T = ZohoCrmRecord>(input: ZohoCrmGetRecordsInput) => Promise<ZohoCrmGetRecordsResponse<T>>;
 
 /**
- * Retrieves records from the given module. Used for paginating across all records.
+ * Creates a {@link ZohoCrmGetRecordsFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/get-records.html
+ * Retrieves a paginated list of records from a CRM module. Supports field
+ * selection, sorting, custom view filtering, territory filtering, and
+ * conversion/approval status filters via {@link ZohoCrmGetRecordsInput}.
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that retrieves paginated records from a module
+ *
+ * @example
+ * ```typescript
+ * const getRecords = zohoCrmGetRecords(context);
+ *
+ * const page = await getRecords({
+ *   module: 'Contacts',
+ *   fields: 'First_Name,Last_Name,Email',
+ *   per_page: 10
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/get-records.html
  */
 export function zohoCrmGetRecords(context: ZohoCrmContext): ZohoCrmGetRecordsFunction {
   return ((input: ZohoCrmGetRecordsInput) => context.fetchJson<ZohoCrmGetRecordsResponse>(`/v8/${input.module}?${zohoCrmUrlSearchParamsMinusModule(input).toString()}`, zohoCrmApiFetchJsonInput('GET'))) as ZohoCrmGetRecordsFunction;
@@ -276,12 +505,36 @@ export type ZohoCrmSearchRecordsResponse<T = ZohoCrmRecord> = ZohoCrmGetRecordsR
 export type ZohoCrmSearchRecordsFunction = <T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => Promise<ZohoCrmSearchRecordsResponse<T>>;
 
 /**
- * Searches records from the given module.
+ * Creates a {@link ZohoCrmSearchRecordsFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/search-records.html
+ * Searches records in a CRM module using one of: criteria tree (compiled
+ * via {@link zohoCrmSearchRecordsCriteriaString}), email, phone, cvid, or keyword.
+ * At least one search parameter must be provided. Returns a paginated result,
+ * defaulting to an empty data array when no matches are found.
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that searches records in the specified module
+ * @throws {Error} If none of `criteria`, `email`, `phone`, `cvid`, or `word` are provided
+ *
+ * @example
+ * ```typescript
+ * const searchRecords = zohoCrmSearchRecords(context);
+ *
+ * // Search by criteria:
+ * const result = await searchRecords({
+ *   module: 'Contacts',
+ *   criteria: [{ field: 'Last_Name', filter: 'starts_with', value: 'Smith' }],
+ *   per_page: 10
+ * });
+ *
+ * // Search by keyword:
+ * const wordResult = await searchRecords({
+ *   module: 'Contacts',
+ *   word: 'engineer'
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/search-records.html
  */
 export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchRecordsFunction {
   function searchRecordsUrlSearchParams<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) {
@@ -304,8 +557,34 @@ export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchReco
   return (<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoCrmSearchRecordsFunction;
 }
 
+/**
+ * Factory that creates paginated search iterators for search record queries.
+ */
 export type ZohoCrmSearchRecordsPageFactory = <T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>>) => FetchPage<ZohoCrmSearchRecordsInput<T>, ZohoCrmSearchRecordsResponse<T>>;
 
+/**
+ * Creates a {@link ZohoCrmSearchRecordsPageFactory} bound to the given context.
+ *
+ * Returns a page factory that automatically handles Zoho CRM's pagination,
+ * making it easy to iterate through all search results across multiple pages.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Page factory for iterating over search results
+ *
+ * @example
+ * ```typescript
+ * const pageFactory = zohoCrmSearchRecordsPageFactory(context);
+ *
+ * const fetchPage = pageFactory({
+ *   module: 'Contacts',
+ *   criteria: [{ field: 'Last_Name', filter: 'starts_with', value: 'Smith' }],
+ *   per_page: 5
+ * });
+ *
+ * const firstPage = await fetchPage.fetchNext();
+ * const secondPage = await firstPage.fetchNext();
+ * ```
+ */
 export function zohoCrmSearchRecordsPageFactory(context: ZohoCrmContext): ZohoCrmSearchRecordsPageFactory {
   return zohoFetchPageFactory(zohoCrmSearchRecords(context));
 }
@@ -346,12 +625,33 @@ export type ZohoCrmGetRelatedRecordsResponse<T = ZohoCrmRecord> = ZohoPageResult
 export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCrmGetRelatedRecordsRequest) => Promise<ZohoCrmGetRelatedRecordsResponse<T>>;
 
 /**
- * Creates a ZohoCrmGetRelatedRecordsFunctionFactory, which can be used to create ZohoCrmGetRelatedRecordsFunction<T> that targets retrieving related records of a given type.
+ * Creates a {@link ZohoCrmGetRelatedRecordsFunctionFactory} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/get-related-records.html
+ * Returns a factory that produces typed functions for fetching related records
+ * (e.g. Notes, Emails, Attachments) of a specific target module. The factory
+ * accepts a {@link ZohoCrmGetRelatedRecordsFunctionConfig} to specify the
+ * target module and empty-result behavior. By default, returns an empty page
+ * result instead of null when no records are found.
  *
- * @param context the ZohoCrmContext to use
- * @returns a ZohoCrmGetRelatedRecordsFunctionFactory
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Factory that creates typed related-records retrieval functions
+ *
+ * @example
+ * ```typescript
+ * const factory = zohoCrmGetRelatedRecordsFunctionFactory(context);
+ *
+ * // Create a typed function for fetching related Notes:
+ * const getNotesForRecord = factory<ZohoCrmRecordNote>({
+ *   targetModule: ZOHO_CRM_NOTES_MODULE
+ * });
+ *
+ * const notes = await getNotesForRecord({
+ *   module: 'Contacts',
+ *   id: contactId
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/get-related-records.html
  */
 export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
@@ -389,6 +689,29 @@ export type ZohoCrmGetEmailsForRecordRawApiResponse = Omit<ZohoCrmGetEmailsForRe
   Emails: ZohoCrmGetEmailsForRecordResponse['data'];
 };
 
+/**
+ * Creates a {@link ZohoCrmGetEmailsForRecordFunction} bound to the given context.
+ *
+ * Retrieves email metadata related to a specific record by targeting the
+ * Emails module via the related records API. Normalizes the Zoho API response
+ * which returns email data under an `Emails` key instead of the standard `data` key.
+ * Returns a paginated result of {@link ZohoCrmRecordEmailMetadata} entries.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that retrieves emails for a record
+ *
+ * @example
+ * ```typescript
+ * const getEmailsForRecord = zohoCrmGetEmailsForRecord(context);
+ *
+ * const result = await getEmailsForRecord({
+ *   id: contactId,
+ *   module: 'Contacts'
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer/docs/api/v8/get-email-rel-list.html
+ */
 export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordFunction {
   const getEmailsFactory = zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
   return (input: ZohoCrmGetEmailsForRecordRequest) =>
@@ -398,23 +721,122 @@ export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEm
     });
 }
 
+/**
+ * Factory that creates paginated iterators for fetching emails related to a record.
+ */
 export type ZohoCrmGetEmailsForRecordPageFactory = FetchPageFactory<ZohoCrmGetEmailsForRecordRequest, ZohoCrmGetEmailsForRecordResponse>;
 
+/**
+ * Creates a {@link ZohoCrmGetEmailsForRecordPageFactory} bound to the given context.
+ *
+ * Returns a page factory for iterating over emails related to a record across
+ * multiple pages. Wraps {@link zohoCrmGetEmailsForRecord} with automatic
+ * pagination handling via {@link zohoFetchPageFactory}.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Page factory for iterating over record emails
+ *
+ * @example
+ * ```typescript
+ * const pageFactory = zohoCrmGetEmailsForRecordPageFactory(context);
+ *
+ * const fetchPage = pageFactory({
+ *   id: contactId,
+ *   module: 'Contacts',
+ *   per_page: 5
+ * });
+ *
+ * const firstPage = await fetchPage.fetchNext();
+ *
+ * if (firstPage.result.info.more_records) {
+ *   const secondPage = await firstPage.fetchNext();
+ * }
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer/docs/api/v8/get-email-rel-list.html
+ */
 export function zohoCrmGetEmailsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetEmailsForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetEmailsForRecord(context));
 }
 
 // MARK: Attachments
+/**
+ * Request for fetching attachments, requiring fields to select from the attachment metadata.
+ */
 export type ZohoCrmGetAttachmentsForRecordRequest = ZohoCrmGetRelatedRecordsRequest & ZohoCrmGetRecordsFieldsRef;
+/**
+ * Paginated response containing attachment metadata records.
+ */
 export type ZohoCrmGetAttachmentsForRecordResponse = ZohoPageResult<ZohoCrmRecordAttachmentMetadata>;
+/**
+ * Fetches attachment metadata for a given record.
+ */
 export type ZohoCrmGetAttachmentsForRecordFunction = (input: ZohoCrmGetAttachmentsForRecordRequest) => Promise<ZohoCrmGetAttachmentsForRecordResponse>;
 
+/**
+ * Creates a {@link ZohoCrmGetAttachmentsForRecordFunction} bound to the given context.
+ *
+ * Retrieves attachment metadata related to a specific record by targeting the
+ * Attachments module via the related records API. Returns a paginated result of
+ * {@link ZohoCrmRecordAttachmentMetadata} entries including file names, sizes,
+ * and category information. When no attachments exist for the record, the result
+ * contains an empty data array rather than null.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that retrieves attachments for a record
+ *
+ * @example
+ * ```typescript
+ * const getAttachmentsForRecord = zohoCrmGetAttachmentsForRecord(context);
+ *
+ * const result = await getAttachmentsForRecord({
+ *   id: contactId,
+ *   module: 'Contacts',
+ *   fields: 'File_Name,Size,Created_Time'
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/get-related-records.html
+ */
 export function zohoCrmGetAttachmentsForRecord(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordFunction {
   return zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordAttachmentMetadata>({ targetModule: ZOHO_CRM_ATTACHMENTS_MODULE });
 }
 
+/**
+ * Factory that creates paginated iterators for fetching attachments related to a record.
+ */
 export type ZohoCrmGetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoCrmGetAttachmentsForRecordRequest, ZohoCrmGetAttachmentsForRecordResponse>;
 
+/**
+ * Creates a {@link ZohoCrmGetAttachmentsForRecordPageFactory} bound to the given context.
+ *
+ * Returns a page factory for iterating over attachments related to a record
+ * across multiple pages. Wraps {@link zohoCrmGetAttachmentsForRecord} with
+ * automatic pagination handling via {@link zohoFetchPageFactory}.
+ *
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Page factory for iterating over record attachments
+ *
+ * @example
+ * ```typescript
+ * const pageFactory = zohoCrmGetAttachmentsForRecordPageFactory(context);
+ *
+ * const fetchPage = pageFactory({
+ *   id: contactId,
+ *   module: 'Contacts',
+ *   fields: 'File_Name,Size',
+ *   per_page: 10
+ * });
+ *
+ * const firstPage = await fetchPage.fetchNext();
+ *
+ * if (firstPage.result.info.more_records) {
+ *   const secondPage = await firstPage.fetchNext();
+ * }
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/get-related-records.html
+ */
 export function zohoCrmGetAttachmentsForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetAttachmentsForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetAttachmentsForRecord(context));
 }
@@ -428,29 +850,19 @@ export const ZOHO_CRM_ATTACHMENT_MAX_SIZE = 20 * 1024 * 1024;
 
 export interface ZohoCrmUploadAttachmentForRecordRequest extends ZohoCrmGetRecordByIdInput {
   /**
-   * Requires the use of a FormData object.
-   *
-   * Max of 20MB are allowed
-   *
-   * @deprecated Use attachmentUrl instead for now.
+   * File to upload as an attachment. Max 20MB.
    */
-  readonly formData?: FormData;
-  /**
-   * File url to pull the file from.
-   *
-   * Either this or formData must be provided.
-   */
-  readonly attachmentUrl?: WebsiteUrlWithPrefix;
+  readonly file: File;
   /**
    * The category id(s) of the attachment.
    *
-   * Either this or attachments_category must be provided.
+   * Either this or attachmentCategoryName must be provided.
    */
   readonly attachmentCategoryId?: ArrayOrValue<ZohoCrmAttachmentCategoryId>;
   /**
    * The category name(s) of the attachment.
    *
-   * Either this or attachments_category_id must be provided.
+   * Either this or attachmentCategoryId must be provided.
    *
    * Example: "Resume"
    */
@@ -461,71 +873,49 @@ export type ZohoCrmUploadAttachmentForRecordResponse = Response;
 export type ZohoCrmUploadAttachmentForRecordFunction = (input: ZohoCrmUploadAttachmentForRecordRequest) => Promise<ZohoCrmUploadAttachmentForRecordResponse>;
 
 /**
- * Uploads an attachment to a record.
+ * Creates a {@link ZohoCrmUploadAttachmentForRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/upload-attachment.html
+ * Uploads a file attachment to a specific record. The file is sent as
+ * multipart/form-data. An attachment category must be specified by ID or name.
+ * Maximum file size is {@link ZOHO_CRM_ATTACHMENT_MAX_SIZE} (20MB).
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that uploads an attachment to a record
+ * @throws {Error} If neither `attachmentCategoryId` nor `attachmentCategoryName` is provided
+ *
+ * @example
+ * ```typescript
+ * const uploadAttachment = zohoCrmUploadAttachmentForRecord(context);
+ *
+ * await uploadAttachment({
+ *   module: 'Contacts',
+ *   id: contactId,
+ *   file: new File(['content'], 'resume.pdf', { type: 'application/pdf' }),
+ *   attachmentCategoryName: 'Resume'
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer/docs/api/v2.1/upload-attachment.html
  */
 export function zohoCrmUploadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmUploadAttachmentForRecordFunction {
   return (input: ZohoCrmUploadAttachmentForRecordRequest) => {
-    const { attachmentCategoryId, attachmentCategoryName, formData } = input;
+    const { attachmentCategoryId, attachmentCategoryName, file } = input;
 
     const urlParams = {
       attachments_category_id: joinStringsWithCommas(attachmentCategoryId),
-      attachments_category: joinStringsWithCommas(attachmentCategoryName),
-      attachment_url: input.attachmentUrl
+      attachments_category: joinStringsWithCommas(attachmentCategoryName)
     };
 
     if (!urlParams.attachments_category_id?.length && !urlParams.attachments_category?.length) {
       throw new Error('attachmentCategoryId or attachmentCategoryName must be provided and not empty.');
     }
 
-    if (formData != null) {
-      delete urlParams.attachment_url;
-    }
+    const url = `/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
+    const body = new FormData();
+    body.append('file', file);
 
-    const url = `https://crmsandbox.zoho.com/crm/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
-    let response: Promise<Response>;
-
-    if (urlParams.attachment_url) {
-      response = context.fetch(url, { method: 'POST' });
-    } else if (formData != null) {
-      throw new Error('unsupported currently. Use the attachmentUrl parameter instead.');
-
-      // There is something weird going on with sending requests this way and zoho's server is rejecting it.
-
-      /*
-      response = context.fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'content-length': '210'
-        },
-        body: formData
-      });
-      */
-
-      /*
-      const fullUrl = (context.config.apiUrl as string) + url;
-      const accessToken = await context.accessTokenStringFactory();
-
-      response = fetch(fullUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        },
-        body: formData,
-        method: 'POST'
-      });
-
-      console.log({ response });
-      */
-    } else {
-      throw new Error('body or attachmentUrl must be provided.');
-    }
-
-    return response;
+    // Clear the base Content-Type header (empty string removes it via mergeRequestHeaders) so fetch auto-detects multipart/form-data with the correct boundary from the FormData body.
+    return context.fetch(url, { method: 'POST', headers: { 'Content-Type': '' }, body });
   };
 }
 
@@ -537,12 +927,27 @@ export type ZohoCrmDownloadAttachmentForRecordResponse = FetchFileResponse;
 export type ZohoCrmDownloadAttachmentForRecordFunction = (input: ZohoCrmDownloadAttachmentForRecordRequest) => Promise<ZohoCrmDownloadAttachmentForRecordResponse>;
 
 /**
- * Downloads an attachment from a record.
+ * Creates a {@link ZohoCrmDownloadAttachmentForRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/download-attachments.html
+ * Downloads a specific attachment from a record. Returns a parsed
+ * {@link FetchFileResponse} containing the file data and metadata extracted
+ * from the response headers.
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that downloads an attachment by record and attachment ID
+ *
+ * @example
+ * ```typescript
+ * const downloadAttachment = zohoCrmDownloadAttachmentForRecord(context);
+ *
+ * const fileResponse = await downloadAttachment({
+ *   module: 'Contacts',
+ *   id: contactId,
+ *   attachment_id: attachmentId
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/download-attachments.html
  */
 export function zohoCrmDownloadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmDownloadAttachmentForRecordFunction {
   return (input: ZohoCrmDownloadAttachmentForRecordRequest) => context.fetch(`/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'GET' }).then(parseFetchFileResponse);
@@ -556,12 +961,26 @@ export type ZohoCrmDeleteAttachmentFromRecordResponse = Response;
 export type ZohoCrmDeleteAttachmentFromRecordFunction = (input: ZohoCrmDeleteAttachmentFromRecordRequest) => Promise<ZohoCrmDeleteAttachmentFromRecordResponse>;
 
 /**
- * Deletes an attachment from a record.
+ * Creates a {@link ZohoCrmDeleteAttachmentFromRecordFunction} bound to the given context.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/delete-attachments.html
+ * Deletes a specific attachment from a record by its attachment ID.
+ * Returns the raw {@link Response}.
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that deletes an attachment by record and attachment ID
+ *
+ * @example
+ * ```typescript
+ * const deleteAttachment = zohoCrmDeleteAttachmentFromRecord(context);
+ *
+ * const response = await deleteAttachment({
+ *   module: 'Contacts',
+ *   id: contactId,
+ *   attachment_id: attachmentId
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/crm/developer-guide/apiv2/delete-attachments.html
  */
 export function zohoCrmDeleteAttachmentFromRecord(context: ZohoCrmContext): ZohoCrmDeleteAttachmentFromRecordFunction {
   return (input: ZohoCrmDeleteAttachmentFromRecordRequest) => context.fetch(`/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'DELETE' });
@@ -612,6 +1031,9 @@ export interface ZohoCrmExecuteRestApiFunctionErrorResponse {
   readonly message: string;
 }
 
+/**
+ * Thrown when a Zoho CRM serverless function returns a non-success response code.
+ */
 export class ZohoCrmExecuteRestApiFunctionError extends BaseError {
   constructor(readonly error: ZohoCrmExecuteRestApiFunctionErrorResponse) {
     super(`An error occured during the execution of the function. Code: ${error.code}, Message: ${error.message}`);
@@ -626,15 +1048,41 @@ export class ZohoCrmExecuteRestApiFunctionError extends BaseError {
 export type ZohoCrmExecuteRestApiFunctionFunction = (input: ZohoCrmExecuteRestApiFunctionRequest) => Promise<ZohoCrmExecuteRestApiFunctionSuccessDetails>;
 
 /**
- * Creates a ZohoCrmExecuteRestApiFunctionFunction
+ * Creates a {@link ZohoCrmExecuteRestApiFunctionFunction} bound to the given context.
+ *
+ * Executes Zoho CRM serverless functions via the REST API. Supports both
+ * OAuth-based and API-key-based authentication. When using an API key, a custom
+ * target URL can be specified for cross-environment calls.
  *
  * OAuth Details:
  * - https://www.zoho.com/crm/developer/docs/functions/serverless-fn-oauth.html#OAuth2
  * - There is no documentation for ZohoCrm specifically, but it seems to behave the same way
  * - You will need the following scopes: ZohoCrm.functions.execute.READ,ZohoCrm.functions.execute.CREATE
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context providing fetch and rate limiting
+ * @returns Function that executes serverless functions via the REST API
+ * @throws {ZohoCrmExecuteRestApiFunctionError} If the function execution fails
+ *
+ * @example
+ * ```typescript
+ * const executeFunction = zohoCrmExecuteRestApiFunction(context);
+ *
+ * // Execute using OAuth credentials:
+ * const result = await executeFunction({ functionName: 'my_function' });
+ *
+ * // Execute with parameters:
+ * const paramResult = await executeFunction({
+ *   functionName: 'process_contact',
+ *   params: { contact_id: '12345', action: 'approve' }
+ * });
+ *
+ * // Execute using an API key (cross-environment):
+ * const apiResult = await executeFunction({
+ *   functionName: 'my_function',
+ *   apiKey: 'your-api-key',
+ *   apiUrl: 'production'
+ * });
+ * ```
  */
 export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmExecuteRestApiFunctionFunction {
   return (input: ZohoCrmExecuteRestApiFunctionRequest): Promise<ZohoCrmExecuteRestApiFunctionSuccessDetails> => {
@@ -659,10 +1107,16 @@ export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmE
 }
 
 // MARK: Util
+/**
+ * Builds URL search params from the input objects, omitting the `module` key since it is used in the URL path rather than as a query parameter.
+ */
 export function zohoCrmUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: 'module' });
 }
 
+/**
+ * Builds URL search params from the input objects, omitting both `id` and `module` keys since they are used in the URL path.
+ */
 export function zohoCrmUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
 }
@@ -672,6 +1126,9 @@ export function zohoCrmUrlSearchParamsMinusIdAndModule(...input: Maybe<object | 
  */
 export const zohoCrmUrlSearchParams = makeUrlSearchParams;
 
+/**
+ * Constructs the standard FetchJsonInput used by CRM API calls, pairing the HTTP method with an optional body.
+ */
 export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   const result = {
     method,
@@ -716,6 +1173,28 @@ export type ZohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<T extends ZohoCr
   readonly errorItems: ZohoCrmChangeObjectResponseErrorEntry[];
 };
 
+/**
+ * Separates a change response's entries into success and error arrays based on their status.
+ *
+ * Iterates over the `data` array from a Zoho CRM change operation response and
+ * partitions entries into `successItems` and `errorItems` based on their `status` field.
+ * The original response is spread into the result, so all original fields remain accessible.
+ *
+ * Used internally by {@link zohoCrmDeleteRecord} and similar functions to provide
+ * convenient access to separated success/error results.
+ *
+ * @param response - Raw change operation response containing mixed success/error entries
+ * @returns The response augmented with pre-separated `successItems` and `errorItems` arrays
+ *
+ * @example
+ * ```typescript
+ * const rawResponse = await context.fetchJson<ZohoCrmChangeObjectLikeResponse>(...);
+ * const result = zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs(rawResponse);
+ *
+ * result.successItems; // entries with status === 'success'
+ * result.errorItems;   // entries with non-success status
+ * ```
+ */
 export function zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<T extends ZohoCrmChangeObjectLikeResponseEntry>(response: ZohoCrmChangeObjectLikeResponse<T>): ZohoCrmChangeObjectLikeResponseSuccessAndErrorPairs<T> {
   const { data } = response;
   const successItems: ZohoCrmChangeObjectLikeResponseSuccessEntryType<T>[] = [];
@@ -750,15 +1229,35 @@ export interface ZohoCrmChangeObjectResponseErrorEntry extends ZohoServerErrorDa
 }
 
 // MARK: Multi-Record Results
+/**
+ * Result of a multi-record operation, grouping inputs by whether their API call succeeded or failed.
+ */
 export interface ZohoCrmMultiRecordResult<I, OS, OE> {
   readonly successItems: ZohoCrmMultiRecordResultEntry<I, OS>[];
   readonly errorItems: ZohoCrmMultiRecordResultEntry<I, OE>[];
 }
 
+/**
+ * Minimal shape required to determine whether an API result entry is a success or error.
+ */
 export interface ZohoCrmMultiRecordResultItem {
   readonly status: ZohoServerSuccessStatus | ZohoServerErrorStatus;
 }
 
+/**
+ * Pairs each input record with its corresponding API result and separates them into success and error arrays by status.
+ *
+ * Iterates over the `input` and `results` arrays in parallel, matching each input record
+ * to its positional result. Entries are classified as success or error based on
+ * the result's `status` field matching {@link ZOHO_SUCCESS_STATUS}.
+ *
+ * Used internally by {@link updateRecordLikeFunction} to pair input data with API outcomes
+ * for insert, update, and upsert operations.
+ *
+ * @param input - Array of input records that were submitted to the API
+ * @param results - Array of per-record results returned by the API, positionally aligned with `input`
+ * @returns Object with `successItems` and `errorItems`, each containing paired `{ input, result }` entries
+ */
 export function zohoCrmMultiRecordResult<I, OS extends ZohoCrmMultiRecordResultItem, OE extends ZohoCrmMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoCrmMultiRecordResult<I, OS, OE> {
   const successItems: ZohoCrmMultiRecordResultEntry<I, OS>[] = [];
   const errorItems: ZohoCrmMultiRecordResultEntry<I, OE>[] = [];

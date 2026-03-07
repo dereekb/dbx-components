@@ -23,13 +23,29 @@ export class ZohoCrmRecordNoContentError extends BaseError {
   }
 }
 
+/**
+ * Base error for Zoho CRM record CRUD operations. Wraps the server-provided error data including field-level details.
+ */
 export class ZohoCrmRecordCrudError extends ZohoServerError<ZohoServerErrorDataWithDetails> {}
 
+/**
+ * Thrown when a CRM create/update request is missing a required field defined in the module layout.
+ */
 export class ZohoCrmRecordCrudMandatoryFieldNotFoundError extends ZohoCrmRecordCrudError {}
+
+/**
+ * Thrown when a CRM create/update request would produce a duplicate record based on unique field constraints.
+ */
 export class ZohoCrmRecordCrudDuplicateDataError extends ZohoCrmRecordCrudError {}
 
+/**
+ * Key-value map of field-level validation error details returned by the Zoho CRM API for invalid data submissions.
+ */
 export type ZohoCrmRecordCrudInvalidDataErrorDetails = Record<string, string>;
 
+/**
+ * Describes the specific field that caused an invalid data error, as reported by the Zoho CRM API.
+ */
 export interface ZohoCrmRecordCrudInvalidFieldDetails {
   /**
    * The api name for this field
@@ -45,14 +61,23 @@ export interface ZohoCrmRecordCrudInvalidFieldDetails {
   readonly json_path: string;
 }
 
+/**
+ * Thrown when a CRM request contains invalid field data. Provides access to the offending field details via {@link invalidFieldDetails}.
+ */
 export class ZohoCrmRecordCrudInvalidDataError extends ZohoCrmRecordCrudError {
   get invalidFieldDetails(): ZohoCrmRecordCrudInvalidFieldDetails {
     return this.error.details as ZohoCrmRecordCrudInvalidFieldDetails;
   }
 }
 
+/**
+ * Thrown when an invalid data error targets the 'id' field, indicating the referenced record does not exist.
+ */
 export class ZohoCrmRecordCrudNoMatchingRecordError extends ZohoCrmRecordCrudInvalidDataError {}
 
+/**
+ * Maps a Zoho CRM server error to the appropriate typed {@link ZohoCrmRecordCrudError} subclass based on the error code and affected field.
+ */
 export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoCrmRecordCrudError {
   let result: ZohoCrmRecordCrudError;
 
@@ -80,6 +105,9 @@ export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): Z
   return result;
 }
 
+/**
+ * Returns an assertion function that throws {@link ZohoCrmRecordNoContentError} when a data array result is empty or null, typically indicating a missing record.
+ */
 export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: ZohoCrmModuleName, recordId?: ZohoCrmRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
     if (x == null || !x.data?.length) {
@@ -90,8 +118,14 @@ export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: Zoh
   };
 }
 
+/**
+ * Pre-configured console logger for Zoho CRM server errors. Data array errors are suppressed since they are handled separately by CRUD error classes.
+ */
 export const logZohoCrmErrorToConsole = logZohoServerErrorFunction('ZohoCrm', { logDataArrayErrors: false });
 
+/**
+ * Parses a fetch response error into a typed Zoho CRM server error by extracting and interpreting the JSON error body.
+ */
 export async function parseZohoCrmError(responseError: FetchResponseError) {
   const data: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef | undefined = await responseError.response.json().catch((x) => undefined);
   let result: ParsedZohoServerError | undefined;
@@ -103,6 +137,9 @@ export async function parseZohoCrmError(responseError: FetchResponseError) {
   return result;
 }
 
+/**
+ * Parses a Zoho CRM error response body into a typed error. Delegates to CRM-specific error code handling before falling back to the generic Zoho error parser.
+ */
 export function parseZohoCrmServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;
   const error = tryFindZohoServerErrorData(errorResponseData, responseError);
@@ -121,5 +158,12 @@ export function parseZohoCrmServerErrorResponseData(errorResponseData: ZohoServe
   return result;
 }
 
+/**
+ * Fetch response interceptor that detects Zoho CRM error payloads hidden within HTTP 200 responses and converts them into proper errors.
+ */
 export const interceptZohoCrm200StatusWithErrorResponse = interceptZohoErrorResponseFactory(parseZohoCrmServerErrorResponseData);
+
+/**
+ * Wraps a fetch function with Zoho CRM error parsing and console logging, ensuring all CRM API errors are surfaced as typed exceptions.
+ */
 export const handleZohoCrmErrorFetch = handleZohoErrorFetchFactory(parseZohoCrmError, logZohoCrmErrorToConsole);

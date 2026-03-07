@@ -3,34 +3,85 @@ import { type FetchNextPage, type FetchPage, type FetchPageFactory, type FetchPa
 
 // MARK: IterateFetchPagesByEachItem
 /**
- * Function called for each item that was fetched, along with the index and fetch results.
+ * Callback invoked for each individual item fetched across all pages.
  *
- * The index is the overall index this item is from the returned items.
+ * Receives the item, its global index (cumulative across all pages, not just the current page),
+ * and the full page result context. This enables per-item processing with awareness of both
+ * the item's position in the overall iteration and the page it originated from.
+ *
+ * @param item - The individual item extracted from a page result
+ * @param i - Global index of this item across all pages visited so far
+ * @param fetchPageResult - The page result containing this item, including input and pagination info
  */
 export type IterateFetchPagesByEachItemFunction<I, O, T, R> = (item: T, i: IndexNumber, fetchPageResult: FetchPageResultWithInput<I, O>) => Promise<R>;
 
+/**
+ * A tuple pairing an item with its global index across all iterated pages.
+ *
+ * Used internally as the task input for {@link performAsyncTasks}, allowing
+ * each item to carry its positional context through parallel/sequential processing.
+ */
 export type IterateFetchPagesByEachItemPair<T> = readonly [T, IndexNumber];
 
+/**
+ * Configuration for {@link iterateFetchPagesByEachItem}.
+ *
+ * Extends {@link IterateFetchPagesByItemsConfig} but replaces the batch-level `iteratePageItems`
+ * with a per-item `iterateEachPageItem` callback. Each item on every page is processed individually,
+ * either sequentially (default) or in parallel via `iteratePerformTasksConfig`.
+ */
 export interface IterateFetchPagesByEachItemConfig<I, O, T, R> extends Omit<IterateFetchPagesByItemsConfig<I, O, T, IterateFetchPagesByEachItemResult<T, R>>, 'iteratePageItems'> {
   /**
-   * The iterate function per each page result.
+   * Callback invoked once per item on each fetched page.
+   *
+   * Items are processed via {@link performAsyncTasks} — sequentially by default,
+   * but configurable to run in parallel via `iteratePerformTasksConfig`.
    */
   readonly iterateEachPageItem: IterateFetchPagesByEachItemFunction<I, O, T, R>;
   /**
-   * Optional additional configuration to pass to the
+   * Optional configuration passed to {@link performAsyncTasks} controlling
+   * how items within a single page are processed.
    *
-   * By default, sequential is true.
+   * By default, `sequential` is true, meaning items are processed one at a time.
+   * Override to enable parallel processing, set concurrency limits, or configure retry behavior.
    */
   readonly iteratePerformTasksConfig?: Partial<PerformAsyncTasksConfig<IterateFetchPagesByEachItemPair<T>>>;
 }
 
+/**
+ * Result of {@link iterateFetchPagesByEachItem}, containing success/failure details
+ * for each individually processed item.
+ *
+ * Wraps {@link PerformAsyncTasksResult} with item-index pairs, providing access to
+ * which items succeeded, failed, and their corresponding results or errors.
+ */
 export type IterateFetchPagesByEachItemResult<T, R> = PerformAsyncTasksResult<IterateFetchPagesByEachItemPair<T>, R>;
 
 /**
- * Iterates through the pages of a created FetchPage instance by each item individually.
+ * Iterates through all pages of a paginated fetch and processes each item individually.
  *
- * @param config
- * @returns
+ * Built on top of {@link iterateFetchPagesByItems}, this function handles per-item granularity
+ * by extracting items from each page and delegating to {@link performAsyncTasks}. Items are
+ * processed sequentially by default to preserve ordering guarantees, but can be parallelized
+ * via `iteratePerformTasksConfig`.
+ *
+ * Each item's callback receives a global index that reflects its position across all pages,
+ * not just within the current page.
+ *
+ * @param config - Configuration specifying the fetch page source, item extraction, and per-item callback
+ * @returns Combined result from {@link iterateFetchPagesByItems} including page/item counts and per-item task results
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFetchPagesByEachItem({
+ *   fetchPageFactory: myPageFactory,
+ *   input: { query: 'active' },
+ *   readItemsFromPageResult: (r) => r.result.items,
+ *   iterateEachPageItem: async (item, index, pageResult) => {
+ *     return processItem(item);
+ *   }
+ * });
+ * ```
  */
 export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFetchPagesByEachItemConfig<I, O, T, R>) {
   const { iterateEachPageItem, iteratePerformTasksConfig } = config;
@@ -58,63 +109,131 @@ export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFet
 
 // MARK: IterateFetchPagesByItems
 /**
- * Filter function used to filter out items.
+ * Filters items extracted from a page result before they are passed to the iteration callback.
  *
- * @param snapshot
- * @returns
+ * Receives all items from a single page along with the page result context.
+ * Filtered-out items do not count toward `iterateItemsLimit` but the filtering
+ * does not affect pagination continuation — pages continue to be fetched regardless
+ * of how many items pass the filter.
+ *
+ * @param items - All items extracted from the current page
+ * @param pageResult - The full page result including input and pagination metadata
+ * @returns The filtered subset of items to process, or a promise resolving to it
  */
 export type IterateFetchPagesByItemsFilterFunction<I, O, T> = (items: T[], pageResult: FetchPageResultWithInput<I, O>) => PromiseOrValue<T[]>;
 
+/**
+ * Callback invoked with all (optionally filtered) items from a single fetched page.
+ *
+ * Unlike {@link IterateFetchPagesByEachItemFunction} which operates per-item, this receives
+ * the entire batch of items for a page, enabling bulk processing strategies.
+ *
+ * @param items - Items from the current page (after filtering, if configured)
+ * @param fetchPageResult - The page result with input and pagination context
+ * @param totalItemsVisited - Running total of items visited across all previous pages (before this batch)
+ */
 export type IterateFetchPagesByItemsFunction<I, O, T, R> = (items: T[], fetchPageResult: FetchPageResultWithInput<I, O>, totalItemsVisited: number) => Promise<R>;
 
+/**
+ * Configuration for {@link iterateFetchPagesByItems}.
+ *
+ * Extends page-level iteration with item extraction, filtering, and item-count-based
+ * termination. Pages are fetched via a {@link FetchPage} or {@link FetchPageFactory},
+ * items are extracted from each page result, optionally filtered, then passed to
+ * `iteratePageItems` as a batch.
+ *
+ * Supports two independent limits: `loadItemLimit` caps the total raw items loaded
+ * from the API, while `iterateItemsLimit` caps items that pass filtering.
+ */
 export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<IterateFetchPagesConfig<I, O, R>, 'iteratePage'> {
   /**
-   * Read individual items from page result.
+   * Extracts typed items from a raw page result.
    *
-   * @param items
-   * @returns
+   * Called once per page to transform the API response into the items
+   * that will be filtered and iterated over.
+   *
+   * @param results - The raw page result from the fetch
+   * @returns Array of items extracted from this page
    */
   readItemsFromPageResult(results: FetchPageResult<O>): T[];
   /**
-   * The total number of items allowed to be visited/used.
+   * Maximum number of items allowed to be visited (post-filter) across all pages.
    *
-   * If items are filtered out, they do not count towards the visit total.
-   *
-   * Ends on the page that reaches this limit.
+   * Items that are filtered out by `filterPageItems` do not count toward this limit.
+   * Iteration ends after the page where this limit is reached; items on that final
+   * page are still fully processed.
    */
   readonly iterateItemsLimit?: Maybe<number>;
   /**
-   * The total number of items allowed to be loaded from all pages.
+   * Maximum number of raw items allowed to be loaded (pre-filter) across all pages.
    *
-   * Ends on the page that reaches this limit.
+   * Counts all items returned by `readItemsFromPageResult`, regardless of filtering.
+   * Iteration ends after the page where this limit is reached.
    */
   readonly loadItemLimit?: Maybe<number>;
   /**
-   * Filter function that can be used to filter out items from a result
+   * Optional filter applied to items on each page before they reach `iteratePageItems`.
    *
-   * If all items are filtered out then the iteration will continue with final item of the snapshot regardless of filtering. The filtering does not impact the continuation decision.
-   * Use the handleRepeatCursor to properly exit the loop in unwanted repeat cursor cases.
+   * Filtered-out items are excluded from processing and do not count toward `iterateItemsLimit`,
+   * but filtering does not affect pagination — the next page is still fetched based on the
+   * original (unfiltered) page result. If all items on a page are filtered out, iteration
+   * continues using the last item for cursor positioning.
    *
-   * @param snapshot
-   * @returns
+   * Use `endEarly` or `handleRepeatCursor` to handle cases where filtering causes
+   * repeated cursors or unwanted looping.
    */
   readonly filterPageItems?: IterateFetchPagesByItemsFilterFunction<I, O, T>;
   /**
-   * The iterate function per each page result.
+   * Callback invoked with the batch of items (post-filter) from each page.
+   *
+   * Receives the filtered items, the page result context, and the running count
+   * of total items visited before this page.
    */
   readonly iteratePageItems: IterateFetchPagesByItemsFunction<I, O, T, R>;
 }
 
+/**
+ * Result of {@link iterateFetchPagesByItems}, extending page-level results
+ * with item-level counters.
+ */
 export interface IterateFetchPagesByItemsResult<I, O, T, R> extends IterateFetchPagesResult {
+  /**
+   * Total number of raw items loaded from all pages (pre-filter).
+   */
   readonly totalItemsLoaded: number;
+  /**
+   * Total number of items visited across all pages (post-filter).
+   */
   readonly totalItemsVisited: number;
 }
 
 /**
- * Iterates through the pages of a created FetchPage instance.
+ * Iterates through paginated fetch results at the item batch level.
  *
- * @param config
- * @returns
+ * Fetches pages sequentially (or in parallel via `maxParallelPages`), extracts items
+ * from each page using `readItemsFromPageResult`, optionally filters them, then
+ * passes the batch to `iteratePageItems`. Tracks both raw loaded counts and
+ * post-filter visited counts, terminating when either limit is reached or pages
+ * are exhausted.
+ *
+ * For per-item processing instead of batch processing, use {@link iterateFetchPagesByEachItem}.
+ *
+ * @param config - Configuration specifying fetch source, item extraction, filtering, limits, and batch callback
+ * @returns Result with page count and item counters (loaded and visited)
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFetchPagesByItems({
+ *   fetchPageFactory: myPageFactory,
+ *   input: { status: 'active' },
+ *   readItemsFromPageResult: (r) => r.result.records,
+ *   filterPageItems: (items) => items.filter(x => x.isValid),
+ *   iterateItemsLimit: 500,
+ *   iteratePageItems: async (items, pageResult, totalVisited) => {
+ *     await bulkInsert(items);
+ *   }
+ * });
+ * ```
  */
 export async function iterateFetchPagesByItems<I, O, T, R>(config: IterateFetchPagesByItemsConfig<I, O, T, R>) {
   const { readItemsFromPageResult, iterateItemsLimit: inputTotalIterateItemsLimit, loadItemLimit: inputTotalLoadItemLimit, filterPageItems: inputFilterPageItems, iteratePageItems } = config;
@@ -152,87 +271,196 @@ export async function iterateFetchPagesByItems<I, O, T, R>(config: IterateFetchP
 }
 
 // MARK: IterateFetchPages
+/**
+ * Union type for {@link iterateFetchPages} configuration.
+ *
+ * Accepts either a factory-based config (providing `input` + `fetchPageFactory` to create
+ * the {@link FetchPage} on demand) or an instance-based config (providing a pre-created
+ * `fetchPage` directly). This flexibility supports both lazy and eager page initialization.
+ */
 export type IterateFetchPagesConfig<I, O, R> = IterateFetchPagesConfigWithFactoryAndInput<I, O, R> | IterateFetchPagesConfigWithFetchPageInstance<I, O, R>;
 
+/**
+ * Configuration variant that creates a {@link FetchPage} from a factory and input.
+ *
+ * Use this when you have a reusable {@link FetchPageFactory} and want the iterator
+ * to handle page instantiation. The factory receives the input along with any
+ * `maxPage`/`maxItemsPerPage` options from {@link FetchPageFactoryInputOptions}.
+ */
 export interface IterateFetchPagesConfigWithFactoryAndInput<I, O, R> extends BaseIterateFetchPagesConfig<I, O, R> {
   /**
-   * Input for the page fetch.
+   * The query/filter input passed to the fetch page factory to initialize pagination.
    */
   readonly input: I;
+  /**
+   * Factory that creates a {@link FetchPage} from the given input and options.
+   */
   readonly fetchPageFactory: FetchPageFactory<I, O>;
 }
 
+/**
+ * Configuration variant that uses a pre-created {@link FetchPage} instance directly.
+ *
+ * Use this when you already have a configured {@link FetchPage} and don't need
+ * the iterator to create one via a factory.
+ */
 export interface IterateFetchPagesConfigWithFetchPageInstance<I, O, R> extends BaseIterateFetchPagesConfig<I, O, R> {
+  /**
+   * Pre-created fetch page instance to iterate through.
+   */
   readonly fetchPage: FetchPage<I, O>;
 }
 
+/**
+ * Base configuration shared by all {@link iterateFetchPages} config variants.
+ *
+ * Provides the core iteration hooks (`iteratePage`, `usePageResult`, `endEarly`),
+ * concurrency controls (`maxParallelPages`, `waitBetweenPages`), and pagination
+ * limits inherited from {@link FetchPageFactoryInputOptions}.
+ */
 export interface BaseIterateFetchPagesConfig<I, O, R> extends FetchPageFactoryInputOptions {
   /**
-   * Input for the page fetch.
+   * Optional input for the page fetch. Required when using `fetchPageFactory`,
+   * ignored when using a pre-created `fetchPage`.
    */
   readonly input?: I;
+  /**
+   * Optional factory for creating the {@link FetchPage}. Mutually exclusive
+   * with `fetchPage` — provide one or the other.
+   */
   readonly fetchPageFactory?: FetchPageFactory<I, O>;
+  /**
+   * Optional pre-created {@link FetchPage} instance. Mutually exclusive
+   * with `fetchPageFactory` + `input`.
+   */
   readonly fetchPage?: FetchPage<I, O>;
   /**
-   * The number of max parallel pages to run.
+   * Maximum number of pages to process concurrently.
    *
-   * By default pages are run serially (max of 1), but can be run in parallel.
+   * Defaults to 1 (serial execution). When set higher, pages are fetched
+   * and processed in parallel using {@link performTasksFromFactoryInParallelFunction}.
+   * Note that page *fetching* is always sequential (each page depends on the
+   * previous page's cursor), but page *processing* via `iteratePage` can overlap.
    */
   readonly maxParallelPages?: number;
   /**
-   * The amount of time to add as a delay between beginning a new page.
+   * Minimum delay in milliseconds between initiating consecutive page fetches.
    *
-   * If in parallel this is the minimum amount of time to wait before starting a new page.
+   * Useful for rate limiting API calls. When running in parallel, this ensures
+   * at least this much time passes between starting each new page request.
    */
   readonly waitBetweenPages?: Milliseconds;
   /**
-   * The iterate function per each page result.
+   * Core iteration callback invoked once per fetched page.
+   *
+   * Receives the full page result including the original input and pagination metadata.
+   * The return value is captured in the {@link IterateFetchPagesIterationResult} and
+   * made available to `usePageResult` and `endEarly`.
+   *
+   * @param result - The fetched page result with input context
+   * @returns The processing result for this page
    */
   iteratePage(result: FetchPageResultWithInput<I, O>): Promise<R>;
   /**
-   * (Optional) Called at the end of each page.
+   * Optional side-effect callback invoked after each page is fully processed.
+   *
+   * Called after `iteratePage` completes, receiving the full iteration result
+   * including the page index, fetch result, and processing result. Useful for
+   * logging, progress tracking, or accumulating results externally.
+   *
+   * @param pageResult - The complete iteration result for this page
    */
   usePageResult?(pageResult: IterateFetchPagesIterationResult<I, O, R>): PromiseOrValue<void>;
   /**
-   * (Optional) Function to check whether or not to end the iteration early based on the result.
+   * Optional early termination predicate evaluated after each page.
    *
-   * @param pageResult
-   * @returns
+   * When this returns `true`, no further pages will be fetched. Any pages
+   * already in-flight (when using parallel processing) will still complete.
+   * Checked after both `iteratePage` and `usePageResult` have finished.
+   *
+   * @param pageResult - The complete iteration result for the most recent page
+   * @returns `true` to stop iteration after this page
    */
   endEarly?: DecisionFunction<IterateFetchPagesIterationResult<I, O, R>>;
 }
 
+/**
+ * Intermediate result produced after processing a single page during iteration.
+ *
+ * Passed to {@link BaseIterateFetchPagesConfig.usePageResult} and
+ * {@link BaseIterateFetchPagesConfig.endEarly} to enable post-page logic
+ * and conditional termination.
+ */
 export interface IterateFetchPagesIterationResult<I, O, R> extends IndexRef {
-  /***
-   * Page index number
+  /**
+   * Zero-based page index within this iteration run.
    */
   readonly i: IndexNumber;
   /**
-   * The returned fetch page result
+   * The raw fetch page result including pagination metadata and the original input.
    */
   readonly fetchPageResult: FetchPageResultWithInput<I, O>;
   /**
-   * Results returned from each page.
+   * Value returned by `iteratePage` for this page.
    */
   readonly result: R;
 }
 
+/**
+ * Final result returned by {@link iterateFetchPages} after all pages have been processed.
+ */
 export interface IterateFetchPagesResult {
   /**
-   * The total number of pages visited.
+   * Total number of pages fetched and processed during this iteration.
    */
   readonly totalPages: number;
   /**
-   * Whether or not the total page limit was reached.
+   * Whether iteration stopped because the configured `maxPage` limit was reached,
+   * as opposed to running out of pages or an early termination via `endEarly`.
    */
   readonly totalPagesLimitReached: boolean;
 }
 
 /**
- * Iterates through the pages of a created FetchPage instance.
+ * Core pagination iterator that fetches and processes pages from a {@link FetchPage} source.
  *
- * @param config
- * @returns
+ * This is the foundational function in the fetch page iteration hierarchy. It drives
+ * sequential page fetching (each page depends on the previous page's cursor/state),
+ * with optional parallel *processing* of fetched pages via `maxParallelPages`.
+ *
+ * The iteration loop continues until one of these conditions is met:
+ * - No more pages are available (`hasNext` is false)
+ * - The `maxPage` limit from {@link FetchPageFactoryInputOptions} is reached
+ * - The `endEarly` predicate returns true
+ *
+ * Higher-level functions {@link iterateFetchPagesByItems} and {@link iterateFetchPagesByEachItem}
+ * build on this to add item extraction, filtering, and per-item processing.
+ *
+ * @param config - Configuration specifying the page source, processing callback, and iteration controls
+ * @returns Summary of the iteration including total pages visited and whether the page limit was hit
+ *
+ * @example
+ * ```typescript
+ * // Using a factory
+ * const result = await iterateFetchPages({
+ *   input: { query: 'active', pageSize: 50 },
+ *   fetchPageFactory: myFactory,
+ *   maxPage: 10,
+ *   iteratePage: async (pageResult) => {
+ *     console.log(`Page ${pageResult.page}:`, pageResult.result);
+ *     return pageResult.result.items.length;
+ *   },
+ *   endEarly: ({ result }) => result === 0
+ * });
+ *
+ * // Using a pre-created FetchPage instance
+ * const result = await iterateFetchPages({
+ *   fetchPage: existingFetchPage,
+ *   iteratePage: async (pageResult) => {
+ *     await processBatch(pageResult.result);
+ *   }
+ * });
+ * ```
  */
 export async function iterateFetchPages<I, O, R>(config: IterateFetchPagesConfigWithFactoryAndInput<I, O, R>): Promise<IterateFetchPagesResult>;
 export async function iterateFetchPages<I, O, R>(config: IterateFetchPagesConfigWithFetchPageInstance<I, O, R>): Promise<IterateFetchPagesResult>;

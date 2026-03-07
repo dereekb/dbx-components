@@ -136,7 +136,21 @@ export interface FirestoreItemPageQueryResultStreamOptions {
   readonly options?: Maybe<SnapshotListenOptions>;
 }
 
+/**
+ * Delegate that implements the page loading logic for Firestore pagination.
+ *
+ * Responsible for translating pagination requests into Firestore queries,
+ * managing cursors between pages, and producing {@link FirestoreItemPageQueryResult} values.
+ */
 export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
+
+/**
+ * Internal pagination instance that works directly with {@link FirestoreItemPageQueryResult}.
+ *
+ * This is the raw iteration instance before mapping to document arrays. It provides
+ * access to snapshot-level data and metadata. Exposed via
+ * {@link FirestoreItemPageIteration.snapshotIteration} for advanced use cases.
+ */
 export type InternalFirestoreItemPageIterationInstance<T> = ItemPageIterationInstance<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 
 /**
@@ -160,6 +174,17 @@ export function filterDisallowedFirestoreItemPageIteratorInputConstraints(constr
  */
 export const DEFAULT_FIRESTORE_ITEM_PAGE_ITERATOR_ITEMS_PER_PAGE = 50;
 
+/**
+ * Creates a {@link FirestoreItemPageIteratorDelegate} that handles cursor-based Firestore pagination.
+ *
+ * The delegate implements `loadItemsForPage` by:
+ * 1. Retrieving the cursor document from the previous page's results
+ * 2. Building a query with the configured constraints, `startAfter` cursor, and `limit`
+ * 3. Executing the query and wrapping the results in a {@link FirestoreItemPageQueryResult}
+ *    with `reload()` and `stream()` capabilities
+ *
+ * @returns A delegate instance for use with {@link ItemPageIterator}
+ */
 export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIteratorDelegate<T> {
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
@@ -407,7 +432,14 @@ function _firestoreItemPageIterationWithSnapshotIteration<T>(snapshotIteration: 
 export type FirestoreFixedItemPageIterationFactoryFunction<T> = (items: DocumentReference<T>[], filter?: FirestoreItemPageIteratorFilter) => FirestoreItemPageIterationInstance<T>;
 
 /**
- * Creates a FirestoreFixedItemPageIterationFactoryFunction.
+ * Creates a factory function for generating fixed-set Firestore pagination instances.
+ *
+ * The returned factory takes an array of document references and an optional filter,
+ * producing a pagination instance that iterates over those specific documents in pages.
+ *
+ * @param baseConfig - Base pagination configuration (query reference, driver, page size)
+ * @param documentAccessor - Accessor used to load document snapshots from the references
+ * @returns A factory function that creates fixed-set pagination instances
  */
 export function firestoreFixedItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationConfig<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T>): FirestoreFixedItemPageIterationFactoryFunction<T> {
   return (items: DocumentReference<T>[], filter?: FirestoreItemPageIteratorFilter) => {
@@ -425,13 +457,38 @@ export function firestoreFixedItemPageIterationFactory<T>(baseConfig: FirestoreI
   };
 }
 
+/**
+ * Configuration for {@link firestoreFixedItemPageIteration}.
+ *
+ * Extends the standard pagination config with a fixed set of document references
+ * and a document accessor to load their snapshots. Instead of querying Firestore,
+ * pagination is simulated by slicing through the provided references array.
+ */
 export interface FirestoreFixedItemPageIterationConfig<T> extends FirestoreItemPageIterationConfig<T> {
+  /**
+   * The fixed set of document references to paginate through.
+   *
+   * Documents are loaded in order, sliced into pages of `itemsPerPage` size.
+   */
   readonly items: DocumentReference<T>[];
+  /**
+   * Accessor used to load document snapshots from the references.
+   */
   readonly documentAccessor: LimitedFirestoreDocumentAccessor<T>;
 }
 
 /**
- * Creates a FirestoreItemPageIterationInstance that iterates over the fixed
+ * Creates a pagination instance that iterates over a fixed set of document references.
+ *
+ * Unlike {@link firestoreItemPageIteration} which queries Firestore dynamically, this function
+ * paginates through a pre-determined list of document references. Each page loads the next
+ * slice of references via the document accessor and produces a synthetic {@link QuerySnapshot}.
+ *
+ * This is useful for paginating over known document sets (e.g., from a pre-computed list
+ * of references) without executing Firestore queries.
+ *
+ * @param config - Configuration including the document references, accessor, and pagination settings
+ * @returns A pagination instance that pages through the fixed reference set
  */
 export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
   const { items, documentAccessor } = config;

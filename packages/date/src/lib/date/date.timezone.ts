@@ -1,7 +1,7 @@
 import { addMilliseconds, startOfDay, endOfDay, millisecondsToHours, millisecondsToMinutes, differenceInHours, addHours } from 'date-fns';
 import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours, type Minutes, MS_IN_MINUTE, MS_IN_DAY, cachedGetter, type Getter, type LogicalDate } from '@dereekb/util';
 import { toZonedTime, format as formatDate } from 'date-fns-tz';
-import { guessCurrentTimezone, isSameDate, isStartOfDayInUTC, requireCurrentTimezone, roundDateDownTo } from './date';
+import { guessCurrentTimezone, isSameDate, isStartOfDayInUTC, roundDateDownTo } from './date';
 import { type DateRange, type TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { dateFromLogicalDate } from './date.logical';
 
@@ -95,8 +95,10 @@ export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConf
  * @returns
  */
 export function getCurrentSystemOffsetInMs(date: Date): Milliseconds {
-  const systemTimezone = requireCurrentTimezone();
-  return calculateTimezoneOffset(systemTimezone, date);
+  // Use native getTimezoneOffset() instead of calculateTimezoneOffset() to avoid
+  // a DST edge case where toZonedTime() creates an epoch that lands on the system's
+  // DST transition boundary, causing formatDate to return the wrong hour.
+  return -date.getTimezoneOffset() * MS_IN_MINUTE;
 }
 
 /**
@@ -134,29 +136,38 @@ export function getCurrentSystemOffsetInMinutes(date: Date): Minutes {
  * @returns
  */
 export function calculateTimezoneOffset(timezone: TimezoneString, date: Date): Milliseconds {
-  /*
-  // BUG: There is a bug with getTimezoneOffset where the offset is not calculated properly for the first 2 hours after the DST change.
-  // https://github.com/marnusw/date-fns-tz/issues/227
-  
-  const tzOffset = getTimezoneOffset(timezone, date);
-  */
+  let tzOffset: Milliseconds;
 
-  /*
-   * WORKAROUND: This is the current workaround. Performance hit seems negligible for all UI use cases.
-   */
+  // UTC always has zero offset; skip toZonedTime which can produce wrong results
+  // when the shifted epoch lands on the system's DST transition boundary.
+  if (isConsideredUtcTimezoneString(timezone)) {
+    tzOffset = 0;
+  } else {
+    /*
+    // BUG: There is a bug with getTimezoneOffset where the offset is not calculated properly for the first 2 hours after the DST change.
+    // https://github.com/marnusw/date-fns-tz/issues/227
 
-  // inputTimeDate.setSeconds(0);         // NOTE: setting seconds/milliseconds during the daylight savings epoch will also remove an hour
-  // inputTimeDate.setMilliseconds(0);    // do not clear seconds in this way.
+    const tzOffset = getTimezoneOffset(timezone, date);
+    */
 
-  const inputTimeUnrounded = date.getTime();
-  const secondsAndMs = inputTimeUnrounded % MS_IN_MINUTE; // determine the number of seconds and milliseconds (prepare to round to nearest minute)
-  const inputTime = inputTimeUnrounded - secondsAndMs; // remove seconds and ms as it will throw off the final tzOffset
+    /*
+     * WORKAROUND: This is the current workaround. Performance hit seems negligible for all UI use cases.
+     */
 
-  const zoneDate = toZonedTime(inputTime, timezone);
-  const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm'); // ignore seconds, etc.
-  const zoneDateTime = new Date(zoneDateStr + 'Z').getTime();
+    // inputTimeDate.setSeconds(0);         // NOTE: setting seconds/milliseconds during the daylight savings epoch will also remove an hour
+    // inputTimeDate.setMilliseconds(0);    // do not clear seconds in this way.
 
-  const tzOffset = zoneDateTime - inputTime;
+    const inputTimeUnrounded = date.getTime();
+    const secondsAndMs = inputTimeUnrounded % MS_IN_MINUTE; // determine the number of seconds and milliseconds (prepare to round to nearest minute)
+    const inputTime = inputTimeUnrounded - secondsAndMs; // remove seconds and ms as it will throw off the final tzOffset
+
+    const zoneDate = toZonedTime(inputTime, timezone);
+    const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm'); // ignore seconds, etc.
+    const zoneDateTime = new Date(zoneDateStr + 'Z').getTime();
+
+    tzOffset = zoneDateTime - inputTime;
+  }
+
   return tzOffset;
 }
 

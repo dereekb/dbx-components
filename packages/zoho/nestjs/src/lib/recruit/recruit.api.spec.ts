@@ -794,62 +794,39 @@ describe('recruit.api', () => {
           });
 
           describe('uploadAttachmentForRecord()', () => {
-            /*
-            it('should upload the attachment using the body', async () => {
-
-              const formData = new FormData();
-
-              formData.append('file', 'text', {
-                contentType: 'text/plain',
-                filename: 'test.txt'
-              });
-
-              const length = formData.getLengthSync();
-              console.log({ length });
+            it('should upload the attachment using a file', async () => {
+              const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
 
               const result = await api.uploadAttachmentForRecord({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 id: testRecordId,
-                formData: formData as any,
+                file,
                 attachmentCategoryName: 'Others'
-              });
-
-              const textResponse = await result.text();
-
-              console.log({
-                result,
-                textResponse
               });
 
               expect(result).toBeDefined();
             });
-            */
-            /*
+
             it('should upload the attachment using the attachment_url', async () => {
-
               const result = await api.uploadAttachmentForRecord({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 id: testRecordId,
-                attachmentUrl: 'https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true',
+                attachmentUrl: `https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true&${randomNumber({ min: 100000000000000, max: 999999999999999 })}`,
                 attachmentCategoryName: 'Others'
-              });
-
-              console.log({
-                result
               });
 
               expect(result).toBeDefined();
             });
-            */
           });
 
           describe('downloadAttachmentForRecord()', () => {
             it('should download the attachment', async () => {
               const attachments = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
-              const attachmentId = attachments.data[0]?.id;
+              const downloadableAttachment = attachments.data.find((x) => x.$type === 'Attachment');
+              const attachmentId = downloadableAttachment?.id;
 
               if (attachmentId) {
-                // No way to add attachments, so don't expect any results.
+                // Only downloadable (non-linked) attachments can be downloaded; linked attachments return DOWNLOAD_NOT_ALLOWED.
                 const result = await api.downloadAttachmentForRecord({
                   id: testRecordId,
                   module: ZOHO_RECRUIT_CANDIDATES_MODULE,

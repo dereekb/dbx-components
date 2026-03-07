@@ -1,6 +1,9 @@
 import { type Maybe, type HexColorCode } from '@dereekb/util';
 import { type ZohoCrmChangeObjectDetails } from './crm';
 
+/**
+ * Unique identifier for a CRM tag.
+ */
 export type ZohoCrmTagId = string;
 
 /**

@@ -1,17 +1,9 @@
 import { startOfDay, addDays, addHours } from 'date-fns';
-import { callbackTest, expectFail, itShouldFail } from '@dereekb/util/test';
+import { callbackTest } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { filter, first, from, skip, map as rxMap } from 'rxjs';
+import { first, map as rxMap } from 'rxjs';
 import {
-  firestoreIdBatchVerifierFactory,
-  limit,
-  orderBy,
-  startAfter,
-  startAt,
   where,
-  limitToLast,
-  endAt,
-  endBefore,
   makeDocuments,
   newDocuments,
   getDocumentSnapshots,
@@ -33,7 +25,6 @@ import {
   loadDocumentsForIdsFromValues,
   firestoreDocumentLoader,
   firestoreDocumentSnapshotPairsLoader,
-  firestoreQueryDocumentSnapshotPairsLoader,
   documentData,
   documentDataFunction,
   documentDataWithIdAndKey,
@@ -47,40 +38,17 @@ import {
   firestoreModelKeysFromDocuments,
   documentReferenceFromDocument,
   documentReferencesFromDocuments,
-  type FirestoreQueryFactoryFunction,
-  type FirestoreCollectionQueryFactoryFunction,
-  startAtValue,
-  endAtValue,
-  whereDocumentId,
-  type FirebaseAuthUserId,
-  whereDateIsBetween,
-  whereDateIsInRange,
-  whereDateIsBeforeWithSort,
-  whereDateIsOnOrAfterWithSort,
-  whereStringValueHasPrefix,
-  whereStringHasRootIdentityModelKey,
-  iterateFirestoreDocumentSnapshotPairs,
-  iterateFirestoreDocumentSnapshotBatches,
-  iterateFirestoreDocumentSnapshotPairBatches,
-  iterateFirestoreDocumentSnapshots,
-  whereDateIsOnOrBeforeWithSort,
-  whereDateIsAfterWithSort,
-  type FirestoreDocumentSnapshotDataPair,
-  type FirestoreDocumentSnapshotDataPairWithData,
-  loadAllFirestoreDocumentSnapshotPairs,
-  loadAllFirestoreDocumentSnapshot,
-  orderByDocumentId,
+  limitedFirestoreDocumentAccessorSnapshotCache,
   latestSnapshotsFromDocuments,
   mapLatestSnapshotsFromDocuments,
-  latestDataFromDocuments,
+  streamDocumentSnapshotsData,
   dataFromDocumentSnapshots,
   streamDocumentSnapshotDataPairs,
   streamDocumentSnapshotDataPairsWithData,
   streamFromOnSnapshot
 } from '@dereekb/firebase';
-import { type MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, type MockItem, type MockItemSubItemDocument, type MockItemSubItem, type MockItemSubItemDeepDocument, type MockItemSubItemDeep, type MockItemUserDocument, mockItemIdentity, type MockItemUserKey } from '../mock';
-import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
-import { DateRangeType } from '@dereekb/date';
+import { type MockItemCollectionFixture, MockItemDocument, type MockItem } from '../mock';
+import { isEvenNumber, unique } from '@dereekb/util';
 
 /**
  * Describes utility driver tests, using a MockItemCollectionFixture.
@@ -811,6 +779,112 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
           });
         });
       });
+
+      // MARK: limitedFirestoreDocumentAccessorSnapshotCache
+      describe('limitedFirestoreDocumentAccessorSnapshotCache()', () => {
+        it('should expose the underlying accessor', () => {
+          const accessor = f.instance.mockItemCollection.documentAccessor();
+          const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+
+          expect(cache.accessor).toBe(accessor);
+        });
+
+        describe('getDocumentSnapshotDataPairForKey()', () => {
+          it('should return a snapshot data pair for an existing document', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+
+            const pair = await cache.getDocumentSnapshotDataPairForKey(items[0].key);
+
+            expect(pair.document).toBeDefined();
+            expect(pair.document.key).toBe(items[0].key);
+            expect(pair.snapshot).toBeDefined();
+            expect(pair.data).toBeDefined();
+            expect(pair.data!.id).toBe(items[0].id);
+            expect(pair.data!.key).toBe(items[0].key);
+          });
+
+          it('should return the same promise for the same key', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+
+            const promise1 = cache.getDocumentSnapshotDataPairForKey(items[0].key);
+            const promise2 = cache.getDocumentSnapshotDataPairForKey(items[0].key);
+
+            expect(promise1).toBe(promise2);
+          });
+
+          it('should return undefined data for a non-existent document', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const newDoc = newDocuments(accessor, 1)[0];
+
+            const pair = await cache.getDocumentSnapshotDataPairForKey(newDoc.key);
+
+            expect(pair.document).toBeDefined();
+            expect(pair.data).toBeUndefined();
+          });
+        });
+
+        describe('getDocumentSnapshotDataPairsForKeys()', () => {
+          it('should return pairs for all keys in order', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const keys = items.map((x) => x.key);
+
+            const pairs = await cache.getDocumentSnapshotDataPairsForKeys(keys);
+
+            expect(pairs.length).toBe(testDocumentCount);
+
+            pairs.forEach((pair, i) => {
+              expect(pair.document.key).toBe(items[i].key);
+              expect(pair.data).toBeDefined();
+              expect(pair.data!.id).toBe(items[i].id);
+            });
+          });
+
+          it('should use the cache for duplicate keys', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const key = items[0].key;
+
+            const [pair1] = await cache.getDocumentSnapshotDataPairsForKeys([key]);
+            const [pair2] = await cache.getDocumentSnapshotDataPairsForKeys([key]);
+
+            expect(pair1).toBe(pair2);
+          });
+        });
+
+        describe('getDocumentSnapshotDataPairsWithDataForKeys()', () => {
+          it('should return pairs for all existing documents', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const keys = items.map((x) => x.key);
+
+            const pairs = await cache.getDocumentSnapshotDataPairsWithDataForKeys(keys);
+
+            expect(pairs.length).toBe(testDocumentCount);
+
+            pairs.forEach((pair) => {
+              expect(pair.data).toBeDefined();
+              expect(pair.data.id).toBeDefined();
+              expect(pair.data.key).toBeDefined();
+            });
+          });
+
+          it('should filter out non-existent documents', async () => {
+            const accessor = f.instance.mockItemCollection.documentAccessor();
+            const cache = limitedFirestoreDocumentAccessorSnapshotCache(accessor);
+            const newDoc = newDocuments(accessor, 1)[0];
+            const keys = [...items.map((x) => x.key), newDoc.key];
+
+            const pairs = await cache.getDocumentSnapshotDataPairsWithDataForKeys(keys);
+
+            expect(pairs.length).toBe(testDocumentCount);
+            expect(pairs.every((p) => p.data != null)).toBe(true);
+          });
+        });
+      });
     });
 
     describe('document.rxjs.ts', () => {
@@ -885,12 +959,12 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
         );
       });
 
-      // MARK: latestDataFromDocuments
-      describe('latestDataFromDocuments()', () => {
+      // MARK: streamDocumentSnapshotsData
+      describe('streamDocumentSnapshotsData()', () => {
         it(
           'should emit data with id/key for all documents',
           callbackTest((done) => {
-            sub.subscription = latestDataFromDocuments(items)
+            sub.subscription = streamDocumentSnapshotsData(items)
               .pipe(first())
               .subscribe((data) => {
                 expect(data.length).toBe(testDocumentCount);
@@ -909,7 +983,7 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
         it(
           'should emit an empty array for empty input',
           callbackTest((done) => {
-            sub.subscription = latestDataFromDocuments([])
+            sub.subscription = streamDocumentSnapshotsData([])
               .pipe(first())
               .subscribe((data) => {
                 expect(data.length).toBe(0);

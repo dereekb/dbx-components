@@ -1,3 +1,44 @@
+## [13.0.7](https://github.com/dereekb/dbx-components/compare/v13.0.6-dev...v13.0.7) (2026-03-07)
+
+
+### ai
+
+- added dbx-merge-release skill ([68fd1941](https://github.com/dereekb/dbx-components/commit/68fd1941c1f4a5d7781a3a48adb4236898a5aba8))
+
+
+### Bug Fixes
+
+- resolved DST boundary bugs in date timezone calculations ([363f7ddf](https://github.com/dereekb/dbx-components/commit/363f7ddf675a081be3cabc99ec159c4d37cd774c))
+- terminate firestore before cleanup in test teardown ([700f7372](https://github.com/dereekb/dbx-components/commit/700f7372093c9f1584151d1ee6c82a10a3ba9da6))
+
+
+### Code Refactoring
+
+- added bufferHasValidPdfMarkings() ([ac98fe91](https://github.com/dereekb/dbx-components/commit/ac98fe91307d712e261800f21395b34fa2d505fa))
+- added build assets to zoho-nestjs project config ([b79fb1da](https://github.com/dereekb/dbx-components/commit/b79fb1da49bf4f31e2d66c64eb012f3505360d80))
+- added fetchFileFromUrl() ([f6986802](https://github.com/dereekb/dbx-components/commit/f6986802db4868bb9f39a2ac7eb9699ab9f1dc4d))
+- added snapshot cache for document accessor ([b3bee1b3](https://github.com/dereekb/dbx-components/commit/b3bee1b3a1416b60d9603cc1307e89a3dbdfcd46))
+- added zoho sign api library ([a05b484c](https://github.com/dereekb/dbx-components/commit/a05b484c10951d2127e7d84963b71cc4046d8a94))
+- updated firestore utilities and test config ([d5d0e382](https://github.com/dereekb/dbx-components/commit/d5d0e38223292bca36761517c66b71f544772323))
+- updated jsdocs for query and pagination utilities ([21ff80b1](https://github.com/dereekb/dbx-components/commit/21ff80b1560ac6dff57c6774e4e9571f7e6ad4ce))
+- updated jsdocs for zoho crm and recruit ([4da61f42](https://github.com/dereekb/dbx-components/commit/4da61f427658f96d9fdccc911ff1c696c4795956))
+- updated zoho crm attachment upload to use File ([d098e6e2](https://github.com/dereekb/dbx-components/commit/d098e6e22f671a77e5755af25f9dc4980187e315))
+- updated zoho sign/recruit api and fetch utils ([fb7f4dc7](https://github.com/dereekb/dbx-components/commit/fb7f4dc7f7bd6d08e03ec6e9f921b1fc7ff4171f))
+
+
+### Continuous Integration
+
+- added run_tests, run_setup_test pipeline parameter ([ac59c756](https://github.com/dereekb/dbx-components/commit/ac59c7561bd3fdaa32603da40ccf5aba507313f2))
+
+
+### Documentation
+
+- added jsdocs to zoho and zoho-nestjs packages ([67dee811](https://github.com/dereekb/dbx-components/commit/67dee81121b7f3a6de7d66fea17789d4ac3fdd36))
+- added zoho crm getting started guide ([b73308d1](https://github.com/dereekb/dbx-components/commit/b73308d139bdd60eb27e1a5fa3f0294164623a83))
+
+
+
+
 ## [13.0.6](https://github.com/dereekb/dbx-components/compare/v13.0.5-dev...v13.0.6) (2026-03-05)
 
 

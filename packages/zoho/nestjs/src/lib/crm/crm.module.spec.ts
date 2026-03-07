@@ -16,11 +16,15 @@ const cacheService = fileZohoAccountsAccessTokenCacheService();
   ],
   exports: [ZohoAccountsAccessTokenCacheService]
 })
-export class TestZohoDependencyModule {}
+export class TestZohoCrmDependencyModule {}
 
 // example of providing the dependency module
-@Module(appZohoCrmModuleMetadata({ dependencyModule: TestZohoDependencyModule }))
+@Module(appZohoCrmModuleMetadata({ dependencyModule: TestZohoCrmDependencyModule }))
 export class TestZohoCrmModule {}
+
+// module without the required dependency
+@Module(appZohoCrmModuleMetadata({}))
+export class TestZohoCrmModuleWithoutDependency {}
 
 describe('appZohoCrmModuleMetadata()', () => {
   let nest: TestingModule;
@@ -40,6 +44,19 @@ describe('appZohoCrmModuleMetadata()', () => {
     });
 
     nest = await builder.compile();
+  });
+
+  it('should fail to compile when ZohoAccountsAccessTokenCacheService is not provided', async () => {
+    const rootModule: DynamicModule = {
+      module: TestZohoCrmModuleWithoutDependency,
+      global: true
+    };
+
+    const builder = Test.createTestingModule({
+      imports: [rootModule]
+    });
+
+    await expect(builder.compile()).rejects.toThrow();
   });
 
   describe('ZohoAccountsApi', () => {

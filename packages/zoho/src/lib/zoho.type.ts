@@ -1,19 +1,28 @@
 import { type Maybe, type MaybeNot } from '@dereekb/util';
 
+/**
+ * Base marker interface for Zoho data models.
+ */
 export interface ZohoModel {}
 
 // MARK: DateTime
 /**
- * Similar to the ISO 8601 date-time format, but with milliseconds removed.
+ * Zoho's date-time string format, similar to ISO 8601 but with milliseconds removed.
  *
- * yyyy-MM-ddTHH:mm:ss±HH:mm
+ * Format: `yyyy-MM-ddTHH:mm:ss±HH:mm`
  *
- * Examples:
- * 2019-05-02T11:17:33Z
- * 2019-05-02T11:17:33+00:00
+ * @example `'2019-05-02T11:17:33Z'`
+ * @example `'2019-05-02T11:17:33+00:00'`
  */
 export type ZohoDateTimeString = string;
 
+/**
+ * Null-safe version of {@link zohoDateTimeString}. Returns the converted string
+ * when a {@link Date} is provided, or passes through `null`/`undefined` as-is.
+ *
+ * @param date - Date to convert, or nullish value
+ * @returns Zoho-formatted date-time string, or the original nullish value
+ */
 export function safeZohoDateTimeString(date: Date): ZohoDateTimeString;
 export function safeZohoDateTimeString(date: MaybeNot): MaybeNot;
 export function safeZohoDateTimeString(date: Maybe<Date>): Maybe<ZohoDateTimeString>;
@@ -22,10 +31,17 @@ export function safeZohoDateTimeString(date: Maybe<Date>): Maybe<ZohoDateTimeStr
 }
 
 /**
- * Converts the input date to a Zoho date.
+ * Converts a {@link Date} to a {@link ZohoDateTimeString} by stripping milliseconds
+ * from the ISO 8601 representation.
  *
- * @param date
- * @returns
+ * @param date - Date to convert
+ * @returns Zoho-formatted date-time string (e.g. `'2019-05-02T11:17:33Z'`)
+ *
+ * @example
+ * ```typescript
+ * zohoDateTimeString(new Date('2019-05-02T11:17:33.000Z'));
+ * // => '2019-05-02T11:17:33Z'
+ * ```
  */
 export function zohoDateTimeString(date: Date): ZohoDateTimeString {
   const isoDate = date.toISOString();

@@ -1,6 +1,9 @@
 import { type HexColorCode } from '@dereekb/util';
 import { type ZohoRecruitChangeObjectDetails } from './recruit';
 
+/**
+ * Unique identifier for a tag in Zoho Recruit.
+ */
 export type ZohoRecruitTagId = string;
 
 /**

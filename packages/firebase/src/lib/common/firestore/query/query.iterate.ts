@@ -1,10 +1,21 @@
 /**
  * @module Firestore Query Iteration
  *
- * This module provides a comprehensive system for iterating through Firestore query results
- * with support for pagination, batching, and parallelism. It enables efficient processing of
- * large result sets by using cursor-based pagination (via "checkpoints") and various iteration
- * strategies.
+ * Provides a layered system for iterating through Firestore query results using
+ * cursor-based pagination ("checkpoints"). Each layer adds convenience on top of the
+ * one below:
+ *
+ * 1. **Checkpoints** ({@link iterateFirestoreDocumentSnapshotCheckpoints}) — core pagination engine
+ * 2. **Batches** ({@link iterateFirestoreDocumentSnapshotBatches}) — subdivides checkpoints into fixed-size batches
+ * 3. **Snapshots** ({@link iterateFirestoreDocumentSnapshots}) — processes individual snapshots
+ * 4. **Pairs** ({@link iterateFirestoreDocumentSnapshotPairs}) — loads typed document wrappers per snapshot
+ *
+ * Batch variants with document pairs are also available:
+ * - {@link iterateFirestoreDocumentSnapshotPairBatches} — batch processing with typed document access
+ *
+ * All functions support configurable limits (`limitPerCheckpoint`, `totalSnapshotsLimit`),
+ * concurrency (`maxParallelCheckpoints`), rate limiting (`waitBetweenCheckpoints`),
+ * snapshot filtering, and repeat cursor detection.
  */
 import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds, mapIdentityFunction, type AllowValueOnceFilter, allowValueOnceFilter, type ReadKeyFunction } from '@dereekb/util';
 import { type FirestoreDocument, type LimitedFirestoreDocumentAccessor, firestoreDocumentSnapshotPairsLoaderInstance, type FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
@@ -16,36 +27,54 @@ import { readFirestoreModelKeyFromDocumentSnapshot } from './query.util';
 
 // MARK: Iterate Snapshot Pairs
 /**
- * Configuration for iterating through Firestore document snapshots with their associated data as pairs.
+ * Configuration for {@link iterateFirestoreDocumentSnapshotPairs}.
  *
- * @template T - The document data type
- * @template R - The result type of processing each snapshot pair
- * @template D - The FirestoreDocument implementation type (defaults to FirestoreDocument<T>)
+ * Extends per-snapshot iteration by automatically loading each snapshot's
+ * {@link FirestoreDocumentSnapshotDataPairWithData} via a document accessor,
+ * providing the callback with both the snapshot and its typed document wrapper.
  */
 export interface IterateFirestoreDocumentSnapshotPairsConfig<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Omit<IterateFirestoreDocumentSnapshotsConfig<T, R>, 'iterateSnapshot'> {
   /**
-   * Document accessor to retrieve the documents for the references.
+   * Accessor used to load {@link FirestoreDocument} instances for each snapshot reference.
+   * Each snapshot is resolved through this accessor to produce a document-snapshot pair.
    */
   readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>;
   /**
-   * The iterate function per each snapshot.
+   * Callback invoked for each document-snapshot pair.
+   *
+   * Receives a pair containing both the {@link FirestoreDocument} wrapper and its
+   * snapshot data, enabling operations that need typed document access (e.g., updates, deletes).
+   *
+   * @param snapshot - The document-snapshot pair with guaranteed data
    */
   iterateSnapshotPair(snapshot: FirestoreDocumentSnapshotDataPairWithData<D>): Promise<R>;
 }
 
 /**
- * Iterates through the results of a Firestore query by each FirestoreDocumentSnapshotDataPairWithData.
+ * Iterates through Firestore query results, loading each snapshot as a
+ * {@link FirestoreDocumentSnapshotDataPairWithData} before processing.
  *
- * This function efficiently handles pagination through potentially large result sets by using
- * the checkpoint system to load documents in batches. For each document snapshot, it loads the
- * associated data using the provided document accessor, then passes the combined pair to the
- * processing function.
+ * Built on {@link iterateFirestoreDocumentSnapshots}, this adds an automatic document
+ * loading step: each raw snapshot is resolved through the `documentAccessor` to produce
+ * a pair containing both the typed {@link FirestoreDocument} and its snapshot data.
+ * This is the highest-level iteration function — use it when your callback needs
+ * document-level operations (updates, deletes) alongside the snapshot data.
  *
- * @template T - The document data type
- * @template R - The result type of processing each snapshot pair
- * @template D - The FirestoreDocument implementation type (defaults to FirestoreDocument<T>)
- * @param config - Configuration for the iteration, including the document accessor and processing function
- * @returns A promise that resolves to the result of the iteration, including statistics about checkpoints and snapshots processed
+ * @param config - Iteration config including the document accessor and per-pair callback
+ * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFirestoreDocumentSnapshotPairs({
+ *   queryFactory,
+ *   constraintsFactory: [where('status', '==', 'pending')],
+ *   limitPerCheckpoint: 100,
+ *   documentAccessor: collection.documentAccessor(),
+ *   iterateSnapshotPair: async (pair) => {
+ *     await pair.document.accessor.set({ ...pair.data, status: 'processed' });
+ *   }
+ * });
+ * ```
  */
 export async function iterateFirestoreDocumentSnapshotPairs<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: IterateFirestoreDocumentSnapshotPairsConfig<T, R, D>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshotPair, documentAccessor } = config;
@@ -101,16 +130,32 @@ export interface IterateFirestoreDocumentSnapshotsConfig<T, R> extends Omit<Iter
 export type IterateFirestoreDocumentSnapshotsResult<T, R> = PerformAsyncTasksResult<QueryDocumentSnapshot<T>, R>;
 
 /**
- * Iterates through the results of a Firestore query by each document snapshot by itself.
+ * Iterates through Firestore query results, processing each document snapshot individually.
  *
- * This function efficiently handles pagination through potentially large result sets by using
- * the checkpoint system to load documents in batches. Each document snapshot is then processed
- * individually using the provided processing function.
+ * Built on {@link iterateFirestoreDocumentSnapshotBatches} with `maxParallelCheckpoints: 1`,
+ * this unwraps each checkpoint's snapshots and processes them one-by-one via
+ * {@link performAsyncTasks} (sequential by default). Use `snapshotsPerformTasksConfig`
+ * to enable parallel snapshot processing within each checkpoint.
  *
- * @template T - The document data type
- * @template R - The result type of processing each snapshot
- * @param config - Configuration for the iteration, including the snapshot processing function
- * @returns A promise that resolves to the result of the iteration, including statistics about checkpoints and snapshots processed
+ * For document-level operations (needing the typed {@link FirestoreDocument} wrapper),
+ * use {@link iterateFirestoreDocumentSnapshotPairs} instead.
+ *
+ * @param config - Iteration config including the per-snapshot callback
+ * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFirestoreDocumentSnapshots({
+ *   queryFactory,
+ *   constraintsFactory: [where('active', '==', true)],
+ *   limitPerCheckpoint: 200,
+ *   totalSnapshotsLimit: 1000,
+ *   iterateSnapshot: async (snapshot) => {
+ *     const data = snapshot.data();
+ *     await externalApi.sync(data);
+ *   }
+ * });
+ * ```
  */
 export async function iterateFirestoreDocumentSnapshots<T, R>(config: IterateFirestoreDocumentSnapshotsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshot, performTasksConfig, snapshotsPerformTasksConfig } = config;
@@ -130,32 +175,55 @@ export async function iterateFirestoreDocumentSnapshots<T, R>(config: IterateFir
 
 // MARK: Iterate Snapshot Pair Batches
 /**
- * Config for iterateFirestoreDocumentSnapshots().
+ * Configuration for {@link iterateFirestoreDocumentSnapshotPairBatches}.
  *
- * This interface defines the configuration for processing batches of document snapshots
- * with their associated data. It supports efficient batch processing operations on related
- * documents.
- *
- * @template T - The document data type
- * @template R - The result type of processing each batch
- * @template D - The FirestoreDocument implementation type
+ * Extends batch-level iteration by automatically resolving each snapshot batch into
+ * {@link FirestoreDocumentSnapshotDataPairWithData} instances via a document accessor.
+ * The callback receives fully typed document-snapshot pairs rather than raw snapshots,
+ * enabling batch operations that need document-level access.
  */
 export interface IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Omit<IterateFirestoreDocumentSnapshotBatchesConfig<T, R>, 'iterateSnapshotBatch'> {
   /**
-   * Document accessor to retrieve the documents for the references.
+   * Accessor used to load {@link FirestoreDocument} instances for each snapshot reference.
+   * All snapshots in a batch are resolved through this accessor before being passed to the callback.
    */
   readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>;
   /**
-   * The iterate function per each snapshot batch.
+   * Callback invoked for each batch of document-snapshot pairs.
+   *
+   * @param snapshotDataPairs - Array of pairs, each containing a typed document and its snapshot data
+   * @param batchIndex - Zero-based index of this batch within the current checkpoint
    */
   iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[], batchIndex: number): Promise<R>;
 }
 
 /**
- * Iterates through the results of a Firestore query by each FirestoreDocumentSnapshotDataPair.
+ * Iterates through Firestore query results in batches, loading each batch as
+ * {@link FirestoreDocumentSnapshotDataPairWithData} instances before processing.
  *
- * @param config
- * @returns
+ * Built on {@link iterateFirestoreDocumentSnapshotBatches} with `maxParallelCheckpoints: 1`.
+ * Each batch of raw snapshots is resolved through the `documentAccessor` to produce
+ * typed document-snapshot pairs. Use this when you need batch-level operations with
+ * typed document access (e.g., bulk updates, batch writes).
+ *
+ * @param config - Iteration config including the document accessor and per-batch callback
+ * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFirestoreDocumentSnapshotPairBatches({
+ *   queryFactory,
+ *   constraintsFactory: [where('needsMigration', '==', true)],
+ *   limitPerCheckpoint: 500,
+ *   batchSize: 50,
+ *   documentAccessor: collection.documentAccessor(),
+ *   iterateSnapshotPairsBatch: async (pairs, batchIndex) => {
+ *     const writeBatch = firestore.batch();
+ *     pairs.forEach((pair) => writeBatch.update(pair.document.documentRef, { migrated: true }));
+ *     await writeBatch.commit();
+ *   }
+ * });
+ * ```
  */
 export async function iterateFirestoreDocumentSnapshotPairBatches<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshotPairsBatch, documentAccessor } = config;
@@ -198,34 +266,46 @@ export interface IterateFirestoreDocumentSnapshotBatchesResult<T, R> extends Ind
 }
 
 /**
- * Config for iterateFirestoreDocumentSnapshots().
+ * Configuration for {@link iterateFirestoreDocumentSnapshotBatches}.
+ *
+ * Extends checkpoint-level iteration by subdividing each checkpoint's snapshots into
+ * smaller batches before processing. This is useful for operations that have size
+ * constraints (e.g., Firestore batch writes limited to 500 operations) or that
+ * benefit from smaller working sets for memory efficiency.
  */
 export interface IterateFirestoreDocumentSnapshotBatchesConfig<T, R> extends Omit<IterateFirestoreDocumentSnapshotCheckpointsConfig<T, IterateFirestoreDocumentSnapshotBatchesResult<T, R>>, 'iterateCheckpoint'> {
   /**
-   * Max number of documents per batch. Defaults to 25.
+   * Maximum number of document snapshots per batch.
    *
-   * If null is then all snapshots will be processed in a single batch.
+   * Defaults to {@link DEFAULT_ITERATE_FIRESTORE_DOCUMENT_SNAPSHOT_BATCHES_BATCH_SIZE} (25).
+   * Pass `null` to process all snapshots from a checkpoint in a single batch.
    */
   readonly batchSize?: Maybe<number>;
   /**
-   * Determines the custom batch size for the input.
+   * Dynamic batch size factory that can vary batch size based on the checkpoint's snapshots.
    *
-   * If the factory returns returned null then all snapshots will be processed in a single batch.
+   * Called once per checkpoint with all snapshots from that checkpoint. If it returns `null`,
+   * all snapshots are processed in a single batch. Takes precedence over `batchSize` when provided.
    */
   readonly batchSizeForSnapshots?: Maybe<FactoryWithRequiredInput<number | null, QueryDocumentSnapshot<T>[]>>;
   /**
-   * The iterate function per each snapshot.
+   * Callback invoked for each batch of document snapshots within a checkpoint.
    *
-   * The batch will have atleast one item in it.
+   * Each batch is guaranteed to contain at least one item. Batches within a checkpoint
+   * are processed via {@link performAsyncTasks} (sequential by default, configurable
+   * via `performTasksConfig`).
+   *
+   * @param snapshotBatch - Non-empty array of document snapshots in this batch
+   * @param batchIndex - Zero-based index of this batch within the current checkpoint
    */
   iterateSnapshotBatch(snapshotBatch: QueryDocumentSnapshot<T>[], batchIndex: number): Promise<R>;
   /**
-   * (Optional) additional config for the PerformAsyncTasks call.
+   * Optional configuration for the {@link performAsyncTasks} call that processes batches
+   * within each checkpoint.
    *
-   * By default:
-   * - retriesAllowed = 0
-   * - throwError = true
-   * - sequential = true
+   * Defaults: `sequential: true`, `retriesAllowed: 0`, `throwError: true`.
+   * Override to enable parallel batch processing, add retries for transient failures,
+   * or customize error handling.
    */
   readonly performTasksConfig?: Partial<PerformAsyncTasksConfig<QueryDocumentSnapshot<T>[]>>;
 }
@@ -238,10 +318,32 @@ export interface IterateFirestoreDocumentSnapshotBatchesConfig<T, R> extends Omi
 export const DEFAULT_ITERATE_FIRESTORE_DOCUMENT_SNAPSHOT_BATCHES_BATCH_SIZE = 25;
 
 /**
- * Iterates through the results of a Firestore query by each document snapshot.
+ * Iterates through Firestore query results by subdividing each checkpoint into smaller batches.
  *
- * @param config
- * @returns
+ * Built on {@link iterateFirestoreDocumentSnapshotCheckpoints}, this function takes each
+ * checkpoint's snapshots and splits them into batches (default size: 25). Batches are
+ * processed via {@link performAsyncTasks}, sequential by default. Use this when operations
+ * have size limits (e.g., Firestore batch writes) or benefit from controlled chunk sizes.
+ *
+ * For per-snapshot processing, use {@link iterateFirestoreDocumentSnapshots}.
+ * For batch processing with typed document pairs, use {@link iterateFirestoreDocumentSnapshotPairBatches}.
+ *
+ * @param config - Iteration config including batch size and per-batch callback
+ * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFirestoreDocumentSnapshotBatches({
+ *   queryFactory,
+ *   constraintsFactory: [where('type', '==', 'order')],
+ *   limitPerCheckpoint: 500,
+ *   batchSize: 100,
+ *   iterateSnapshotBatch: async (snapshots, batchIndex) => {
+ *     const data = snapshots.map((s) => s.data());
+ *     await analytics.trackBatch(data);
+ *   }
+ * });
+ * ```
  */
 export async function iterateFirestoreDocumentSnapshotBatches<T, R>(config: IterateFirestoreDocumentSnapshotBatchesConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshotBatch, batchSizeForSnapshots: inputBatchSizeForSnapshots, performTasksConfig, batchSize: inputBatchSize } = config;
@@ -271,67 +373,116 @@ export async function iterateFirestoreDocumentSnapshotBatches<T, R>(config: Iter
 
 // MARK: Iterate Checkpoints
 /**
- * Config for iterateFirestoreDocumentSnapshotCheckpoints().
+ * Configuration for {@link iterateFirestoreDocumentSnapshotCheckpoints}.
+ *
+ * This is the lowest-level configuration in the iteration hierarchy. It controls
+ * cursor-based pagination through Firestore query results, where each "checkpoint"
+ * represents one query execution that fetches a page of documents. Higher-level
+ * functions ({@link iterateFirestoreDocumentSnapshotBatches}, {@link iterateFirestoreDocumentSnapshots},
+ * {@link iterateFirestoreDocumentSnapshotPairs}) build on this.
  */
 export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
+  /**
+   * Factory used to create Firestore queries. The query is rebuilt for each checkpoint
+   * with the current constraints (including the cursor `startAfter` and `limit`).
+   */
   readonly queryFactory: FirestoreQueryFactory<T>;
+  /**
+   * Base query constraints applied to every checkpoint query.
+   *
+   * When a function (getter), it is called for each checkpoint by default, enabling
+   * dynamic constraints that change between pages. When a static array, the same
+   * constraints are reused. Override this behavior with `dynamicConstraints`.
+   *
+   * The cursor (`startAfter`) and page limit are appended automatically — do not
+   * include them here.
+   */
   readonly constraintsFactory: GetterOrValue<FirestoreQueryConstraint[]>;
   /**
-   * Whether or not to call the constraints factory each time.
+   * Controls whether `constraintsFactory` is re-evaluated for each checkpoint.
    *
-   * If the constraintsFactory is a getter then this defaults to true. If constraintsFactory is a value then this is set to false.
+   * Defaults to `true` when `constraintsFactory` is a function, `false` when it is a static array.
+   * Set explicitly to override the default — e.g., `false` to cache a function's result,
+   * or `true` to force re-evaluation of a memoized getter.
    */
   readonly dynamicConstraints?: boolean;
   /**
-   * Convenience paramenter to add a maximum limit constraint to the query.
+   * Maximum number of documents to fetch per checkpoint (Firestore query `limit`).
    *
-   * The actual limit passed to the query will be calculated between this value, the totalSnapshotsLimit value, and the remaining number of snapshots to load.
+   * The effective limit is the minimum of this value and the remaining documents
+   * allowed by `totalSnapshotsLimit`. Defaults to `totalSnapshotsLimit` if not set.
    *
-   * A limit of 0 is NOT considered as unlimited and will cause the function to end immediately.
+   * A value of `0` causes immediate termination with no documents loaded — it is NOT
+   * treated as "unlimited".
    */
   readonly limitPerCheckpoint?: Maybe<number>;
   /**
-   * The total number of snapshots allowed.
+   * Maximum total number of document snapshots to load across all checkpoints.
    *
-   * Ends on the checkpoint that reaches this limit.
+   * Iteration stops after the checkpoint that causes this limit to be reached or exceeded.
+   * When omitted, there is no snapshot count limit (pagination continues until results
+   * are exhausted or `maxPage`/`endEarly` terminates it).
    */
   readonly totalSnapshotsLimit?: Maybe<number>;
   /**
-   * The number of max parallel checkpoints to run.
+   * Maximum number of checkpoints to process concurrently.
    *
-   * By default checkpoints are run serially (max of 1), but can be run in parallel.
+   * Defaults to 1 (serial execution). When set higher, checkpoint *processing*
+   * (via `iterateCheckpoint`) can overlap, though checkpoint *fetching* remains
+   * sequential since each query depends on the previous checkpoint's cursor.
    */
   readonly maxParallelCheckpoints?: number;
   /**
-   * The amount of time to add as a delay between beginning a new checkpoint.
+   * Minimum delay in milliseconds between initiating consecutive checkpoint queries.
    *
-   * If in parallel this is the minimum amount of time to wait before starting a new checkpoint.
+   * Useful for Firestore rate limiting or quota management. When running checkpoints
+   * in parallel, this ensures at least this much time passes between starting each
+   * new query.
    */
   readonly waitBetweenCheckpoints?: Milliseconds;
   /**
-   * Configuration to use when a repeat cursor is visited (potentially indicative of an infinite query loop).
+   * Strategy for handling repeat cursor documents, which can indicate an infinite loop.
    *
-   * Can be configured with false to exit the iteration immediately and return, or can use a function to decide if the iteration should continue.
+   * A repeat cursor occurs when the last document of a checkpoint has already been
+   * seen as a cursor in a previous checkpoint — often caused by document updates
+   * during iteration that re-match the query.
    *
-   * If false is returned the cursor is discarded and the loop will end.
+   * - `false` or `undefined`: Immediately stop iteration when a repeat is detected
+   * - `async (cursor) => boolean`: Custom handler — return `true` to continue iteration
+   *   despite the repeat, or `false` to stop
    */
   readonly handleRepeatCursor?: Maybe<false | ((cursor: QueryDocumentSnapshot<T>) => Promise<boolean>)>;
   /**
-   * Filter function that can be used to filter out snapshots.
+   * Optional filter applied to each checkpoint's snapshots before they reach `iterateCheckpoint`.
    *
-   * If all snapshots are filtered out then the iteration will continue with final item of the snapshot regardless of filtering. The filtering does not impact the continuation decision.
-   * Use the handleRepeatCursor to properly exit the loop in unwanted repeat cursor cases.
+   * Filtering does not affect pagination decisions — the cursor for the next checkpoint
+   * is always based on the last *unfiltered* document. If all documents in a checkpoint
+   * are filtered out, iteration continues to the next checkpoint.
    *
-   * @param snapshot
-   * @returns
+   * Use {@link filterRepeatCheckpointSnapshots} to deduplicate documents that appear
+   * in multiple checkpoints. Combine with `handleRepeatCursor` to properly terminate
+   * iteration when filtering causes repeated cursors.
    */
   readonly filterCheckpointSnapshots?: IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T>;
   /**
-   * The iterate function per each snapshot.
+   * Core callback invoked once per checkpoint with the (optionally filtered) document snapshots.
+   *
+   * Receives all snapshots for this checkpoint and the raw query snapshot for metadata access.
+   * Returns an array of results — one per logical unit processed (could be per-document,
+   * per-batch, or any grouping the implementation chooses).
+   *
+   * @param snapshots - Document snapshots for this checkpoint (post-filter)
+   * @param query - The raw Firestore query snapshot for this checkpoint
    */
   iterateCheckpoint(snapshots: QueryDocumentSnapshot<T>[], query: QuerySnapshot<T>): Promise<R[]>;
   /**
-   * (Optional) Called at the end of each checkpoint.
+   * Optional side-effect callback invoked after each checkpoint is fully processed.
+   *
+   * Called after `iterateCheckpoint` completes, receiving the full iteration result
+   * including checkpoint index, cursor state, results, and raw snapshots. Useful for
+   * progress logging, metrics, or external state accumulation.
+   *
+   * @param checkpointResults - Complete iteration result for this checkpoint
    */
   useCheckpointResult?(checkpointResults: IterateFirestoreDocumentSnapshotCheckpointsIterationResult<T, R>): PromiseOrValue<void>;
 }
@@ -349,13 +500,32 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
 export type IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T> = (snapshot: QueryDocumentSnapshot<T>[]) => PromiseOrValue<QueryDocumentSnapshot<T>[]>;
 
 /**
- * Creates a IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction that filters out any repeat documents.
+ * Creates a checkpoint filter that deduplicates documents across checkpoints.
  *
- * Repeat documents can occur in cases where the document is updated and the query matches it again for a different reason.
- * This utility function creates a filter that prevents processing the same document multiple times.
+ * Repeat documents can appear when a document is updated during iteration and
+ * re-matches the query in a subsequent checkpoint. This factory returns a stateful
+ * filter that tracks seen document keys and removes duplicates.
  *
- * @param readKeyFunction - Function that extracts a unique key from a document snapshot, defaults to document ID
- * @returns A filter function that prevents duplicate document processing
+ * The filter maintains state across checkpoints — use a single instance for the
+ * entire iteration run. Pair with `handleRepeatCursor: false` to also terminate
+ * iteration when cursor-level repeats are detected.
+ *
+ * @param readKeyFunction - Extracts a unique key from each snapshot; defaults to `snapshot.id`
+ * @returns A stateful filter function suitable for `filterCheckpointSnapshots`
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFirestoreDocumentSnapshotCheckpoints({
+ *   queryFactory,
+ *   constraintsFactory: [orderBy('updatedAt')],
+ *   limitPerCheckpoint: 100,
+ *   filterCheckpointSnapshots: filterRepeatCheckpointSnapshots(),
+ *   handleRepeatCursor: false,
+ *   iterateCheckpoint: async (snapshots) => {
+ *     return snapshots.map((s) => s.data());
+ *   }
+ * });
+ * ```
  */
 export function filterRepeatCheckpointSnapshots<T>(readKeyFunction: ReadKeyFunction<QueryDocumentSnapshot<T>> = (x) => x.id): IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T> {
   const allowOnceFilter = allowValueOnceFilter(readKeyFunction);
@@ -443,16 +613,43 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
 }
 
 /**
- * Iterates through the results of a Firestore query in several batches.
+ * Core cursor-based pagination engine for iterating through Firestore query results.
  *
- * This is the core pagination function that handles cursor-based iteration through
- * potentially large Firestore query results. It manages cursor documents, checkpoint
- * processing, parallel execution, and various limit controls.
+ * This is the foundational function in the Firestore iteration hierarchy. It drives
+ * sequential cursor-based pagination: each "checkpoint" executes a Firestore query,
+ * uses the last document as a `startAfter` cursor for the next query, and passes
+ * results to the `iterateCheckpoint` callback.
  *
- * @template T - The document data type
- * @template R - The result type of the iteration
- * @param config - Complete configuration for the pagination and processing behavior
- * @returns Promise resolving to statistics about the iteration
+ * The iteration loop continues until one of these conditions is met:
+ * - A query returns no results (no more matching documents)
+ * - The `totalSnapshotsLimit` is reached
+ * - A repeat cursor is detected and `handleRepeatCursor` returns `false`
+ * - The effective `limitPerCheckpoint` calculates to 0 remaining
+ *
+ * Higher-level functions build on this:
+ * - {@link iterateFirestoreDocumentSnapshotBatches} — subdivides checkpoints into smaller batches
+ * - {@link iterateFirestoreDocumentSnapshots} — processes one snapshot at a time
+ * - {@link iterateFirestoreDocumentSnapshotPairs} — loads typed document wrappers per snapshot
+ *
+ * @param config - Complete configuration for pagination, processing, and termination behavior
+ * @returns Statistics including total checkpoints executed, snapshots visited, and whether the limit was hit
+ *
+ * @example
+ * ```typescript
+ * const result = await iterateFirestoreDocumentSnapshotCheckpoints({
+ *   queryFactory,
+ *   constraintsFactory: [where('createdAt', '<=', cutoffDate), orderBy('createdAt')],
+ *   limitPerCheckpoint: 200,
+ *   totalSnapshotsLimit: 5000,
+ *   handleRepeatCursor: false,
+ *   iterateCheckpoint: async (snapshots, querySnapshot) => {
+ *     return snapshots.map((s) => ({ id: s.id, data: s.data() }));
+ *   },
+ *   useCheckpointResult: (result) => {
+ *     console.log(`Checkpoint ${result.i}: processed ${result.docSnapshots.length} docs`);
+ *   }
+ * });
+ * ```
  */
 export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint: inputLimitPerCheckpoint, totalSnapshotsLimit: inputTotalSnapshotsLimit } = config;
@@ -577,13 +774,20 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
 // MARK: Utility
 /**
- * Creates a filter that allows each document snapshot to be processed only once based on its path.
+ * Creates a stateful filter that allows each document snapshot through only once,
+ * keyed by its full Firestore model path.
  *
- * This utility helps prevent duplicate processing of documents by tracking which ones have
- * already been seen based on their path.
+ * Unlike {@link filterRepeatCheckpointSnapshots} which uses document ID by default,
+ * this filter uses the full document path ({@link readFirestoreModelKeyFromDocumentSnapshot}),
+ * making it suitable for cross-collection iteration where document IDs alone may collide.
  *
- * @template T - The document snapshot type
- * @returns A filter function that only allows each unique document to pass once
+ * @returns A reusable filter function that passes each unique document path exactly once
+ *
+ * @example
+ * ```typescript
+ * const onceFilter = allowDocumentSnapshotWithPathOnceFilter();
+ * const uniqueSnapshots = allSnapshots.filter(onceFilter);
+ * ```
  */
 export function allowDocumentSnapshotWithPathOnceFilter<T extends DocumentSnapshot>(): AllowValueOnceFilter<T, FirestoreModelKey> {
   return allowValueOnceFilter(readFirestoreModelKeyFromDocumentSnapshot);

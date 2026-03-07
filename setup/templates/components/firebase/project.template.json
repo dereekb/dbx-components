@@ -36,17 +36,17 @@
       }
     },
     "run-tests": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/FIREBASE_COMPONENTS_FOLDER", "{projectRoot}/.reports/junit/FIREBASE_COMPONENTS_NAME.junit.xml"],
-      "options": {
-        "jestConfig": "FIREBASE_COMPONENTS_FOLDER/jest.config.ts"
-      }
-    },
-    "test": {
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
         "reportsDirectory": "../../coverage/FIREBASE_COMPONENTS_FOLDER"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests FIREBASE_COMPONENTS_NAME'",
+        "color": true
       }
     }
   },
