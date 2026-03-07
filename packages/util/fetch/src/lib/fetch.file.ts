@@ -1,4 +1,4 @@
-import { type ArrayOrValue, asArray, type ContentTypeMimeType, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type ContentTypeMimeType, type Maybe, type MimeTypeWithoutParameters, urlWithoutParameters } from '@dereekb/util';
 import { safeParse as parseContentType } from 'fast-content-type-parse';
 import { type FetchMethod } from './fetch.type';
 
@@ -47,6 +47,63 @@ export function makeFileForFetch(input: MakeFileForFetchInput): File {
   }
 
   return new File(asArray(input.content), input.fileName, options);
+}
+
+// MARK: Fetch File From URL
+/**
+ * Input for fetchFileFromUrl().
+ */
+export interface FetchFileFromUrlInput {
+  /**
+   * URL to download the file from.
+   */
+  readonly url: string;
+  /**
+   * File name to use for the resulting File object.
+   *
+   * If not provided, attempts to derive the name from the URL path or falls back to 'file'.
+   */
+  readonly fileName?: Maybe<string>;
+  /**
+   * MIME type override. If not provided, uses the Content-Type from the response.
+   */
+  readonly mimeType?: Maybe<ContentTypeMimeType>;
+  /**
+   * Fetch function to use. Defaults to the global fetch.
+   */
+  readonly fetch?: Maybe<typeof fetch>;
+}
+
+/**
+ * Downloads a file from the given URL and returns it as a File object.
+ *
+ * When safe is true, returns undefined instead of throwing on fetch failure.
+ *
+ * @example
+ * const file = await fetchFileFromUrl({ url: 'https://example.com/doc.pdf' })
+ * formData.append('file', file)
+ */
+export async function fetchFileFromUrl(input: FetchFileFromUrlInput): Promise<File>;
+export async function fetchFileFromUrl(input: FetchFileFromUrlInput, safe: true): Promise<Maybe<File>>;
+export async function fetchFileFromUrl(input: FetchFileFromUrlInput, safe?: Maybe<boolean>): Promise<Maybe<File>> {
+  const { url, mimeType, fetch: inputFetch } = input;
+  const useFetch = inputFetch ?? fetch;
+  const response = await useFetch(url, { method: 'GET' });
+  let result: Maybe<File>;
+
+  if (!response.ok) {
+    if (!safe) {
+      throw new Error(`Failed to fetch file from ${url}: ${response.status} ${response.statusText}`);
+    }
+  } else {
+    const buffer = await response.arrayBuffer();
+    const responseMimeType = mimeType ?? response.headers.get('content-type') ?? undefined;
+    const fileName = input.fileName ?? urlWithoutParameters(url).split('/').pop() ?? 'file';
+    const options: FilePropertyBag = responseMimeType ? { type: responseMimeType } : {};
+    result = new File([buffer], fileName, options);
+  }
+
+  return result;
 }
 
 // MARK: Parse Response

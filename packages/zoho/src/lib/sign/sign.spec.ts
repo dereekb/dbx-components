@@ -9,7 +9,7 @@ describe('zohoSignConfigApiUrl()', () => {
 
   it('should return the sandbox URL for "sandbox"', () => {
     const result = zohoSignConfigApiUrl('sandbox');
-    expect(result).toBe('https://sign.zoho.com/api/v1');
+    expect(result).toBe('https://signsandbox.zoho.com/api/v1');
   });
 
   it('should return a custom URL as-is', () => {
