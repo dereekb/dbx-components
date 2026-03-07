@@ -8,35 +8,59 @@ import { type ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } f
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Main Zoho CRM instance providing access to all CRM API operations through its underlying context.
+ * Top-level Zoho CRM client instance, providing access to the authenticated {@link ZohoCrmContext}.
  */
 export type ZohoCrm = ZohoCrmContextRef;
 
 /**
- * Configuration for constructing a {@link ZohoCrmFactory}, including account credentials, rate limiting, and optional transport customization.
+ * Configuration for creating a {@link ZohoCrmFactory}, combining account credentials
+ * with optional overrides for rate limiting, fetch behavior, and error logging.
  */
 export interface ZohoCrmFactoryConfig extends ZohoAccountsContextRef {
   /**
-   * Custom ZohoRateLimitedFetchHandlerConfig
+   * Custom rate limiter configuration to control request concurrency and throttling.
    */
   rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
-   * Creates a new fetch instance to use when making calls.
+   * Custom fetch factory for creating the underlying HTTP client.
+   * Defaults to a standard fetch service with OAuth Bearer token headers and a 20-second timeout.
    */
   fetchFactory?: ZohoCrmFetchFactory;
   /**
-   * Custom log error function.
+   * Custom error logging function invoked when Zoho API errors are encountered.
    */
   logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
 /**
- * Factory function that produces a {@link ZohoCrm} instance from a given CRM configuration.
+ * Factory function that creates a {@link ZohoCrm} client from a {@link ZohoCrmConfig}.
  */
 export type ZohoCrmFactory = (config: ZohoCrmConfig) => ZohoCrm;
 
 /**
- * Creates a {@link ZohoCrmFactory} that wires up authenticated fetch, rate limiting, error handling, and automatic token refresh for all downstream CRM API calls.
+ * Creates a {@link ZohoCrmFactory} from the given configuration.
+ *
+ * The factory pre-initializes shared resources (access token provider, rate limiter)
+ * once, then produces {@link ZohoCrm} client instances for each {@link ZohoCrmConfig}.
+ * Each client handles OAuth token refresh on {@link ZohoInvalidTokenError}, rate limiting,
+ * and Zoho CRM's non-standard error responses (200 status with error body).
+ *
+ * @param factoryConfig - Configuration providing account credentials and optional overrides
+ * @returns A factory function that creates authenticated Zoho CRM clients
+ *
+ * @example
+ * ```typescript
+ * const factory = zohoCrmFactory({
+ *   accountsContext: zohoAccountsApi.accountsContext
+ * });
+ *
+ * const zohoCrm = factory({
+ *   apiUrl: 'https://www.zohoapis.com/crm'
+ * });
+ *
+ * // Use the CRM context for API calls:
+ * const { crmContext } = zohoCrm;
+ * ```
  */
 export function zohoCrmFactory(factoryConfig: ZohoCrmFactoryConfig): ZohoCrmFactory {
   const { accountsContext } = factoryConfig;

@@ -38,7 +38,28 @@ export type ZohoRecruitCreateTagsResult = ZohoRecruitMultiRecordResult<ZohoRecru
 export type ZohoRecruitCreateTagsFunction = (input: ZohoRecruitCreateTagsRequest) => Promise<ZohoRecruitCreateTagsResult>;
 
 /**
- * Creates one or more tags for a module. Duplicate tag errors are separated from other errors in the result.
+ * Creates a {@link ZohoRecruitCreateTagsFunction} bound to the given context.
+ *
+ * Creates one or more tags for a module. The result separates duplicate tag errors
+ * (which are often non-fatal) from other errors, making it easy to handle the common
+ * case where a tag already exists.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that creates tags in the specified module
+ *
+ * @example
+ * ```typescript
+ * const createTags = zohoRecruitCreateTagsForModule(context);
+ *
+ * const result = await createTags({
+ *   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+ *   tags: [{ name: 'Interviewed' }, { name: 'Priority', color_code: '#FF0000' }]
+ * });
+ *
+ * // Duplicate tags are separated for convenience:
+ * result.duplicateErrorItems; // tags that already existed
+ * result.errorItems;          // other (real) errors
+ * ```
  */
 export function zohoRecruitCreateTagsForModule(context: ZohoRecruitContext) {
   return (input: ZohoRecruitCreateTagsRequest) =>
@@ -77,9 +98,24 @@ export type ZohoRecruitGetTagsResult = ZohoPageResult<ZohoRecruitTagWithObjectDe
 export type ZohoRecruitGetTagsFunction = (input: ZohoRecruitGetTagsRequest) => Promise<ZohoRecruitGetTagsResult>;
 
 /**
- * Returns the list of tags within a module. Normalizes the non-standard API response that uses `tags` instead of `data`.
+ * Creates a {@link ZohoRecruitGetTagsFunction} bound to the given context.
  *
- * https://www.zoho.com/recruit/developer-guide/apiv2/get-tag-list.html
+ * Returns the list of tags within a module. Normalizes the non-standard API response
+ * that returns data under a `tags` key instead of the standard `data` key.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that retrieves tags for a module
+ *
+ * @example
+ * ```typescript
+ * const getTags = zohoRecruitGetTagsForModule(context);
+ *
+ * const result = await getTags({
+ *   module: ZOHO_RECRUIT_CANDIDATES_MODULE
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-tag-list.html
  */
 export function zohoRecruitGetTagsForModule(context: ZohoRecruitContext): ZohoRecruitGetTagsFunction {
   return (input: ZohoRecruitGetTagsRequest) =>
@@ -99,7 +135,13 @@ export function zohoRecruitGetTagsForModule(context: ZohoRecruitContext): ZohoRe
 export type ZohoRecruitGetTagsForModulePageFactory = (input: ZohoRecruitGetTagsRequest, options?: Maybe<FetchPageFactoryOptions<ZohoRecruitGetTagsRequest, ZohoRecruitGetTagsResult>>) => FetchPage<ZohoRecruitGetTagsRequest, ZohoRecruitGetTagsResult>;
 
 /**
- * Creates a page factory for iterating over tags in a module across multiple pages.
+ * Creates a {@link ZohoRecruitGetTagsForModulePageFactory} bound to the given context.
+ *
+ * Returns a page factory for iterating over tags in a module across multiple pages.
+ * Wraps {@link zohoRecruitGetTagsForModule} with automatic pagination handling.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Page factory for iterating over module tags
  */
 export function zohoRecruitGetTagsForModulePageFactory(context: ZohoRecruitContext): ZohoRecruitGetTagsForModulePageFactory {
   return zohoFetchPageFactory(zohoRecruitGetTagsForModule(context));
@@ -164,9 +206,27 @@ export type ZohoRecruitAddTagsToRecordsResult = ZohoRecruitMultiRecordResult<Zoh
 export type ZohoRecruitAddTagsToRecordsFunction = (input: ZohoRecruitAddTagsToRecordsRequest) => Promise<ZohoRecruitAddTagsToRecordsResult>;
 
 /**
- * Adds one or more tags to one or more records. Throws if more than 100 record ids are provided.
+ * Creates a {@link ZohoRecruitAddTagsToRecordsFunction} bound to the given context.
  *
- * https://www.zoho.com/recruit/developer-guide/apiv2/add-tags.html
+ * Adds one or more tags to one or more records. Returns a paired success/error result
+ * for each record. Maximum of {@link ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} (100) record IDs per call.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that adds tags to records
+ * @throws {Error} If more than 100 record IDs are provided
+ *
+ * @example
+ * ```typescript
+ * const addTags = zohoRecruitAddTagsToRecords(context);
+ *
+ * const result = await addTags({
+ *   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+ *   tag_names: ['Interviewed', 'Priority'],
+ *   ids: [candidateId1, candidateId2]
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/add-tags.html
  */
 export function zohoRecruitAddTagsToRecords(context: ZohoRecruitContext): ZohoRecruitAddTagsToRecordsFunction {
   return (input: ZohoRecruitAddTagsToRecordsRequest) => {
@@ -213,9 +273,27 @@ export type ZohoRecruitRemoveTagsFromRecordsResult = ZohoRecruitMultiRecordResul
 export type ZohoRecruitRemoveTagsFromRecordsFunction = (input: ZohoRecruitRemoveTagsFromRecordsRequest) => Promise<ZohoRecruitRemoveTagsFromRecordsResult>;
 
 /**
- * Removes one or more tags from one or more records. Throws if more than 100 record ids are provided.
+ * Creates a {@link ZohoRecruitRemoveTagsFromRecordsFunction} bound to the given context.
  *
- * https://www.zoho.com/recruit/developer-guide/apiv2/remove-tags.html
+ * Removes one or more tags from one or more records. Returns a paired success/error result
+ * for each record. Maximum of {@link ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED} (100) record IDs per call.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that removes tags from records
+ * @throws {Error} If more than 100 record IDs are provided
+ *
+ * @example
+ * ```typescript
+ * const removeTags = zohoRecruitRemoveTagsFromRecords(context);
+ *
+ * const result = await removeTags({
+ *   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+ *   tag_names: 'Interviewed',
+ *   ids: candidateId
+ * });
+ * ```
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/remove-tags.html
  */
 export function zohoRecruitRemoveTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitRemoveTagsFromRecordsFunction {
   return (input: ZohoRecruitRemoveTagsFromRecordsRequest) => {

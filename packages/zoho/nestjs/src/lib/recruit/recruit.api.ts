@@ -80,157 +80,157 @@ export class ZohoRecruitApi {
   }
 
   // MARK: Accessors
-  /** Inserts a new record into a Recruit module. */
+  /** Configured pass-through for {@link zohoRecruitInsertRecord}. */
   get insertRecord() {
     return zohoRecruitInsertRecord(this.recruitContext);
   }
 
-  /** Inserts or updates a record based on a duplicate-check field. */
+  /** Configured pass-through for {@link zohoRecruitUpsertRecord}. */
   get upsertRecord() {
     return zohoRecruitUpsertRecord(this.recruitContext);
   }
 
-  /** Updates an existing record in a Recruit module. */
+  /** Configured pass-through for {@link zohoRecruitUpdateRecord}. */
   get updateRecord() {
     return zohoRecruitUpdateRecord(this.recruitContext);
   }
 
-  /** Deletes a record from a Recruit module. */
+  /** Configured pass-through for {@link zohoRecruitDeleteRecord}. */
   get deleteRecord() {
     return zohoRecruitDeleteRecord(this.recruitContext);
   }
 
-  /** Retrieves a single record by its ID. */
+  /** Configured pass-through for {@link zohoRecruitGetRecordById}. */
   get getRecordById() {
     return zohoRecruitGetRecordById(this.recruitContext);
   }
 
-  /** Retrieves a list of records from a Recruit module. */
+  /** Configured pass-through for {@link zohoRecruitGetRecords}. */
   get getRecords() {
     return zohoRecruitGetRecords(this.recruitContext);
   }
 
-  /** Searches records in a Recruit module using criteria. */
+  /** Configured pass-through for {@link zohoRecruitSearchRecords}. */
   get searchRecords() {
     return zohoRecruitSearchRecords(this.recruitContext);
   }
 
-  /** Creates a paginated search factory for iterating over search results. */
+  /** Configured pass-through for {@link zohoRecruitSearchRecordsPageFactory}. */
   get searchRecordsPageFactory() {
     return zohoRecruitSearchRecordsPageFactory(this.recruitContext);
   }
 
-  /** Creates a factory for fetching related records of a parent record. */
+  /** Configured pass-through for {@link zohoRecruitGetRelatedRecordsFunctionFactory}. */
   get getRelatedRecordsFunctionFactory() {
     return zohoRecruitGetRelatedRecordsFunctionFactory(this.recruitContext);
   }
 
-  /** Retrieves emails associated with a specific record. */
+  /** Configured pass-through for {@link zohoRecruitGetEmailsForRecord}. */
   get getEmailsForRecord() {
     return zohoRecruitGetEmailsForRecord(this.recruitContext);
   }
 
-  /** Creates a paginated factory for iterating over emails of a record. */
+  /** Configured pass-through for {@link zohoRecruitGetEmailsForRecordPageFactory}. */
   get getEmailsForRecordPageFactory() {
     return zohoRecruitGetEmailsForRecordPageFactory(this.recruitContext);
   }
 
-  /** Retrieves attachments associated with a specific record. */
+  /** Configured pass-through for {@link zohoRecruitGetAttachmentsForRecord}. */
   get getAttachmentsForRecord() {
     return zohoRecruitGetAttachmentsForRecord(this.recruitContext);
   }
 
-  /** Creates a paginated factory for iterating over attachments of a record. */
+  /** Configured pass-through for {@link zohoRecruitGetAttachmentsForRecordPageFactory}. */
   get getAttachmentsForRecordPageFactory() {
     return zohoRecruitGetAttachmentsForRecordPageFactory(this.recruitContext);
   }
 
-  /** Uploads an attachment to a specific record. */
+  /** Configured pass-through for {@link zohoRecruitUploadAttachmentForRecord}. */
   get uploadAttachmentForRecord() {
     return zohoRecruitUploadAttachmentForRecord(this.recruitContext);
   }
 
-  /** Downloads an attachment from a specific record. */
+  /** Configured pass-through for {@link zohoRecruitDownloadAttachmentForRecord}. */
   get downloadAttachmentForRecord() {
     return zohoRecruitDownloadAttachmentForRecord(this.recruitContext);
   }
 
-  /** Deletes an attachment from a specific record. */
+  /** Configured pass-through for {@link zohoRecruitDeleteAttachmentFromRecord}. */
   get deleteAttachmentFromRecord() {
     return zohoRecruitDeleteAttachmentFromRecord(this.recruitContext);
   }
 
-  /** Creates notes in Recruit. */
+  /** Configured pass-through for {@link zohoRecruitCreateNotes}. */
   get createNotes() {
     return zohoRecruitCreateNotes(this.recruitContext);
   }
 
-  /** Deletes notes from Recruit. */
+  /** Configured pass-through for {@link zohoRecruitDeleteNotes}. */
   get deleteNotes() {
     return zohoRecruitDeleteNotes(this.recruitContext);
   }
 
-  /** Creates notes attached to a specific record. */
+  /** Configured pass-through for {@link zohoRecruitCreateNotesForRecord}. */
   get createNotesForRecord() {
     return zohoRecruitCreateNotesForRecord(this.recruitContext);
   }
 
-  /** Retrieves notes attached to a specific record. */
+  /** Configured pass-through for {@link zohoRecruitGetNotesForRecord}. */
   get getNotesForRecord() {
     return zohoRecruitGetNotesForRecord(this.recruitContext);
   }
 
-  /** Creates a paginated factory for iterating over notes of a record. */
+  /** Configured pass-through for {@link zohoRecruitGetNotesForRecordPageFactory}. */
   get getNotesForRecordPageFactory() {
     return zohoRecruitGetNotesForRecordPageFactory(this.recruitContext);
   }
 
-  /** Executes a custom REST API function in Recruit. */
+  /** Configured pass-through for {@link zohoRecruitExecuteRestApiFunction}. */
   get executeRestApiFunction() {
     return zohoRecruitExecuteRestApiFunction(this.recruitContext);
   }
 
-  /** Associates candidate records with one or more job openings. */
+  /** Configured pass-through for {@link zohoRecruitAssociateCandidateRecordsWithJobOpenings}. */
   get associateCandidateRecordsWithJobOpenings() {
     return zohoRecruitAssociateCandidateRecordsWithJobOpenings(this.recruitContext);
   }
 
-  /** Searches job openings associated with a candidate. */
+  /** Configured pass-through for {@link zohoRecruitSearchCandidateAssociatedJobOpeningRecords}. */
   get searchCandidateAssociatedJobOpeningRecords() {
     return zohoRecruitSearchCandidateAssociatedJobOpeningRecords(this.recruitContext);
   }
 
-  /** Creates a paginated factory for iterating over job openings associated with a candidate. */
+  /** Configured pass-through for {@link zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory}. */
   get searchCandidateAssociatedJobOpeningRecordsPageFactory() {
     return zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory(this.recruitContext);
   }
 
-  /** Searches candidates associated with a job opening. */
+  /** Configured pass-through for {@link zohoRecruitSearchJobOpeningAssociatedCandidateRecords}. */
   get searchJobOpeningAssociatedCandidateRecords() {
     return zohoRecruitSearchJobOpeningAssociatedCandidateRecords(this.recruitContext);
   }
 
-  /** Creates a paginated factory for iterating over candidates associated with a job opening. */
+  /** Configured pass-through for {@link zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory}. */
   get searchJobOpeningAssociatedCandidateRecordsPageFactory() {
     return zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory(this.recruitContext);
   }
 
-  /** Creates tags within a Recruit module. */
+  /** Configured pass-through for {@link zohoRecruitCreateTagsForModule}. */
   get createTagsForModule() {
     return zohoRecruitCreateTagsForModule(this.recruitContext);
   }
 
-  /** Retrieves all tags defined for a Recruit module. */
+  /** Configured pass-through for {@link zohoRecruitGetTagsForModule}. */
   get getTagsForModule() {
     return zohoRecruitGetTagsForModule(this.recruitContext);
   }
 
-  /** Adds tags to one or more records. */
+  /** Configured pass-through for {@link zohoRecruitAddTagsToRecords}. */
   get addTagsToRecords() {
     return zohoRecruitAddTagsToRecords(this.recruitContext);
   }
 
-  /** Removes tags from one or more records. */
+  /** Configured pass-through for {@link zohoRecruitRemoveTagsFromRecords}. */
   get removeTagsFromRecords() {
     return zohoRecruitRemoveTagsFromRecords(this.recruitContext);
   }

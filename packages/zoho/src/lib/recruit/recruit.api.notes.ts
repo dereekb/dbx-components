@@ -19,14 +19,46 @@ export interface ZohoRecruitCreateNotesRequest {
  */
 export type ZohoRecruitCreateNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitCreateNotesRequestEntry, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
 
+/**
+ * Input data for a single note entry, equivalent to {@link NewZohoRecruitNoteData}.
+ */
 export type ZohoRecruitCreateNotesRequestEntry = NewZohoRecruitNoteData;
+
+/**
+ * Raw API response from the create notes endpoint.
+ */
 export type ZohoRecruitCreateNotesResponse = ZohoRecruitChangeObjectResponse;
+
+/**
+ * Creates one or more notes in the Notes module, returning paired success/error results.
+ */
 export type ZohoRecruitCreateNotesFunction = (input: ZohoRecruitCreateNotesRequest) => Promise<ZohoRecruitCreateNotesResult>;
 
 /**
- * Creates one or more notes directly in the Notes module. The note data must include `se_module` and `Parent_Id` to link to a record.
+ * Creates a {@link ZohoRecruitCreateNotesFunction} bound to the given context.
  *
- * Prefer {@link zohoRecruitCreateNotesForRecord} when creating notes linked to a specific record, as it handles the module/parent linking automatically.
+ * Creates one or more notes directly in the Notes module. Each note entry must include
+ * `se_module` and `Parent_Id` to link the note to a record.
+ *
+ * Prefer {@link zohoRecruitCreateNotesForRecord} when creating notes linked to a specific
+ * record, as it handles the module/parent linking automatically.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that creates notes in the Notes module
+ *
+ * @example
+ * ```typescript
+ * const createNotes = zohoRecruitCreateNotes(context);
+ *
+ * const result = await createNotes({
+ *   data: [{
+ *     Note_Title: 'Interview Notes',
+ *     Note_Content: 'Strong candidate',
+ *     se_module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+ *     Parent_Id: candidateId
+ *   }]
+ * });
+ * ```
  */
 export function zohoRecruitCreateNotes(context: ZohoRecruitContext) {
   return (input: ZohoRecruitCreateNotesRequest) =>
@@ -47,11 +79,31 @@ export interface ZohoRecruitDeleteNotesRequest {
  */
 export type ZohoRecruitDeleteNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
 
+/**
+ * Raw API response from the delete notes endpoint.
+ */
 export type ZohoRecruitDeleteNotesResponse = ZohoRecruitChangeObjectResponse;
+
+/**
+ * Deletes one or more notes by their IDs, returning paired success/error results.
+ */
 export type ZohoRecruitDeleteNotesFunction = (input: ZohoRecruitDeleteNotesRequest) => Promise<ZohoRecruitDeleteNotesResult>;
 
 /**
- * Deletes one or more notes by their ids from the Notes module.
+ * Creates a {@link ZohoRecruitDeleteNotesFunction} bound to the given context.
+ *
+ * Deletes one or more notes by their IDs from the Notes module. Returns a paired
+ * success/error result for each note ID.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that deletes notes by ID
+ *
+ * @example
+ * ```typescript
+ * const deleteNotes = zohoRecruitDeleteNotes(context);
+ *
+ * const result = await deleteNotes({ ids: [noteId1, noteId2] });
+ * ```
  */
 export function zohoRecruitDeleteNotes(context: ZohoRecruitContext) {
   return (input: ZohoRecruitDeleteNotesRequest) =>
@@ -60,12 +112,39 @@ export function zohoRecruitDeleteNotes(context: ZohoRecruitContext) {
     });
 }
 
+/**
+ * Request for fetching notes related to a record, using the related records API input shape.
+ */
 export type ZohoRecruitGetNotesForRecordRequest = ZohoRecruitGetRelatedRecordsRequest;
+
+/**
+ * Paginated response containing note records for a parent record.
+ */
 export type ZohoRecruitGetNotesForRecordResponse = ZohoPageResult<ZohoRecruitRecordNote>;
+
+/**
+ * Retrieves paginated notes for a specific record in a module.
+ */
 export type ZohoRecruitGetNotesForRecordFunction = (input: ZohoRecruitGetNotesForRecordRequest) => Promise<ZohoRecruitGetNotesForRecordResponse>;
 
 /**
- * Retrieves notes related to a specific record, using the related records API targeting the Notes module.
+ * Creates a {@link ZohoRecruitGetNotesForRecordFunction} bound to the given context.
+ *
+ * Retrieves notes related to a specific record by targeting the Notes module
+ * via the related records API. Returns an empty page result when no notes exist.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that retrieves notes for a record
+ *
+ * @example
+ * ```typescript
+ * const getNotesForRecord = zohoRecruitGetNotesForRecord(context);
+ *
+ * const result = await getNotesForRecord({
+ *   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+ *   id: candidateId
+ * });
+ * ```
  */
 export function zohoRecruitGetNotesForRecord(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordFunction {
   return zohoRecruitGetRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordNote>({ targetModule: ZOHO_RECRUIT_NOTES_MODULE });
@@ -77,7 +156,14 @@ export function zohoRecruitGetNotesForRecord(context: ZohoRecruitContext): ZohoR
 export type ZohoRecruitGetNotesForRecordPageFactory = FetchPageFactory<ZohoRecruitGetNotesForRecordRequest, ZohoRecruitGetNotesForRecordResponse>;
 
 /**
- * Creates a page factory for iterating over notes related to a record across multiple pages.
+ * Creates a {@link ZohoRecruitGetNotesForRecordPageFactory} bound to the given context.
+ *
+ * Returns a page factory for iterating over notes related to a record across
+ * multiple pages. Wraps {@link zohoRecruitGetNotesForRecord} with automatic
+ * pagination handling via {@link zohoFetchPageFactory}.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Page factory for iterating over record notes
  */
 export function zohoRecruitGetNotesForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordPageFactory {
   return zohoFetchPageFactory(zohoRecruitGetNotesForRecord(context));
@@ -91,10 +177,34 @@ export interface ZohoRecruitCreateNotesForRecordRequest extends ZohoRecruitModul
   readonly notes: ArrayOrValue<Omit<NewZohoRecruitNoteData, 'se_module' | 'Parent_Id'>>;
 }
 
+/**
+ * Creates one or more notes linked to a specific record, returning paired success/error results.
+ */
 export type ZohoRecruitCreateNotesForRecordFunction = (input: ZohoRecruitCreateNotesForRecordRequest) => Promise<ZohoRecruitCreateNotesResult>;
 
 /**
- * Creates one or more notes linked to a specific record. Automatically sets the module and parent id on each note entry before delegating to {@link zohoRecruitCreateNotes}.
+ * Creates a {@link ZohoRecruitCreateNotesForRecordFunction} bound to the given context.
+ *
+ * Creates one or more notes linked to a specific record. Automatically sets
+ * `se_module` and `Parent_Id` on each note entry from the request's `module` and `id`,
+ * then delegates to {@link zohoRecruitCreateNotes}.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
+ * @returns Function that creates notes linked to a specific record
+ *
+ * @example
+ * ```typescript
+ * const createNotesForRecord = zohoRecruitCreateNotesForRecord(context);
+ *
+ * const result = await createNotesForRecord({
+ *   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+ *   id: candidateId,
+ *   notes: {
+ *     Note_Title: 'Interview Notes',
+ *     Note_Content: 'Strong candidate for the role.'
+ *   }
+ * });
+ * ```
  */
 export function zohoRecruitCreateNotesForRecord(context: ZohoRecruitContext): ZohoRecruitCreateNotesForRecordFunction {
   const createNotesInstance = zohoRecruitCreateNotes(context);

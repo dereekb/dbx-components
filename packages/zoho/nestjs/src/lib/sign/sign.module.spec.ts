@@ -1,7 +1,7 @@
-import { appZohoRecruitModuleMetadata } from './recruit.module';
+import { appZohoSignModuleMetadata } from './sign.module';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
+import { ZOHO_SIGN_SERVICE_NAME } from '@dereekb/zoho';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 
@@ -16,24 +16,24 @@ const cacheService = fileZohoAccountsAccessTokenCacheService();
   ],
   exports: [ZohoAccountsAccessTokenCacheService]
 })
-export class TestZohoRecruitDependencyModule {}
+export class TestZohoSignDependencyModule {}
 
 // example of providing the dependency module
-@Module(appZohoRecruitModuleMetadata({ dependencyModule: TestZohoRecruitDependencyModule }))
-export class TestZohoRecruitModule {}
+@Module(appZohoSignModuleMetadata({ dependencyModule: TestZohoSignDependencyModule }))
+export class TestZohoSignModule {}
 
 // module without the required dependency
-@Module(appZohoRecruitModuleMetadata({}))
-export class TestZohoRecruitModuleWithoutDependency {}
+@Module(appZohoSignModuleMetadata({}))
+export class TestZohoSignModuleWithoutDependency {}
 
-describe('appZohoRecruitModuleMetadata()', () => {
+describe('appZohoSignModuleMetadata()', () => {
   let nest: TestingModule;
 
   beforeEach(async () => {
     const providers: Provider[] = [];
 
     const rootModule: DynamicModule = {
-      module: TestZohoRecruitModule,
+      module: TestZohoSignModule,
       providers,
       exports: providers,
       global: true
@@ -48,7 +48,7 @@ describe('appZohoRecruitModuleMetadata()', () => {
 
   it('should fail to compile when ZohoAccountsAccessTokenCacheService is not provided', async () => {
     const rootModule: DynamicModule = {
-      module: TestZohoRecruitModuleWithoutDependency,
+      module: TestZohoSignModuleWithoutDependency,
       global: true
     };
 
@@ -87,8 +87,8 @@ describe('appZohoRecruitModuleMetadata()', () => {
           expect(result.expiresAt.getTime()).toBeGreaterThan(new Date().getTime());
           expect(result.apiDomain).toBeDefined();
 
-          const recruitTokenCache = cacheService.loadZohoAccessTokenCache(ZOHO_RECRUIT_SERVICE_NAME);
-          const cachedToken = await recruitTokenCache.loadCachedToken();
+          const signTokenCache = cacheService.loadZohoAccessTokenCache(ZOHO_SIGN_SERVICE_NAME);
+          const cachedToken = await signTokenCache.loadCachedToken();
           expect(cachedToken).toBe(result);
         });
       });

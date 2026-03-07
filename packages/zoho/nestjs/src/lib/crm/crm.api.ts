@@ -76,137 +76,137 @@ export class ZohoCrmApi {
   }
 
   // MARK: Accessors
-  /** Inserts a new record into a CRM module. */
+  /** Configured pass-through for {@link zohoCrmInsertRecord}. */
   get insertRecord() {
     return zohoCrmInsertRecord(this.crmContext);
   }
 
-  /** Inserts or updates a record based on a duplicate-check field. */
+  /** Configured pass-through for {@link zohoCrmUpsertRecord}. */
   get upsertRecord() {
     return zohoCrmUpsertRecord(this.crmContext);
   }
 
-  /** Updates an existing record in a CRM module. */
+  /** Configured pass-through for {@link zohoCrmUpdateRecord}. */
   get updateRecord() {
     return zohoCrmUpdateRecord(this.crmContext);
   }
 
-  /** Deletes a record from a CRM module. */
+  /** Configured pass-through for {@link zohoCrmDeleteRecord}. */
   get deleteRecord() {
     return zohoCrmDeleteRecord(this.crmContext);
   }
 
-  /** Retrieves a single record by its ID. */
+  /** Configured pass-through for {@link zohoCrmGetRecordById}. */
   get getRecordById() {
     return zohoCrmGetRecordById(this.crmContext);
   }
 
-  /** Retrieves a list of records from a CRM module. */
+  /** Configured pass-through for {@link zohoCrmGetRecords}. */
   get getRecords() {
     return zohoCrmGetRecords(this.crmContext);
   }
 
-  /** Searches records in a CRM module using criteria. */
+  /** Configured pass-through for {@link zohoCrmSearchRecords}. */
   get searchRecords() {
     return zohoCrmSearchRecords(this.crmContext);
   }
 
-  /** Creates a paginated search factory for iterating over search results. */
+  /** Configured pass-through for {@link zohoCrmSearchRecordsPageFactory}. */
   get searchRecordsPageFactory() {
     return zohoCrmSearchRecordsPageFactory(this.crmContext);
   }
 
-  /** Creates a factory for fetching related records of a parent record. */
+  /** Configured pass-through for {@link zohoCrmGetRelatedRecordsFunctionFactory}. */
   get getRelatedRecordsFunctionFactory() {
     return zohoCrmGetRelatedRecordsFunctionFactory(this.crmContext);
   }
 
-  /** Retrieves emails associated with a specific record. */
+  /** Configured pass-through for {@link zohoCrmGetEmailsForRecord}. */
   get getEmailsForRecord() {
     return zohoCrmGetEmailsForRecord(this.crmContext);
   }
 
-  /** Creates a paginated factory for iterating over emails of a record. */
+  /** Configured pass-through for {@link zohoCrmGetEmailsForRecordPageFactory}. */
   get getEmailsForRecordPageFactory() {
     return zohoCrmGetEmailsForRecordPageFactory(this.crmContext);
   }
 
-  /** Retrieves attachments associated with a specific record. */
+  /** Configured pass-through for {@link zohoCrmGetAttachmentsForRecord}. */
   get getAttachmentsForRecord() {
     return zohoCrmGetAttachmentsForRecord(this.crmContext);
   }
 
-  /** Creates a paginated factory for iterating over attachments of a record. */
+  /** Configured pass-through for {@link zohoCrmGetAttachmentsForRecordPageFactory}. */
   get getAttachmentsForRecordPageFactory() {
     return zohoCrmGetAttachmentsForRecordPageFactory(this.crmContext);
   }
 
-  /** Uploads an attachment to a specific record. */
+  /** Configured pass-through for {@link zohoCrmUploadAttachmentForRecord}. */
   get uploadAttachmentForRecord() {
     return zohoCrmUploadAttachmentForRecord(this.crmContext);
   }
 
-  /** Downloads an attachment from a specific record. */
+  /** Configured pass-through for {@link zohoCrmDownloadAttachmentForRecord}. */
   get downloadAttachmentForRecord() {
     return zohoCrmDownloadAttachmentForRecord(this.crmContext);
   }
 
-  /** Deletes an attachment from a specific record. */
+  /** Configured pass-through for {@link zohoCrmDeleteAttachmentFromRecord}. */
   get deleteAttachmentFromRecord() {
     return zohoCrmDeleteAttachmentFromRecord(this.crmContext);
   }
 
-  /** Creates notes in the CRM. */
+  /** Configured pass-through for {@link zohoCrmCreateNotes}. */
   get createNotes() {
     return zohoCrmCreateNotes(this.crmContext);
   }
 
-  /** Deletes notes from the CRM. */
+  /** Configured pass-through for {@link zohoCrmDeleteNotes}. */
   get deleteNotes() {
     return zohoCrmDeleteNotes(this.crmContext);
   }
 
-  /** Creates notes attached to a specific record. */
+  /** Configured pass-through for {@link zohoCrmCreateNotesForRecord}. */
   get createNotesForRecord() {
     return zohoCrmCreateNotesForRecord(this.crmContext);
   }
 
-  /** Retrieves notes attached to a specific record. */
+  /** Configured pass-through for {@link zohoCrmGetNotesForRecord}. */
   get getNotesForRecord() {
     return zohoCrmGetNotesForRecord(this.crmContext);
   }
 
-  /** Creates a paginated factory for iterating over notes of a record. */
+  /** Configured pass-through for {@link zohoCrmGetNotesForRecordPageFactory}. */
   get getNotesForRecordPageFactory() {
     return zohoCrmGetNotesForRecordPageFactory(this.crmContext);
   }
 
-  /** Executes a custom REST API function in the CRM. */
+  /** Configured pass-through for {@link zohoCrmExecuteRestApiFunction}. */
   get executeRestApiFunction() {
     return zohoCrmExecuteRestApiFunction(this.crmContext);
   }
 
-  /** Creates tags within a CRM module. */
+  /** Configured pass-through for {@link zohoCrmCreateTagsForModule}. */
   get createTagsForModule() {
     return zohoCrmCreateTagsForModule(this.crmContext);
   }
 
-  /** Deletes a tag from the CRM. */
+  /** Configured pass-through for {@link zohoCrmDeleteTag}. */
   get deleteTag() {
     return zohoCrmDeleteTag(this.crmContext);
   }
 
-  /** Retrieves all tags defined for a CRM module. */
+  /** Configured pass-through for {@link zohoCrmGetTagsForModule}. */
   get getTagsForModule() {
     return zohoCrmGetTagsForModule(this.crmContext);
   }
 
-  /** Adds tags to one or more records. */
+  /** Configured pass-through for {@link zohoCrmAddTagsToRecords}. */
   get addTagsToRecords() {
     return zohoCrmAddTagsToRecords(this.crmContext);
   }
 
-  /** Removes tags from one or more records. */
+  /** Configured pass-through for {@link zohoCrmRemoveTagsFromRecords}. */
   get removeTagsFromRecords() {
     return zohoCrmRemoveTagsFromRecords(this.crmContext);
   }
