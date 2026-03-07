@@ -43,9 +43,17 @@ export type ReadMultipleKeysFunction<T, K extends PrimativeKey = PrimativeKey> =
 export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<ArrayOrValue<T>, K[]>;
 
 /**
- * Creates a ReadKeysFromFunction using a ReadKeyFunction.
+ * Creates a {@link ReadKeysFunction} from a key-reading function. Handles both single and array inputs,
+ * filtering out null/undefined keys.
  *
- * @param read
+ * @param readKey - Function that extracts one or more keys from a value.
+ * @returns A function that reads keys from a single value or array of values.
+ *
+ * @example
+ * ```ts
+ * const fn = readKeysFunction<string>((x) => x);
+ * fn(['a', 'b', 'c']); // ['a', 'b', 'c']
+ * ```
  */
 export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysFunction<T, K> {
   return (values: ArrayOrValue<T>) => {
@@ -68,10 +76,11 @@ export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readK
 }
 
 /**
- * Convenience function for reading all the keys for the input values.
- * @param readKey
- * @param values
- * @returns
+ * Convenience function that reads all keys from an array of values using the provided key-reading function.
+ *
+ * @param readKey - Function that extracts one or more keys from a value.
+ * @param values - Values to read keys from.
+ * @returns An array of all extracted keys.
  */
 export function readKeysFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): K[] {
   return readKeysFunction(readKey)(values);
@@ -82,6 +91,18 @@ export function readKeysFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: 
  */
 export type ReadKeysSetFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T[], Set<K>>;
 
+/**
+ * Creates a {@link ReadKeysSetFunction} from a key-reading function. Like {@link readKeysFunction} but returns a Set, deduplicating keys.
+ *
+ * @param readKey - Function that extracts one or more keys from a value.
+ * @returns A function that reads keys from values into a Set.
+ *
+ * @example
+ * ```ts
+ * const fn = readKeysSetFunction<string>((x) => x);
+ * fn(['a', 'b', 'a']); // Set { 'a', 'b' }
+ * ```
+ */
 export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysSetFunction<T, K> {
   return (values: ArrayOrValue<T>) => {
     if (Array.isArray(values)) {
@@ -107,10 +128,11 @@ export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(re
 }
 
 /**
- * Convenience function for reading all the keys for the input values.
- * @param readKey
- * @param values
- * @returns
+ * Convenience function that reads all keys from an array of values into a Set using the provided key-reading function.
+ *
+ * @param readKey - Function that extracts one or more keys from a value.
+ * @param values - Values to read keys from.
+ * @returns A Set of all extracted keys.
  */
 export function readKeysSetFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): Set<K> {
   return readKeysSetFunction(readKey)(values);

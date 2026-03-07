@@ -1,4 +1,4 @@
-import { isMapIdentityFunction, minAndMaxFunction, sortNumbersAscendingFunction, sortValues, sortValuesFunctionOrMapIdentityWithSortRef } from '@dereekb/util';
+import { compareWithMappedValuesFunction, isMapIdentityFunction, minAndMaxFunction, sortNumbersAscendingFunction, sortValues, sortValuesFunctionOrMapIdentityWithSortRef } from '@dereekb/util';
 
 describe('sortValues()', () => {
   it('should sort the values if sortWith is defined.', () => {
@@ -60,6 +60,18 @@ describe('sortValuesFunctionOrMapIdentityWithSortRef()', () => {
   });
 });
 
+describe('compareWithMappedValuesFunction()', () => {
+  it('should run the example successfully', () => {
+    const byName = compareWithMappedValuesFunction(
+      (user: { name: string }) => user.name,
+      (a: string, b: string) => a.localeCompare(b)
+    );
+    const result = [{ name: 'Bob' }, { name: 'Alice' }].sort(byName);
+    expect(result[0].name).toBe('Alice');
+    expect(result[1].name).toBe('Bob');
+  });
+});
+
 describe('minAndMaxFunction()', () => {
   describe('function', () => {
     const fn = minAndMaxFunction<number>((a, b) => a - b);
@@ -75,6 +87,15 @@ describe('minAndMaxFunction()', () => {
       const result = fn([min, 1, 2, 3, 4, max]);
       expect(result?.min).toBe(min);
       expect(result?.max).toBe(max);
+    });
+
+    it('should run the example successfully', () => {
+      const result = fn([3, 1, 4, 1, 5]);
+      expect(result?.min).toBe(1);
+      expect(result?.max).toBe(5);
+
+      const emptyResult = fn([]);
+      expect(emptyResult).toBe(null);
     });
   });
 });

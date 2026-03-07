@@ -29,5 +29,13 @@ describe('readKeysSetFunction()', () => {
       expect(result).toContain(input[2]);
       expect(result).toContain(input[3]);
     });
+
+    it('should deduplicate keys', () => {
+      const fn = readKeysSetFunction<string>((x) => x);
+      const result = fn(['a', 'b', 'a']);
+      expect(result.size).toBe(2);
+      expect(result).toContain('a');
+      expect(result).toContain('b');
+    });
   });
 });
