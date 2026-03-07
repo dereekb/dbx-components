@@ -1,59 +1,52 @@
-import { type ContentTypeMimeType, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type ContentTypeMimeType, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { safeParse as parseContentType } from 'fast-content-type-parse';
 import { type FetchMethod } from './fetch.type';
 
-// MARK: Post
+// MARK: Make File
 /**
- * Input for fetchUploadFile().
+ * Input for makeFileForFetch().
  */
-export interface FetchUploadFile {
+export interface MakeFileForFetchInput {
   /**
-   * URL to upload the file to.
+   * File content. Can be a string, ArrayBuffer, Blob, or array of BlobParts.
    */
-  readonly url: string;
+  readonly content: ArrayOrValue<BlobPart>;
   /**
-   * Fetch function to use.
+   * File name including extension.
    *
-   * Defaults to the global fetch function.
+   * @example 'document.pdf'
    */
-  readonly fetch?: typeof fetch;
+  readonly fileName: string;
   /**
-   * Method to use. Defaults to 'POST'.
+   * MIME type of the file.
+   *
+   * @example 'application/pdf'
    */
-  readonly method?: FetchMethod;
+  readonly mimeType?: ContentTypeMimeType;
   /**
-   * Body data to upload.
+   * Last modified timestamp in milliseconds.
    */
-  readonly body: FetchUploadFileBody;
+  readonly lastModified?: number;
 }
 
 /**
- * A mime type and body pair to upload.
+ * Creates a File object from the given input.
+ *
+ * @example
+ * makeFileForFetch({ content: pdfBuffer, fileName: 'doc.pdf', mimeType: 'application/pdf' })
  */
-export interface FetchUploadFileBody {
-  /**
-   * The mime type of the body content to upload.
-   */
-  readonly mimeType: ContentTypeMimeType;
-  /**
-   * The body, passed to fetch.
-   *
-   * Can be a Uint8Array, Buffer, FormData, string, etc.
-   */
-  readonly body: BodyInit;
-}
+export function makeFileForFetch(input: MakeFileForFetchInput): File {
+  const options: FilePropertyBag = {};
 
-export function fetchUploadFile(input: FetchUploadFile) {
-  const { fetch: inputFetch, url, body: inputBody } = input;
-  const useFetch = inputFetch ?? fetch;
+  if (input.mimeType) {
+    options.type = input.mimeType;
+  }
 
-  return useFetch(url, {
-    method: input.method ?? 'POST',
-    body: inputBody.body,
-    headers: {
-      'Content-Type': inputBody.mimeType
-    }
-  });
+  if (input.lastModified != null) {
+    options.lastModified = input.lastModified;
+  }
+
+  return new File(asArray(input.content), input.fileName, options);
 }
 
 // MARK: Parse Response
@@ -95,4 +88,39 @@ export function parseFetchFileResponse(response: Response): FetchFileResponse {
     contentType,
     mimeType: contentType?.type
   };
+}
+
+// MARK: Compat
+/**
+ * @deprecated Use makeFileForFetch() with FormData instead.
+ */
+export interface FetchUploadFile {
+  readonly url: string;
+  readonly fetch?: typeof fetch;
+  readonly method?: FetchMethod;
+  readonly body: FetchUploadFileBody;
+}
+
+/**
+ * @deprecated Use makeFileForFetch() with FormData instead.
+ */
+export interface FetchUploadFileBody {
+  readonly mimeType: ContentTypeMimeType;
+  readonly body: BodyInit;
+}
+
+/**
+ * @deprecated Use makeFileForFetch() with FormData and context.fetch() instead.
+ */
+export function fetchUploadFile(input: FetchUploadFile) {
+  const { fetch: inputFetch, url, body: inputBody } = input;
+  const useFetch = inputFetch ?? fetch;
+
+  return useFetch(url, {
+    method: input.method ?? 'POST',
+    body: inputBody.body,
+    headers: {
+      'Content-Type': inputBody.mimeType
+    }
+  });
 }

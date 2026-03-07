@@ -14,7 +14,7 @@ export type ZohoSignConfigApiUrlInput = ZohoSignApiUrlKey | ZohoSignApiUrl;
 export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiUrl {
   switch (input) {
     case 'sandbox':
-      return 'https://sign.zoho.com/api/v1';
+      return 'https://signsandbox.zoho.com/api/v1';
     case 'production':
       return 'https://sign.zoho.com/api/v1';
     default:

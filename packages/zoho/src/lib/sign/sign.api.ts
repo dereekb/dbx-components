@@ -92,14 +92,20 @@ export type ZohoSignGetDocumentsFunction = (input: ZohoSignGetDocumentsInput) =>
 export function zohoSignGetDocuments(context: ZohoSignContext): ZohoSignGetDocumentsFunction {
   return (input: ZohoSignGetDocumentsInput) => {
     const { search_columns, ...pageFilter } = input;
-    const body = {
+    const data = {
       page_context: {
         ...pageFilter,
         ...(search_columns ? { search_columns } : {})
       }
     };
 
-    return context.fetchJson<ZohoSignGetDocumentsResponse>(`/requests`, zohoSignApiFetchJsonInput('GET', body));
+    return context.fetchJson<ZohoSignGetDocumentsResponse>(
+      {
+        url: `/requests`,
+        queryParams: { data: JSON.stringify(data) }
+      },
+      zohoSignApiFetchJsonInput('GET')
+    );
   };
 }
 
@@ -207,7 +213,11 @@ export function zohoSignDownloadCompletionCertificate(context: ZohoSignContext):
 
 // MARK: Create Document
 export interface ZohoSignCreateDocumentInput {
-  readonly data: ZohoSignRequestData;
+  readonly requestData: ZohoSignRequestData;
+  /**
+   * File to attach to the document.
+   */
+  readonly file: File;
 }
 
 export type ZohoSignCreateDocumentFunction = (input: ZohoSignCreateDocumentInput) => Promise<ZohoSignDocumentOperationResponse>;
@@ -215,13 +225,22 @@ export type ZohoSignCreateDocumentFunction = (input: ZohoSignCreateDocumentInput
 /**
  * Creates a new document (draft).
  *
+ * Uses multipart/form-data to send the request data and optional file.
+ *
  * https://www.zoho.com/sign/api/document-managment/create-document.html
  *
  * @param context
  * @returns
  */
 export function zohoSignCreateDocument(context: ZohoSignContext): ZohoSignCreateDocumentFunction {
-  return ({ data }: ZohoSignCreateDocumentInput) => context.fetchJson<ZohoSignDocumentOperationResponse>(`/requests`, zohoSignApiFetchJsonInput('POST', { requests: data }));
+  return ({ requestData, file }: ZohoSignCreateDocumentInput) => {
+    const body = new FormData();
+    body.append('data', JSON.stringify({ requests: requestData }));
+    body.append('file', file);
+
+    // Clear the base Content-Type header (empty string removes it via mergeRequestHeaders) so fetch auto-detects multipart/form-data with the correct boundary from the FormData body.
+    return context.fetch(`/requests`, { method: 'POST', headers: { 'Content-Type': '' }, body }).then((response) => response.json() as Promise<ZohoSignDocumentOperationResponse>);
+  };
 }
 
 // MARK: Update Document
@@ -290,4 +309,49 @@ export type ZohoSignExtendDocumentFunction = (input: ZohoSignExtendDocumentInput
  */
 export function zohoSignExtendDocument(context: ZohoSignContext): ZohoSignExtendDocumentFunction {
   return ({ requestId, expire_by }: ZohoSignExtendDocumentInput) => context.fetchJson<ZohoSignApiResponse>(`/requests/${requestId}/extend`, zohoSignApiFetchJsonInput('PUT', { expire_by }));
+}
+
+// MARK: Delete Document
+export interface ZohoSignDeleteDocumentInput {
+  readonly requestId: ZohoSignRequestId;
+  /**
+   * Set to true when the document is in progress to recall it before deleting.
+   */
+  readonly recall_inprogress?: boolean;
+  /**
+   * Reason for recalling/deleting the document.
+   */
+  readonly reason?: string;
+}
+
+export type ZohoSignDeleteDocumentFunction = (input: ZohoSignDeleteDocumentInput) => Promise<ZohoSignApiResponse>;
+
+/**
+ * Deletes a document.
+ *
+ * https://www.zoho.com/sign/api/document-managment/delete-document.html
+ *
+ * @param context
+ * @returns
+ */
+export function zohoSignDeleteDocument(context: ZohoSignContext): ZohoSignDeleteDocumentFunction {
+  return ({ requestId, recall_inprogress, reason }: ZohoSignDeleteDocumentInput) => {
+    const params: Record<string, string> = {};
+
+    if (recall_inprogress != null) {
+      params['recall_inprogress'] = String(recall_inprogress);
+    }
+
+    if (reason != null) {
+      params['reason'] = reason;
+    }
+
+    const form = makeUrlSearchParams(params);
+    const hasForm = form.toString().length > 0;
+
+    return context.fetchJson<ZohoSignApiResponse>(`/requests/${requestId}/delete`, {
+      method: 'PUT',
+      ...(hasForm ? { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() } : {})
+    });
+  };
 }

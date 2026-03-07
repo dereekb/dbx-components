@@ -463,29 +463,27 @@ export const ZOHO_RECRUIT_ATTACHMENT_MAX_SIZE = 20 * 1024 * 1024;
  */
 export interface ZohoRecruitUploadAttachmentForRecordRequest extends ZohoRecruitGetRecordByIdInput {
   /**
-   * Requires the use of a FormData object.
+   * File to upload as an attachment. Max 20MB.
    *
-   * Max of 20MB are allowed
-   *
-   * @deprecated Use attachmentUrl instead for now.
+   * Either this or attachmentUrl must be provided.
    */
-  readonly formData?: FormData;
+  readonly file?: Maybe<File>;
   /**
    * File url to pull the file from.
    *
-   * Either this or formData must be provided.
+   * Either this or file must be provided.
    */
   readonly attachmentUrl?: WebsiteUrlWithPrefix;
   /**
    * The category id(s) of the attachment.
    *
-   * Either this or attachments_category must be provided.
+   * Either this or attachmentCategoryName must be provided.
    */
   readonly attachmentCategoryId?: ArrayOrValue<ZohoRecruitAttachmentCategoryId>;
   /**
    * The category name(s) of the attachment.
    *
-   * Either this or attachments_category_id must be provided.
+   * Either this or attachmentCategoryId must be provided.
    *
    * Example: "Resume"
    */
@@ -502,62 +500,31 @@ export type ZohoRecruitUploadAttachmentForRecordFunction = (input: ZohoRecruitUp
  */
 export function zohoRecruitUploadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitUploadAttachmentForRecordFunction {
   return (input: ZohoRecruitUploadAttachmentForRecordRequest) => {
-    const { attachmentCategoryId, attachmentCategoryName, formData } = input;
+    const { attachmentCategoryId, attachmentCategoryName, file, attachmentUrl } = input;
 
     const urlParams = {
       attachments_category_id: joinStringsWithCommas(attachmentCategoryId),
-      attachments_category: joinStringsWithCommas(attachmentCategoryName),
-      attachment_url: input.attachmentUrl
+      attachments_category: joinStringsWithCommas(attachmentCategoryName)
     };
 
     if (!urlParams.attachments_category_id?.length && !urlParams.attachments_category?.length) {
       throw new Error('attachmentCategoryId or attachmentCategoryName must be provided and not empty.');
     }
 
-    if (formData != null) {
-      delete urlParams.attachment_url;
-    }
+    const url = `/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
 
-    const url = `https://recruitsandbox.zoho.com/recruit/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
-    let response: Promise<Response>;
+    if (file != null) {
+      const body = new FormData();
+      body.append('file', file);
 
-    if (urlParams.attachment_url) {
-      response = context.fetch(url, { method: 'POST' });
-    } else if (formData != null) {
-      throw new Error('unsupported currently. Use the attachmentUrl parameter instead.');
-
-      // There is something weird going on with sending requests this way and zoho's server is rejecting it.
-
-      /*
-      response = context.fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'content-length': '210'
-        },
-        body: formData
-      });
-      */
-
-      /*
-      const fullUrl = (context.config.apiUrl as string) + url;
-      const accessToken = await context.accessTokenStringFactory();
-
-      response = fetch(fullUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        },
-        body: formData,
-        method: 'POST'
-      });
-
-      console.log({ response });
-      */
+      // Clear the base Content-Type header (empty string removes it via mergeRequestHeaders) so fetch auto-detects multipart/form-data with the correct boundary from the FormData body.
+      return context.fetch(url, { method: 'POST', headers: { 'Content-Type': '' }, body });
+    } else if (attachmentUrl) {
+      const urlWithAttachment = `${url}&${makeUrlSearchParams({ attachment_url: attachmentUrl }).toString()}`;
+      return context.fetch(urlWithAttachment, { method: 'POST' });
     } else {
-      throw new Error('body or attachmentUrl must be provided.');
+      throw new Error('file or attachmentUrl must be provided.');
     }
-
-    return response;
   };
 }
 

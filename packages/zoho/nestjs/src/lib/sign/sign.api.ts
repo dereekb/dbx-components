@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoSign, ZohoSignContext, zohoSignGetDocument, zohoSignGetDocuments, zohoSignGetDocumentsPageFactory, zohoSignGetDocumentFormData, zohoSignRetrieveFieldTypes, zohoSignDownloadPdf, zohoSignDownloadCompletionCertificate, zohoSignCreateDocument, zohoSignUpdateDocument, zohoSignSendDocumentForSignature, zohoSignExtendDocument, zohoSignFactory } from '@dereekb/zoho';
+import { ZohoSign, ZohoSignContext, zohoSignGetDocument, zohoSignGetDocuments, zohoSignGetDocumentsPageFactory, zohoSignGetDocumentFormData, zohoSignRetrieveFieldTypes, zohoSignDownloadPdf, zohoSignDownloadCompletionCertificate, zohoSignCreateDocument, zohoSignUpdateDocument, zohoSignSendDocumentForSignature, zohoSignExtendDocument, zohoSignDeleteDocument, zohoSignFactory } from '@dereekb/zoho';
 import { ZohoSignServiceConfig } from './sign.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -68,5 +68,9 @@ export class ZohoSignApi {
 
   get extendDocument() {
     return zohoSignExtendDocument(this.signContext);
+  }
+
+  get deleteDocument() {
+    return zohoSignDeleteDocument(this.signContext);
   }
 }

@@ -3,9 +3,19 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoSignApi } from './sign.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
-import { type ZohoSignRequest } from '@dereekb/zoho';
+import { type ZohoSignRequest, type ZohoSignRequestData } from '@dereekb/zoho';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
+
+const TEST_FILES_DIR = path.resolve(__dirname, '../../../test/files');
+
+function loadTestPdfFile(filename = 'resume.pdf'): File {
+  const filePath = path.join(TEST_FILES_DIR, filename);
+  const buffer = fs.readFileSync(filePath);
+  return new File([buffer], filename, { type: 'application/pdf' });
+}
 
 @Module(appZohoSignModuleMetadata({}))
 export class TestZohoSignModule {}
@@ -37,9 +47,42 @@ describe('sign.api', () => {
 
   describe('ZohoSignApi', () => {
     let api: ZohoSignApi;
+    let testRequest: ZohoSignRequest;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       api = nest.get(ZohoSignApi);
+
+      // List existing documents; create one if none exist
+      const listResult = await api.getDocuments({
+        start_index: 1,
+        row_count: 1,
+        sort_column: 'created_time',
+        sort_order: 'DESC'
+      });
+
+      console.log({
+        listResult: listResult.requests[0]
+      });
+
+      if (listResult.requests.length > 0) {
+        testRequest = listResult.requests[0];
+      } else {
+        const data: ZohoSignRequestData = {
+          request_name: 'Test Document',
+          is_sequential: false,
+          actions: [
+            {
+              action_type: 'SIGN',
+              recipient_name: 'Test Signer',
+              recipient_email: 'derek.burgman@hellosubs.co',
+              signing_order: 1
+            }
+          ]
+        };
+
+        const createResult = await api.createDocument({ requestData: data, file: loadTestPdfFile() });
+        testRequest = createResult.requests;
+      }
     });
 
     // MARK: Read Operations
@@ -61,23 +104,12 @@ describe('sign.api', () => {
 
     describe('getDocument()', () => {
       it('should retrieve details of a specific document', async () => {
-        // First, get a request id from the list
-        const listResult = await api.getDocuments({
-          start_index: 1,
-          row_count: 1,
-          sort_column: 'created_time',
-          sort_order: 'DESC'
-        });
+        const requestId = testRequest.request_id!;
+        const result = await api.getDocument({ requestId });
 
-        if (listResult.requests.length > 0) {
-          const requestId = listResult.requests[0].request_id!;
-
-          const result = await api.getDocument({ requestId });
-
-          expect(result).toBeDefined();
-          expect(result.requests).toBeDefined();
-          expect(result.requests.request_name).toBeDefined();
-        }
+        expect(result).toBeDefined();
+        expect(result.requests).toBeDefined();
+        expect(result.requests.request_name).toBeDefined();
       });
     });
 
@@ -170,6 +202,44 @@ describe('sign.api', () => {
           expect(result).toBeDefined();
           expect(result.ok).toBe(true);
         }
+      });
+    });
+
+    // MARK: Write Operations
+    describe('createDocument() and deleteDocument()', () => {
+      it('should create a new document then delete it', async () => {
+        const data: ZohoSignRequestData = {
+          request_name: 'Test Create Document',
+          is_sequential: false,
+          actions: [
+            {
+              action_type: 'SIGN',
+              recipient_name: 'Test Signer',
+              recipient_email: 'derek.burgman@hellosubs.co',
+              signing_order: 1
+            }
+          ]
+        };
+
+        // Create the document
+        const createResult = await api.createDocument({ requestData: data, file: loadTestPdfFile() });
+
+        expect(createResult).toBeDefined();
+        expect(createResult.requests).toBeDefined();
+        expect(createResult.requests.request_name).toBe('Test Create Document');
+
+        const createdRequestId = createResult.requests.request_id!;
+        expect(createdRequestId).toBeDefined();
+
+        // Verify it exists by fetching it
+        const getResult = await api.getDocument({ requestId: createdRequestId });
+        expect(getResult).toBeDefined();
+        expect(getResult.requests.request_id).toBe(createdRequestId);
+
+        // Delete the document
+        const deleteResult = await api.deleteDocument({ requestId: createdRequestId });
+        expect(deleteResult).toBeDefined();
+        expect(deleteResult.status).toBe('success');
       });
     });
   });
