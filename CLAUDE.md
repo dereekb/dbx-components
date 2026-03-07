@@ -22,6 +22,31 @@
 
 <!-- nx configuration end-->
 
+# Code Style
+
+## Single Return Per Function
+
+Functions should ALWAYS have a single `return` statement. Use a result variable instead of early returns.
+
+Don't:
+
+```ts
+if (value) {
+  return doSomething(value);
+}
+return undefined;
+```
+
+Do:
+
+```ts
+let result: Maybe<Result>;
+if (value) {
+  result = doSomething(value);
+}
+return result;
+```
+
 # Package Documentation
 
 When working with @dereekb packages, use these resources for quick discovery and detailed guidance.

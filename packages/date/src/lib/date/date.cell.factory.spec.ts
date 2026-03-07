@@ -1268,7 +1268,8 @@ wrapDateTests(() => {
               });
 
               it('should return the original timing using the second event', () => {
-                const startsAt = addHours(timing.startsAt, 24);
+                const startsAtFactory = dateCellTimingStartsAtDateFactory(timing);
+                const startsAt = startsAtFactory(1); // DST-safe next-day startsAt
 
                 const result = updateDateCellTimingWithDateCellTimingEvent({
                   timing,

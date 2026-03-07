@@ -7,7 +7,6 @@ import { Expose, Type } from 'class-transformer';
 import { type DateTimezoneUtcNormalFunctionInput, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { IsDate, IsNumber, IsString, Min } from 'class-validator';
 import { IsKnownTimezone } from '../timezone/timezone.validator';
-import { fitDateRangeToDayPeriod } from './date.range.timezone';
 import { formatToISO8601DayStringForUTC } from './date.format';
 
 /**
@@ -521,7 +520,9 @@ export function dateCellTimingEventRange(timing: Pick<DateCellTiming, 'startsAt'
  * @returns
  */
 export function getDateCellTimingFirstEventDateRange(timing: DateCellTimingStartsAtEndRange): DateRange {
-  return fitDateRangeToDayPeriod({ start: timing.startsAt, end: timing.end }, timing.timezone);
+  const duration = calculateExpectedDateCellTimingDuration(timing);
+  const end = addMinutes(timing.startsAt, duration);
+  return { start: timing.startsAt, end };
 }
 
 /**
