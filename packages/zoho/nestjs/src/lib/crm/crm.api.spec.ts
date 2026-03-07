@@ -805,53 +805,18 @@ describe('crm.api', () => {
           });
 
           describe('uploadAttachmentForRecord()', () => {
-            /*
-            it('should upload the attachment using the body', async () => {
-
-              const formData = new FormData();
-
-              formData.append('file', 'text', {
-                contentType: 'text/plain',
-                filename: 'test.txt'
-              });
-
-              const length = formData.getLengthSync();
-              console.log({ length });
+            it('should upload the attachment using a file', async () => {
+              const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
 
               const result = await api.uploadAttachmentForRecord({
                 module: ZOHO_CRM_CONTACTS_MODULE,
                 id: testRecordId,
-                formData: formData as any,
+                file,
                 attachmentCategoryName: 'Others'
-              });
-
-              const textResponse = await result.text();
-
-              console.log({
-                result,
-                textResponse
               });
 
               expect(result).toBeDefined();
             });
-            */
-            /*
-            it('should upload the attachment using the attachment_url', async () => {
-
-              const result = await api.uploadAttachmentForRecord({
-                module: ZOHO_CRM_CONTACTS_MODULE,
-                id: testRecordId,
-                attachmentUrl: 'https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true',
-                attachmentCategoryName: 'Others'
-              });
-
-              console.log({
-                result
-              });
-
-              expect(result).toBeDefined();
-            });
-            */
           });
 
           describe('downloadAttachmentForRecord()', () => {

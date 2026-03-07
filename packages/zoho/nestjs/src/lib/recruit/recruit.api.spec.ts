@@ -811,7 +811,7 @@ describe('recruit.api', () => {
               const result = await api.uploadAttachmentForRecord({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 id: testRecordId,
-                attachmentUrl: 'https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true',
+                attachmentUrl: `https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true&${randomNumber({ min: 100000000000000, max: 999999999999999 })}`,
                 attachmentCategoryName: 'Others'
               });
 

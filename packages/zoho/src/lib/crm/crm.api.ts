@@ -24,7 +24,7 @@ import {
   type KnownZohoCrmAttachmentCategoryName
 } from './crm';
 import { zohoCrmSearchRecordsCriteriaString, type ZohoCrmSearchRecordsCriteriaTreeElement } from './crm.criteria';
-import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, type WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
+import { type ArrayOrValue, type EmailAddress, type Maybe, type PhoneNumber, type SortingOrder, type UniqueModelWithId, asArray, joinStringsWithCommas } from '@dereekb/util';
 import { assertZohoCrmRecordDataArrayResultHasContent, zohoCrmRecordCrudError } from './crm.error.api';
 import { ZOHO_SUCCESS_STATUS, ZohoServerFetchResponseDataArrayError, type ZohoServerErrorDataWithDetails, type ZohoServerErrorStatus, type ZohoServerSuccessCode, type ZohoServerSuccessStatus } from '../zoho.error.api';
 import { type ZohoDateTimeString } from '../zoho.type';
@@ -531,29 +531,19 @@ export const ZOHO_CRM_ATTACHMENT_MAX_SIZE = 20 * 1024 * 1024;
 
 export interface ZohoCrmUploadAttachmentForRecordRequest extends ZohoCrmGetRecordByIdInput {
   /**
-   * Requires the use of a FormData object.
-   *
-   * Max of 20MB are allowed
-   *
-   * @deprecated Use attachmentUrl instead for now.
+   * File to upload as an attachment. Max 20MB.
    */
-  readonly formData?: FormData;
-  /**
-   * File url to pull the file from.
-   *
-   * Either this or formData must be provided.
-   */
-  readonly attachmentUrl?: WebsiteUrlWithPrefix;
+  readonly file: File;
   /**
    * The category id(s) of the attachment.
    *
-   * Either this or attachments_category must be provided.
+   * Either this or attachmentCategoryName must be provided.
    */
   readonly attachmentCategoryId?: ArrayOrValue<ZohoCrmAttachmentCategoryId>;
   /**
    * The category name(s) of the attachment.
    *
-   * Either this or attachments_category_id must be provided.
+   * Either this or attachmentCategoryId must be provided.
    *
    * Example: "Resume"
    */
@@ -566,66 +556,27 @@ export type ZohoCrmUploadAttachmentForRecordFunction = (input: ZohoCrmUploadAtta
 /**
  * Uploads an attachment to a record.
  *
- * https://www.zoho.com/crm/developer-guide/apiv2/upload-attachment.html
+ * https://www.zoho.com/crm/developer/docs/api/v2.1/upload-attachment.html
  */
 export function zohoCrmUploadAttachmentForRecord(context: ZohoCrmContext): ZohoCrmUploadAttachmentForRecordFunction {
   return (input: ZohoCrmUploadAttachmentForRecordRequest) => {
-    const { attachmentCategoryId, attachmentCategoryName, formData } = input;
+    const { attachmentCategoryId, attachmentCategoryName, file } = input;
 
     const urlParams = {
       attachments_category_id: joinStringsWithCommas(attachmentCategoryId),
-      attachments_category: joinStringsWithCommas(attachmentCategoryName),
-      attachment_url: input.attachmentUrl
+      attachments_category: joinStringsWithCommas(attachmentCategoryName)
     };
 
     if (!urlParams.attachments_category_id?.length && !urlParams.attachments_category?.length) {
       throw new Error('attachmentCategoryId or attachmentCategoryName must be provided and not empty.');
     }
 
-    if (formData != null) {
-      delete urlParams.attachment_url;
-    }
+    const url = `/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
+    const body = new FormData();
+    body.append('file', file);
 
-    const url = `https://crmsandbox.zoho.com/crm/v8/${input.module}/${input.id}/${ZOHO_CRM_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
-    let response: Promise<Response>;
-
-    if (urlParams.attachment_url) {
-      response = context.fetch(url, { method: 'POST' });
-    } else if (formData != null) {
-      throw new Error('unsupported currently. Use the attachmentUrl parameter instead.');
-
-      // There is something weird going on with sending requests this way and zoho's server is rejecting it.
-
-      /*
-      response = context.fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'content-length': '210'
-        },
-        body: formData
-      });
-      */
-
-      /*
-      const fullUrl = (context.config.apiUrl as string) + url;
-      const accessToken = await context.accessTokenStringFactory();
-
-      response = fetch(fullUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        },
-        body: formData,
-        method: 'POST'
-      });
-
-      console.log({ response });
-      */
-    } else {
-      throw new Error('body or attachmentUrl must be provided.');
-    }
-
-    return response;
+    // Clear the base Content-Type header (empty string removes it via mergeRequestHeaders) so fetch auto-detects multipart/form-data with the correct boundary from the FormData body.
+    return context.fetch(url, { method: 'POST', headers: { 'Content-Type': '' }, body });
   };
 }
 
