@@ -60,10 +60,6 @@ describe('sign.api', () => {
         sort_order: 'DESC'
       });
 
-      console.log({
-        listResult: listResult.requests[0]
-      });
-
       if (listResult.requests.length > 0) {
         testRequest = listResult.requests[0];
       } else {

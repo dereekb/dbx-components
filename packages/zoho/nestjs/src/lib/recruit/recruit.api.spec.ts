@@ -822,10 +822,11 @@ describe('recruit.api', () => {
           describe('downloadAttachmentForRecord()', () => {
             it('should download the attachment', async () => {
               const attachments = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
-              const attachmentId = attachments.data[0]?.id;
+              const downloadableAttachment = attachments.data.find((x) => x.$type === 'Attachment');
+              const attachmentId = downloadableAttachment?.id;
 
               if (attachmentId) {
-                // No way to add attachments, so don't expect any results.
+                // Only downloadable (non-linked) attachments can be downloaded; linked attachments return DOWNLOAD_NOT_ALLOWED.
                 const result = await api.downloadAttachmentForRecord({
                   id: testRecordId,
                   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
