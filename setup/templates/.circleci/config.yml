@@ -7,6 +7,11 @@ defaults: &defaults
   docker:
     - image: cimg/node:24.13
 
+parameters:
+  run_tests:
+    type: boolean
+    default: true
+
 orbs:
   nx: nrwl/nx@1.7.0
   node: circleci/node@7.2.1
@@ -21,11 +26,11 @@ jobs:
         default: true
       scan_with_snyk:
         type: boolean
-        default: false    # flag true if you want to scan for vulnerabilities with snyk
+        default: false # flag true if you want to scan for vulnerabilities with snyk
     environment:
       CYPRESS_INSTALL_BINARY: 0
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
     steps:
       - checkout
       # install node packages
@@ -58,8 +63,8 @@ jobs:
   test-with-node:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
     steps:
       - checkout
       - attach_workspace:
@@ -77,8 +82,8 @@ jobs:
       GCE_METADATA_HOST: 0.0.0.0
       DETECT_GCP_RETRIES: 0
       METADATA_SERVER_DETECTION: none
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
     steps:
       - checkout
       - attach_workspace:
@@ -88,12 +93,17 @@ jobs:
       # restore the emulators cache
       - restore_cache:
           key: firebase-cache-
-      - run:
-          name: run API_APP_NAME tests
-          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests API_APP_NAME'
-      - run:
-          name: run E2E_APP_NAME tests
-          command: npx firebase --project=default emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
+      # Skip tests if run_tests is false
+      - unless:
+          condition:
+            equal: [false, << pipeline.parameters.run_tests >>]
+          steps:
+            - run:
+                name: run API_APP_NAME tests
+                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests API_APP_NAME'
+            # - run:
+            #    name: run E2E_APP_NAME tests
+            #    command: npx firebase --project=default emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
       # store the emulators cache
       - save_cache:
           key: firebase-cache-
@@ -105,8 +115,8 @@ jobs:
   run-release-and-push-to-main:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
       # SETUP REQUIRED - Set the git username and email to the desired values
       GIT_USER_EMAIL: CI_GIT_USER_EMAIL
       GIT_USER_NAME: CI_GIT_USER_NAME
@@ -118,7 +128,7 @@ jobs:
       # https://circleci.com/docs/2.0/add-ssh-key/#adding-ssh-keys-to-a-job
       - add_ssh_keys:
           fingerprints:
-            - "SET_THIS_VALUE_TO_BE_VALID"
+            - 'SET_THIS_VALUE_TO_BE_VALID'
       - run:
           name: setup git
           command: git config user.email "$GIT_USER_EMAIL" && git config user.name "$GIT_USER_NAME"
@@ -128,7 +138,7 @@ jobs:
           command: npx nx run workspace:release
       - run:
           # we grab the relevant tag names before swapping to main
-          name: "setup env vars for git changes"
+          name: 'setup env vars for git changes'
           command: echo -e "export DEV_TAG_ID=$(git describe --tags --abbrev=0 HEAD^)\nTAG_ID=$(git describe --tags --abbrev=0)" >> $BASH_ENV
       - run:
           # copy the commit message before we swap branches, or it will include unrelated changes. Move tag to the main branch after making the merge commit into main
@@ -146,8 +156,8 @@ jobs:
   deploy-to-firebase-staging:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
@@ -169,8 +179,8 @@ jobs:
   deploy-to-firebase-prod:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
@@ -194,8 +204,8 @@ jobs:
   publish-to-npm:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
-      NX_NO_CLOUD: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
+      NX_NO_CLOUD: 'true'
     steps:
       - checkout
       - attach_workspace:

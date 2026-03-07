@@ -9,6 +9,14 @@ defaults: &defaults
 
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
+parameters:
+  run_tests:
+    type: boolean
+    default: true
+  run_setup_test:
+    type: boolean
+    default: true
+
 orbs:
   nx: nrwl/nx@1.7.0
   node: circleci/node@7.2.1
@@ -139,18 +147,23 @@ jobs:
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
           key: firebase-cache-
-      - run:
-          name: run firebase tests
-          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase'
-      - run:
-          name: run firebase-server tests
-          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase-server'
-      - run:
-          name: run dbx-firebase tests
-          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
-      - run:
-          name: run demo-api tests
-          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
+      # Skip tests if run_tests is false
+      - unless:
+          condition:
+            equal: [false, << pipeline.parameters.run_tests >>]
+          steps:
+            - run:
+                name: run firebase tests
+                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase'
+            - run:
+                name: run firebase-server tests
+                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase-server'
+            - run:
+                name: run dbx-firebase tests
+                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
+            - run:
+                name: run demo-api tests
+                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
       - save_cache:
           key: firebase-cache-
           paths:
@@ -170,33 +183,38 @@ jobs:
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
           key: firebase-cache-
-      - run:
-          name: setup git
-          command: git config --global user.email "ci@dereekb.com" && git config --global user.name "ci"
-      - run:
-          name: "Setup env vars for setup script"
-          command: echo -e 'export DBX_SETUP_PROJECT_IS_CI_TEST="y"\nDBX_SETUP_PROJECT_BRANCH="$CIRCLE_BRANCH"\nDBX_SETUP_PROJECT_MANUAL="n"' >> $BASH_ENV
-      - run:
-          name: Create output folder for setup-project.sh testing
-          command: mkdir ~/setup-test
-      - run:
-          name: run setup-project.sh script
-          command: cd setup && ./setup-project.sh myprojectapp myproject myProject 9200 ~/setup-test
-      - run:
-          name: replace test project's @dereekb in node_modules with generated packages (we don't want symlinks)
-          command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
-      - run:
-          name: print root package.json
-          command: cd ~/setup-test/myproject && cat package.json
-      - run:
-          name: Try build components
-          command: cd ~/setup-test/myproject && npx nx build myproject-components
-      - run:
-          name: Try build
-          command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
-      - run:
-          name: Run tests
-          command: cd ~/setup-test/myproject && npx nx test myproject-components && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-firebase' && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
+      # Skip setup test if run_setup_test is false
+      - unless:
+          condition:
+            equal: [false, << pipeline.parameters.run_setup_test >>]
+          steps:
+            - run:
+                name: setup git
+                command: git config --global user.email "ci@dereekb.com" && git config --global user.name "ci"
+            - run:
+                name: "Setup env vars for setup script"
+                command: echo -e 'export DBX_SETUP_PROJECT_IS_CI_TEST="y"\nDBX_SETUP_PROJECT_BRANCH="$CIRCLE_BRANCH"\nDBX_SETUP_PROJECT_MANUAL="n"' >> $BASH_ENV
+            - run:
+                name: Create output folder for setup-project.sh testing
+                command: mkdir ~/setup-test
+            - run:
+                name: run setup-project.sh script
+                command: cd setup && ./setup-project.sh myprojectapp myproject myProject 9200 ~/setup-test
+            - run:
+                name: replace test project's @dereekb in node_modules with generated packages (we don't want symlinks)
+                command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
+            - run:
+                name: print root package.json
+                command: cd ~/setup-test/myproject && cat package.json
+            - run:
+                name: Try build components
+                command: cd ~/setup-test/myproject && npx nx build myproject-components
+            - run:
+                name: Try build
+                command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
+            - run:
+                name: Run tests
+                command: cd ~/setup-test/myproject && npx nx test myproject-components && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-firebase' && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
     # todo: add checks, etc.
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
