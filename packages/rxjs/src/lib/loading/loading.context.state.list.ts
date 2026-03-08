@@ -56,10 +56,32 @@ export type ListLoadingStateContextConfig<L, S extends ListLoadingState<L> = Lis
 export type ListLoadingStateContextInput<L, S extends ListLoadingState<L> = ListLoadingState<L>> = Omit<LoadingStateContextInput<L[], S>, 'loadingEventForLoadingPair'> | ListLoadingStateContextConfig<L, S>;
 
 /**
- * Creates a ListLoadingStateContext.
+ * Creates a {@link MutableListLoadingStateContext} that wraps a {@link ListLoadingState} observable
+ * and provides list-specific reactive accessors like `isEmpty$` and `list$`.
  *
- * @param input Optional configuration for the ListLoadingStateContext.
- * @returns A ListLoadingStateContext.
+ * Extends {@link loadingStateContext} with list-aware behavior, including optional array length limiting
+ * via {@link LimitArrayConfig} and empty-state detection streams.
+ *
+ * @example
+ * ```ts
+ * const context = listLoadingStateContext<string>();
+ *
+ * // Set a state observable
+ * context.setStateObs(of(successResult(['a', 'b', 'c'])));
+ *
+ * // Access the list (defaults to [] when undefined)
+ * context.list$.subscribe((list) => console.log(list));
+ * // => ['a', 'b', 'c']
+ *
+ * // Check if the list is empty
+ * context.isEmpty$.subscribe((empty) => console.log('Empty:', empty));
+ * // => false
+ *
+ * context.destroy();
+ * ```
+ *
+ * @param input - optional observable or config to initialize the context
+ * @returns a mutable list loading state context
  */
 export function listLoadingStateContext<L, S extends ListLoadingState<L> = ListLoadingState<L>>(input?: ListLoadingStateContextInput<L, S>): MutableListLoadingStateContext<L, S> {
   const limitArrayConfig = (typeof input === 'object' ? input : undefined) as Maybe<Partial<LimitArrayConfig>>;

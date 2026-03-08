@@ -134,16 +134,16 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 39 | loading.ts | **NEEDS SPEC** | `[ ]` |
-| 40 | loading.context.ts | **NEEDS SPEC** | `[ ]` |
-| 41 | loading.context.rxjs.ts | **NEEDS SPEC** | `[ ]` |
-| 42 | loading.context.simple.ts | **NEEDS SPEC** | `[ ]` |
-| 43 | loading.context.state.ts | YES | `[ ]` |
-| 44 | loading.context.state.list.ts | YES | `[ ]` |
-| 45 | loading.context.value.ts | YES | `[ ]` |
-| 46 | loading.state.ts | YES | `[ ]` |
-| 47 | loading.state.list.ts | YES | `[ ]` |
-| 48 | loading.state.rxjs.ts | YES | `[ ]` |
+| 39 | loading.ts | **NEEDS SPEC** | `[S]` |
+| 40 | loading.context.ts | **NEEDS SPEC** | `[S]` |
+| 41 | loading.context.rxjs.ts | YES | `[x]` |
+| 42 | loading.context.simple.ts | YES | `[x]` |
+| 43 | loading.context.state.ts | YES | `[x]` |
+| 44 | loading.context.state.list.ts | YES | `[x]` |
+| 45 | loading.context.value.ts | YES | `[x]` |
+| 46 | loading.state.ts | YES | `[x]` |
+| 47 | loading.state.list.ts | YES | `[x]` |
+| 48 | loading.state.rxjs.ts | YES | `[x]` |
 
 ---
 
