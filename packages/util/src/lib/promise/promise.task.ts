@@ -15,6 +15,9 @@ export type NamedAsyncTask<T = void> = {
   readonly run: AsyncTask<T>;
 };
 
+/**
+ * A record of named async tasks, keyed by name.
+ */
 export type NamedAsyncTaskRecord<T = void> = Record<string, AsyncTask<T>>;
 
 /**
@@ -115,11 +118,12 @@ export function runNamedAsyncTasksFunction<T = void>(config?: RunNamedAsyncTasks
 }
 
 /**
- * Runs the input named tasks and returns the results.
+ * Convenience function that creates a {@link RunNamedAsyncTasksFunction} and immediately
+ * executes it with the given tasks.
  *
- * @param inputTasks
- * @param options
- * @returns
+ * @param inputTasks - An array of named tasks or a record of task functions keyed by name.
+ * @param config - Optional configuration for callbacks and default execution options.
+ * @returns The result containing successful and failed tasks.
  */
 export async function runNamedAsyncTasks<T = void>(inputTasks: RunNamedAsyncTasksInput<T>, config?: RunNamedAsyncTasksFunctionConfig<T>): Promise<RunNamedAsyncTasksResult<T>> {
   return runNamedAsyncTasksFunction(config)(inputTasks);

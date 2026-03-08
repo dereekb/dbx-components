@@ -13,16 +13,27 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
   readonly status: number;
 }
 
+/**
+ * Type guard that checks if the input is a ServerError (has both status and code properties).
+ *
+ * @param input - The value to check
+ * @returns True if the input is a ServerError
+ */
 export function isServerError(input: unknown): input is ServerError {
-  return typeof input === 'object' && (input as ServerError).status != null && (input as ServerError).code != null;
+  return input != null && typeof input === 'object' && (input as ServerError).status != null && (input as ServerError).code != null;
 }
 
+/**
+ * Union type for either a plain error message string or a partial server error object.
+ */
 export type ErrorMessageOrPartialServerError<T = ServerErrorResponseData> = string | Partial<ReadableDataError | ServerError<T>>;
 
 /**
- * Converts the input to a Partial ServerError
+ * Normalizes a string or partial error into a Partial ServerError object.
+ * If the input is a string, it becomes the message property.
  *
- * @param message
+ * @param messageOrError - A string message or partial server error object
+ * @returns A partial ServerError object
  */
 export function partialServerError<T = ServerErrorResponseData>(message: string): Partial<ServerError<T>>;
 export function partialServerError<T = ServerErrorResponseData>(serverError: Partial<ReadableDataError | ServerError<T>>): Partial<ServerError<T>>;
@@ -39,8 +50,17 @@ export function partialServerError<T = ServerErrorResponseData>(messageOrError: 
   return serverError;
 }
 
+/**
+ * Configuration for creating a ServerError, combining ServerError and optional CodedError properties.
+ */
 export interface ServerErrorMakeConfig<T> extends ServerError<T>, Partial<CodedError> {}
 
+/**
+ * Creates a ServerError from the given configuration.
+ *
+ * @param config - The server error configuration
+ * @returns A ServerError object
+ */
 export function serverError<T>(config: ServerErrorMakeConfig<T>): ServerError<T> {
   return {
     ...config,
@@ -65,6 +85,9 @@ export class ServerErrorResponse<T extends ServerErrorResponseData = ServerError
   }
 }
 
+/**
+ * Server error response with a 401 Unauthorized status.
+ */
 export class UnauthorizedServerErrorResponse extends ServerErrorResponse {
   constructor({ code, data, message }: Partial<ServerError>) {
     super({ status: 401, message: message ?? 'Unauthorized', data, code });

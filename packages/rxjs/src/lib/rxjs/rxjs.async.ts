@@ -48,10 +48,23 @@ export interface AsyncPusherConfig<T> {
 }
 
 /**
- * Creates an AsyncPusher.
+ * Creates an {@link AsyncPusher} — a callable function backed by a throttled {@link BehaviorSubject}.
  *
- * @param config
- * @returns
+ * Each call pushes a value onto the internal subject and returns the shared, throttled observable.
+ * Useful for debouncing repeated calls while sharing a single observable output.
+ *
+ * @example
+ * ```ts
+ * const pusher = asyncPusher<string>({ throttle: 100 });
+ * const result$ = pusher('hello');
+ * // subsequent calls within 100ms are throttled
+ * pusher('world');
+ * // clean up
+ * pusher.destroy();
+ * ```
+ *
+ * @param config - optional throttle, distinct, and pipe settings
+ * @returns an async pusher function
  */
 export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T> {
   const { throttle = DEFAULT_ASYNC_PUSHER_THROTTLE, cleanupObs, distinct = true, pipe: pipeObs } = config;
@@ -105,12 +118,12 @@ export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T
 export type AsyncPusherCache<T> = CachedFactoryWithInput<AsyncPusher<T>, Observable<unknown>>;
 
 /**
- * Creates a cache that returns an AsyncPusher.
+ * Creates a cached factory that lazily creates and returns an {@link AsyncPusher}.
  *
- * The CachedFactoryWithInput resunt can optionally be pass an observable to watch for the cleanup process.
+ * The factory optionally accepts a cleanup observable — when it completes, the pusher is destroyed.
  *
- * @param config
- * @returns
+ * @param config - optional config passed to the underlying async pusher
+ * @returns a cached factory that produces an async pusher
  */
 export function asyncPusherCache<T>(config?: AsyncPusherConfig<T>): AsyncPusherCache<T> {
   return cachedGetter((cleanupObs?: Observable<unknown>) => {

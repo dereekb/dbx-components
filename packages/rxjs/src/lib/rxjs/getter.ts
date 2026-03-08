@@ -8,7 +8,7 @@ export type ObservableOrValue<T> = T | Observable<T>;
 export type MaybeObservableOrValue<T> = Maybe<ObservableOrValue<Maybe<T>>>;
 
 /**
- * Wraps the input value as an observable, if it is not an observable.
+ * Wraps a value as an observable using `of()`, or returns it directly if it is already an observable.
  */
 export function asObservable<T>(valueOrObs: ObservableOrValue<T>): Observable<T>;
 export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observable<Maybe<T>>;
@@ -21,18 +21,19 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observ
 }
 
 /**
- * Switch map for an ObservableGetter that pipes through the value.
+ * RxJS operator that flattens an emitted {@link ObservableOrValue} into its unwrapped value via `switchMap`.
  *
- * @returns OperatorFunction<ObservableOrValue<T>, T>
+ * @returns an operator that unwraps ObservableOrValue emissions
  */
 export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
   return switchMap((x) => asObservable(x));
 }
 
 /**
- * Switch map for an ObservableGetter that pipes through the Maybe value.
+ * RxJS operator that flattens an emitted Maybe<{@link ObservableOrValue}> into its unwrapped value,
+ * emitting `undefined` when the input is nullish.
  *
- * @returns OperatorFunction<Maybe<ObservableOrValue<T>>, Maybe<T>>
+ * @returns an operator that unwraps Maybe<ObservableOrValue> emissions
  */
 export function maybeValueFromObservableOrValue<T>(): OperatorFunction<MaybeObservableOrValue<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservable(x) : of(undefined)));
@@ -46,6 +47,14 @@ export type ObservableOrValueFactoryWithInput<T extends GetterDistinctValue, A> 
 export type ObservableFactoryWithRequiredInput<T extends GetterDistinctValue, A> = FactoryWithRequiredInput<ObservableOrValue<T>, A>;
 export type MaybeObservableOrValueGetter<T> = Maybe<ObservableOrValueGetter<Maybe<T>>>;
 
+/**
+ * Resolves an {@link ObservableOrValueGetter} into an Observable by first evaluating the getter,
+ * then wrapping the result with {@link asObservable} if needed.
+ *
+ * @param input - a getter or value that produces an observable or value
+ * @param args - optional arguments passed to the getter
+ * @returns an observable of the resolved value
+ */
 export function asObservableFromGetter<T>(input: ObservableOrValueGetter<T>): Observable<T>;
 export function asObservableFromGetter<T>(this: unknown, input: ObservableOrValueGetter<T>): Observable<T>;
 export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableFactoryWithRequiredInput<T, A>, args: A): Observable<T>;
@@ -56,23 +65,28 @@ export function asObservableFromGetter<T, A>(this: unknown, input: ObservableOrV
 }
 
 /**
- * Switch map for an ObservableOrValueGetter that pipes through the value.
+ * RxJS operator that flattens an emitted {@link ObservableOrValueGetter} into its resolved value via `switchMap`.
  *
- * @returns
+ * @returns an operator that unwraps getter emissions
  */
 export function valueFromObservableOrValueGetter<T>(): OperatorFunction<ObservableOrValueGetter<T>, T> {
   return switchMap((x) => asObservableFromGetter(x));
 }
 
+/**
+ * RxJS operator that flattens an emitted Maybe<{@link ObservableOrValueGetter}> into its resolved value,
+ * emitting `undefined` when the input is nullish.
+ */
 export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<MaybeObservableOrValueGetter<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservableFromGetter(x) : of(undefined)));
 }
 
 /**
- * Convenience function for subscribing to a ObservableOrValue<T> value as an observable.
+ * Subscribes to an {@link ObservableOrValue} and calls the observer/next function with each emitted value.
  *
- * @param input
- * @param next
+ * @param input - the observable or value to subscribe to
+ * @param observer - callback or partial observer
+ * @returns the subscription
  */
 export function useAsObservable<T>(input: ObservableOrValue<T>, next: (value: T) => void): Subscription;
 export function useAsObservable<T>(input: ObservableOrValue<T>, observer: Partial<Observer<T>>): Subscription;

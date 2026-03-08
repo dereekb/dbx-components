@@ -2,12 +2,14 @@ import { type Getter, type Maybe } from '@dereekb/util';
 import { combineLatest, type Observable, type MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize, of, mergeMap, from } from 'rxjs';
 
 /**
- * Merges both startWith and tapFirst to initialize a pipe.
+ * Combines `startWith` and {@link tapFirst} to initialize an observable pipe with a side-effect on the first emission.
  *
- * @param initial
- * @param tap
- * @param skipFirst
- * @returns
+ * Emits the `initial` value first, then taps on the first emitted value to run the provided callback.
+ *
+ * @param tap - side-effect function called with the first value
+ * @param initial - optional starting value emitted before the source
+ * @param skipFirst - if true, skips tapping the initial value
+ * @returns an operator that initializes the pipe with a tap
  */
 export function initialize<T>(tap: (value: Maybe<T>) => void, initial?: Maybe<T>, skipFirst?: boolean): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
@@ -21,11 +23,11 @@ export function initialize<T>(tap: (value: Maybe<T>) => void, initial?: Maybe<T>
 }
 
 /**
- * Taps once on the first element.
+ * Executes a side-effect on the first emission from the observable, then passes all values through.
  *
- * @param tap
- * @param skipFirst
- * @returns
+ * @param tap - the side-effect function to call once
+ * @param skipFirst - if true, skips the very first emission before tapping
+ * @returns an operator that taps the first value
  */
 export function tapFirst<T>(tap: (value: T) => void, skipFirst = false): MonoTypeOperatorFunction<T> {
   return skipWhile((value, i = 0) => {
@@ -35,13 +37,13 @@ export function tapFirst<T>(tap: (value: T) => void, skipFirst = false): MonoTyp
 }
 
 /**
- * Prevents an observable from emitting complete until it is unsubscribed from.
+ * Wraps an observable so that it never emits `complete` until it is unsubscribed.
  *
- * The subscription will never have complete() called as complete only gets called after it unsubscribes,
- * so use finalize() if additional cleanup is required.
+ * The subscription will never have `complete()` called since it only triggers after unsubscription.
+ * Use `finalize()` for additional cleanup.
  *
- * @param obs
- * @returns
+ * @param obs - the source observable to wrap
+ * @returns an observable that only completes on unsubscription
  */
 export function preventComplete<T>(obs: Observable<T>): Observable<T> {
   const complete = new BehaviorSubject<number>(0);
@@ -56,12 +58,18 @@ export function preventComplete<T>(obs: Observable<T>): Observable<T> {
 }
 
 /**
- * Similar to from, but uses a Getter to keeps the Observable cold until it is subscribed to, then calls the promise or observable.
+ * Creates a cold observable that defers execution of the getter until subscription, then shares the result.
  *
- * The result value of the promise or the latest value of the observable is shared.
+ * Unlike `from()`, the promise/observable is not created until the first subscriber connects.
  *
- * @param getter
- * @returns
+ * @example
+ * ```ts
+ * const data$ = lazyFrom(() => fetch('/api/data').then(r => r.json()));
+ * // The fetch is not called until data$ is subscribed to
+ * ```
+ *
+ * @param getter - factory that returns a Promise or Observable
+ * @returns a shared observable that defers execution until subscription
  */
 export function lazyFrom<T>(getter: Getter<Promise<T> | Observable<T>>): Observable<T> {
   return of(undefined).pipe(

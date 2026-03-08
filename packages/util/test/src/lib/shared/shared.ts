@@ -17,8 +17,8 @@ export type TestDoneCallback = ((...args: any[]) => any) & {
 
 /**
  * Passes the error to the TestDoneCallback.
- * @param done
- * @param e
+ * @param done - the test framework's done callback to signal completion or failure
+ * @param e - the error to pass to the callback; defaults to a generic error
  */
 export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = new Error('failed test')) {
   if (done.fail != null) {
@@ -28,9 +28,20 @@ export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = ne
   }
 }
 
+/**
+ * A test function that receives a done callback to signal completion.
+ */
 export type TestProvidesCallbackWithDone = (cb: TestDoneCallback) => void | undefined;
+
+/**
+ * A test function that either uses a done callback or returns a promise to signal completion.
+ */
 export type TestProvidesCallback = TestProvidesCallbackWithDone | (() => Promise<unknown>);
 
+/**
+ * Reference wrapper around a {@link TestDoneCallback} that exposes the underlying promise,
+ * allowing callers to await the done signal.
+ */
 export type TestDoneCallbackRef = Omit<TestDoneCallback, 'fail'> & {
   readonly _promise: PromiseReference<void>;
   readonly done: TestDoneCallback;
@@ -102,6 +113,9 @@ export interface TestFixture<I> {
   readonly instance: TestFixtureInstance<I>;
 }
 
+/**
+ * Cleanup function returned by {@link TestContextFixture.setInstance} to clear the current instance after a test completes.
+ */
 export type TestContextFixtureClearInstanceFunction = () => void;
 
 /**
@@ -152,6 +166,10 @@ export abstract class AbstractChildTestContextFixture<I, P extends TestContextFi
   }
 }
 
+/**
+ * Function that declares tests using the provided fixture. Called during test suite setup
+ * to register test cases that will later run against fresh fixture instances.
+ */
 export type BuildTestsWithContextFunction<F> = (fixture: F) => void;
 
 /**
@@ -203,8 +221,8 @@ export interface TestContextBuilderConfig<I, F extends TestContextFixture<I>, C>
 /**
  * Creates a TestContextBuilderFunction given the input builder.
  *
- * @param builder
- * @returns
+ * @param builder - configuration defining how to build configs, fixtures, and manage instance lifecycle
+ * @returns a builder function that accepts optional partial config and produces a {@link TestContextFactory}
  */
 export function testContextBuilder<I, F extends TestContextFixture<I>, C>(builder: TestContextBuilderConfig<I, F, C>): TestContextBuilderFunction<I, F, C> {
   return (inputConfig?: Partial<C>) => {
@@ -239,6 +257,10 @@ export function testContextBuilder<I, F extends TestContextFixture<I>, C>(builde
   };
 }
 
+/**
+ * Configuration for {@link useTestContextFixture} that defines how to initialize and destroy
+ * test instances, along with the fixture and test-building function.
+ */
 export interface UseContextFixture<C extends TestContextFixture<I>, I> {
   readonly fixture: C;
   readonly buildTests: BuildTestsWithContextFunction<C>;
@@ -247,7 +269,12 @@ export interface UseContextFixture<C extends TestContextFixture<I>, I> {
 }
 
 /**
- * Creates a test context and configurations that will initialize an instance
+ * Registers beforeEach/afterEach hooks that manage instance lifecycle for a test context fixture.
+ *
+ * Before each test, a new instance is created and set on the fixture. After each test, the instance
+ * is cleared and optionally destroyed. Test declarations happen synchronously between the hooks.
+ *
+ * @param config - fixture, test builder, and instance lifecycle functions
  */
 export function useTestContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;

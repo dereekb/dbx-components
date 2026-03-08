@@ -2,57 +2,75 @@ import { filterEmptyArrayValues } from '../array/array.value';
 import { type Maybe } from './maybe.type';
 
 /**
- * City name
+ * City name string (e.g. "San Antonio").
  */
 export type CityString = string;
 
 /**
- * Full state name
+ * Full state name string (e.g. "Texas").
  */
 export type StateString = string;
 
 /**
- * State code
+ * Two-letter US state code (e.g. "TX").
  */
 export type StateCodeString = string;
 
 /**
- * Full country name
+ * Full country name string (e.g. "United States").
  */
 export type CountryString = string;
 
 /**
- * Country code
+ * Country code string (e.g. "US").
  */
 export type CountryCodeString = string;
 
+/**
+ * A single line in a street address.
+ */
 export type AddressLineString = string;
+
+/**
+ * Postal/zip code string.
+ */
 export type ZipCodeString = string;
 
 /**
- * Basic US Address that has 2 lines, a city, state, and zip code.
+ * Basic US address with two address lines, city, state, and zip code.
  */
 export interface UnitedStatesAddress {
+  /** Primary street address line. */
   line1: AddressLineString;
+  /** Secondary address line (apartment, suite, etc.). */
   line2?: AddressLineString;
+  /** City name. */
   city: CityString;
+  /** State name or two-letter state code. */
   state: StateString | StateCodeString;
+  /** Postal/zip code. */
   zip: ZipCodeString;
 }
 
 /**
- * UnitedStatesAddress with an additional name field for display.
+ * Extends {@link UnitedStatesAddress} with optional contact information for display purposes,
+ * such as a recipient name and phone number.
  */
 export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
+  /** Contact name associated with this address. */
   name?: string;
+  /** Phone number associated with this address. */
   phone?: string;
 }
 
 /**
- * Creates a string from a UnitedStatesAddress. Linebreaks are added by default.
+ * Formats a {@link UnitedStatesAddress} or {@link UnitedStatesAddressWithContact} into a human-readable multi-line string.
  *
- * @param input
- * @returns
+ * Empty or undefined fields are omitted. If the input includes contact fields (name, phone), they appear at the top.
+ * Returns `undefined` if no meaningful parts are present.
+ *
+ * @param input - the address to format
+ * @param addLinebreaks - whether to join parts with newlines (default `true`) or concatenate them directly
  */
 export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddress | UnitedStatesAddressWithContact>>, addLinebreaks = true): Maybe<string> {
   const { name, phone, line1, line2, zip, state, city } = (input as UnitedStatesAddressWithContact) ?? {};
@@ -87,29 +105,61 @@ export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddre
 }
 
 /**
- * Returns true if the input address is completely configured and not missing any info.
+ * Checks whether the input address has all required fields populated (line1, city, state, zip).
  *
- * @param input
- * @returns
+ * Useful for validating an address before submission or display.
+ *
+ * @param input - the address to validate
+ *
+ * @example
+ * ```ts
+ * const address: UnitedStatesAddress = {
+ *   line1: 'hello world',
+ *   city: 'San Antonio',
+ *   state: 'TX',
+ *   zip: '78216'
+ * };
+ *
+ * isCompleteUnitedStatesAddress(address);
+ * // true
+ * ```
  */
 export function isCompleteUnitedStatesAddress(input: Maybe<UnitedStatesAddress>): boolean {
   return input != null ? Boolean(input.line1 && input.city && input.state && input.zip) : false;
 }
 
 /**
- * Regex expression for all US states and territories.
+ * Regex that matches valid two-letter US state and territory codes (uppercase only).
+ *
+ * Includes all 50 states plus DC, PR, GU, AS, MP, VI, FM, MH, and PW.
  */
 export const US_STATE_CODE_STRING_REGEX = /^((A[LKSZR])|(C[AOT])|(D[EC])|(F[ML])|(G[AU])|(HI)|(I[DLNA])|(K[SY])|(LA)|(M[EHDAINSOT])|(N[EVHJMYCD])|(MP)|(O[HKR])|(P[WAR])|(RI)|(S[CD])|(T[NX])|(UT)|(V[TIA])|(W[AVIY]))$/;
 
+/**
+ * Tests whether the input string is a valid two-letter US state or territory code.
+ *
+ * Only matches uppercase codes; lowercase input returns `false`.
+ *
+ * @param input - the string to test
+ *
+ * @example
+ * ```ts
+ * isUsStateCodeString('TX');
+ * // true
+ *
+ * isUsStateCodeString('XX');
+ * // false
+ * ```
+ */
 export function isUsStateCodeString(input: string): boolean {
   return US_STATE_CODE_STRING_REGEX.test(input);
 }
 
 /**
- * Simple regex expression for zip codes.
+ * Simple regex for validating postal/zip codes.
  *
- * Credit to:
+ * Matches alphanumeric codes between 2 and 12 characters, allowing hyphens and spaces in the middle.
  *
- * https://stackoverflow.com/a/19844362
+ * Credit: https://stackoverflow.com/a/19844362
  */
 export const ZIP_CODE_STRING_REGEX = /^[a-z0-9][a-z0-9\- ]{0,10}[a-z0-9]$/;

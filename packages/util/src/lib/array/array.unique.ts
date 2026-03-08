@@ -7,10 +7,22 @@ import { MAP_IDENTITY } from '../value/map';
 import { type Building } from '../value/build';
 import { type DecisionFunction } from '../value/decision';
 
+/**
+ * Concatenates multiple arrays and returns only unique values.
+ *
+ * @param arrays - Arrays to concatenate. Null/undefined arrays are ignored.
+ * @returns Array containing only unique values from all input arrays.
+ */
 export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {
   return unique(concatArrays(...arrays));
 }
 
+/**
+ * Flattens a 2D array and returns only unique values.
+ *
+ * @param array - Two-dimensional array to flatten and deduplicate.
+ * @returns Array containing only unique values from the flattened input.
+ */
 export function flattenArrayUnique<T extends PrimativeKey = PrimativeKey>(array: T[][]): T[] {
   return unique(flattenArray(array));
 }
@@ -18,9 +30,9 @@ export function flattenArrayUnique<T extends PrimativeKey = PrimativeKey>(array:
 /**
  * Filters the input values and only returns unique values.
  *
- * @param values
- * @param exclude
- * @returns
+ * @param values - Array of primitive-key values to deduplicate.
+ * @param excludeInput - Optional keys or values to exclude from the result.
+ * @returns Array containing only unique values with exclusions removed.
  */
 export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, T>): T[] {
   const unique = new Set(values);
@@ -40,18 +52,42 @@ export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], exclu
  */
 export type FilterUniqueFunction<T, K extends PrimativeKey = PrimativeKey> = (input: T[], exclude?: FilterUniqueFunctionExcludeKeysInput<T, K>) => T[];
 
+/**
+ * Input for specifying additional keys to include in uniqueness checks. Accepts either a raw array of keys or a {@link FilterUniqueFunctionAdditionalKeys} object.
+ */
 export type FilterUniqueFunctionAdditionalKeysInput<T, K extends PrimativeKey = PrimativeKey> = K[] | FilterUniqueFunctionAdditionalKeys<T, K>;
+
+/**
+ * Input for specifying keys or values to exclude from unique filtering. Accepts either a raw array of values or a {@link FilterUniqueFunctionAdditionalKeys} object.
+ */
 export type FilterUniqueFunctionExcludeKeysInput<T, K extends PrimativeKey = PrimativeKey> = T[] | FilterUniqueFunctionAdditionalKeys<T, K>;
 
+/**
+ * Provides additional keys and/or values to seed the uniqueness filter, causing those entries to be treated as already seen.
+ */
 export interface FilterUniqueFunctionAdditionalKeys<T, K extends PrimativeKey = PrimativeKey> {
   readonly keys?: Maybe<K[]>;
   readonly values?: Maybe<T[]>;
 }
 
+/**
+ * Reads and resolves keys from a {@link FilterUniqueFunctionAdditionalKeysInput}, handling both raw key arrays and structured input objects.
+ *
+ * @param additionalKeysInput - Input containing keys to resolve.
+ * @param readKey - Function to extract a key from a value.
+ * @returns Flat array of resolved non-null keys.
+ */
 export function readKeysFromFilterUniqueFunctionAdditionalKeysInput<T, K extends PrimativeKey = PrimativeKey>(additionalKeysInput: Maybe<FilterUniqueFunctionAdditionalKeysInput<T, K>>, readKey: ReadKeyFunction<T, K>): K[] {
   return filterMaybeArrayValues(additionalKeysInput != null ? (Array.isArray(additionalKeysInput) ? additionalKeysInput : readKeysFromFilterUniqueFunctionAdditionalKeys<T, K>(additionalKeysInput, readKey)) : []);
 }
 
+/**
+ * Reads keys from a {@link FilterUniqueFunctionAdditionalKeys} object by combining explicit keys with keys derived from values.
+ *
+ * @param input - Object containing explicit keys and/or values to derive keys from.
+ * @param readKey - Function to extract a key from a value.
+ * @returns Array of keys, which may include null/undefined entries.
+ */
 export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends PrimativeKey = PrimativeKey>(input: FilterUniqueFunctionAdditionalKeys<T, K>, readKey: ReadKeyFunction<T, K>): Maybe<K>[] {
   const keys = new Set<Maybe<K>>(input.keys);
 
@@ -63,11 +99,11 @@ export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends Prim
 }
 
 /**
- * Creates a FilterUniqueFunction.
+ * Creates a {@link FilterUniqueFunction} that deduplicates items by their computed key.
  *
- * @param readKey
- * @param additionalKeys
- * @returns
+ * @param readKey - Function to extract a unique key from each item.
+ * @param additionalKeysInput - Optional keys or values to pre-seed as already seen, causing them to be excluded.
+ * @returns A reusable filter function that removes duplicate items from arrays.
  */
 export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>, additionalKeysInput?: FilterUniqueFunctionAdditionalKeysInput<T, K>): FilterUniqueFunction<T, K> {
   const baseKeys: K[] = readKeysFromFilterUniqueFunctionAdditionalKeysInput(additionalKeysInput, readKey);
@@ -96,6 +132,14 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
   };
 }
 
+/**
+ * Filters an array to contain only items with unique keys.
+ *
+ * @param values - Array of items to deduplicate.
+ * @param readKey - Function to extract a unique key from each item.
+ * @param additionalKeys - Optional keys to pre-seed as already seen, excluding matching items.
+ * @returns Array containing only the first occurrence of each uniquely-keyed item.
+ */
 export function filterUniqueValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
   return filterUniqueFunction(readKey, additionalKeys)(values);
 }
@@ -105,6 +149,12 @@ export function filterUniqueValues<T, K extends PrimativeKey = PrimativeKey>(val
  */
 export type IsUniqueKeyedFunction<T> = DecisionFunction<T[]>;
 
+/**
+ * Creates an {@link IsUniqueKeyedFunction} that checks whether all items in an array have unique keys.
+ *
+ * @param readKey - Function to extract a unique key from each item.
+ * @returns A decision function that returns true if all items have distinct keys.
+ */
 export function isUniqueKeyedFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): IsUniqueKeyedFunction<T> {
   return (input) => {
     const keys = new Set<Maybe<K>>();
@@ -144,7 +194,10 @@ export type AllowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey> = Dec
 };
 
 /**
- * Creates a new AllowValueOnceFilter.
+ * Creates a new {@link AllowValueOnceFilter} that permits each unique key only on its first encounter.
+ *
+ * @param inputReadKey - Optional function to extract a key from each value. Defaults to identity.
+ * @returns A stateful filter function that returns true only for the first occurrence of each key.
  */
 export function allowValueOnceFilter<T extends PrimativeKey = PrimativeKey>(): AllowValueOnceFilter<T, T>;
 export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(readKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K>;

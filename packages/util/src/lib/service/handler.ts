@@ -6,7 +6,7 @@ import { type PromiseOrValue } from '../promise/promise.type';
 import { setKeysOnMap } from '../map/map';
 
 /**
- * Key used to signify
+ * Special key used to register a catch-all handler that matches any unhandled key.
  */
 export const CATCH_ALL_HANDLE_RESULT_KEY = '__CATCH_ALL_HANDLE_RESULT_KEY__';
 
@@ -22,7 +22,14 @@ export type HandleResult = boolean;
  */
 export type InternalHandlerFunctionHandleResult = HandleResult | void;
 
+/**
+ * The type of the catch-all handler key constant.
+ */
 export type HandlerCatchAllKey = typeof CATCH_ALL_HANDLE_RESULT_KEY;
+
+/**
+ * A handler key that is either a specific key type or the catch-all key.
+ */
 export type HandlerKey<K extends PrimativeKey = string> = K | HandlerCatchAllKey;
 
 /**
@@ -37,6 +44,9 @@ export type HandlerFunction<T, R = HandleResult> = (value: T) => Promise<R>;
  */
 export type InternalHandlerFunction<T, R = HandleResult> = (value: T) => PromiseOrValue<R | void>;
 
+/**
+ * Provides methods to register handler functions for specific keys.
+ */
 export interface HandlerSetAccessor<T, K extends PrimativeKey = string, R = HandleResult> {
   /**
    * Adds a new handler function to the current handler.
@@ -53,6 +63,9 @@ export interface HandlerSetAccessor<T, K extends PrimativeKey = string, R = Hand
   setCatchAll(handle: InternalHandlerFunction<T, R>): void;
 }
 
+/**
+ * Extends {@link HandlerSetAccessor} with a key reader and a bind-aware set method.
+ */
 export interface HandlerAccessor<T, K extends PrimativeKey = string, R = HandleResult> extends HandlerSetAccessor<T, K, R> {
   /**
    * Used to read a handler key from the input value.
@@ -69,14 +82,34 @@ export interface HandlerAccessor<T, K extends PrimativeKey = string, R = HandleR
   bindSet(bindTo: unknown, key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T, R>): void;
 }
 
+/**
+ * A callable handler function combined with its accessor interface for registering sub-handlers.
+ */
 export type Handler<T, K extends PrimativeKey = string, R = HandleResult> = HandlerFunction<T, R> & HandlerAccessor<T, K, R>;
+
+/**
+ * Factory that creates new {@link Handler} instances.
+ */
 export type HandlerFactory<T, K extends PrimativeKey = string, R = HandleResult> = () => Handler<T, K, R>;
 
+/**
+ * Options for configuring default and negative results in a {@link HandlerFactory}.
+ */
 export interface HandlerFactoryOptions<R = HandleResult> {
+  /** The result returned when a handler function returns void. */
   readonly defaultResult: R;
+  /** The result returned when no handler matches the input key. */
   readonly negativeResult: R;
 }
 
+/**
+ * Creates a {@link HandlerFactory} that produces key-based dispatch handlers.
+ * Each handler routes incoming values to registered handler functions based on a key extracted from the value.
+ *
+ * @param readKey - Function to extract the dispatch key from an input value.
+ * @param options - Optional configuration for default and negative result values.
+ * @returns A factory that creates new Handler instances.
+ */
 export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K, HandleResult>;
 export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options: HandlerFactoryOptions<R>): HandlerFactory<T, K, R>;
 export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options?: HandlerFactoryOptions<R>): HandlerFactory<T, K, R> {
@@ -130,10 +163,21 @@ export function handlerFactory<T, K extends PrimativeKey = string, R = HandleRes
   };
 }
 
+/**
+ * Convenience function that creates a new {@link Handler} from the given key reader using default options.
+ *
+ * @param readKey - Function to extract the dispatch key from an input value.
+ * @returns A new Handler instance.
+ */
 export function makeHandler<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): Handler<T, K> {
   return handlerFactory(readKey)();
 }
 
+/**
+ * Returns the {@link CATCH_ALL_HANDLE_RESULT_KEY} constant, useful for registering a catch-all handler.
+ *
+ * @returns The catch-all handler key.
+ */
 export function catchAllHandlerKey(): typeof CATCH_ALL_HANDLE_RESULT_KEY {
   return CATCH_ALL_HANDLE_RESULT_KEY;
 }

@@ -1,4 +1,4 @@
-import { nearestDivisibleValues, sumOfIntegersBetween } from './number';
+import { nearestDivisibleValues, sumOfIntegersBetween, getBaseLog } from './number';
 
 describe('nearestDivisibleValues', () => {
   it('should return the nearest divisible values to 3', () => {
@@ -25,5 +25,12 @@ describe('sumOfIntegersBetween()', () => {
   it('should calculate the sum of 51 to 100.', () => {
     const result = sumOfIntegersBetween(51, 100);
     expect(result).toBe(3775);
+  });
+});
+
+describe('getBaseLog()', () => {
+  it('should run the example successfully', () => {
+    expect(getBaseLog(2, 16)).toBe(4);
+    expect(getBaseLog(10, 100)).toBe(2);
   });
 });

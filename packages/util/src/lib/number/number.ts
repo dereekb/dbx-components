@@ -22,15 +22,25 @@ export type PercentNumber = number;
 export type PercentDecimal = number;
 
 /**
- * Converts the percent number to a decimal value.
+ * Converts a {@link PercentNumber} (e.g., 5 for 5%) to its decimal equivalent (e.g., 0.05).
  *
- * @param input
- * @returns
+ * Returns 0 for null/undefined input.
+ *
+ * @param input - A percent number value (e.g., 5 means 5%)
+ * @returns The decimal equivalent
  */
 export function percentNumberToDecimal(input: Maybe<number>): number {
   return input ? input / 100 : 0;
 }
 
+/**
+ * Converts a {@link PercentDecimal} (e.g., 0.05 for 5%) to its {@link PercentNumber} equivalent (e.g., 5).
+ *
+ * Returns 0 for null/undefined input.
+ *
+ * @param input - A decimal percent value (e.g., 0.05 means 5%)
+ * @returns The percent number equivalent
+ */
 export function percentNumberFromDecimal(input: Maybe<number>): PercentNumber {
   return input ? input * 100 : 0;
 }
@@ -48,9 +58,12 @@ export type ReadNumberFunction<T, N extends number = number> = MapFunction<T, N>
 export type AsNumberInput = Maybe<NumberOrNumberString>;
 
 /**
- * Converts the input value to a number.
+ * Converts a number, string, or null/undefined value to a number.
  *
- * @param input
+ * Strings are parsed via `Number()`. Null/undefined returns 0.
+ *
+ * @param input - A number, number string, or null/undefined
+ * @returns The numeric value, or 0 for null/undefined
  */
 export function asNumber(input: AsNumberInput): number {
   let value: number;
@@ -71,11 +84,13 @@ export function asNumber(input: AsNumberInput): number {
 }
 
 /**
- * Returns true if the input value is divisible by the divisor.
+ * Checks whether the input value is evenly divisible by the divisor.
  *
- * @param value
- * @param divisor
- * @returns
+ * Treats null/undefined as 0.
+ *
+ * @param value - The number to check
+ * @param divisor - The divisor to test against
+ * @returns `true` if the remainder is zero
  */
 export function isNumberDivisibleBy(value: Maybe<number>, divisor: number): boolean {
   const remainder = (value ?? 0) % divisor;
@@ -90,11 +105,11 @@ export interface NearestDivisibleValues {
 }
 
 /**
- * Returns true if the input value is divisible by the divisor.
+ * Finds the nearest values that are evenly divisible by the divisor, both above (ceil) and below (floor) the input value.
  *
- * @param value
- * @param divisor
- * @returns
+ * @param value - The value to find divisible neighbors for
+ * @param divisor - The divisor to align to
+ * @returns Object with the input value, divisor, and the nearest ceil/floor divisible values
  */
 export function nearestDivisibleValues(value: number, divisor: number): NearestDivisibleValues {
   const point = value / divisor;
@@ -110,30 +125,33 @@ export function nearestDivisibleValues(value: number, divisor: number): NearestD
 }
 
 /**
- * Returns true if the input is an even number.
+ * Checks whether the input is an even number.
  *
- * @param value
- * @returns
+ * @param value - Number to test
+ * @returns `true` if even
  */
 export function isEvenNumber(value: number): boolean {
   return value % 2 === 0;
 }
 
 /**
- * Returns true if the input is an odd number.
+ * Checks whether the input is an odd number.
  *
- * @param value
- * @returns
+ * @param value - Number to test
+ * @returns `true` if odd
  */
 export function isOddNumber(value: number): boolean {
   return value % 2 === 1;
 }
 
 /**
- * The sum of all numbers between the two input number values, inclusive.
+ * Computes the sum of all integers between two values, inclusive, using Gauss's formula.
  *
- * @param from
- * @param to
+ * The `from` value is floored and the `to` value is ceiled before computation.
+ *
+ * @param from - The starting value (floored to nearest integer)
+ * @param to - The ending value (ceiled to nearest integer)
+ * @returns Sum of all integers in the range
  */
 export function sumOfIntegersBetween(from: number, to: number): number {
   const x = Math.floor(from);
@@ -146,28 +164,33 @@ export function sumOfIntegersBetween(from: number, to: number): number {
   return sumOfIntegers;
 }
 
+/**
+ * A {@link SortCompareFunction} for numbers that sorts in ascending order.
+ */
 export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => a - b;
 
 /**
- * Returns the min and max values from the input numbers.
+ * Finds the minimum and maximum values from an iterable of numbers.
  *
- * @param values
- * @returns
+ * @param values - Iterable of numbers to examine
+ * @returns Object with `min` and `max` values
  */
 export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResult<number> {
   return minAndMaxFunction(sortCompareNumberFunction)(values);
 }
 
 /**
- * Returns the lorgathirm of y with base x.
+ * Computes the logarithm of `y` with base `x`.
  *
- * Example:
- * - (log2(16)): x = 2, y = 16 -> 4    (2^4 = 16)
- * - (log10(100)): x = 10, y = 100 -> 2   (10^2 = 100)
+ * @param x - The base of the logarithm
+ * @param y - The value to compute the logarithm of
+ * @returns The base-x logarithm of y
  *
- * @param x
- * @param y
- * @returns
+ * @example
+ * ```ts
+ * getBaseLog(2, 16); // 4 (2^4 = 16)
+ * getBaseLog(10, 100); // 2 (10^2 = 100)
+ * ```
  */
 export function getBaseLog(x: number, y: number): number {
   return Math.log(y) / Math.log(x);

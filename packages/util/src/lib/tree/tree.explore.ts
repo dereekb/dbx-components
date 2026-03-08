@@ -28,48 +28,95 @@ export const ExploreTreeVisitNodeDecision = {
 export type ExploreTreeVisitNodeDecision = (typeof ExploreTreeVisitNodeDecision)[keyof typeof ExploreTreeVisitNodeDecision];
 
 /**
- * A function that determines if a node should be visited.
+ * Function that determines how a node should be handled during tree exploration.
  *
- * The mapped value is also present.
+ * Receives both the original node and its mapped value, allowing filtering decisions
+ * based on either the raw tree structure or a transformed representation.
+ *
+ * @template N - The tree node type.
+ * @template V - The mapped value type, defaults to N if no mapping is applied.
  */
 export type ExploreTreeVisitNodeDecisionFunction<N extends TreeNode<unknown>, V = N> = (node: N, nodeMappedValue: V) => ExploreTreeVisitNodeDecision;
 
 /**
- * A function that visits a node.
+ * Callback invoked when a node is visited during tree exploration.
+ *
+ * Receives the mapped value (or the node itself if no mapping) and the original node,
+ * allowing side effects such as accumulating results or modifying external state.
+ *
+ * @template N - The tree node type.
+ * @template V - The mapped value type passed to the callback.
  */
 export type ExploreTreeVisitNodeFunction<N extends TreeNode<unknown>, V> = (value: V, node: N) => void;
 
 /**
- * Creates a traversal function that can be used to visit nodes.
+ * Factory that creates a traversal strategy for tree exploration.
+ *
+ * Controls the order in which nodes are visited (e.g., depth-first vs breadth-first).
+ * Receives the visit callback and a recursive traversal function, and returns a function
+ * that handles a single node based on its visit decision.
+ *
+ * @template N - The tree node type.
+ * @template V - The mapped value type.
  */
 export type ExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown>, V> = (visit: ExploreTreeVisitNodeFunction<N, V>, traverseTree: (tree: N) => void) => (node: N, nodeMappedValue: V, visitDecision: ExploreTreeVisitNodeDecision) => void;
 
+/**
+ * Configuration for creating an {@link ExploreTreeFunction}.
+ *
+ * Allows customizing node mapping, visit filtering, and traversal order.
+ * All options can also be overridden at call time.
+ *
+ * @template N - The tree node type.
+ * @template V - The mapped value type, defaults to N.
+ */
 export interface ExploreTreeFunctionConfig<N extends TreeNode<unknown>, V = N> {
   /**
-   * A custom traversal function to use instead of the default traversal function.
+   * Custom traversal strategy (e.g., breadth-first). Defaults to depth-first.
    */
   traverseFunctionFactory?: ExploreTreeTraversalFactoryFunction<N, V>;
   /**
-   * A function that maps a node to a specific value before visiting it.
+   * Transforms each node into a value before visiting. Defaults to identity.
    */
   mapNodeFunction?: (node: N) => V;
   /**
-   * A function that determines if a node should be visited.
+   * Controls whether each node is visited, skipped, or has only its children visited.
+   * Defaults to visiting all nodes.
    */
   shouldVisitNodeFunction?: Maybe<ExploreTreeVisitNodeDecisionFunction<N, V>>;
 }
 
 /**
- * Explores the input trees.
+ * Traverses one or more trees, invoking a visit callback on each node.
+ *
+ * Supports runtime overrides of mapping, filtering, and traversal strategy.
+ *
+ * @template N - The tree node type.
+ * @template V - The mapped value type passed to the visit callback.
  */
 export type ExploreTreeFunction<N extends TreeNode<unknown, N>, V> = (trees: ArrayOrValue<N>, visit: ExploreTreeVisitNodeFunction<N, V>, override?: ExploreTreeFunctionConfig<N, V>) => void;
 
 /**
- * Convenience function for exploring the input trees
- 
- * @param trees 
- * @param visitNodeFn 
- * @returns 
+ * Creates a reusable tree exploration function with configurable traversal, mapping, and filtering.
+ *
+ * The returned function traverses one or more trees, applying a visit callback to each node.
+ * By default uses depth-first traversal, identity mapping, and visits all nodes. All options
+ * can be overridden per-call.
+ *
+ * @param config - Optional default configuration for mapping, filtering, and traversal strategy.
+ * @returns A reusable function that explores trees with the configured behavior.
+ *
+ * @example
+ * ```typescript
+ * const exploreFn = exploreTreeFunction<TestNode, string>({
+ *   mapNodeFunction: (node) => node.value.id
+ * });
+ * const visited: string[] = [];
+ *
+ * exploreFn(rootNode, (id) => {
+ *   visited.push(id);
+ * });
+ * ```
  */
 export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: Maybe<ExploreTreeFunctionConfig<N, V>>): ExploreTreeFunction<N, V> {
   const defaultMapNodeFn: (node: N) => V = config?.mapNodeFunction ?? (MAP_IDENTITY as typeof defaultMapNodeFn);
@@ -100,9 +147,20 @@ export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: 
 }
 
 /**
- * A depth-first traversal factory function.
+ * Creates a depth-first traversal strategy for tree exploration.
  *
- * @returns A ExploreTreeTraversalFactoryFunction<N, V>.
+ * Visits each node before its children (pre-order). This is the default traversal
+ * strategy used by {@link exploreTreeFunction}.
+ *
+ * @returns A traversal factory that processes nodes in depth-first order.
+ *
+ * @example
+ * ```typescript
+ * const exploreFn = exploreTreeFunction<TestNode, TestNode>({
+ *   traverseFunctionFactory: depthFirstExploreTreeTraversalFactoryFunction()
+ * });
+ * // Visits: root -> child1 -> leaf1 -> leaf2 -> child2 -> leaf3
+ * ```
  */
 export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown, N>, V>(): ExploreTreeTraversalFactoryFunction<N, V> {
   return (visit: ExploreTreeVisitNodeFunction<N, V>, continueTraversal: (tree: N) => void) => {
@@ -122,11 +180,20 @@ export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode
 }
 
 /**
- * A breadth-first traversal factory function.
+ * Creates a breadth-first traversal strategy for tree exploration.
  *
  * Visits nodes level by level, processing all nodes at depth N before moving to depth N+1.
+ * Uses an internal queue to defer child processing until the current level is complete.
  *
- * @returns A ExploreTreeTraversalFactoryFunction<N, V>.
+ * @returns A traversal factory that processes nodes in breadth-first order.
+ *
+ * @example
+ * ```typescript
+ * const exploreFn = exploreTreeFunction<TestNode, TestNode>({
+ *   traverseFunctionFactory: breadthFirstExploreTreeTraversalFactoryFunction()
+ * });
+ * // Visits: root -> child1, child2, child3 -> leaf1, leaf2, leaf3
+ * ```
  */
 export function breadthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown, N>, V>(): ExploreTreeTraversalFactoryFunction<N, V> {
   return (visit: ExploreTreeVisitNodeFunction<N, V>, continueTraversal: (tree: N) => void) => {

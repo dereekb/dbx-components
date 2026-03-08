@@ -56,7 +56,21 @@ export interface LimitDateTimeConfig {
 }
 
 /**
- * Used for deriving a limit for the current instant in time.
+ * Derives min/max date boundaries from a {@link LimitDateTimeConfig} and provides clamping
+ * utilities for constraining dates and date ranges within those boundaries.
+ *
+ * Supports dynamic limits based on the current time (e.g., "must be in the future",
+ * "must be at least N minutes from now") as well as static min/max bounds.
+ *
+ * @example
+ * ```ts
+ * const limiter = new LimitDateTimeInstance({
+ *   limits: { isFuture: true, future: { hours: 2 } }
+ * });
+ *
+ * const range = limiter.dateRange(); // { start: <2 hours from now>, end: undefined }
+ * const clamped = limiter.clamp(someDate);
+ * ```
  */
 export class LimitDateTimeInstance {
   private readonly _config: LimitDateTimeConfig;
@@ -127,15 +141,26 @@ export class LimitDateTimeInstance {
   }
 
   /**
-   * Creates a date range for now.
+   * Computes the allowed date range based on the configured limits, evaluated at the
+   * config's instant (or now if not set).
    *
-   * @returns
+   * @example
+   * ```ts
+   * const limiter = new LimitDateTimeInstance({ limits: { isFuture: true } });
+   * const range = limiter.dateRange(); // { start: <now>, end: undefined }
+   * ```
    */
   dateRange(): Partial<DateRange> {
     const { instant = new Date() } = this._config;
     return this.dateRangeForInstant(instant);
   }
 
+  /**
+   * Computes the allowed date range evaluated at a specific instant, allowing limits
+   * like "now" or relative future offsets to resolve against the given moment.
+   *
+   * @param instant - The reference point in time for resolving dynamic limits.
+   */
   dateRangeForInstant(instant: Date) {
     const { min, max } = this;
     return {
@@ -145,7 +170,18 @@ export class LimitDateTimeInstance {
   }
 
   /**
-   * Clamps the input date to the current range.
+   * Clamps the input date to the allowed range, optionally applying `takeNextUpcomingTime`
+   * (copies time to today, advancing to tomorrow if already past) or `roundDownToMinute`.
+   *
+   * @param date - The date to constrain.
+   *
+   * @example
+   * ```ts
+   * const limiter = new LimitDateTimeInstance({
+   *   limits: { isFuture: true, future: { minutes: 30 } }
+   * });
+   * const safe = limiter.clamp(new Date()); // at least 30 minutes from now
+   * ```
    */
   clamp(date: Date): Date {
     let result: Date = date;
@@ -176,11 +212,38 @@ export class LimitDateTimeInstance {
     return result;
   }
 
+  /**
+   * Clamps an entire date range to fit within the allowed limits, constraining both
+   * start and end dates.
+   *
+   * @param dateRange - The date range to constrain.
+   *
+   * @example
+   * ```ts
+   * const limiter = new LimitDateTimeInstance({ limits: { isFuture: true } });
+   * const clamped = limiter.clampDateRange({ start: pastDate, end: futureDate });
+   * // clamped.start will be at least now
+   * ```
+   */
   clampDateRange(dateRange: DateRange): DateRange {
     return clampDateRangeToDateRange(dateRange, this.dateRange()) as DateRange;
   }
 }
 
+/**
+ * Factory function that creates a {@link LimitDateTimeInstance} from the given configuration.
+ *
+ * @param config - The limit configuration specifying bounds, future requirements, and rounding.
+ *
+ * @example
+ * ```ts
+ * const limiter = limitDateTimeInstance({
+ *   limits: { min: new Date('2024-01-01'), isFuture: true },
+ *   roundDownToMinute: true
+ * });
+ * const clamped = limiter.clamp(someDate);
+ * ```
+ */
 export function limitDateTimeInstance(config: LimitDateTimeConfig): LimitDateTimeInstance {
   return new LimitDateTimeInstance(config);
 }

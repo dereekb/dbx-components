@@ -10,8 +10,14 @@ export type SlashPathDirectoryTreeNodeValue<T> = {
   readonly slashPathDetails: SlashPathDetails;
 };
 
+/**
+ * A tree node containing a value with slash path details.
+ */
 export type SlashPathDirectoryTreeNode<T, V extends SlashPathDirectoryTreeNodeValue<T> = SlashPathDirectoryTreeNodeValue<T>> = TreeNode<V>;
 
+/**
+ * Root of a slash path directory tree. Has children but no value of its own.
+ */
 export type SlashPathDirectoryTreeRoot<T, V extends SlashPathDirectoryTreeNodeValue<T> = SlashPathDirectoryTreeNodeValue<T>> = Omit<SlashPathDirectoryTreeNode<T, V>, 'value'>;
 
 export interface SlashPathDirectoryTreeOptions {
@@ -25,6 +31,16 @@ export interface SlashPathDirectoryTreeOptions {
   readonly includeChildrenWithMissingParentFolder?: Maybe<boolean>;
 }
 
+/**
+ * Builds a directory tree structure from a flat list of node values based on their slash path hierarchy.
+ *
+ * Nodes are organized by their path parts, with each part becoming a level in the tree.
+ * Typed files (files with extensions) are added as children but cannot serve as parent folders.
+ *
+ * @param nodeValues - Flat list of values with associated slash path details.
+ * @param options - Optional configuration for tree building behavior.
+ * @returns The root node of the constructed directory tree.
+ */
 export function slashPathDirectoryTree<T, V extends SlashPathDirectoryTreeNodeValue<T> = SlashPathDirectoryTreeNodeValue<T>>(nodeValues: V[], options?: SlashPathDirectoryTreeOptions): SlashPathDirectoryTreeRoot<T, V> {
   const { includeChildrenWithMissingParentFolder } = options ?? {};
 

@@ -1,4 +1,20 @@
-import { type Rectangle, rectangleOverlapsRectangle } from './vector';
+import { type Rectangle, rectangleOverlapsRectangle, vectorMinimumSizeResizeFunction } from './vector';
+
+describe('vectorMinimumSizeResizeFunction()', () => {
+  it('should enforce minimum x dimension while preserving y', () => {
+    const resize = vectorMinimumSizeResizeFunction({ x: 5 });
+    const result = resize({ x: 3, y: 10 });
+
+    expect(result).toEqual({ x: 5, y: 10 });
+  });
+
+  it('should pass through values already above the minimum', () => {
+    const resize = vectorMinimumSizeResizeFunction({ x: 5, y: 5 });
+    const result = resize({ x: 10, y: 10 });
+
+    expect(result).toEqual({ x: 10, y: 10 });
+  });
+});
 
 describe('rectangleOverlapsRectangle()', () => {
   it('it should return true if a rectangle is the same.', () => {

@@ -36,10 +36,14 @@ export interface IdBatchFactoryConfig<T, K extends PrimativeKey = PrimativeKey> 
 export type IdBatchFactory<T> = AsyncArrayFactory<T>;
 
 /**
- * Creates an IdBatchFactory
+ * Creates an {@link IdBatchFactory} that generates batches of unique, verified identifiers.
  *
- * @param config
- * @returns
+ * The factory generates identifiers in batches, filters them for uniqueness, and verifies each batch
+ * using the configured verifier. Throws if uniqueness generation fails repeatedly (after 20 attempts).
+ *
+ * @param config - Configuration with the base factory for generating candidates and the verifier for validating them
+ * @returns An async factory function that produces the requested number of valid identifiers
+ * @throws Error if the factory cannot produce enough unique values after repeated attempts
  */
 export function idBatchFactory<T, K extends PrimativeKey = PrimativeKey>(config: IdBatchFactoryConfig<T, K>): IdBatchFactory<T> {
   const { factory, verifier } = config;

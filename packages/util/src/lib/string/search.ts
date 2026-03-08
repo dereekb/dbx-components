@@ -12,26 +12,36 @@ export type SearchStringDecisionFunctionFactory = DecisionFunctionFactory<string
  */
 export type SearchStringFilterFunction<T> = (filterText: string, values: T[]) => T[];
 
+/**
+ * Configuration for creating a {@link SearchStringFilterFunction}.
+ *
+ * @template T - The type of values being filtered.
+ */
 export interface SearchStringFilterConfig<T> {
   /**
-   * Reads the search value(s) from the input
+   * Reads the search value(s) from the input item to compare against the filter text.
    */
   readStrings: ReadKeyFunction<T, string> | ReadMultipleKeysFunction<T, string>;
   /**
-   * (Optional) decision function factory for the input.
+   * Optional decision function factory for matching logic.
    *
-   * Defaults to caseInsensitiveFilterByIndexOfDecisionFactory() if not defined.
+   * Defaults to {@link caseInsensitiveFilterByIndexOfDecisionFactory} if not defined.
    */
   decisionFactory?: SearchStringDecisionFunctionFactory;
 }
 
+/**
+ * Input for creating a {@link SearchStringFilterFunction}. Can be a read function directly or a full config object.
+ *
+ * @template T - The type of values being filtered.
+ */
 export type SearchStringFilterFunctionConfigInput<T> = ReadKeyFunction<T, string> | ReadMultipleKeysFunction<T, string> | SearchStringFilterConfig<T>;
 
 /**
- * Creates a SearchStringFilterFunction
+ * Creates a {@link SearchStringFilterFunction} that filters values based on whether their string representation matches the filter text.
  *
- * @param config
- * @returns
+ * @param config - A read function or full configuration specifying how to extract and match search strings.
+ * @returns A function that filters an array of values by a search/filter text string.
  */
 export function searchStringFilterFunction<T>(config: SearchStringFilterFunctionConfigInput<T>): SearchStringFilterFunction<T> {
   const { readStrings, decisionFactory = caseInsensitiveFilterByIndexOfDecisionFactory } = typeof config === 'function' ? { readStrings: config } : config;
@@ -55,10 +65,10 @@ export function searchStringFilterFunction<T>(config: SearchStringFilterFunction
 }
 
 /**
- * SearchStringDecisionFunctionFactory that searches for string matches using the input search term/filter text.
+ * Default {@link SearchStringDecisionFunctionFactory} that performs case-insensitive substring matching using `indexOf`.
  *
- * @param filterText
- * @returns
+ * @param filterText - The search term to match against.
+ * @returns A decision function that returns `true` if the input string contains the filter text (case-insensitive).
  */
 export const caseInsensitiveFilterByIndexOfDecisionFactory: SearchStringDecisionFunctionFactory = (filterText: string) => {
   const searchString = filterText.toLocaleLowerCase();

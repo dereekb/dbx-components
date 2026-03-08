@@ -39,6 +39,12 @@ import { isSameDateRange } from './date.range';
 import { dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance } from './date.timezone';
 import { type YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
+/**
+ * Encodes days of the week as numeric codes for use in schedule filtering.
+ *
+ * Values 1-7 map to individual days (offset by +1 from DayOfWeek), while
+ * 8 and 9 serve as shorthand for all weekdays or weekend days respectively.
+ */
 export enum DateCellScheduleDayCode {
   /**
    * Special no-op/unused code
@@ -61,23 +67,38 @@ export enum DateCellScheduleDayCode {
   WEEKEND = 9
 }
 
+/**
+ * Returns day codes representing all seven days of the week using the WEEKDAY and WEEKEND shorthand codes.
+ *
+ * @returns array containing WEEKDAY and WEEKEND codes
+ */
 export function fullWeekDateCellScheduleDayCodes() {
   return [DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND];
 }
 
+/**
+ * Returns individual day codes for Monday through Friday.
+ *
+ * @returns array of five weekday codes
+ */
 export function weekdayDateCellScheduleDayCodes() {
   return [DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.TUESDAY, DateCellScheduleDayCode.WEDNESDAY, DateCellScheduleDayCode.THURSDAY, DateCellScheduleDayCode.FRIDAY];
 }
 
+/**
+ * Returns individual day codes for Saturday and Sunday.
+ *
+ * @returns array of two weekend codes
+ */
 export function weekendDateCellScheduleDayCodes() {
   return [DateCellScheduleDayCode.SATURDAY, DateCellScheduleDayCode.SUNDAY];
 }
 
 /**
- * Creates an EnabledDays from the input.
+ * Creates an EnabledDays from the input by expanding schedule day codes to their corresponding days of the week.
  *
- * @param input
- * @returns
+ * @param input - schedule day codes to convert (WEEKDAY/WEEKEND shorthand codes are expanded)
+ * @returns an EnabledDays object with boolean flags for each day
  */
 export function enabledDaysFromDateCellScheduleDayCodes(input: Maybe<Iterable<DateCellScheduleDayCode>>): EnabledDays {
   const days = expandDateCellScheduleDayCodesToDayOfWeekSet(Array.from(new Set(input)));
@@ -85,10 +106,10 @@ export function enabledDaysFromDateCellScheduleDayCodes(input: Maybe<Iterable<Da
 }
 
 /**
- * Creates an array of simplified DateCellScheduleDayCode[] values from the input.
+ * Creates an array of simplified DateCellScheduleDayCode values from the input EnabledDays, using shorthand codes (WEEKDAY/WEEKEND) where possible.
  *
- * @param input
- * @returns
+ * @param input - enabled days to convert back to schedule day codes
+ * @returns simplified array of day codes
  */
 export function dateCellScheduleDayCodesFromEnabledDays(input: Maybe<EnabledDays>): DateCellScheduleDayCode[] {
   const days = daysOfWeekFromEnabledDays(input);
@@ -106,18 +127,18 @@ export const DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX = /^[0-9]{0,9}$/;
 /**
  * Returns true if the input is a DateCellScheduleEncodedWeek.
  *
- * @param input
- * @returns
+ * @param input - string to validate against the encoded week regex
+ * @returns whether the string matches the encoded week format
  */
 export function isDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek {
   return DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX.test(input);
 }
 
 /**
- * Returns true if the input string represents an empty DateCellScheduleEncodedWeek.
+ * Returns true if the input string represents an empty DateCellScheduleEncodedWeek (no days selected).
  *
- * @param input
- * @returns
+ * @param input - string to check for emptiness
+ * @returns whether the encoded week represents no selected days
  */
 export function isEmptyDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek {
   return input === '' || input === '0';
@@ -126,9 +147,21 @@ export function isEmptyDateCellScheduleEncodedWeek(input: string): input is Date
 /**
  * Creates a DateCellScheduleEncodedWeek from an array of DateCellScheduleDayCode values.
  *
- * The returned encoded week is simplified.
+ * The returned encoded week is simplified so redundant individual day codes are replaced with shorthand (e.g., Mon-Fri becomes WEEKDAY).
  *
- * @param codes
+ * @param codes - day codes to encode into the compact string representation
+ * @returns the encoded week string
+ *
+ * @example
+ * ```ts
+ * // Encode weekdays only
+ * dateCellScheduleEncodedWeek([DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.TUESDAY, DateCellScheduleDayCode.WEDNESDAY, DateCellScheduleDayCode.THURSDAY, DateCellScheduleDayCode.FRIDAY]);
+ * // Returns '8' (WEEKDAY shorthand)
+ *
+ * // Encode specific days
+ * dateCellScheduleEncodedWeek([DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.WEDNESDAY]);
+ * // Returns '24'
+ * ```
  */
 export function dateCellScheduleEncodedWeek(codes: Iterable<DateCellScheduleDayCode>): DateCellScheduleEncodedWeek {
   const result = simplifyDateCellScheduleDayCodes(codes);
@@ -138,10 +171,26 @@ export function dateCellScheduleEncodedWeek(codes: Iterable<DateCellScheduleDayC
 /**
  * Reduces/merges any day codes into more simplified day codes.
  *
- * For instance, if all days of the week are selected, they will be reduced to "8".
+ * For instance, if all five weekdays are selected, they will be reduced to WEEKDAY (8).
+ * Similarly, Saturday + Sunday becomes WEEKEND (9).
  *
- * @param codes
- * @returns
+ * @param codes - day codes to simplify
+ * @returns simplified array with shorthand codes where applicable
+ *
+ * @example
+ * ```ts
+ * // All weekdays collapse to WEEKDAY
+ * simplifyDateCellScheduleDayCodes([2, 3, 4, 5, 6]);
+ * // Returns [DateCellScheduleDayCode.WEEKDAY]  // [8]
+ *
+ * // Saturday + Sunday collapses to WEEKEND
+ * simplifyDateCellScheduleDayCodes([1, 7]);
+ * // Returns [DateCellScheduleDayCode.WEEKEND]  // [9]
+ *
+ * // Mixed: partial weekdays remain individual
+ * simplifyDateCellScheduleDayCodes([2, 4]);
+ * // Returns [DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.WEDNESDAY]  // [2, 4]
+ * ```
  */
 export function simplifyDateCellScheduleDayCodes(codes: Iterable<DateCellScheduleDayCode>): DateCellScheduleDayCode[] {
   const codesSet = new Set(codes);
@@ -190,13 +239,16 @@ export function simplifyDateCellScheduleDayCodes(codes: Iterable<DateCellSchedul
   return result;
 }
 
+/**
+ * Flexible input type for day codes: accepts an encoded week string, a single code, an array, or a Set.
+ */
 export type DateCellScheduleDayCodesInput = DateCellScheduleEncodedWeek | ArrayOrValue<DateCellScheduleDayCode> | Set<DateCellScheduleDayCode>;
 
 /**
- * Expands the input DateCellScheduleDayCodesInput to a Set of DayOfWeek values.
+ * Expands the input DateCellScheduleDayCodesInput to a Set of DayOfWeek values, converting from the +1 offset used by schedule day codes back to standard DayOfWeek.
  *
- * @param input
- * @returns
+ * @param input - day codes to expand (shorthand codes like WEEKDAY are expanded to individual days)
+ * @returns set of DayOfWeek values
  */
 export function expandDateCellScheduleDayCodesToDayOfWeekSet(input: DateCellScheduleDayCodesInput): Set<DayOfWeek> {
   const days = new Set<DayOfWeek>();
@@ -209,6 +261,12 @@ export function expandDateCellScheduleDayCodesToDayOfWeekSet(input: DateCellSche
   return days;
 }
 
+/**
+ * Converts DayOfWeek values to their corresponding DateCellScheduleDayCode values (offset by +1).
+ *
+ * @param input - days of the week to convert
+ * @returns set of individual schedule day codes (no shorthand grouping applied)
+ */
 export function dateCellScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfWeek>): Set<DateCellScheduleDayCode> {
   const codes = new Set<DateCellScheduleDayCode>();
 
@@ -220,22 +278,22 @@ export function dateCellScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfW
 }
 
 /**
- * Expands the input into an array of DateCellScheduleDayCode values.
+ * Expands the input into a sorted array of individual DateCellScheduleDayCode values.
  *
- * The values are sorted in ascending order.
+ * Shorthand codes (WEEKDAY, WEEKEND) are expanded to their constituent day codes, sorted ascending.
  *
- * @param input
- * @returns
+ * @param input - day codes to expand
+ * @returns sorted array of individual day codes (1-7 only, no shorthand)
  */
 export function expandDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
   return Array.from(expandDateCellScheduleDayCodesToDayCodesSet(input)).sort(sortNumbersAscendingFunction);
 }
 
 /**
- * Expands the input DateCellScheduleDayCodesInput to a Set of DayOfWeek values.
+ * Expands the input DateCellScheduleDayCodesInput to a Set of individual DateCellScheduleDayCode values (1-7), expanding shorthand codes like WEEKDAY and WEEKEND.
  *
- * @param input
- * @returns
+ * @param input - day codes to expand into a set
+ * @returns set of individual day codes with shorthand codes resolved
  */
 export function expandDateCellScheduleDayCodesToDayCodesSet(input: DateCellScheduleDayCodesInput): Set<DateCellScheduleDayCode> {
   const codes: DateCellScheduleDayCode[] = rawDateCellScheduleDayCodes(input);
@@ -262,10 +320,12 @@ export function expandDateCellScheduleDayCodesToDayCodesSet(input: DateCellSched
 }
 
 /**
- * Converts the input DateCellScheduleDayCodesInput to an array of DateCellScheduleDayCode values, but does not expand
+ * Converts the input to an array of DateCellScheduleDayCode values without expanding shorthand codes (WEEKDAY/WEEKEND remain as-is).
  *
- * @param input
- * @returns
+ * Filters out the NONE (0) code.
+ *
+ * @param input - day codes input in any supported format
+ * @returns raw array of day codes with NONE values removed
  */
 export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
   let dayCodes: DateCellScheduleDayCode[];
@@ -290,13 +350,16 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
  */
 export type DateCellScheduleDayCodeFactory = (date: Date) => DateCellScheduleDayCode;
 
+/**
+ * Configuration for creating a DateCellScheduleDayCodeFactory, specifying the timezone context.
+ */
 export type DateCellScheduleDayCodeConfig = Pick<YearWeekCodeConfig, 'timezone'>;
 
 /**
- * Creates a DateCellScheduleDayCodeFactory using the optional input config.
+ * Creates a DateCellScheduleDayCodeFactory that converts dates to their corresponding day code, accounting for timezone normalization.
  *
- * @param config
- * @returns
+ * @param config - optional timezone configuration; defaults to system timezone if not provided
+ * @returns a factory function that maps a Date to its DateCellScheduleDayCode
  */
 export function dateCellScheduleDayCodeFactory(config?: DateCellScheduleDayCodeConfig): DateCellScheduleDayCodeFactory {
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
@@ -308,11 +371,11 @@ export function dateCellScheduleDayCodeFactory(config?: DateCellScheduleDayCodeC
 }
 
 /**
- * Returns true if the input codes, when expanded, are equivalent.
+ * Returns true if both inputs, when fully expanded to individual day codes, represent the same set of days.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - first day codes input to compare
+ * @param b - second day codes input to compare
+ * @returns whether both inputs resolve to the same days of the week
  */
 export function dateCellScheduleDayCodesAreSetsEquivalent(a: DateCellScheduleDayCodesInput, b: DateCellScheduleDayCodesInput): boolean {
   const ae = expandDateCellScheduleDayCodes(a);
@@ -322,7 +385,10 @@ export function dateCellScheduleDayCodesAreSetsEquivalent(a: DateCellScheduleDay
 
 // MARK: DateCellSchedule
 /**
- * Scheduled used to filter to disable DateCell values for a job.
+ * Schedule configuration used to control which DateCell values are active for a recurring event.
+ *
+ * Combines weekly recurrence patterns (via encoded week days) with explicit include/exclude lists
+ * for fine-grained control over individual date cell indices.
  */
 export interface DateCellSchedule {
   /**
@@ -340,10 +406,10 @@ export interface DateCellSchedule {
 }
 
 /**
- * Returns true if the input is a DateCellSchedule.
+ * Returns true if the input is structurally a DateCellSchedule (has the expected shape).
  *
- * @param input
- * @returns
+ * @param input - object to check
+ * @returns whether the input matches the DateCellSchedule structure
  */
 export function isDateCellSchedule(input: object): input is DateCellSchedule {
   if (typeof input === 'object') {
@@ -354,6 +420,13 @@ export function isDateCellSchedule(input: object): input is DateCellSchedule {
   return false;
 }
 
+/**
+ * Returns true if both schedules have the same encoded week, included indices, and excluded indices.
+ *
+ * @param a - first schedule to compare
+ * @param b - second schedule to compare
+ * @returns whether both schedules are equivalent
+ */
 export function isSameDateCellSchedule(a: Maybe<DateCellSchedule>, b: Maybe<DateCellSchedule>): boolean {
   if (a && b) {
     return a.w === b.w && iterablesAreSetEquivalent(a.ex ?? [], b.ex ?? []) && iterablesAreSetEquivalent(a.d ?? [], b.d ?? []);
@@ -390,7 +463,7 @@ export class DateCellSchedule implements DateCellSchedule {
 }
 
 /**
- * A DateCellSchedule with a DateRange that signifies and end days.
+ * A DateCellSchedule combined with a DateRange and timezone, bounding the schedule to a specific date window.
  */
 export interface DateCellScheduleDateRange extends DateCellSchedule, DateCellTimingDateRange {}
 
@@ -400,12 +473,12 @@ export interface DateCellScheduleDateRange extends DateCellSchedule, DateCellTim
 export type DateCellScheduleStartOfDayDateRange = DateCellScheduleDateRange;
 
 /**
- * Returns true if the input is possibly a FullDateCellScheduleRange.
+ * Returns true if the input is possibly a DateCellScheduleDateRange (has schedule fields and valid start/end dates).
  *
  * Does not check that the input is a valid FullDateCellScheduleRange.
  *
- * @param input
- * @returns
+ * @param input - object to check
+ * @returns whether the input has the structure of a DateCellScheduleDateRange
  */
 export function isDateCellScheduleDateRange(input: object): input is DateCellScheduleDateRange {
   if (typeof input === 'object') {
@@ -417,10 +490,10 @@ export function isDateCellScheduleDateRange(input: object): input is DateCellSch
 }
 
 /**
- * Returns true if the input is a DateCellScheduleDateRange without a duration or startsAt.
+ * Returns true if the input is a DateCellScheduleDateRange whose start and end are both at the start of day in its timezone, and has no duration or startsAt fields.
  *
- * @param input
- * @returns
+ * @param input - object to check
+ * @returns whether the input is a start-of-day schedule date range
  */
 export function isDateCellScheduleStartOfDayDateRange(input: object): input is DateCellScheduleStartOfDayDateRange {
   if (isDateCellScheduleDateRange(input) && (input as Partial<FullDateCellScheduleRange>).duration == null && (input as Partial<FullDateCellScheduleRange>).startsAt == null) {
@@ -436,9 +509,9 @@ export function isDateCellScheduleStartOfDayDateRange(input: object): input is D
 /**
  * Returns true if both inputs have the same schedule and date range.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - first schedule date range to compare
+ * @param b - second schedule date range to compare
+ * @returns whether both have identical date ranges and schedules
  */
 export function isSameDateCellScheduleDateRange(a: Maybe<DateCellScheduleDateRange>, b: Maybe<DateCellScheduleDateRange>): boolean {
   if (a && b) {
@@ -458,10 +531,12 @@ export function isSameDateCellScheduleDateRange(a: Maybe<DateCellScheduleDateRan
 export type DateCellScheduleDateRangeInput = DateCellSchedule & Partial<TimezoneStringRef & (DateRange | DateCellTimingStartsAtEndRange)>;
 
 /**
- * Creates a DateCellScheduleDateRange from the input.
+ * Creates a DateCellScheduleDateRange from the input, normalizing the start date to the start of day in the target timezone.
  *
- * @param input
- * @returns
+ * Accepts either a start/end pair or a startsAt/end pair. If no end is provided, defaults to one minute after start.
+ *
+ * @param input - schedule and partial date range information to assemble
+ * @returns a fully resolved schedule date range with timezone-aware start/end
  */
 export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput): DateCellScheduleDateRange {
   const { w, ex, d, start: inputStart, startsAt: inputStartsAt, end: inputEnd, timezone: inputTimezone } = input as DateCellSchedule & Partial<FullDateCellScheduleRange>;
@@ -508,10 +583,10 @@ export type ChangeDateCellScheduleDateRangeToTimezoneFunction = ((dateRange: Dat
 };
 
 /**
- * Creates a ChangeDateCellScheduleDateRangeToTimezoneFunction for the input timezone.
+ * Creates a reusable function that converts any DateCellScheduleDateRange to the specified target timezone while preserving the same wall-clock day boundaries.
  *
- * @param timezoneInput
- * @returns
+ * @param timezoneInput - the target timezone to convert ranges into
+ * @returns a conversion function with the internal normal instance exposed as `_normalInstance`
  */
 export function changeDateCellScheduleDateRangeToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ChangeDateCellScheduleDateRangeToTimezoneFunction {
   const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
@@ -544,9 +619,9 @@ export function changeDateCellScheduleDateRangeToTimezoneFunction(timezoneInput:
 /**
  * Convenience function for calling changeDateCellScheduleDateRangeToTimezoneFunction() and passing the new timing and timezone.
  *
- * @param timing
- * @param timezone
- * @returns
+ * @param timing - the schedule date range to convert
+ * @param timezone - the target timezone
+ * @returns the schedule date range re-expressed in the target timezone
  */
 export function changeDateCellScheduleDateRangeToTimezone(timing: DateCellScheduleDateRange, timezone: DateCellTimingTimezoneInput): DateCellScheduleDateRange {
   return changeDateCellScheduleDateRangeToTimezoneFunction(timezone)(timing);
@@ -558,11 +633,11 @@ export function changeDateCellScheduleDateRangeToTimezone(timing: DateCellSchedu
 export interface DateCellScheduleEventRange extends DateCellScheduleDateRange, DateCellTimingEventStartsAt {}
 
 /**
- * Returns true if both inputs have the same FullDateCellScheduleRange.
+ * Returns true if both inputs have the same schedule, date range, and event startsAt.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - first event range to compare
+ * @param b - second event range to compare
+ * @returns whether both event ranges are equivalent
  */
 export function isSameDateCellScheduleEventRange(a: Maybe<DateCellScheduleEventRange>, b: Maybe<DateCellScheduleEventRange>): boolean {
   if (a && b) {
@@ -578,12 +653,12 @@ export function isSameDateCellScheduleEventRange(a: Maybe<DateCellScheduleEventR
 export interface FullDateCellScheduleRange extends DateCellScheduleEventRange, FullDateCellTiming {}
 
 /**
- * Returns true if the input is possibly a FullDateCellScheduleRange.
+ * Returns true if the input is possibly a FullDateCellScheduleRange (has schedule fields and full timing fields).
  *
  * Does not check that the input is a valid FullDateCellScheduleRange.
  *
- * @param input
- * @returns
+ * @param input - object to check
+ * @returns whether the input has the structure of a FullDateCellScheduleRange
  */
 export function isFullDateCellScheduleDateRange(input: object): input is FullDateCellScheduleRange {
   if (typeof input === 'object') {
@@ -595,11 +670,11 @@ export function isFullDateCellScheduleDateRange(input: object): input is FullDat
 }
 
 /**
- * Returns true if both inputs have the same FullDateCellScheduleRange.
+ * Returns true if both inputs have the same FullDateCellScheduleRange (schedule, date range, startsAt, and duration).
  *
- * @param a
- * @param b
- * @returns
+ * @param a - first full schedule range to compare
+ * @param b - second full schedule range to compare
+ * @returns whether both full schedule ranges are equivalent
  */
 export function isSameFullDateCellScheduleDateRange(a: Maybe<FullDateCellScheduleRange>, b: Maybe<FullDateCellScheduleRange>): boolean {
   if (a && b) {
@@ -610,7 +685,7 @@ export function isSameFullDateCellScheduleDateRange(a: Maybe<FullDateCellSchedul
 }
 
 /**
- * Different types of inputs for fullDateCellScheduleRange() that can be used to derive a FullDateCellScheduleRange.
+ * Union of schedule range types accepted by fullDateCellScheduleRange(), ordered from most complete (FullDateCellScheduleRange) to partial (DateCellScheduleDateRangeInput).
  */
 export type FullDateCellScheduleRangeInputDateRange = DateCellScheduleDateRange | DateCellScheduleEventRange | FullDateCellScheduleRange | DateCellScheduleDateRangeInput;
 
@@ -645,7 +720,28 @@ export interface FullDateCellScheduleRangeInput {
 export const DEFAULT_FULL_DATE_SCHEDULE_RANGE_DURATION = 1;
 
 /**
- * Creates a FullDateCellScheduleRange from the input.
+ * Creates a FullDateCellScheduleRange from the input, filling in missing startsAt, duration, and end values with defaults.
+ *
+ * If the input already has full timing info, it is used as-is unless `updateWithDefaults` forces overrides.
+ * When startsAt or duration are missing, they are derived from the start date or use a 1-minute default duration.
+ *
+ * @param input - configuration with the schedule range and optional default overrides
+ * @returns a fully populated schedule range with timing, duration, and schedule data
+ *
+ * @example
+ * ```ts
+ * const range = fullDateCellScheduleRange({
+ *   dateCellScheduleRange: {
+ *     w: '89', // all week
+ *     start: startDate,
+ *     end: endDate,
+ *     timezone: 'America/Denver'
+ *   },
+ *   startsAtTime: new Date('2025-01-01T09:00:00Z'),
+ *   duration: 60
+ * });
+ * // range now has startsAt, duration, and correctly adjusted end date
+ * ```
  */
 export function fullDateCellScheduleRange(input: FullDateCellScheduleRangeInput): FullDateCellScheduleRange {
   const { dateCellScheduleRange, duration: inputDefaultDuration, startsAtTime: inputDefaultStartsAtTime, updateWithDefaults } = input;
@@ -705,7 +801,7 @@ export function fullDateCellScheduleRange(input: FullDateCellScheduleRangeInput)
 
 // MARK: DateCellScheduleDate
 /**
- * DateCellScheduleDateFilter input.
+ * Input for a DateCellScheduleDateFilter: accepts either a Date or a DateCellIndex to test against the schedule.
  */
 export type DateCellScheduleDateFilterInput = DateCellTimingRelativeIndexFactoryInput;
 
@@ -730,6 +826,12 @@ export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Part
   readonly setStartAsMinDate?: boolean;
 }
 
+/**
+ * Creates a shallow copy of a DateCellScheduleDateFilterConfig, useful for preserving configuration before mutation.
+ *
+ * @param inputFilter - the filter config to copy
+ * @returns a new config object with the same values
+ */
 export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilterConfig {
   return {
     start: inputFilter.start,
@@ -746,10 +848,28 @@ export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellSchedu
 }
 
 /**
- * Creates a DateCellScheduleDateFilter.
+ * Creates a DateCellScheduleDateFilter that decides whether a given date or index falls within the schedule.
  *
- * @param config
- * @returns
+ * The filter checks: (1) allowed days of the week from the encoded week, (2) explicit include/exclude lists,
+ * and (3) optional min/max date boundaries. The filter accounts for timezone normalization.
+ *
+ * @param config - schedule, timing, and boundary configuration
+ * @returns a decision function that returns true when the input date/index is within the schedule
+ *
+ * @example
+ * ```ts
+ * const filter = dateCellScheduleDateFilter({
+ *   w: '8', // weekdays only
+ *   startsAt: new Date('2025-01-06T09:00:00Z'),
+ *   end: new Date('2025-01-31T10:00:00Z'),
+ *   timezone: 'America/Denver',
+ *   ex: [2] // exclude index 2 (Wednesday Jan 8)
+ * });
+ *
+ * filter(0);  // true (Monday Jan 6)
+ * filter(2);  // false (excluded)
+ * filter(5);  // false (Saturday Jan 11)
+ * ```
  */
 export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilter {
   const { w, start: inputStart, startsAt: inputStartsAt, end: inputEnd, timezone: inputTimezone, setStartAsMinDate = true, minMaxDateRange } = config;
@@ -801,10 +921,25 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   return fn as DateCellScheduleDateFilter;
 }
 
+/**
+ * Configuration for findNextDateInDateCellScheduleFilter().
+ */
 export interface FindNextDateInDateCellScheduleFilterInput {
+  /**
+   * Starting date or index to search from.
+   */
   readonly date: DateCellScheduleDateFilterInput;
+  /**
+   * The schedule filter to test against.
+   */
   readonly filter: DateCellScheduleDateFilter;
+  /**
+   * Direction to search: 'past' moves backward, 'future' moves forward.
+   */
   readonly direction: DateRelativeDirection;
+  /**
+   * Maximum number of days to search before giving up.
+   */
   readonly maxDistance: Days;
   /**
    * Whether or not to exclude the input date. False by default.
@@ -813,11 +948,31 @@ export interface FindNextDateInDateCellScheduleFilterInput {
 }
 
 /**
- * Passes a number of day values until it reaches an open day on a schedule. There's a maximum distance it searches in a direction before returning null.
+ * Searches forward or backward from a starting date/index to find the next date cell index that passes the schedule filter.
  *
- * @param date
- * @param filter
- * @param maxDistance
+ * Returns null if no matching date is found within the maxDistance limit.
+ *
+ * @param config - search parameters including start date, filter, direction, and distance limit
+ * @returns the matching index/date pair, or null if none found within range
+ *
+ * @example
+ * ```ts
+ * const filter = dateCellScheduleDateFilter({
+ *   w: '8', // weekdays
+ *   startsAt: mondayDate,
+ *   end: endDate,
+ *   timezone: 'America/Denver'
+ * });
+ *
+ * // Find next weekday from a Saturday
+ * const next = findNextDateInDateCellScheduleFilter({
+ *   date: saturdayDate,
+ *   filter,
+ *   direction: 'future',
+ *   maxDistance: 7
+ * });
+ * // next.date is the following Monday
+ * ```
  */
 export function findNextDateInDateCellScheduleFilter(config: FindNextDateInDateCellScheduleFilterInput): Maybe<DateCellIndexDatePair> {
   const { date, filter, direction, maxDistance, excludeInputDate } = config;
@@ -846,6 +1001,9 @@ export function findNextDateInDateCellScheduleFilter(config: FindNextDateInDateC
 }
 
 // MARK: DateCellScheduleDateCellTimingFilter
+/**
+ * A decision function that filters DateCell blocks based on a schedule applied to a specific timing.
+ */
 export type DateCellScheduleDateCellTimingFilter<B extends DateCell = DateCell> = DecisionFunction<B>;
 
 /**
@@ -897,10 +1055,10 @@ export interface DateCellScheduleDateCellTimingFilterConfig {
 }
 
 /**
- * Creates a DateCellScheduleDateCellTimingFilter.
+ * Creates a DateCellScheduleDateCellTimingFilter that tests whether a DateCell block's index is allowed by the schedule within the given timing.
  *
- * @param param0
- * @returns
+ * @param config - timing and schedule to build the filter from
+ * @returns a decision function returning true for allowed blocks
  */
 export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCell>({ timing, schedule }: DateCellScheduleDateCellTimingFilterConfig): DateCellScheduleDateCellTimingFilter<B> {
   const isAllowed = dateCellScheduleDateFilter({
@@ -919,10 +1077,10 @@ export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCe
 }
 
 /**
- * Creates a DateCellTimingExpansionFactory using the input DateCellScheduleDateCellTimingFilterConfig.
+ * Creates a DateCellTimingExpansionFactory that expands date cell ranges into duration spans, filtered by a schedule and optional time-based criteria (started, ended, etc.).
  *
- * @param config
- * @returns
+ * @param config - timing, schedule, and optional temporal/custom filters
+ * @returns an expansion factory that converts DateCellRange arrays into filtered DateCellDurationSpan arrays
  */
 export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(config: DateCellScheduleDateCellTimingFilterConfig): DateCellTimingExpansionFactory<B> {
   const { invertSchedule = false, now, onlyBlocksThatHaveEnded, onlyBlocksThatHaveStarted, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateCellsToReturn, durationSpanFilter: inputDurationSpanFilter } = config;
@@ -959,22 +1117,33 @@ export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(con
   return expansionFactory;
 }
 
+/**
+ * Input for expandDateCellSchedule(), extending the filter config with an optional index range limit.
+ */
 export interface ExpandDateCellScheduleInput extends DateCellScheduleDateCellTimingFilterConfig {
   /**
-   * Index range to limit the expansion to.
+   * Index range to limit the expansion to. Capped to the timing's own range.
    */
   readonly limitIndexRange?: IndexRange;
 }
 
 /**
- * Expands the input DateCellTiming and DateCellSchedule into an array of DateCellDurationSpan value that correspond with blocks in the event.
+ * Expands a DateCellTiming and DateCellSchedule into concrete DateCellDurationSpan values representing each active block in the event.
  *
- * Can optionally provide an IndexRange to specify a specific range to filter on. The range will be capped to the range of the timing.
+ * Only blocks whose indices pass the schedule filter (and any time-based filters) are included.
+ * An optional limitIndexRange further restricts which indices are expanded, capped to the timing's own range.
  *
- * @param timing
- * @param schedule
- * @param inputRange
- * @returns
+ * @param input - timing, schedule, and optional filters/range limit
+ * @returns array of duration spans for each active date cell
+ *
+ * @example
+ * ```ts
+ * const spans = expandDateCellSchedule({
+ *   timing: myTiming,
+ *   schedule: { w: '8', ex: [3] } // weekdays, excluding index 3
+ * });
+ * // Returns DateCellDurationSpan[] for each weekday block except index 3
+ * ```
  */
 export function expandDateCellSchedule(input: ExpandDateCellScheduleInput): DateCellDurationSpan<DateCell>[] {
   const { timing, limitIndexRange } = input;
@@ -990,7 +1159,7 @@ export function expandDateCellSchedule(input: ExpandDateCellScheduleInput): Date
 }
 
 /**
- * Input for ExpandDateCellScheduleRangeInput
+ * Input for expandDateCellScheduleRange(), which derives both timing and schedule from a single schedule range.
  */
 export interface ExpandDateCellScheduleRangeInput extends Omit<DateCellScheduleDateCellTimingFilterConfig, 'schedule' | 'timing'> {
   readonly dateCellScheduleRange: FullDateCellScheduleRangeInputDateRange;
@@ -1007,9 +1176,12 @@ export interface ExpandDateCellScheduleRangeInput extends Omit<DateCellScheduleD
 }
 
 /**
+ * Expands a schedule range into concrete DateCellDurationSpan values by first building a FullDateCellScheduleRange from the input, then expanding it.
  *
- * @param input
- * @returns
+ * Allows overriding the duration and startsAt time on the schedule range before expansion.
+ *
+ * @param input - schedule range and optional override values
+ * @returns array of duration spans for each active date cell in the range
  */
 export function expandDateCellScheduleRange(input: ExpandDateCellScheduleRangeInput): DateCellDurationSpan<DateCell>[] {
   const { dateCellScheduleRange, duration, startsAtTime } = input;
@@ -1024,8 +1196,17 @@ export function expandDateCellScheduleRange(input: ExpandDateCellScheduleRangeIn
 }
 
 // MARK: DateCellScheduleRange
+/**
+ * Alias for ExpandDateCellScheduleRangeInput used when the goal is to produce DateCellRange groups.
+ */
 export type ExpandDateCellScheduleRangeToDateCellRangeInput = ExpandDateCellScheduleRangeInput;
 
+/**
+ * Expands a schedule range and groups the resulting duration spans into contiguous DateCellRangeWithRange values.
+ *
+ * @param input - schedule range expansion configuration
+ * @returns grouped date cell ranges with their associated date ranges
+ */
 export function expandDateCellScheduleRangeToDateCellRanges(input: ExpandDateCellScheduleRangeToDateCellRangeInput): DateCellRangeWithRange[] {
   const dateCellDurationSpans = expandDateCellScheduleRange(input);
   return groupToDateCellRanges(dateCellDurationSpans);

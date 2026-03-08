@@ -5,17 +5,21 @@ import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap,
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
+/**
+ * Configuration for limiting the number of pages that can be loaded by a page iterator.
+ */
 export interface ItemPageLimit {
   /**
-   * Maximum number of pages to load.
-   *
-   * This value should be defined in most cases.
-   *
-   * If not defined, the will be no ending iteration.
+   * Maximum number of pages to load. Should be defined in most cases to prevent
+   * unbounded iteration. If not defined, there is no limit.
    */
   readonly maxPageLoadLimit?: Maybe<number>;
 }
 
+/**
+ * Request object passed to the {@link ItemPageIteratorDelegate.loadItemsForPage} method,
+ * providing all context needed to load a specific page.
+ */
 export interface ItemPageIteratorRequest<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> extends Page {
   /**
    * The base iterator config.
@@ -43,6 +47,10 @@ export interface ItemPageIteratorRequest<V, F, C extends ItemPageIterationConfig
   readonly lastState$: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>>;
 }
 
+/**
+ * Result returned by the delegate for a single page load, containing the loaded values
+ * and pagination status.
+ */
 export interface ItemPageIteratorResult<V> {
   /**
    * Error result.
@@ -62,6 +70,10 @@ export interface ItemPageIteratorResult<V> {
   readonly end?: boolean;
 }
 
+/**
+ * Delegate responsible for loading items for a given page request.
+ * Implementations define the data-fetching logic for each page.
+ */
 export interface ItemPageIteratorDelegate<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
   /**
    * Returns an observable of items given the input request.
@@ -75,16 +87,31 @@ interface InternalItemPageIteratorNext extends ItemIteratorNextRequest {
   n: number;
 }
 
+/**
+ * Combined configuration for page iteration, including filter criteria and page limits.
+ */
 export interface ItemPageIterationConfig<F = unknown> extends Filter<F>, ItemPageLimit {}
 
-// MARK: Iterator
 /**
- * Default number of pages that can be loaded.
+ * Default maximum number of pages that can be loaded by an {@link ItemPageIterator}.
  */
 export const DEFAULT_ITEM_PAGE_ITERATOR_MAX = 100;
 
 /**
- * Used for generating new iterations.
+ * Factory for creating paginated iteration instances from a delegate and configuration.
+ *
+ * The iterator itself holds the delegate (data-loading logic) and optional global page limits.
+ * Call {@link instance} to create a new iteration session with a specific configuration.
+ *
+ * @example
+ * ```ts
+ * const iterator = new ItemPageIterator({
+ *   loadItemsForPage: (request) => fetchPage(request.page)
+ * });
+ *
+ * const instance = iterator.instance({ filter: 'active', maxPageLoadLimit: 10 });
+ * instance.next(); // loads first page
+ * ```
  */
 export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
   private readonly _delegate: ItemPageIteratorDelegate<V, F, C>;
@@ -116,17 +143,20 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemP
   }
 
   /**
-   * Creates a new instance based on the input config.
+   * Creates a new iteration instance with the given configuration.
    *
-   * @param config
-   * @returns
+   * @param config - filter and page limit configuration for this iteration session
+   * @returns new iteration instance ready to begin loading pages
    */
   instance(config: C): ItemPageIterationInstance<V, F, C> {
     return new ItemPageIterationInstance(this, config);
   }
 }
 
-// MARK: Instance
+/**
+ * Internal state snapshot of an {@link ItemPageIterationInstance}, tracking the current
+ * and historical loading states across page loads.
+ */
 export interface ItemPageIterationInstanceState<V> {
   /**
    * Used for tracking the start/end of a specific next call.
@@ -143,7 +173,11 @@ export interface ItemPageIterationInstanceState<V> {
 }
 
 /**
- * Configured Iterator instance.
+ * Active iteration session created by an {@link ItemPageIterator}.
+ *
+ * Manages the lifecycle of paginated loading: triggering page loads via {@link next},
+ * tracking loading/success/error states, and exposing all results as reactive observables.
+ * Implements {@link PageItemIteration} for use with accumulators and other iteration utilities.
  */
 export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V, PageLoadingState<V>>, Destroyable {
   private readonly _iterator: ItemPageIterator<V, F, C>;
@@ -466,15 +500,16 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   }
 }
 
-// MARK: Utility
 /**
- * Is considered the "end" result if:
+ * Determines whether an {@link ItemPageIteratorResult} represents the end of iteration.
  *
- * - end is true
- * - end is not false and the result value is not empty/null. Uses hasValueOrNotEmpty internally to decide.
+ * End is detected when:
+ * - `end` is explicitly `true`
+ * - `end` is not explicitly `false` and the result value is empty/null (via `hasValueOrNotEmpty`)
+ * - Error results are never considered the end
  *
- * @param result
- * @returns
+ * @param result - the page result to check
+ * @returns `true` if this result indicates no more pages are available
  */
 export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorResult<V>) {
   if (result.error != null) {

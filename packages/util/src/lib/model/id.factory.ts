@@ -40,7 +40,22 @@ export interface SequentialIncrementingNumberStringModelIdFactoryConfig {
 }
 
 /**
- * Creates a ModelIdFactory that generates sequential incrementing encoded NumberStringDencoderString values using the input configuration.
+ * Creates a {@link ModelIdFactory} that generates sequential incrementing encoded string identifiers.
+ *
+ * Each call to the returned factory produces the next identifier in the sequence, encoded using the configured
+ * {@link NumberStringDencoder} (defaults to base-64). Supports starting from a specific index or continuing
+ * from a current index, and an optional transform for post-processing (e.g., padding).
+ *
+ * @param config - Configuration for the starting index, increment step, dencoder, and transform
+ * @returns A factory function that returns the next encoded string identifier on each call
+ * @throws Error if `increaseBy` is 0
+ *
+ * @example
+ * ```ts
+ * const factory = sequentialIncrementingNumberStringModelIdFactory({ startAt: 0 });
+ * const first = factory(); // encoded representation of 0
+ * const second = factory(); // encoded representation of 1
+ * ```
  */
 export function sequentialIncrementingNumberStringModelIdFactory(config: SequentialIncrementingNumberStringModelIdFactoryConfig = {}): ModelIdFactory {
   const { transform: inputTranformFunction, dencoder: inputDencoder, currentIndex, startAt: inputStartAt, increaseBy: inputIncreaseBy } = config;
@@ -53,7 +68,7 @@ export function sequentialIncrementingNumberStringModelIdFactory(config: Sequent
   const dencoder = inputDencoder ?? NUMBER_STRING_DENCODER_64;
   const dencoderNumberValue = numberStringDencoderDecodedNumberValueFunction(dencoder);
   const startAtFromCurrentIndex = currentIndex != null ? dencoderNumberValue(currentIndex) + increaseBy : undefined;
-  const startAt = inputStartAt != null ? dencoderNumberValue(inputStartAt) : startAtFromCurrentIndex ?? 0;
+  const startAt = inputStartAt != null ? dencoderNumberValue(inputStartAt) : (startAtFromCurrentIndex ?? 0);
   const transform = inputTranformFunction ?? mapIdentityFunction();
 
   const numberFactory = incrementingNumberFactory({

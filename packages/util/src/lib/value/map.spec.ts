@@ -1,4 +1,27 @@
-import { chainMapSameFunctions } from './map';
+import { chainMapSameFunctions, mapMaybeFunction } from './map';
+
+describe('mapMaybeFunction()', () => {
+  it('should apply the function when input is defined', () => {
+    const double = (x: number) => x * 2;
+    const maybeDouble = mapMaybeFunction(double);
+
+    expect(maybeDouble(3)).toBe(6);
+  });
+
+  it('should pass through undefined', () => {
+    const double = (x: number) => x * 2;
+    const maybeDouble = mapMaybeFunction(double);
+
+    expect(maybeDouble(undefined)).toBeUndefined();
+  });
+
+  it('should pass through null', () => {
+    const double = (x: number) => x * 2;
+    const maybeDouble = mapMaybeFunction(double);
+
+    expect(maybeDouble(null)).toBeNull();
+  });
+});
 
 describe('chainMapSameFunctions', () => {
   it('should chain all the input functions together.', () => {

@@ -2,7 +2,18 @@ import { isISO8601DayString, type ObjectWithConstructor } from '@dereekb/util';
 import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
- * isISO8601DayString validator
+ * Class-validator decorator that validates a property value is a valid ISO 8601 day string (e.g., "2024-01-15").
+ *
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
+ *
+ * @example
+ * ```typescript
+ * class MyDto {
+ *   @IsISO8601DayString()
+ *   date!: string;
+ * }
+ * ```
  */
 export function IsISO8601DayString(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {

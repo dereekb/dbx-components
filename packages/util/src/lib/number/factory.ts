@@ -17,10 +17,18 @@ export interface IncrementingNumberFactoryConfig {
 }
 
 /**
- * Creates a factory that returns increasing numbers.
+ * Creates a factory that returns sequentially increasing numbers, starting from a configurable value and incrementing by a configurable step.
  *
- * @param config
- * @returns
+ * @param config - Configuration with optional `startAt` (default 0) and `increaseBy` (default 1)
+ * @returns A factory function that returns the next number in the sequence on each call
+ *
+ * @example
+ * ```ts
+ * const factory = incrementingNumberFactory({ startAt: 10, increaseBy: 5 });
+ * factory(); // 10
+ * factory(); // 15
+ * factory(); // 20
+ * ```
  */
 export function incrementingNumberFactory(config: IncrementingNumberFactoryConfig = {}): NumberFactory {
   const { startAt: initial, increaseBy: inputIncreaseBy } = config;

@@ -8,22 +8,44 @@ import { type Maybe } from './maybe.type';
 export type EqualityComparatorFunction<T> = (a: T, b: T) => boolean;
 
 /**
- * Wraps a EqualityComparatorFunction that handles Maybe values and only uses the comparator when the input values are not null/undefined.
+ * Wraps an {@link EqualityComparatorFunction} to safely handle `Maybe` values.
  *
- * @param compare
- * @returns
+ * The wrapped function delegates to the comparator only when both values are non-nullish.
+ * When both are nullish, it uses strict equality (`===`), so `null === null` is `true`
+ * but `null === undefined` is `false`.
+ *
+ * @param compare - the comparator to wrap
+ *
+ * @example
+ * ```ts
+ * const safeCompare = safeEqualityComparatorFunction((a: number, b: number) => a === b);
+ * safeCompare(1, 1);       // true
+ * safeCompare(null, null);  // true
+ * safeCompare(null, undefined); // false
+ * ```
  */
 export function safeEqualityComparatorFunction<T>(compare: EqualityComparatorFunction<T>): EqualityComparatorFunction<Maybe<T>> {
   return (a: Maybe<T>, b: Maybe<T>) => (a != null && b != null ? compare(a, b) : a === b);
 }
 
 /**
- * Safely compares two Maybe values.
+ * Convenience function that safely compares two `Maybe` values using the provided comparator.
  *
- * @param a
- * @param b
- * @param compare
- * @returns
+ * Delegates to {@link safeEqualityComparatorFunction} internally, so nullish values are handled
+ * without invoking the comparator.
+ *
+ * @param a - first value to compare
+ * @param b - second value to compare
+ * @param compare - the equality comparator for non-nullish values
+ *
+ * @example
+ * ```ts
+ * safeCompareEquality(0, 1, (a, b) => a === b);
+ * // false
+ *
+ * safeCompareEquality(null, null, (a, b) => a === b);
+ * // true (comparator is not invoked)
+ * ```
  */
 export function safeCompareEquality<T>(a: Maybe<T>, b: Maybe<T>, compare: EqualityComparatorFunction<T>): boolean {
   return safeEqualityComparatorFunction(compare)(a, b);
@@ -39,30 +61,23 @@ export function safeCompareEquality<T>(a: Maybe<T>, b: Maybe<T>, compare: Equali
  */
 export type CompareEqualityWithValueFromItemsFunction<I, V> = ((a: Maybe<I>, b: Maybe<I>) => boolean) & {
   /**
-   * Used to read the values from the input, if the input is defined.
-   *
-   * @param a
-   * @returns
+   * The function used to extract comparable values from each input item.
    */
   readonly _readValues: ReadValueFunction<I, V>;
   /**
-   * Decision function.
-   *
-   * @param a
-   * @param b
-   * @returns
+   * The equality comparator applied to the extracted values.
    */
   readonly _equalityComparator: EqualityComparatorFunction<V>;
 };
 
 /**
- * Creates a new CompareEqualityWithValueFromItemsFunction.
+ * Creates a {@link CompareEqualityWithValueFromItemsFunction} that extracts values from items before comparing them.
  *
- * Convenience function for calling compareEqualityWithValueFromItemsFunctionFactory() and passing the read values and values decision functions.
+ * This is a convenience wrapper around {@link compareEqualityWithValueFromItemsFunctionFactory} that
+ * accepts both the value reader and comparator in a single call.
  *
- * @param readValues
- * @param equalityComparator
- * @returns
+ * @param readValues - extracts the comparable value from each item
+ * @param equalityComparator - compares the extracted values for equality
  */
 export function compareEqualityWithValueFromItemsFunction<I, V>(readValues: ReadValueFunction<I, V>, equalityComparator: EqualityComparatorFunction<V>): CompareEqualityWithValueFromItemsFunction<I, V> {
   return compareEqualityWithValueFromItemsFunctionFactory(readValues)(equalityComparator);
@@ -74,10 +89,23 @@ export function compareEqualityWithValueFromItemsFunction<I, V>(readValues: Read
 export type CompareEqualityWithValueFromItemsFunctionFactory<I, V> = ((equalityComparator: EqualityComparatorFunction<V>) => CompareEqualityWithValueFromItemsFunction<I, V>) & Pick<CompareEqualityWithValueFromItemsFunction<I, V>, '_readValues'>;
 
 /**
- * Creates a new CompareEqualityWithValueFromItemsFunctionFactory.
+ * Creates a {@link CompareEqualityWithValueFromItemsFunctionFactory} that is pre-configured with a value reader.
  *
- * @param readValues
- * @returns
+ * The returned factory accepts different equality comparators, allowing reuse of the same value extraction logic
+ * with varying comparison strategies.
+ *
+ * @param readValues - extracts the comparable value from each item
+ *
+ * @example
+ * ```ts
+ * const factory = compareEqualityWithValueFromItemsFunctionFactory<number, number[]>((x) => [x]);
+ * const fn = factory(iterablesAreSetEquivalent);
+ *
+ * fn(0, 0);           // true
+ * fn(null, null);     // true
+ * fn(undefined, undefined); // true
+ * fn(0, 1);           // false
+ * ```
  */
 export function compareEqualityWithValueFromItemsFunctionFactory<I, V>(readValues: ReadValueFunction<I, V>): CompareEqualityWithValueFromItemsFunctionFactory<I, V> {
   const fn = ((equalityComparator: (a: V, b: V) => boolean) => {

@@ -1,8 +1,17 @@
 import { type ArrayOrValue } from '../array/array';
 import { type DecisionFunction } from '../value/decision';
 
+/**
+ * Result describing the first and last index positions of a character within a string.
+ */
 export interface FirstAndLastCharacterOccurrence {
+  /**
+   * Index of the first occurrence, or -1 if the character was not found.
+   */
   readonly first: number | -1;
+  /**
+   * Index of the last occurrence, or -1 if the character was not found.
+   */
   readonly last: number | -1;
   /**
    * Total number of occurrences.
@@ -11,11 +20,12 @@ export interface FirstAndLastCharacterOccurrence {
 }
 
 /**
- * Find the first and last occurence of the input character in the input string.
+ * Finds the first and last occurrence of a single character within the input string.
  *
- * @param input string to find the character occurrences
- * @param find character to find
- * @returns
+ * @param input - string to search through
+ * @param find - single character to find
+ * @returns an object containing the first index, last index, and total occurrence count
+ * @throws Error if find is not exactly one character long
  */
 export function firstAndLastCharacterOccurrence(input: string, find: string): FirstAndLastCharacterOccurrence {
   let first: number = -1;
@@ -50,7 +60,11 @@ export function firstAndLastCharacterOccurrence(input: string, find: string): Fi
 }
 
 /**
- * Returns true if the input string contains the character (or string) to find.
+ * Checks whether the input string contains the given substring.
+ *
+ * @param input - string to search within
+ * @param find - substring to search for
+ * @returns true if the substring is found within the input
  */
 export function stringContains(input: string, find: string): boolean {
   return input.indexOf(find) !== -1;
@@ -62,12 +76,12 @@ export function stringContains(input: string, find: string): boolean {
 export type ReplaceLastCharacterIfIsFunction = (input: string) => string;
 
 /**
- * Replaces the last character with the replacement string if it is any of the input values.
+ * Creates a function that replaces the last character of a string with the replacement string
+ * if that character matches any of the specified values.
  *
- * @param input
- * @param replacement
- * @param is
- * @returns
+ * @param replacement - string to substitute for the last character
+ * @param is - character(s) that trigger the replacement
+ * @returns a function that conditionally replaces the last character
  */
 export function replaceLastCharacterIfIsFunction(replacement: string, is: ArrayOrValue<string>): ReplaceLastCharacterIfIsFunction {
   const matches = new Set(is);
@@ -77,24 +91,25 @@ export function replaceLastCharacterIfIsFunction(replacement: string, is: ArrayO
 }
 
 /**
- * Replaces the last character with the replacement string if the decision is true.
+ * Replaces the last character of a string with the replacement if the decision function returns true for that character.
  *
- * @param input
- * @param index
- * @param replacement
- * @returns
+ * @param input - string to potentially modify
+ * @param replacement - string to substitute for the last character
+ * @param decision - function that determines whether the last character should be replaced
+ * @returns the modified string, or the original if the decision is false or the string is empty
  */
 export function replaceLastCharacterIf(input: string, replacement: string, decision: DecisionFunction<string>): string {
   return input.length > 0 ? replaceCharacterAtIndexIf(input, input.length - 1, replacement, decision) : input;
 }
 
 /**
- * Replaces the character at the given index with the replacement string if the decision is true.
+ * Replaces the character at the given index with the replacement string if the decision function returns true for that character.
  *
- * @param input
- * @param index
- * @param replacement
- * @returns
+ * @param input - string to potentially modify
+ * @param index - character index to evaluate
+ * @param replacement - string to substitute at the index
+ * @param decision - function that determines whether the character should be replaced
+ * @returns the modified string, or the original if the decision is false
  */
 export function replaceCharacterAtIndexIf(input: string, index: number, replacement: string, decision: DecisionFunction<string>): string {
   if (decision(input[index])) {
@@ -107,10 +122,10 @@ export function replaceCharacterAtIndexIf(input: string, index: number, replacem
 /**
  * Replaces the character at the given index with the replacement string.
  *
- * @param input
- * @param index
- * @param replacement
- * @returns
+ * @param input - string to modify
+ * @param index - character index to replace
+ * @param replacement - string to substitute at the index
+ * @returns the string with the character at the index replaced
  */
 export function replaceCharacterAtIndexWith(input: string, index: number, replacement: string): string {
   const [head, tail] = splitStringAtIndex(input, index, false);
@@ -118,12 +133,12 @@ export function replaceCharacterAtIndexWith(input: string, index: number, replac
 }
 
 /**
- * Splits the input string at the given character index.
+ * Splits the input string into two parts at the given character index.
  *
- * @param input
- * @param index
- * @param replacement
- * @returns
+ * @param input - string to split
+ * @param index - character index at which to split
+ * @param inclusive - if true, the character at the index is included in the tail; if false (default), it is excluded from both parts
+ * @returns a tuple of [head, tail] substrings
  */
 export function splitStringAtIndex(input: string, index: number, inclusive = false): [string, string] {
   const head = input.substring(0, index);
@@ -148,12 +163,11 @@ export const UTF_8_START_CHARACTER = '\u0000';
 export const UTF_PRIVATE_USAGE_AREA_START = '\uf8ff';
 
 /**
- * Takes in a string and returns a Record that has the index value mapped to the property of the character.
+ * Creates a lookup record mapping each character in the input string to its index position.
+ * In case of duplicate characters, the last occurrence's index is used.
  *
- * The latest character index is used in collision cases.
- *
- * @param chars
- * @returns
+ * @param chars - string whose characters become keys in the record
+ * @returns a record mapping each character to its index in the input string
  */
 export function stringCharactersToIndexRecord(chars: string): Record<string, number> {
   const record: Record<string, number> = {} as Record<string, number>;

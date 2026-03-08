@@ -171,40 +171,35 @@ export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
  *
  * I.E. 2022-01-02T04:00:00.000Z in GMT-6 returns 2022-01-02
  *
- * @param date
- * @returns
+ * @param date - The date to get the start of day for
+ * @returns A new Date set to midnight UTC of the input date's UTC day
  */
 export function startOfDayForUTCDateInUTC(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 /**
- * Returns the system's date in UTC.
+ * Returns the start of the system's local date in UTC.
  *
  * I.E. 2022-01-02T04:00:00.000Z in GMT-6 (10PM Jan 1st CST) returns 2022-01-01
  *
- * @param date
- * @returns
+ * @param date - The date to get the start of local day for
+ * @returns A new Date set to midnight UTC of the input date's local day
  */
 export function startOfDayForSystemDateInUTC(date: Date): Date {
   return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 }
 
 /**
- * Parses a ISO8601DayString to a Date.
+ * Parses an ISO8601DayString (YYYY-MM-DD) to a UTC Date at midnight.
  *
- * @param inputDateString
- * @returns
+ * @param inputDateString - The ISO8601 day string to parse (e.g., '2022-01-15')
+ * @returns A Date object set to midnight UTC on the specified day
  */
 export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {
   const [yearString, monthString, dateString] = inputDateString.split('-');
   return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
 }
 
-/**
- * Returns true if the input date is strictly a
- * @param input
- * @returns
- */
 /**
  * Determines if a string is a valid ISO8601 day string (YYYY-MM-DD format).
  *

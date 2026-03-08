@@ -15,6 +15,14 @@ export type ModelInputModelModifier<V extends object> = {
 export type ModelModifier<V extends object, D extends object> = ModelInputModelModifier<V> & ModelInputDataModifier<D>;
 export type PartialModelModifier<V extends object, D extends object> = Partial<MaybeMap<ModelModifier<V, D>>>;
 
+/**
+ * Merges one or more partial model modifiers into a single {@link PartialModelModifier}.
+ *
+ * Combines all `modifyData` and `modifyModel` functions from the input modifiers into unified modifier functions.
+ *
+ * @param input - One or more partial model modifiers to merge
+ * @returns A single merged modifier with combined `modifyData` and `modifyModel` functions
+ */
 export function maybeMergeModelModifiers<V extends object, D extends object>(input: ArrayOrValue<PartialModelModifier<V, D>>): PartialModelModifier<V, D> {
   const modifiers = asArray(input);
   const allModifyData = filterMaybeArrayValues(modifiers.map((x) => x.modifyData));
@@ -52,6 +60,14 @@ export interface ModifyModelMapFunctionsConfig<V extends object, D extends objec
   readonly copyData?: boolean;
 }
 
+/**
+ * Wraps existing {@link ModelMapFunctions} with modifier functions that are applied to the input before conversion.
+ *
+ * Optionally copies the input object before modification to avoid mutating the original.
+ *
+ * @param config - Configuration with the base map functions, modifiers, and copy options
+ * @returns New model map functions with modifiers applied before each conversion
+ */
 export function modifyModelMapFunctions<V extends object, D extends object>(config: ModifyModelMapFunctionsConfig<V, D>): ModelMapFunctions<V, D> {
   const { copy, copyModel = copy, copyData = copy, mapFunctions, modifiers } = config;
   const { from, to } = mapFunctions;
@@ -67,12 +83,15 @@ export function modifyModelMapFunctions<V extends object, D extends object>(conf
 }
 
 /**
- * Merges a ModifierFunction with a ModelMapFunction
+ * Wraps a single {@link ModelMapFunction} with a modifier that is applied to the input before the map function runs.
  *
- * @param mapFn
- * @param modifyModel
- * @param copy
- * @returns
+ * When `copy` is true (default), the input is shallow-copied before modification to avoid mutating the original.
+ * If no modifier is provided, the original map function is returned unchanged.
+ *
+ * @param mapFn - The base map function to wrap
+ * @param modifyModel - Optional modifier to apply before mapping
+ * @param copy - Whether to shallow-copy the input before modifying; defaults to true
+ * @returns The wrapped map function, or the original if no modifier is provided
  */
 export function modifyModelMapFunction<I extends object, O extends object>(mapFn: ModelMapFunction<I, O>, modifyModel: Maybe<ModifierFunction<I>>, copy = true): ModelMapFunction<I, O> {
   return modifyModel

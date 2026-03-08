@@ -16,15 +16,18 @@ export type StringObjectMap<T> = {
   [key: symbol]: never;
 };
 
+/**
+ * Mapped type that preserves the keys of `M` but replaces all value types with `O`.
+ */
 export type MappedObjectMap<M extends object, O> = {
   [key in keyof M]: O;
 };
 
 /**
- * Converts an ObjectMap into a Map.
+ * Converts an {@link ObjectMap} into a `Map` using `Object.entries`.
  *
- * @param object
- * @returns
+ * @param object - The object map to convert
+ * @returns A `Map` with the same key-value pairs
  */
 export function objectToMap<T>(object: ObjectMap<T>): Map<string, T> {
   return new Map(Object.entries(object));
@@ -36,21 +39,26 @@ export function objectToMap<T>(object: ObjectMap<T>): Map<string, T> {
 export type MapObjectMapFunction<M extends ObjectMap<I>, I = unknown, O = unknown> = MapFunction<M, MappedObjectMap<M, O>>;
 
 /**
- * Creates a MapObjectMapFunction that calls mapObjectMap().
+ * Creates a reusable {@link MapObjectMapFunction} that applies {@link mapObjectMap} with the given mapping function.
  *
- * @param mapFn
- * @returns
+ * @param mapFn - Function that transforms each value (receives value and key)
+ * @returns A function that maps all values in an input object map
  */
 export function mapObjectMapFunction<M extends ObjectMap<I>, I = unknown, O = unknown>(mapFn: MapObjectMapValueFunction<M, I, O>): MapObjectMapFunction<M, I, O> {
   return (object) => mapObjectMap(object, mapFn);
 }
 
+/**
+ * Mapping function that transforms a single value from an {@link ObjectMap}, receiving both the value and its key.
+ */
 export type MapObjectMapValueFunction<M extends ObjectMap<I>, I = unknown, O = unknown> = <K extends keyof M>(value: M[K], key: K) => O;
 
 /**
- * Maps the values of an ObjectMap from one type to another and returns an ObjectMap containing that type.
+ * Maps all values of an {@link ObjectMap} from one type to another, returning a new object with the same keys.
  *
- * @param object
+ * @param object - The source object map
+ * @param mapFn - Function that transforms each value
+ * @returns A new object with mapped values
  */
 export function mapObjectMap<M extends ObjectMap<I>, I = unknown, O = unknown>(object: M, mapFn: MapObjectMapValueFunction<M, I, O>): MappedObjectMap<M, O> {
   const mappedObject = {} as MappedObjectMap<M, O>;
@@ -58,12 +66,12 @@ export function mapObjectMap<M extends ObjectMap<I>, I = unknown, O = unknown>(o
 }
 
 /**
- * Maps the values of an ObjectMap from one type to the target and return the target.
+ * Maps the values of a source {@link ObjectMap} and assigns the results onto the target object, returning the target.
  *
- * @param object
- * @param target
- * @param mapFn
- * @returns
+ * @param object - The source object map
+ * @param target - The target object to assign mapped values onto
+ * @param mapFn - Function that transforms each value
+ * @returns The target object with mapped values assigned
  */
 export function mapObjectToTargetObject<M extends ObjectMap<I>, I = unknown, O = unknown>(object: M, target: MappedObjectMap<M, O>, mapFn: MapObjectMapValueFunction<M, I, O>): MappedObjectMap<M, O> {
   const keys = Object.keys(object);
@@ -87,9 +95,10 @@ export type MapObjectKeysFunction<M> = (object: M) => any;
 export type MapObjectKeyFunction<M> = <K extends keyof M>(key: K, value: M[K]) => POJOKey;
 
 /**
- * Maps the keys of the input object to a new object with the mapped keys.
+ * Creates a reusable {@link MapObjectKeysFunction} that transforms the keys of an input object using the given mapping function.
  *
- * @param object
+ * @param mapKeyFn - Function that computes the new key from the old key and its value
+ * @returns A function that remaps keys on any input object
  */
 export function mapObjectKeysFunction<M extends object>(mapKeyFn: MapObjectKeyFunction<M>): MapObjectKeysFunction<M> {
   return (object: M) => {
@@ -104,16 +113,18 @@ export function mapObjectKeysFunction<M extends object>(mapKeyFn: MapObjectKeyFu
   };
 }
 
+/**
+ * Mapped type that converts all string keys of `M` to lowercase while preserving their value types.
+ */
 export type MappedKeysToLowercaseObjectMap<M extends object> = {
   [K in keyof M as K extends string ? Lowercase<K> : K]: M[K];
 };
 
 /**
- * Maps all the keys of an object to a new object with keys of the object mapped to lowercase.
+ * Pre-built function that maps all string keys of an object to lowercase, returning a new object.
  *
- * @param object
- * @param target
- * @param mapFn
+ * Non-string keys (e.g., numbers) are passed through unchanged.
+ * When multiple keys map to the same lowercase key, the last one wins (order is undefined).
  */
 export const mapObjectKeysToLowercase = mapObjectKeysFunction((key) => {
   let nextKey = key as POJOKey;

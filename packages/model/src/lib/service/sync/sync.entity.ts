@@ -29,6 +29,22 @@ export interface SyncEntityCommonTypeIdPair {
 export type SyncEntityCommonTypeIdPairFactoryInput = SyncEntityCommonTypeIdPair | SyncEntityCommonId;
 export type SyncEntityCommonTypeIdPairFactory = (input: SyncEntityCommonTypeIdPairFactoryInput) => SyncEntityCommonTypeIdPair;
 
+/**
+ * Creates a factory that normalizes a {@link SyncEntityCommonTypeIdPairFactoryInput} into a full {@link SyncEntityCommonTypeIdPair}.
+ *
+ * If the input is a string, it is treated as a commonId and paired with the given commonType.
+ * If the input is already a pair, it is returned as-is.
+ *
+ * @param commonType - the default common type to use when input is a plain string
+ * @returns a factory function that produces SyncEntityCommonTypeIdPair instances
+ *
+ * @example
+ * ```typescript
+ * const factory = syncEntityCommonTypeIdPairFactory('user');
+ * factory('abc123');  // { commonType: 'user', commonId: 'abc123' }
+ * factory({ commonType: 'user', commonId: 'abc123' });  // passed through as-is
+ * ```
+ */
 export function syncEntityCommonTypeIdPairFactory(commonType: SyncEntityCommonType): SyncEntityCommonTypeIdPairFactory {
   return (input: SyncEntityCommonTypeIdPairFactoryInput) => {
     if (typeof input === 'string') {
@@ -76,10 +92,23 @@ export interface SyncEntityFactoryConfig {
 export type SyncEntityFactory = FactoryWithRequiredInput<SyncEntity, SyncEntityCommonTypeIdPair>;
 
 /**
- * Creates a SyncEntityFactory.
+ * Creates a {@link SyncEntityFactory} that produces {@link SyncEntity} instances from a common type/id pair.
  *
- * @param config
- * @returns
+ * The factory attaches the configured source info and optionally transforms the commonId into an entity id
+ * using the provided idFactory (defaults to identity).
+ *
+ * @param config - source info and optional id factory
+ * @returns a factory that creates SyncEntity instances
+ *
+ * @example
+ * ```typescript
+ * const factory = syncEntityFactory({
+ *   sourceInfo: { id: 'api', name: 'External API' }
+ * });
+ *
+ * const entity = factory({ commonType: 'user', commonId: 'abc123' });
+ * // entity.id === 'abc123', entity.sourceInfo.id === 'api'
+ * ```
  */
 export function syncEntityFactory(config: SyncEntityFactoryConfig): SyncEntityFactory {
   const { idFactory: inputIdFactory, sourceInfo } = config;

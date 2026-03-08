@@ -2,7 +2,7 @@ import { type Configurable } from '../type';
 import { type IndexNumber } from '../value/index';
 
 /**
- * Returns a random value from the pre-configured values array.
+ * A callable factory that returns a random value from its pre-configured values array on each invocation.
  */
 export type RandomPickFactory<T> = (() => T) & {
   /**
@@ -12,10 +12,11 @@ export type RandomPickFactory<T> = (() => T) & {
 };
 
 /**
- * Creates a RandomPickFactory<T> from the input values.
+ * Creates a {@link RandomPickFactory} from the input values.
  *
- * @param values
- * @returns
+ * @param values - array of values to randomly pick from
+ * @returns a callable factory that returns a random value from the array on each invocation
+ * @throws Error if the input array is empty
  */
 export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
   if (values.length === 0) {
@@ -31,10 +32,10 @@ export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
 }
 
 /**
- * Returns a random index from the input values.
+ * Returns a random index from the input array. Returns 0 if the array is empty.
  *
- * @param values
- * @returns
+ * @param values - array to generate a random index for
+ * @returns a random valid index within the array, or 0 if the array is empty
  */
 export function randomArrayIndex<T>(values: T[]): IndexNumber {
   if (values.length === 0) {
@@ -47,9 +48,11 @@ export function randomArrayIndex<T>(values: T[]): IndexNumber {
 }
 
 /**
- * Picks an item randomly from the input array. If the array is empty, returns undefined.
+ * Picks a single item randomly from the input array.
  *
- * @param values
+ * @param values - array to pick a random item from
+ * @returns a randomly selected item from the array
+ * @throws Error if the input array is empty
  */
 export function pickOneRandomly<T>(values: T[]): T {
   return randomPickFactory(values)();

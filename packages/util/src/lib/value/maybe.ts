@@ -3,24 +3,24 @@ import { objectHasNoKeys } from '../object/object';
 import { type Maybe, type MaybeNot, type MaybeSo } from './maybe.type';
 
 /**
- * Returns true if the value is not null or undefined.
+ * Type guard that returns `true` if the value is not `null` or `undefined`.
  *
- * @param value
- * @returns
+ * @param value - the value to check
  */
 export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   return value != null;
 }
 
 /**
- * Whether or not the input has any value.
+ * Type guard that checks whether the input has a meaningful value.
  *
- * Will return false for:
- * - empty iterables
- * - empty strings
- * - null/undefined values.
+ * Returns `false` for empty iterables (arrays, Sets, Maps), empty strings, and nullish values.
+ * Non-iterable objects (e.g. `{}`) are considered non-empty by this function;
+ * use {@link hasValueOrNotEmptyObject} to also reject empty objects.
  *
  * NaN has undefined behavior.
+ *
+ * @param value - the value to check
  */
 export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   if (isIterable(value, false)) {
@@ -31,15 +31,14 @@ export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is Maybe
 }
 
 /**
- * Whether or not the input has any value.
+ * Type guard that checks whether the input has a meaningful value, including checking for empty objects.
  *
- * Will return false for:
- * - empty iterables
- * - empty strings
- * - empty objects (no keys)
- * - null/undefined values.
+ * Returns `false` for empty iterables, empty strings, objects with no own keys (`{}`), and nullish values.
+ * This is stricter than {@link hasValueOrNotEmpty}, which considers `{}` as having a value.
  *
  * NaN has undefined behavior.
+ *
+ * @param value - the value to check
  */
 export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   if (isIterable(value, true)) {
@@ -52,106 +51,105 @@ export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is
 }
 
 /**
- * Returns true if the input value is a non-empty string or is true.
+ * Returns `true` if the input value is a non-empty string or is `true`.
  *
- * @param value
- * @returns
+ * @param value - the value to check
  */
 export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
   return Boolean(value || value !== '');
 }
 
 /**
- * Returns true if the input is not MaybeNot and not an empty string.
+ * Type guard that returns `true` if the input is not nullish and not an empty string.
  *
- * @param value
- * @returns
+ * Useful for filtering out both nullish values and empty strings in a single check.
+ *
+ * @param value - the value to check
  */
 export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): value is MaybeSo<T> {
   return value != null && value !== '';
 }
 
 /**
- * True if the input is MaybeNot.
+ * Type guard that returns `true` if the input is `null` or `undefined`.
  *
- * @param value
- * @returns
+ * @param value - the value to check
  */
 export function isMaybeNot<T = unknown>(value: Maybe<T>): value is MaybeNot {
   return value == null;
 }
 
 /**
- * True if the input is MaybeSo
+ * Type guard that returns `true` if the input is neither `null` nor `undefined`.
  *
- * @param value
- * @returns
+ * Equivalent to {@link hasNonNullValue} but with the `MaybeSo` narrowing type.
+ *
+ * @param value - the value to check
  */
 export function isMaybeSo<T>(value: Maybe<T>): value is MaybeSo<T> {
   return value != null;
 }
 
 /**
- * True if the input is MaybeNot and true.
+ * Type guard that returns `true` if the input is nullish or is strictly `true`.
  *
- * @param value
- * @returns
+ * Useful for optional boolean flags where both absence and `true` indicate the same behavior.
+ *
+ * @param value - the value to check
  */
 export function isMaybeNotOrTrue<T = unknown>(value: Maybe<T | true>): value is MaybeNot | true {
   return value == null || value === true;
 }
 
 /**
- * True if the input is not null/undefined/false.
+ * Returns `true` if the input is not `null`, `undefined`, or `false`.
  *
- * @param value
- * @returns
+ * @param value - the value to check
  */
 export function isDefinedAndNotFalse<T = unknown>(value: Maybe<T>): boolean {
   return value != null && value !== false;
 }
 
 /**
- * True if the input is not false
+ * Returns `true` if the input is not strictly `false`. Nullish values return `true`.
  *
- * @param value
- * @returns
+ * @param value - the value to check
  */
 export function isNotFalse<T = unknown>(value: Maybe<T>): boolean {
   return value !== false;
 }
 
 /**
- * Returns true if both the inputs are not null/undefined but the same value.
+ * Returns `true` if both inputs are non-nullish and strictly equal (`===`).
  *
- * @param a
- * @param b
- * @returns
+ * @param a - first value
+ * @param b - second value
  */
 export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullable<T> {
   return a === b && a != null;
 }
 
 /**
- * Returns true if both inputs are null/undefined, or are the same value.
+ * Returns `true` if both inputs are nullish (using loose equality `==`) or are strictly the same value.
  *
- * @param a
- * @param b
- * @returns
+ * This means `null` and `undefined` are considered equivalent to each other, but `false` and `null` are not.
+ *
+ * @param a - first value
+ * @param b - second value
  */
 export function valuesAreBothNullishOrEquivalent<T>(a: Maybe<T>, b: Maybe<T>): boolean {
   return a != null && b != null ? a === b : a == b;
 }
 
 /**
- * Updates "a" with "b".
+ * Merges two `Maybe` values using `undefined` as the "no change" sentinel.
  *
- * - If b is defined, then returns b
- * - If b is undefined, then returns a
- * - If b is null, then returns null
+ * - If `b` is `undefined`, returns `a` (no update).
+ * - If `b` is `null`, returns `null` (explicit clear).
+ * - If `b` is defined, returns `b` (new value).
  *
- * @param a
- * @param b
+ * @param a - the current value
+ * @param b - the update value
  */
 export function updateMaybeValue<T>(a: Maybe<T>, b: Maybe<T>): Maybe<T> {
   return b === undefined ? a : b;

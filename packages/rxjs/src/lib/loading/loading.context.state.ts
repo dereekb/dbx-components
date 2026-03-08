@@ -90,6 +90,12 @@ export interface LoadingStateContextConfig<T = unknown, S extends LoadingState<T
 
 export type LoadingEventForLoadingPairConfigInput = Pick<LoadingStateContextConfig, 'showLoadingOnUndefinedValue'>;
 
+/**
+ * Default function for converting a {@link LoadingState} into a {@link LoadingStateContextEvent}.
+ *
+ * Determines the `loading` flag based on whether an error is present, whether the value is defined,
+ * and the `showLoadingOnUndefinedValue` setting. Loading progress is only included while loading.
+ */
 export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(state: S, input: LoadingEventForLoadingPairConfigInput): LoadingStateContextEvent<T> => {
   const { showLoadingOnUndefinedValue } = input;
   const { error, value, loadingProgress } = state;
@@ -116,10 +122,32 @@ export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S e
 export type LoadingStateContextInput<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S> = LoadingStateContextConfig<T, S, E> | LoadingStateContextConfig<T, S, E>['obs'];
 
 /**
- * Creates a new LoadingStateContext from the input.
- 
- * @param input LoadingStateContextInput
- * @returns LoadingStateContext
+ * Creates a new {@link MutableLoadingStateContext} that wraps an observable of {@link LoadingState} values
+ * and exposes reactive accessors for the loading flag, current value, errors, and state stream.
+ *
+ * Accepts either a raw observable or a {@link LoadingStateContextConfig} for fine-grained control
+ * over how loading events are derived from the state.
+ *
+ * @example
+ * ```ts
+ * // Create a context from a state observable
+ * const context = loadingStateContext(myLoadingState$);
+ *
+ * // Subscribe to the loading flag
+ * context.loading$.subscribe((loading) => console.log('Loading:', loading));
+ *
+ * // Access the value after loading completes
+ * context.value$.subscribe((value) => console.log('Value:', value));
+ *
+ * // Update the state observable later
+ * context.setStateObs(newLoadingState$);
+ *
+ * // Clean up
+ * context.destroy();
+ * ```
+ *
+ * @param input - optional observable or config to initialize the context
+ * @returns a mutable loading state context with reactive accessors
  */
 export function loadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(input?: LoadingStateContextInput<T, S, E>): MutableLoadingStateContext<T, S, E> {
   const _config: Maybe<LoadingStateContextConfig<T, S, E>> = input && isObservable(input) ? { obs: input } : input;

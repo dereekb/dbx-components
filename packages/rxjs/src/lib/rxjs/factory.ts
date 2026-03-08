@@ -29,10 +29,23 @@ export interface FactoryTimerConfig<T> {
 export const DEFAULT_FACTORY_TIMER_INTERVAL = 1000;
 
 /**
- * Creates an observable that uses timer internally and maps values from the factory result.
+ * Creates an observable that emits values produced by a factory function on a timer interval.
  *
- * @param config
- * @returns
+ * Wraps `timer()` internally and maps each tick index through the factory. Optionally limits
+ * the total number of emissions.
+ *
+ * @example
+ * ```ts
+ * const countdown$ = factoryTimer({
+ *   factory: (i) => 10 - i,
+ *   interval: 1000,
+ *   limit: 11
+ * });
+ * // emits 10, 9, 8, ... 0
+ * ```
+ *
+ * @param config - timer configuration including factory, interval, wait, and limit
+ * @returns an observable of factory-produced values
  */
 export function factoryTimer<T>(config: FactoryTimerConfig<T>): Observable<T> {
   const { wait = 0, interval = DEFAULT_FACTORY_TIMER_INTERVAL, limit, factory } = config;

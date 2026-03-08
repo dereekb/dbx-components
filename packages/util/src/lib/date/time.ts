@@ -23,6 +23,15 @@ export type TimePeriodCounter = (() => number) & {
   readonly _reset: (start?: Date) => Date;
 };
 
+/**
+ * Creates a counter that tracks invocations within fixed time periods.
+ * Returns the number of invocations since the current period started.
+ * When a new period begins, the counter resets to 0.
+ *
+ * @param timePeriodLength - Length of each time period in milliseconds
+ * @param lastTimePeriodStart - Optional starting point for the first period
+ * @returns A callable counter function with metadata properties
+ */
 export function timePeriodCounter(timePeriodLength: number, lastTimePeriodStart?: Maybe<Date>): TimePeriodCounter {
   function reset(inputStart: Maybe<Date>) {
     const start = inputStart ?? new Date();
@@ -269,10 +278,10 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
 }
 
 /**
- * Toggles the input Timer's running state.
+ * Toggles the input Timer's running state between running and stopped.
  *
- * @param timer
- * @param toggleRun
+ * @param timer - The timer to toggle
+ * @param toggleRun - If provided, forces the timer to run (true) or stop (false). Otherwise toggles the current state.
  */
 export function toggleTimerRunning(timer: Timer, toggleRun?: boolean): void {
   toggleRun = toggleRun != null ? toggleRun : timer.state !== 'running';

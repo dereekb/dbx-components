@@ -14,13 +14,15 @@ interface CleanupInternalState<T> {
 }
 
 /**
- * Cleans up the instance when a new value is pushed.
+ * RxJS operator that calls a destroy function on the previous value whenever a new value is emitted.
  *
- * Can be configured to wait until the previous value's destroy promise has resolved.
+ * Ensures proper cleanup of resources when switching between instances. When `wait` is true,
+ * delays emitting the new value until the previous destruction completes.
+ * On unsubscription, the last emitted instance is also destroyed.
  *
- * @param destroy
- * @param wait
- * @returns
+ * @param destroy - function to clean up each replaced instance
+ * @param wait - whether to wait for the previous destroy to complete before emitting
+ * @returns an operator that manages instance lifecycle
  */
 export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait = false): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => {
@@ -63,9 +65,10 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait 
 }
 
 /**
- * Convenience function for cleanup() on a Destroyable type.
+ * Convenience wrapper for {@link cleanup} that calls `destroy()` on each replaced {@link Destroyable} instance.
  *
- * @returns
+ * @param wait - whether to wait for the previous destroy to complete before emitting
+ * @returns an operator that manages Destroyable lifecycle
  */
 export function cleanupDestroyable<T extends Destroyable>(wait?: boolean): MonoTypeOperatorFunction<T> {
   return cleanup((x) => x.destroy(), wait);

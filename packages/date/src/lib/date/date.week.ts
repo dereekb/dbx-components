@@ -29,10 +29,15 @@ export type UnknownYearWeekCode = typeof UNKNOWN_YEAR_WEEK_CODE;
 export type YearWeekCodeIndex = number;
 
 /**
- * Returns the YearWeekCodeIndex for the YearWeekCode.
+ * Extracts the week-of-year index (1-52) from a {@link YearWeekCode}.
  *
- * @param yearWeekCode
- * @returns
+ * @param yearWeekCode - the encoded year+week code (e.g. 202401 = week 1 of 2024)
+ * @returns the week index portion
+ *
+ * @example
+ * ```ts
+ * yearWeekCodeIndex(202415); // 15
+ * ```
  */
 export function yearWeekCodeIndex(yearWeekCode: YearWeekCode): YearWeekCodeIndex {
   return yearWeekCode % 100;
@@ -47,10 +52,15 @@ export interface YearWeekCodePair {
 }
 
 /**
- * Returns the YearWeekCodePair for the YearWeekCode.
+ * Decodes a {@link YearWeekCode} into its year and week components.
  *
- * @param yearWeekCode
- * @returns
+ * @param yearWeekCode - the encoded year+week code
+ * @returns the decoded pair with year and week
+ *
+ * @example
+ * ```ts
+ * yearWeekCodePair(202415); // { year: 2024, week: 15 }
+ * ```
  */
 export function yearWeekCodePair(yearWeekCode: YearWeekCode): YearWeekCodePair {
   return {
@@ -60,10 +70,18 @@ export function yearWeekCodePair(yearWeekCode: YearWeekCode): YearWeekCodePair {
 }
 
 /**
- * Creates a YearWeekCodePair using the input date and the current/system timezone.
+ * Creates a {@link YearWeekCodePair} from a Date using the system timezone.
  *
- * @param date
- * @returns
+ * Handles year-boundary weeks correctly (e.g. Dec 31 that falls in week 1 of the next year).
+ *
+ * @param date - the date to compute the week pair for
+ * @returns the year and week-of-year pair
+ *
+ * @example
+ * ```ts
+ * yearWeekCodePairFromDate(new Date('2024-04-15'));
+ * // { year: 2024, week: 16 }
+ * ```
  */
 export function yearWeekCodePairFromDate(date: Date): YearWeekCodePair {
   let year: YearWeekCode;
@@ -83,10 +101,15 @@ export function yearWeekCodePairFromDate(date: Date): YearWeekCodePair {
 }
 
 /**
- * Creates a YearWeekCode from the input pair.
+ * Encodes a {@link YearWeekCodePair} into a single {@link YearWeekCode} number.
  *
- * @param pair
- * @returns
+ * @param pair - the year and week to encode
+ * @returns the encoded code (e.g. { year: 2024, week: 15 } => 202415)
+ *
+ * @example
+ * ```ts
+ * yearWeekCodeFromPair({ year: 2024, week: 15 }); // 202415
+ * ```
  */
 export function yearWeekCodeFromPair(pair: YearWeekCodePair): YearWeekCode {
   const { year, week } = pair;
@@ -95,10 +118,16 @@ export function yearWeekCodeFromPair(pair: YearWeekCodePair): YearWeekCode {
 }
 
 /**
- * Creates a YearWeekCode from the input Date.
+ * Computes the {@link YearWeekCode} for a Date, optionally in a specific timezone.
  *
- * @param date
- * @returns
+ * @param date - the date to compute the week code for
+ * @param timezone - optional timezone (defaults to system timezone)
+ * @returns the encoded year+week code
+ *
+ * @example
+ * ```ts
+ * yearWeekCodeFromDate(new Date('2024-04-15')); // 202416
+ * ```
  */
 export function yearWeekCodeFromDate(date: Date, timezone?: YearWeekCodeDateTimezoneInput): YearWeekCode {
   if (timezone) {
@@ -111,7 +140,7 @@ export function yearWeekCodeFromDate(date: Date, timezone?: YearWeekCodeDateTime
 }
 
 /**
- * Used to convert the input to a YearWeekCode.
+ * A function that computes a {@link YearWeekCode} from either a Date or explicit year+week values.
  */
 export type YearWeekCodeFactory = ((dateOrYear: Date | number, inputWeek?: YearWeekCodeIndex) => YearWeekCode) & {
   _normal: DateTimezoneUtcNormalInstance;
@@ -129,10 +158,12 @@ export interface YearWeekCodeConfig {
 }
 
 /**
- * Creates a DateTimezoneUtcNormalInstance using the input config.
+ * Resolves a timezone input into a {@link DateTimezoneUtcNormalInstance} for use with YearWeekCode calculations.
  *
- * @param input
- * @returns
+ * Falls back to the system timezone instance if the input is falsy.
+ *
+ * @param input - timezone string, config, or instance
+ * @returns the resolved normal instance
  */
 export function yearWeekCodeDateTimezoneInstance(input: YearWeekCodeDateTimezoneInput): DateTimezoneUtcNormalInstance {
   const normal = input ? (input instanceof DateTimezoneUtcNormalInstance ? input : dateTimezoneUtcNormal(input)) : SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
@@ -140,9 +171,13 @@ export function yearWeekCodeDateTimezoneInstance(input: YearWeekCodeDateTimezone
 }
 
 /**
- * Returns the yearWeekCode for the input system Date or Year/Week combo.
+ * Computes the {@link YearWeekCode} from a Date (using system timezone) or from explicit year and week values.
  *
- * @param date
+ * @example
+ * ```ts
+ * yearWeekCode(new Date('2024-04-15')); // 202416
+ * yearWeekCode(2024, 15);               // 202415
+ * ```
  */
 export function yearWeekCode(date: Date): YearWeekCode;
 export function yearWeekCode(year: number, week: YearWeekCodeIndex): YearWeekCode;
@@ -151,10 +186,19 @@ export function yearWeekCode(dateOrYear: Date | number, inputWeek?: YearWeekCode
 }
 
 /**
- * Creates a YearWeekCodeFactory using the optional input config.
+ * Creates a {@link YearWeekCodeFactory} that computes YearWeekCode values in the configured timezone.
  *
- * @param config
- * @returns
+ * The factory accepts either a Date or explicit year+week values.
+ *
+ * @param config - optional timezone configuration (defaults to system timezone)
+ * @returns a factory function for computing YearWeekCode values
+ *
+ * @example
+ * ```ts
+ * const factory = yearWeekCodeFactory({ timezone: 'America/Chicago' });
+ * factory(new Date('2024-04-15')); // 202416
+ * factory(2024, 15);               // 202415
+ * ```
  */
 export function yearWeekCodeFactory(config?: YearWeekCodeConfig): YearWeekCodeFactory {
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
@@ -185,30 +229,30 @@ export function yearWeekCodeFactory(config?: YearWeekCodeConfig): YearWeekCodeFa
 export type YearWeekCodeForDateRangeFactory = (dateRange: DateRange) => YearWeekCode[];
 
 /**
- * Returns the yearWeekCodes for the input Date's calendar month.
+ * Returns all {@link YearWeekCode} values that overlap with the given date range, using the system timezone.
  *
- * @param date
+ * @param dateRange - the date range to compute week codes for
+ * @returns an array of YearWeekCode values covering the range
  */
 export function yearWeekCodeForDateRange(dateRange: DateRange): YearWeekCode[] {
   return yearWeekCodeForDateRangeInTimezone(dateRange, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
 }
 
 /**
- * Returns the yearWeekCodes for the input date range's calendar month and evaluates those dates from the input timezone.
+ * Returns all {@link YearWeekCode} values that overlap with the given date range, evaluated in the specified timezone.
  *
- * The timezone of the DateRange should be passed to ensure the proper yearWeekCodes are returned.
- *
- * @param date
+ * @param dateRange - the range to compute week codes for
+ * @param dateRangeTimezone - the timezone context for accurate week boundary calculation
  */
 export function yearWeekCodeForDateRangeInTimezone(dateRange: DateRange, dateRangeTimezone: YearWeekCodeDateTimezoneInput): YearWeekCode[] {
   return yearWeekCodeForDateRangeFactory(yearWeekCodeFactory({ timezone: dateRangeTimezone }))(dateRange);
 }
 
 /**
- * Create a YearWeekCodeForMonthFactory.
+ * Creates a {@link YearWeekCodeForDateRangeFactory} that computes all week codes overlapping a date range.
  *
- * @param factory
- * @returns
+ * @param factory - the YearWeekCodeFactory to use (defaults to system timezone)
+ * @returns a factory that accepts a DateRange and returns overlapping YearWeekCode values
  */
 export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = yearWeekCodeFactory()): YearWeekCodeForDateRangeFactory {
   const { _normal } = factory;
@@ -240,21 +284,19 @@ export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = y
 export type YearWeekCodeForCalendarMonthFactory = (date: Date) => YearWeekCode[];
 
 /**
- * Returns the yearWeekCodes for the input Date's calendar month.
+ * Returns all {@link YearWeekCode} values for the calendar month containing the given date, using the system timezone.
  *
- * The date is expected to be relative to UTC.
- *
- * @param date
+ * @param date - a date within the target month
  */
 export function yearWeekCodeForCalendarMonth(date: Date): YearWeekCode[] {
   return yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(date);
 }
 
 /**
- * Create a YearWeekCodeForMonthFactory.
+ * Creates a {@link YearWeekCodeForCalendarMonthFactory} that computes all week codes for a calendar month.
  *
- * @param factory
- * @returns
+ * @param factory - the YearWeekCodeFactory to use (defaults to system timezone)
+ * @returns a factory that accepts a Date and returns YearWeekCode values for that month
  */
 export function yearWeekCodeForCalendarMonthFactory(factory: YearWeekCodeFactory = yearWeekCodeFactory()): YearWeekCodeForCalendarMonthFactory {
   const { _normal } = factory;
@@ -271,17 +313,23 @@ export function yearWeekCodeForCalendarMonthFactory(factory: YearWeekCodeFactory
 }
 
 /**
- * Used to convert the input to a YearWeekCode.
+ * A function that converts a {@link YearWeekCode} back to the start-of-week Date.
  */
 export type YearWeekCodeDateFactory = (yearWeekCode: YearWeekCode) => Date;
 
 export type YearWeekCodeDateConfig = Pick<YearWeekCodeConfig, 'timezone'>;
 
 /**
- * Creates a YearWeekCodeDateFactory using the optional input config.
+ * Creates a factory that converts a {@link YearWeekCode} back into the start-of-week Date for that week.
  *
- * @param config
- * @returns
+ * @param config - optional timezone configuration
+ * @returns a function that converts a YearWeekCode to its corresponding start-of-week Date
+ *
+ * @example
+ * ```ts
+ * const toDate = yearWeekCodeDateFactory({ timezone: 'America/Chicago' });
+ * const weekStart = toDate(202415); // Sunday of week 15, 2024
+ * ```
  */
 export function yearWeekCodeDateFactory(config?: YearWeekCodeDateConfig): YearWeekCodeDateFactory {
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
@@ -296,11 +344,16 @@ export function yearWeekCodeDateFactory(config?: YearWeekCodeDateConfig): YearWe
 }
 
 /**
- * Convenience function for calling yearWeekCodeDateFactory() with the input year week code and optional timezone.
+ * Returns the start-of-week Date for the given {@link YearWeekCode}, optionally in a specific timezone.
  *
- * @param yearWeekCode
- * @param timezone
- * @returns
+ * @param yearWeekCode - the encoded year+week code
+ * @param timezone - optional timezone (defaults to system timezone)
+ * @returns the Date at the start of the specified week
+ *
+ * @example
+ * ```ts
+ * startOfWeekForYearWeekCode(202415); // Sunday of week 15, 2024
+ * ```
  */
 export function startOfWeekForYearWeekCode(yearWeekCode: YearWeekCode, timezone?: YearWeekCodeDateTimezoneInput): Date {
   return yearWeekCodeDateFactory({ timezone })(yearWeekCode);
@@ -332,10 +385,21 @@ export interface YearWeekCodeGroupFactoryConfig<B> {
 }
 
 /**
- * Creates a YearWeekCodeGroupFactory.
+ * Creates a {@link YearWeekCodeGroupFactory} that groups items by their {@link YearWeekCode}.
  *
- * @param config
- * @returns
+ * Uses the configured date reader to extract a date or week code from each item, then groups items that share the same week.
+ *
+ * @param config - reader and factory configuration
+ * @returns a factory that groups input items by YearWeekCode
+ *
+ * @example
+ * ```ts
+ * const group = yearWeekCodeGroupFactory({
+ *   dateReader: (item) => item.date,
+ * });
+ * const groups = group([{ date: new Date('2024-04-15') }, { date: new Date('2024-04-16') }]);
+ * // groups[0].week === 202416, groups[0].items has both items
+ * ```
  */
 export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConfig<B>): YearWeekCodeGroupFactory<B> {
   const { yearWeekCodeFactory: factoryInput, yearWeekCodeReader: readerInput, dateReader } = config;

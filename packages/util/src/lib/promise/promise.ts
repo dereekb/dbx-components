@@ -13,12 +13,23 @@ import { asPromise, type PromiseOrValue } from './promise.type';
 import { terminatingFactoryFromArray } from '../array/array.factory';
 import { type PromiseReference, promiseReference } from './promise.ref';
 
+/**
+ * Configuration for {@link runAsyncTaskForValue}, which omits `throwError` since it always throws on failure.
+ */
 export type RunAsyncTaskForValueConfig<T = unknown> = Omit<PerformAsyncTaskConfig<T>, 'throwError'>;
 
+/**
+ * Configuration for {@link runAsyncTasksForValues}, which omits `throwError` since it always throws on failure.
+ */
 export type RunAsyncTasksForValuesConfig<T = unknown> = Omit<PerformAsyncTasksConfig<T>, 'throwError'>;
 
 /**
- * Runs the task using the input config, and returns the value. Is always configured to throw the error if it fails.
+ * Runs a single async task and returns the resulting value. Always configured to throw on failure.
+ *
+ * @param taskFn - The async task to execute.
+ * @param config - Optional configuration for retries and retry behavior.
+ * @returns The value produced by the task, or undefined if the task produced no value.
+ * @throws Rethrows any error thrown by the task function.
  */
 export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?: RunAsyncTaskForValueConfig<0>): Promise<Maybe<O>> {
   const { value } = await performAsyncTask(taskFn, {
@@ -30,12 +41,14 @@ export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?:
 }
 
 /**
- * Returns the task for each input value, and returns the values. Is always configured to throw the error if it fails.
+ * Runs an async task for each input value and returns an array of the resulting values.
+ * Always configured to throw on failure.
  *
- * @param input
- * @param taskFn
- * @param config
- * @returns
+ * @param input - The array of input values to process.
+ * @param taskFn - The async task function to run for each input value.
+ * @param config - Optional configuration for parallelism and retries.
+ * @returns An array of results produced by the task function for each input.
+ * @throws Rethrows any error thrown by a task function.
  */
 export async function runAsyncTasksForValues<T, K = unknown>(input: T[], taskFn: PerformAsyncTaskFn<T, K>, config?: RunAsyncTasksForValuesConfig<T>): Promise<K[]> {
   const results = await performAsyncTasks(input, taskFn, {
@@ -47,20 +60,41 @@ export async function runAsyncTasksForValues<T, K = unknown>(input: T[], taskFn:
 }
 
 // MARK: Perform
+/**
+ * An async function that processes a value and returns a result. Receives the current retry/try number.
+ *
+ * @param value - The input value to process.
+ * @param tryNumber - The current attempt number (0-based).
+ */
 export type PerformAsyncTaskFn<T, K = unknown> = (value: T, tryNumber?: number) => Promise<K>;
 
+/**
+ * The result of executing a single async task via {@link performAsyncTask}.
+ */
 export interface PerformAsyncTaskResult<O> {
+  /** The resulting value if the task succeeded, or undefined on failure. */
   readonly value: Maybe<O>;
+  /** Whether the task completed successfully. */
   readonly success: boolean;
 }
 
+/**
+ * The aggregated result of executing multiple async tasks via {@link performAsyncTasks}.
+ */
 export interface PerformAsyncTasksResult<I, O> {
+  /** Input values whose tasks succeeded. */
   readonly succeded: I[];
+  /** Input values whose tasks failed. */
   readonly failed: I[];
+  /** Tuples of [input, output] for each successful task. */
   readonly results: [I, O][];
+  /** Tuples of [input, error] for each failed task. */
   readonly errors: [I, unknown][];
 }
 
+/**
+ * Configuration for retry behavior when performing async tasks.
+ */
 export interface PerformAsyncTaskConfig<I = unknown> {
   /**
    * Whether or not to throw an error if the task fails. Defaults to true.
@@ -82,12 +116,20 @@ export interface PerformAsyncTaskConfig<I = unknown> {
   readonly beforeRetry?: (value: I, tryNumber?: number) => void | Promise<void>;
 }
 
+/**
+ * Configuration for {@link performAsyncTasks}, combining retry behavior with parallel execution options.
+ */
 export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> extends PerformAsyncTaskConfig<I>, Omit<PerformTasksInParallelFunctionConfig<I, K>, 'taskFactory'> {}
 
 /**
- * Performs the input tasks, and will retry tasks if they fail, up to a certain point.
+ * Performs async tasks for each input value with configurable retry and parallelism behavior.
+ * Useful for operations that may experience optimistic concurrency collisions.
  *
- * This is useful for retrying sections that may experience optimistic concurrency collisions.
+ * @param input - The array of input values to process.
+ * @param taskFn - The async function to execute for each input.
+ * @param config - Configuration for retries, parallelism, and error handling.
+ * @returns An aggregated result with succeeded/failed items and their outputs/errors.
+ * @throws Rethrows the last error from retries if `throwError` is true (default).
  */
 export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I, K> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
   const { sequential, maxParallelTasks, waitBetweenTasks, nonConcurrentTaskKeyFactory } = config;
@@ -129,6 +171,14 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
   };
 }
 
+/**
+ * Performs a single async task with configurable retry behavior and returns the result with success status.
+ *
+ * @param taskFn - The async task to execute.
+ * @param config - Optional configuration for retries and error handling.
+ * @returns A result object containing the value (if successful) and a success flag.
+ * @throws Rethrows the last error from retries if `throwError` is true (default).
+ */
 export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: PerformAsyncTaskConfig<0>): Promise<PerformAsyncTaskResult<O>> {
   const [, value, success] = await _performAsyncTask(0, () => taskFn(), config);
   return { value, success };
@@ -189,6 +239,9 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
  */
 export type PerformTasksInParallelTaskUniqueKey = string;
 
+/**
+ * Configuration for {@link performTasksInParallelFunction}, excluding `waitBetweenTaskInputRequests`.
+ */
 export type PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> = Omit<PerformTasksFromFactoryInParallelFunctionConfig<I, K>, 'waitBetweenTaskInputRequests'>;
 
 /**
@@ -199,20 +252,23 @@ export type PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = Per
 export type PerformTasksInParallelFunction<I> = (input: I[]) => Promise<void>;
 
 /**
- * Convenience function for calling performTasksInParallelFunction() with the given input.
+ * Convenience function that creates a parallel task executor and immediately runs it with the given input.
  *
- * @param input
- * @param config
- * @returns
+ * @param input - The array of items to process.
+ * @param config - Configuration for task execution, parallelism, and concurrency constraints.
+ * @returns A Promise that resolves when all tasks complete.
+ * @throws Rethrows the first error encountered during task execution.
  */
 export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], config: PerformTasksInParallelFunctionConfig<I, K>): Promise<void> {
   return performTasksInParallelFunction(config)(input);
 }
 
 /**
- * Creates a function that performs tasks in parallel.
+ * Creates a reusable function that performs tasks in parallel with optional concurrency limits
+ * and non-concurrent task key constraints.
  *
- * @param config
+ * @param config - Configuration for task factory, parallelism limits, and concurrency keys.
+ * @returns A function that accepts an array of inputs and returns a Promise resolving when all tasks complete.
  */
 export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
   const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
@@ -263,6 +319,10 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
   return result;
 }
 
+/**
+ * Configuration for {@link performTasksFromFactoryInParallelFunction}, controlling task execution,
+ * parallelism limits, and non-concurrent key constraints.
+ */
 export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> {
   /**
    * Creates a promise from the input.
@@ -298,6 +358,10 @@ export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends Pr
   // readonly waitForTaskArrayToComplete?: boolean; // TODO(FUTURE): implement
 }
 
+/**
+ * A factory function that produces the next batch of task inputs. Returns `null` to signal
+ * that no more inputs are available.
+ */
 export type PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I> = () => PromiseOrValue<ArrayOrValue<I> | null>;
 
 /**
@@ -310,9 +374,11 @@ export type PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I> = () =>
 export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I>) => Promise<void>;
 
 /**
- * Creates a function that performs tasks from the task factory in parallel.
+ * Creates a function that pulls task inputs from a factory and executes them in parallel
+ * with configurable concurrency limits and non-concurrent key constraints.
  *
- * @param config
+ * @param config - Configuration for the task factory, parallelism, and concurrency behavior.
+ * @returns A function that accepts a task input factory and returns a Promise resolving when all tasks complete.
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
   /**
@@ -520,9 +586,9 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 }
 
 /**
- * Creates a default non-concurrent task key factory that simply creates increasing number strings.
+ * Creates a default non-concurrent task key factory that generates unique incrementing number strings.
  *
- * @returns A string factory that generates unique keys for non-concurrent tasks.
+ * @returns A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.
  */
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;

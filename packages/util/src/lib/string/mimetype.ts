@@ -35,15 +35,26 @@ export type ContentTypeMimeType = string;
  */
 export type ImageFileExtension = 'jpeg' | 'jpg' | 'png' | 'webp' | 'gif' | 'svg' | 'raw' | 'heif' | 'tiff';
 
+/** MIME type for JPEG images. */
 export const JPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpeg';
+/** MIME type for PNG images. */
 export const PNG_MIME_TYPE: MimeTypeWithoutParameters = 'image/png';
+/** MIME type for WebP images. */
 export const WEBP_MIME_TYPE: MimeTypeWithoutParameters = 'image/webp';
+/** MIME type for GIF images. */
 export const GIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/gif';
+/** MIME type for HEIF images. */
 export const HEIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/heif';
+/** MIME type for TIFF images. */
 export const TIFF_MIME_TYPE: MimeTypeWithoutParameters = 'image/tiff';
+/** MIME type for SVG images. */
 export const SVG_MIME_TYPE: MimeTypeWithoutParameters = 'image/svg+xml';
+/** MIME type for RAW images. */
 export const RAW_MIME_TYPE: MimeTypeWithoutParameters = 'image/raw';
 
+/**
+ * Maps image file extensions to their corresponding MIME types.
+ */
 export const IMAGE_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<ImageFileExtension, MimeTypeWithoutParameters> = {
   jpeg: JPEG_MIME_TYPE,
   jpg: JPEG_MIME_TYPE,
@@ -56,10 +67,16 @@ export const IMAGE_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<ImageFileExtensio
   tiff: TIFF_MIME_TYPE
 };
 
+/**
+ * Maps image MIME types back to their corresponding file extensions.
+ */
 export const IMAGE_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD: Record<MimeTypeWithoutParameters, ImageFileExtension> = invertStringRecord(IMAGE_FILE_EXTENSION_TO_MIME_TYPES_RECORD);
 
 /**
- * Returns the mimetype for the given image type, or undefined if the type is not known.
+ * Returns the MIME type for the given image file extension, or undefined if the extension is not recognized.
+ *
+ * @param extension - the image file extension to look up
+ * @returns the corresponding MIME type, or undefined if the extension is not known
  */
 export function mimeTypeForImageFileExtension(extension: ImageFileExtension): MimeTypeWithoutParameters;
 export function mimeTypeForImageFileExtension(extension: SlashPathTypedFileExtension): Maybe<MimeTypeWithoutParameters>;
@@ -68,23 +85,45 @@ export function mimeTypeForImageFileExtension(extension: Maybe<ImageFileExtensio
   return extension ? IMAGE_FILE_EXTENSION_TO_MIME_TYPES_RECORD[extension as ImageFileExtension] : undefined;
 }
 
+/**
+ * Returns the image file extension for the given MIME type, or undefined if the MIME type is not a known image type.
+ *
+ * @param mimeType - the MIME type to look up
+ * @returns the corresponding image file extension, or undefined if not recognized
+ */
 export function imageFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<ImageFileExtension> {
   return mimeType ? IMAGE_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD[mimeType] : undefined;
 }
 
+/**
+ * Non-exhaustive list of common document file extensions.
+ */
 export type DocumentFileExtension = 'pdf' | 'docx' | 'xlsx' | 'txt' | 'csv' | 'html' | 'xml' | 'json' | 'yaml' | 'md';
 
+/** MIME type for PDF documents. */
 export const PDF_MIME_TYPE: MimeTypeWithoutParameters = 'application/pdf';
+/** MIME type for DOCX (Word) documents. */
 export const DOCX_MIME_TYPE: MimeTypeWithoutParameters = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+/** MIME type for XLSX (Excel) spreadsheets. */
 export const XLSX_MIME_TYPE: MimeTypeWithoutParameters = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+/** MIME type for plain text files. */
 export const TXT_MIME_TYPE: MimeTypeWithoutParameters = 'text/plain';
+/** MIME type for CSV files. */
 export const CSV_MIME_TYPE: MimeTypeWithoutParameters = 'text/csv';
+/** MIME type for HTML files. */
 export const HTML_MIME_TYPE: MimeTypeWithoutParameters = 'text/html';
+/** MIME type for XML files. */
 export const XML_MIME_TYPE: MimeTypeWithoutParameters = 'application/xml';
+/** MIME type for JSON files. */
 export const JSON_MIME_TYPE: MimeTypeWithoutParameters = 'application/json';
+/** MIME type for YAML files. */
 export const YAML_MIME_TYPE: MimeTypeWithoutParameters = 'application/yaml';
+/** MIME type for Markdown files. */
 export const MARKDOWN_MIME_TYPE: MimeTypeWithoutParameters = 'text/markdown';
 
+/**
+ * Maps document file extensions to their corresponding MIME types.
+ */
 export const DOCUMENT_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<DocumentFileExtension, MimeTypeWithoutParameters> = {
   pdf: PDF_MIME_TYPE,
   docx: DOCX_MIME_TYPE,
@@ -98,6 +137,9 @@ export const DOCUMENT_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<DocumentFileEx
   md: MARKDOWN_MIME_TYPE
 };
 
+/**
+ * Maps document MIME types back to their corresponding file extensions.
+ */
 export const DOCUMENT_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD: Record<MimeTypeWithoutParameters, DocumentFileExtension> = invertStringRecord(DOCUMENT_FILE_EXTENSION_TO_MIME_TYPES_RECORD);
 
 /**
@@ -123,14 +165,24 @@ export function documentFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithout
   return mimeType ? DOCUMENT_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD[mimeType] : undefined;
 }
 
+/**
+ * Non-exhaustive list of common application file extensions.
+ */
 export type ApplicationFileExtension = 'zip';
 
+/** MIME type for ZIP archive files. */
 export const ZIP_FILE_MIME_TYPE: MimeTypeWithoutParameters = 'application/zip';
 
+/**
+ * Maps application file extensions to their corresponding MIME types.
+ */
 export const APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<ApplicationFileExtension, MimeTypeWithoutParameters> = {
   zip: ZIP_FILE_MIME_TYPE
 };
 
+/**
+ * Maps application MIME types back to their corresponding file extensions.
+ */
 export const APPLICATION_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD: Record<MimeTypeWithoutParameters, ApplicationFileExtension> = invertStringRecord(APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD);
 
 /**
@@ -146,6 +198,12 @@ export function mimeTypeForApplicationFileExtension(extension: Maybe<Application
   return extension ? APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD[extension as ApplicationFileExtension] : undefined;
 }
 
+/**
+ * Returns the application file extension for the given MIME type, or undefined if the MIME type is not a known application type.
+ *
+ * @param mimeType - the MIME type to look up
+ * @returns the corresponding application file extension, or undefined if not recognized
+ */
 export function applicationFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<ApplicationFileExtension> {
   return mimeType ? APPLICATION_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD[mimeType] : undefined;
 }
@@ -171,6 +229,12 @@ export function mimeTypeForFileExtension(extension: Maybe<DbxComponentsKnownFile
   return result;
 }
 
+/**
+ * Returns the file extension for the given MIME type by checking image, document, and application types in order.
+ *
+ * @param mimeType - the MIME type to look up
+ * @returns the corresponding file extension, or undefined if the MIME type is not recognized
+ */
 export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<DbxComponentsKnownFileExtension> {
   const result: Maybe<DbxComponentsKnownFileExtension> = imageFileExtensionForMimeType(mimeType) ?? documentFileExtensionForMimeType(mimeType) ?? applicationFileExtensionForMimeType(mimeType);
   return result;

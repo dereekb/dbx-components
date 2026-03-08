@@ -2,19 +2,27 @@ import { type Observable } from 'rxjs';
 import { type Destroyable, type Maybe, type PageNumber } from '@dereekb/util';
 import { type LoadingState, type PageLoadingState } from '../loading';
 
+/**
+ * Request parameters for triggering the next load in an {@link ItemIteration}.
+ */
 export interface ItemIteratorNextRequest {
   /**
-   * The expected page to request.
-   *
-   * If provided, the page must equal the target page, otherwise the next is ignored.
+   * Target page number to load. If provided and the iterator is not on this page,
+   * the request is ignored to prevent out-of-order loading.
    */
   page?: number;
   /**
-   * Whether or not to retry loading the page.
+   * Whether to retry loading the current page after an error.
    */
   retry?: boolean;
 }
 
+/**
+ * Reactive iterator that loads items incrementally and exposes loading state as observables.
+ *
+ * Consumers call {@link next} to trigger loading of the next batch and observe results
+ * through the various state observables.
+ */
 export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingState<V>> extends Destroyable {
   /**
    * Whether or not there are more items to be loaded.
@@ -56,7 +64,10 @@ export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingS
 }
 
 /**
- * An ItemIteration that has pages.
+ * Extension of {@link ItemIteration} that supports paginated loading with page numbers.
+ *
+ * Adds page-specific operations like {@link nextPage} (promise-based) and page load limits
+ * to prevent unbounded iteration.
  */
 export interface PageItemIteration<V = unknown, L extends PageLoadingState<V> = PageLoadingState<V>> extends ItemIteration<V, L> {
   /**
