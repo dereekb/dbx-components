@@ -3,8 +3,14 @@ import { type KeyAsString } from '../type';
 import { hasValueOrNotEmpty, hasValueOrNotEmptyObject } from '../value/maybe';
 
 // MARK: For Each
+/**
+ * Callback invoked for each key/value tuple during iteration.
+ */
 export type ForEachKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = (tuple: KeyValueTuple<T, K>, index: number) => void;
 
+/**
+ * Configuration for {@link forEachKeyValue} specifying a filter and a forEach callback.
+ */
 export interface ForEachKeyValue<T extends object = object, K extends keyof T = keyof T> {
   readonly filter?: FilterKeyValueTuplesInput<T, K>;
   readonly forEach: ForEachKeyValueTupleFunction<T, K>;
@@ -54,6 +60,9 @@ export function filterKeyValueTuples<T extends object = object, K extends keyof 
  */
 export type KeyValueTuple<T extends object = object, K extends keyof T = keyof T> = [K, T[K]];
 
+/**
+ * Function that extracts key/value tuples from an object, optionally filtering them based on a pre-configured filter.
+ */
 export type FilterKeyValueTuplesFunction<T extends object = object, K extends keyof T = keyof T> = (obj: T) => KeyValueTuple<T, K>[];
 
 /**
@@ -99,6 +108,10 @@ export function allKeyValueTuples<T extends object = object, K extends keyof T =
   return Object.entries(obj) as KeyValueTuple<T, K>[];
 }
 
+/**
+ * Input for configuring key/value tuple filtering. Can be a {@link KeyValueTypleValueFilter} enum for simple cases
+ * or a {@link KeyValueTupleFilter} object for more complex filtering (value type + key restriction + inversion).
+ */
 export type FilterKeyValueTuplesInput<T extends object = object, K extends keyof T = keyof T> = KeyValueTypleValueFilter | KeyValueTupleFilter<T, K>;
 
 /**
@@ -139,9 +152,21 @@ export enum KeyValueTypleValueFilter {
   FALSY_AND_EMPTY_STRICT = 7
 }
 
+/**
+ * Full configuration for filtering key/value tuples, supporting value type filtering, key restriction, and inversion.
+ */
 export interface KeyValueTupleFilter<T extends object = object, K extends keyof T = keyof T> {
+  /**
+   * Type of value filtering to apply.
+   */
   valueFilter?: KeyValueTypleValueFilter;
+  /**
+   * When `true`, inverts the filter so that only non-matching tuples are retained.
+   */
   invertFilter?: boolean;
+  /**
+   * Restricts filtering to only these keys. Other keys are excluded from the result.
+   */
   keysFilter?: (K | KeyAsString<K>)[];
 }
 
@@ -161,6 +186,9 @@ export function filterKeyValueTuplesInputToFilter<T extends object = object, K e
   }
 }
 
+/**
+ * Predicate function that tests a single key/value tuple, returning `true` if it passes the filter.
+ */
 export type FilterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = FilterFunction<KeyValueTuple<T, K>>;
 
 /**

@@ -223,15 +223,15 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 83 | object.ts | YES | `[ ]` |
-| 84 | object.array.ts | **NEEDS SPEC** | `[ ]` |
-| 85 | object.array.delta.ts | YES | `[ ]` |
-| 86 | object.empty.ts | YES | `[ ]` |
-| 87 | object.equal.ts | YES | `[ ]` |
-| 88 | object.filter.pojo.ts | YES | `[ ]` |
-| 89 | object.filter.tuple.ts | YES | `[ ]` |
-| 90 | object.key.ts | **NEEDS SPEC** | `[ ]` |
-| 91 | object.map.ts | YES | `[ ]` |
+| 83 | object.ts | YES | `[x]` |
+| 84 | object.array.ts | YES | `[x]` |
+| 85 | object.array.delta.ts | YES | `[x]` |
+| 86 | object.empty.ts | YES | `[x]` |
+| 87 | object.equal.ts | YES | `[x]` |
+| 88 | object.filter.pojo.ts | YES | `[x]` |
+| 89 | object.filter.tuple.ts | YES | `[x]` |
+| 90 | object.key.ts | YES | `[x]` |
+| 91 | object.map.ts | YES | `[x]` |
 
 ---
 
