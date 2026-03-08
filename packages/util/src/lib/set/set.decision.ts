@@ -10,9 +10,11 @@ export type IsInSetDecisionFunction<T, V> = DecisionFunction<T> & {
 };
 
 /**
- * Creates an IsInSetDecisionFunction.
+ * Creates an {@link IsInSetDecisionFunction} that checks whether a value (or a derived value) is in the given set.
  *
- * @param set
+ * @param set - The set to check membership against.
+ * @param readValue - Optional function to extract the lookup value from the input. Defaults to identity.
+ * @returns A decision function that returns true for values found in the set.
  */
 export function isInSetDecisionFunction<T>(set: Set<T>): IsInSetDecisionFunction<T, T>;
 export function isInSetDecisionFunction<T, V>(set: Set<V>, readValue: (value: T) => V): IsInSetDecisionFunction<T, V>;
