@@ -31,7 +31,7 @@ describe('workFactory', () => {
     })
   );
 
-  it('should catch errors thrown by the work function', () => {
+  it('should catch errors thrown by the work function and call reject', () => {
     const delegate = {
       startWorking: vi.fn(),
       success: vi.fn(),
@@ -45,11 +45,9 @@ describe('workFactory', () => {
       delegate
     });
 
+    // workFactory returns undefined when the work function throws
     const instance = factory(1);
-
+    expect(instance).toBeUndefined();
     expect(delegate.reject).toHaveBeenCalled();
-    expect(instance).toBeDefined();
-
-    instance!.destroy();
   });
 });

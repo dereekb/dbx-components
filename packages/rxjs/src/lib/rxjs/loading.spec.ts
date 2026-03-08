@@ -3,20 +3,22 @@ import { isLoading } from './loading';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('isLoading', () => {
-  it('should emit true initially then false once the source emits', (done) => {
-    const results: boolean[] = [];
-    const source = new BehaviorSubject<string>('data');
+  it('should emit true initially then false once the source emits', () => {
+    return new Promise<void>((resolve) => {
+      const results: boolean[] = [];
+      const source = new BehaviorSubject<string>('data');
 
-    source.pipe(isLoading()).subscribe({
-      next: (value) => {
-        results.push(value);
+      source.pipe(isLoading()).subscribe({
+        next: (value) => {
+          results.push(value);
 
-        if (results.length === 2) {
-          expect(results[0]).toBe(true);
-          expect(results[1]).toBe(false);
-          done();
+          if (results.length === 2) {
+            expect(results[0]).toBe(true);
+            expect(results[1]).toBe(false);
+            resolve();
+          }
         }
-      }
+      });
     });
   });
 
