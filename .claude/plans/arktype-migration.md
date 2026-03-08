@@ -85,20 +85,33 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 
 ## Phase 2: `@dereekb/date`
 
-### 2.1 Add arktype peer dependency
-- [ ] Add `arktype` to `packages/date/package.json` (peerDependency)
+### 2.1 Add arktype peer dependency ✅
+- [x] Add `arktype` to `packages/date/package.json` (peerDependency)
 
-### 2.2 Convert custom validators
-- [ ] `@IsKnownTimezone()` → `.narrow()` wrapping `isKnownTimezone`
-- [ ] `@IsValidDateCellTiming()` → `.narrow()`
-- [ ] `@IsValidDateCellRange()` → `.narrow()`
-- [ ] `@IsValidDateCellRangeSeries()` → `.narrow()`
-- [ ] `@IsISO8601DayString()` → regex or `.narrow()`
+### 2.2 Convert custom validators ✅
+- [x] `@IsKnownTimezone()` → `knownTimezoneType` (`.narrow()` wrapping `isKnownTimezone`)
+- [x] `@IsValidDateCellTiming()` → `validDateCellTimingType` (`.narrow()`)
+- [x] `@IsValidDateCellRange()` → `validDateCellRangeType` (`.narrow()`)
+- [x] `@IsValidDateCellRangeSeries()` → `validDateCellRangeSeriesType` (`.narrow()`)
+- [x] `@IsISO8601DayString()` already converted in Phase 1 (`iso8601DayStringType` in `@dereekb/model`)
 
-### 2.3 Convert DTOs and adapt existing tests
-- [ ] Convert `@Expose()`-annotated classes to ArkType schemas + inferred types
-- [ ] Adapt existing tests
-- [ ] Verify all existing date tests pass
+### 2.3 Convert DTOs and adapt existing tests ✅
+- [x] `DateDurationSpan` class → `dateDurationSpanType` schema (interface kept)
+- [x] `DateRange` class → `dateRangeType` schema (interface kept)
+- [x] `DateRangeParams` class → `dateRangeParamsType` schema (converted to interface)
+- [x] `DateCell` class → `dateCellType` schema (interface kept)
+- [x] `DateCellTiming` class → `dateCellTimingType` schema using `.merge()` (interface kept)
+- [x] `DateCellRange` class → `dateCellRangeType` schema using `.merge()` (interface kept)
+- [x] `CalendarDate` class → `calendarDateType` schema using `.merge()` (interface kept)
+- [x] `DateCellSchedule` class → `dateCellScheduleType` schema (interface kept)
+- [x] `ModelRecurrenceInfo` class → `modelRecurrenceInfoType` schema (converted to interface)
+- [x] Adapted all validator spec tests to use ArkType schemas
+- [x] Adapted `date.duration.spec.ts` to use schema validation
+- [x] Adapted `date.cell.spec.ts` to use ArkType schema instead of `plainToInstance`
+- [x] Adapted `date.recurrence.spec.ts` to use interface instead of class constructor
+- [x] Removed all `class-validator` and `class-transformer` imports from date package
+- [x] Build passes
+- [x] Verify all existing date tests pass
 
 ---
 
