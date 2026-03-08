@@ -190,14 +190,39 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 
 ---
 
-## Phase 5: Demo App and Templates
+## Phase 5: Demo App and Templates ✅ COMPLETE
 
-### 5.1 Update demo-firebase API DTOs
-- [ ] Verify `apps/demo-api/` entry-level files need no changes (already import types)
-- [ ] Convert any demo-specific param classes in `demo-firebase/` to ArkType schemas
+### 5.1 Update demo-firebase API DTOs ✅
+- [x] `apps/demo-api/` entry-level files already used type-only imports — no changes needed
+- [x] `components/demo-firebase/src/lib/development/development.api.ts` — `DemoDevelopmentExampleParams` class → interface + `demoDevelopmentExampleParamsType` schema
+- [x] `components/demo-firebase/src/lib/model/system/system.api.ts` — `ExampleReadParams` class → interface + `exampleReadParamsType` schema
+- [x] `components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts` — 6 classes → interfaces + schemas:
+  - `CreateGuestbookParams`, `GuestbookEntryParams`, `InsertGuestbookEntryParams` (with `.merge()`)
+  - `LikeGuestbookEntryParams` (alias of `TargetModelParams`), `SubscribeToGuestbookNotificationsParams` (alias of `AbstractSubscribeToNotificationBoxParams`)
+- [x] `components/demo-firebase/src/lib/model/profile/profile.api.ts` — 5 classes → interfaces + schemas:
+  - `ProfileCreateTestNotificationParams`, `SetProfileUsernameParams`, `UpdateProfileParams` (all `.merge()` on `inferredTargetModelParamsType`)
+  - `FinishOnboardingProfileParams` (alias), `DownloadProfileArchiveParams` (alias)
+- [x] Updated `demo-firebase/package.json`: replaced `class-transformer`/`class-validator` with `arktype`
 
-### 5.2 Update setup templates
-- [ ] Convert template DTO classes in `setup/templates/` to ArkType pattern
+### 5.2 Update demo-api action servers ✅
+- [x] `apps/demo-api/src/app/common/model/profile/profile.action.server.ts` — 3 factory calls now use ArkType schemas
+- [x] `apps/demo-api/src/app/common/model/guestbook/guestbook.action.server.ts` — 4 factory calls now use ArkType schemas
+- [x] All imports use `type` keyword for interface-only references
+
+### 5.3 Update setup templates ✅
+- [x] `setup/templates/components/firebase/src/lib/development/development.api.ts` — class → interface + schema
+- [x] `setup/templates/components/firebase/src/lib/model/example/example.api.ts` — class → interface + schema
+- [x] `setup/templates/components/firebase/src/lib/model/profile/profile.api.ts` — 2 classes → type aliases + schemas
+- [x] `setup/templates/apps/api/src/app/common/model/example/example.action.server.ts` — factory call uses schema
+- [x] `setup/templates/apps/api/src/app/common/model/profile/profile.action.server.ts` — factory call uses schema
+- [x] Template function files updated to use type-only imports
+
+### 5.4 Remove stray class-validator utility imports ✅
+- [x] `packages/dbx-core/.../angular.router.service.ts` — `isArray` from class-validator → `Array.isArray`
+- [x] `packages/dbx-web/.../compact.ts` — `isBoolean` from class-validator → `typeof input === 'boolean'`
+- [x] `packages/util/.../random.spec.ts` — `isEmail`/`isPhoneNumber` from class-validator → regex match / `isE164PhoneNumber`
+- [x] Updated `apps/demo/src/app/modules/landing/container/layout.component.ts` — description and links updated from class-transformer/class-validator to arktype
+- [x] All source code now free of `class-validator` and `class-transformer` imports (only `.claude/skills/` docs remain)
 
 ---
 
