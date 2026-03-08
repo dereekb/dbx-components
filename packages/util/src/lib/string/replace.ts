@@ -3,8 +3,14 @@ import { type Maybe } from '../value/maybe.type';
 import { type MapSameFunction } from '../value/map';
 import { replaceCharacterAtIndexWith, splitStringAtIndex } from './char';
 
+/**
+ * Function that replaces target substrings within an input string.
+ */
 export type ReplaceStringsFunction = MapSameFunction<string>;
 
+/**
+ * Configuration for creating a {@link ReplaceStringsFunction}.
+ */
 export interface ReplaceStringsConfig {
   /**
    * Strings to target/replace.
@@ -16,6 +22,12 @@ export interface ReplaceStringsConfig {
   readonly replaceWith: string;
 }
 
+/**
+ * Creates a function that replaces all occurrences of the configured target strings with a replacement value.
+ *
+ * @param config - Configuration specifying strings to find and the replacement value.
+ * @returns A function that performs the configured replacements on an input string.
+ */
 export function replaceStringsFunction(config: ReplaceStringsConfig) {
   const { replace: replaceInput, replaceWith } = config;
   const replaceRegexString = findStringsRegexString(replaceInput);
@@ -23,13 +35,21 @@ export function replaceStringsFunction(config: ReplaceStringsConfig) {
   return (input: string) => input.replace(replaceRegex, replaceWith);
 }
 
+/**
+ * Array of characters that have special meaning in regular expressions and need escaping.
+ */
 export const REGEX_SPECIAL_CHARACTERS = ['\\', '^', '$', '.', '|', '?', '*', '+', '(', ')', '[', ']', '{', '}'];
+
+/**
+ * Set of regex special characters for efficient lookup.
+ */
 export const REGEX_SPECIAL_CHARACTERS_SET = new Set(REGEX_SPECIAL_CHARACTERS);
 
 /**
- * Creates an escaped regex string joined with or values that finds all of the input values.
+ * Creates an escaped regex string that matches any of the input values, joined with the OR (`|`) operator.
  *
- * @param find
+ * @param find - One or more strings to create a matching regex pattern for.
+ * @returns A regex-compatible string with special characters escaped and values joined by `|`.
  */
 export function findStringsRegexString(find: ArrayOrValue<string>): string {
   const input = asArray(find);
@@ -37,6 +57,9 @@ export function findStringsRegexString(find: ArrayOrValue<string>): string {
   return escapedInput.join('|');
 }
 
+/**
+ * Configuration for creating an {@link EscapeStringCharactersFunction}.
+ */
 export interface EscapeStringCharactersFunctionConfig {
   /**
    * The set of characters to find and use the escapeCharacter() function on.
@@ -61,10 +84,10 @@ export interface EscapeStringCharactersFunctionConfig {
 export type EscapeStringCharactersFunction = (input: string) => string;
 
 /**
- * Creates an EscapeStringCharactersFunction
+ * Creates an {@link EscapeStringCharactersFunction} that escapes specific characters in a string using the configured escape strategy.
  *
- * @param config
- * @returns
+ * @param config - Configuration specifying which characters to escape and how to escape them.
+ * @returns A function that escapes the configured characters in any input string.
  */
 export function escapeStringCharactersFunction(config: EscapeStringCharactersFunctionConfig): EscapeStringCharactersFunction {
   const { escapeTargets: inputEscapeTargets, escapeCharacter } = config;
@@ -119,11 +142,12 @@ export function escapeStringCharactersFunction(config: EscapeStringCharactersFun
 }
 
 /**
- * Escapes the input string to be usable in a Regex value.
+ * Escapes the input string so it can be safely used as a literal value in a regular expression.
  *
- * For instance, 'hello.world' will be escaped to be 'hello\.world'
+ * For instance, `'hello.world'` will be escaped to `'hello\\.world'`.
  *
- * @param input
+ * @param input - The string to escape for regex use.
+ * @returns The escaped string with all regex special characters prefixed with a backslash.
  */
 export const escapeStringForRegex = escapeStringCharactersFunction({
   escapeTargets: REGEX_SPECIAL_CHARACTERS_SET,
@@ -132,8 +156,21 @@ export const escapeStringForRegex = escapeStringCharactersFunction({
   }
 });
 
+/**
+ * Function that finds all indices of characters from a pre-configured set within an input string.
+ *
+ * @param input - The string to search through.
+ * @param max - Optional maximum number of occurrences to return.
+ * @returns An array of zero-based indices where matching characters were found.
+ */
 export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<number>) => number[];
 
+/**
+ * Creates a {@link FindAllCharacterOccurencesFunction} that searches for characters from the given set.
+ *
+ * @param characterSet - The set of characters to search for.
+ * @returns A function that finds all occurrences of the configured characters in an input string.
+ */
 export function findAllCharacterOccurencesFunction(characterSet: Set<string>): FindAllCharacterOccurencesFunction {
   return (input: string, maxToReturn?: Maybe<number>) => {
     const max = maxToReturn ?? Number.MAX_SAFE_INTEGER;
@@ -157,22 +194,23 @@ export function findAllCharacterOccurencesFunction(characterSet: Set<string>): F
 }
 
 /**
- * First all occurences of the characters from the set in the input string.
+ * Finds all indices of characters from the set that appear in the input string.
  *
- * @param set
- * @param input
- * @returns
+ * @param set - The set of characters to search for.
+ * @param input - The string to search through.
+ * @param max - Optional maximum number of occurrences to return.
+ * @returns An array of zero-based indices where matching characters were found.
  */
 export function findAllCharacterOccurences(set: Set<string>, input: string, max?: number): number[] {
   return findAllCharacterOccurencesFunction(set)(input, max);
 }
 
 /**
- * First the first occurence of a character from the set in the input string.
+ * Finds the index of the first occurrence of any character from the set in the input string.
  *
- * @param set
- * @param input
- * @returns
+ * @param set - The set of characters to search for.
+ * @param input - The string to search through.
+ * @returns The zero-based index of the first matching character, or `undefined` if none found.
  */
 export function findFirstCharacterOccurence(set: Set<string>, input: string): Maybe<number> {
   return findAllCharacterOccurences(set, input, 1)[0];
@@ -192,10 +230,10 @@ export type SplitStringAtFirstCharacterOccurenceResult = [string, string | undef
 export type SplitStringAtFirstCharacterOccurenceFunction = (input: string) => SplitStringAtFirstCharacterOccurenceResult;
 
 /**
- * Splits the string into two parts at the first occurence of a string or any string in the set.
+ * Creates a function that splits a string into two parts at the first occurrence of any character in the configured set.
  *
- * @param set
- * @param input
+ * @param splitAt - A single character or set of characters to split on.
+ * @returns A function that splits input strings at the first matching character.
  */
 export function splitStringAtFirstCharacterOccurenceFunction(splitAt: string | Set<string>): SplitStringAtFirstCharacterOccurenceFunction {
   return (input: string) => {
@@ -213,6 +251,13 @@ export function splitStringAtFirstCharacterOccurenceFunction(splitAt: string | S
   };
 }
 
+/**
+ * Splits the input string into two parts at the first occurrence of any character in the split set.
+ *
+ * @param input - The string to split.
+ * @param splitAt - A single character or set of characters to split on.
+ * @returns A tuple of [before, after], where `after` is `undefined` if no split character was found.
+ */
 export function splitStringAtFirstCharacterOccurence(input: string, splitAt: string | Set<string>): [string, string | undefined] {
   return splitStringAtFirstCharacterOccurenceFunction(splitAt)(input);
 }
@@ -225,10 +270,10 @@ export function splitStringAtFirstCharacterOccurence(input: string, splitAt: str
 export type KeepCharactersAfterFirstCharacterOccurenceFunction = (input: string) => string;
 
 /**
- * Splits the string into two parts at the first occurence of a string or any string in the set.
+ * Creates a function that returns only the characters after the first occurrence of any character in the configured set.
  *
- * @param set
- * @param input
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns A function that extracts the substring after the first matching character, or an empty string if none found.
  */
 export function keepCharactersAfterFirstCharacterOccurenceFunction(findCharacters: string | Set<string>): KeepCharactersAfterFirstCharacterOccurenceFunction {
   const splitStringAtFirstCharacterOccurence = splitStringAtFirstCharacterOccurenceFunction(findCharacters);
@@ -236,11 +281,11 @@ export function keepCharactersAfterFirstCharacterOccurenceFunction(findCharacter
 }
 
 /**
- * Keeps all characters from the input string after the first character occurence from findCharacters input.
+ * Returns only the characters after the first occurrence of any character from the find set.
  *
- * @param input
- * @param splitAt
- * @returns
+ * @param input - The string to search through.
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns The substring after the first matching character, or an empty string if none found.
  */
 export function keepCharactersAfterFirstCharacterOccurence(input: string, findCharacters: string | Set<string>): string {
   return keepCharactersAfterFirstCharacterOccurenceFunction(findCharacters)(input);
@@ -252,10 +297,10 @@ export function keepCharactersAfterFirstCharacterOccurence(input: string, findCh
 export type RemoveCharactersAfterFirstCharacterOccurenceFunction = (input: string) => string;
 
 /**
- * Splits the string into two parts at the first occurence of a string or any string in the set.
+ * Creates a function that removes all characters after (and including) the first occurrence of any character in the configured set.
  *
- * @param set
- * @param input
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns A function that truncates input strings at the first matching character.
  */
 export function removeCharactersAfterFirstCharacterOccurenceFunction(findCharacters: string | Set<string>): RemoveCharactersAfterFirstCharacterOccurenceFunction {
   const splitStringAtFirstCharacterOccurence = splitStringAtFirstCharacterOccurenceFunction(findCharacters);
@@ -263,11 +308,11 @@ export function removeCharactersAfterFirstCharacterOccurenceFunction(findCharact
 }
 
 /**
- * Removes all characters from the input string after the first character occurence from findCharacters input.
+ * Removes all characters after (and including) the first occurrence of any character from the find set.
  *
- * @param input
- * @param splitAt
- * @returns
+ * @param input - The string to truncate.
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns The substring before the first matching character, or the full string if none found.
  */
 export function removeCharactersAfterFirstCharacterOccurence(input: string, findCharacters: string | Set<string>): string {
   return removeCharactersAfterFirstCharacterOccurenceFunction(findCharacters)(input);

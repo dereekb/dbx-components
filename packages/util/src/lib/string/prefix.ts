@@ -34,6 +34,12 @@ export type CharacterPrefixString<P extends CharacterPrefix = '', T extends stri
  */
 export type CharacterSuffixString<S extends CharacterSuffix = '', T extends string = string> = CharacterPrefixSuffixString<'', S, T>;
 
+/**
+ * Configuration for creating a {@link CharacterPrefixSuffixInstance} that manages adding and removing prefix/suffix strings.
+ *
+ * @template P - The prefix string type.
+ * @template S - The suffix string type.
+ */
 export interface CharacterPrefixSuffixInstanceConfiguration<P extends CharacterPrefix = '', S extends CharacterSuffix = ''> {
   /**
    * The prefix characters to add/remove to/from the start of the string.
@@ -53,30 +59,38 @@ export interface CharacterPrefixSuffixInstanceConfiguration<P extends CharacterP
   readonly suffixEmptyString?: boolean;
 }
 
+/**
+ * Instance that can add or remove a configured prefix and/or suffix from strings.
+ *
+ * @template P - The prefix string type.
+ * @template S - The suffix string type.
+ */
 export interface CharacterPrefixSuffixInstance<P extends CharacterPrefix = '', S extends CharacterSuffix = ''> extends CharacterPrefixSuffixInstanceConfiguration<P, S> {
   /**
-   * Adds the prefix and suffix to the input string.
+   * Adds the prefix and suffix to the input string. Cleans any existing prefix/suffix before adding.
    *
-   * @param input
+   * @param input - The string to prefix and suffix.
+   * @returns The string with prefix and suffix applied.
    */
   prefixSuffixString(input: ''): string;
   prefixSuffixString<T extends string>(input: T | CharacterPrefixSuffixString<P, S, T> | CharacterPrefixString<P, T> | CharacterSuffixString<S, T>): CharacterPrefixSuffixString<P, S, T>;
   prefixSuffixString(input: string): CharacterPrefixSuffixString<P, S>;
 
   /**
-   * Removes the prefix and suffix from the input string.
+   * Removes the prefix and suffix from the input string, stripping repeated occurrences.
    *
-   * @param input
+   * @param input - The string to clean.
+   * @returns The string with prefix and suffix removed.
    */
   cleanString<T extends string>(input: T | CharacterPrefixSuffixString<P, S, T> | CharacterPrefixString<P, T> | CharacterSuffixString<S, T>): T;
   cleanString(input: string): string;
 }
 
 /**
- * Creates a CharacterPrefixSuffixInstance
+ * Creates a {@link CharacterPrefixSuffixInstance} that can add or remove configured prefix/suffix strings.
  *
- * @param config
- * @returns
+ * @param config - Configuration specifying the prefix, suffix, and empty string behavior.
+ * @returns A new instance for managing prefix/suffix operations on strings.
  */
 export function characterPrefixSuffixInstance<P extends CharacterPrefix = '', S extends CharacterSuffix = ''>(config: CharacterPrefixSuffixInstanceConfiguration<P, S>): CharacterPrefixSuffixInstance<P, S> {
   const { prefix: inputPrefix, suffix: inputSuffix, prefixEmptyString, suffixEmptyString } = config;

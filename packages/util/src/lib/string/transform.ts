@@ -152,6 +152,13 @@ export function transformStringFunction<S extends string = string>(config: Trans
   return transform as unknown as TransformStringFunction<S>;
 }
 
+/**
+ * Adds a prefix to the input string if it does not already start with that prefix.
+ *
+ * @param prefix - The prefix to add.
+ * @param input - The string to modify.
+ * @returns The string with the prefix applied.
+ */
 export function addPrefix(prefix: string, input: string): string {
   return addPrefixFunction(prefix)(input);
 }

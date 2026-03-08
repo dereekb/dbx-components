@@ -14,7 +14,14 @@ export type PrimativeKeyDencoderValueMap<D extends PrimativeKey, E extends Prima
   [key in E]: D;
 };
 
+/**
+ * A tuple pairing an encoded value to its decoded counterpart.
+ */
 export type PrimativeKeyDencoderTuple<D extends PrimativeKey, E extends PrimativeKey> = [E, D];
+
+/**
+ * An array of {@link PrimativeKeyDencoderTuple} values.
+ */
 export type PrimativeKeyDencoderTupleArray<D extends PrimativeKey, E extends PrimativeKey> = PrimativeKeyDencoderTuple<D, E>[];
 
 /**
@@ -22,14 +29,19 @@ export type PrimativeKeyDencoderTupleArray<D extends PrimativeKey, E extends Pri
  */
 export type PrimativeKeyDencoderValues<D extends PrimativeKey, E extends PrimativeKey> = PrimativeKeyDencoderTupleArray<D, E> | PrimativeKeyDencoderValueMap<D, E>;
 
+/**
+ * A bidirectional Map that maps both encoded-to-decoded and decoded-to-encoded values.
+ * Also carries the original tuple array used to construct it.
+ */
 export type PrimativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey> = Map<D | E, E | D> & { readonly _tuples: PrimativeKeyDencoderTupleArray<D, E> };
 
 /**
- * Creates a Map of the PrimativeKeyDencoder values.
+ * Creates a bidirectional {@link PrimativeKeyDencoderMap} from the given values,
+ * allowing lookup in both directions (encoded-to-decoded and decoded-to-encoded).
  *
- * If any repeat values are found, an error will be thrown.
- *
- * @param values
+ * @param values - encoder/decoder value pairs as tuples or a map object
+ * @returns a bidirectional Map for encoding/decoding
+ * @throws Error if any key or value is repeated
  */
 export function primativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey>(values: PrimativeKeyDencoderValues<D, E>): PrimativeKeyDencoderMap<D, E> {
   const map = new Map<D | E, E | D>();
@@ -64,8 +76,18 @@ export function primativeKeyDencoderMap<D extends PrimativeKey, E extends Primat
   return map as PrimativeKeyDencoderMap<D, E>;
 }
 
+/**
+ * Configuration for creating a {@link PrimativeKeyDencoderFunction}.
+ */
 export interface PrimativeKeyDencoderConfig<D extends PrimativeKey, E extends PrimativeKey> {
+  /**
+   * The encode/decode value pairs.
+   */
   readonly values: PrimativeKeyDencoderValues<D, E>;
+  /**
+   * Optional factory to produce a fallback value when a lookup misses.
+   * If not provided or if it returns null, an error is thrown for unknown values.
+   */
   readonly defaultValue?: FactoryWithRequiredInput<D | E, D | E>;
 }
 
@@ -81,10 +103,19 @@ export type PrimativeKeyDencoderFunction<D extends PrimativeKey, E extends Prima
     readonly _map: PrimativeKeyDencoderMap<D, E>;
   };
 
+/**
+ * Default fallback factory for {@link PrimativeKeyDencoderFunction} that always returns null,
+ * causing an error to be thrown for unknown values.
+ */
 export const PRIMATIVE_KEY_DENCODER_VALUE = (input: unknown) => null;
 
 /**
- * Creates a new PrimiativeKeyDencoder.
+ * Creates a new {@link PrimativeKeyDencoderFunction} that can bidirectionally encode/decode
+ * primitive key values based on the configured value pairs.
+ *
+ * @param config - configuration with value pairs and optional default fallback
+ * @returns a function that encodes or decodes single values or arrays
+ * @throws Error if a single value lookup produces a null result and no default handles it
  */
 export function primativeKeyDencoder<D extends PrimativeKey, E extends PrimativeKey>(config: PrimativeKeyDencoderConfig<D, E>): PrimativeKeyDencoderFunction<D, E> {
   const { defaultValue = PRIMATIVE_KEY_DENCODER_VALUE } = config;
@@ -113,7 +144,8 @@ export function primativeKeyDencoder<D extends PrimativeKey, E extends Primative
 }
 
 /**
- * Used to decode
+ * Configuration for creating a {@link PrimativeKeyStringDencoderFunction} that can encode/decode
+ * between a compact string representation and an array of values.
  */
 export interface PrimativeKeyStringDencoderConfig<D extends PrimativeKey, E extends PrimativeKey> {
   /**
@@ -134,10 +166,15 @@ export interface PrimativeKeyStringDencoderConfig<D extends PrimativeKey, E exte
 export type PrimativeKeyStringDencoderFunction<D extends PrimativeKey, E extends PrimativeKey, S extends string = string> = ((encodedValues: S) => (E | D)[]) & ((decodedValues: (E | D)[]) => S);
 
 /**
- * Creates a new PrimativeKeyStringDencoderFunction.
+ * Creates a new {@link PrimativeKeyStringDencoderFunction} that converts between a compact string
+ * and an array of encoded/decoded values.
  *
- * @param config
- * @returns
+ * When no splitter is defined, all encoded values must be exactly one character long so the string
+ * can be split character-by-character.
+ *
+ * @param config - configuration with dencoder and optional splitter
+ * @returns a bidirectional function for string-to-array and array-to-string conversion
+ * @throws Error if encoded values contain the splitter character, or if values exceed one character when no splitter is defined
  */
 export function primativeKeyStringDencoder<D extends PrimativeKey, E extends PrimativeKey>(config: PrimativeKeyStringDencoderConfig<D, E>): PrimativeKeyStringDencoderFunction<D, E> {
   const dencoder = typeof config.dencoder === 'function' ? config.dencoder : primativeKeyDencoder(config.dencoder);
@@ -240,21 +277,28 @@ export interface NumberStringDencoder {
   decodeNumber(encodedNumber: NumberStringDencoderString): NumberStringDencoderNumber;
 }
 
+/**
+ * Configuration for creating a {@link NumberStringDencoder}.
+ */
 export interface NumberStringDencoderConfig {
   /**
    * Optional negative prefix character. Should not be in the digits.
    */
   readonly negativePrefix?: Maybe<string>;
+  /**
+   * The character set used for encoding. Length must be a power of 2.
+   */
   readonly digits: NumberStringDencoderDigits;
 }
 
 /**
- * Creates an integer-type NumberStringDencoder.
+ * Creates an integer-type {@link NumberStringDencoder} that can encode and decode integers
+ * using a custom character set (digit alphabet).
  *
- * If the config does not include a negative prefix, any negative number will be treated like a positive number.
+ * If the config does not include a negative prefix, negative numbers lose their sign during encoding.
  *
- * @param config
- * @returns
+ * @param config - configuration with digit alphabet and optional negative prefix
+ * @returns a NumberStringDencoder capable of encoding/decoding integers
  */
 export function numberStringDencoder(config: NumberStringDencoderConfig): NumberStringDencoder {
   const { negativePrefix, digits } = config;
@@ -318,13 +362,27 @@ export function numberStringDencoder(config: NumberStringDencoderConfig): Number
   };
 }
 
+/**
+ * Pre-configured 64-character {@link NumberStringDencoder} using the default digit alphabet and negative prefix.
+ */
 export const NUMBER_STRING_DENCODER_64 = numberStringDencoder({
   negativePrefix: NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX,
   digits: NUMBER_STRING_DENCODER_64_DIGITS
 });
 
+/**
+ * A bidirectional function that encodes a number to a string or decodes a string to a number,
+ * depending on the type of the input.
+ */
 export type NumberStringDencoderFunction = ((input: NumberStringDencoderString) => NumberStringDencoderNumber) & ((input: NumberStringDencoderNumber) => NumberStringDencoderString);
 
+/**
+ * Creates a {@link NumberStringDencoderFunction} from the given dencoder.
+ * The returned function auto-detects the input type: numbers are encoded, strings are decoded.
+ *
+ * @param dencoder - the NumberStringDencoder to wrap
+ * @returns a bidirectional encode/decode function
+ */
 export function numberStringDencoderFunction(dencoder: NumberStringDencoder): NumberStringDencoderFunction {
   const fn = (input: NumberStringDencoderString | NumberStringDencoderNumber) => {
     const result: NumberStringDencoderNumber | NumberStringDencoderString = typeof input === 'number' ? dencoder.encodeNumber(input) : dencoder.decodeNumber(input);
@@ -334,12 +392,26 @@ export function numberStringDencoderFunction(dencoder: NumberStringDencoder): Nu
   return fn as NumberStringDencoderFunction;
 }
 
+/**
+ * Creates a function that always returns the encoded string form of the input.
+ * Numbers are encoded; strings are passed through as-is.
+ *
+ * @param dencoder - the NumberStringDencoder to use for encoding
+ * @returns a function that normalizes input to an encoded string
+ */
 export function numberStringDencoderEncodedStringValueFunction(dencoder: NumberStringDencoder): (input: NumberStringDencoderString | NumberStringDencoderNumber) => NumberStringDencoderString {
   return (input: NumberStringDencoderString | NumberStringDencoderNumber) => {
     return typeof input === 'number' ? dencoder.encodeNumber(input) : input;
   };
 }
 
+/**
+ * Creates a function that always returns the decoded number form of the input.
+ * Strings are decoded; numbers are passed through as-is.
+ *
+ * @param dencoder - the NumberStringDencoder to use for decoding
+ * @returns a function that normalizes input to a decoded number
+ */
 export function numberStringDencoderDecodedNumberValueFunction(dencoder: NumberStringDencoder): (input: NumberStringDencoderString | NumberStringDencoderNumber) => NumberStringDencoderNumber {
   return (input: NumberStringDencoderString | NumberStringDencoderNumber) => {
     return typeof input === 'number' ? input : dencoder.decodeNumber(input);

@@ -2,16 +2,22 @@ import { type FactoryWithInput, type Factory, type FactoryWithRequiredInput } fr
 import { type Maybe } from '../value';
 import { transformStringFunction, type TransformStringFunctionConfig } from './transform';
 
+/**
+ * A factory that produces a string value with no input.
+ */
 export type StringFactory<K extends string = string> = Factory<K>;
 
+/**
+ * A function that converts a value of type T to a string.
+ */
 export type ToStringFunction<T, K extends string = string> = FactoryWithRequiredInput<K, T>;
 
 /**
- * Wraps another factory with a ToStringFactory function to generate strings from the original factory.
+ * Wraps an existing factory with a {@link ToStringFunction} to produce strings from the factory's output.
  *
- * @param factory
- * @param toStringFunction
- * @returns
+ * @param factory - the original value factory
+ * @param toStringFunction - function to convert the factory's output to a string
+ * @returns a new factory that produces string values
  */
 export function stringFactoryFromFactory<T, K extends string = string>(factory: Factory<T>, toStringFunction: ToStringFunction<T, K>): StringFactory<K> {
   return () => toStringFunction(factory());
@@ -22,6 +28,9 @@ export function stringFactoryFromFactory<T, K extends string = string>(factory: 
  */
 export type StringFromDateFactory = FactoryWithInput<string, Maybe<Date>>;
 
+/**
+ * Configuration for creating a {@link StringFromDateFactory}.
+ */
 export interface StringFromDateConfig {
   /**
    * The number of digits to return from the end of the generated string.

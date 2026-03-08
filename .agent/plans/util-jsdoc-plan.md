@@ -277,7 +277,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 109 | relation.ts | YES | `[ ]` |
+| 109 | relation.ts | YES | `[x]` |
 
 ---
 
@@ -285,9 +285,9 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 110 | handler.ts | YES | `[ ]` |
-| 111 | handler.config.ts | YES | `[ ]` |
-| 112 | typed.service.ts | YES | `[ ]` |
+| 110 | handler.ts | YES | `[x]` |
+| 111 | handler.config.ts | YES | `[x]` |
+| 112 | typed.service.ts | YES | `[x]` |
 
 ---
 
@@ -295,14 +295,14 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 113 | set.ts | YES | `[ ]` |
-| 114 | set.allowed.ts | YES | `[ ]` |
-| 115 | set.decision.ts | YES | `[ ]` |
-| 116 | set.delta.ts | YES | `[ ]` |
-| 117 | set.hashset.ts | YES | `[ ]` |
-| 118 | set.maybe.ts | **NEEDS SPEC** | `[ ]` |
-| 119 | set.mode.ts | **NEEDS SPEC** | `[ ]` |
-| 120 | set.selection.ts | YES | `[ ]` |
+| 113 | set.ts | YES | `[x]` |
+| 114 | set.allowed.ts | YES | `[x]` |
+| 115 | set.decision.ts | YES | `[x]` |
+| 116 | set.delta.ts | YES | `[x]` |
+| 117 | set.hashset.ts | YES | `[x]` |
+| 118 | set.maybe.ts | YES | `[x]` |
+| 119 | set.mode.ts | YES | `[S]` |
+| 120 | set.selection.ts | YES | `[x]` |
 
 ---
 
@@ -310,10 +310,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 121 | storage.ts | **NEEDS SPEC** | `[ ]` |
-| 122 | storage.error.ts | YES | `[ ]` |
-| 123 | storage.memory.ts | YES | `[ ]` |
-| 124 | storage.object.ts | YES | `[ ]` |
+| 121 | storage.ts | YES | `[S]` |
+| 122 | storage.error.ts | YES | `[x]` |
+| 123 | storage.memory.ts | YES | `[x]` |
+| 124 | storage.object.ts | YES | `[x]` |
 
 ---
 
@@ -321,22 +321,22 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 125 | string.ts | YES | `[ ]` |
-| 126 | char.ts | YES | `[ ]` |
-| 127 | dencoder.ts | YES | `[ ]` |
-| 128 | factory.ts | YES | `[ ]` |
-| 129 | html.ts | YES | `[ ]` |
-| 130 | json.ts | **NEEDS SPEC** | `[ ]` |
-| 131 | mimetype.ts | **NEEDS SPEC** | `[ ]` |
-| 132 | password.ts | **NEEDS SPEC** | `[ ]` |
-| 133 | prefix.ts | YES | `[ ]` |
-| 134 | record.ts | YES | `[ ]` |
-| 135 | replace.ts | YES | `[ ]` |
-| 136 | search.ts | YES | `[ ]` |
-| 137 | sort.ts | YES | `[ ]` |
-| 138 | transform.ts | YES | `[ ]` |
-| 139 | tree.ts | YES | `[ ]` |
-| 140 | url.ts | YES | `[ ]` |
+| 125 | string.ts | YES | `[x]` |
+| 126 | char.ts | YES | `[x]` |
+| 127 | dencoder.ts | YES | `[x]` |
+| 128 | factory.ts | YES | `[x]` |
+| 129 | html.ts | YES | `[x]` |
+| 130 | json.ts | YES | `[x]` |
+| 131 | mimetype.ts | YES | `[x]` |
+| 132 | password.ts | YES | `[x]` |
+| 133 | prefix.ts | YES | `[x]` |
+| 134 | record.ts | YES | `[x]` |
+| 135 | replace.ts | YES | `[x]` |
+| 136 | search.ts | YES | `[x]` |
+| 137 | sort.ts | YES | `[x]` |
+| 138 | transform.ts | YES | `[x]` |
+| 139 | tree.ts | YES | `[x]` |
+| 140 | url.ts | YES | `[x]` |
 
 ---
 
