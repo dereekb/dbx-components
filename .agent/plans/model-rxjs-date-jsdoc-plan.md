@@ -151,30 +151,30 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 49 | rxjs.ts | YES | `[ ]` |
-| 50 | rxjs.async.ts | YES | `[ ]` |
-| 51 | rxjs.error.ts | **NEEDS SPEC** | `[ ]` |
-| 52 | rxjs.map.ts | YES | `[ ]` |
-| 53 | rxjs.unique.ts | **NEEDS SPEC** | `[ ]` |
-| 54 | array.ts | YES | `[ ]` |
-| 55 | boolean.ts | YES | `[ ]` |
-| 56 | decision.ts | **NEEDS SPEC** | `[ ]` |
-| 57 | delta.ts | YES | `[ ]` |
-| 58 | expires.ts | YES | `[ ]` |
-| 59 | factory.ts | **NEEDS SPEC** | `[ ]` |
-| 60 | getter.ts | YES | `[ ]` |
-| 61 | key.ts | **NEEDS SPEC** | `[ ]` |
-| 62 | lifecycle.ts | YES | `[ ]` |
-| 63 | loading.ts | **NEEDS SPEC** | `[ ]` |
-| 64 | map.ts | YES | `[ ]` |
-| 65 | misc.ts | **NEEDS SPEC** | `[ ]` |
-| 66 | model.ts | **NEEDS SPEC** | `[ ]` |
-| 67 | number.ts | **NEEDS SPEC** | `[ ]` |
-| 68 | set.ts | **NEEDS SPEC** | `[ ]` |
-| 69 | string.ts | YES | `[ ]` |
-| 70 | timeout.ts | **NEEDS SPEC** | `[ ]` |
-| 71 | use.ts | **NEEDS SPEC** | `[ ]` |
-| 72 | value.ts | YES | `[ ]` |
+| 49 | rxjs.ts | YES | `[x]` |
+| 50 | rxjs.async.ts | YES | `[x]` |
+| 51 | rxjs.error.ts | YES | `[x]` |
+| 52 | rxjs.map.ts | YES | `[x]` |
+| 53 | rxjs.unique.ts | YES | `[x]` |
+| 54 | array.ts | YES | `[x]` |
+| 55 | boolean.ts | YES | `[x]` |
+| 56 | decision.ts | YES | `[x]` |
+| 57 | delta.ts | YES | `[x]` |
+| 58 | expires.ts | YES | `[x]` |
+| 59 | factory.ts | YES | `[x]` |
+| 60 | getter.ts | YES | `[x]` |
+| 61 | key.ts | YES | `[x]` |
+| 62 | lifecycle.ts | YES | `[x]` |
+| 63 | loading.ts | YES | `[x]` |
+| 64 | map.ts | YES | `[x]` |
+| 65 | misc.ts | YES | `[x]` |
+| 66 | model.ts | YES | `[x]` |
+| 67 | number.ts | YES | `[x]` |
+| 68 | set.ts | YES | `[x]` |
+| 69 | string.ts | YES | `[x]` |
+| 70 | timeout.ts | YES | `[x]` |
+| 71 | use.ts | YES | `[x]` |
+| 72 | value.ts | YES | `[x]` |
 
 ---
 
@@ -193,7 +193,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 75 | date.ts | YES | `[ ]` |
+| 75 | date.ts | YES | `[x]` |
 | 76 | date.calendar.ts | YES | `[ ]` |
 | 77 | date.cell.ts | YES | `[ ]` |
 | 78 | date.cell.factory.ts | YES | `[ ]` |

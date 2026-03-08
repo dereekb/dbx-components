@@ -2,21 +2,25 @@ import { type OperatorFunction, identity, type MonoTypeOperatorFunction, map } f
 import { onMatchDelta } from './delta';
 
 /**
- * Returns the pipe if usePipe is true, otherwise returns the identity.
+ * Conditionally applies an operator. Returns the given pipe when `usePipe` is true, otherwise returns identity (pass-through).
+ *
+ * @param usePipe - whether to apply the pipe
+ * @param pipe - the operator to conditionally apply
+ * @returns the pipe or identity operator
  */
 export function pipeIf<A>(usePipe: boolean, pipe: OperatorFunction<A, A>): OperatorFunction<A, A> {
   return usePipe ? pipe : identity;
 }
 
 /**
- * Maps the opposite value of the input boolean.
+ * RxJS operator that negates each emitted boolean value.
  */
 export function isNot(): MonoTypeOperatorFunction<boolean> {
   return map((x) => !x);
 }
 
 /**
- * Emits a value when moving from a true value to a false value.
+ * RxJS operator that only emits when a boolean stream transitions from `true` to `false`.
  */
 export function onTrueToFalse(): MonoTypeOperatorFunction<boolean> {
   return onMatchDelta({
@@ -27,7 +31,7 @@ export function onTrueToFalse(): MonoTypeOperatorFunction<boolean> {
 }
 
 /**
- * Emits a value when moving from a false value to a true value.
+ * RxJS operator that only emits when a boolean stream transitions from `false` to `true`.
  */
 export function onFalseToTrue(): MonoTypeOperatorFunction<boolean> {
   return onMatchDelta({

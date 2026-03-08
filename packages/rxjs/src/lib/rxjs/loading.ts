@@ -1,9 +1,17 @@
 import { type Observable, startWith, distinctUntilChanged, shareReplay, map, type OperatorFunction, first } from 'rxjs';
 
 /**
- * Operator that returns true until the first item is emitted. Then returns false.
+ * RxJS operator that emits `true` immediately (loading), then `false` after the source emits its first value.
  *
- * @returns
+ * Only considers the first emission from the source. The result is shared via `shareReplay(1)`.
+ *
+ * @example
+ * ```ts
+ * const loading$ = dataFetch$.pipe(isLoading());
+ * // emits true initially, then false once dataFetch$ emits
+ * ```
+ *
+ * @returns an operator that tracks whether the first value has been emitted
  */
 export function isLoading<T>(): OperatorFunction<T, boolean> {
   return (source: Observable<T>) => {

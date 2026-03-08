@@ -44,9 +44,21 @@ interface OnMatchDeltaScan<T> {
 }
 
 /**
- * Emits a value when going from one matching value to a target value.
+ * RxJS operator that emits only when the stream transitions from a `from` value to a `to` value.
  *
- * The first value must be determined first before the second is raised.
+ * The `from` value must be seen first; only then is the `to` value emitted. When `requireConsecutive`
+ * is true, the two values must be adjacent emissions.
+ *
+ * @example
+ * ```ts
+ * // Emit when transitioning from true to false
+ * source$.pipe(
+ *   onMatchDelta({ from: true, to: false, requireConsecutive: true })
+ * ).subscribe((val) => console.log('Transitioned to false'));
+ * ```
+ *
+ * @param config - from/to values, optional comparator, and consecutive requirement
+ * @returns an operator that emits on value transitions
  */
 export function onMatchDelta<T>(config: OnMatchDeltaConfig<T>): MonoTypeOperatorFunction<T> {
   const { isMatch: inputIsSame, from, to, requireConsecutive } = config;
