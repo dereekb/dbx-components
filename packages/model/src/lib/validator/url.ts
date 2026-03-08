@@ -2,7 +2,18 @@ import { isWebsiteUrl, isWebsiteUrlWithPrefix, type ObjectWithConstructor } from
 import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
- * isWebsiteUrl validator
+ * Class-validator decorator that validates a property value is a valid website URL (with or without protocol prefix).
+ *
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
+ *
+ * @example
+ * ```typescript
+ * class ProfileDto {
+ *   @IsWebsiteUrl()
+ *   website!: string; // e.g., "example.com" or "https://example.com"
+ * }
+ * ```
  */
 export function IsWebsiteUrl(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -20,7 +31,10 @@ export function IsWebsiteUrl(validationOptions?: ValidationOptions) {
 }
 
 /**
- * isWebsiteUrlWithPrefix validator
+ * Class-validator decorator that validates a property value is a valid website URL that starts with `http://` or `https://`.
+ *
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
  */
 export function IsWebsiteUrlWithPrefix(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {

@@ -2,7 +2,19 @@ import { type ObjectWithConstructor, type ReadKeyFunction, isUniqueKeyedFunction
 import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
- * isUniqueKeyedFunction validator
+ * Class-validator decorator that validates an array property has no duplicate keys (as determined by the given key reader function).
+ *
+ * @param readKey - function that extracts the key from each array element
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
+ *
+ * @example
+ * ```typescript
+ * class ItemListDto {
+ *   @IsUniqueKeyed((item: Item) => item.id)
+ *   items!: Item[];
+ * }
+ * ```
  */
 export function IsUniqueKeyed<T>(readKey: ReadKeyFunction<T>, validationOptions?: ValidationOptions) {
   const isUniqueKeyed = isUniqueKeyedFunction(readKey);

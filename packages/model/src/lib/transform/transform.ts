@@ -18,6 +18,25 @@ export interface TransformAndValidateObject<T extends object, O, C = unknown> ex
   readonly handleValidationError: TransformAndValidateObjectHandleValidate<O>;
 }
 
+/**
+ * Creates a function that transforms a plain object into a class instance, validates it, and then processes it.
+ *
+ * On validation success, calls the configured handler function. On validation failure, delegates to the error handler.
+ *
+ * @param config - class type, handler function, validation error handler, and optional context options
+ * @returns a function that transforms, validates, and processes input objects
+ *
+ * @example
+ * ```typescript
+ * const processUser = transformAndValidateObject({
+ *   classType: UserDto,
+ *   fn: async (user) => ({ id: user.id }),
+ *   handleValidationError: async (errors) => { throw new Error('Validation failed'); }
+ * });
+ *
+ * const result = await processUser({ id: '123', name: 'John' });
+ * ```
+ */
 export function transformAndValidateObject<T extends object, O, I extends object = object, C = unknown>(config: TransformAndValidateObject<T, O, C>): TransformAndValidateObjectFunction<T, O, I, C> {
   const transformToResult = transformAndValidateObjectResult(config);
   const { handleValidationError } = config;
@@ -54,10 +73,13 @@ export interface TransformAndValidateObjectFactoryDefaults<C> extends Pick<Trans
 export type TransformAndValidateObjectFactory<C = unknown> = <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => TransformAndValidateObjectFunction<T, O, I, C>;
 
 /**
- * Creates a new TransformAndValidateObjectFactory.
+ * Creates a reusable factory for generating transform-and-validate functions with shared defaults.
  *
- * @param defaults
- * @returns
+ * The factory pre-configures validation options and error handling so individual function calls
+ * only need to specify the class type and handler.
+ *
+ * @param defaults - shared validation options and default error handler
+ * @returns a factory function that creates TransformAndValidateObjectFunction instances
  */
 export function transformAndValidateObjectFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
   const { handleValidationError: defaultHandleValidationError, optionsForContext, defaultValidationOptions } = defaults;
@@ -106,11 +128,29 @@ export interface TransformAndValidateObjectResultFunctionConfig<T extends object
 }
 
 /**
- * Factory function that wraps the input class type and handler function to first transform the input object to a the given class, and then validate it.
+ * Creates a function that transforms a plain object into a class instance using `class-transformer`,
+ * validates it using `class-validator`, and returns a discriminated result.
  *
- * @param classType
- * @param fn
- * @returns
+ * Returns `{ success: true, result }` on valid input, or `{ success: false, validationErrors }` on failure.
+ * The caller is responsible for handling the error case.
+ *
+ * @param config - class type, handler function, and optional validation/transform options
+ * @returns a function that returns a success/error discriminated result
+ *
+ * @example
+ * ```typescript
+ * const validateUser = transformAndValidateObjectResult({
+ *   classType: UserDto,
+ *   fn: async (user) => ({ saved: true })
+ * });
+ *
+ * const result = await validateUser({ name: 'John' });
+ * if (result.success) {
+ *   console.log(result.result);
+ * } else {
+ *   console.log(result.validationErrors);
+ * }
+ * ```
  */
 export function transformAndValidateObjectResult<T extends object, O, I extends object = object, C = unknown>(config: TransformAndValidateObjectResultFunctionConfig<T, O, C, I>): TransformAndValidateObjectResultFunction<T, O, I, C> {
   const { defaultValidationOptions, classType, fn, optionsForContext: inputOptionsForContext } = config;

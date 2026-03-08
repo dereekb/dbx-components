@@ -2,7 +2,18 @@ import { isE164PhoneNumber, isE164PhoneNumberWithExtension, type ObjectWithConst
 import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
- * isE164PhoneNumber validator that does not allowed extensions.
+ * Class-validator decorator that validates a property value is a valid E.164 phone number without an extension.
+ *
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
+ *
+ * @example
+ * ```typescript
+ * class ContactDto {
+ *   @IsE164PhoneNumber()
+ *   phone!: string; // e.g., "+15551234567"
+ * }
+ * ```
  */
 export function IsE164PhoneNumber(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -20,10 +31,10 @@ export function IsE164PhoneNumber(validationOptions?: ValidationOptions) {
 }
 
 /**
- * isE164PhoneNumber validator that allows extensions.
+ * Class-validator decorator that validates a property value is a valid E.164 phone number, optionally with an extension.
  *
- * @param validationOptions
- * @returns
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
  */
 export function IsE164PhoneNumberWithOptionalExtension(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -41,10 +52,10 @@ export function IsE164PhoneNumberWithOptionalExtension(validationOptions?: Valid
 }
 
 /**
- * isE164PhoneNumberWithExtension validator
+ * Class-validator decorator that validates a property value is a valid E.164 phone number that includes an extension.
  *
- * @param validationOptions
- * @returns
+ * @param validationOptions - optional class-validator options
+ * @returns a property decorator
  */
 export function IsE164PhoneNumberWithExtension(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
