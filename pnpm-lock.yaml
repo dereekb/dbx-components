@@ -142,12 +142,6 @@ importers:
       change-case-all:
         specifier: ^2.1.0
         version: 2.1.0
-      class-transformer:
-        specifier: ^0.5.1
-        version: 0.5.1
-      class-validator:
-        specifier: ^0.15.1
-        version: 0.15.1
       date-fns:
         specifier: ^4.0.0
         version: 4.1.0
@@ -211,9 +205,6 @@ importers:
       raw-body:
         specifier: ^3.0.0
         version: 3.0.2
-      reflect-metadata:
-        specifier: '>= 0.1.12 < 0.3.0'
-        version: 0.2.2
       rrule:
         specifier: git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570
         version: https://codeload.github.com/dereekb/rrule/tar.gz/2b13b1ea881059ba2ecfec380e12ef244ef54570
@@ -18046,7 +18037,8 @@ snapshots:
 
   '@types/ungap__structured-clone@1.2.0': {}
 
-  '@types/validator@13.15.10': {}
+  '@types/validator@13.15.10':
+    optional: true
 
   '@types/ws@8.18.1':
     dependencies:
@@ -19305,13 +19297,15 @@ snapshots:
     dependencies:
       json-parse-helpfulerror: 1.0.3
 
-  class-transformer@0.5.1: {}
+  class-transformer@0.5.1:
+    optional: true
 
   class-validator@0.15.1:
     dependencies:
       '@types/validator': 13.15.10
       libphonenumber-js: 1.12.38
       validator: 13.15.26
+    optional: true
 
   cli-boxes@2.2.1: {}
 
@@ -26199,7 +26193,8 @@ snapshots:
 
   validate-npm-package-name@7.0.2: {}
 
-  validator@13.15.26: {}
+  validator@13.15.26:
+    optional: true
 
   varint@6.0.0: {}
 

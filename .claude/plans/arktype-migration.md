@@ -226,35 +226,38 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 
 ---
 
-## Phase 6: Cleanup
+## Phase 6: Cleanup ✅ COMPLETE
 
-### 6.1 Remove class-validator and class-transformer
-- [ ] Remove `class-validator` and `class-transformer` from all `package.json` files (root + all packages)
-- [ ] Run `pnpm install` to clean lockfile
+### 6.1 Remove class-validator and class-transformer ✅
+- [x] Removed `class-validator` and `class-transformer` from root `package.json`
+- [x] Removed from `packages/date/package.json`, `packages/firebase/package.json` (peerDependencies)
+- [x] Removed from `packages/util/package.json` (devDependencies)
+- [x] Removed from `packages/dbx-core/package.json`, `packages/dbx-web/package.json` (peerDependencies)
+- [x] Replaced with `arktype` in `components/demo-firebase/package.json` (done in Phase 5)
+- [x] Ran `pnpm install` to clean lockfile
 
-### 6.2 Evaluate reflect-metadata removal
-- [ ] Check demo project for remaining direct constructor injection (no `@Inject()` decorator)
-- [ ] If all NestJS injection uses `@Inject()` tokens, remove `reflect-metadata` from dependencies
-- [ ] If some demo files still use direct injection, fix to use `@Inject()` or keep reflect-metadata
+### 6.2 Remove reflect-metadata ✅
+- [x] All NestJS injection uses explicit `@Inject()` tokens — no type-based injection
+- [x] Removed `reflect-metadata` from root `package.json` and `apps/demo-api/package.json`
+- [x] Removed `import 'reflect-metadata'` from `vitest.setup.node.ts` and `apps/demo-api/src/main.ts`
+- [x] Removed from template files: `setup/templates/vitest.setup.node.ts` and `setup/templates/apps/api/src/main.ts`
 
-### 6.3 Remove `emitDecoratorMetadata` and evaluate SWC
-- [ ] Remove `emitDecoratorMetadata` from tsconfig (once reflect-metadata is removed)
-- [ ] Evaluate switching from Babel to SWC for compilation
-- [ ] Update build configs to use SWC where applicable (NestJS projects, tests, etc.)
+### 6.3 Remove `emitDecoratorMetadata` ✅
+- [x] Removed `emitDecoratorMetadata: true` from `tsconfig.base.json`
+- [ ] SWC evaluation deferred — separate concern, not part of this migration
 
-### 6.4 Update peer dependencies
-- [ ] Update peerDependencies across all affected packages to include `arktype`
-- [ ] Remove `class-validator` and `class-transformer` from peerDependencies
-- [ ] Run `node ./tools/scripts/sync-peer-deps.mjs`
+### 6.4 Update peer dependencies ✅
+- [x] `arktype` already added as peerDependency in model, date, firebase, firebase-server
+- [x] Removed `class-validator` and `class-transformer` from all peerDependencies
+- [x] Ran `node ./tools/scripts/sync-peer-deps.mjs` — synced arktype to `^2.2.0` across all packages
 
-### 6.5 Update `@dereekb/nestjs` if needed (unlikely)
-- [ ] We don't use NestJS controllers with built-in validation pipes — validation happens via our own transform pipeline on POJO webhook data
-- [ ] `nestjs-arktype` exists but likely not needed given our architecture
-- [ ] Revisit only if a future need arises for controller-level validation
+### 6.5 Update `@dereekb/nestjs` — not needed ✅
+- [x] No NestJS controller validation pipes used — validation is via our transform pipeline
+- [x] No changes needed
 
-### 6.6 Verify builds and tests
-- [ ] `pnpm nx run-many --target=build --all`
-- [ ] Ask the user to run tests for everything, or commit the changes `/dbx-commit-changes` skill, and wait for CircleCI results, which you ask the user to read over.
+### 6.6 Verify builds ✅
+- [x] `pnpm nx run-many -t build --all` passes
+- [x] User to run tests separately
 
 ---
 
@@ -263,3 +266,4 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 ### 7.1 Build migration skill for downstream projects
 - [ ] Create a Claude skill that guides downstream dbx-components consumers through migration
 - [ ] Cover: class→schema conversion, decorator→ArkType mapping, test updates, import changes
+- [ ] Include note: remove `reflect-metadata` from `project.json` polyfills for Angular projects (no longer needed as a frontend polyfill)

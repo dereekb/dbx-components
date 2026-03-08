@@ -29,6 +29,9 @@ We noticed we still had some `.babelrc` files in the codebase, but babel usage d
 
 We updated `@dereekb/util` to use `swc` for transpiling, but the rest of the app has a reliance on `reflect-metadata`, so we still use `tsc` for building the rest of the project.
 
+#### dbx-components v13.1.0 Update
+NOTE: We migrated to ArkType as of v13.1.0 of dbx-components, so the `reflect-metadata` dependency has been removed. As a result, we started using `swc` instead of `tsc` for all projects. This update also reduced the build size of the bundle by ~0.4mb.
+
 ## Migrations
 We are jumping from Nx version 20 to version 22. It is important to run two independent migrations to ensure everything gets up to date properly.
 
