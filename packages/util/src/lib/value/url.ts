@@ -1,8 +1,15 @@
 /**
- * Removes any query parameters and hashbang parameters from the input string.
+ * Strips query parameters (`?...`) and hash fragments (`#...`) from a URL string, returning only the base URL.
  *
- * @param url
- * @returns
+ * Operates via simple string splitting rather than URL parsing, so it works with partial or non-standard URLs.
+ *
+ * @param url - the full URL string to clean
+ *
+ * @example
+ * ```ts
+ * const base = urlWithoutParameters('https://test.com:1234?test=true');
+ * // base === 'https://test.com:1234'
+ * ```
  */
 export function urlWithoutParameters(url: string): string {
   const queryOpenPosition = url.indexOf('?');

@@ -1,5 +1,5 @@
 import { type TreeNode } from './tree';
-import { breadthFirstExploreTreeTraversalFactoryFunction, exploreTreeFunction, ExploreTreeVisitNodeDecision } from './tree.explore';
+import { breadthFirstExploreTreeTraversalFactoryFunction, depthFirstExploreTreeTraversalFactoryFunction, exploreTreeFunction, ExploreTreeVisitNodeDecision } from './tree.explore';
 
 interface TestNodeValue {
   id: string;
@@ -35,6 +35,19 @@ const root2 = createTestNode('root2', 200, [leaf4]);
 const singleNodeTree = createTestNode('single', 500);
 
 describe('exploreTreeFunction()', () => {
+  it('should run the example from the JSDoc successfully', () => {
+    const exploreFn = exploreTreeFunction<TestNode, string>({
+      mapNodeFunction: (node) => node.value.id
+    });
+    const visited: string[] = [];
+
+    exploreFn(root1, (id) => {
+      visited.push(id);
+    });
+
+    expect(visited).toEqual(['root1', 'child1', 'leaf1', 'leaf2', 'child2', 'leaf3', 'child3']);
+  });
+
   describe('basic traversal', () => {
     it('should visit all nodes in a single tree.', () => {
       const exploreFn = exploreTreeFunction<TestNode, TestNode>();
@@ -350,6 +363,38 @@ describe('exploreTreeFunction()', () => {
       });
 
       expect(visited).toEqual([]);
+    });
+  });
+
+  describe('depthFirstExploreTreeTraversalFactoryFunction()', () => {
+    it('should run the example from the JSDoc successfully', () => {
+      const exploreFn = exploreTreeFunction<TestNode, TestNode>({
+        traverseFunctionFactory: depthFirstExploreTreeTraversalFactoryFunction()
+      });
+      const visited: string[] = [];
+
+      exploreFn(root1, (value) => {
+        visited.push(value.value.id);
+      });
+
+      // Visits: root -> child1 -> leaf1 -> leaf2 -> child2 -> leaf3 -> child3
+      expect(visited).toEqual(['root1', 'child1', 'leaf1', 'leaf2', 'child2', 'leaf3', 'child3']);
+    });
+  });
+
+  describe('breadthFirstExploreTreeTraversalFactoryFunction()', () => {
+    it('should run the example from the JSDoc successfully', () => {
+      const exploreFn = exploreTreeFunction<TestNode, TestNode>({
+        traverseFunctionFactory: breadthFirstExploreTreeTraversalFactoryFunction()
+      });
+      const visited: string[] = [];
+
+      exploreFn(root1, (value) => {
+        visited.push(value.value.id);
+      });
+
+      // Visits: root -> child1, child2, child3 -> leaf1, leaf2, leaf3
+      expect(visited).toEqual(['root1', 'child1', 'child2', 'child3', 'leaf1', 'leaf2', 'leaf3']);
     });
   });
 

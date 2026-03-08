@@ -36,6 +36,13 @@ const root2 = createTestNode('root2', 200, [leaf4]);
 const singleNodeTree = createTestNode('single', 500);
 
 describe('flattenTree()', () => {
+  it('should run the example from the JSDoc successfully', () => {
+    const nodes = flattenTree(root1);
+    // Returns [root, child1, leaf1, leaf2, child2, leaf3, child3]
+    expect(nodes.length).toBe(7);
+    expect(nodes[0]).toBe(root1);
+  });
+
   it('should flatten a single node tree.', () => {
     const result = flattenTree(singleNodeTree);
     expect(result).toEqual([singleNodeTree]);
@@ -119,6 +126,14 @@ describe('flattenTree()', () => {
 });
 
 describe('flattenTreeToArray()', () => {
+  it('should run the example from the JSDoc successfully', () => {
+    const existing: TestNode[] = [singleNodeTree];
+    flattenTreeToArray(root1, existing);
+    // existing now contains [singleNodeTree, root1, child1, ...]
+    expect(existing[0]).toBe(singleNodeTree);
+    expect(existing.length).toBe(8); // 1 existing + 7 from root1
+  });
+
   it('should flatten a tree into a given array.', () => {
     const initialArray: TestNode[] = [createTestNode('existing')];
     const result = flattenTreeToArray(root1, initialArray);
@@ -138,6 +153,12 @@ describe('flattenTreeToArray()', () => {
 });
 
 describe('flattenTreeToArrayFunction()', () => {
+  it('should run the example from the JSDoc successfully', () => {
+    const flattenIds = flattenTreeToArrayFunction<TestNode, string>((node) => node.value.id);
+    const ids = flattenIds(root1);
+    expect(ids).toEqual(['root1', 'child1', 'leaf1', 'leaf2', 'child2', 'leaf3', 'child3']);
+  });
+
   describe('without mapNodeFn', () => {
     it('should flatten tree nodes into an array.', () => {
       const flattenFn = flattenTreeToArrayFunction<TestNode>();

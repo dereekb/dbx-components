@@ -20,7 +20,7 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
  * @returns True if the input is a ServerError
  */
 export function isServerError(input: unknown): input is ServerError {
-  return typeof input === 'object' && (input as ServerError).status != null && (input as ServerError).code != null;
+  return input != null && typeof input === 'object' && (input as ServerError).status != null && (input as ServerError).code != null;
 }
 
 /**

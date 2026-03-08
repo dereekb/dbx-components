@@ -12,10 +12,23 @@ import { failWithTestDoneCallback, testDoneCallbackRef, type TestProvidesCallbac
  */
 export class ExpectedFailError extends BaseError {}
 
+/**
+ * Creates an {@link ExpectedFailError} without throwing it, for use in deferred error handling.
+ *
+ * @param message - optional error message
+ */
 export function failSuccessfullyError(message?: string): ExpectedFailError {
   return new ExpectedFailError(message);
 }
 
+/**
+ * Throws an {@link ExpectedFailError} to signal that a test reached the expected failure point.
+ *
+ * Used within {@link shouldFail} or {@link expectSuccessfulFail} to indicate that the expected
+ * error path was taken successfully.
+ *
+ * @param message - optional error message
+ */
 export function failSuccessfully(message?: string): never {
   throw failSuccessfullyError(message);
 }
@@ -25,6 +38,11 @@ export function failSuccessfully(message?: string): never {
  */
 export class UnexpectedSuccessFailureError extends BaseError {}
 
+/**
+ * Creates an {@link UnexpectedSuccessFailureError} without throwing it.
+ *
+ * @param message - optional error message; defaults to a standard "expected an error" message
+ */
 export function failDueToSuccessError(message?: string): UnexpectedSuccessFailureError {
   return new UnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
 }
@@ -41,14 +59,28 @@ export class ExpectedErrorOfSpecificTypeError extends BaseError {
   }
 }
 
+/**
+ * Fails the current test by throwing an {@link UnexpectedSuccessFailureError}.
+ * Use when a code path should not have been reached.
+ *
+ * @param message - optional error message
+ */
 export function failTest(message?: string): never {
   throw failDueToSuccessError(message);
 }
 
+/**
+ * Throws an {@link UnexpectedSuccessFailureError} with a default message.
+ * Typically called when an operation succeeds but was expected to throw.
+ */
 export function failDueToSuccess(): never {
   throw failDueToSuccessError();
 }
 
+/**
+ * Default error handler for {@link expectSuccessfulFail} that passes through {@link ExpectedFailError}
+ * instances and re-throws all other errors.
+ */
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   if (e instanceof ExpectedFailError) {
     // success
@@ -70,8 +102,8 @@ export type ExpectFailAssertionFunction = (error: unknown) => PromiseOrValue<May
  *
  * Throws an ExpectedErrorOfSpecificTypeError on failures.
  *
- * @param expectedType
- * @returns
+ * @param expectedType - the class or constructor function that the error should be an instance of
+ * @returns an assertion function that validates the error type via instanceof
  */
 export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeType | typeof Error | any): ExpectFailAssertionFunction {
   return (error: unknown) => {
@@ -84,8 +116,8 @@ export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeTyp
 /**
  * Function that expects any failure to be thrown, then throws an ExpectedFailError.
  *
- * @param errorFn
- * @param handleError
+ * @param errorFn - function expected to throw an error (sync or async)
+ * @param assertFailType - optional assertion to validate the type or content of the thrown error
  */
 export function expectFail(errorFn: () => void, assertFailType?: ExpectFailAssertionFunction): void;
 export function expectFail(errorFn: () => Promise<void>, assertFailType?: ExpectFailAssertionFunction): Promise<void>;
@@ -120,8 +152,8 @@ export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, ass
 /**
  * Function that expects an ExpectedFailError to be thrown.
  *
- * @param errorFn
- * @param handleError
+ * @param errorFn - function expected to throw (sync or async); if it succeeds, the test fails
+ * @param handleError - optional custom error handler; defaults to {@link EXPECT_ERROR_DEFAULT_HANDLER}
  */
 export function expectSuccessfulFail(errorFn: () => void, handleError?: (e: unknown) => void): void;
 export function expectSuccessfulFail(errorFn: () => Promise<void>, handleError?: (e: unknown) => void): Promise<void>;
@@ -140,12 +172,26 @@ export function expectSuccessfulFail<R extends PromiseOrValue<void>>(errorFn: ()
 }
 
 // MARK: ShouldFail
+/**
+ * Extended done callback for {@link shouldFail} tests that adds a {@link failSuccessfully} convenience method.
+ */
 export interface ShouldFailDoneCallback extends TestDoneCallback {
   failSuccessfully(): void;
 }
 
+/**
+ * A test function for {@link shouldFail} that receives a {@link ShouldFailDoneCallback} to signal failure outcomes.
+ */
 export type ShouldFailProvidesCallbackWithDone = (cb: ShouldFailDoneCallback) => void | undefined;
+
+/**
+ * A test function for {@link shouldFail} that returns its result directly (sync or async), without using a done callback.
+ */
 export type ShouldFailProvidesCallbackWithResult = () => PromiseOrValue<unknown>;
+
+/**
+ * Union type for test functions accepted by {@link shouldFail}. Supports both done-callback and promise-based patterns.
+ */
 export type ShouldFailProvidesCallback = ShouldFailProvidesCallbackWithDone | ShouldFailProvidesCallbackWithResult;
 
 /**
@@ -153,9 +199,8 @@ export type ShouldFailProvidesCallback = ShouldFailProvidesCallbackWithDone | Sh
  *
  * This is typically used in conjunction with failSuccessfully(), expectSuccessfulFail(), or expectFail().
  *
- * @param fn
- * @param strict
- * @returns
+ * @param fn - the test function that is expected to throw an {@link ExpectedFailError}
+ * @returns an async test function suitable for use with `it()`
  */
 export function shouldFail(fn: ShouldFailProvidesCallback): () => Promise<unknown> {
   const usesDoneCallback = fn.length > 0;
@@ -215,6 +260,14 @@ export function shouldFail(fn: ShouldFailProvidesCallback): () => Promise<unknow
 }
 
 // MARK: It
+/**
+ * Convenience wrapper that registers an `it()` test case which is expected to fail.
+ *
+ * Automatically generates a "should fail" description and wraps the test function with {@link shouldFail}.
+ *
+ * @param describeOrFn - either a description suffix (e.g., "when input is null") or the test function directly
+ * @param fn - the test function, if a description string was provided as the first argument
+ */
 export function itShouldFail(fn: ShouldFailProvidesCallback): void;
 export function itShouldFail(describe: string, fn: ShouldFailProvidesCallback): void;
 export function itShouldFail(describeOrFn: string | ShouldFailProvidesCallback, fn?: ShouldFailProvidesCallback): void {
@@ -231,10 +284,22 @@ export function itShouldFail(describeOrFn: string | ShouldFailProvidesCallback, 
 }
 
 // MARK: Fake Done
+/**
+ * A simulated done callback that bridges callback-based test patterns to promises.
+ *
+ * Calling the handler or its `fail` method resolves or rejects the underlying promise,
+ * allowing callback-style tests to be awaited.
+ */
 export interface FakeDoneHandler extends TestDoneCallback, PromiseReference {
   _ref: PromiseReference;
 }
 
+/**
+ * Creates a {@link FakeDoneHandler} that converts done-callback invocations into promise resolution/rejection.
+ *
+ * Calling the returned function with no arguments resolves the promise;
+ * calling it with an error (or calling `.fail()`) rejects the promise.
+ */
 export function fakeDoneHandler(): FakeDoneHandler {
   const promiseRef = promiseReference();
 
