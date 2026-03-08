@@ -182,8 +182,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 73 | work.factory.ts | **NEEDS SPEC** | `[ ]` |
-| 74 | work.instance.ts | YES | `[ ]` |
+| 73 | work.factory.ts | YES | `[x]` |
+| 74 | work.instance.ts | YES | `[x]` |
 
 ---
 
