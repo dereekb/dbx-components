@@ -1,44 +1,40 @@
-import { validate } from 'class-validator';
-import { UnitedStatesAddressWithStateCodeParams, UnitedStatesAddressWithStateStringParams } from './address';
+import { type } from 'arktype';
+import { unitedStatesAddressWithStateCodeType, unitedStatesAddressWithStateStringType } from './address';
 
-describe('UnitedStatesAddressWithStateCodeParams', () => {
+describe('unitedStatesAddressWithStateCodeType', () => {
   describe('validation', () => {
-    it('should validate the input', async () => {
-      const model = new UnitedStatesAddressWithStateCodeParams();
-      model.line1 = 'valid';
-      model.city = 'valid';
-      model.zip = '77834';
-      model.state = 'TX';
-
-      const result = await validate(model);
-      expect(result.length).toBe(0);
+    it('should validate valid input', () => {
+      const result = unitedStatesAddressWithStateCodeType({
+        line1: 'valid',
+        city: 'valid',
+        zip: '77834',
+        state: 'TX'
+      });
+      expect(result instanceof type.errors).toBe(false);
     });
 
-    it('should validate the state code', async () => {
-      const model = new UnitedStatesAddressWithStateCodeParams();
-      model.line1 = 'valid';
-      model.city = 'valid';
-      model.zip = '77834';
-      model.state = 'Texas';
-
-      const result = await validate(model);
-      expect(result.length).toBe(1);
-      expect(result[0].property).toBe('state');
+    it('should reject invalid state code', () => {
+      const result = unitedStatesAddressWithStateCodeType({
+        line1: 'valid',
+        city: 'valid',
+        zip: '77834',
+        state: 'Texas'
+      });
+      expect(result instanceof type.errors).toBe(true);
     });
   });
 });
 
-describe('UnitedStatesAddressWithStateStringParams', () => {
+describe('unitedStatesAddressWithStateStringType', () => {
   describe('validation', () => {
-    it('should validate the input', async () => {
-      const model = new UnitedStatesAddressWithStateStringParams();
-      model.line1 = 'valid';
-      model.city = 'valid';
-      model.zip = '77834';
-      model.state = 'Texas';
-
-      const result = await validate(model);
-      expect(result.length).toBe(0);
+    it('should validate valid input', () => {
+      const result = unitedStatesAddressWithStateStringType({
+        line1: 'valid',
+        city: 'valid',
+        zip: '77834',
+        state: 'Texas'
+      });
+      expect(result instanceof type.errors).toBe(false);
     });
   });
 });

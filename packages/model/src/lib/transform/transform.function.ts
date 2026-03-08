@@ -1,4 +1,5 @@
-import { type ClassType, mapPromiseOrValue, type PromiseOrValue } from '@dereekb/util';
+import { type Type } from 'arktype';
+import { mapPromiseOrValue, type PromiseOrValue } from '@dereekb/util';
 import { type TransformAndValidateObjectFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactoryDefaults, type TransformAndValidateObjectHandleValidate, type TransformAndValidateObjectOutput } from './transform';
 import { type TransformAndValidateResultFunction } from './transform.result';
 
@@ -9,12 +10,12 @@ import { type TransformAndValidateResultFunction } from './transform.result';
  */
 export type TransformAndValidateFunctionResult<T extends object, O> = O & { params: T };
 export type TransformAndValidateFunctionResultFunction<T extends object, O, I extends object = object, C = unknown> = TransformAndValidateResultFunction<TransformAndValidateFunctionResult<T, O>, I, C>;
-export type TransformAndValidateFunctionResultFactory<C = unknown> = <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => TransformAndValidateFunctionResultFunction<T, O, I, C>;
+export type TransformAndValidateFunctionResultFactory<C = unknown> = <T extends object, O, I extends object = object>(schema: Type<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => TransformAndValidateFunctionResultFunction<T, O, I, C>;
 
 /**
  * Creates a factory for transform-and-validate functions that return the result with the parsed object attached as `params`.
  *
- * @param defaults - shared validation options and default error handler
+ * @param defaults - shared error handler defaults
  * @returns a factory that produces functions returning {@link TransformAndValidateFunctionResult}
  */
 export function transformAndValidateFunctionResultFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateFunctionResultFactory<C> {
@@ -29,8 +30,8 @@ export function transformAndValidateFunctionResultFactory<C = unknown>(defaults:
  * @returns a factory that produces functions returning results with `params` attached
  */
 export function toTransformAndValidateFunctionResultFactory<C = unknown>(transformAndValidateObjectFactory: TransformAndValidateObjectFactory<C>): TransformAndValidateFunctionResultFactory<C> {
-  return <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => {
-    const transformAndValidateObjectFn = transformAndValidateObjectFactory<T, O, I>(classType, fn, handleValidationError);
+  return <T extends object, O, I extends object = object>(schema: Type<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => {
+    const transformAndValidateObjectFn = transformAndValidateObjectFactory<T, O, I>(schema, fn, handleValidationError);
 
     return (input: I, context?: C) => {
       return toTransformAndValidateFunctionResult(transformAndValidateObjectFn(input, context));

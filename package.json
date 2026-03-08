@@ -54,6 +54,7 @@
     "@zip.js/zip.js": "^2.8.11",
     "angular-calendar": "^0.32.0",
     "archiver": "^7.0.0",
+    "arktype": "^2.2.0",
     "body-parser": "^2.0.0",
     "change-case-all": "^2.1.0",
     "class-transformer": "^0.5.1",

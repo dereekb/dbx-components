@@ -1,70 +1,36 @@
-import { WebsiteUrl, WebsiteUrlWithPrefix } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsOptional, validate } from 'class-validator';
-import { IsWebsiteUrl, IsWebsiteUrlWithPrefix } from '.';
+import { type } from 'arktype';
+import { websiteUrlType, websiteUrlWithPrefixType } from './url';
 
-class TestModelClassWithPrefix {
-  @Expose()
-  @IsOptional()
-  @IsWebsiteUrlWithPrefix()
-  url!: WebsiteUrlWithPrefix;
-}
-
-class TestModelClassWithOptionalPrefix {
-  @Expose()
-  @IsOptional()
-  @IsWebsiteUrl()
-  url!: WebsiteUrl;
-}
-
-describe('IsWebsiteUrl', () => {
-  it('should pass a valid website url', async () => {
-    const instance = new TestModelClassWithOptionalPrefix();
-    instance.url = 'dereekb.com/test';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('websiteUrlType', () => {
+  it('should pass a valid website url', () => {
+    const result = websiteUrlType('dereekb.com/test');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should pass a valid website url with prefix', async () => {
-    const instance = new TestModelClassWithOptionalPrefix();
-    instance.url = 'https://dereekb.com/test/test?test=1';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should pass a valid website url with prefix', () => {
+    const result = websiteUrlType('https://dereekb.com/test/test?test=1');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should not pass an invalid IsWebsiteUrl', async () => {
-    const instance = new TestModelClassWithOptionalPrefix();
-    instance.url = '245678910' as any;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not pass an invalid url', () => {
+    const result = websiteUrlType('245678910');
+    expect(result instanceof type.errors).toBe(true);
   });
 });
 
-describe('IsWebsiteUrlWithPrefix', () => {
-  it('should not pass a valid website url', async () => {
-    const instance = new TestModelClassWithPrefix();
-    instance.url = 'dereekb.com/test';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+describe('websiteUrlWithPrefixType', () => {
+  it('should not pass a url without prefix', () => {
+    const result = websiteUrlWithPrefixType('dereekb.com/test');
+    expect(result instanceof type.errors).toBe(true);
   });
 
-  it('should pass a valid website url with prefix', async () => {
-    const instance = new TestModelClassWithPrefix();
-    instance.url = 'https://dereekb.com/test/test?test=1';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should pass a valid website url with prefix', () => {
+    const result = websiteUrlWithPrefixType('https://dereekb.com/test/test?test=1');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should not pass an invalid IsWebsiteUrl', async () => {
-    const instance = new TestModelClassWithPrefix();
-    instance.url = '245678910' as any;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not pass an invalid url', () => {
+    const result = websiteUrlWithPrefixType('245678910');
+    expect(result instanceof type.errors).toBe(true);
   });
 });

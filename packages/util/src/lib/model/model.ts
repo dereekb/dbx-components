@@ -10,6 +10,11 @@ import { filterUniqueValues } from '../array/array.unique';
 export type ModelKey = string;
 
 /**
+ * A string model identifier (typically the document/record ID segment, not the full path).
+ */
+export type ModelId = string;
+
+/**
  * Arbitrary model type.
  */
 export type ModelTypeString = string;
@@ -40,6 +45,10 @@ export interface NamedUniqueModel extends UniqueModel {
 
 export interface ModelKeyRef {
   key: ModelKey;
+}
+
+export interface ModelIdRef {
+  id: ModelId;
 }
 
 export type ModelOrKey<T> = T | ModelKey;
