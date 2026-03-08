@@ -2,9 +2,11 @@ import { type Maybe } from '../value/maybe.type';
 import { hasValueOrNotEmpty } from '../value/maybe';
 
 /**
- * Recursively function that returns true if the input is not an object or if every key on the object is empty.
+ * Recursively checks whether an object is "empty" — meaning it is null/undefined, has no keys,
+ * or all of its values are themselves empty (recursively for nested objects, or falsy for primitives).
  *
- * @param obj
+ * @param obj - Object to check
+ * @returns `true` if the object is considered empty
  */
 export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
   if (obj != null && typeof obj === 'object') {

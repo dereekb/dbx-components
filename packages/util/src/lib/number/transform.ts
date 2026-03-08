@@ -30,10 +30,26 @@ export type TransformNumberFunction<N extends number = number> = MapFunction<N, 
 
 export type TransformNumberFunctionConfigInput<S extends number = number> = TransformNumberFunctionConfig<S> | TransformNumberFunction<S>;
 
+/**
+ * Normalizes a {@link TransformNumberFunctionConfigInput} to a {@link TransformNumberFunctionConfig}.
+ *
+ * If a function is provided, wraps it as the `transform` field. Returns undefined for undefined input.
+ *
+ * @param config - A config object, a transform function, or undefined
+ * @returns The normalized config, or undefined
+ */
 export function transformNumberFunctionConfig<S extends number = number>(config?: TransformNumberFunctionConfigInput<S>): Maybe<TransformNumberFunctionConfig<S>> {
   return config ? (typeof config === 'function' ? { transform: config } : (config as TransformNumberFunctionConfig<S>)) : undefined;
 }
 
+/**
+ * Creates a composite number transform function from a {@link TransformNumberFunctionConfig}.
+ *
+ * Chains the configured operations in order: custom transform, step rounding, precision cut, then bounds clamping.
+ *
+ * @param config - Configuration with optional transform, roundToStep, precision, and bounds
+ * @returns A single function that applies all configured transformations in sequence
+ */
 export function transformNumberFunction<N extends number = number>(config: TransformNumberFunctionConfig<N>): TransformNumberFunction<N> {
   const transformFunctions: Maybe<TransformNumberFunction<N>>[] = [config.transform];
 

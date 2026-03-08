@@ -1,6 +1,46 @@
-import { allKeyValueTuples, filterKeyValueTupleFunction, filterKeyValueTuplesFunction, KeyValueTypleValueFilter } from './object.filter.tuple';
+import { allKeyValueTuples, filterKeyValueTuples, filterKeyValueTupleFunction, filterKeyValueTuplesFunction, forEachKeyValue, KeyValueTypleValueFilter } from './object.filter.tuple';
+
+describe('forEachKeyValue()', () => {
+  it('should run the example successfully', () => {
+    const keys: string[] = [];
+    forEachKeyValue(
+      { a: 1, b: undefined, c: 3 },
+      {
+        filter: KeyValueTypleValueFilter.UNDEFINED,
+        forEach: ([key]) => keys.push(key as string)
+      }
+    );
+    expect(keys).toEqual(['a', 'c']);
+  });
+});
+
+describe('filterKeyValueTuples()', () => {
+  it('should run the example successfully', () => {
+    const tuples = filterKeyValueTuples({ a: 1, b: null, c: 3 }, KeyValueTypleValueFilter.NULL);
+    expect(tuples).toEqual([
+      ['a', 1],
+      ['c', 3]
+    ]);
+  });
+});
+
+describe('allKeyValueTuples()', () => {
+  it('should run the example successfully', () => {
+    const tuples = allKeyValueTuples({ x: 10, y: 20 });
+    expect(tuples).toEqual([
+      ['x', 10],
+      ['y', 20]
+    ]);
+  });
+});
 
 describe('filterKeyValueTupleFunction()', () => {
+  it('should run the example successfully', () => {
+    const isNotNull = filterKeyValueTupleFunction(KeyValueTypleValueFilter.NULL);
+    expect(isNotNull(['a', 1], 0)).toBe(true);
+    expect(isNotNull(['b', null], 0)).toBe(false);
+  });
+
   describe('config', () => {
     describe('invertFilter', () => {
       it('should not invert the filter if invertFilter is not defined.', () => {
@@ -42,6 +82,15 @@ describe('filterKeyValueTupleFunction()', () => {
 });
 
 describe('filterKeyValueTuplesFunction()', () => {
+  it('should run the example successfully', () => {
+    const getDefinedTuples = filterKeyValueTuplesFunction(KeyValueTypleValueFilter.UNDEFINED);
+    const tuples = getDefinedTuples({ a: 1, b: undefined, c: 'hello' });
+    expect(tuples).toEqual([
+      ['a', 1],
+      ['c', 'hello']
+    ]);
+  });
+
   describe('config', () => {
     describe('valueFilter', () => {
       describe('NULL', () => {

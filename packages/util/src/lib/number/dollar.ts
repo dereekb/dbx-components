@@ -42,21 +42,22 @@ export const DOLLAR_AMOUNT_STRING_REGEX = /^\$?([0-9]+)\.?([0-9][0-9])$/;
 export const DOLLAR_AMOUNT_PRECISION = 2;
 
 /**
- * Returns true if the input is a valid DollarAmountString value.
+ * Checks whether the input string matches the expected dollar amount format (e.g., "12.50" or "$12.50").
  *
- * @param value
- * @returns
+ * @param value - String to test
+ * @returns `true` if the string matches the dollar amount regex
  */
 export function isDollarAmountString(value: string): boolean {
   return DOLLAR_AMOUNT_STRING_REGEX.test(value);
 }
 
 /**
- * Returns a dollar amount, or '0.00' if null/undefined.
+ * Formats a number as a dollar amount string with exactly two decimal places.
  *
- * If the input number has more than two decimal places, only the first two are used; no rounding occurs. (I.E. 1.115 becomes 1.11)
+ * Truncates (does not round) excess precision: e.g., 1.115 becomes "1.11". Returns "0.00" for null/undefined.
  *
- * @param number
+ * @param number - The dollar amount to format
+ * @returns Formatted string with two decimal places (e.g., "12.50")
  */
 export function dollarAmountString(number: Maybe<number>): string {
   if (number) {
@@ -76,6 +77,12 @@ export type DollarAmountStringWithUnitFunction<U extends DollarAmountUnit> = ((a
   readonly unit: U;
 };
 
+/**
+ * Creates a function that formats dollar amounts as strings with a unit prefix (e.g., "$12.50").
+ *
+ * @param unit - The unit prefix to prepend; defaults to "$"
+ * @returns A function that formats dollar amounts with the configured unit
+ */
 export function dollarAmountStringWithUnitFunction<U extends DollarAmountUnit>(unit: U = '$' as U): DollarAmountStringWithUnitFunction<U> {
   const fn = (amount: DollarAmount) => `${unit}${dollarAmountString(amount)}`;
   fn.unit = unit;

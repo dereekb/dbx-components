@@ -8,7 +8,10 @@ import { type ReadNumberFunction } from './number';
 export type SortByNumberFunction<T> = SortCompareFunction<T>;
 
 /**
- * Creates a SortByNumberFunction that sorts values in ascending order.
+ * Creates a {@link SortCompareFunction} that sorts values in ascending order by a numeric property.
+ *
+ * @param readNumberFn - Function that extracts the numeric value from each item
+ * @returns A sort comparator function for ascending numeric order
  */
 export function sortByNumberFunction<T>(readNumberFn: ReadNumberFunction<T>): SortByNumberFunction<T> {
   return (a: T, b: T) => {
@@ -18,4 +21,7 @@ export function sortByNumberFunction<T>(readNumberFn: ReadNumberFunction<T>): So
   };
 }
 
+/**
+ * Pre-built sort comparator for sorting plain numbers in ascending order.
+ */
 export const sortNumbersAscendingFunction: SortByNumberFunction<number> = sortByNumberFunction<number>((a) => a);

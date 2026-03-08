@@ -51,9 +51,13 @@ export interface ObjectDeltaArrayCompressor<T extends object> {
 }
 
 /**
- * Creates an object delta array compressor.
+ * Creates an {@link ObjectDeltaArrayCompressor} that can compress and expand arrays of objects using delta encoding.
  *
- * @param compressor
+ * The first object is stored fully. Subsequent objects store only fields that changed from the previous entry.
+ * Null in a delta entry means the field was cleared. Undefined (missing key) means no change.
+ *
+ * @param config - Configuration with the equality checker that defines which fields to track
+ * @returns A compressor with `compress` and `expand` methods
  */
 export function objectDeltaArrayCompressor<T extends object>(config: ObjectDeltaArrayCompressorConfig<T>): ObjectDeltaArrayCompressor<T> {
   const { equalityChecker: _equalityChecker } = config;

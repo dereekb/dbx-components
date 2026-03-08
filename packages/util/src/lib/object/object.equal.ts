@@ -8,18 +8,27 @@ import { type FilterFromPOJOFunction } from './object.filter.pojo';
 import { MAP_IDENTITY } from '../value/map';
 
 /**
- * Performs a deep comparison to check if all values on the input filters are equal.
+ * Performs a deep equality comparison between two values.
  *
- * Recursively compares Arrays, Objects, Maps, Sets, Primatives, and Dates.
+ * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
+ *
+ * @param a - First value to compare
+ * @param b - Second value to compare
+ * @returns `true` if the values are deeply equal
  */
 export function areEqualPOJOValues<F>(a: F, b: F): boolean {
   return areEqualPOJOValuesUsingPojoFilter(a, b, MAP_IDENTITY);
 }
 
 /**
- * Performs a deep comparison to check if all values on the input filters are equal. Each input is run through the pojo filter
+ * Performs a deep equality comparison with a POJO filter applied to each value before comparison.
  *
- * Recursively compares Arrays, Objects, Maps, Sets, Primatives, and Dates.
+ * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
+ *
+ * @param a - First value to compare
+ * @param b - Second value to compare
+ * @param pojoFilter - Filter function applied to each value before comparison
+ * @returns `true` if the filtered values are deeply equal
  */
 export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
   // check self
@@ -169,6 +178,14 @@ export type ObjectFieldEqualityChecker<T extends object> = ((a: Partial<T>, b: P
   readonly _fields: Map<keyof T, ObjectFieldEqualityCheckerFieldConfig<T, any>>;
 };
 
+/**
+ * Creates an {@link ObjectFieldEqualityChecker} that compares two objects field-by-field using configured equality functions.
+ *
+ * Fields can be specified as simple field names (using the default `===` comparator) or as config objects with custom comparators.
+ *
+ * @param config - Configuration with the fields to compare and an optional default equality function
+ * @returns A function that compares two objects and reports which fields are equal/unequal
+ */
 export function objectFieldEqualityChecker<T extends object>(config: ObjectFieldEqualityCheckerConfig<T>): ObjectFieldEqualityChecker<T> {
   const { fields, defaultEqualityFunction = (a, b) => a === b } = config;
   const _fields = new Map<keyof T, ObjectFieldEqualityCheckerFieldConfig<T, any>>();
