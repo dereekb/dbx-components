@@ -37,22 +37,22 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 9 | array.ts | YES | `[ ]` |
-| 10 | array.boolean.ts | YES | `[ ]` |
-| 11 | array.factory.ts | YES | `[ ]` |
-| 12 | array.filter.ts | YES | `[ ]` |
-| 13 | array.find.ts | YES | `[ ]` |
-| 14 | array.index.ts | YES | `[ ]` |
-| 15 | array.indexed.ts | YES | `[ ]` |
-| 16 | array.limit.ts | **NEEDS SPEC** | `[ ]` |
-| 17 | array.make.ts | **NEEDS SPEC** | `[ ]` |
-| 18 | array.map.ts | **NEEDS SPEC** | `[ ]` |
-| 19 | array.number.ts | YES | `[ ]` |
-| 20 | array.random.ts | **NEEDS SPEC** | `[ ]` |
-| 21 | array.set.ts | YES | `[ ]` |
-| 22 | array.string.ts | YES | `[ ]` |
-| 23 | array.unique.ts | YES | `[ ]` |
-| 24 | array.value.ts | YES | `[ ]` |
+| 9 | array.ts | YES | `[x]` |
+| 10 | array.boolean.ts | YES | `[x]` |
+| 11 | array.factory.ts | YES | `[x]` |
+| 12 | array.filter.ts | YES | `[x]` |
+| 13 | array.find.ts | YES | `[x]` |
+| 14 | array.index.ts | YES | `[x]` |
+| 15 | array.indexed.ts | YES | `[x]` |
+| 16 | array.limit.ts | YES | `[x]` |
+| 17 | array.make.ts | YES | `[x]` |
+| 18 | array.map.ts | YES | `[x]` |
+| 19 | array.number.ts | YES | `[x]` |
+| 20 | array.random.ts | YES | `[x]` |
+| 21 | array.set.ts | YES | `[x]` |
+| 22 | array.string.ts | YES | `[x]` |
+| 23 | array.unique.ts | YES | `[x]` |
+| 24 | array.value.ts | YES | `[x]` |
 
 ---
 
@@ -184,13 +184,13 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 65 | model.ts | **NEEDS SPEC** | `[ ]` |
-| 66 | model.conversion.ts | YES | `[ ]` |
-| 67 | model.conversion.field.ts | **NEEDS SPEC** | `[ ]` |
-| 68 | model.copy.ts | YES | `[ ]` |
-| 69 | model.modify.ts | **NEEDS SPEC** | `[ ]` |
-| 70 | id.batch.ts | YES | `[ ]` |
-| 71 | id.factory.ts | YES | `[ ]` |
+| 65 | model.ts | YES | `[x]` |
+| 66 | model.conversion.ts | YES | `[x]` |
+| 67 | model.conversion.field.ts | YES | `[x]` |
+| 68 | model.copy.ts | YES | `[x]` |
+| 69 | model.modify.ts | YES | `[x]` |
+| 70 | id.batch.ts | YES | `[x]` |
+| 71 | id.factory.ts | YES | `[x]` |
 
 ---
 
@@ -198,7 +198,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 72 | stream.ts | **NEEDS SPEC** | `[ ]` |
+| 72 | stream.ts | YES | `[x]` |
 
 ---
 
@@ -206,16 +206,16 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 73 | number.ts | YES | `[ ]` |
-| 74 | bitwise.dencoder.ts | YES | `[ ]` |
-| 75 | bound.ts | YES | `[ ]` |
-| 76 | dollar.ts | YES | `[ ]` |
-| 77 | factory.ts | **NEEDS SPEC** | `[ ]` |
-| 78 | pay.ts | **NEEDS SPEC** | `[ ]` |
-| 79 | random.ts | **NEEDS SPEC** | `[ ]` |
-| 80 | round.ts | YES | `[ ]` |
-| 81 | sort.ts | YES | `[ ]` |
-| 82 | transform.ts | **NEEDS SPEC** | `[ ]` |
+| 73 | number.ts | YES | `[x]` |
+| 74 | bitwise.dencoder.ts | YES | `[x]` |
+| 75 | bound.ts | YES | `[x]` |
+| 76 | dollar.ts | YES | `[x]` |
+| 77 | factory.ts | YES | `[x]` |
+| 78 | pay.ts | **NEEDS SPEC** | `[S]` |
+| 79 | random.ts | YES | `[x]` |
+| 80 | round.ts | YES | `[x]` |
+| 81 | sort.ts | YES | `[x]` |
+| 82 | transform.ts | YES | `[x]` |
 
 ---
 

@@ -2,26 +2,24 @@ import { invertBooleanReturnFunction } from '../function/function.boolean';
 import { type SetIncludesMode } from '../set/set.mode';
 
 /**
- * A decision function used by the array find function.
- * Similar to the predicate function in Array.prototype.find() or Array.prototype.filter().
- * @template T - The type of elements in the array
+ * Predicate function that tests an individual array element, similar to the callback used by {@link Array.prototype.find} or {@link Array.prototype.filter}.
  */
 export type ArrayFindDecisionFunction<T> = (value: T, index: number, obj: T[]) => boolean;
 
 /**
- * Returns a decision about an array based on its input values using a preconfigured DecisionFunction and SetIncludesMode.
- *
- * @template T - The type of elements in the array
+ * Preconfigured function that evaluates an array and returns whether its elements satisfy a decision criterion based on a {@link SetIncludesMode}.
  */
 export type ArrayDecisionFunction<T> = (values: T[]) => boolean;
 
 /**
- * Creates an ArrayDecisionFunction based on the input decision and mode.
+ * Creates an {@link ArrayDecisionFunction} from a per-element predicate and a {@link SetIncludesMode}.
  *
- * @template T - The type of elements in the array
- * @param decision - The function used to test individual elements of the array
- * @param mode - The mode determining how the decision is applied ('any' or 'all')
- * @returns A function that takes an array and returns a boolean decision based on the array elements
+ * When mode is `'any'`, the resulting function returns `true` if at least one element satisfies the predicate.
+ * When mode is `'all'`, it returns `true` only if every element satisfies the predicate.
+ *
+ * @param decision - Predicate used to test individual elements.
+ * @param mode - Whether all or any elements must satisfy the predicate.
+ * @returns A function that evaluates an array against the configured decision criteria.
  */
 export function arrayDecisionFunction<T>(decision: ArrayFindDecisionFunction<T>, mode: SetIncludesMode): ArrayDecisionFunction<T> {
   const findFn: ArrayFindDecisionFunction<T> = mode === 'all' ? invertBooleanReturnFunction(decision) : decision;
@@ -29,14 +27,12 @@ export function arrayDecisionFunction<T>(decision: ArrayFindDecisionFunction<T>,
 }
 
 /**
- * Returns true based on the input values and find decision.
- * A convenience function that creates and immediately applies an array decision function.
+ * Convenience wrapper that creates and immediately invokes an {@link ArrayDecisionFunction}.
  *
- * @template T - The type of elements in the array
- * @param values - The array to evaluate
- * @param decision - The function used to test individual elements of the array
- * @param mode - The mode determining how the decision is applied ('any' or 'all')
- * @returns A boolean indicating whether the array meets the decision criteria
+ * @param values - Array to evaluate.
+ * @param decision - Predicate used to test individual elements.
+ * @param mode - Whether all or any elements must satisfy the predicate.
+ * @returns `true` if the array satisfies the decision criteria for the given mode.
  */
 export function arrayDecision<T>(values: T[], decision: ArrayFindDecisionFunction<T>, mode: SetIncludesMode): boolean {
   return arrayDecisionFunction(decision, mode)(values);
