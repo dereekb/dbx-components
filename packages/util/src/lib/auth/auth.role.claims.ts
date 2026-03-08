@@ -57,7 +57,7 @@ export type AuthClaimsUpdate<T extends AuthClaimsObject = AuthClaimsObject> = Pa
 export type AuthRoleClaimsFactoryConfigEntry<V extends AuthClaimValue = AuthClaimValue> = V extends SimpleAuthClaimValue ? AuthRoleClaimsFactoryConfigEntryEncodeOptions<V> | AuthRoleClaimsFactoryConfigEntrySimpleOptions<V> : AuthRoleClaimsFactoryConfigEntryEncodeOptions<V>;
 
 /**
- *
+ * Simple configuration for a claims key that maps a claim value directly to one or more roles.
  */
 export interface AuthRoleClaimsFactoryConfigEntrySimpleOptions<V extends SimpleAuthClaimValue = SimpleAuthClaimValue> {
   /**
@@ -144,11 +144,14 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
 }
 
 /**
- * Creates a AuthRoleClaimsService using the input configuration.
+ * Creates an {@link AuthRoleClaimsService} that converts between {@link AuthRoleSet} and JWT-style claims objects.
  *
- * @param config
- * @param defaults
- * @returns
+ * Each key in the config maps a claim key to role(s). Simple entries map a claim value to one or more roles,
+ * while encode/decode entries allow custom bidirectional conversion logic.
+ *
+ * @param config - Mapping of claim keys to their role configuration entries (or null to ignore)
+ * @param defaults - Optional default values for claim presence and absence
+ * @returns A service with `toClaims` and `toRoles` conversion functions
  */
 export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRoleClaimsFactoryConfig<T>, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
   const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults?.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
@@ -271,10 +274,13 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
 }
 
 /**
- * Converts an AuthClaimsUpdate to AuthClaims by removing all null keys.
+ * Converts an {@link AuthClaimsUpdate} to {@link AuthClaims} by stripping all null-valued keys.
  *
- * @param authClaimsUpdate
- * @returns
+ * Useful for cleaning up a claims update before persisting or comparing, since update objects
+ * use `null` to indicate claim removal.
+ *
+ * @param authClaimsUpdate - The claims update object potentially containing null values
+ * @returns A clean claims object with all null entries removed
  */
 export function authClaims<T extends AuthClaimsObject = AuthClaimsObject>(authClaimsUpdate: AuthClaimsUpdate<T>): AuthClaims<T> {
   return filterFromPOJO(authClaimsUpdate, { filter: { valueFilter: KeyValueTypleValueFilter.NULL } }) as AuthClaims<T>;

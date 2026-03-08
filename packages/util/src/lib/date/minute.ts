@@ -13,8 +13,8 @@ export interface MinutesAndSeconds {
  *
  * Rounds down to the nearest second.
  *
- * @param milliseconds
- * @returns
+ * @param milliseconds - The number of milliseconds to convert
+ * @returns An object with the minute and second components
  */
 export function millisecondsToMinutesAndSeconds(milliseconds: Milliseconds): MinutesAndSeconds {
   const seconds = Math.floor(milliseconds / MS_IN_SECOND);
@@ -32,8 +32,8 @@ export interface MinutesAndSeconds {
 /**
  * Converts the input number of seconds to the equivalent in minutes and seconds.
  *
- * @param inputSeconds
- * @returns
+ * @param inputSeconds - The number of seconds to convert
+ * @returns An object with the minute and second components
  */
 export function secondsToMinutesAndSeconds(inputSeconds: Seconds): MinutesAndSeconds {
   const minute = Math.floor(inputSeconds / 60);

@@ -7,10 +7,10 @@ import { type Factory } from './getter';
 export type RandomFromArrayFactory<T> = Factory<T>;
 
 /**
- * Makes a RandomFromArrayFactory
+ * Creates a factory that returns a random element from the given array on each call.
  *
- * @param config
- * @returns
+ * @param values - The array of values to randomly select from
+ * @returns A factory that returns a random element from the array
  */
 export function randomFromArrayFactory<T>(values: T[]): RandomFromArrayFactory<T> {
   const randomIndex = randomNumberFactory({ min: 0, max: values.length, round: 'floor' });

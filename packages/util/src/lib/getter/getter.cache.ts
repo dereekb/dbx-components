@@ -23,6 +23,10 @@ export type CachedGetter<T> = Getter<T> & {
   init(): void;
 };
 
+/**
+ * A cached factory that stores the result of the first call and returns it on subsequent calls.
+ * Supports optional input arguments for the initial factory call.
+ */
 export type CachedFactoryWithInput<T, A = unknown> = CachedGetter<T> &
   FactoryWithInput<T, A> & {
     /**
@@ -34,12 +38,12 @@ export type CachedFactoryWithInput<T, A = unknown> = CachedGetter<T> &
   };
 
 /**
- * Creates a CachedGetter from the input Getter.
+ * Creates a CachedGetter from the input factory function.
+ * The value is retrieved once on first call and cached permanently.
+ * Use `reset()` to clear the cache and `init()` to reload.
  *
- * The value will be retrieved once, then cached permenantly by this function.
- *
- * @param getter
- * @returns
+ * @param factory - The factory function to cache
+ * @returns A CachedFactoryWithInput that caches the first result
  */
 export function cachedGetter<T>(getter: Getter<T>): CachedFactoryWithInput<T>;
 export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>;

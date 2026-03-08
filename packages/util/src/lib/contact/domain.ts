@@ -2,12 +2,27 @@ import { uniqueCaseInsensitiveStrings } from '../array';
 import { websiteDomainAndPathPairFromWebsiteUrl } from '../string/url';
 import { type EmailAddress } from './email';
 
-export type EmailAddressDomain = string; // Domain name of an email address.
+/**
+ * Domain name portion of an email address (e.g., "example.com").
+ */
+export type EmailAddressDomain = string;
 
+/**
+ * Extracts unique domain names from a list of email addresses (case-insensitive).
+ *
+ * @param addresses - Array of email addresses to extract domains from
+ * @returns Array of unique lowercase domain strings
+ */
 export function readDomainsFromEmailAddresses(addresses: EmailAddress[]): EmailAddressDomain[] {
   return uniqueCaseInsensitiveStrings(addresses.map(readDomainFromEmailAddress));
 }
 
+/**
+ * Extracts the domain portion from a single email address.
+ *
+ * @param address - The email address to extract the domain from
+ * @returns The lowercase domain string
+ */
 export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressDomain {
   const split = address.split('@');
   const domain = split[1];
@@ -15,15 +30,18 @@ export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressD
 }
 
 /**
- * Reads a domain from the input that can be formatted as
+ * Reads a domain from various input formats including URLs, email addresses, and raw domains.
  *
- * - A url: www.test.com,
+ * Supported formats:
+ * - A url: www.test.com
  * - A url with the protocol (://): https://www.test.com
  * - An email address: test@test.com
  * - A domain: test.com
  *
- * @param urlLikeInput
- * @returns The domain
+ * The "www." prefix is stripped from URL-style inputs since emails typically don't use it.
+ *
+ * @param urlLikeInput - A URL, email address, or domain string
+ * @returns The extracted domain
  */
 export function readEmailDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain {
   const emailSplit = urlLikeInput.split('@');

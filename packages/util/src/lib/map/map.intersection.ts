@@ -8,11 +8,12 @@ export interface MapKeysIntersectionObject<T> {
 }
 
 /**
- * Builds an array from intersection of the input object and input keys that correspond to values that should be part of the result.
+ * Builds an array from the intersection of an object's keys with the provided keys.
+ * For each matching key, the associated value (or values) are added to the result array.
  *
- * @param object
- * @param keys
- * @returns
+ * @param object - The object mapping keys to values
+ * @param keys - The keys to intersect with the object
+ * @returns An array of values from the matching keys
  */
 export function mapKeysIntersectionObjectToArray<T>(object: MapKeysIntersectionObject<T>, keys: Iterable<string>): T[] {
   const keysToApply = Array.from(keys);
