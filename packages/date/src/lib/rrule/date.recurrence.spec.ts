@@ -1,29 +1,35 @@
-import { ModelRecurrenceInfo, ModelRecurrenceInfoUtility } from './date.recurrence';
-import { type CalendarDate } from '../date';
+import { type } from 'arktype';
+import { type ModelRecurrenceInfo, modelRecurrenceInfoType, ModelRecurrenceInfoUtility } from './date.recurrence';
+import { type CalendarDate, CalendarDateType } from '../date';
 
-describe('ModelRecurrenceInfo', () => {
-  it('should create an instance from a template', () => {
-    const template = {
+describe('modelRecurrenceInfoType', () => {
+  it('should validate a valid ModelRecurrenceInfo', () => {
+    const info: ModelRecurrenceInfo = {
       timezone: 'America/Chicago',
       rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
       start: new Date('2026-01-01'),
       end: new Date('2026-01-15'),
       forever: false
-    } as ModelRecurrenceInfo;
+    };
 
-    const info = new ModelRecurrenceInfo(template);
-
-    expect(info.timezone).toBe('America/Chicago');
-    expect(info.rrule).toBe('RRULE:FREQ=WEEKLY;COUNT=3');
-    expect(info.start).toEqual(new Date('2026-01-01'));
-    expect(info.end).toEqual(new Date('2026-01-15'));
-    expect(info.forever).toBe(false);
+    const result = modelRecurrenceInfoType(info);
+    expect(result).not.toBeInstanceOf(type.errors);
   });
 
-  it('should create an empty instance without a template', () => {
-    const info = new ModelRecurrenceInfo();
-    expect(info.timezone).toBeUndefined();
-    expect(info.rrule).toBeUndefined();
+  it('should validate without optional fields', () => {
+    const info = {
+      rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
+      start: new Date('2026-01-01'),
+      end: new Date('2026-01-15')
+    };
+
+    const result = modelRecurrenceInfoType(info);
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should reject missing required fields', () => {
+    const result = modelRecurrenceInfoType({ rrule: 'test' });
+    expect(result).toBeInstanceOf(type.errors);
   });
 });
 
@@ -31,6 +37,7 @@ describe('ModelRecurrenceInfoUtility', () => {
   describe('expandModelRecurrenceStartToModelRecurrenceInfo()', () => {
     it('should expand a recurrence start into a full ModelRecurrenceInfo', () => {
       const calendarDate: CalendarDate = {
+        type: CalendarDateType.TIME,
         startsAt: new Date('2026-01-05T10:00:00Z'),
         duration: 3600000
       };
@@ -41,7 +48,6 @@ describe('ModelRecurrenceInfoUtility', () => {
         timezone: 'America/Chicago'
       });
 
-      expect(result).toBeInstanceOf(ModelRecurrenceInfo);
       expect(result.timezone).toBe('America/Chicago');
       expect(result.rrule).toBeDefined();
       expect(result.start).toBeDefined();
@@ -50,6 +56,7 @@ describe('ModelRecurrenceInfoUtility', () => {
 
     it('should set forever to true for rules without COUNT or UNTIL', () => {
       const calendarDate: CalendarDate = {
+        type: CalendarDateType.TIME,
         startsAt: new Date('2026-01-05T10:00:00Z'),
         duration: 3600000
       };
@@ -66,6 +73,7 @@ describe('ModelRecurrenceInfoUtility', () => {
   describe('makeDateRRuleInstance()', () => {
     it('should create a DateRRuleInstance from stored info', () => {
       const calendarDate: CalendarDate = {
+        type: CalendarDateType.TIME,
         startsAt: new Date('2026-01-05T10:00:00Z'),
         duration: 3600000
       };

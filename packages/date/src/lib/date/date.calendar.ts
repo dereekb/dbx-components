@@ -1,8 +1,7 @@
 import { parseISO8601DayStringToUTCDate, type ISO8601DayString } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsEnum } from 'class-validator';
+import { type } from 'arktype';
 import { daysToMinutes } from './date';
-import { DateDurationSpan } from './date.duration';
+import { type DateDurationSpan, dateDurationSpanType } from './date.duration';
 import { dateTimezoneUtcNormal } from './date.timezone';
 
 /**
@@ -27,22 +26,12 @@ export interface CalendarDate extends DateDurationSpan {
   type: CalendarDateType;
 }
 
-export class CalendarDate extends DateDurationSpan {
-  /**
-   * The type of event date.
-   */
-  @Expose()
-  @IsEnum(CalendarDateType)
-  type: CalendarDateType = CalendarDateType.TIME;
-
-  constructor(template?: CalendarDate) {
-    super(template);
-
-    if (template != null) {
-      this.type = template.type;
-    }
-  }
-}
+/**
+ * ArkType schema for {@link CalendarDate}.
+ */
+export const calendarDateType = dateDurationSpanType.merge({
+  type: type.enumerated(...Object.values(CalendarDateType))
+});
 
 /**
  * Configuration for creating calendar dates with timezone handling.

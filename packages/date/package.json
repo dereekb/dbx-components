@@ -5,6 +5,7 @@
     "@dereekb/rxjs": "13.0.7",
     "@dereekb/util": "13.0.7",
     "@vvo/tzdb": "^6.0.0",
+    "arktype": "^2.1.20",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "date-fns": "^4.0.0",

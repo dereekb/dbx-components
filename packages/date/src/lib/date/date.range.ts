@@ -1,6 +1,5 @@
 import { type Building, type DateOrDateString, type DateRelativeState, type FactoryWithRequiredInput, groupValues, type MapFunction, type Maybe, MS_IN_DAY, type ISO8601DayString, type DayOfWeek, dayOfWeek, daysOfWeekArray } from '@dereekb/util';
-import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
+import { type } from 'arktype';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
@@ -50,30 +49,12 @@ export interface DateRange extends DateRangeStart {
 }
 
 /**
- * Class-transformer compatible implementation of {@link DateRange} for use with
- * serialization/deserialization and class-validator validation.
+ * ArkType schema for {@link DateRange}.
  */
-export class DateRange {
-  @Expose()
-  @IsDate()
-  @Type(() => Date)
-  start!: Date;
-
-  @Expose()
-  @IsDate()
-  @Type(() => Date)
-  end!: Date;
-
-  /**
-   * @param template - source range to copy start and end from
-   */
-  constructor(template: DateRange) {
-    if (template != null) {
-      this.start = template.start;
-      this.end = template.end;
-    }
-  }
-}
+export const dateRangeType = type({
+  start: 'Date',
+  end: 'Date'
+});
 
 /**
  * Counts the total number of calendar days spanned by the range, inclusive of both endpoints.
@@ -265,33 +246,26 @@ export enum DateRangeType {
 /**
  * Params for building a date range.
  */
-export class DateRangeParams {
+export interface DateRangeParams {
   /**
    * Type of range.
    */
-  @IsEnum(DateRangeType)
-  type: DateRangeType = DateRangeType.DAY;
-
+  type: DateRangeType;
   /**
    * Date to filter on. If not provided, assumes now.
    */
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  date: Date = new Date();
-
-  @IsNumber()
-  @IsOptional()
+  date: Date;
   distance?: number;
-
-  constructor(template: DateRangeParams) {
-    if (template) {
-      this.type = template.type;
-      this.date = template.date;
-      this.distance = template.distance;
-    }
-  }
 }
+
+/**
+ * ArkType schema for {@link DateRangeParams}.
+ */
+export const dateRangeParamsType = type({
+  type: type.enumerated(...Object.values(DateRangeType)),
+  date: 'Date',
+  'distance?': 'number'
+});
 
 export interface DateRangeTypedInput {
   type: DateRangeType;

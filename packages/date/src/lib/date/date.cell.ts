@@ -1,12 +1,11 @@
 import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC, isEqualDate } from '@dereekb/util';
+import { type } from 'arktype';
 import { type DateRange, type DateRangeDayDistanceInput, isDateRange } from './date.range';
-import { DateDurationSpan } from './date.duration';
+import { type DateDurationSpan, dateDurationSpanType } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay, addHours } from 'date-fns';
 import { roundDownToMinute, isSameDate, isDate, requireCurrentTimezone, copyHoursAndMinutesFromUTCDate } from './date';
-import { Expose, Type } from 'class-transformer';
 import { type DateTimezoneUtcNormalFunctionInput, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
-import { IsDate, IsNumber, IsString, Min } from 'class-validator';
-import { IsKnownTimezone } from '../timezone/timezone.validator';
+import { knownTimezoneType } from '../timezone/timezone.validator';
 import { formatToISO8601DayStringForUTC } from './date.format';
 
 /**
@@ -55,18 +54,12 @@ export interface DateCell extends IndexRef {
   i: DateCellIndex;
 }
 
-export class DateCell {
-  @Expose()
-  @IsNumber()
-  @Min(0)
-  i!: DateCellIndex;
-
-  constructor(template?: DateCell) {
-    if (template) {
-      this.i = template.i;
-    }
-  }
-}
+/**
+ * ArkType schema for {@link DateCell}.
+ */
+export const dateCellType = type({
+  i: 'number.integer >= 0'
+});
 
 /**
  * Normalizes a number or {@link DateCell} to a DateCell object.
@@ -176,26 +169,13 @@ export interface DateCellTimingDateRange extends DateRange, TimezoneStringRef {}
  */
 export type DateCellTimingEventRange = DateCellTimingDateRange;
 
-export class DateCellTiming extends DateDurationSpan {
-  @Expose()
-  @IsDate()
-  @Type(() => Date)
-  end!: Date;
-
-  @Expose()
-  @IsString()
-  @IsKnownTimezone()
-  timezone!: TimezoneString;
-
-  constructor(template?: DateCellTiming) {
-    super(template);
-
-    if (template) {
-      this.end = template.end;
-      this.timezone = template.timezone;
-    }
-  }
-}
+/**
+ * ArkType schema for {@link DateCellTiming}.
+ */
+export const dateCellTimingType = dateDurationSpanType.merge({
+  end: 'Date',
+  timezone: knownTimezoneType
+});
 
 /**
  * Reference to a DateCellTiming

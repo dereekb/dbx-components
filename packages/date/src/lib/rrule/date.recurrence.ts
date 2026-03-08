@@ -1,8 +1,7 @@
-import { Exclude, Expose, Type } from 'class-transformer';
+import { type } from 'arktype';
 import { type CalendarDate, type DateRange } from '../date';
 import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { DateRRuleParseUtility, type RRuleLines, type RRuleStringLineSet } from './date.rrule.parse';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { type TimezoneString } from '@dereekb/util';
 
 /**
@@ -21,61 +20,30 @@ export interface RecurrenceModel {
  * RRule string, the computed start/end of the recurrence window, and a
  * "forever" flag. Implements {@link DateRange} for easy integration with
  * date-range utilities.
- *
- * Decorated with `class-transformer` / `class-validator` for automatic
- * serialization and validation.
  */
-@Exclude()
-export class ModelRecurrenceInfo implements DateRange {
-  /**
-   * Timezone the rule is a part of.
-   *
-   * Required for RRules that have timezone-sensitive implementations.
-   */
-  @Expose()
-  @IsOptional()
-  @IsString()
+export interface ModelRecurrenceInfo extends DateRange {
+  /** Timezone the rule is a part of. Required for RRules that have timezone-sensitive implementations. */
   timezone?: TimezoneString;
-
-  /**
-   * RRules for this recurrence.
-   */
-  @Expose()
-  @IsString()
-  rrule!: RRuleLines;
-
-  /**
-   * First instance of the recurrence.
-   */
-  @Expose()
-  @Type(() => Date)
-  start!: Date;
-
-  /**
-   * Final instance of the recurrence.
-   */
-  @Expose()
-  @Type(() => Date)
-  end!: Date;
-
-  /**
-   * True if the recurrence has no end.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
+  /** RRules for this recurrence. */
+  rrule: RRuleLines;
+  /** First instance of the recurrence. */
+  start: Date;
+  /** Final instance of the recurrence. */
+  end: Date;
+  /** True if the recurrence has no end. */
   forever?: boolean;
-
-  constructor(template?: ModelRecurrenceInfo) {
-    if (template != null) {
-      this.timezone = template.timezone;
-      this.rrule = template.rrule;
-      this.start = template.start;
-      this.end = template.end;
-      this.forever = template.forever;
-    }
-  }
 }
+
+/**
+ * ArkType schema for {@link ModelRecurrenceInfo}.
+ */
+export const modelRecurrenceInfoType = type({
+  'timezone?': 'string',
+  rrule: 'string',
+  start: 'Date',
+  end: 'Date',
+  'forever?': 'boolean'
+});
 
 /**
  * Input used to create or update recurrence on a model, before it is
@@ -134,7 +102,7 @@ export class ModelRecurrenceInfoUtility {
     const dates = dateRRule.getRecurrenceDateRange();
     const rruleSetString: RRuleLines = DateRRuleParseUtility.toRRuleLines(rrule);
 
-    const recurrenceInfo = {
+    const recurrenceInfo: ModelRecurrenceInfo = {
       timezone,
       rrule: rruleSetString,
       start: dates.start,
@@ -142,7 +110,7 @@ export class ModelRecurrenceInfoUtility {
       forever: dates.forever
     };
 
-    return new ModelRecurrenceInfo(recurrenceInfo);
+    return recurrenceInfo;
   }
 
   /**
