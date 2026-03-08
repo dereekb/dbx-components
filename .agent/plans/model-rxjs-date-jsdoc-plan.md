@@ -13,8 +13,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 ## Statistics
 
 - **Total source files:** 107
-- **Files with specs:** 63
-- **Files missing specs:** 44
+- **Files with specs:** 77
+- **Files missing specs (types-only, skipped):** 30
 
 ---
 
@@ -32,7 +32,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 2 | link.ts | **NEEDS SPEC** | `[x]` |
+| 2 | link.ts | YES | `[x]` |
 | 3 | link.file.ts | YES | `[x]` |
 | 4 | link.website.ts | YES | `[x]` |
 
@@ -50,8 +50,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 6 | permission.ts | **NEEDS SPEC** | `[x]` |
-| 7 | permission.service.ts | **NEEDS SPEC** | `[x]` |
+| 6 | permission.ts | YES | `[x]` |
+| 7 | permission.service.ts | **NEEDS SPEC** | `[S]` |
 | 8 | role.ts | YES | `[x]` |
 
 ---
@@ -60,10 +60,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 9 | sync.entity.ts | **NEEDS SPEC** | `[x]` |
-| 10 | sync.entity.synchronizer.ts | **NEEDS SPEC** | `[x]` |
+| 9 | sync.entity.ts | YES | `[x]` |
+| 10 | sync.entity.synchronizer.ts | YES | `[x]` |
 | 11 | sync.entity.synchronizer.basic.ts | YES | `[x]` |
-| 12 | sync.error.ts | **NEEDS SPEC** | `[x]` |
+| 12 | sync.error.ts | **NEEDS SPEC** | `[S]` |
 | 13 | sync.service.ts | **NEEDS SPEC** | `[S]` |
 | 14 | sync.source.ts | **NEEDS SPEC** | `[S]` |
 
@@ -74,10 +74,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
 | 15 | transform.ts | YES | `[x]` |
-| 16 | transform.function.ts | **NEEDS SPEC** | `[x]` |
-| 17 | transform.result.ts | **NEEDS SPEC** | `[x]` |
-| 18 | type.ts | **NEEDS SPEC** | `[x]` |
-| 19 | type.annotation.ts | **NEEDS SPEC** | `[x]` |
+| 16 | transform.function.ts | YES | `[x]` |
+| 17 | transform.result.ts | YES (in transform.spec.ts) | `[x]` |
+| 18 | type.ts | YES | `[x]` |
+| 19 | type.annotation.ts | YES | `[x]` |
 
 ---
 
@@ -86,7 +86,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
 | 20 | date.ts | YES | `[x]` |
-| 21 | number.ts | **NEEDS SPEC** | `[x]` |
+| 21 | number.ts | YES | `[x]` |
 | 22 | phone.ts | YES | `[x]` |
 | 23 | unique.ts | YES | `[x]` |
 | 24 | url.ts | YES | `[x]` |
@@ -206,12 +206,12 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | 85 | date.day.ts | YES | `[x]` |
 | 86 | date.duration.ts | YES | `[x]` |
 | 87 | date.format.ts | YES | `[x]` |
-| 88 | date.hashset.ts | **NEEDS SPEC** | `[x]` |
-| 89 | date.logical.ts | **NEEDS SPEC** | `[x]` |
+| 88 | date.hashset.ts | YES | `[x]` |
+| 89 | date.logical.ts | YES | `[x]` |
 | 90 | date.range.ts | YES | `[x]` |
-| 91 | date.range.string.ts | **NEEDS SPEC** | `[x]` |
+| 91 | date.range.string.ts | YES | `[x]` |
 | 92 | date.range.timezone.ts | YES | `[x]` |
-| 93 | date.round.ts | **NEEDS SPEC** | `[x]` |
+| 93 | date.round.ts | YES | `[x]` |
 | 94 | date.rxjs.ts | YES | `[x]` |
 | 95 | date.sort.ts | YES | `[x]` |
 | 96 | date.time.ts | YES | `[x]` |
@@ -227,8 +227,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 102 | query.builder.ts | **NEEDS SPEC** | `[x]` |
-| 103 | query.builder.mongo.ts | **NEEDS SPEC** | `[x]` |
+| 102 | query.builder.ts | YES | `[x]` |
+| 103 | query.builder.mongo.ts | YES | `[x]` |
 | 104 | query.filter.ts | **NEEDS SPEC** | `[S]` |
 | 105 | query.request.ts | **NEEDS SPEC** | `[S]` |
 
@@ -238,7 +238,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 106 | date.recurrence.ts | **NEEDS SPEC** | `[x]` |
+| 106 | date.recurrence.ts | YES | `[x]` |
 | 107 | date.rrule.ts | YES | `[x]` |
 | 108 | date.rrule.extension.ts | YES | `[x]` |
 | 109 | date.rrule.parse.ts | YES | `[x]` |
@@ -249,7 +249,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 110 | timezone.ts | **NEEDS SPEC** | `[x]` |
+| 110 | timezone.ts | YES | `[x]` |
 | 111 | timezone.validator.ts | YES | `[x]` |
 
 ---

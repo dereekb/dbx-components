@@ -60,7 +60,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 25 | assert.ts | **NEEDS SPEC** | `[S]` |
+| 25 | assert.ts | **NEEDS SPEC** | `[x]` types-only |
 | 26 | assert.error.ts | YES | `[x]` |
 | 27 | assertion.ts | YES | `[x]` |
 | 28 | assertion.generic.ts | YES | `[x]` |
@@ -116,9 +116,9 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 46 | file.ts | **NEEDS SPEC** | `[S]` |
+| 46 | file.ts | **NEEDS SPEC** | `[x]` types-only |
 | 47 | pdf.ts | YES | `[x]` |
-| 48 | xml.ts | **NEEDS SPEC** | `[S]` |
+| 48 | xml.ts | **NEEDS SPEC** | `[x]` types-only |
 
 ---
 
@@ -148,7 +148,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | 54 | getter.cache.ts | YES | `[x]` |
 | 55 | getter.map.ts | YES | `[x]` |
 | 56 | getter.util.ts | YES | `[x]` |
-| 57 | type.ts | **NEEDS SPEC** | `[S]` |
+| 57 | type.ts | **NEEDS SPEC** | `[x]` types-only |
 
 ---
 
@@ -175,7 +175,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 63 | color.ts | **NEEDS SPEC** | `[S]` |
+| 63 | color.ts | **NEEDS SPEC** | `[x]` types-only |
 | 64 | host.ts | YES | `[x]` |
 
 ---
@@ -211,7 +211,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | 75 | bound.ts | YES | `[x]` |
 | 76 | dollar.ts | YES | `[x]` |
 | 77 | factory.ts | YES | `[x]` |
-| 78 | pay.ts | **NEEDS SPEC** | `[S]` |
+| 78 | pay.ts | **NEEDS SPEC** | `[x]` types-only |
 | 79 | random.ts | YES | `[x]` |
 | 80 | round.ts | YES | `[x]` |
 | 81 | sort.ts | YES | `[x]` |
@@ -344,7 +344,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 141 | tree.ts | **NEEDS SPEC** | `[S]` |
+| 141 | tree.ts | **NEEDS SPEC** | `[x]` types-only |
 | 142 | tree.array.ts | YES | `[x]` |
 | 143 | tree.expand.ts | YES | `[x]` |
 | 144 | tree.explore.ts | YES | `[x]` |
@@ -369,13 +369,13 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | 156 | maybe.ts | YES | `[x]` |
 | 157 | maybe.type.ts | YES | `[S]` |
 | 158 | modifier.ts | YES | `[x]` |
-| 159 | pixel.ts | **NEEDS SPEC** | `[S]` |
+| 159 | pixel.ts | **NEEDS SPEC** | `[x]` types-only |
 | 160 | point.ts | YES | `[x]` |
-| 161 | sync.ts | **NEEDS SPEC** | `[S]` |
+| 161 | sync.ts | **NEEDS SPEC** | `[x]` types-only |
 | 162 | url.ts | YES | `[x]` |
 | 163 | use.ts | YES | `[x]` |
 | 164 | vector.ts | YES | `[x]` |
-| 165 | zoom.ts | **NEEDS SPEC** | `[S]` |
+| 165 | zoom.ts | **NEEDS SPEC** | `[x]` types-only |
 
 ---
 
@@ -387,10 +387,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | 167 | jest/jest.fail.ts | NO (tested via jest.spec.ts) | `[x]` |
 | 168 | jest/jest.function.ts | YES | `[x]` |
 | 169 | jest/jest.wrap.ts | YES | `[x]` |
-| 170 | shared/shared.ts | YES (shared.spec.ts) | `[ ]` |
-| 171 | shared/shared.fail.ts | YES | `[ ]` |
-| 172 | shared/shared.function.ts | YES | `[ ]` |
-| 173 | shared/shared.wrap.ts | YES | `[ ]` |
+| 170 | shared/shared.ts | YES (shared.spec.ts) | `[x]` |
+| 171 | shared/shared.fail.ts | YES | `[x]` |
+| 172 | shared/shared.function.ts | YES | `[x]` |
+| 173 | shared/shared.wrap.ts | YES | `[x]` |
 
 ---
 
