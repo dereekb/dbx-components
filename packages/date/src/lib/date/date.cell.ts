@@ -439,8 +439,13 @@ export interface DateCellTimingStartPair {
 export function dateCellTimingStartPair(timing: DateCellTimingStartsAt): DateCellTimingStartPair {
   const { startsAt, timezone } = timing;
   const normalInstance = dateTimezoneUtcNormal(timezone);
-  const startsAtInSystem = normalInstance.systemDateToTargetDate(startsAt);
-  const start = normalInstance.startOfDayInTargetTimezone(startsAtInSystem);
+
+  // convert to target-date form (wall clock as UTC), floor to midnight via pure UTC math,
+  // then convert back to real UTC. Avoids system-timezone-dependent startOfDay which breaks
+  // on DST day when system and target timezones transition at different UTC times.
+  const startsAtAsTarget = normalInstance.baseDateToTargetDate(startsAt);
+  const startOfDayAsTarget = startOfDayForUTCDateInUTC(startsAtAsTarget);
+  const start = normalInstance.targetDateToBaseDate(startOfDayAsTarget);
 
   return {
     start,
