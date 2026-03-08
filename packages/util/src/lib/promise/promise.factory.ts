@@ -2,12 +2,18 @@ import { type FactoryWithRequiredInput } from '../getter/getter';
 import { type Maybe } from '../value/maybe.type';
 
 /**
- * Function that uses an array of Factories to produce Promises, one after the other, to attempt to return the value.
+ * A function that tries an array of Promise factories one after another until one
+ * produces a successful result. Returns `undefined` if none succeed.
  *
- * Returns a Maybe value of the expected output, and returns null if no factory/promise returns the intended value.
+ * @param input - The input to pass to each factory.
+ * @param config - Optional per-call configuration overrides.
+ * @returns The first successful value, or `undefined` if no factory succeeds.
  */
 export type TryWithPromiseFactoriesFunction<I, O> = (input: I, config?: TryWithPromiseFactoriesFunctionOptionalConfig<I, O>) => Promise<Maybe<O>>;
 
+/**
+ * Optional per-call configuration for {@link TryWithPromiseFactoriesFunction}.
+ */
 export interface TryWithPromiseFactoriesFunctionOptionalConfig<I, O> {
   /**
    * Whether or not to return a Maybe value if it is returned by one of the created promises.
@@ -23,6 +29,9 @@ export interface TryWithPromiseFactoriesFunctionOptionalConfig<I, O> {
   readonly throwErrors?: boolean;
 }
 
+/**
+ * Configuration for creating a {@link TryWithPromiseFactoriesFunction} via {@link tryWithPromiseFactoriesFunction}.
+ */
 export interface TryWithPromiseFactoriesFunctionConfig<I, O> extends TryWithPromiseFactoriesFunctionOptionalConfig<I, O> {
   /**
    * Factories used to create new Promise valeus to test.
@@ -34,6 +43,13 @@ export interface TryWithPromiseFactoriesFunctionConfig<I, O> extends TryWithProm
   readonly promiseFactories: FactoryWithRequiredInput<Promise<Maybe<O>>, I>[];
 }
 
+/**
+ * Creates a {@link TryWithPromiseFactoriesFunction} that sequentially tries each promise factory
+ * until one returns a non-null value (or a Maybe value if `successOnMaybe` is true).
+ *
+ * @param config - Configuration including the array of promise factories and default behavior options.
+ * @returns A function that tries each factory in order for a given input.
+ */
 export function tryWithPromiseFactoriesFunction<I, O>(config: TryWithPromiseFactoriesFunctionConfig<I, O>): TryWithPromiseFactoriesFunction<I, O> {
   const { promiseFactories, successOnMaybe: defaultSuccessOnMaybe, throwErrors: defaultThrowErrors } = config;
 

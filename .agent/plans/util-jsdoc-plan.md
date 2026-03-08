@@ -257,19 +257,19 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 96 | promise.ts | YES | `[ ]` |
-| 97 | promise.factory.ts | YES | `[ ]` |
-| 98 | promise.limit.ts | YES | `[ ]` |
-| 99 | promise.loop.ts | YES | `[ ]` |
-| 100 | promise.ref.ts | YES | `[ ]` |
-| 101 | promise.task.ts | YES | `[ ]` |
-| 102 | promise.type.ts | **NEEDS SPEC** | `[ ]` |
-| 103 | callback.ts | **NEEDS SPEC** | `[ ]` |
-| 104 | is.ts | YES | `[ ]` |
-| 105 | map.ts | **NEEDS SPEC** | `[ ]` |
-| 106 | poll.ts | **NEEDS SPEC** | `[ ]` |
-| 107 | use.ts | **NEEDS SPEC** | `[ ]` |
-| 108 | wait.ts | **NEEDS SPEC** | `[ ]` |
+| 96 | promise.ts | YES | `[x]` |
+| 97 | promise.factory.ts | YES | `[x]` |
+| 98 | promise.limit.ts | YES | `[x]` |
+| 99 | promise.loop.ts | YES | `[x]` |
+| 100 | promise.ref.ts | YES | `[x]` |
+| 101 | promise.task.ts | YES | `[x]` |
+| 102 | promise.type.ts | YES | `[x]` |
+| 103 | callback.ts | YES | `[x]` |
+| 104 | is.ts | YES | `[x]` |
+| 105 | map.ts | YES | `[x]` |
+| 106 | poll.ts | YES | `[x]` |
+| 107 | use.ts | YES | `[x]` |
+| 108 | wait.ts | YES | `[x]` |
 
 ---
 

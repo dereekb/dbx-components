@@ -1,23 +1,33 @@
 import { performTaskLoop } from './promise.loop';
 import { waitForMs } from './wait';
 
+/**
+ * Configuration for the {@link poll} function.
+ */
 export interface PollConfig {
   /**
-   * How long to wait between polling checks in ms.
+   * How long to wait between polling checks in milliseconds.
+   *
+   * Defaults to 250.
    */
   wait?: number;
   /**
-   * Checks to see the poll has been met.
+   * Predicate function that returns `true` when the polling condition has been met.
    */
   check: () => boolean;
   /**
-   * Max number of times to poll before giving up.
+   * Maximum number of polling iterations before giving up.
+   *
+   * Defaults to `Number.MAX_SAFE_INTEGER`.
    */
   timesToGiveup?: number;
 }
 
 /**
- * Polls every number of ms to check that a condition has been met.
+ * Polls at a regular interval until a condition is met or the maximum number of attempts is reached.
+ *
+ * @param config - Polling configuration including check function, wait interval, and max attempts.
+ * @returns A Promise that resolves when the check condition returns `true` or the max attempts are exhausted.
  */
 export function poll({ check, wait = 250, timesToGiveup = Number.MAX_SAFE_INTEGER }: PollConfig): Promise<void> {
   return performTaskLoop({
