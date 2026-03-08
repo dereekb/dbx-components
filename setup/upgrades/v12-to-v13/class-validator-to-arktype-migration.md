@@ -101,8 +101,8 @@ export const setUsernameParamsType = type({
 | `@MaxLength(N)` | `'string <= N'` |
 | `@IsNotEmpty()` + `@IsString()` + `@MaxLength(N)` | `'string > 0 & string <= N'` |
 | `@IsBoolean()` | `'boolean'` |
-| `@IsOptional()` + `@IsBoolean()` | `'boolean \| null'` (with `?` key) |
-| `@IsOptional()` | Use `'key?'` syntax in schema |
+| `@IsOptional()` + `@IsBoolean()` | `clearable('boolean')` (with `?` key) |
+| `@IsOptional()` | Use `'key?'` syntax in schema; use `clearable()` if the field is `Maybe<T>` |
 | `@Type(() => Date)` | `'string.date.parse'` |
 | `@ValidateNested({ each: true })` | `nestedSchemaType.array()` |
 | Custom `@IsX()` validators | `.narrow((val, ctx) => predicate(val) \|\| ctx.mustBe('description'))` |
@@ -115,11 +115,14 @@ const myType = type([/regex/, '&', 'string <= N'] as const);
 ```
 
 ### Optional fields
-Use the `'key?'` syntax:
+Use the `'key?'` syntax. For `Maybe<T>` fields (nullable/clearable), use `clearable()`:
 ```typescript
+import { clearable } from '@dereekb/model';
+
 const myType = type({
-  'bio?': 'string > 0 & string <= 200 | null',
-  'published?': 'boolean | null'
+  'bio?': clearable('string > 0 & string <= 200'),
+  'published?': clearable('boolean'),
+  'name?': 'string > 0'  // optional but NOT nullable — no clearable needed
 });
 ```
 
@@ -143,7 +146,7 @@ export interface UpdateProfileParams extends InferredTargetModelParams {
 }
 
 export const updateProfileParamsType = inferredTargetModelParamsType.merge({
-  'bio?': 'string > 0 & string <= 200 | null'
+  'bio?': clearable('string > 0 & string <= 200')
 }) as Type<UpdateProfileParams>;
 ```
 
@@ -161,13 +164,33 @@ export type FinishOnboardingParams = InferredTargetModelParams;
 export const finishOnboardingParamsType = inferredTargetModelParamsType as Type<FinishOnboardingParams>;
 ```
 
-### Object composition with `.or()`
-For clearable/nullable schemas:
+### Clearable fields with `clearable()`
+
+The dbx-components library uses `null` in API calls to signal that a field should be cleared/deleted, while `undefined` means "no change." Use `clearable()` from `@dereekb/model` for any `Maybe<T>` field:
+
 ```typescript
 import { clearable } from '@dereekb/model';
 
-// clearable() uses .or('null') internally
-const clearableStringType = clearable(type('string > 0'));
+const updateParamsType = targetModelParamsType.merge({
+  // clearable() accepts an ArkType string definition and returns `def | null | undefined`
+  'bio?': clearable(`string > 0 & string <= ${BIO_MAX_LENGTH}`),
+  'published?': clearable('boolean'),
+  'scheduledDate?': clearable('string.date.parse'),  // morph: string → Date | null | undefined
+  'email?': clearable('string.email'),
+  'count?': clearable('number >= 0'),
+}) as Type<UpdateParams>;
+```
+
+`clearable()` accepts both string definitions and `Type` instances:
+- For strings, it returns `"${def} | null | undefined"` with TypeScript return type `Type<type.infer<def> | null | undefined>`
+- For `Type` instances, it calls `.or('null').or('undefined')` on the schema
+
+```typescript
+const myType = type({
+  'items?': clearable(myCustomSchemaType.array()),    // Type instance
+  'phone?': clearable(e164PhoneNumberType),            // Type instance
+  'flag?': clearable(type.enumerated(Flag.A, Flag.B)), // enumerated Type
+});
 ```
 
 ## Updating Action Servers
@@ -245,6 +268,12 @@ These schemas are exported and can be used with `.merge()`:
 | `targetModelIdParamsType` | `TargetModelIdParams` | Required model ID |
 | `abstractSubscribeToNotificationBoxParamsType` | `AbstractSubscribeToNotificationBoxParams` | Notification subscription |
 | `downloadStorageFileParamsType` | `DownloadStorageFileParams` | Storage file download |
+
+## Available Helpers from @dereekb/model
+
+| Helper | Description |
+|---|---|
+| `clearable(def)` | Wraps a string definition as `def \| null \| undefined` for `Maybe<T>` fields |
 
 ## Available Validators from @dereekb/model
 

@@ -153,8 +153,8 @@ export interface CreateStorageFileGroupParams {
 }
 
 export const createStorageFileGroupParamsType = type({
-  'model?': firestoreModelKeyType.or('null'),
-  'storageFileId?': firestoreModelIdType.or('null')
+  'model?': clearable(firestoreModelKeyType),
+  'storageFileId?': clearable(firestoreModelIdType)
 }) as Type<CreateStorageFileGroupParams>;
 
 export interface SyncStorageFileWithGroupsParams extends TargetModelParams {
@@ -195,7 +195,7 @@ export interface UpdateStorageFileGroupParams extends TargetModelParams {
 }
 
 export const updateStorageFileGroupParamsType = targetModelParamsType.merge({
-  'entries?': updateStorageFileGroupEntryParamsType.array().or('null')
+  'entries?': clearable(updateStorageFileGroupEntryParamsType.array())
 }) as Type<UpdateStorageFileGroupParams>;
 
 export interface RegenerateStorageFileGroupContentParams extends TargetModelParams {

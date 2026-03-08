@@ -19,9 +19,10 @@ describe('clearable()', () => {
       expect((result as { value: number | null }).value).toBe(null);
     });
 
-    it('should reject undefined', () => {
+    it('should accept undefined', () => {
       const result = clearableNumber({ value: undefined });
-      expect(result instanceof type.errors).toBe(true);
+      expect(result instanceof type.errors).toBe(false);
+      expect((result as { value: number | undefined }).value).toBe(undefined);
     });
 
     it('should reject a string', () => {
@@ -432,6 +433,91 @@ describe('clearable()', () => {
       const out = result as { date: Date | null; num: number | null };
       expect(out.date).toBe(null);
       expect(out.num).toBe(null);
+    });
+  });
+
+  describe('with Type instance (overload)', () => {
+    const customType = type('string.email');
+    const schema = type({
+      'email?': clearable(customType)
+    });
+
+    it('should accept a valid value', () => {
+      const result = schema({ email: 'user@example.com' });
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should accept null', () => {
+      const result = schema({ email: null });
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should accept undefined (omitted)', () => {
+      const result = schema({});
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should reject invalid values', () => {
+      const result = schema({ email: 'not-email' });
+      expect(result instanceof type.errors).toBe(true);
+    });
+  });
+
+  describe('with .array() Type instance', () => {
+    const itemType = type({ id: 'string' });
+    const schema = type({
+      'items?': clearable(itemType.array())
+    });
+
+    it('should accept a valid array', () => {
+      const result = schema({ items: [{ id: 'a' }, { id: 'b' }] });
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should accept null', () => {
+      const result = schema({ items: null });
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should accept undefined (omitted)', () => {
+      const result = schema({});
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should reject invalid array entries', () => {
+      const result = schema({ items: [{ id: 123 }] });
+      expect(result instanceof type.errors).toBe(true);
+    });
+  });
+
+  describe('with type.enumerated() Type instance', () => {
+    enum Color {
+      Red = 'red',
+      Blue = 'blue'
+    }
+
+    const schema = type({
+      'color?': clearable(type.enumerated(Color.Red, Color.Blue))
+    });
+
+    it('should accept a valid enum value', () => {
+      const result = schema({ color: 'red' });
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should accept null', () => {
+      const result = schema({ color: null });
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should accept undefined (omitted)', () => {
+      const result = schema({});
+      expect(result instanceof type.errors).toBe(false);
+    });
+
+    it('should reject invalid enum values', () => {
+      const result = schema({ color: 'green' });
+      expect(result instanceof type.errors).toBe(true);
     });
   });
 });
