@@ -14,6 +14,9 @@ export interface PageAndFilter<F> extends OptionalFilter<F> {
   page: Page;
 }
 
+/**
+ * Callbacks for iterating over paged results. Provide either `use` (per-item) or `usePage` (per-page).
+ */
 export interface FilteredPageIterateFn<T> {
   /**
    * Uses each value one-by-one.
@@ -26,11 +29,11 @@ export interface FilteredPageIterateFn<T> {
 }
 
 /**
- * Creates a FilteredPage.
+ * Creates a {@link FilteredPage} combining a page number with an optional filter copied from the request.
  *
- * @param page
- * @param request
- * @returns
+ * @param page - The page number
+ * @param request - Optional filter to copy into the result
+ * @returns A new filtered page object
  */
 export function filteredPage<F = unknown>(page: PageNumber, request?: Filter<F>): FilteredPage<F> {
   return {
@@ -40,12 +43,16 @@ export function filteredPage<F = unknown>(page: PageNumber, request?: Filter<F>)
 }
 
 /**
- * Iterates using a delegate function sequentially.
+ * Sequentially loads and iterates through pages of results until an empty page is returned.
  *
- * @param inputPage
- * @param loadFn
- * @param iterFn
- * @returns
+ * Starts from the given page and increments the page number after each load. Stops when
+ * `loadFn` returns an empty array. Either `iterFn.use` or `iterFn.usePage` must be provided.
+ *
+ * @param inputPage - Starting page with optional filter
+ * @param loadFn - Async function that loads a page of results
+ * @param iterFn - Callbacks for processing each item or page
+ * @returns The total number of items processed across all pages
+ * @throws Error if neither `use` nor `usePage` is specified in `iterFn`
  */
 export async function iterateFilteredPages<T, F>(inputPage: FilteredPage<F>, loadFn: (page: FilteredPage<F>) => Promise<T[]>, iterFn: FilteredPageIterateFn<T>): Promise<number> {
   let currentPage = inputPage?.page ?? 0;

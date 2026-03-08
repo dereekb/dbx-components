@@ -60,11 +60,11 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 25 | assert.ts | **NEEDS SPEC** | `[ ]` |
-| 26 | assert.error.ts | **NEEDS SPEC** | `[ ]` |
-| 27 | assertion.ts | **NEEDS SPEC** | `[ ]` |
-| 28 | assertion.generic.ts | **NEEDS SPEC** | `[ ]` |
-| 29 | assertion.number.ts | **NEEDS SPEC** | `[ ]` |
+| 25 | assert.ts | **NEEDS SPEC** | `[S]` |
+| 26 | assert.error.ts | YES | `[x]` |
+| 27 | assertion.ts | YES | `[x]` |
+| 28 | assertion.generic.ts | YES | `[x]` |
+| 29 | assertion.number.ts | YES | `[x]` |
 
 ---
 
@@ -72,8 +72,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 30 | auth.role.ts | **NEEDS SPEC** | `[ ]` |
-| 31 | auth.role.claims.ts | YES | `[ ]` |
+| 30 | auth.role.ts | YES | `[x]` |
+| 31 | auth.role.claims.ts | YES | `[x]` |
 
 ---
 
@@ -81,10 +81,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 32 | domain.ts | YES | `[ ]` |
-| 33 | email.ts | **NEEDS SPEC** | `[ ]` |
-| 34 | phone.ts | YES | `[ ]` |
-| 35 | random.ts | YES | `[ ]` |
+| 32 | domain.ts | YES | `[x]` |
+| 33 | email.ts | YES | `[x]` |
+| 34 | phone.ts | YES | `[x]` |
+| 35 | random.ts | YES | `[x]` |
 
 ---
 
@@ -92,14 +92,14 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 36 | date.ts | YES | `[ ]` |
-| 37 | date.time.ts | **NEEDS SPEC** | `[ ]` |
-| 38 | date.unix.ts | YES | `[ ]` |
-| 39 | expires.ts | YES | `[ ]` |
-| 40 | hour.ts | YES | `[ ]` |
-| 41 | minute.ts | YES | `[ ]` |
-| 42 | time.ts | YES | `[ ]` |
-| 43 | week.ts | YES | `[ ]` |
+| 36 | date.ts | YES | `[x]` |
+| 37 | date.time.ts | YES | `[x]` |
+| 38 | date.unix.ts | YES | `[x]` |
+| 39 | expires.ts | YES | `[x]` |
+| 40 | hour.ts | YES | `[x]` |
+| 41 | minute.ts | YES | `[x]` |
+| 42 | time.ts | YES | `[x]` |
+| 43 | week.ts | YES | `[x]` |
 
 ---
 
@@ -107,8 +107,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 44 | error.ts | YES | `[ ]` |
-| 45 | error.server.ts | **NEEDS SPEC** | `[ ]` |
+| 44 | error.ts | YES | `[x]` |
+| 45 | error.server.ts | YES | `[x]` |
 
 ---
 
@@ -116,9 +116,9 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 46 | file.ts | **NEEDS SPEC** | `[ ]` |
-| 47 | pdf.ts | **NEEDS SPEC** | `[ ]` |
-| 48 | xml.ts | **NEEDS SPEC** | `[ ]` |
+| 46 | file.ts | **NEEDS SPEC** | `[S]` |
+| 47 | pdf.ts | YES | `[x]` |
+| 48 | xml.ts | **NEEDS SPEC** | `[S]` |
 
 ---
 
@@ -126,7 +126,7 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 49 | filter.ts | YES | `[ ]` |
+| 49 | filter.ts | YES | `[x]` |
 
 ---
 
@@ -134,9 +134,9 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 50 | function.ts | YES | `[ ]` |
-| 51 | function.boolean.ts | YES | `[ ]` |
-| 52 | function.forward.ts | YES | `[ ]` |
+| 50 | function.ts | YES | `[x]` |
+| 51 | function.boolean.ts | YES | `[x]` |
+| 52 | function.forward.ts | YES | `[x]` |
 
 ---
 
@@ -144,11 +144,11 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 53 | getter.ts | YES | `[ ]` |
-| 54 | getter.cache.ts | YES | `[ ]` |
-| 55 | getter.map.ts | YES | `[ ]` |
-| 56 | getter.util.ts | **NEEDS SPEC** | `[ ]` |
-| 57 | type.ts | **NEEDS SPEC** | `[ ]` |
+| 53 | getter.ts | YES | `[x]` |
+| 54 | getter.cache.ts | YES | `[x]` |
+| 55 | getter.map.ts | YES | `[x]` |
+| 56 | getter.util.ts | YES | `[x]` |
+| 57 | type.ts | **NEEDS SPEC** | `[S]` |
 
 ---
 
@@ -156,8 +156,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 58 | iterable.ts | YES | `[ ]` |
-| 59 | iterable.map.ts | **NEEDS SPEC** | `[ ]` |
+| 58 | iterable.ts | YES | `[x]` |
+| 59 | iterable.map.ts | YES | `[x]` |
 
 ---
 
@@ -165,9 +165,9 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 60 | map.ts | **NEEDS SPEC** | `[ ]` |
-| 61 | map.intersection.ts | **NEEDS SPEC** | `[ ]` |
-| 62 | map.key.ts | YES | `[ ]` |
+| 60 | map.ts | YES | `[x]` |
+| 61 | map.intersection.ts | YES | `[x]` |
+| 62 | map.key.ts | YES | `[x]` |
 
 ---
 
@@ -175,8 +175,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 63 | color.ts | **NEEDS SPEC** | `[ ]` |
-| 64 | host.ts | **NEEDS SPEC** | `[ ]` |
+| 63 | color.ts | **NEEDS SPEC** | `[S]` |
+| 64 | host.ts | YES | `[x]` |
 
 ---
 
@@ -239,8 +239,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 92 | page.ts | **NEEDS SPEC** | `[ ]` |
-| 93 | page.filter.ts | **NEEDS SPEC** | `[ ]` |
+| 92 | page.ts | YES | `[x]` |
+| 93 | page.filter.ts | YES | `[x]` |
 
 ---
 
@@ -248,8 +248,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 94 | path.ts | YES | `[ ]` |
-| 95 | path.tree.ts | YES | `[ ]` |
+| 94 | path.ts | YES | `[x]` |
+| 95 | path.tree.ts | YES | `[x]` |
 
 ---
 
