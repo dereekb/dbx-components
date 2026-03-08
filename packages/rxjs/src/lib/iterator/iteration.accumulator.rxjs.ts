@@ -5,10 +5,13 @@ import { mapLoadingStateResults, mapLoadingStateValueFunction, type PageListLoad
 import { type ItemAccumulator, type ItemAccumulatorValuePair, type PageItemAccumulator } from './iteration.accumulator';
 
 /**
- * Used for ItemAccumulators that have an array of results returned per page instead of a single item.
+ * Flattens paginated array results from an {@link ItemAccumulator} into a single growing array.
  *
- * @param accumulator
- * @returns
+ * Designed for accumulators where each page returns an array of items. Concatenates all
+ * page results into one flat array that grows as new pages are loaded.
+ *
+ * @param accumulator - accumulator whose page results are arrays to flatten
+ * @returns observable emitting the flattened array of all accumulated items
  */
 export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: ItemAccumulator<T[], I>): Observable<T[]> {
   return accumulator.currentAllItemPairs$.pipe(
@@ -35,7 +38,14 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
 }
 
 /**
- * A PageListLoadingState that captures all the values that have been loaded so far, flattens them as an array, and the current loading state of currentPageResult$.
+ * Combines a page accumulator's flattened array results with its current loading state
+ * into a single {@link PageListLoadingState} observable.
+ *
+ * The loading state reflects whether a page is currently being fetched, while the value
+ * always contains the full flattened array of all items loaded so far.
+ *
+ * @param accumulator - page accumulator whose results are arrays to flatten
+ * @returns observable of the combined loading state with all accumulated items
  */
 export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulator: PageItemAccumulator<T[], I>): Observable<PageListLoadingState<T>> {
   return combineLatest([accumulator.itemIteration.currentState$, flattenAccumulatorResultItemArray(accumulator)]).pipe(
@@ -51,7 +61,14 @@ export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulat
 }
 
 /**
- * A PageListLoadingState that captures all the values that have been loaded so far, and the current loading state of currentPageResult$.
+ * Combines a page accumulator's collected items with its current loading state
+ * into a single {@link PageListLoadingState} observable.
+ *
+ * Unlike {@link accumulatorFlattenPageListLoadingState}, this does not flatten arrays —
+ * each accumulated value is included as-is.
+ *
+ * @param accumulator - page accumulator to observe
+ * @returns observable of the combined loading state with all accumulated items
  */
 export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulator: PageItemAccumulator<V, I>): Observable<PageListLoadingState<V>> {
   return combineLatest([accumulator.itemIteration.currentState$, accumulator.currentAllItems$]).pipe(
@@ -67,10 +84,10 @@ export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulat
 }
 
 /**
- * Returns the latest loaded page number from the input PageItemAccumulator.
+ * Returns the latest loaded page number from the input accumulator's underlying iteration.
  *
- * @param pageItemAccumulator
- * @returns
+ * @param pageItemAccumulator - accumulator to observe the current page from
+ * @returns observable emitting the most recently loaded page number
  */
 export function pageItemAccumulatorCurrentPage(pageItemAccumulator: PageItemAccumulator<any, any>): Observable<number> {
   return pageItemAccumulator.itemIteration.latestLoadedPage$;

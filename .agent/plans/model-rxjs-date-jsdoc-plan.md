@@ -99,9 +99,9 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 25 | lock.ts | YES | `[ ]` |
-| 26 | object.ts | **NEEDS SPEC** | `[ ]` |
-| 27 | subscription.ts | **NEEDS SPEC** | `[ ]` |
+| 25 | lock.ts | YES | `[x]` |
+| 26 | object.ts | YES | `[x]` |
+| 27 | subscription.ts | YES | `[x]` |
 
 ---
 
@@ -109,10 +109,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 28 | filter.ts | **NEEDS SPEC** | `[ ]` |
-| 29 | filter.map.ts | YES | `[ ]` |
-| 30 | filter.preset.ts | **NEEDS SPEC** | `[ ]` |
-| 31 | filter.source.ts | YES | `[ ]` |
+| 28 | filter.ts | **NEEDS SPEC** | `[S]` |
+| 29 | filter.map.ts | YES | `[x]` |
+| 30 | filter.preset.ts | YES | `[x]` |
+| 31 | filter.source.ts | YES | `[x]` |
 
 ---
 
@@ -120,13 +120,13 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 32 | iteration.ts | **NEEDS SPEC** | `[ ]` |
-| 33 | iteration.accumulator.ts | YES | `[ ]` |
-| 34 | iteration.accumulator.rxjs.ts | YES | `[ ]` |
-| 35 | iteration.mapped.ts | YES | `[ ]` |
-| 36 | iteration.mapped.page.ts | **NEEDS SPEC** | `[ ]` |
-| 37 | iteration.next.ts | YES | `[ ]` |
-| 38 | iterator.page.ts | YES | `[ ]` |
+| 32 | iteration.ts | **NEEDS SPEC** | `[S]` |
+| 33 | iteration.accumulator.ts | YES | `[x]` |
+| 34 | iteration.accumulator.rxjs.ts | YES | `[x]` |
+| 35 | iteration.mapped.ts | YES | `[x]` |
+| 36 | iteration.mapped.page.ts | YES | `[x]` |
+| 37 | iteration.next.ts | YES | `[x]` |
+| 38 | iterator.page.ts | YES | `[x]` |
 
 ---
 

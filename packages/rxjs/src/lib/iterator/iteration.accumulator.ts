@@ -6,10 +6,14 @@ import { type ItemIteration, type PageItemIteration } from './iteration';
 import { type LoadingState, isLoadingStateWithError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
+/**
+ * Function that maps loaded values from their raw iteration type to the accumulator's output type.
+ */
 export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O, I>;
 
 /**
- * An object that accumulates and exposes values from an ItemIteration.
+ * Accumulates values from an {@link ItemIteration} into a growing collection,
+ * optionally mapping each value through a transform function.
  */
 export interface ItemAccumulator<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> {
   /**
@@ -67,22 +71,31 @@ export type MonotypePageItemAccumulator<I, N extends PageItemIteration<I> = Page
  */
 export interface ItemAccumulatorValuePair<O, I = unknown> extends MapFunctionOutputPair<O, LoadingState<I>>, IndexRef {}
 
+/**
+ * Concrete accumulator instance with additional observables for tracking load progress
+ * and successful states.
+ */
 export interface ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> extends ItemAccumulator<O, I, N>, Destroyable {
+  /** Emits `true` once the first load has completed. */
   readonly hasCompletedInitialLoad$: Observable<boolean>;
+  /** The most recent loading state that completed without an error. */
   readonly latestSuccessfulState$: Observable<LoadingState<I>>;
-  /**
-   * All successful page results in a single array.
-   */
+  /** All successful loading states accumulated in order. */
   readonly allSuccessfulStates$: Observable<LoadingState<I>[]>;
+  /** Count of successfully loaded pages so far. */
   readonly successfulLoadCount$: Observable<number>;
 }
 
 /**
- * Creates a new ItemAccumulatorInstance give the input ItemIteration and optional map function.
+ * Creates a new {@link ItemAccumulatorInstance} that collects values from an {@link ItemIteration},
+ * optionally transforming each value through a mapping function.
  *
- * @param itemIteration
- * @param mapItem
- * @returns
+ * The accumulator subscribes to the iteration's states and builds up an array of all
+ * successfully loaded items over time. Error states are excluded from accumulation.
+ *
+ * @param itemIteration - the iteration to accumulate values from
+ * @param inputMapItem - optional function to transform raw values into the desired output type
+ * @returns accumulator instance with observables for all collected items
  */
 export function itemAccumulator<I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N): ItemAccumulatorInstance<I, I, N>;
 export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
@@ -181,27 +194,39 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
   return result;
 }
 
-// MARK: Utility
+/**
+ * Function that counts the number of meaningful results in the accumulated items array.
+ */
 export type ItemAccumulatorNextPageUntilResultsCountFunction<O> = MapFunction<O[], PromiseOrValue<number>>;
 
+/**
+ * Configuration for {@link itemAccumulatorNextPageUntilResultsCount}.
+ */
 export interface ItemAccumulatorNextPageUntilResultsCountConfig<O> {
+  /** The accumulator whose iteration will be advanced. */
   readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>;
+  /** Target number of results to accumulate before stopping. */
   readonly maxResultsLimit: GetterOrValue<number>;
+  /** Function to count how many meaningful results exist in the accumulated items. */
   readonly countResultsFunction: ItemAccumulatorNextPageUntilResultsCountFunction<O>;
 }
 
+/**
+ * Result of {@link itemAccumulatorNextPageUntilResultsCount} containing the final page
+ * and total results count.
+ */
 export interface ItemAccumulatorNextPageUntilResultsCountResult extends Page {
   readonly resultsCount: number;
 }
 
 /**
- * Automatically calls next on the accumulator's page item iteration up to the target number of results. Returns the total number of items loaded.
+ * Automatically pages through an accumulator's iteration until the desired number of results
+ * is reached or no more pages are available.
  *
- * The promise will reject with an error if an error is encountered.
+ * @param config - configuration specifying the accumulator, result limit, and counting function
+ * @returns promise resolving to the final page number and total results count
  *
- * @param iteration
- * @param maxResultsLimit
- * @returns
+ * @throws Rejects if the iteration encounters an error during loading
  */
 export function itemAccumulatorNextPageUntilResultsCount<O>(config: ItemAccumulatorNextPageUntilResultsCountConfig<O>): Promise<ItemAccumulatorNextPageUntilResultsCountResult> {
   const { accumulator, maxResultsLimit, countResultsFunction: countResults } = config;
