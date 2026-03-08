@@ -4,7 +4,9 @@ import { isValidDateCellTiming } from './date.cell';
 import { isValidDateCellRange, isValidDateCellRangeSeries } from './date.cell.index';
 
 /**
- * isValidDateCellTiming validator
+ * class-validator decorator that validates a property is a valid {@link DateCellTiming}.
+ *
+ * @param validationOptions - optional class-validator options
  */
 export function IsValidDateCellTiming(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -22,7 +24,9 @@ export function IsValidDateCellTiming(validationOptions?: ValidationOptions) {
 }
 
 /**
- * isValidDateCellRange validator
+ * class-validator decorator that validates a property is a valid {@link DateCellRange} (non-negative indexes, `to >= i`).
+ *
+ * @param validationOptions - optional class-validator options
  */
 export function IsValidDateCellRange(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -40,7 +44,9 @@ export function IsValidDateCellRange(validationOptions?: ValidationOptions) {
 }
 
 /**
- * isValidDateCellRangeSeries validator
+ * class-validator decorator that validates a property is a sorted array of non-overlapping {@link DateCellRange} values.
+ *
+ * @param validationOptions - optional class-validator options
  */
 export function IsValidDateCellRangeSeries(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {

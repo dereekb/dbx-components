@@ -4,6 +4,12 @@ import { toZonedTime } from 'date-fns-tz';
 import { DateRangeType, dateRange } from '../date/date.range';
 import { type DateDayTimezoneHintFilter, type DateItemOccuringFilter, type DateItemQueryStartsEndsFilter, type DateItemRangeFilter } from './query.filter';
 
+/**
+ * Paired time and day filters produced by a {@link DaysAndTimeFiltersFunction}.
+ *
+ * Separates the UTC-based time filter from the timezone-adjusted day filter so
+ * that consumers can apply each independently or together.
+ */
 export interface DaysAndTimeFilter<F> {
   /**
    * The time filter is the primary filter.
@@ -15,6 +21,13 @@ export interface DaysAndTimeFilter<F> {
   daysFilter: Maybe<F>;
 }
 
+/**
+ * Intermediate representation of a date query before it is compiled into
+ * database-specific filters via a {@link DateQueryBuilder}.
+ *
+ * Captures upper/lower bounds for both the starts-at and ends-at fields,
+ * plus the implied recurrence range used internally for range-based filtering.
+ */
 export interface RawDateQuery extends DateDayTimezoneHintFilter {
   timezone?: Maybe<TimezoneString>;
 
@@ -35,7 +48,10 @@ export interface RawDateQuery extends DateDayTimezoneHintFilter {
 }
 
 /**
+ * Strategy interface that converts {@link RawDateQuery} bounds into
+ * database-specific range objects (`R`) and field filter objects (`F`).
  *
+ * Implementations are provided for different query backends (e.g. MongoDB-like).
  */
 export interface DateQueryBuilder<R, F> {
   /**
@@ -58,6 +74,10 @@ export type MakeRangeFilterFunction<R> = (gte: Maybe<Date>, lte: Maybe<Date>) =>
  */
 export type MergeStartsAtEndsAtFilterFunction<R> = (startsAt: Maybe<R>, endsAt: Maybe<R>) => R;
 
+/**
+ * Input to {@link MakeFieldFilterFunction} containing the optional range
+ * objects for starts-at and ends-at fields.
+ */
 export interface MakeFieldFilterInput<R> {
   startsAt?: Maybe<R>;
   endsAt?: Maybe<R>;
@@ -65,6 +85,23 @@ export interface MakeFieldFilterInput<R> {
 
 export type MakeFieldFilterFunction<R, F> = (input: MakeFieldFilterInput<R>) => F;
 
+/**
+ * Builds a {@link RawDateQuery} that matches items occurring at a single point in time.
+ *
+ * Sets `startsLte` and `endsGte` to the same instant so only items whose
+ * active window contains the target date are included.
+ *
+ * @example
+ * ```ts
+ * const query = makeDateQueryForOccuringFilter({
+ *   occuringAt: new Date('2026-06-15T12:00:00Z'),
+ *   timezone: 'America/Chicago'
+ * });
+ * ```
+ *
+ * @param find - Filter specifying the target date and optional timezone hint.
+ * @returns A raw date query representing the "occurring at" constraint.
+ */
 export function makeDateQueryForOccuringFilter(find: DateItemOccuringFilter & DateDayTimezoneHintFilter): RawDateQuery {
   const result: RawDateQuery = {};
 
@@ -77,6 +114,25 @@ export function makeDateQueryForOccuringFilter(find: DateItemOccuringFilter & Da
   return result;
 }
 
+/**
+ * Builds a {@link RawDateQuery} from a {@link DateItemRangeFilter}, deriving
+ * the concrete start/end dates from the provided {@link DateRangeParams}.
+ *
+ * When `rangeContained` is true, only items fully enclosed within the range
+ * are matched. Otherwise items merely overlapping the range are included.
+ *
+ * @example
+ * ```ts
+ * const query = makeDateQueryForDateItemRangeFilter({
+ *   range: { type: DateRangeType.WEEK, date: new Date() },
+ *   timezone: 'America/New_York',
+ *   rangeContained: false
+ * });
+ * ```
+ *
+ * @param find - Range filter with optional timezone and containment flag.
+ * @returns A raw date query bounded by the resolved range.
+ */
 export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): RawDateQuery {
   const result: RawDateQuery = {};
 
@@ -111,6 +167,24 @@ export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): 
   return result;
 }
 
+/**
+ * Builds a {@link RawDateQuery} from explicit starts/ends boundary constraints.
+ *
+ * Allows callers to independently control the before/after bounds for both
+ * the start and end fields of date items.
+ *
+ * @example
+ * ```ts
+ * const query = makeDateQueryForDateStartsEndsFilter({
+ *   starts: { after: new Date('2026-01-01'), before: new Date('2026-12-31') },
+ *   ends: { after: new Date('2026-06-01') },
+ *   timezone: 'UTC'
+ * });
+ * ```
+ *
+ * @param find - Filter with optional starts/ends boundaries and timezone hint.
+ * @returns A raw date query with the corresponding GTE/LTE bounds populated.
+ */
 export function makeDateQueryForDateStartsEndsFilter(find: DateItemQueryStartsEndsFilter & DateDayTimezoneHintFilter): RawDateQuery {
   const result: RawDateQuery = {};
   result.timezone = find.timezone;
@@ -134,6 +208,23 @@ export function makeDateQueryForDateStartsEndsFilter(find: DateItemQueryStartsEn
 
 export type DaysAndTimeFiltersFunction<F> = (dateQueryInstance: RawDateQuery) => DaysAndTimeFilter<F>;
 
+/**
+ * Creates a function that splits a {@link RawDateQuery} into separate time
+ * and day filters using the supplied {@link DateQueryBuilder}.
+ *
+ * The day filter is only produced when a timezone is present, allowing
+ * timezone-aware day-level filtering alongside the UTC time filter.
+ *
+ * @example
+ * ```ts
+ * const filtersFunction = makeDaysAndTimeFiltersFunction(mongoBuilder);
+ * const rawQuery = makeDateQueryForOccuringFilter({ occuringAt: new Date() });
+ * const { timeFilter, daysFilter } = filtersFunction(rawQuery);
+ * ```
+ *
+ * @param builder - Strategy for converting date bounds into backend-specific filters.
+ * @returns A function that produces a {@link DaysAndTimeFilter} from a raw query.
+ */
 export function makeDaysAndTimeFiltersFunction<R, F>(builder: DateQueryBuilder<R, F>): DaysAndTimeFiltersFunction<F> {
   return (dateQueryInstance: RawDateQuery) => {
     const { timezone, startsGte, startsLte, endsGte, endsLte } = dateQueryInstance;

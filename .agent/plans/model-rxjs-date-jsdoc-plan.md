@@ -194,32 +194,32 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
 | 75 | date.ts | YES | `[x]` |
-| 76 | date.calendar.ts | YES | `[ ]` |
-| 77 | date.cell.ts | YES | `[ ]` |
-| 78 | date.cell.factory.ts | YES | `[ ]` |
-| 79 | date.cell.filter.ts | YES | `[ ]` |
-| 80 | date.cell.index.ts | YES | `[ ]` |
-| 81 | date.cell.schedule.ts | YES | `[ ]` |
-| 82 | date.cell.schedule.day.ts | YES | `[ ]` |
-| 83 | date.cell.validator.ts | YES | `[ ]` |
-| 84 | date.cell.week.ts | YES | `[ ]` |
-| 85 | date.day.ts | YES | `[ ]` |
-| 86 | date.duration.ts | YES | `[ ]` |
-| 87 | date.format.ts | YES | `[ ]` |
-| 88 | date.hashset.ts | **NEEDS SPEC** | `[ ]` |
-| 89 | date.logical.ts | **NEEDS SPEC** | `[ ]` |
-| 90 | date.range.ts | YES | `[ ]` |
-| 91 | date.range.string.ts | **NEEDS SPEC** | `[ ]` |
-| 92 | date.range.timezone.ts | YES | `[ ]` |
-| 93 | date.round.ts | **NEEDS SPEC** | `[ ]` |
-| 94 | date.rxjs.ts | YES | `[ ]` |
-| 95 | date.sort.ts | YES | `[ ]` |
-| 96 | date.time.ts | YES | `[ ]` |
-| 97 | date.time.limit.ts | YES | `[ ]` |
-| 98 | date.time.minute.ts | YES | `[ ]` |
-| 99 | date.timezone.ts | YES | `[ ]` |
-| 100 | date.unix.ts | **NEEDS SPEC** | `[ ]` |
-| 101 | date.week.ts | YES | `[ ]` |
+| 76 | date.calendar.ts | YES | `[x]` |
+| 77 | date.cell.ts | YES | `[x]` |
+| 78 | date.cell.factory.ts | YES | `[x]` |
+| 79 | date.cell.filter.ts | YES | `[x]` |
+| 80 | date.cell.index.ts | YES | `[x]` |
+| 81 | date.cell.schedule.ts | YES | `[x]` |
+| 82 | date.cell.schedule.day.ts | YES | `[x]` |
+| 83 | date.cell.validator.ts | YES | `[x]` |
+| 84 | date.cell.week.ts | YES | `[x]` |
+| 85 | date.day.ts | YES | `[x]` |
+| 86 | date.duration.ts | YES | `[x]` |
+| 87 | date.format.ts | YES | `[x]` |
+| 88 | date.hashset.ts | **NEEDS SPEC** | `[x]` |
+| 89 | date.logical.ts | **NEEDS SPEC** | `[x]` |
+| 90 | date.range.ts | YES | `[x]` |
+| 91 | date.range.string.ts | **NEEDS SPEC** | `[x]` |
+| 92 | date.range.timezone.ts | YES | `[x]` |
+| 93 | date.round.ts | **NEEDS SPEC** | `[x]` |
+| 94 | date.rxjs.ts | YES | `[x]` |
+| 95 | date.sort.ts | YES | `[x]` |
+| 96 | date.time.ts | YES | `[x]` |
+| 97 | date.time.limit.ts | YES | `[x]` |
+| 98 | date.time.minute.ts | YES | `[x]` |
+| 99 | date.timezone.ts | YES | `[x]` |
+| 100 | date.unix.ts | **NEEDS SPEC** | `[S]` |
+| 101 | date.week.ts | YES | `[x]` |
 
 ---
 
@@ -227,10 +227,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 102 | query.builder.ts | **NEEDS SPEC** | `[ ]` |
-| 103 | query.builder.mongo.ts | **NEEDS SPEC** | `[ ]` |
-| 104 | query.filter.ts | **NEEDS SPEC** | `[ ]` |
-| 105 | query.request.ts | **NEEDS SPEC** | `[ ]` |
+| 102 | query.builder.ts | **NEEDS SPEC** | `[x]` |
+| 103 | query.builder.mongo.ts | **NEEDS SPEC** | `[x]` |
+| 104 | query.filter.ts | **NEEDS SPEC** | `[S]` |
+| 105 | query.request.ts | **NEEDS SPEC** | `[S]` |
 
 ---
 
@@ -238,10 +238,10 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 106 | date.recurrence.ts | **NEEDS SPEC** | `[ ]` |
-| 107 | date.rrule.ts | YES | `[ ]` |
-| 108 | date.rrule.extension.ts | YES | `[ ]` |
-| 109 | date.rrule.parse.ts | YES | `[ ]` |
+| 106 | date.recurrence.ts | **NEEDS SPEC** | `[x]` |
+| 107 | date.rrule.ts | YES | `[x]` |
+| 108 | date.rrule.extension.ts | YES | `[x]` |
+| 109 | date.rrule.parse.ts | YES | `[x]` |
 
 ---
 
@@ -249,8 +249,8 @@ Track progress of adding JSDoc annotations with `@example` blocks to all exporte
 
 | # | File | Spec? | JSDoc Status |
 |---|------|-------|-------------|
-| 110 | timezone.ts | **NEEDS SPEC** | `[ ]` |
-| 111 | timezone.validator.ts | YES | `[ ]` |
+| 110 | timezone.ts | **NEEDS SPEC** | `[x]` |
+| 111 | timezone.validator.ts | YES | `[x]` |
 
 ---
 

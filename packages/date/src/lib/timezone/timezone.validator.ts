@@ -3,7 +3,17 @@ import { buildMessage, type ValidationOptions, registerDecorator } from 'class-v
 import { isKnownTimezone } from './timezone';
 
 /**
- * isKnownTimezone validator
+ * `class-validator` property decorator that validates a string is a recognized IANA timezone.
+ *
+ * Delegates to {@link isKnownTimezone} for the actual check.
+ *
+ * @example
+ * ```ts
+ * class MyDto {
+ *   @IsKnownTimezone()
+ *   timezone!: string;
+ * }
+ * ```
  */
 export function IsKnownTimezone(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {

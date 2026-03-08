@@ -2,6 +2,11 @@ import { type Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
 import { RRule } from 'rrule';
 
+/**
+ * Internal iteration arguments used by the RRule iteration engine.
+ *
+ * Mirrors the shape expected by RRule's `_iter` method for custom iteration control.
+ */
 export interface IterArgs {
   inc: boolean;
   before: Date;
@@ -12,33 +17,60 @@ export interface IterArgs {
 
 // TODO: Fix typings in RRule, or better yet, add the given types up to RRule.
 
+/**
+ * Safety limit to prevent infinite iteration over unbounded recurrence rules.
+ */
 export const DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED = 10000;
 
+/**
+ * Extended RRule that adds convenience methods for querying recurrence dates
+ * using custom iteration strategies (`last`, `next`, `any`).
+ *
+ * Works around missing typings in the upstream RRule library.
+ *
+ * @example
+ * ```ts
+ * const rule = new DateRRule({ freq: RRule.DAILY, dtstart: new Date() });
+ * const lastDate = rule.last();
+ * const nextDate = rule.next(new Date());
+ * const hasAny = rule.any({ minDate: startDate, maxDate: endDate });
+ * ```
+ */
 export class DateRRule extends RRule {
   /**
-   * Returns the last occurence that occurs in the rule chain.
+   * Returns the last occurrence in the rule chain, up to the configured max iteration limit.
    *
-   * @returns
+   * @example
+   * ```ts
+   * const rule = new DateRRule({ freq: RRule.DAILY, count: 5, dtstart: startDate });
+   * const lastDate = rule.last(); // fifth occurrence
+   * ```
    */
   last(): Maybe<Date> {
     return this._iter(new LastIterResult());
   }
 
   /**
-   * Returns the next recurrence that occurs on/after the input date.
+   * Returns the first recurrence that occurs on or after the given date.
    *
-   * @returns
+   * @example
+   * ```ts
+   * const rule = new DateRRule({ freq: RRule.WEEKLY, dtstart: startDate });
+   * const nextDate = rule.next(new Date());
+   * ```
    */
   next(minDate: Date): Maybe<Date> {
     return this._iter(new NextIterResult(minDate));
   }
 
   /**
-   * Returns any recurrence between the input min and max dates, if specified.
+   * Checks whether any recurrence falls within the optional date bounds.
    *
-   * @param minDate
-   * @param maxDate
-   * @returns
+   * @example
+   * ```ts
+   * const rule = new DateRRule({ freq: RRule.DAILY, dtstart: startDate });
+   * const exists = rule.any({ minDate: rangeStart, maxDate: rangeEnd });
+   * ```
    */
   any(filter: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> } = {}): boolean {
     return this._iter(new AnyIterResult(filter)) != null;
@@ -63,7 +95,8 @@ abstract class BaseRRuleIter {
 }
 
 /**
- * Used by DateRRule to find the last result.
+ * Iterator result that captures the last date encountered before reaching the max future date
+ * or the iteration limit. Used by {@link DateRRule.last}.
  */
 export class LastIterResult extends BaseRRuleIter {
   private readonly _maxIterationsAllowed: number;
@@ -103,10 +136,17 @@ export class LastIterResult extends BaseRRuleIter {
   }
 }
 
+/**
+ * Iterator result that finds the first recurrence on or after a minimum date.
+ * Stops iteration as soon as a qualifying date is found. Used by {@link DateRRule.next}.
+ */
 export class NextIterResult extends BaseRRuleIter {
   override readonly maxDate: Date;
 
-  constructor(override readonly minDate: Date, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
+  constructor(
+    override readonly minDate: Date,
+    readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED
+  ) {
     super();
     this.maxDate = minDate;
   }
@@ -134,11 +174,18 @@ export class NextIterResult extends BaseRRuleIter {
   }
 }
 
+/**
+ * Iterator result that checks whether any recurrence falls within an optional date range.
+ * Stops as soon as one qualifying date is found. Used by {@link DateRRule.any}.
+ */
 export class AnyIterResult extends BaseRRuleIter {
   override readonly minDate: Date | null = null;
   override readonly maxDate: Date | null = null;
 
-  constructor(filter?: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> }, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
+  constructor(
+    filter?: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> },
+    readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED
+  ) {
     super();
     if (filter) {
       this.minDate = filter.minDate ?? null;
