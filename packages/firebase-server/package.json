@@ -46,7 +46,7 @@
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
     "archiver": "^7.0.0",
-    "class-validator": "^0.15.1",
+    "arktype": "^2.1.0",
     "date-fns": "^4.0.0",
     "express": "^5.0.0",
     "firebase-admin": "^13.0.0",

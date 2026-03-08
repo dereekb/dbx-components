@@ -10,13 +10,16 @@ import {
   type NotificationFirestoreCollections,
   type AsyncNotificationBoxUpdateAction,
   type NotificationBoxDocument,
-  InitializeNotificationModelParams,
-  InitializeAllApplicableNotificationBoxesParams,
+  type InitializeNotificationModelParams,
+  initializeNotificationModelParamsType,
+  type InitializeAllApplicableNotificationBoxesParams,
+  initializeAllApplicableNotificationBoxesParamsType,
   type InitializeAllApplicableNotificationBoxesResult,
   notificationBoxesFlaggedForNeedsInitializationQuery,
   type NotificationBox,
   type NotificationSummary,
-  InitializeAllApplicableNotificationSummariesParams,
+  type InitializeAllApplicableNotificationSummariesParams,
+  initializeAllApplicableNotificationSummariesParamsType,
   type InitializeAllApplicableNotificationSummariesResult,
   notificationSummariesFlaggedForNeedsInitializationQuery,
   type NotificationSummaryDocument,
@@ -172,7 +175,7 @@ export function initializeNotificationBoxFactory(context: NotificationInitServer
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const initializeNotificationBoxInTransaction = initializeNotificationBoxInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeNotificationModelParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(initializeNotificationModelParamsType, async (params) => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       await firestoreContext.runTransaction((transaction) => initializeNotificationBoxInTransaction(params, notificationBoxDocument, transaction));
       return notificationBoxDocument;
@@ -184,7 +187,7 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationCollectionGroup } = context;
   const initializeNotificationBoxInTransaction = initializeNotificationBoxInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeAllApplicableNotificationBoxesParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(initializeAllApplicableNotificationBoxesParamsType, async () => {
     return async () => {
       let notificationBoxesVisited: number = 0;
       let notificationBoxesSucceeded: number = 0;
@@ -268,7 +271,7 @@ export function initializeNotificationSummaryFactory(context: NotificationInitSe
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const initializeNotificationSummaryInTransaction = initializeNotificationSummaryInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeNotificationModelParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(initializeNotificationModelParamsType, async (params) => {
     return async (notificationSummaryDocument: NotificationSummaryDocument) => {
       await firestoreContext.runTransaction((transaction) => initializeNotificationSummaryInTransaction(params, notificationSummaryDocument, transaction));
       return notificationSummaryDocument;
@@ -280,7 +283,7 @@ export function initializeAllApplicableNotificationSummariesFactory(context: Not
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationSummaryCollection, notificationCollectionGroup } = context;
   const initializeNotificationSummaryInTransaction = initializeNotificationSummaryInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeAllApplicableNotificationSummariesParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(initializeAllApplicableNotificationSummariesParamsType, async () => {
     return async () => {
       let notificationSummariesVisited: number = 0;
       let notificationSummariesSucceeded: number = 0;
