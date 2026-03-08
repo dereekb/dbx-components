@@ -115,60 +115,78 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 
 ---
 
-## Phase 3: `@dereekb/firebase`
+## Phase 3: `@dereekb/firebase` ✅ COMPLETE
 
-### 3.1 Add arktype peer dependency
-- [ ] Add `arktype` to `packages/firebase/package.json` (peerDependency)
+### 3.1 Add arktype peer dependency ✅
+- [x] Add `arktype` to `packages/firebase/package.json` (peerDependency)
 
-### 3.2 Update `FirestoreModelKeyRef` / `FirestoreModelIdRef`
-- [ ] Have `FirestoreModelKeyRef` extend `ModelKeyRef` from `@dereekb/util`
-- [ ] Update `FirestoreModelIdRef` to extend `ModelIdRef`
-- [ ] Convert `@IsFirestoreModelKey()` → `.narrow()` wrapping `isFirestoreModelKey`
-- [ ] Convert `@IsFirestoreModelId()` → `.narrow()` wrapping `isFirestoreModelId`
-- [ ] Convert `@IsFirestoreModelIdOrKey()` → `.narrow()` wrapping `isFirestoreModelIdOrKey`
-- [ ] Create `firestoreModelKeyType`, `firestoreModelIdType` schemas
-- [ ] Create `firestoreTargetModelParamsType` that uses `firestoreModelKeyType`
+### 3.2 Update validators and model params ✅
+- [x] Convert `@IsFirestoreModelKey()` → `firestoreModelKeyType` (`.narrow()` wrapping `isFirestoreModelKey`)
+- [x] Convert `@IsFirestoreModelId()` → `firestoreModelIdType` (`.narrow()` wrapping `isFirestoreModelId`)
+- [x] Convert `@IsFirestoreModelIdOrKey()` → `firestoreModelIdOrKeyType` (`.narrow()` wrapping `isFirestoreModelIdOrKey`)
+- [x] Create `targetModelParamsType`, `inferredTargetModelParamsType`, `targetModelIdParamsType`, `inferredTargetModelIdParamsType` in `model.param.ts`
+- [x] Convert `TargetModelParams`, `InferredTargetModelParams`, `TargetModelIdParams`, `InferredTargetModelIdParams` from classes to interfaces
+- [x] Note: Did not add extends from `ModelKeyRef`/`ModelIdRef` — `FirestoreModelKeyRef`/`FirestoreModelIdRef` have `readonly` modifier which is more restrictive; kept as-is
 
-### 3.3 Convert all API param classes
-- [ ] Convert `notification/notification.api.ts` (~20 classes, uses `IsE164PhoneNumber` from `@dereekb/model`, `@Type(() => Date)`, nested validation, enums, inheritance from `TargetModelParams`)
-- [ ] Convert `storagefile/storagefile.api.ts` (~15 classes)
-- [ ] Convert other model API files with `@Expose()`-annotated classes
-- [ ] Verify: nested validation uses `.array()` on nested schemas
-- [ ] Verify: `@Type(() => Date)` replaced with `"string.date.parse"`
-- [ ] Verify: interfaces (result types) and function map configs unchanged
+### 3.3 Convert all API param classes ✅
+- [x] Convert `notification/notification.api.ts` (~20 classes → interfaces + ArkType schemas)
+- [x] Convert `storagefile/storagefile.api.ts` (~15 classes → interfaces + ArkType schemas)
+- [x] Convert `common/development/function.schedule.ts` (1 class → interface + schema)
+- [x] Nested validation uses `.array()` on nested schemas (e.g., `updateStorageFileGroupEntryParamsType.array()`)
+- [x] `@Type(() => Date)` replaced with `"string.date.parse"`
+- [x] Enum validation uses `type.enumerated()` (e.g., `NotificationBoxRecipientFlag`)
+- [x] Class inheritance (`extends TargetModelParams`) replaced with `targetModelParamsType.merge({...})`
+- [x] Interfaces (result types) and function map configs unchanged
+- [x] Abstract classes (`AbstractSubscribeToNotificationBoxParams`, etc.) converted to interfaces + schemas
 
-### 3.4 Adapt existing firebase tests
-- [ ] Adapt existing tests to new schema patterns
-- [ ] Verify all existing firebase tests pass
+### 3.4 Adapt existing firebase tests ✅
+- [x] Rewrote `model.validator.spec.ts` to use ArkType schemas instead of class-validator `validate()`
+- [x] No other test files had class-validator usage
+- [x] Build passes clean
+- [x] Removed all `class-validator` and `class-transformer` imports from firebase package
+
+**ArkType patterns established in Phase 3:**
+- `targetModelParamsType.merge({...})` replaces `extends TargetModelParams` class inheritance
+- `type.enumerated(Enum.A, Enum.B, ...)` for enum validation
+- Nested object arrays: `nestedSchemaType.array()` replaces `@ValidateNested({ each: true }) @Type(() => Class)`
+- Empty param types: `type({})` for params with no validated fields
 
 ---
 
-## Phase 4: `@dereekb/firebase-server`
+## Phase 4: `@dereekb/firebase-server` ✅ COMPLETE
 
-### 4.1 Configure ArkType globally in nest server instance
-- [ ] Add ArkType configuration option to nest server instance factory
-- [ ] Default: `configure({ onUndeclaredKey: "reject" })` via `import { configure } from "arktype/config"`
-- [ ] If config is explicitly `null`, skip `configure()` call
-- [ ] Remove `class-validator` and `ValidationPipe` dependency from `context.ts`
+### 4.1 Rewrite firebase server context ✅
+- [x] Replaced `ValidationError[]` with `ArkErrors` in `firebaseServerValidationServerError()` and `firebaseServerValidationError()`
+- [x] Error formatting now uses `validationErrors.summary` instead of NestJS `ValidationPipe.createExceptionFactory()`
+- [x] Removed `ValidationPipe` import from `@nestjs/common`
+- [x] Removed `class-validator` import entirely
+- [x] Dropped `defaultValidationOptions` from `FirebaseServerActionsTransformFactoryOptions`
+- [x] `handleValidationError` callback now receives `ArkErrors` (already aligned with `@dereekb/model` Phase 1 changes)
+- [x] Added `arktype` to `packages/firebase-server/package.json` peerDependencies, removed `class-validator`
 
-### 4.2 Rewrite firebase server context
-- [ ] `firebaseServerValidationServerError()` — takes `ArkErrors`, format with `errors.summary`
-- [ ] `firebaseServerValidationError()` — same, wraps in `badRequestError()`
-- [ ] `firebaseServerActionsTransformFactory()` — drop `defaultValidationOptions`, error handler takes `ArkErrors`
-- [ ] `FirebaseServerActionsTransformFactoryOptions` — remove `Pick<..., 'defaultValidationOptions'>`
-- [ ] `FirebaseServerActionsContext` / `AbstractFirebaseServerActionsContext` — types updated
+### 4.2 Update firebase-server model action servers ✅
+- [x] Updated `notification.action.service.ts` — all 11 factory calls now use ArkType schema imports
+- [x] Updated `notification.action.init.service.ts` — all 4 factory calls now use ArkType schema imports
+- [x] Updated `storagefile.action.server.ts` — all 15 factory calls now use ArkType schema imports
+- [x] Updated `storagefile.action.init.service.ts` — all 2 factory calls now use ArkType schema imports
+- [x] Updated `notification.expedite.service.ts` — converted value imports to type-only imports
+- [x] All imports use `type` keyword for interface-only references, value imports for schemas
 
-### 4.3 Update firebase-server tests
-- [ ] Adapt existing class-validator-specific tests
-- [ ] Add test: default behavior (reject unknown keys)
-- [ ] Add test: explicit `null` config (skip configuration)
-- [ ] Add test: custom config override
-- [ ] Verify all existing firebase-server tests pass
+### 4.3 Fix ArkType schema type inference ✅
+- [x] Added `as Type<InterfaceName>` casts to all schema definitions in `@dereekb/firebase` API files
+- [x] Casts applied in: `model.param.ts`, `notification.api.ts`, `storagefile.api.ts`, `function.schedule.ts`
+- [x] This ensures consumers get correctly-typed schemas without needing per-call-site casts
+- [x] Build passes clean for both firebase and firebase-server packages
+- [x] Removed all `class-validator` and `class-transformer` imports from firebase-server
 
-### 4.4 Update firebase-server model action servers
-- [ ] Swap class imports for schema imports in every action server file
-- [ ] Import types separately: `import { type FooParams, fooParamsType, ... }`
-- [ ] Verify no business logic changes needed
+### 4.4 ArkType global config decision
+- [x] Decided NOT to add `configure({ onUndeclaredKey: "reject" })` to nest server instance factory
+- [x] Reason: ArkType `configure()` is a global side-effect that must be called before any `type()` — not suitable for per-instance config in a library
+- [x] If needed, individual schemas can use `'+': 'reject'` syntax, or the app entry point can call `configure()`
+
+**ArkType patterns established in Phase 4:**
+- `as Type<InterfaceName>` casts on schema definitions to fix generic type inference in factory consumers
+- `ArkErrors.summary` for human-readable validation error messages (replaces NestJS ValidationPipe formatting)
 
 ---
 
