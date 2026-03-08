@@ -261,9 +261,10 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 
 ---
 
-## Phase 7: Migration Skill (Post-Migration)
+## Phase 7: Migration Guide ✅ COMPLETE
 
-### 7.1 Build migration skill for downstream projects
-- [ ] Create a Claude skill that guides downstream dbx-components consumers through migration
-- [ ] Cover: class→schema conversion, decorator→ArkType mapping, test updates, import changes
-- [ ] Include note: remove `reflect-metadata` from `project.json` polyfills for Angular projects (no longer needed as a frontend polyfill)
+### 7.1 Write migration guide for downstream projects ✅
+- [x] Created `setup/upgrades/v12-to-v13/class-validator-to-arktype-migration.md`
+- [x] Covers: class→schema conversion, decorator→ArkType mapping, test updates, import changes
+- [x] Includes note: remove `reflect-metadata` from `project.json` polyfills for Angular projects
+- [x] Updated `setup/upgrades/v12-to-v13/v12-to-v13-upgrade-info.md` with ArkType migration section and updated Removal of Babel section
