@@ -1,6 +1,7 @@
 import { type DownloadStorageFileParams, downloadStorageFileParamsType, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
+import { clearable } from '@dereekb/model';
 import { ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
@@ -12,8 +13,8 @@ export interface ProfileCreateTestNotificationParams extends InferredTargetModel
 }
 
 export const profileCreateTestNotificationParamsType = inferredTargetModelParamsType.merge({
-  'skipSend?': 'boolean | null',
-  'expediteSend?': 'boolean | null'
+  'skipSend?': clearable('boolean'),
+  'expediteSend?': clearable('boolean')
 }) as Type<ProfileCreateTestNotificationParams>;
 
 export interface SetProfileUsernameParams extends InferredTargetModelParams {
@@ -29,7 +30,7 @@ export interface UpdateProfileParams extends InferredTargetModelParams {
 }
 
 export const updateProfileParamsType = inferredTargetModelParamsType.merge({
-  'bio?': `string > 0 & string <= ${PROFILE_BIO_MAX_LENGTH} | null`
+  'bio?': clearable(`string > 0 & string <= ${PROFILE_BIO_MAX_LENGTH}`)
 }) as Type<UpdateProfileParams>;
 
 export type FinishOnboardingProfileParams = InferredTargetModelParams;

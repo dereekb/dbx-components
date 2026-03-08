@@ -8,6 +8,7 @@ import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '.
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type StorageFileId } from './storagefile.id';
 import { type SendNotificationResult } from '../notification/notification.api';
+import { clearable } from '@dereekb/model';
 
 /**
  * Used for directly create a new StorageFile.
@@ -26,9 +27,9 @@ export interface InitializeAllStorageFilesFromUploadsParams {
 }
 
 export const initializeAllStorageFilesFromUploadsParamsType = type({
-  'maxFilesToInitialize?': 'number',
-  'folderPath?': 'string',
-  'overrideUploadsFolderPath?': 'string'
+  'maxFilesToInitialize?': clearable('number'),
+  'folderPath?': clearable('string'),
+  'overrideUploadsFolderPath?': clearable('string')
 }) as Type<InitializeAllStorageFilesFromUploadsParams>;
 
 export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreateModelResult {
@@ -47,7 +48,7 @@ export interface InitializeStorageFileFromUploadParams extends Pick<StoragePath,
 }
 
 export const initializeStorageFileFromUploadParamsType = type({
-  'bucketId?': 'string',
+  'bucketId?': clearable('string'),
   pathString: 'string > 0',
   'expediteProcessing?': 'boolean'
 }) as Type<InitializeStorageFileFromUploadParams>;
@@ -60,10 +61,10 @@ export interface ProcessStorageFileParams extends TargetModelParams {
 }
 
 export const processStorageFileParamsType = targetModelParamsType.merge({
-  'runImmediately?': 'boolean',
-  'checkRetryProcessing?': 'boolean',
-  'forceRestartProcessing?': 'boolean',
-  'processAgainIfSuccessful?': 'boolean'
+  'runImmediately?': clearable('boolean'),
+  'checkRetryProcessing?': clearable('boolean'),
+  'forceRestartProcessing?': clearable('boolean'),
+  'processAgainIfSuccessful?': clearable('boolean')
 }) as Type<ProcessStorageFileParams>;
 
 export interface ProcessStorageFileResult {
@@ -89,7 +90,7 @@ export interface UpdateStorageFileParams extends TargetModelParams {
 }
 
 export const updateStorageFileParamsType = targetModelParamsType.merge({
-  'sdat?': 'string.date.parse'
+  'sdat?': clearable('string.date.parse')
 }) as Type<UpdateStorageFileParams>;
 
 export interface DeleteStorageFileParams extends TargetModelParams {
@@ -97,7 +98,7 @@ export interface DeleteStorageFileParams extends TargetModelParams {
 }
 
 export const deleteStorageFileParamsType = targetModelParamsType.merge({
-  'force?': 'boolean'
+  'force?': clearable('boolean')
 }) as Type<DeleteStorageFileParams>;
 
 /**
@@ -122,11 +123,11 @@ export interface DownloadStorageFileParams extends TargetModelParams {
 }
 
 export const downloadStorageFileParamsType = targetModelParamsType.merge({
-  'expiresAt?': 'string.date.parse',
-  'expiresIn?': 'number >= 0',
-  'responseDisposition?': 'string',
-  'responseContentType?': 'string',
-  'asAdmin?': 'boolean'
+  'expiresAt?': clearable('string.date.parse'),
+  'expiresIn?': clearable('number >= 0'),
+  'responseDisposition?': clearable('string'),
+  'responseContentType?': clearable('string'),
+  'asAdmin?': clearable('boolean')
 }) as Type<DownloadStorageFileParams>;
 
 /**
@@ -152,8 +153,8 @@ export interface CreateStorageFileGroupParams {
 }
 
 export const createStorageFileGroupParamsType = type({
-  'model?': firestoreModelKeyType,
-  'storageFileId?': firestoreModelIdType
+  'model?': firestoreModelKeyType.or('null'),
+  'storageFileId?': firestoreModelIdType.or('null')
 }) as Type<CreateStorageFileGroupParams>;
 
 export interface SyncStorageFileWithGroupsParams extends TargetModelParams {
@@ -186,7 +187,7 @@ export interface UpdateStorageFileGroupEntryParams {
 
 export const updateStorageFileGroupEntryParamsType = type({
   s: firestoreModelIdType,
-  'n?': 'string > 0'
+  'n?': clearable('string > 0')
 }) as Type<UpdateStorageFileGroupEntryParams>;
 
 export interface UpdateStorageFileGroupParams extends TargetModelParams {
@@ -194,7 +195,7 @@ export interface UpdateStorageFileGroupParams extends TargetModelParams {
 }
 
 export const updateStorageFileGroupParamsType = targetModelParamsType.merge({
-  'entries?': updateStorageFileGroupEntryParamsType.array()
+  'entries?': updateStorageFileGroupEntryParamsType.array().or('null')
 }) as Type<UpdateStorageFileGroupParams>;
 
 export interface RegenerateStorageFileGroupContentParams extends TargetModelParams {

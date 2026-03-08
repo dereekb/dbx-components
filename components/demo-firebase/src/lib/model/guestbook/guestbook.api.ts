@@ -2,6 +2,7 @@ import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFireba
 import { type, type Type } from 'arktype';
 import { GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
+import { clearable } from '@dereekb/model';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
@@ -15,7 +16,7 @@ export interface CreateGuestbookParams {
 
 export const createGuestbookParamsType = type({
   name: `string > 0 & string <= ${GUESTBOOK_NAME_MAX_LENGTH}`,
-  'published?': 'boolean | null'
+  'published?': clearable('boolean')
 }) as Type<CreateGuestbookParams>;
 
 export interface GuestbookEntryParams {

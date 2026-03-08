@@ -7,7 +7,7 @@ import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe }
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
-import { e164PhoneNumberType } from '@dereekb/model';
+import { clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -35,12 +35,12 @@ export interface NotificationBoxRecipientTemplateConfigArrayEntryParam extends N
 
 export const notificationBoxRecipientTemplateConfigArrayEntryParamType = type({
   type: 'string > 0',
-  'sd?': 'boolean',
-  'se?': 'boolean',
-  'st?': 'boolean',
-  'sp?': 'boolean',
-  'sn?': 'boolean',
-  'remove?': 'boolean'
+  'sd?': clearable('boolean'),
+  'se?': clearable('boolean'),
+  'st?': clearable('boolean'),
+  'sp?': clearable('boolean'),
+  'sn?': clearable('boolean'),
+  'remove?': clearable('boolean')
 });
 
 /**
@@ -68,13 +68,13 @@ export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigPara
 }
 
 export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = type({
-  'i?': 'number',
-  'e?': 'string.email',
-  't?': e164PhoneNumberType,
-  'configs?': notificationBoxRecipientTemplateConfigArrayEntryParamType.array(),
-  'lk?': 'boolean',
-  'bk?': 'boolean',
-  'f?': type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT)
+  'i?': clearable('number'),
+  'e?': clearable('string.email'),
+  't?': e164PhoneNumberType.or('null'),
+  'configs?': notificationBoxRecipientTemplateConfigArrayEntryParamType.array().or('null'),
+  'lk?': clearable('boolean'),
+  'bk?': clearable('boolean'),
+  'f?': type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT).or('null')
 }) as Type<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
 
 export interface UpdateNotificationBoxRecipientLikeParams {
@@ -85,10 +85,10 @@ export interface UpdateNotificationBoxRecipientLikeParams {
 }
 
 export const updateNotificationBoxRecipientLikeParamsType = type({
-  'e?': 'string.email',
-  't?': e164PhoneNumberType,
-  's?': 'string',
-  'configs?': notificationBoxRecipientTemplateConfigArrayEntryParamType.array()
+  'e?': clearable('string.email'),
+  't?': e164PhoneNumberType.or('null'),
+  's?': clearable('string'),
+  'configs?': notificationBoxRecipientTemplateConfigArrayEntryParamType.array().or('null')
 }) as Type<UpdateNotificationBoxRecipientLikeParams>;
 
 /**
@@ -105,11 +105,11 @@ export interface UpdateNotificationUserNotificationBoxRecipientParams extends Up
 
 export const updateNotificationUserNotificationBoxRecipientParamsType = updateNotificationBoxRecipientLikeParamsType.merge({
   nb: firestoreModelIdType,
-  'rm?': 'boolean',
-  'lk?': 'boolean',
-  'bk?': 'boolean',
-  'f?': type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT),
-  'deleteRemovedConfig?': 'boolean'
+  'rm?': clearable('boolean'),
+  'lk?': clearable('boolean'),
+  'bk?': clearable('boolean'),
+  'f?': type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT).or('null'),
+  'deleteRemovedConfig?': clearable('boolean')
 }) as Type<UpdateNotificationUserNotificationBoxRecipientParams>;
 
 /**
@@ -122,9 +122,9 @@ export interface UpdateNotificationUserParams extends TargetModelParams {
 }
 
 export const updateNotificationUserParamsType = targetModelParamsType.merge({
-  'gc?': updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType,
-  'dc?': updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType,
-  'bc?': updateNotificationUserNotificationBoxRecipientParamsType.array()
+  'gc?': updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType.or('null'),
+  'dc?': updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType.or('null'),
+  'bc?': updateNotificationUserNotificationBoxRecipientParamsType.array().or('null')
 }) as Type<UpdateNotificationUserParams>;
 
 export interface ResyncNotificationUserParams extends TargetModelParams {}
@@ -163,8 +163,8 @@ export interface UpdateNotificationSummaryParams extends TargetModelParams {
 }
 
 export const updateNotificationSummaryParamsType = targetModelParamsType.merge({
-  'flagAllRead?': 'boolean',
-  'setReadAtTime?': 'string.date.parse'
+  'flagAllRead?': clearable('boolean'),
+  'setReadAtTime?': clearable('string.date.parse')
 }) as Type<UpdateNotificationSummaryParams>;
 
 /**
@@ -237,12 +237,12 @@ export interface UpdateNotificationBoxRecipientParams extends UpdateNotification
 
 export const updateNotificationBoxRecipientParamsType = updateNotificationBoxRecipientLikeParamsType.merge({
   key: firestoreModelKeyType,
-  'i?': 'number',
-  'uid?': firestoreModelIdType,
-  'insert?': 'boolean',
-  'enabled?': 'boolean',
-  'remove?': 'boolean',
-  'setExclusion?': 'boolean'
+  'i?': clearable('number'),
+  'uid?': firestoreModelIdType.or('null'),
+  'insert?': clearable('boolean'),
+  'enabled?': clearable('boolean'),
+  'remove?': clearable('boolean'),
+  'setExclusion?': clearable('boolean')
 }) as Type<UpdateNotificationBoxRecipientParams>;
 
 export interface NotificationRecipientParams {
@@ -253,10 +253,10 @@ export interface NotificationRecipientParams {
 }
 
 export const notificationRecipientParamsType = type({
-  'uid?': firestoreModelIdType,
-  'un?': `string >= ${NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH} & string <= ${NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH}` as any,
-  'e?': 'string.email',
-  'p?': 'string'
+  'uid?': firestoreModelIdType.or('null'),
+  'un?': clearable(`string >= ${NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH} & string <= ${NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH}`),
+  'e?': clearable('string.email'),
+  'p?': clearable('string')
 }) as Type<NotificationRecipientParams>;
 
 /**
@@ -268,8 +268,8 @@ export interface SendNotificationParams extends TargetModelParams {
 }
 
 export const sendNotificationParamsType = targetModelParamsType.merge({
-  'ignoreSendAtThrottle?': 'boolean',
-  'throwErrorIfSent?': 'boolean'
+  'ignoreSendAtThrottle?': clearable('boolean'),
+  'throwErrorIfSent?': clearable('boolean')
 }) as Type<SendNotificationParams>;
 
 /**
@@ -288,7 +288,7 @@ export interface AbstractSubscribeOrUnsubscribeToNotificationBoxParams extends A
 }
 
 export const abstractSubscribeOrUnsubscribeToNotificationBoxParamsType = abstractSubscribeToNotificationBoxParamsType.merge({
-  'unsubscribe?': 'boolean'
+  'unsubscribe?': clearable('boolean')
 }) as Type<AbstractSubscribeOrUnsubscribeToNotificationBoxParams>;
 
 export interface SendNotificationResultOnSendCompleteResult<T = unknown> {
@@ -334,9 +334,9 @@ export interface SendQueuedNotificationsParams {
 }
 
 export const sendQueuedNotificationsParamsType = type({
-  'maxSendNotificationLoops?': 'number',
-  'maxParellelSendTasks?': 'number',
-  'sendNotificationLoopsTaskExcessThreshold?': 'number'
+  'maxSendNotificationLoops?': clearable('number'),
+  'maxParellelSendTasks?': clearable('number'),
+  'sendNotificationLoopsTaskExcessThreshold?': clearable('number')
 }) as Type<SendQueuedNotificationsParams>;
 
 export interface SendQueuedNotificationsResult extends Omit<
