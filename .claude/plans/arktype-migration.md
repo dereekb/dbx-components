@@ -10,67 +10,76 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 - https://arktype.io/docs/primitives — string, number, Date constraints, parse morphs (`string.date.parse`, etc.)
 - https://arktype.io/docs/objects — object schemas, optional keys, merge, index signatures, undeclared keys
 - https://arktype.io/docs/configuration — global config (`onUndeclaredKey`, etc.)
+- Use Context7 MCP tool (`/arktypeio/arktype`) for API questions during implementation
 
 ---
 
 **Testing**
 - Ask the user to run tests instead of running them yourself as that eats up context.
 
-## Phase 1: Foundation in `@dereekb/model`
+**ArkType patterns established in Phase 1:**
+- `type('string > 0').narrow((val, ctx) => predicate(val) || ctx.mustBe('description'))` for custom validators
+- `schema(input)` returns `T | ArkErrors`; use `instanceof type.errors` to check errors, then cast: `out as ArkErrors` / `out as T`
+- Generic `Type<T>` in factories needs `as T` and `as ArkErrors` casts due to ArkType's complex distillation types
+- `clearable(schema)` uses `.or('null')` fluent API (not tuple syntax)
+- `.merge({...})` for object composition (replaces class inheritance)
+- Regex + string constraint intersections use tuple with `as const`: `[/regex/, '&', 'string <= N'] as const`
+- DTOs become: `export const fooType = type({...})` + `export type Foo = typeof fooType.infer`
+- Interfaces stay as-is; only classes with `@Expose()` decorators get converted
+- Downstream packages (firebase, etc.) will have temporary build failures until their phase is reached — this is expected
 
-### 1.1 Add arktype dependency
-- [ ] Add `arktype` to `packages/model/package.json` (peerDependency + devDependency)
-- [ ] Add `arktype` to root `package.json`
-- [ ] Run `pnpm install`
+## Phase 1: Foundation in `@dereekb/model` ✅ COMPLETE
 
-### 1.2 Add helper utilities
-- [ ] Create `packages/model/src/lib/type/` (or similar) for ArkType helpers
-- [ ] Implement `clearable()` helper — returns `type(schema, "|", "null")` for fields where `null` is a clear/reset signal
-- [ ] Export from `@dereekb/model`
+### 1.1 Add arktype dependency ✅
+- [x] Add `arktype` to `packages/model/package.json` (peerDependency)
+- [x] Add `arktype` to root `package.json`
+- [x] Run `pnpm install`
 
-### 1.3 Add `ModelId`, `ModelKeyRef`, `ModelIdRef` to `@dereekb/model`
-- [ ] Add `ModelId` type (string alias, like existing `ModelKey`)
-- [ ] Add `ModelKeyRef` interface (`{ readonly key: ModelKey }`)
-- [ ] Add `ModelIdRef` interface (`{ readonly id: ModelId }`)
-- [ ] Add `modelKeyType` and `modelIdType` ArkType schemas (basic string validation)
-- [ ] Add `targetModelParamsType` schema (merges `modelKeyType` as `key`)
-- [ ] Export all from `@dereekb/model`
+### 1.2 Add helper utilities ✅
+- [x] Create `packages/model/src/lib/type/` for ArkType helpers
+- [x] Implement `clearable()` helper — uses `.or('null')` fluent API on `Type<t>`
+- [x] Export from `@dereekb/model`
 
-### 1.4 Rewrite transform pipeline
-- [ ] Rewrite `packages/model/src/lib/transform/transform.ts`:
-  - [ ] Replace `ClassType<T>` with ArkType `Type<T>` in all signatures
-  - [ ] Replace `ValidationError[]` with `ArkErrors`
-  - [ ] Keep `I extends object` generic on function signatures for compile-time input narrowing; internally the schema receives `input as unknown`
-  - [ ] Remove `TransformAndValidateObjectResultTransformContextOptions` (no separate transform/validate options)
-  - [ ] Remove `optionsForContext` / `defaultValidationOptions` from factory defaults
-  - [ ] `transformAndValidateObjectResult` becomes a single `schema(input)` call instead of `plainToInstance` + `validate`
-  - [ ] Error output loses `object` field on failure (no partial object produced)
-- [ ] Update `transform.function.ts` and `transform.result.ts` to match new types
-- [ ] Remove `class-transformer` imports from transform module
-- [ ] Remove `class-validator` imports from transform module
-- [ ] Remove `type.ts` and `type.annotation.ts` (class-transformer annotation helpers) — or convert to ArkType `.pipe()` equivalents if still needed
+### 1.3 Add `ModelId`, `ModelIdRef` and ArkType schemas ✅
+- [x] Add `ModelId` type to `@dereekb/util` (alongside existing `ModelKey`)
+- [x] Add `ModelIdRef` interface to `@dereekb/util` (alongside existing `ModelKeyRef`)
+- [x] `ModelKeyRef` already existed in `@dereekb/util` — no changes needed
+- [x] Add `modelKeyType` and `modelIdType` ArkType schemas in `packages/model/src/lib/type/model.ts`
+- [x] Add `targetModelParamsType` and `targetModelIdParamsType` schemas
+- [x] Export all from `@dereekb/model`
 
-### 1.5 Convert custom validators in `@dereekb/model`
-- [ ] `@IsE164PhoneNumber()` → regex type
-- [ ] `@IsE164PhoneNumberWithOptionalExtension()` → regex type
-- [ ] `@IsE164PhoneNumberWithExtension()` → regex type
-- [ ] `@IsWebsiteUrl()` → `.narrow()` wrapping existing `isWebsiteUrl`
-- [ ] `@IsWebsiteUrlWithPrefix()` → `.narrow()` wrapping existing predicate
-- [ ] `@IsMinuteOfDay()` → `.narrow()` wrapping `isMinuteOfDay`
-- [ ] `@IsUniqueKeyed()` → `.narrow()` wrapping `isUniqueKeyedFunction`
-- [ ] Export reusable schema fragments from `@dereekb/model`
+### 1.4 Rewrite transform pipeline ✅
+- [x] Rewrite `transform.ts`: `Type<T>` replaces `ClassType<T>`, `ArkErrors` replaces `ValidationError[]`
+- [x] Single `schema(input)` call replaces `plainToInstance` + `validate`
+- [x] Removed `TransformAndValidateObjectResultTransformContextOptions`, `optionsForContext`, `defaultValidationOptions`
+- [x] Error output no longer has `object` field (no partial object produced)
+- [x] Config uses `schema` field instead of `classType`
+- [x] Updated `transform.function.ts` and `transform.result.ts` to match
+- [x] Deleted `type.ts` and `type.annotation.ts` (class-transformer helpers, no consumers outside tests)
 
-### 1.6 Convert DTOs in `@dereekb/model`
-- [ ] Convert all `@Expose()`-annotated classes to ArkType schemas + inferred types
-- [ ] Files: `packages/model/src/lib/data/` (WebsiteLink, Address, etc.)
-- [ ] Use `.merge()` for types that previously used class inheritance
-- [ ] Use `clearable()` for `Maybe<T>` fields where null is a valid value
-- [ ] Use `"string.date.parse"` for Date fields that arrive as JSON strings
-- [ ] Verify interfaces (result types, config types) remain unchanged
+### 1.5 Convert custom validators in `@dereekb/model` ✅
+- [x] `IsE164PhoneNumber()` → `e164PhoneNumberType` (`.narrow()`)
+- [x] `IsE164PhoneNumberWithOptionalExtension()` → `e164PhoneNumberWithOptionalExtensionType`
+- [x] `IsE164PhoneNumberWithExtension()` → `e164PhoneNumberWithExtensionType`
+- [x] `IsWebsiteUrl()` → `websiteUrlType` (`.narrow()`)
+- [x] `IsWebsiteUrlWithPrefix()` → `websiteUrlWithPrefixType`
+- [x] `IsMinuteOfDay()` → `minuteOfDayType` (`.narrow()`)
+- [x] `IsUniqueKeyed()` → `uniqueKeyedType()` factory function
+- [x] `IsISO8601DayString()` → `iso8601DayStringType`
 
-### 1.7 Adapt existing model tests
-- [ ] Update existing test files to use `schema(input)` + `instanceof type.errors` instead of `validate()` + `ValidationError[]`
-- [ ] Verify all existing model tests pass
+### 1.6 Convert DTOs in `@dereekb/model` ✅
+- [x] `address.ts`: classes → ArkType schemas with `.merge()` for composition
+- [x] `link.ts`: kept `WebsiteLink` interface, removed class, added `websiteLinkType` schema
+- [x] `link.file.ts`: kept `WebsiteFileLink` interface and utility functions, removed class, added `websiteFileLinkType` schema
+- [x] `link.website.ts`: no changes needed (pure utility functions, no decorators)
+
+### 1.7 Adapt existing model tests ✅
+- [x] Rewrote transform tests to use ArkType schemas instead of class DTOs
+- [x] Rewrote all validator tests to use `schema(input)` + `instanceof type.errors`
+- [x] Rewrote address tests to use schema validation
+- [x] Deleted `type.spec.ts` and `type.annotation.spec.ts` (tested deleted files)
+- [x] `link.spec.ts` and `link.file.spec.ts` unchanged (test utility functions only)
+- [x] All model tests pass, model builds clean
 
 ---
 
@@ -99,7 +108,7 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 - [ ] Add `arktype` to `packages/firebase/package.json` (peerDependency)
 
 ### 3.2 Update `FirestoreModelKeyRef` / `FirestoreModelIdRef`
-- [ ] Have `FirestoreModelKeyRef` extend `ModelKeyRef` from `@dereekb/model`
+- [ ] Have `FirestoreModelKeyRef` extend `ModelKeyRef` from `@dereekb/util`
 - [ ] Update `FirestoreModelIdRef` to extend `ModelIdRef`
 - [ ] Convert `@IsFirestoreModelKey()` → `.narrow()` wrapping `isFirestoreModelKey`
 - [ ] Convert `@IsFirestoreModelId()` → `.narrow()` wrapping `isFirestoreModelId`
@@ -108,8 +117,8 @@ Replace all decorator-based validation (`class-validator` + `class-transformer`)
 - [ ] Create `firestoreTargetModelParamsType` that uses `firestoreModelKeyType`
 
 ### 3.3 Convert all API param classes
+- [ ] Convert `notification/notification.api.ts` (~20 classes, uses `IsE164PhoneNumber` from `@dereekb/model`, `@Type(() => Date)`, nested validation, enums, inheritance from `TargetModelParams`)
 - [ ] Convert `storagefile/storagefile.api.ts` (~15 classes)
-- [ ] Convert `notification/notification.api.ts`
 - [ ] Convert other model API files with `@Expose()`-annotated classes
 - [ ] Verify: nested validation uses `.array()` on nested schemas
 - [ ] Verify: `@Type(() => Date)` replaced with `"string.date.parse"`
