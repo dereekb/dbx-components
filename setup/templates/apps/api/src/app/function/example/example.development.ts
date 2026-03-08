@@ -1,4 +1,4 @@
-import { APP_CODE_PREFIXDevelopmentExampleResult, APP_CODE_PREFIXDevelopmentExampleParams } from 'FIREBASE_COMPONENTS_NAME';
+import { type APP_CODE_PREFIXDevelopmentExampleResult, type APP_CODE_PREFIXDevelopmentExampleParams } from 'FIREBASE_COMPONENTS_NAME';
 import { APP_CODE_PREFIXDevelopmentFunction } from '../function';
 
 export const exampleDevelopmentFunction: APP_CODE_PREFIXDevelopmentFunction<APP_CODE_PREFIXDevelopmentExampleParams, APP_CODE_PREFIXDevelopmentExampleResult> = (request) => {
