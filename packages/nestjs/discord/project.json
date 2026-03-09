@@ -1,0 +1,46 @@
+{
+  "name": "nestjs-discord",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nestjs/discord/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["util", "!util-test"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/nestjs/discord",
+        "outputPath": "dist/packages/nestjs/discord",
+        "tsConfig": "packages/nestjs/discord/tsconfig.lib.json",
+        "project": "packages/nestjs/discord/package.json",
+        "main": "packages/nestjs/discord/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "tsc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/nestjs/discord"
+      }
+    }
+  }
+}

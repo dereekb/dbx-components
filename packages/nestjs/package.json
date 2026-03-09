@@ -34,10 +34,17 @@
       "types": "./typeform/index.d.ts",
       "import": "./typeform/index.cjs.mjs",
       "default": "./typeform/index.cjs.js"
+    },
+    "./discord": {
+      "module": "./discord/index.esm.js",
+      "types": "./discord/index.d.ts",
+      "import": "./discord/index.cjs.mjs",
+      "default": "./discord/index.cjs.js"
     }
   },
   "peerDependencies": {
     "@dereekb/util": "13.1.0",
+    "discord.js": "^14.18.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@typeform/api-client": "^2.5.1",
