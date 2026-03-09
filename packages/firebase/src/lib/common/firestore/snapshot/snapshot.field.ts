@@ -290,7 +290,7 @@ export interface OptionalFirestoreFieldConfigWithOneTypeTransform<T> extends Opt
  * @param config - Configuration for the optional Firestore field
  * @returns A field mapping configuration for optional values
  */
-export function optionalFirestoreField<V, D>(config?: OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>): ModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
+export function optionalFirestoreField<V, D>(config?: OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>): FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
 /**
  * Creates a field mapping configuration for optional Firestore fields with same type.
  *
@@ -300,8 +300,8 @@ export function optionalFirestoreField<V, D>(config?: OptionalFirestoreFieldConf
  * @param config - Configuration for the optional Firestore field
  * @returns A field mapping configuration for optional values
  */
-export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithOneTypeTransform<T>): ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
-export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>> {
+export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithOneTypeTransform<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
+export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>> {
   // NOTE: Typings for this function internally is weird due to the support for both the one and two type transforms.
 
   if (config) {
@@ -375,7 +375,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMa
       toData
     });
   } else {
-    return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
+    return FIRESTORE_PASSTHROUGH_FIELD as FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
   }
 }
 
