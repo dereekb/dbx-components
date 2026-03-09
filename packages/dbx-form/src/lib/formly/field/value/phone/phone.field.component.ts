@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnInit, type OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FieldType } from '@ngx-formly/material'; // extend FieldType from Material, not core!
-import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { isPhoneExtension } from '../../../../validator/phone';
-import { E164PhoneNumber, E164PhoneNumberExtensionPair, Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
+import { type E164PhoneNumber, type E164PhoneNumberExtensionPair, type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { combineLatest, distinctUntilChanged, map, startWith } from 'rxjs';

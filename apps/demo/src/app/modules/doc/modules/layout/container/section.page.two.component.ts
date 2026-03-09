@@ -1,8 +1,8 @@
-import { ChangeDetectorRef, Component, OnDestroy, inject, OnInit } from '@angular/core';
-import { filterWithSearchString, ListLoadingState, mapLoadingStateValueWithOperator, successResult } from '@dereekb/rxjs';
+import { ChangeDetectorRef, Component, type OnDestroy, inject, type OnInit } from '@angular/core';
+import { filterWithSearchString, type ListLoadingState, mapLoadingStateValueWithOperator, successResult } from '@dereekb/rxjs';
 import { takeFront } from '@dereekb/util';
-import { Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
-import { DocValue, makeDocValues } from '../component/item.list';
+import { type Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
+import { type DocValue, makeDocValues } from '../component/item.list';
 import { DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 

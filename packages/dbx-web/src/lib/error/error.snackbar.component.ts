@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal, effect } from '@angular/core';
-import { MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
-import { ErrorInput, MS_IN_MINUTE, makeTimer, toggleTimerRunning } from '@dereekb/util';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { MAT_SNACK_BAR_DATA, type MatSnackBar, type MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
+import { type ErrorInput, MS_IN_MINUTE, makeTimer, toggleTimerRunning } from '@dereekb/util';
+import { type NgPopoverRef } from 'ng-overlay-container';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';

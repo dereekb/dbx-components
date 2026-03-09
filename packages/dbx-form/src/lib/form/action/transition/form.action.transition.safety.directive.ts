@@ -1,6 +1,6 @@
 import { Directive, effect, inject, input } from '@angular/core';
-import { HookResult, Transition } from '@uirouter/core';
-import { DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
+import { type HookResult, type Transition } from '@uirouter/core';
+import { type DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
 import { DbxActionFormDirective } from '../form.action.directive';
 
 /**

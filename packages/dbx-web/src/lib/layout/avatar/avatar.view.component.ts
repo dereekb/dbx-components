@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { Maybe, WebsitePath, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Maybe, type WebsitePath, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxAvatarViewService } from './avatar.service';
-import { DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, DbxAvatarStyle } from './avatar';
+import { type DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarStyle } from './avatar';
 
 /**
  * Component that displays an avatar image. It has a configurable default avatar.

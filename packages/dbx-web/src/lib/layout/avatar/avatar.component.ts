@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, Injector, input } from '@angular/core';
-import { DBX_AVATAR_CONTEXT_DATA_TOKEN, DbxAvatarContext, DbxAvatarKey, DbxAvatarSelector, DbxAvatarSize, DbxAvatarStyle } from './avatar';
+import { DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarContext, type DbxAvatarKey, type DbxAvatarSelector, type DbxAvatarSize, type DbxAvatarStyle } from './avatar';
 import { DbxAvatarViewService } from './avatar.service';
-import { AuthUserIdentifier, DbxInjectionComponent, DbxInjectionComponentConfig, mergeStaticProviders } from '@dereekb/dbx-core';
-import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type AuthUserIdentifier, DbxInjectionComponent, type DbxInjectionComponentConfig, mergeStaticProviders } from '@dereekb/dbx-core';
+import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * Component that displays an avatar based on the input context.

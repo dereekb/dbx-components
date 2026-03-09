@@ -1,6 +1,6 @@
 import { RawBody, type RawBodyBuffer } from '@dereekb/nestjs';
 import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { type Request, type Response } from 'express';
 import { ZoomWebhookService } from './webhook.zoom.service';
 
 @Controller('/webhook/zoom')

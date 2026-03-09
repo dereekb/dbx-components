@@ -62,7 +62,6 @@ import {
   updateNotificationUserDefaultNotificationBoxRecipientConfig,
   updateNotificationUserNotificationBoxRecipientConfigs,
   type ResyncAllNotificationUserParams,
-  resyncAllNotificationUserParamsType,
   type ResyncAllNotificationUsersResult,
   type ResyncNotificationUserResult,
   type ResyncNotificationUserParams,

@@ -1,7 +1,7 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component, inject } from '@angular/core';
-import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
-import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
+import { DbxCalendarScheduleSelectionStore, type DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
+import { type DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';

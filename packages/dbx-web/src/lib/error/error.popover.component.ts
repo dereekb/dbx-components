@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
-import { ReadableError } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, type ElementRef } from '@angular/core';
+import { type ReadableError } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../interaction/popover/abstract.popover.directive';
-import { DbxPopoverKey } from '../interaction/popover/popover';
-import { DbxPopoverService } from '../interaction/popover/popover.service';
+import { type DbxPopoverKey } from '../interaction/popover/popover';
+import { type DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../interaction';
 import { DbxErrorDetailsComponent } from './error.details.component';
 

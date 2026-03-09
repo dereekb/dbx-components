@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxActionDirective } from '../../action/directive/context/action.directive';
 import { DbxActionButtonDirective } from './action.button.directive';

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
 import { fileAcceptString, fileArrayAcceptMatchFunction } from './upload.accept';
 import { DbxButtonComponent } from '../../button/button.component';
-import { DbxButtonStyle } from '../../button/button';
-import { Maybe } from '@dereekb/util';
-import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
+import { type DbxButtonStyle } from '../../button/button';
+import { type Maybe } from '@dereekb/util';
+import { AbstractDbxFileUploadComponent, type DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
 import { provideDbxFileUploadActionCompatable } from './upload.action';
 
 export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEvent;

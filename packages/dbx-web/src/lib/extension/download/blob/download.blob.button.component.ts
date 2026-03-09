@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { clean, DbxButtonDisplay } from '@dereekb/dbx-core';
+import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
+import { clean, type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { type DbxButtonStyle } from '../../../button/button';
 import { DbxActionModule } from '../../../action/action.module';
 import { browserObjectUrlRef } from '@dereekb/browser';
-import { asPromise, Getter, Maybe, PromiseOrValue, safeCompareEquality } from '@dereekb/util';
+import { asPromise, type Getter, type Maybe, type PromiseOrValue, safeCompareEquality } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, from, Observable, of, shareReplay, switchMap } from 'rxjs';
+import { distinctUntilChanged, from, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { NgClass } from '@angular/common';
 
 export interface DbxDownloadBlobButtonConfig {

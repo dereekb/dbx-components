@@ -1,6 +1,6 @@
-import { Observable, BehaviorSubject, of, switchMap, shareReplay } from 'rxjs';
+import { type Observable, BehaviorSubject, of, switchMap, shareReplay } from 'rxjs';
 import { Directive } from '@angular/core';
-import { FilterSourceConnector, FilterSource, filterMaybe } from '@dereekb/rxjs';
+import { type FilterSourceConnector, type FilterSource, filterMaybe } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { completeOnDestroy } from '../rxjs';
 

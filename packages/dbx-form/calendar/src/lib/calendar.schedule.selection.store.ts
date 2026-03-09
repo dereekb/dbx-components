@@ -1,58 +1,58 @@
 import { Injectable } from '@angular/core';
 import {
-  DateCellDayOfWeekFactory,
+  type DateCellDayOfWeekFactory,
   dateCellDayOfWeekFactory,
-  DateCellIndex,
-  DateCellRangeWithRange,
+  type DateCellIndex,
+  type DateCellRangeWithRange,
   dateCellTimingDateFactory,
-  DateRange,
+  type DateRange,
   dateCellScheduleDateFilter,
   copyDateCellScheduleDateFilterConfig,
-  DateCellScheduleDateFilterConfig,
+  type DateCellScheduleDateFilterConfig,
   DateCellScheduleDayCode,
   dateCellScheduleEncodedWeek,
-  DateCellScheduleEncodedWeek,
-  DateCellTimingRelativeIndexFactory,
+  type DateCellScheduleEncodedWeek,
+  type DateCellTimingRelativeIndexFactory,
   dateCellTimingRelativeIndexFactory,
   expandDateCellScheduleDayCodes,
   expandDateCellScheduleDayCodesToDayOfWeekSet,
   findMaxDate,
   findMinDate,
   isDateInDateRangeFunction,
-  IsDateWithinDateCellRangeFunction,
+  type IsDateWithinDateCellRangeFunction,
   isDateWithinDateCellRangeFunction,
   isSameDate,
   isSameDateDay,
   isSameDateRange,
-  DateOrDateRangeOrDateCellIndexOrDateCellRange,
+  type DateOrDateRangeOrDateCellIndexOrDateCellRange,
   dateCellTimingRelativeIndexArrayFactory,
   isInfiniteDateRange,
   dateTimezoneUtcNormal,
-  DateTimezoneUtcNormalInstance,
+  type DateTimezoneUtcNormalInstance,
   expandDateCellScheduleRange,
-  DateCell,
-  DateCellDurationSpan,
+  type DateCell,
+  type DateCellDurationSpan,
   formatToISO8601DayStringForSystem,
-  DateCellTimingRelativeIndexFactoryInput,
+  type DateCellTimingRelativeIndexFactoryInput,
   dateCellScheduleDayCodesAreSetsEquivalent,
   simplifyDateCellScheduleDayCodes,
   fullWeekDateCellScheduleDayCodes,
   dateCellTimingStartDateFactory,
-  DateCellScheduleDateRange,
+  type DateCellScheduleDateRange,
   dateCellTimingStartsAtForStartOfDay,
   isSameDateCellScheduleDateRange,
-  FullDateCellScheduleRangeInputDateRange,
+  type FullDateCellScheduleRangeInputDateRange,
   fullDateCellScheduleRange,
   dateCellTimingTimezoneNormalInstance,
   changeDateCellScheduleDateRangeToTimezone,
   SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValueFromIterable, isIterable, removeFromSet, Configurable } from '@dereekb/util';
+import { type Maybe, type TimezoneString, type DecisionFunction, type IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, type MaybeMap, minAndMaxNumber, type DayOfWeek, range, type AllOrNoneSelection, unique, mergeArrays, type ArrayOrValue, type ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, type Building, firstValueFromIterable, isIterable, removeFromSet, type Configurable } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
-import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of } from 'rxjs';
-import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
+import { type Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of } from 'rxjs';
+import { type CalendarScheduleSelectionCellContentFactory, type CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
 export interface CalendarScheduleSelectionInputDateRange {
   /**

@@ -2,8 +2,8 @@ import { Directive, inject, signal } from '@angular/core';
 import { DbxStyleService } from './style.service';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { delay } from 'rxjs';
-import { Maybe } from '@dereekb/util';
-import { DbxStyleClass } from './style';
+import { type Maybe } from '@dereekb/util';
+import { type DbxStyleClass } from './style';
 
 /**
  * Used to retrieve the current app styling from the DbxStyleService.

@@ -1,36 +1,36 @@
 import { Inject, Injectable, Optional } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of, catchError } from 'rxjs';
+import { type Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, type Subscription, of, catchError } from 'rxjs';
 import {
-  DocumentSnapshot,
-  DocumentReference,
-  FirestoreCollection,
-  FirestoreDocument,
-  DocumentDataWithIdAndKey,
-  FirestoreModelId,
-  FirestoreModelKey,
-  FirestoreCollectionLike,
-  FirestoreModelIdentity,
+  type DocumentSnapshot,
+  type DocumentReference,
+  type FirestoreCollection,
+  type FirestoreDocument,
+  type DocumentDataWithIdAndKey,
+  type FirestoreModelId,
+  type FirestoreModelKey,
+  type FirestoreCollectionLike,
+  type FirestoreModelIdentity,
   firestoreModelIdsFromKey,
   firestoreModelKeyPartPairs,
-  FirestoreModelCollectionAndIdPair,
+  type FirestoreModelCollectionAndIdPair,
   firestoreModelKeyPairObject,
-  FirestoreModelCollectionAndIdPairObject,
+  type FirestoreModelCollectionAndIdPairObject,
   documentDataWithIdAndKey,
   FirestoreAccessorStreamMode,
-  TwoWayFlatFirestoreModelKey,
+  type TwoWayFlatFirestoreModelKey,
   inferKeyFromTwoWayFlatFirestoreModelKey,
-  RootSingleItemFirestoreCollection,
-  FlatFirestoreModelKey,
+  type RootSingleItemFirestoreCollection,
+  type FlatFirestoreModelKey,
   flatFirestoreModelKey,
   twoWayFlatFirestoreModelKey,
   FIRESTORE_PERMISSION_DENIED_ERROR_CODE,
   isClientFirebaseError
 } from '@dereekb/firebase';
-import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading } from '@dereekb/rxjs';
-import { Maybe, isMaybeSo } from '@dereekb/util';
+import { filterMaybe, type LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, isLoadingStateLoading } from '@dereekb/rxjs';
+import { type Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
-import { DbxFirebaseDocumentStore } from './store';
+import { type DbxFirebaseDocumentStore } from './store';
 import { linkDocumentStoreToParentContextStores } from './store.document.context.store.link';
 
 @Injectable()

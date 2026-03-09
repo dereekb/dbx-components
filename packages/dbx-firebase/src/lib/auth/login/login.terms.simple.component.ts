@@ -1,4 +1,4 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { Component, inject } from '@angular/core';
 import { DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG } from './login.terms';
 import { DbxLinkComponent } from '@dereekb/dbx-web';

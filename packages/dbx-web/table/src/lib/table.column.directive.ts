@@ -4,7 +4,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged } from 'rxjs';
 import { DbxTableStore } from './table.store';
 import { type Maybe } from '@dereekb/util';
-import { DbxTableColumn } from './table';
+import { type DbxTableColumn } from './table';
 
 /**
  * Abstract directive that has a column input.

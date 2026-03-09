@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { TimezoneString, type Maybe } from '@dereekb/util';
+import { Pipe, type PipeTransform } from '@angular/core';
+import { type TimezoneString, type Maybe } from '@dereekb/util';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
 
 /**

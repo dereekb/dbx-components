@@ -1,7 +1,7 @@
 import { BehaviorSubject, delay, of, tap } from 'rxjs';
-import { DocActionFormExampleValue, DocActionFormExampleFormComponent } from './../component/action.example.form.component';
-import { Component, OnDestroy } from '@angular/core';
-import { WorkUsingObservable } from '@dereekb/rxjs';
+import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from './../component/action.example.form.component';
+import { Component, type OnDestroy } from '@angular/core';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 import { DbxContentContainerDirective, DbxActionSnackbarDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

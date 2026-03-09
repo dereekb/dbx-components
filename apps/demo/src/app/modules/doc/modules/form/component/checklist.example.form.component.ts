@@ -1,9 +1,9 @@
-import { Observable, map } from 'rxjs';
+import { type Observable, map } from 'rxjs';
 import { Component } from '@angular/core';
-import { DocFormExampleChecklistFieldsConfig, docFormExampleChecklistFieldsSection, DocFormExampleChecklistValues } from './checklist.example';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type DocFormExampleChecklistFieldsConfig, docFormExampleChecklistFieldsSection, type DocFormExampleChecklistValues } from './checklist.example';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
-import { BooleanKeyValueTransformMap } from '@dereekb/util';
+import { type BooleanKeyValueTransformMap } from '@dereekb/util';
 
 export type DocFormExampleChecklistFormValue = BooleanKeyValueTransformMap<DocFormExampleChecklistValues>;
 

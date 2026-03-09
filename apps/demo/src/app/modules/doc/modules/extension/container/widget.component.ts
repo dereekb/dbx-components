@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { DbxWidgetDataPair, DbxContentContainerDirective, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent } from '@dereekb/dbx-web';
-import { ListLoadingState, successResult } from '@dereekb/rxjs';
-import { map, Observable, of } from 'rxjs';
-import { DocExtensionWidgetExampleData, DOC_EXTENSION_WIDGET_EXAMPLE_TYPE } from '../component/widget.example.component';
+import { type DbxWidgetDataPair, DbxContentContainerDirective, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent } from '@dereekb/dbx-web';
+import { type ListLoadingState, successResult } from '@dereekb/rxjs';
+import { map, type Observable, of } from 'rxjs';
+import { type DocExtensionWidgetExampleData, DOC_EXTENSION_WIDGET_EXAMPLE_TYPE } from '../component/widget.example.component';
 import { DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from '../component/widget.icon.example.component';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

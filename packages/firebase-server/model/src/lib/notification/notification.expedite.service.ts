@@ -1,7 +1,7 @@
 import { type CreateNotificationDocumentPairResult, firestoreDummyKey, type NotificationDocument, type SendNotificationParams, type SendNotificationResult } from '@dereekb/firebase';
-import { NotificationServerActions } from './notification.action.service';
-import { Abstract, Injectable, Provider } from '@nestjs/common';
-import { Maybe, runAsyncTasksForValues } from '@dereekb/util';
+import { type NotificationServerActions } from './notification.action.service';
+import { type Abstract, Injectable, type Provider } from '@nestjs/common';
+import { type Maybe, runAsyncTasksForValues } from '@dereekb/util';
 
 export type NotificationExpediteServiceSendNotificationOptions = Pick<SendNotificationParams, 'ignoreSendAtThrottle' | 'throwErrorIfSent'>;
 

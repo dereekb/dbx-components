@@ -1,15 +1,15 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, type ElementRef, inject } from '@angular/core';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../../interaction/popover/abstract.popover.directive';
-import { DbxPopoverKey } from '../../interaction/popover/popover';
-import { DbxPopoverConfigSizing, DbxPopoverService } from '../../interaction/popover/popover.service';
+import { type DbxPopoverKey } from '../../interaction/popover/popover';
+import { type DbxPopoverConfigSizing, type DbxPopoverService } from '../../interaction/popover/popover.service';
 import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../../interaction';
 import { DbxHelpViewListComponent } from './help.view.list.component';
-import { DbxHelpContextKey } from './help';
-import { NgPopoverRef } from 'ng-overlay-container';
-import { ObservableOrValue } from '@dereekb/rxjs';
+import { type DbxHelpContextKey } from './help';
+import { type NgPopoverRef } from 'ng-overlay-container';
+import { type ObservableOrValue } from '@dereekb/rxjs';
 import { DbxHelpContextService } from './help.context.service';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxHelpWidgetService } from './help.widget.service';
 
 export const DEFAULT_DBX_HELP_VIEW_POPOVER_KEY = 'help';

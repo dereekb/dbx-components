@@ -1,8 +1,8 @@
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { computed, Directive, model } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { ClickableAnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
-import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
+import { type ClickableAnchorType, type ClickableAnchor, anchorTypeForAnchor, type DbxAnchor } from './anchor';
+import { type SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**

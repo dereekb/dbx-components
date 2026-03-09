@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ErrorInput, type Maybe } from '@dereekb/util';
-import { DbxErrorSnackbarComponent, DbxErrorSnackbarConfig } from './error.snackbar.component';
+import { type ErrorInput, type Maybe } from '@dereekb/util';
+import { DbxErrorSnackbarComponent, type DbxErrorSnackbarConfig } from './error.snackbar.component';
 
 export const DEFAULT_DBX_ERROR_SNACKBAR_CONFIG: DbxErrorSnackbarConfig = {
   politeness: 'polite',

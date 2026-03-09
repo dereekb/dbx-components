@@ -1,11 +1,11 @@
-import { Directive, ElementRef, input, inject } from '@angular/core';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { Directive, type ElementRef, input, inject } from '@angular/core';
+import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxPopoverService } from '../popover/popover.service';
 import { DbxFilterPopoverComponent } from './filter.popover.component';
 import { AbstractPopoverRefDirective } from '../popover/abstract.popover.ref.directive';
-import { FilterSource, PresetFilterSource } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
-import { DbxFilterComponentConfig } from './filter.config';
+import { type FilterSource, type PresetFilterSource } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
+import { type DbxFilterComponentConfig } from './filter.config';
 
 export type DbxFilterButtonConfig<F extends object> = DbxFilterComponentConfig<F>;
 export type DbxFilterButtonConfigWithCustomFilter<F extends object, CF extends FilterSource<F> = FilterSource<F>> = Omit<DbxFilterComponentConfig<F, any, CF, any>, 'presetFilter' | 'presetFilterComponentConfig'>;

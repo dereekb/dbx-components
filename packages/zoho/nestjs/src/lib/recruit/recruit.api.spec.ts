@@ -1,30 +1,30 @@
 import { appZohoRecruitModuleMetadata } from './recruit.module';
-import { DynamicModule, Module } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { type DynamicModule, Module } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 import {
   ZOHO_DUPLICATE_DATA_ERROR_CODE,
   ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE,
-  NewZohoRecruitRecordData,
+  type NewZohoRecruitRecordData,
   ZohoRecruitRecordCrudDuplicateDataError,
   ZohoRecruitRecordCrudMandatoryFieldNotFoundError,
   ZohoRecruitRecordNoContentError,
-  ZohoRecruitRecord,
+  type ZohoRecruitRecord,
   ZohoRecruitRecordCrudNoMatchingRecordError,
   ZOHO_INVALID_DATA_ERROR_CODE,
   ZohoInvalidQueryError,
-  ZohoRecruitRecordId,
+  type ZohoRecruitRecordId,
   ZOHO_RECRUIT_CANDIDATES_MODULE,
   ZohoServerFetchResponseError,
-  ZohoRecruitUpdateRecordData,
-  ZohoRecruitUpsertRecordData,
+  type ZohoRecruitUpdateRecordData,
+  type ZohoRecruitUpsertRecordData,
   ZOHO_ERROR_STATUS,
   ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH,
-  ZohoRecruitTag
+  type ZohoRecruitTag
 } from '@dereekb/zoho';
-import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
+import { type Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
 // NOTE: Should have test canidates available on the Zoho Sandbox that is being used. Use test_candidates.csv to generate if needed.
 

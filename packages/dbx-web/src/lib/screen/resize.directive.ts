@@ -1,5 +1,5 @@
 import { Directive, inject, ElementRef, output, effect } from '@angular/core';
-import { ResizedEvent, resizeSignal } from './resize';
+import { type ResizedEvent, resizeSignal } from './resize';
 
 /**
  * Directive that emits resize events when the parent element is resized.

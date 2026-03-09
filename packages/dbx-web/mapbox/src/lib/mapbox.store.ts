@@ -3,15 +3,15 @@ import { Injectable, inject } from '@angular/core';
 import {
   isSameLatLngBound,
   isSameLatLngPoint,
-  IsWithinLatLngBoundFunction,
+  type IsWithinLatLngBoundFunction,
   isWithinLatLngBoundFunction,
-  LatLngBound,
+  type LatLngBound,
   latLngBoundFunction,
-  LatLngPointInput,
-  LatLngPoint,
+  type LatLngPointInput,
+  type LatLngPoint,
   latLngPointFunction,
-  Maybe,
-  OverlapsLatLngBoundFunction,
+  type Maybe,
+  type OverlapsLatLngBoundFunction,
   overlapsLatLngBoundFunction,
   diffLatLngBoundPoints,
   latLngBoundCenterPoint,
@@ -20,22 +20,22 @@ import {
   swMostLatLngPoint,
   neMostLatLngPoint,
   latLngBoundWrapsMap,
-  Vector,
+  type Vector,
   filterUndefinedValues,
   latLngBoundFromInput,
   vectorMinimumSizeResizeFunction,
   isSameVector,
-  ZoomLevel
+  type ZoomLevel
 } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { MapService } from 'ngx-mapbox-gl';
-import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, OperatorFunction, throttleTime } from 'rxjs';
-import MapboxGl, { MapEventType, MapEvents, Map } from 'mapbox-gl';
-import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxEventData, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
+import { type MapService } from 'ngx-mapbox-gl';
+import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, type Observable, of, type Subscription, startWith, interval, first, combineLatest, EMPTY, type OperatorFunction, throttleTime } from 'rxjs';
+import MapboxGl, { type MapEventType, type MapEvents, type Map } from 'mapbox-gl';
+import { type DbxMapboxClickEvent, type KnownMapboxStyle, type MapboxBearing, type MapboxEaseTo, type MapboxEventData, type MapboxFitBounds, type MapboxFitPositions, type MapboxFlyTo, type MapboxJumpTo, type MapboxResetNorth, type MapboxResetNorthPitch, type MapboxRotateTo, type MapboxSnapToNorth, type MapboxStyleConfig, type MapboxZoomLevel, type MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { mapboxViewportBoundFunction, MapboxViewportBoundFunction } from './mapbox.util';
-import { FilterMapboxBoundConfig, FilterMapboxBoundReadItemValueFunction, filterByMapboxViewportBound } from './mapbox.rxjs';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { mapboxViewportBoundFunction, type MapboxViewportBoundFunction } from './mapbox.util';
+import { type FilterMapboxBoundConfig, type FilterMapboxBoundReadItemValueFunction, filterByMapboxViewportBound } from './mapbox.rxjs';
 
 export type MapboxMapLifecycleState = 'init' | 'load' | 'render' | 'idle';
 export type MapboxMapMoveState = 'init' | 'idle' | 'moving';

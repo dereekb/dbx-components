@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
 import { map, withLatestFrom } from 'rxjs';
-import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
+import { type MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';

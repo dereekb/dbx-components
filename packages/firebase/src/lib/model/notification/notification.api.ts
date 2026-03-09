@@ -9,7 +9,7 @@ import { type NotificationUserDefaultNotificationBoxRecipientConfig, type Notifi
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
-import { NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
+import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -127,7 +127,7 @@ export const updateNotificationUserParamsType = targetModelParamsType.merge({
   'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array())
 }) as Type<UpdateNotificationUserParams>;
 
-export interface ResyncNotificationUserParams extends TargetModelParams {}
+export type ResyncNotificationUserParams = TargetModelParams
 
 export const resyncNotificationUserParamsType = targetModelParamsType as Type<ResyncNotificationUserParams>;
 
@@ -218,7 +218,7 @@ export interface InitializeAllApplicableNotificationSummariesResult {
 /**
  * Used for updating the NotificationBox.
  */
-export interface UpdateNotificationBoxParams extends TargetModelParams {}
+export type UpdateNotificationBoxParams = TargetModelParams
 
 export const updateNotificationBoxParamsType = targetModelParamsType as Type<UpdateNotificationBoxParams>;
 

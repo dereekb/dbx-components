@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithKeyAndStore, DbxFirebaseModelEntityWithStore } from './model.entities';
+import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithKeyAndStore, type DbxFirebaseModelEntityWithStore } from './model.entities';
 import { MatAccordion } from '@angular/material/expansion';
 import { DbxIconButtonComponent, DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesEntityComponent } from './model.entities.entity.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, combineLatestWith, defaultIfEmpty, distinctUntilChanged, map, Observable, shareReplay, switchMap } from 'rxjs';
-import { filterUniqueValues, Maybe, reverseCompareFn, separateValues, sortByNumberFunction } from '@dereekb/util';
-import { beginLoading, filterMaybeArray, LoadingState, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { combineLatest, combineLatestWith, defaultIfEmpty, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
+import { filterUniqueValues, type Maybe, reverseCompareFn, separateValues, sortByNumberFunction } from '@dereekb/util';
+import { beginLoading, filterMaybeArray, type LoadingState, mapLoadingStateValueWithOperator, switchMapMaybe, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
 import { cleanLoadingContext } from '@dereekb/dbx-core';
 

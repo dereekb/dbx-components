@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FormlyFieldConfig, FormlyForm, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
-import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
+import { type FormlyFieldConfig, FormlyForm, type FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, type Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
 import { cleanWithLockSet } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
-import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
+import { type DbxForm, type DbxFormDisabledKey, type DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
+import { DbxFormlyContext, type DbxFormlyContextDelegate, type DbxFormlyInitialize } from './formly.context';
 import { scanCount, switchMapFilterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, iterablesAreSetEquivalent, type Maybe } from '@dereekb/util';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, iterablesAreSetEquivalent, type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface DbxFormlyFormState {

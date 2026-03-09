@@ -1,5 +1,5 @@
 import { Directive, inject } from '@angular/core';
-import { SystemState, SystemStateDocument, SystemStateStoredData } from '@dereekb/firebase';
+import { type SystemState, type SystemStateDocument, type SystemStateStoredData } from '@dereekb/firebase';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '../modules/store/store.document.directive';
 import { SystemStateDocumentStore } from './systemstate.document.store';
 

@@ -1,4 +1,4 @@
-import { FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap, SystemStateTypes, ModelFirebaseFunctionMap, ModelFirebaseCrudFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type SystemStateTypes, type ModelFirebaseFunctionMap, type ModelFirebaseCrudFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 
 export interface ExampleReadParams {

@@ -1,6 +1,6 @@
 import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

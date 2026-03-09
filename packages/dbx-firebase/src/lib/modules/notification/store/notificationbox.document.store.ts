@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { isSameDate } from '@dereekb/date';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { NotificationFirestoreCollections, NotificationFunctions, NotificationBox, NotificationBoxDocument } from '@dereekb/firebase';
+import { NotificationFirestoreCollections, NotificationFunctions, type NotificationBox, type NotificationBoxDocument } from '@dereekb/firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
 @Injectable()

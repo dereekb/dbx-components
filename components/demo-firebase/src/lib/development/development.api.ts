@@ -1,4 +1,4 @@
-import { DevelopmentFirebaseFunctionConfigMap, DevelopmentFirebaseFunctionMap, developmentFirebaseFunctionMapFactory, FirebaseDevelopmentFunctions, FirebaseDevelopmentFunctionTypeMap, FirebaseFunctionMapFunction } from '@dereekb/firebase';
+import { type DevelopmentFirebaseFunctionConfigMap, type DevelopmentFirebaseFunctionMap, developmentFirebaseFunctionMapFactory, FirebaseDevelopmentFunctions, type FirebaseDevelopmentFunctionTypeMap, type FirebaseFunctionMapFunction } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 
 export const DEMO_DEVELOPMENT_EXAMPLE_MAX_MESSAGE_LENGTH = 200;

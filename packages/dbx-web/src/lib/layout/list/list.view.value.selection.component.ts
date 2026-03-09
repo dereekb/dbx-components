@@ -1,8 +1,8 @@
 import { map, shareReplay, distinctUntilChanged, of } from 'rxjs';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatListModule, MatSelectionList, MatSelectionListChange } from '@angular/material/list';
-import { DbxListSelectionMode, ListSelectionStateItem } from './list.view';
-import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
+import { MatListModule, MatSelectionList, type MatSelectionListChange } from '@angular/material/list';
+import { type DbxListSelectionMode, type ListSelectionStateItem } from './list.view';
+import { type DbxValueListItem, type AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { type Maybe } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from './list.view.value.component';

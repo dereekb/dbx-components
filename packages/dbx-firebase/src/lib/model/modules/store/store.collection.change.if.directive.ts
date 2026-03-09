@@ -1,8 +1,8 @@
 import { Directive, inject, input } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
-import { shareReplay, combineLatest, Observable, map } from 'rxjs';
+import { shareReplay, combineLatest, type Observable, map } from 'rxjs';
 import { DbxFirebaseCollectionChangeDirective } from './store.collection.change.directive';
-import { IterationQueryDocChangeWatcherChangeType } from '@dereekb/firebase';
+import { type IterationQueryDocChangeWatcherChangeType } from '@dereekb/firebase';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQueryDocChangeWatcherChangeType;

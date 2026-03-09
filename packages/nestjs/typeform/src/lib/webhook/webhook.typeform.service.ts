@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Request } from 'express';
-import { typeformEventHandlerConfigurerFactory, typeformEventHandlerFactory, TypeformWebhookEvent, TypeformWebhookEventType } from './webhook.typeform';
-import { Handler } from '@dereekb/util';
+import { type Request } from 'express';
+import { typeformEventHandlerConfigurerFactory, typeformEventHandlerFactory, type TypeformWebhookEvent, type TypeformWebhookEventType } from './webhook.typeform';
+import { type Handler } from '@dereekb/util';
 import { TypeformWebhookServiceConfig } from './webhook.typeform.config';
-import { typeFormWebhookEventVerifier, TypeformWebhookEventVerifier } from './webhook.typeform.verify';
+import { typeFormWebhookEventVerifier, type TypeformWebhookEventVerifier } from './webhook.typeform.verify';
 
 /**
  * Service that makes system changes based on Typeform webhook events.

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { DbxInjectionComponentConfig, DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
+import { type DbxInjectionComponentConfig, type DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { DbxTableColumn } from '../table';
+import { type DbxTableColumn } from '../table';
 import { DatePipe } from '@angular/common';
 
 /**

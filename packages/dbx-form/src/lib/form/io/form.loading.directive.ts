@@ -1,10 +1,10 @@
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { Directive, inject, input } from '@angular/core';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { DbxMutableForm } from '../../form/form';
-import { LoadingState, MaybeObservableOrValue, filterMaybe, maybeValueFromObservableOrValue, valueFromFinishedLoadingState } from '@dereekb/rxjs';
-import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from './form.input.directive';
-import { Maybe } from '@dereekb/util';
+import { type LoadingState, type MaybeObservableOrValue, filterMaybe, maybeValueFromObservableOrValue, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { dbxFormSourceObservableFromStream, type DbxFormSourceDirectiveMode } from './form.input.directive';
+import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 const DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE: DbxFormSourceDirectiveMode = 'reset';

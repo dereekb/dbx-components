@@ -1,6 +1,6 @@
-import { inject, Injectable, Type } from '@angular/core';
-import { ArrayOrValue, Maybe, cachedGetter, filterMaybeArrayValues, mapIterable, useIterableOrValue } from '@dereekb/util';
-import { FirestoreModelIdentity } from '@dereekb/firebase';
+import { inject, Injectable, type Type } from '@angular/core';
+import { type ArrayOrValue, type Maybe, cachedGetter, filterMaybeArrayValues, mapIterable, useIterableOrValue } from '@dereekb/util';
+import { type FirestoreModelIdentity } from '@dereekb/firebase';
 
 export interface DbxFirebaseModelEntitiesWidgetEntry {
   /**

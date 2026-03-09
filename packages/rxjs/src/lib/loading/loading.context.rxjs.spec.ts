@@ -1,6 +1,6 @@
-import { BehaviorSubject, first, of } from 'rxjs';
+import { BehaviorSubject, first } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
-import { type LoadingContext, type LoadingContextEvent } from './loading.context';
+import { type LoadingContext } from './loading.context';
 import { switchMapMaybeLoadingContextStream } from './loading.context.rxjs';
 import { SimpleLoadingContext } from './loading.context.simple';
 import { callbackTest } from '@dereekb/util/test';

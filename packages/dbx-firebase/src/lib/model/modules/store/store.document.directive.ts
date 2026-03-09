@@ -1,11 +1,11 @@
-import { Directive, forwardRef, model, Provider, Type } from '@angular/core';
-import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId, TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { ModelKey, type Maybe } from '@dereekb/util';
-import { DbxFirebaseDocumentStore } from './store';
-import { BehaviorSubject, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
+import { Directive, forwardRef, model, type Provider, type Type } from '@angular/core';
+import { type DocumentReference, FirestoreAccessorStreamMode, type FirestoreDocument, type FirestoreModelKey, type FirestoreModelId, type TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { type ModelKey, type Maybe } from '@dereekb/util';
+import { type DbxFirebaseDocumentStore } from './store';
+import { BehaviorSubject, type Observable, shareReplay, type Subscription, switchMap } from 'rxjs';
 import { filterMaybe, skipInitialMaybe } from '@dereekb/rxjs';
-import { cleanSubscription, completeOnDestroy, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
-import { DbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
+import { cleanSubscription, completeOnDestroy, type DbxRouteModelIdDirectiveDelegate, type DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
+import { type DbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**

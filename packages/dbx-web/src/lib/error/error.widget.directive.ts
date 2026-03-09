@@ -1,6 +1,6 @@
 import { Directive, inject } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
-import { ReadableError, ReadableErrorWithCode } from '@dereekb/util';
+import { type ReadableError, type ReadableErrorWithCode } from '@dereekb/util';
 
 @Directive()
 export abstract class AbstractDbxErrorWidgetComponent<T extends ReadableError = ReadableError> {

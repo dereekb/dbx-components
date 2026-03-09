@@ -1,8 +1,8 @@
 import { LOREM } from '../../shared/lorem';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxColorDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
+import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxColorDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
-import { DocValue, DocValueWithSelection } from './item.list';
+import { type DocValue, type DocValueWithSelection } from './item.list';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent } from '@angular/material/expansion';
 
 /**

@@ -1,9 +1,9 @@
 import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { asyncScheduler, combineLatest, delayWhen, map, Subject, switchMap, timer, startWith } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'dbx-iframe',

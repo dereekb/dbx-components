@@ -1,8 +1,8 @@
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { unixDateTimeSecondsNumberForNow, encodeModelKeyTypePair, ModelRelationUtility, type Maybe } from '@dereekb/util';
-import { completeOnDestroy, StorageAccessor } from '@dereekb/dbx-core';
-import { map, mergeMap, catchError, Observable, of, Subject, tap } from 'rxjs';
-import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.tracker';
+import { completeOnDestroy, type StorageAccessor } from '@dereekb/dbx-core';
+import { map, mergeMap, catchError, type Observable, of, Subject, tap } from 'rxjs';
+import { type DbxModelViewTrackerEventSet, type DbxModelViewTrackerEvent } from './model.tracker';
 
 /**
  * Token that corresponds to a StorageAccessor<DbxModelViewTrackerEventSet> that is used by DbxModelViewTrackerStorage.

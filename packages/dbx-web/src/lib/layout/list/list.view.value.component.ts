@@ -1,12 +1,12 @@
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { ChangeDetectionStrategy, Component, Signal, TrackByFunction, computed, inject, input } from '@angular/core';
-import { shareReplay, map, Observable, switchMap, of } from 'rxjs';
-import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
+import { ChangeDetectionStrategy, Component, type Signal, type TrackByFunction, computed, inject, input } from '@angular/core';
+import { shareReplay, map, type Observable, switchMap, of } from 'rxjs';
+import { type DbxValueListItem, type AbstractDbxValueListViewConfig, type DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
-import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
-import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
+import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { type DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
 import { MatListModule, MatNavList } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';

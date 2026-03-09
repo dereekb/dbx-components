@@ -1,10 +1,10 @@
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { splitCommaSeparatedStringToSet, type Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay, delay, combineLatest, Subscription } from 'rxjs';
+import { type Observable, distinctUntilChanged, map, shareReplay, delay, combineLatest, type Subscription } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, inject, signal, input, effect, OnDestroy } from '@angular/core';
+import { Directive, inject, signal, input, effect, type OnDestroy } from '@angular/core';
 import { DbxStyleService } from './style.service';
-import { DbxStyleConfig, DbxStyleClass, DbxStyleName } from './style';
+import { type DbxStyleConfig, type DbxStyleClass, type DbxStyleName } from './style';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 export type DbxSetStyleMode = 'both' | 'global' | 'self';

@@ -1,6 +1,6 @@
-import { FirebaseLoginMethodCategory, FirebaseLoginMethodType } from './login';
+import { type FirebaseLoginMethodCategory, type FirebaseLoginMethodType } from './login';
 import { Component, input } from '@angular/core';
-import { ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { DbxFirebaseLoginComponent } from './login.component';
 
 /**

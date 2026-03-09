@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { Directive, Input, inject } from '@angular/core';
-import { Maybe, ModelKey } from '@dereekb/util';
-import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
+import { type Maybe, type ModelKey } from '@dereekb/util';
+import { type MaybeObservableOrValueGetter, type SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 import { dbxRouteModelIdParamRedirect } from './id.param.redirect';
 import { DbxRouterService } from '../router/service/router.service';
 import { DbxRouteModelIdDirectiveDelegate } from './model.router';

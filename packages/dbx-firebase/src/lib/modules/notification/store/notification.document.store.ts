@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store/store.document.crud';
 import { AbstractDbxFirebaseDocumentWithParentStore } from '../../../model/modules/store/store.subcollection.document';
 import { NotificationBoxDocumentStore } from './notificationbox.document.store';
-import { Notification, NotificationBox, NotificationBoxDocument, NotificationDocument, NotificationFirestoreCollections, NotificationFunctions } from '@dereekb/firebase';
+import { type Notification, type NotificationBox, type NotificationBoxDocument, type NotificationDocument, NotificationFirestoreCollections, NotificationFunctions } from '@dereekb/firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { isSameDate } from '@dereekb/date';
 

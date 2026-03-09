@@ -1,8 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxWebFilePreviewService } from './webfilepreview.service';
-import { Maybe } from '@dereekb/util';
-import { DbxWebFilePreviewServicePreviewComponentFunctionInput } from './webfilepreview';
+import { type Maybe } from '@dereekb/util';
+import { type DbxWebFilePreviewServicePreviewComponentFunctionInput } from './webfilepreview';
 
 /**
  * Config for DbxWebFilePreviewComponent.

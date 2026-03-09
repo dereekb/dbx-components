@@ -3,7 +3,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { shareReplay, switchMap } from 'rxjs';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { provideFormlyContext } from '@dereekb/dbx-form';
-import { DbxActionContextStoreSourceInstance, DbxActionDirective, DbxActionSourceDirective } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, type DbxActionDirective, DbxActionSourceDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { MatDivider } from '@angular/material/divider';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';

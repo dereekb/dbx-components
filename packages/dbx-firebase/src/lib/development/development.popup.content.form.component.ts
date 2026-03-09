@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractConfigAsyncFormlyFormDirective, pickableItemChipField, filterPickableItemFieldValuesByLabel, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, dbxFormlyFormComponentProviders, DbxFormlyFormComponentImportsModule } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncFormlyFormDirective, pickableItemChipField, filterPickableItemFieldValuesByLabel, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, dbxFormlyFormComponentProviders, DbxFormlyFormComponentImportsModule } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { map, Observable, of } from 'rxjs';
-import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { map, type Observable, of } from 'rxjs';
+import { type DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 
 export interface DbxFirebaseDevelopmentPopupContentFormInput {
   readonly entries: DbxFirebaseDevelopmentWidgetEntry[];

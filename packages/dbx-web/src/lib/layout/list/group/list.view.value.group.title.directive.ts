@@ -1,9 +1,9 @@
-import { Directive, input, StaticProvider } from '@angular/core';
-import { DbxValueListItem, DbxValueListItemConfig } from '../list.view.value';
-import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
+import { Directive, input, type StaticProvider } from '@angular/core';
+import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
+import { type DbxValueListItemGroup, type DbxValueListViewGroupDelegate, type DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { map } from 'rxjs';
-import { Building, Maybe, PrimativeKey, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
-import { DbxListTitleGroupData, DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
+import { type Building, type Maybe, type PrimativeKey, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
+import { type DbxListTitleGroupData, type DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxListTitleGroupHeaderComponent, DBX_LIST_TITLE_GROUP_DATA } from './list.view.value.group.title.header.component';
 

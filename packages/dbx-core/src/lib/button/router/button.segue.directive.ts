@@ -3,7 +3,7 @@ import { type Maybe } from '@dereekb/util';
 import { cleanSubscription } from '../../rxjs';
 import { DbxButton } from '../button';
 import { DbxRouterService } from '../../router/router/service/router.service';
-import { SegueRef } from '../../router/segue';
+import { type SegueRef } from '../../router/segue';
 
 // MARK: Button Directives
 @Directive({

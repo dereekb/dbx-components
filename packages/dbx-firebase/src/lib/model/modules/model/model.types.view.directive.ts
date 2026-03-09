@@ -1,11 +1,11 @@
 import { distinctUntilModelKeyChange } from '@dereekb/rxjs';
-import { DbxModelObjectStateService, ModelViewContext } from '@dereekb/dbx-web';
+import { DbxModelObjectStateService, type ModelViewContext } from '@dereekb/dbx-web';
 import { Directive, inject, input } from '@angular/core';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { combineLatestWith, first, map, switchMap } from 'rxjs';
 import { DbxFirebaseDocumentStoreDirective } from '../store/store.document.directive';
 import { DbxFirebaseModelTypesService } from './model.types.service';
-import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
+import { type Maybe, type ModelKeyTypeNamePair } from '@dereekb/util';
 
 /**
  * Used with a DbxFirebaseDocumentStoreDirective to emit model viewed events.

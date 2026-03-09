@@ -1,9 +1,9 @@
-import { Component, computed, Signal } from '@angular/core';
+import { Component, computed, type Signal } from '@angular/core';
 import { AbstractDbxFirebaseModelEntityWidgetDirective } from './model.entities.widget.entity.abstract.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxFirebaseModelKeyComponent } from '../model.key.component';
-import { DbxDownloadTextViewComponent, DbxLoadingComponent, DownloadTextContent } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { DbxDownloadTextViewComponent, DbxLoadingComponent, type DownloadTextContent } from '@dereekb/dbx-web';
+import { type Maybe } from '@dereekb/util';
 import { twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { cleanLoadingContext } from '@dereekb/dbx-core';
 

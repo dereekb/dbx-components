@@ -1,4 +1,4 @@
-import { ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
+import { type ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
 import { DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent } from '@dereekb/dbx-web';

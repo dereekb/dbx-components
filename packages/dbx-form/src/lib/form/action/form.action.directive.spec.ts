@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from './form.action.directive';

@@ -1,5 +1,5 @@
 import { computed, Directive, input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type DbxDialogContentContainerWidth = 'normal' | 'wide';
 

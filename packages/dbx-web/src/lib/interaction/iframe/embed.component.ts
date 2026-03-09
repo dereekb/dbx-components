@@ -1,8 +1,8 @@
 import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, effect, signal, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, throttleTime } from 'rxjs';
-import { ContentTypeMimeType, Maybe } from '@dereekb/util';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { type ContentTypeMimeType, type Maybe } from '@dereekb/util';
+import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { browserObjectUrlRef } from '@dereekb/browser';
 import { clean, cleanSubscription } from '@dereekb/dbx-core';
 

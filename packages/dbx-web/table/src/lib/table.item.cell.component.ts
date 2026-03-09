@@ -3,7 +3,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { map, switchMap, combineLatest } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { AbstractDbxTableItemDirective } from './table.item.directive';
-import { DbxTableColumn } from './table';
+import { type DbxTableColumn } from './table';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 
 @Component({

@@ -1,5 +1,5 @@
 import { DOC_ROUTER_ROUTES } from './../doc.router';
-import { DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
+import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
 import { Component } from '@angular/core';
 
 @Component({

@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AbstractDbxTableItemDirective } from './table.item.directive';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 
 @Component({
   selector: 'dbx-table-item-action',

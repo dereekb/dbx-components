@@ -1,4 +1,4 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { Component, output } from '@angular/core';
 import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
 

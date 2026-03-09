@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIRouterModule } from '@uirouter/angular';
-import { ClickableAnchorLink, provideDbxUIRouterService } from '@dereekb/dbx-core';
+import { type ClickableAnchorLink, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxNavbarComponent } from './navbar.component';
 import { provideDbxRouterWebUiRouterProviderConfig } from '../../provider/uirouter/uirouter.router.providers';

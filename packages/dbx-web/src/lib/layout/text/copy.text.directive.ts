@@ -1,5 +1,5 @@
-import { Directive, ElementRef, HostListener, input, model } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { Directive, type ElementRef, HostListener, input, model } from '@angular/core';
+import { type Maybe } from '@dereekb/util';
 import { AbstractDbxClipboardDirective } from '../../util/clipboard.directive';
 
 @Directive({

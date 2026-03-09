@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, input, effect } from '@angular/core';
 
-import { Observable, combineLatest, distinctUntilChanged, map } from 'rxjs';
+import { type Observable, combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentContainerDirective } from '../../content/content.container.directive';
-import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
+import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxResizedDirective } from '../../../screen/resize.directive';
-import { ResizedEvent } from '../../../screen/resize';
+import { type ResizedEvent } from '../../../screen/resize';
 
 export interface DbxTwoColumnViewState {
   readonly showRight: boolean;

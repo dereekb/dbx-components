@@ -1,5 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
-import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
+import { type ClickableAnchor, type ClickableAnchorLink, type ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
 import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

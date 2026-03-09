@@ -1,6 +1,6 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, type PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DateRange, formatToDayRangeString } from '@dereekb/date';
+import { type DateRange, formatToDayRangeString } from '@dereekb/date';
 
 @Pipe({
   name: 'dateDayRange',

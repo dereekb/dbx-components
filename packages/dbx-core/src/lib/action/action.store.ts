@@ -1,9 +1,9 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, type OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
-import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith, of } from 'rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe, ReadableError } from '@dereekb/util';
-import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
-import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkOrWorkProgress, DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
+import { type Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith, of } from 'rxjs';
+import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe, type ReadableError } from '@dereekb/util';
+import { type LoadingStateType, idleLoadingState, errorResult, filterMaybe, type LoadingState, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
+import { type DbxActionDisabledKey, type DbxActionRejectedPair, DbxActionState, type DbxActionSuccessPair, type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 import { cleanLockSet } from '../rxjs';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {

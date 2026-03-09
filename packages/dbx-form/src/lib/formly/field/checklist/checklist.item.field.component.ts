@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, Type, inject, signal } from '@angular/core';
-import { DbxInjectionComponentConfig, DbxInjectionComponent, cleanSubscription } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, Component, type OnInit, type Type, inject, signal } from '@angular/core';
+import { type DbxInjectionComponentConfig, DbxInjectionComponent, cleanSubscription } from '@dereekb/dbx-core';
 import { switchMapFilterMaybe } from '@dereekb/rxjs';
-import { shareReplay, distinctUntilChanged, map, Observable } from 'rxjs';
-import { ValidationErrors, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { FieldType, FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
-import { ChecklistItemFieldDisplayComponent, ChecklistItemDisplayContent } from './checklist.item';
+import { shareReplay, distinctUntilChanged, map, type Observable } from 'rxjs';
+import { type ValidationErrors, type FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FieldType, type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
+import { type ChecklistItemFieldDisplayComponent, type ChecklistItemDisplayContent } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { type Maybe } from '@dereekb/util';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';

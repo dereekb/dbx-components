@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { Maybe, UnitedStatesAddressWithContact } from '@dereekb/util';
+import { type Maybe, type UnitedStatesAddressWithContact } from '@dereekb/util';
 
 // prettier-ignore
 @Component({

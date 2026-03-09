@@ -1,7 +1,7 @@
-import { ListLoadingStateContext, MaybeObservableOrValue, asObservable, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { Directive, input, NgModule, output, signal, TrackByFunction } from '@angular/core';
-import { DbxListSelectionMode, DbxListView } from './list.view';
+import { type ListLoadingStateContext, type MaybeObservableOrValue, asObservable, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { combineLatest, distinctUntilChanged, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { Directive, input, NgModule, output, signal, type TrackByFunction } from '@angular/core';
+import { type DbxListSelectionMode, type DbxListView } from './list.view';
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxValueListViewComponent } from './list.view.value.component';

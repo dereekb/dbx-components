@@ -1,10 +1,10 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { OnInit, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
+import { type OnInit, type OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { asObservable, ObservableOrValue, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { asObservable, type ObservableOrValue, switchMapMaybeDefault } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
-import { BehaviorSubject, Observable, shareReplay } from 'rxjs';
+import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
+import { BehaviorSubject, type Observable, shareReplay } from 'rxjs';
 
 export type DbxFormStyleObject = { [styleClass: string]: any };
 

@@ -1,10 +1,10 @@
-import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
+import { type ListLoadingState, type ObservableOrValue, maybeValueFromObservableOrValue, type MaybeObservableOrValue } from '@dereekb/rxjs';
 import { BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
-import { OnDestroy, Directive, input, output, computed, Signal, NgModule } from '@angular/core';
-import { DbxListComponent, DbxListConfig } from './list.component';
-import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
-import { Configurable, type Maybe } from '@dereekb/util';
-import { DbxListViewWrapper } from './list.wrapper';
+import { type OnDestroy, Directive, input, output, computed, type Signal, NgModule } from '@angular/core';
+import { DbxListComponent, type DbxListConfig } from './list.component';
+import { type DbxListSelectionMode, type DbxListView, type ListSelectionState } from './list.view';
+import { type Configurable, type Maybe } from '@dereekb/util';
+import { type DbxListViewWrapper } from './list.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 // MARK: Wrapper

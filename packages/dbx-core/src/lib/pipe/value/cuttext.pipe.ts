@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, type PipeTransform } from '@angular/core';
 import { cutString, type Maybe } from '@dereekb/util';
 
 /**

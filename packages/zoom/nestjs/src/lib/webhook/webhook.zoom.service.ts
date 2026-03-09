@@ -1,12 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Request } from 'express';
+import { type Request } from 'express';
 import { zoomEventHandlerConfigurerFactory, zoomEventHandlerFactory } from './webhook.zoom';
-import { Handler, Maybe } from '@dereekb/util';
+import { type Handler, type Maybe } from '@dereekb/util';
 import { ZoomWebhookServiceConfig } from './webhook.zoom.config';
-import { zoomWebhookEventVerifier, ZoomWebhookEventVerifier } from './webhook.zoom.verify';
-import { UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
-import { ZOOM_WEBHOOK_URL_VALIDATION_EVENT_TYPE, ZoomWebhookUrlValidationEvent } from './webhook.zoom.type.validate';
-import { ZoomWebhookEventValidationFunction, zoomWebhookEventValidationFunction, ZoomWebhookValidationResponse } from './webhook.zoom.validate';
+import { zoomWebhookEventVerifier, type ZoomWebhookEventVerifier } from './webhook.zoom.verify';
+import { type UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
+import { ZOOM_WEBHOOK_URL_VALIDATION_EVENT_TYPE, type ZoomWebhookUrlValidationEvent } from './webhook.zoom.type.validate';
+import { type ZoomWebhookEventValidationFunction, zoomWebhookEventValidationFunction, type ZoomWebhookValidationResponse } from './webhook.zoom.validate';
 
 export interface UpdateForWebhookResponse {
   readonly valid: boolean;

@@ -1,4 +1,4 @@
-import { DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
+import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
 import { Component } from '@angular/core';
 import { DOC_LAYOUT_ROUTES } from '../doc.layout';
 

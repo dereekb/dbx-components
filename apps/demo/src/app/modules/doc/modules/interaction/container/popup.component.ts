@@ -1,6 +1,6 @@
 import { DocInteractionExamplePopupComponent } from './../component/interaction.popup.component';
-import { Component, AfterViewInit, inject } from '@angular/core';
-import { DbxPopupService, PopupPosition, DbxContentContainerDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { Component, type AfterViewInit, inject } from '@angular/core';
+import { DbxPopupService, type PopupPosition, DbxContentContainerDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';

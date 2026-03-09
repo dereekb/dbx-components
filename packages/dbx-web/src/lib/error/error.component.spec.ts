@@ -1,6 +1,6 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { ErrorInput } from '@dereekb/util';
+import { type ErrorInput } from '@dereekb/util';
 import { DbxErrorComponent } from './error.component';
 
 describe('ReadableErrorComponent', () => {

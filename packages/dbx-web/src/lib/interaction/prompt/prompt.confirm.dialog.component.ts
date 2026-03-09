@@ -1,8 +1,8 @@
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
-import { DbxPromptConfirmComponent, DbxPromptConfirmConfig } from './prompt.confirm.component';
+import { DbxPromptConfirmComponent, type DbxPromptConfirmConfig } from './prompt.confirm.component';
 import { type Maybe } from '@dereekb/util';
 import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
 

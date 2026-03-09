@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbxTwoColumnComponent } from './two.column.component';
 import { provideTwoColumnsContext } from './two.column.store';

@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { WorkUsingObservable, IsModifiedFunction, IsValidFunction, IsEqualFunction } from '@dereekb/rxjs';
+import { type WorkUsingObservable, type IsModifiedFunction, type IsValidFunction, type IsEqualFunction } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
-import { DocActionFormExampleValue, DocActionFormExampleFormComponent } from '../component/action.example.form.component';
+import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from '../component/action.example.form.component';
 import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

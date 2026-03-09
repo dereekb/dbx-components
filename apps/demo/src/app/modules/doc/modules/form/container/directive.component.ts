@@ -1,8 +1,8 @@
 import { incrementingNumberTimer, SubscriptionObject, successResult } from '@dereekb/rxjs';
-import { OnDestroy, Component, OnInit } from '@angular/core';
+import { type OnDestroy, Component, type OnInit } from '@angular/core';
 import { BehaviorSubject, map } from 'rxjs';
-import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormSourceDirectiveMode, textField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, textField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

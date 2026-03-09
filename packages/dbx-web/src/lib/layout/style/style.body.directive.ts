@@ -2,8 +2,8 @@ import { Directive, Renderer2, inject } from '@angular/core';
 import { DbxStyleService } from './style.service';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { delay } from 'rxjs';
-import { DbxStyleClass } from './style';
-import { Maybe } from '@dereekb/util';
+import { type DbxStyleClass } from './style';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used to style the <body> element of the browser view/document using the style provided by DbxStyleService.

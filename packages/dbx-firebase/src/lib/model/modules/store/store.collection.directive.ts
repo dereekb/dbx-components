@@ -1,12 +1,12 @@
-import { Directive, forwardRef, model, Provider, Type } from '@angular/core';
-import { DocumentReference, FirestoreDocument, FirestoreModelKey, FirestoreQueryConstraint } from '@dereekb/firebase';
-import { Maybe, ArrayOrValue } from '@dereekb/util';
-import { DbxFirebaseCollectionStore } from './store.collection';
+import { Directive, forwardRef, model, type Provider, type Type } from '@angular/core';
+import { type DocumentReference, type FirestoreDocument, type FirestoreModelKey, type FirestoreQueryConstraint } from '@dereekb/firebase';
+import { type Maybe, type ArrayOrValue } from '@dereekb/util';
+import { type DbxFirebaseCollectionStore } from './store.collection';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe, skipInitialMaybe } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
-import { DbxFirebaseCollectionMode } from '../../loader/collection.loader.instance';
+import { type DbxFirebaseCollectionMode } from '../../loader/collection.loader.instance';
 
 /**
  * Abstract directive that contains a DbxFirebaseCollectionStore and provides an interface for communicating with other directives.

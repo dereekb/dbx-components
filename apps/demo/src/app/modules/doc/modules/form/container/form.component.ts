@@ -1,4 +1,4 @@
-import { DbxFormFormlyTextFieldModule, DbxFormSearchFormFieldsConfig, DbxFormSearchFormComponent } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, type DbxFormSearchFormFieldsConfig, DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

@@ -1,8 +1,8 @@
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { switchMap, mergeMap, map, withLatestFrom, shareReplay, Observable, of, EMPTY } from 'rxjs';
+import { switchMap, mergeMap, map, withLatestFrom, shareReplay, type Observable, of, EMPTY } from 'rxjs';
 import { Directive, inject, input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { IsEqualFunction, IsModifiedFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
+import { type IsEqualFunction, type IsModifiedFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { cleanSubscriptionWithLockSet } from '../../../rxjs';
 

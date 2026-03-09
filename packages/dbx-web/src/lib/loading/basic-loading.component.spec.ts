@@ -1,10 +1,10 @@
 import { toObservable } from '@angular/core/rxjs-interop';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component, Injector, runInInjectionContext, signal, viewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
-import { ErrorInput } from '@dereekb/util';
-import { LoadingComponentState, DbxBasicLoadingComponent } from './basic-loading.component';
+import { type ErrorInput } from '@dereekb/util';
+import { type LoadingComponentState, DbxBasicLoadingComponent } from './basic-loading.component';
 import { DbxErrorComponent } from '../error/error.component';
 import { filter, first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';

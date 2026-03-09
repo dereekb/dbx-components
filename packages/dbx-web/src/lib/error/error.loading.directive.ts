@@ -1,8 +1,8 @@
 import { Directive, effect, inject, input } from '@angular/core';
-import { LoadingContext, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { type LoadingContext, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { DbxErrorComponent } from './error.component';
-import { distinctUntilChanged, shareReplay, Subscription } from 'rxjs';
+import { distinctUntilChanged, shareReplay, type Subscription } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**

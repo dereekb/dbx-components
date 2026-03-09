@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { latLngPoint, LatLngPointInput, Milliseconds } from '@dereekb/util';
-import { MapOptions } from 'mapbox-gl';
-import { KnownMapboxStyle, MapboxZoomLevel } from './mapbox';
+import { latLngPoint, type LatLngPointInput, type Milliseconds } from '@dereekb/util';
+import { type MapOptions } from 'mapbox-gl';
+import { type KnownMapboxStyle, type MapboxZoomLevel } from './mapbox';
 
 export class DbxMapboxConfig {
   readonly defaultStyle?: MapOptions['style'];

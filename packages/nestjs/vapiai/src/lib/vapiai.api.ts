@@ -1,7 +1,7 @@
 import { VapiClient } from '@vapi-ai/server-sdk';
 import { Inject, Injectable } from '@nestjs/common';
 import { VapiAiServiceConfig } from './vapiai.config';
-import { VapiCallWithTranscript } from './vapiai.type';
+import { type VapiCallWithTranscript } from './vapiai.type';
 
 @Injectable()
 export class VapiAiApi {

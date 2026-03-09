@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { delay, first, map, of, tap, throwError, timer } from 'rxjs';
-import { SubscriptionObject, WorkUsingObservable } from '@dereekb/rxjs';
-import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { SubscriptionObject, type WorkUsingObservable } from '@dereekb/rxjs';
+import { type DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { callbackTest } from '@dereekb/util/test';

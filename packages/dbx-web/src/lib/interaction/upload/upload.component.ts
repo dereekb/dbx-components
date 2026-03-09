@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
-import { FileArrayAcceptMatchConfig } from './upload.accept';
-import { DbxButtonStyle } from '../../button/button';
-import { Maybe } from '@dereekb/util';
-import { DbxFileUploadButtonComponent, DbxFileUploadButtonFilesChangedEvent } from './upload.button.component';
-import { DbxFileUploadAreaComponent, DbxFileUploadAreaFilesChangedEvent } from './upload.area.component';
+import { type FileArrayAcceptMatchConfig } from './upload.accept';
+import { type DbxButtonStyle } from '../../button/button';
+import { type Maybe } from '@dereekb/util';
+import { DbxFileUploadButtonComponent, type DbxFileUploadButtonFilesChangedEvent } from './upload.button.component';
+import { DbxFileUploadAreaComponent, type DbxFileUploadAreaFilesChangedEvent } from './upload.area.component';
 import { NgTemplateOutlet } from '@angular/common';
-import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
+import { AbstractDbxFileUploadComponent, type DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
 import { provideDbxFileUploadActionCompatable } from './upload.action';
-import { DbxButtonDisplay } from '@dereekb/dbx-core';
+import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 
 export type DbxFileUploadMode = 'area' | 'button' | 'default';
 

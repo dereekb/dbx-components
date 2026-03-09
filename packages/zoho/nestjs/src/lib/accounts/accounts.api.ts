@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoAccounts, ZohoAccountsContext, zohoAccountsAccessToken, zohoAccountsFactory } from '@dereekb/zoho';
+import { type ZohoAccounts, type ZohoAccountsContext, zohoAccountsAccessToken, zohoAccountsFactory } from '@dereekb/zoho';
 import { ZohoAccountsServiceConfig } from './accounts.config';
 import { ZohoAccountsAccessTokenCacheService } from './accounts.service';
 

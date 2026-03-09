@@ -1,7 +1,7 @@
 import { Directive, inject } from '@angular/core';
 import { cleanSubscription, DbxRouterService, isSegueRefActive } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
-import { shareReplay, distinctUntilChanged, Subscription } from 'rxjs';
+import { shareReplay, distinctUntilChanged, type Subscription } from 'rxjs';
 import { isNot } from '@dereekb/rxjs';
 
 /**

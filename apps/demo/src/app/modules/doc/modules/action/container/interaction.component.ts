@@ -1,13 +1,13 @@
 import { MatDialog } from '@angular/material/dialog';
-import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
-import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
+import { type DbxActionDialogFunction, DbxPopoverService, type DbxActionPopoverFunction, type DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
+import { ChangeDetectorRef, Component, type OnDestroy, inject } from '@angular/core';
 import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
-import { DbxActionAnalyticsConfig, DbxAnalyticsService, DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
-import { Maybe, ReadableError } from '@dereekb/util';
-import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
+import { type DbxActionAnalyticsConfig, type DbxAnalyticsService, DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
+import { type Maybe, type ReadableError } from '@dereekb/util';
+import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';

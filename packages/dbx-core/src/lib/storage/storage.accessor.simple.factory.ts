@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { StorageAccessor } from './storage.accessor';
-import { SimpleStorageAccessorConfig, SimpleStorageAccessor, SimpleStorageAccessorConverter, StringifySimpleStorageAccessorConverter, WrapperSimpleStorageAccessorDelegate } from './storage.accessor.simple';
+import { type StorageAccessor } from './storage.accessor';
+import { type SimpleStorageAccessorConfig, SimpleStorageAccessor, type SimpleStorageAccessorConverter, StringifySimpleStorageAccessorConverter, WrapperSimpleStorageAccessorDelegate } from './storage.accessor.simple';
 import { StringStorageAccessor } from './storage.accessor.string';
 import { DEFAULT_STORAGE_OBJECT_TOKEN } from './storage.di';
-import { FullStorageObject, StoredDataString } from '@dereekb/util';
+import { type FullStorageObject, type StoredDataString } from '@dereekb/util';
 
 export interface StorageAccessorFactoryConfig<T> extends SimpleStorageAccessorConfig {
   storage?: StorageAccessor<StoredDataString>;

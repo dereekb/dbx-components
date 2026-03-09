@@ -1,5 +1,5 @@
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent } from './component/example.calendar.schedule.selection.popover.content.component';
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DocExtensionDownloadComponent } from './container/download.component';
 import { DocExtensionHomeComponent } from './container/home.component';
@@ -87,7 +87,9 @@ import { DocExtensionHelpListBottomExampleComponent } from './component/help.lis
   ]
 })
 export class DocExtensionModule {
-  constructor(dbxWidgetService: DbxWidgetService, dbxHelpWidgetService: DbxHelpWidgetService) {
+  constructor() {
+    const dbxWidgetService = inject(DbxWidgetService);
+    const dbxHelpWidgetService = inject(DbxHelpWidgetService);
     dbxWidgetService.register({
       type: DOC_EXTENSION_WIDGET_EXAMPLE_TYPE,
       componentClass: DocExtensionWidgetExampleComponent

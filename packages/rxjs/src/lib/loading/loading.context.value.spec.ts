@@ -37,8 +37,8 @@ describe('ValuesLoadingContext', () => {
     it(
       'should set loading to false when all check values are defined',
       callbackTest((done) => {
-        let valueA: string | undefined = 'hello';
-        let valueB: string | undefined = 'world';
+        const valueA: string | undefined = 'hello';
+        const valueB: string | undefined = 'world';
 
         context = new ValuesLoadingContext({
           checkDone: () => [valueA, valueB]
@@ -56,7 +56,7 @@ describe('ValuesLoadingContext', () => {
     it(
       'should keep loading true when some check values are undefined',
       callbackTest((done) => {
-        let valueA: string | undefined = 'hello';
+        const valueA: string | undefined = 'hello';
         let valueB: string | undefined;
 
         context = new ValuesLoadingContext({

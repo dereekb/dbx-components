@@ -1,9 +1,9 @@
 import { Injectable, InjectionToken, inject } from '@angular/core';
-import { StorageAccessor } from '@dereekb/dbx-core';
-import { map, mergeMap, catchError, Observable, of, switchMap, first } from 'rxjs';
-import { FirebaseAuthUserId, firestoreModelId, FirestoreModelIdInput, StorageFileId, StorageFileSignedDownloadUrl } from '@dereekb/firebase';
+import { type StorageAccessor } from '@dereekb/dbx-core';
+import { map, mergeMap, catchError, type Observable, of, switchMap, first } from 'rxjs';
+import { type FirebaseAuthUserId, firestoreModelId, type FirestoreModelIdInput, type StorageFileId, type StorageFileSignedDownloadUrl } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { ContentTypeMimeType, Maybe, splitJoinRemainder, UnixDateTimeSecondsNumber } from '@dereekb/util';
+import { type ContentTypeMimeType, type Maybe, splitJoinRemainder, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 
 export interface DbxFirebaseStorageFileDownloadUrlPair {
   readonly id: StorageFileId;

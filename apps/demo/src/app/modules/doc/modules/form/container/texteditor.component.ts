@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { DbxFormFormlyTextEditorFieldModule, textEditorField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';

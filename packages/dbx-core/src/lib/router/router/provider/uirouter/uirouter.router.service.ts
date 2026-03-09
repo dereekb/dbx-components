@@ -1,12 +1,12 @@
 import { KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
-import { Subject, BehaviorSubject, Observable, firstValueFrom, map } from 'rxjs';
-import { DbxRouterService } from '../../service/router.service';
-import { DbxRouterTransitionService } from '../../service/router.transition.service';
-import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
-import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
-import { Injectable, OnDestroy, inject } from '@angular/core';
-import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
-import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { Subject, BehaviorSubject, type Observable, firstValueFrom, map } from 'rxjs';
+import { type DbxRouterService } from '../../service/router.service';
+import { type DbxRouterTransitionService } from '../../service/router.transition.service';
+import { asSegueRef, asSegueRefString, type SegueRef, type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../../segue';
+import { StateService, UIRouterGlobals, type TransitionOptions, TransitionService } from '@uirouter/core';
+import { Injectable, type OnDestroy, inject } from '@angular/core';
+import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
+import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 
 /**
  * UIRouter implementation of DbxRouterService and DbxRouterTransitionService.

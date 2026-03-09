@@ -1,5 +1,5 @@
-import { Maybe, AuthRole, ArrayOrValue } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { type Maybe, type AuthRole, type ArrayOrValue } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 import { Directive, inject, input } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { authRolesSetContainsNoRolesFrom, DbxAuthService } from './service';

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DbxValueAsListItem, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, provideDbxListViewWrapper, AbstractDbxSelectionListWrapperDirective, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, provideDbxListView, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, AbstractDbxValueListViewItemComponent, DbxSpacerDirective } from '../../layout';
+import { type DbxValueAsListItem, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, provideDbxListViewWrapper, AbstractDbxSelectionListWrapperDirective, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, provideDbxListView, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, AbstractDbxValueListViewItemComponent, DbxSpacerDirective } from '../../layout';
 import { of } from 'rxjs';
-import { DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
+import { type DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
 import { DatePipe } from '@angular/common';
-import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
+import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 
 export type DbxZipPreviewEntryWithSelection = DbxValueAsListItem<DbxZipBlobPreviewEntryTreeNode>;
 

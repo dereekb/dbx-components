@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Stripe } from 'stripe';
+import { type Stripe } from 'stripe';
 import { StripeApi } from './stripe.api';
 import { StripeServiceConfig } from './stripe.config';
 

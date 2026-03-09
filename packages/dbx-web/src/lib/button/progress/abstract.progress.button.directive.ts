@@ -1,9 +1,9 @@
-import { Directive, HostListener, inject, computed, input, Signal, output } from '@angular/core';
+import { Directive, HostListener, inject, computed, input, type Signal, output } from '@angular/core';
 import { dbxActionWorkProgress, type DbxActionWorkProgress, type DbxButtonWorking } from '@dereekb/dbx-core';
-import { Configurable, CssClass, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
-import { DbxProgressButtonGlobalConfig, DbxProgressButtonConfig, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
+import { type Configurable, type CssClass, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
+import { type DbxProgressButtonGlobalConfig, type DbxProgressButtonConfig, type DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { DbxButtonType } from '../button';
+import { type DbxButtonType } from '../button';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 @Directive()

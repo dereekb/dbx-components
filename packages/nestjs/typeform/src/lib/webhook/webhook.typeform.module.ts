@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { TypeformWebhookService } from './webhook.typeform.service';
 import { TYPEFORM_WEBHOOK_SECRET_TOKEN_ENV_VAR, TypeformWebhookServiceConfig } from './webhook.typeform.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeformWebhookSecretToken } from '../typeform.type';
+import { type TypeformWebhookSecretToken } from '../typeform.type';
 
 export function typeFormWebhookServiceConfigFactory(configService: ConfigService): TypeformWebhookServiceConfig {
   const config: TypeformWebhookServiceConfig = {

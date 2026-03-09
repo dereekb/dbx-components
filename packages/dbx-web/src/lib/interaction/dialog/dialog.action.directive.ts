@@ -1,9 +1,9 @@
-import { first, Observable } from 'rxjs';
+import { first, type Observable } from 'rxjs';
 import { Directive, ElementRef, inject, input } from '@angular/core';
 import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
-import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
+import { type IsEqualFunction, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { MatDialogRef } from '@angular/material/dialog';
+import { type MatDialogRef } from '@angular/material/dialog';
 
 export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, Maybe<T>>;
 

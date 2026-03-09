@@ -1,4 +1,4 @@
-import { isValidWebsiteLinkType, WEBSITE_LINK_TYPE_REGEX } from './link';
+import { isValidWebsiteLinkType } from './link';
 
 describe('isValidWebsiteLinkType()', () => {
   it('should return true for a valid short type', () => {

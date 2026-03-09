@@ -1,9 +1,9 @@
 import { Inject, inject, Injectable, InjectionToken, Optional } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { MimeTypeWithoutParameters, ArrayOrValue, asArray } from '@dereekb/util';
-import { DbxWebFilePreviewServiceEntry, DbxWebFilePreviewServicePreviewComponentFunction, DbxWebFilePreviewServicePreviewComponentFunctionInput, DbxWebFilePreviewServicePreviewDialogFunction, DbxWebFilePreviewServicePreviewDialogFunctionInput, DbxWebFilePreviewServicePreviewDialogWithComponentFunction } from './webfilepreview';
+import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
+import { type MimeTypeWithoutParameters, type ArrayOrValue, asArray } from '@dereekb/util';
+import { type DbxWebFilePreviewServiceEntry, type DbxWebFilePreviewServicePreviewComponentFunction, type DbxWebFilePreviewServicePreviewComponentFunctionInput, type DbxWebFilePreviewServicePreviewDialogFunction, type DbxWebFilePreviewServicePreviewDialogFunctionInput, type DbxWebFilePreviewServicePreviewDialogWithComponentFunction } from './webfilepreview';
 import { DbxInjectionDialogComponent } from '../../interaction/dialog/dialog.injection.component';
-import { DbxEmbedComponent, DbxEmbedComponentElement } from '../../interaction/iframe/embed.component';
+import { DbxEmbedComponent, type DbxEmbedComponentElement } from '../../interaction/iframe/embed.component';
 
 /**
  * Default entries to inject.

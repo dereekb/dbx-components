@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
-import { DbxButtonDisplay } from '@dereekb/dbx-core';
-import { DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
-import { Milliseconds } from '@dereekb/util';
+import { type DbxButtonDisplay } from '@dereekb/dbx-core';
+import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
+import { type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatIcon } from '@angular/material/icon';

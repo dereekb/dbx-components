@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractFormExpandSectionWrapperDirective, AbstractFormExpandSectionConfig } from './expand.wrapper.delegate';
+import { AbstractFormExpandSectionWrapperDirective, type AbstractFormExpandSectionConfig } from './expand.wrapper.delegate';
 
 export type DbxFormExpandWrapperButtonType = 'button' | 'text';
 

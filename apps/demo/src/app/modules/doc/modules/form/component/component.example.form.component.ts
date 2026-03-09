@@ -1,7 +1,7 @@
 import { LOREM } from './../../shared/lorem';
-import { Type, InjectionToken, Inject, Component } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type Type, InjectionToken, Inject, Component } from '@angular/core';
+import { type Observable, map } from 'rxjs';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 

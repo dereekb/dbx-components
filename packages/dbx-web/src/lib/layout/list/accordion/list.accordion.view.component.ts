@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { DbxValueListItem } from '../list.view.value';
+import { type DbxValueListItem } from '../list.view.value';
 import { AbstractDbxValueListViewDirective } from '../list.view.value.directive';
-import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
-import { DbxValueListViewContentComponent, DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from '../list.view.value.component';
+import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { DbxValueListViewContentComponent, type DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from '../list.view.value.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatAccordion } from '@angular/material/expansion';
-import { DbxValueListItemGroup } from '../group/list.view.value.group';
+import { type DbxValueListItemGroup } from '../group/list.view.value.group';
 
 // MARK: Config
 export interface DbxValueListAccordionViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {

@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Request } from 'express';
-import { openaiEventHandlerConfigurerFactory, openaiEventHandlerFactory, OpenAIWebhookEvent, OpenAIWebhookEventType } from './webhook.openai';
-import { Handler } from '@dereekb/util';
+import { type Request } from 'express';
+import { openaiEventHandlerConfigurerFactory, openaiEventHandlerFactory, type OpenAIWebhookEvent, type OpenAIWebhookEventType } from './webhook.openai';
+import { type Handler } from '@dereekb/util';
 import { OpenAIWebhookServiceConfig } from './webhook.openai.config';
 import { OpenAIApi } from '../openai.api';
-import { openAIWebhookEventVerifier, OpenAIWebhookEventVerifier } from './webhook.openai.verify';
+import { openAIWebhookEventVerifier, type OpenAIWebhookEventVerifier } from './webhook.openai.verify';
 
 /**
  * Service that makes system changes based on OpenAI webhook events.

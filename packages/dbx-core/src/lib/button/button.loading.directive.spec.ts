@@ -1,9 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { filter } from 'rxjs';
 import { DbxButtonDirective } from './button.directive';
 import { DbxLoadingButtonDirective } from './button.loading.directive';
-import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
+import { SimpleLoadingContext, type SubscriptionObject } from '@dereekb/rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingButton', () => {

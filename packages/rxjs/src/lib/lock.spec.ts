@@ -1,5 +1,5 @@
 import { SubscriptionObject } from './subscription';
-import { LockSet, onLockSetNextUnlock } from './lock';
+import { LockSet } from './lock';
 import { filter, first, of } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 

@@ -1,7 +1,7 @@
 import { Directive, computed, inject, input } from '@angular/core';
 import { DbxScreenMediaService } from '../../screen/screen.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Directive used to calculate a dynamic height for an accordion header.

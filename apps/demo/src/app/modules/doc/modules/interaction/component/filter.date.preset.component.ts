@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective } from '@dereekb/dbx-core';
-import { DocInteractionTestFilter, DOC_INTERACTION_DATE_TEST_PRESETS } from './filter';
+import { type ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective } from '@dereekb/dbx-core';
+import { type DocInteractionTestFilter, DOC_INTERACTION_DATE_TEST_PRESETS } from './filter';
 import { isSameDateDayRange } from '@dereekb/date';
-import { DbxActionFormMapValueFunction, DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { DocInteractionTestDateFilterFormValue, DocInteractionTestDateFilterFormComponent } from './filter.date.form.component';
+import { type DbxActionFormMapValueFunction, DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { type DocInteractionTestDateFilterFormValue, DocInteractionTestDateFilterFormComponent } from './filter.date.form.component';
 import { map, shareReplay } from 'rxjs';
-import { IsModifiedFunction } from '@dereekb/rxjs';
+import { type IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxFilterWrapperComponent } from '@dereekb/dbx-web';
 
 @Component({

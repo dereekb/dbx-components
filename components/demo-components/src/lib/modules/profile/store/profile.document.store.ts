@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreReadFunction, firebaseDocumentStoreUpdateFunction } from '@dereekb/dbx-firebase';
 import { storageFileGroupZipStorageFileKey } from '@dereekb/firebase';
-import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions, userProfileStorageFileGroupId } from 'demo-firebase';
+import { DemoFirestoreCollections, type Profile, type ProfileDocument, ProfileFunctions, userProfileStorageFileGroupId } from 'demo-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
 @Injectable()

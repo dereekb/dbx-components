@@ -1,6 +1,6 @@
 import { Directive, inject } from '@angular/core';
 import { DBX_FIREBASE_MODEL_ENTITY_WITH_STORE_TOKEN } from './model.entities.widget';
-import { DbxFirebaseModelEntityWithStore } from './model.entities';
+import { type DbxFirebaseModelEntityWithStore } from './model.entities';
 import { type FirestoreDocument } from '@dereekb/firebase';
 
 /**

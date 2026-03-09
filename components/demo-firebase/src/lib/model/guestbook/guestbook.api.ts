@@ -1,6 +1,6 @@
-import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
-import { GuestbookTypes } from './guestbook';
+import { type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 

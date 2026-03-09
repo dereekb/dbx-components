@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { onDbxModel } from './state';
-import { DbxModelObjectViewedParams } from './state/actions/model.actions';
-import { DbxModelFullState } from './state/state';
+import { type DbxModelObjectViewedParams } from './state/actions/model.actions';
+import { type DbxModelFullState } from './state/state';
 
 @Injectable()
 export class DbxModelObjectStateService {

@@ -1,8 +1,8 @@
-import { type DownloadStorageFileParams, downloadStorageFileParamsType, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type DownloadStorageFileParams, downloadStorageFileParamsType, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
-import { ProfileTypes } from './profile';
+import { type ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;

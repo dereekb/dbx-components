@@ -1,8 +1,8 @@
-import { DASH_CHARACTER_PREFIX_INSTANCE, Destroyable, type Maybe } from '@dereekb/util';
-import { asObservable, filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
-import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
+import { DASH_CHARACTER_PREFIX_INSTANCE, type Destroyable, type Maybe } from '@dereekb/util';
+import { asObservable, filterMaybe, type ObservableOrValue } from '@dereekb/rxjs';
+import { BehaviorSubject, type Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
 import { Injectable, InjectionToken, inject } from '@angular/core';
-import { DBX_DARK_STYLE_CLASS_SUFFIX, DbxStyleClass, dbxStyleClassCleanSuffix, DbxStyleClassCleanSuffix, DbxStyleClassSuffix, DbxStyleConfig } from './style';
+import { DBX_DARK_STYLE_CLASS_SUFFIX, type DbxStyleClass, dbxStyleClassCleanSuffix, type DbxStyleClassCleanSuffix, type DbxStyleClassSuffix, type DbxStyleConfig } from './style';
 
 export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 

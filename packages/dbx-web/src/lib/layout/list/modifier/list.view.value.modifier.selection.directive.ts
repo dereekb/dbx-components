@@ -1,7 +1,7 @@
 import { Directive, input } from '@angular/core';
-import { Maybe, ArrayOrValue, Modifier } from '@dereekb/util';
-import { Observable, map } from 'rxjs';
-import { DbxValueListItem, DbxValueListItemDecisionFunction } from '../list.view.value';
+import { type Maybe, type ArrayOrValue, type Modifier } from '@dereekb/util';
+import { type Observable, map } from 'rxjs';
+import { type DbxValueListItem, type DbxValueListItemDecisionFunction } from '../list.view.value';
 import { AbstractDbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';

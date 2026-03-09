@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SegueRef } from '@dereekb/dbx-core';
+import { type SegueRef } from '@dereekb/dbx-core';
 
 @Injectable({
   providedIn: 'root'

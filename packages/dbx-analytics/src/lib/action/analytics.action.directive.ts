@@ -1,9 +1,9 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { switchMap, tap, shareReplay, merge, Observable, of } from 'rxjs';
+import { switchMap, tap, shareReplay, merge, type Observable, of } from 'rxjs';
 import { Directive, inject, input } from '@angular/core';
 import { DbxActionContextStoreSourceInstance, cleanSubscriptionWithLockSet } from '@dereekb/dbx-core';
 import { DbxAnalyticsService } from '../analytics/analytics.service';
-import { Maybe, ReadableError } from '@dereekb/util';
+import { type Maybe, type ReadableError } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**

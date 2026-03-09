@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { FirebaseStorageContext, FirebaseStorageAccessor, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StoragePathInput } from '@dereekb/firebase';
+import { type FirebaseStorageContext, type FirebaseStorageAccessor, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StoragePathInput } from '@dereekb/firebase';
 import { DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
 
 /**

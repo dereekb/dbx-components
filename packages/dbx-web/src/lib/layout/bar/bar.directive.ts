@@ -1,6 +1,6 @@
 import { computed, Directive, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DbxBarColor } from './bar';
+import { type DbxBarColor } from './bar';
 
 /**
  * Acts as a wrapper for content distributed along a bar.

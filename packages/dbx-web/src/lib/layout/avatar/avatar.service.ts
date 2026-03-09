@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAvatarViewComponent } from './avatar.view.component';
-import { DbxAvatarContext } from './avatar';
-import { Maybe, WebsitePath, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type DbxAvatarContext } from './avatar';
+import { type Maybe, type WebsitePath, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * The injection configuration for a DbxAvatar component.

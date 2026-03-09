@@ -1,6 +1,6 @@
 import { RawBody, type RawBodyBuffer } from '@dereekb/nestjs';
 import { Controller, Inject, Post, Req } from '@nestjs/common';
-import { Request } from 'express';
+import { type Request } from 'express';
 import { StripeWebhookService } from './webhook.stripe.service';
 
 @Controller('/webhook/stripe')

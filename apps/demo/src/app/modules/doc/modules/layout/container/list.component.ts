@@ -1,14 +1,14 @@
-import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
+import { type ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
 import {
   listItemModifier,
-  ListItemModifier,
-  ListSelectionState,
-  AnchorForValueFunction,
-  DbxValueListGridItemViewGridSizeConfig,
-  DbxListSelectionMode,
-  DbxValueListItemDecisionFunction,
+  type ListItemModifier,
+  type ListSelectionState,
+  type AnchorForValueFunction,
+  type DbxValueListGridItemViewGridSizeConfig,
+  type DbxListSelectionMode,
+  type DbxValueListItemDecisionFunction,
   dbxValueListItemDecisionFunction,
-  DbxListTitleGroupTitleDelegate,
+  type DbxListTitleGroupTitleDelegate,
   DbxContentContainerDirective,
   DbxContentDirective,
   DbxButtonSpacerDirective,
@@ -20,12 +20,12 @@ import {
   DbxListTitleGroupDirective,
   DbxListEmptyContentComponent
 } from '@dereekb/dbx-web';
-import { CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
-import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
-import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
-import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
-import { Maybe, takeFront } from '@dereekb/util';
+import { type CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
+import { type ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
+import { BehaviorSubject, map, switchMap, startWith, type Observable, delay, of } from 'rxjs';
+import { ChangeDetectorRef, Component, type OnInit, type OnDestroy, inject } from '@angular/core';
+import { type DocValue, type DocValueWithSelection, makeDocValues } from '../component/item.list';
+import { type Maybe, takeFront } from '@dereekb/util';
 import { pascalCase } from 'change-case-all';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

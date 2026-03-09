@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { GetterOrValue, getValueFromGetter } from '@dereekb/util';
+import { Pipe, type PipeTransform } from '@angular/core';
+import { type GetterOrValue, getValueFromGetter } from '@dereekb/util';
 
 /**
  * Retrieves the value from the getter. This is a non-pure pipe. Use the getValueOncePipe instead for a pure pipe.

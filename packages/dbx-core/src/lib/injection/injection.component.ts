@@ -1,8 +1,8 @@
 import { Component, ViewContainerRef, input, viewChild, effect } from '@angular/core';
-import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
+import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';
-import { ObservableOrValueGetter } from '@dereekb/rxjs';
+import { type ObservableOrValueGetter } from '@dereekb/rxjs';
 
 /**
  * Component that injects content based on the configuration into the view.

@@ -1,12 +1,12 @@
-import { Component, Directive, OnInit, inject, signal, computed, ChangeDetectionStrategy, model } from '@angular/core';
-import { WorkUsingContext } from '@dereekb/rxjs';
+import { Component, Directive, type OnInit, inject, signal, computed, ChangeDetectionStrategy, model } from '@angular/core';
+import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
-import { FirebaseLoginMethodType } from './login';
+import { type FirebaseLoginMethodType } from './login';
 import { DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxFirebaseLoginButtonConfig {
   text: string;

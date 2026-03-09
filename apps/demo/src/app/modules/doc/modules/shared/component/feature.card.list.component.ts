@@ -1,4 +1,4 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { Component, input } from '@angular/core';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZoomOAuth, ZoomOAuthContext, serverAccessToken, userAccessToken, zoomOAuthFactory } from '@dereekb/zoom';
+import { type ZoomOAuth, type ZoomOAuthContext, serverAccessToken, userAccessToken, zoomOAuthFactory } from '@dereekb/zoom';
 import { ZoomOAuthServiceConfig } from './oauth.config';
 import { ZoomOAuthAccessTokenCacheService } from './oauth.service';
 

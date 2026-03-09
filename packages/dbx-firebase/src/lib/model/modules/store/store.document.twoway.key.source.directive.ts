@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
-import { DbxFirebaseDocumentStoreTwoWayKeyProvider, provideDbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
+import { type DbxFirebaseDocumentStoreTwoWayKeyProvider, provideDbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
 
 /**
  * Directive that implements DbxFirebaseDocumentStoreTwoWayKeyProvider and passes the twoWayFlatKey from a host DbxFirebaseDocumentStoreDirective.

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { VapiAiApi } from './vapiai.api';
 import { VAPI_AI_SECRET_TOKEN_ENV_VAR, VapiAiServiceConfig } from './vapiai.config';
-import { VapiAiSecretToken } from './vapiai.type';
+import { type VapiAiSecretToken } from './vapiai.type';
 
 export function vapiaiServiceConfigFactory(configService: ConfigService): VapiAiServiceConfig {
   const config: VapiAiServiceConfig = {

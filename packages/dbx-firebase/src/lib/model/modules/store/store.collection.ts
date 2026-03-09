@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, Subscription, first, map, switchMap, tap } from 'rxjs';
-import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, DocumentDataWithIdAndKey, DocumentReference, FirebaseQuerySnapshotAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirestoreModelKey } from '@dereekb/firebase';
-import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe, ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
-import { ArrayOrValue, Maybe, PageNumber } from '@dereekb/util';
+import { type Observable, shareReplay, distinctUntilChanged, type Subscription, first, map, switchMap, tap } from 'rxjs';
+import { type FirebaseQueryItemAccumulator, type FirestoreCollectionLike, type FirestoreDocument, type FirestoreItemPageIterationInstance, type FirestoreQueryConstraint, type IterationQueryDocChangeWatcher, type DocumentDataWithIdAndKey, type DocumentReference, type FirebaseQuerySnapshotAccumulator, type FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, type FirestoreModelKey } from '@dereekb/firebase';
+import { type ObservableOrValue, cleanupDestroyable, type PageListLoadingState, filterMaybe, type ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
+import { type ArrayOrValue, type Maybe, type PageNumber } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData, DbxFirebaseCollectionLoaderInstanceInitConfig, DbxFirebaseCollectionMode } from '../../loader/collection.loader.instance';
-import { DbxFirebaseCollectionLoaderAccessorWithAccumulator } from '../../loader/collection.loader';
+import { type DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, type DbxFirebaseCollectionLoaderInstanceData, type DbxFirebaseCollectionLoaderInstanceInitConfig, type DbxFirebaseCollectionMode } from '../../loader/collection.loader.instance';
+import { type DbxFirebaseCollectionLoaderAccessorWithAccumulator } from '../../loader/collection.loader';
 
 export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessorWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
   /**

@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { Maybe, DateOrDateString } from '@dereekb/util';
+import { Pipe, type PipeTransform } from '@angular/core';
+import { type Maybe, type DateOrDateString } from '@dereekb/util';
 import { formatDistance, isPast } from 'date-fns';
 import { ToJsDatePipe } from './tojsdate.pipe';
 

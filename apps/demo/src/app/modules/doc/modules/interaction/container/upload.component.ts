@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { DbxContentContainerDirective, DbxContentBorderDirective, DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, DbxFileUploadAreaFilesChangedEvent, DbxContentPitDirective, DbxFileUploadComponent, DbxFileUploadButtonFilesChangedEvent, DbxFileUploadFilesChangedEvent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, type DbxFileUploadAreaFilesChangedEvent, DbxContentPitDirective, DbxFileUploadComponent, type DbxFileUploadButtonFilesChangedEvent, type DbxFileUploadFilesChangedEvent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { JsonPipe, NgTemplateOutlet } from '@angular/common';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 function mapFileToString(file: File) {
   return `${file.name} (${file.size} bytes) - ${file.type}`;

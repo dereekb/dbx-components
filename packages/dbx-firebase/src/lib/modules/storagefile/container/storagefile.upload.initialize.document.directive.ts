@@ -1,8 +1,8 @@
 import { Directive, inject, input } from '@angular/core';
 import { DbxFirebaseStorageFileUploadStore, StorageFileDocumentStore } from '../store';
 import { DbxActionContextStoreSourceInstance, DbxActionHandlerInstance, clean, cleanSubscription } from '@dereekb/dbx-core';
-import { FirebaseStorageAccessorFile, OnCallCreateModelResult } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type FirebaseStorageAccessorFile, type OnCallCreateModelResult } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Directive that passes the upload result to a StorageFileDocumentStore to initialize the document immediately.

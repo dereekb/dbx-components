@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DbxTableColumn } from '@dereekb/dbx-web/table';
+import { type DbxTableColumn } from '@dereekb/dbx-web/table';
 import { DatePipe } from '@angular/common';
 
 @Component({

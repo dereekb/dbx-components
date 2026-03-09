@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 

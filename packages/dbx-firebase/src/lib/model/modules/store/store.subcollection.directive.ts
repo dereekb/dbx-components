@@ -1,8 +1,8 @@
-import { Directive, forwardRef, model, Provider, Type } from '@angular/core';
-import { FirestoreDocument } from '@dereekb/firebase';
+import { Directive, forwardRef, model, type Provider, type Type } from '@angular/core';
+import { type FirestoreDocument } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from './store.collection.directive';
-import { DbxFirebaseCollectionWithParentStore, DbxFirebaseComponentStoreWithParentSourceMode } from './store.subcollection';
+import { type DbxFirebaseCollectionWithParentStore, type DbxFirebaseComponentStoreWithParentSourceMode } from './store.subcollection';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { skipInitialMaybe } from '@dereekb/rxjs';
 import { cleanSubscription } from '@dereekb/dbx-core';

@@ -1,4 +1,4 @@
-import { Directive, inject, OnInit } from '@angular/core';
+import { Directive, inject, type OnInit } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**

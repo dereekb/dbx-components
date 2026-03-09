@@ -1,7 +1,7 @@
 import { Directive, inject, input } from '@angular/core';
-import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
+import { getValueFromGetter, type Maybe, type GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, map, Observable, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { cleanSubscriptionWithLockSet } from '../../../rxjs';

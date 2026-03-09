@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
-import { AbstractFormExpandSectionConfig, AbstractFormExpandSectionWrapperDirective } from './expand.wrapper.delegate';
+import { first, shareReplay, switchMap, type Observable, of } from 'rxjs';
+import { type AbstractFormExpandSectionConfig, AbstractFormExpandSectionWrapperDirective } from './expand.wrapper.delegate';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { toSignal } from '@angular/core/rxjs-interop';
 

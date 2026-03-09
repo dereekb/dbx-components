@@ -1,12 +1,12 @@
-import { AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { Guestbook, publishedGuestbook } from 'demo-firebase';
-import { Component, inject, viewChild, OnInit } from '@angular/core';
+import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
+import { type Guestbook, publishedGuestbook } from 'demo-firebase';
+import { Component, inject, viewChild, type OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookListComponent } from 'demo-components';
 import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective } from '@dereekb/dbx-firebase';
 import { DbxRouteModelIdDirective } from '@dereekb/dbx-core';
 import { UIView } from '@uirouter/angular';
-import { DocumentDataWithIdAndKey } from '@dereekb/firebase';
+import { type DocumentDataWithIdAndKey } from '@dereekb/firebase';
 
 @Component({
   templateUrl: './list.component.html',

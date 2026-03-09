@@ -1,7 +1,7 @@
-import { Component, ElementRef, input, viewChild } from '@angular/core';
+import { Component, type ElementRef, input, viewChild } from '@angular/core';
 import { DbxClickToCopyTextDirective } from './copy.text.directive';
-import { Maybe } from '@dereekb/util';
-import { CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig } from '../../util';
+import { type Maybe } from '@dereekb/util';
+import { type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig } from '../../util';
 import { MatIcon } from '@angular/material/icon';
 
 @Component({

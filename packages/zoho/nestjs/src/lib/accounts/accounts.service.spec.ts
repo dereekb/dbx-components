@@ -1,10 +1,10 @@
 import { addSeconds } from 'date-fns';
 import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
-import { DynamicModule, Module, Provider } from '@nestjs/common';
+import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from './accounts.service';
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoAccountsApi } from './accounts.api';
-import { ZOHO_RECRUIT_SERVICE_NAME, ZohoAccessToken, ZohoAccountsAccessTokenError, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
+import { ZOHO_RECRUIT_SERVICE_NAME, type ZohoAccessToken, ZohoAccountsAccessTokenError, type ZohoServiceAccessTokenKey } from '@dereekb/zoho';
 import { appZohoRecruitModuleMetadata } from '../recruit/recruit.module';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();

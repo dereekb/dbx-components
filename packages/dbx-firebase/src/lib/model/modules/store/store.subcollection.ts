@@ -1,10 +1,10 @@
 import { type Maybe } from '@dereekb/util';
 import { Inject, Injectable, Optional } from '@angular/core';
-import { filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
-import { Observable, shareReplay, distinctUntilChanged, map, Subscription, NEVER, switchMap, tap } from 'rxjs';
-import { FirestoreCollectionGroup, FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
-import { AbstractDbxFirebaseCollectionStore, DbxFirebaseCollectionStore, DbxFirebaseCollectionStoreContextState } from './store.collection';
-import { DbxFirebaseComponentStoreSetParentEffectFunction, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect } from './store.subcollection.rxjs';
+import { filterMaybe, type ObservableOrValue } from '@dereekb/rxjs';
+import { type Observable, shareReplay, distinctUntilChanged, map, type Subscription, NEVER, switchMap, tap } from 'rxjs';
+import { type FirestoreCollectionGroup, type FirestoreCollectionWithParentFactory, type FirestoreDocument } from '@dereekb/firebase';
+import { AbstractDbxFirebaseCollectionStore, type DbxFirebaseCollectionStore, type DbxFirebaseCollectionStoreContextState } from './store.collection';
+import { type DbxFirebaseComponentStoreSetParentEffectFunction, type DbxFirebaseComponentStoreWithParent, type DbxFirebaseComponentStoreWithParentContextState, type DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect } from './store.subcollection.rxjs';
 
 /**
  * Whether or not to load values from a parent or a group.

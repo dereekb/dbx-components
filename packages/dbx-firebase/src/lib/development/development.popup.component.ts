@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
-import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { type DbxPopupKey, AbstractPopupDirective, DbxPopupService, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
+import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
 
 export const DEFAULT_FIREBASE_DEVELOPMENT_POPUP_KEY = 'devpopup';

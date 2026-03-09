@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { Directive, forwardRef, inject, InjectionToken, Injector, OnDestroy, Provider, Type } from '@angular/core';
-import { FilterSource, FilterSourceInstance, MaybeObservableOrValue } from '@dereekb/rxjs';
+import { type Observable } from 'rxjs';
+import { Directive, forwardRef, inject, InjectionToken, Injector, type OnDestroy, type Provider, type Type } from '@angular/core';
+import { type FilterSource, FilterSourceInstance, type MaybeObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { provideFilterSource } from './filter.content';
 

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { delay, filter, first, of } from 'rxjs';
 import { SubscriptionObject, type WorkUsingObservable } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';

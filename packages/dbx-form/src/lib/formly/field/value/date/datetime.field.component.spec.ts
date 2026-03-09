@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, viewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
 import { DbxFormFormlyDateFieldModule } from '../../value/date/date.field.module';

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } from '@angular/core';
 import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';

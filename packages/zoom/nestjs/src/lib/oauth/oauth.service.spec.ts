@@ -1,9 +1,9 @@
 import { addSeconds } from 'date-fns';
 import { expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
-import { DynamicModule, Module, Provider } from '@nestjs/common';
+import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { ZoomOAuthAccessTokenCacheService, fileZoomOAuthAccessTokenCacheService, memoryZoomOAuthAccessTokenCacheService, mergeZoomOAuthAccessTokenCacheServices } from './oauth.service';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ZoomAccessToken, ZoomOAuthAccessTokenError } from '@dereekb/zoom';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { type ZoomAccessToken, ZoomOAuthAccessTokenError } from '@dereekb/zoom';
 import { appZoomOAuthModuleMetadata } from './oauth.module';
 import { ZoomOAuthApi } from './oauth.api';
 

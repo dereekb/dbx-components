@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { TextPasswordFieldConfig, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue, AbstractConfigAsyncFormlyFormDirective, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, DbxFormlyFormComponentImportsModule, dbxFormlyFormComponentProviders } from '@dereekb/dbx-form';
+import { type TextPasswordFieldConfig, usernamePasswordLoginFields, type DefaultUsernameLoginFieldsValue, AbstractConfigAsyncFormlyFormDirective, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, DbxFormlyFormComponentImportsModule, dbxFormlyFormComponentProviders } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { map, Observable } from 'rxjs';
-import { DbxFirebaseLoginMode } from './login';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { map, type Observable } from 'rxjs';
+import { type DbxFirebaseLoginMode } from './login';
 
 export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue;
 

@@ -1,19 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, input, Signal, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, type Signal, signal } from '@angular/core';
 import { cleanLoadingContext } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
-import { ZipReader, BlobReader, Entry, FileEntry } from '@zip.js/zip.js';
+import { type Maybe } from '@dereekb/util';
+import { ZipReader, BlobReader, type Entry, type FileEntry } from '@zip.js/zip.js';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../loading';
-import { distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { LoadingState, loadingStateFromObs, valueFromFinishedLoadingState } from '@dereekb/rxjs';
-import { dbxZipBlobPreviewEntryTreeFromEntries, DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
+import { distinctUntilChanged, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { type LoadingState, loadingStateFromObs, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { dbxZipBlobPreviewEntryTreeFromEntries, type DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
 import { DbxZipPreviewEntryListComponent } from './zip.blob.preview.list.component';
-import { DbxBarHeaderComponent, DbxListTitleGroupData, DbxListTitleGroupDirective, DbxListTitleGroupTitleDelegate, DbxSpacerDirective, DbxValueListItemModifierDirective } from '../../layout';
-import { AnchorForValueFunction, DbxListItemAnchorModifierDirective } from '../../router';
+import { DbxBarHeaderComponent, type DbxListTitleGroupData, DbxListTitleGroupDirective, type DbxListTitleGroupTitleDelegate, DbxSpacerDirective, DbxValueListItemModifierDirective } from '../../layout';
+import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective } from '../../router';
 import { DbxEmbedComponent } from '../../interaction';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { DbxButtonSpacerDirective, DbxIconButtonComponent } from '../../button';
-import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
+import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 
 export type DbxZipBlobPreviewMode = 'view_directory' | 'view_entry';
 

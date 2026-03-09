@@ -1,5 +1,4 @@
 import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
-import { type } from 'arktype';
 import { type DateCell, dateCellType, isValidDateCellIndex, type DateOrDateCellIndex, type DateCellIndex } from './date.cell';
 import { type DateRange } from './date.range';
 

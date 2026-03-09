@@ -1,6 +1,6 @@
 import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { ResizedEvent } from '../../screen/resize';
+import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';
 
 /**

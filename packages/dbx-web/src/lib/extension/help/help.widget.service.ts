@@ -1,8 +1,8 @@
-import { Inject, Injectable, Optional, Type } from '@angular/core';
-import { ArrayOrValue, Maybe, asArray, cachedGetter, mapIterable } from '@dereekb/util';
-import { DbxHelpContextKey } from './help';
-import { DbxHelpWidgetServiceEntry } from './help.widget';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { Inject, Injectable, Optional, type Type } from '@angular/core';
+import { type ArrayOrValue, type Maybe, asArray, cachedGetter, mapIterable } from '@dereekb/util';
+import { type DbxHelpContextKey } from './help';
+import { type DbxHelpWidgetServiceEntry } from './help.widget';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 export abstract class DbxHelpWidgetServiceConfig {
   /**

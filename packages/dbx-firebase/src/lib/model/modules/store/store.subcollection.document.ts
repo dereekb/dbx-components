@@ -1,11 +1,11 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, Subscription } from 'rxjs';
-import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection, DocumentReference, FirestoreModelId, FirestoreModelKey, SingleItemFirestoreCollection, firestoreModelKeyParentKey } from '@dereekb/firebase';
+import { type Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, type Subscription } from 'rxjs';
+import { type FirestoreDocument, type FirestoreCollectionWithParentFactory, type FirestoreCollection, type DocumentReference, type FirestoreModelId, type FirestoreModelKey, type SingleItemFirestoreCollection, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { AbstractDbxFirebaseDocumentStore , DbxFirebaseDocumentStoreContextState } from './store.document';
-import { DbxFirebaseDocumentStore } from './store';
-import { DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
+import { AbstractDbxFirebaseDocumentStore , type DbxFirebaseDocumentStoreContextState } from './store.document';
+import { type DbxFirebaseDocumentStore } from './store';
+import { type DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, type DbxFirebaseComponentStoreWithParent, type DbxFirebaseComponentStoreWithParentContextState, type DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
 
 export interface DbxFirebaseDocumentWithParentStoreContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends DbxFirebaseDocumentStoreContextState<T, D>, DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD> {}
 

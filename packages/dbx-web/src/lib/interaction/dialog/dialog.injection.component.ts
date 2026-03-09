@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AbstractDialogDirective } from './abstract.dialog.directive';
-import { DbxDialogContentContainerWidth, DbxDialogContentDirective } from './dialog.content.directive';
+import { type DbxDialogContentContainerWidth, DbxDialogContentDirective } from './dialog.content.directive';
 import { DbxDialogContentCloseComponent } from './dialog.content.close.component';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { NgClass } from '@angular/common';
 
 export interface DbxInjectionDialogComponentConfig<T = unknown> extends Omit<MatDialogConfig, 'data'> {

@@ -1,8 +1,8 @@
-import { Directive, Injector, Signal, effect, inject, input, runInInjectionContext } from '@angular/core';
-import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
+import { Directive, Injector, type Signal, effect, inject, input, runInInjectionContext } from '@angular/core';
+import { type IsEqualFunction, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { DbxActionValueGetterValueGetterFunction, DbxActionValueGetterInstance } from './action.value.trigger.instance';
+import { type DbxActionValueGetterValueGetterFunction, DbxActionValueGetterInstance } from './action.value.trigger.instance';
 import { clean } from '../../../rxjs/clean';
 
 export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {

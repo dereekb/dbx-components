@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { Injectable, type OnDestroy, inject } from '@angular/core';
 import { goWithRouter } from '../../router/router/service/router.go';
 import { DbxRouterService } from '../../router/router/service/router.service';
 import { DbxAppAuthRoutes } from './auth.router';

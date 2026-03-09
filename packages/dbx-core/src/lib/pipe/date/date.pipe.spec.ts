@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DateFormatFromToPipe } from './dateformatfromto.pipe';
 import { DateFormatDistancePipe } from './dateformatdistance.pipe';

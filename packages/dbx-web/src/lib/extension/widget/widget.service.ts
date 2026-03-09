@@ -1,6 +1,6 @@
-import { Injectable, Type } from '@angular/core';
-import { Maybe, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
-import { DbxWidgetType } from './widget';
+import { Injectable, type Type } from '@angular/core';
+import { type Maybe, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
+import { type DbxWidgetType } from './widget';
 
 export interface DbxWidgetEntry {
   /**

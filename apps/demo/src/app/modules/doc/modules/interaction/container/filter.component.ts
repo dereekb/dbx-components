@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxButtonDisplay, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective } from '@dereekb/dbx-core';
-import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
+import { type DbxButtonDisplay, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective } from '@dereekb/dbx-core';
+import { FilterMap, type FilterMapKey } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { startOfDay } from 'date-fns';
-import { map, of, Observable } from 'rxjs';
-import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';
+import { map, of, type Observable } from 'rxjs';
+import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

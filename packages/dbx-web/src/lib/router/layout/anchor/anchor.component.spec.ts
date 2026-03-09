@@ -1,8 +1,8 @@
 import { provideDbxRouterWebUiRouterProviderConfig } from './../../provider/uirouter/uirouter.router.providers';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, input, viewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
 import { delay, filter, first } from 'rxjs';

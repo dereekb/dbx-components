@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { FieldType, type FormlyFieldConfig } from '@ngx-formly/core';
 
 export type DbxFormComponentFieldConfig<T> = DbxInjectionComponentConfig<T>;
 

@@ -1,5 +1,5 @@
 import { DOC_FORM_ROUTES } from '../doc.form';
-import { DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
+import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
 import { Component } from '@angular/core';
 
 @Component({

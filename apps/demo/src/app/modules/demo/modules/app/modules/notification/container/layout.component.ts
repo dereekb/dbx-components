@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationItemStore, DbxFirebaseNotificationItemStorePopoverButtonComponent, DbxFirebaseNotificationSummaryDocumentStoreDirective } from '@dereekb/dbx-firebase';
-import { AnchorForValueFunction, DbxContentLayoutModule, DbxSectionPageComponent, DbxSpacerDirective } from '@dereekb/dbx-web';
-import { NotificationItem } from '@dereekb/firebase';
+import { type AnchorForValueFunction, DbxContentLayoutModule, DbxSectionPageComponent, DbxSpacerDirective } from '@dereekb/dbx-web';
+import { type NotificationItem } from '@dereekb/firebase';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DbxAppContextStateDirective, DbxRouteModelIdFromAuthUserIdDirective } from '@dereekb/dbx-core';
 import { DemoProfileDocumentStoreDirective } from 'demo-components';

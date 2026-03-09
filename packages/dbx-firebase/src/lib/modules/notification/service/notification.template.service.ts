@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { AppNotificationTemplateTypeInfoRecordService, NotificationItem, NotificationItemMetadata, NotificationItemSubjectMessagePair } from '@dereekb/firebase';
+import { AppNotificationTemplateTypeInfoRecordService, type NotificationItem, type NotificationItemMetadata, type NotificationItemSubjectMessagePair } from '@dereekb/firebase';
 
 /**
  * Client-side service used for retrieving notification templates.

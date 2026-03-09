@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { Maybe, ReadableError } from '@dereekb/util';
+import { type Maybe, type ReadableError } from '@dereekb/util';
 import { DbxErrorWidgetViewComponent } from './error.widget.component';
 
 @Component({

@@ -1,7 +1,7 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, signal, viewChild } from '@angular/core';
-import { first, Observable, of } from 'rxjs';
-import { LoadingState, successResult } from '@dereekb/rxjs';
+import { first, type Observable, of } from 'rxjs';
+import { type LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFormLoadingSourceDirective } from './form.loading.directive';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
 import { callbackTest } from '@dereekb/util/test';

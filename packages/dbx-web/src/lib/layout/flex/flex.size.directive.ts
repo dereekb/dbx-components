@@ -1,5 +1,5 @@
 import { Directive, input, computed } from '@angular/core';
-import { DbxFlexSize } from './flex';
+import { type DbxFlexSize } from './flex';
 
 /**
  * Applies the proper dbx-flex size class based on the input.

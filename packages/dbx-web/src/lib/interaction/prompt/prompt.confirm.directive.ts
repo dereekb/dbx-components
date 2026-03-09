@@ -1,9 +1,9 @@
 import { Directive, inject, input } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { type Maybe } from '@dereekb/util';
-import { Observable, from } from 'rxjs';
-import { DbxPromptConfirm, provideDbxPromptConfirm } from './prompt.confirm';
-import { DbxPromptConfirmConfig } from './prompt.confirm.component';
+import { type Observable, from } from 'rxjs';
+import { type DbxPromptConfirm, provideDbxPromptConfirm } from './prompt.confirm';
+import { type DbxPromptConfirmConfig } from './prompt.confirm.component';
 import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
 
 // MARK: Abstract

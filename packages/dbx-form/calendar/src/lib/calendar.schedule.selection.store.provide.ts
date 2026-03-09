@@ -1,4 +1,4 @@
-import { Directive, Injectable, Injector, Optional, Provider, SkipSelf, inject } from '@angular/core';
+import { Directive, Injectable, Injector, Optional, type Provider, SkipSelf, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 
 /**

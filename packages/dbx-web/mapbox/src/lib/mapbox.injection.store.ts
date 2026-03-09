@@ -1,8 +1,8 @@
-import { map, Observable, shareReplay } from 'rxjs';
+import { map, type Observable, shareReplay } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { DbxInjectionComponentConfigWithoutInjector } from '@dereekb/dbx-core';
+import { type DbxInjectionComponentConfigWithoutInjector } from '@dereekb/dbx-core';
 import { ComponentStore } from '@ngrx/component-store';
-import { distinctUntilMapHasDifferentKeys, ObservableOrValueGetter } from '@dereekb/rxjs';
+import { distinctUntilMapHasDifferentKeys, type ObservableOrValueGetter } from '@dereekb/rxjs';
 
 export type DbxMapboxInjectionKey = string;
 

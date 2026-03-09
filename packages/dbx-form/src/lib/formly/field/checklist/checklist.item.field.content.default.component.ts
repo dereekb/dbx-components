@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from './checklist.item';
+import { type ChecklistItemDisplayContent, type ChecklistItemFieldDisplayComponent } from './checklist.item';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Default

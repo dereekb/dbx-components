@@ -1,6 +1,6 @@
 import { dateTimezoneUtcNormal, expandDaysForDateRange, isSameDateDay } from '@dereekb/date';
 import { Day, MS_IN_MINUTE, MS_IN_SECOND, isISO8601DateString, isUTCDateString } from '@dereekb/util';
-import { parseISO, addMinutes, addDays, endOfWeek, startOfWeek, set as setDateValues, addHours } from 'date-fns';
+import { parseISO, addMinutes, addDays, endOfWeek, startOfWeek, set as setDateValues, addHours , min as minDate } from 'date-fns';
 import {
   parseJsDateString,
   readDaysOfWeek,
@@ -40,7 +40,6 @@ import {
   isStartOfDayForSystem,
   reduceDatesFunction
 } from './date';
-import { min as minDate } from 'date-fns';
 import { wrapDateTests } from '../../test.spec';
 
 wrapDateTests(() => {

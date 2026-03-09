@@ -1,4 +1,4 @@
-import { type, type Type } from 'arktype';
+import { type type, type Type } from 'arktype';
 
 /**
  * Creates an ArkType schema that accepts the given ArkType definition OR null/undefined.

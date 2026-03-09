@@ -1,6 +1,6 @@
-import { DbxFirebaseLoginMode, FirebaseLoginMethodCategory, FirebaseLoginMethodType } from './login';
+import { type DbxFirebaseLoginMode, type FirebaseLoginMethodCategory, type FirebaseLoginMethodType } from './login';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { DbxInjectionContextDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseLoginListComponent } from './login.list.component';
 import { DbxFirebaseLoginContextDirective } from './login.context.directive';

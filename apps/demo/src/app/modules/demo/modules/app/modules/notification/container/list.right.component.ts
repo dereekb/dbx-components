@@ -1,4 +1,4 @@
-import { OnDestroy, Component, inject } from '@angular/core';
+import { type OnDestroy, Component, inject } from '@angular/core';
 import { loadingStateContext, loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseNotificationItemStore, DbxFirebaseNotificationItemViewComponent } from '@dereekb/dbx-firebase';
 import { DbxContentContainerDirective, DbxLoadingComponent, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';

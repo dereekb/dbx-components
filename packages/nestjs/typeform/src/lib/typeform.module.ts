@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeformApi } from './typeform.api';
 import { TYPEFORM_SECRET_TOKEN_ENV_VAR, TYPEFORM_BASE_URL_ENV_VAR, TypeformServiceConfig } from './typeform.config';
-import { TypeformApiToken } from './typeform.type';
+import { type TypeformApiToken } from './typeform.type';
 
 export function typeFormServiceConfigFactory(configService: ConfigService): TypeformServiceConfig {
   const config: TypeformServiceConfig = {

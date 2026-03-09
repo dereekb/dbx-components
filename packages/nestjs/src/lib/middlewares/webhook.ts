@@ -1,5 +1,5 @@
-import { Logger, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
-import { RouteInfo } from '@nestjs/common/interfaces';
+import { Logger, type MiddlewareConsumer, Module, type NestModule, RequestMethod } from '@nestjs/common';
+import { type RouteInfo } from '@nestjs/common/interfaces';
 import { JsonBodyMiddleware } from './json.middleware';
 import { RawBodyMiddleware } from './rawbody.middleware';
 

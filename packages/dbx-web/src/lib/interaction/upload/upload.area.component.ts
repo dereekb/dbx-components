@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, HostListener, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { fileArrayAcceptMatchFunction } from './upload.accept';
 import { NgTemplateOutlet } from '@angular/common';
-import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
+import { AbstractDbxFileUploadComponent, type DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
 import { provideDbxFileUploadActionCompatable } from './upload.action';
 
 export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;

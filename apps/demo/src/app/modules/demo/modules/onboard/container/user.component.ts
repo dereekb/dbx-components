@@ -1,6 +1,6 @@
-import { OnInit, Component, inject } from '@angular/core';
-import { DbxActionSuccessHandlerFunction, DbxRouterService, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
-import { WorkUsingContext } from '@dereekb/rxjs';
+import { type OnInit, Component, inject } from '@angular/core';
+import { type DbxActionSuccessHandlerFunction, DbxRouterService, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { ProfileDocumentStore } from 'demo-components';
 import { DbxContentBoxDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';

@@ -1,5 +1,5 @@
-import { Directive, OnInit, TemplateRef, ViewContainerRef, inject } from '@angular/core';
-import { distinctUntilChanged, Observable } from 'rxjs';
+import { Directive, type OnInit, TemplateRef, ViewContainerRef, inject } from '@angular/core';
+import { distinctUntilChanged, type Observable } from 'rxjs';
 import { cleanSubscription } from '../rxjs/subscription';
 
 /**

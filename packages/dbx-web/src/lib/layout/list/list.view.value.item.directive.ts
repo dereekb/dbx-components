@@ -1,7 +1,7 @@
 import { Directive, inject } from '@angular/core';
-import { DbxValueListItem, DBX_VALUE_LIST_VIEW_ITEM } from './list.view.value';
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type DbxValueListItem, DBX_VALUE_LIST_VIEW_ITEM } from './list.view.value';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
+import { type Maybe } from '@dereekb/util';
 
 @Directive()
 export abstract class AbstractDbxValueListViewItemComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {

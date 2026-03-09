@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AbstractDbxTableGroupDirective } from './table.group.directive';
 
 @Component({

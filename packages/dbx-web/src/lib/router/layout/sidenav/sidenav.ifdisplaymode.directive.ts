@@ -1,9 +1,9 @@
-import { input, Directive, inject, computed, Signal } from '@angular/core';
+import { input, Directive, inject, computed, type Signal } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
-import { ArrayOrValue, Maybe, asArray, filterMaybeArrayValues } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe, asArray, filterMaybeArrayValues } from '@dereekb/util';
 import { shareReplay, switchMap, distinctUntilChanged, map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
-import { SideNavDisplayMode } from './sidenav';
+import { type SideNavDisplayMode } from './sidenav';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**

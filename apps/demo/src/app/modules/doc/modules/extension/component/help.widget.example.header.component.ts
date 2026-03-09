@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { AbstractDbxHelpWidgetDirective, DbxButtonComponent, DbxHelpContextKey } from '@dereekb/dbx-web';
+import { AbstractDbxHelpWidgetDirective, DbxButtonComponent, type DbxHelpContextKey } from '@dereekb/dbx-web';
 
 export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
 

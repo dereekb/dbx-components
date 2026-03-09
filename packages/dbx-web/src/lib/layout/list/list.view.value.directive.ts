@@ -1,9 +1,9 @@
-import { Maybe, maybeModifierMapToFunction, ModifierFunction } from '@dereekb/util';
+import { type Maybe, maybeModifierMapToFunction, type ModifierFunction } from '@dereekb/util';
 import { Directive, inject, input } from '@angular/core';
 import { filterMaybe, mapForEach } from '@dereekb/rxjs';
-import { distinctUntilChanged, shareReplay, combineLatest, switchMap, map, Observable, of } from 'rxjs';
+import { distinctUntilChanged, shareReplay, combineLatest, switchMap, map, type Observable, of } from 'rxjs';
 import { DbxListView } from './list.view';
-import { AbstractDbxValueListViewConfig, DbxValueListItem, DbxValueListItemConfig, DbxValueListView, mapValuesToValuesListItemConfigObs } from './list.view.value';
+import { type AbstractDbxValueListViewConfig, type DbxValueListItem, type DbxValueListItemConfig, type DbxValueListView, mapValuesToValuesListItemConfigObs } from './list.view.value';
 import { DbxValueListItemModifier } from './list.view.value.modifier';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 

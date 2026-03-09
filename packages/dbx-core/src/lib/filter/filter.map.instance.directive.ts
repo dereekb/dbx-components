@@ -1,5 +1,5 @@
-import { filterMaybe, FilterMapKey, FilterMap, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { Directive, OnDestroy, inject } from '@angular/core';
+import { filterMaybe, type FilterMapKey, FilterMap, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { Directive, type OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 
 /**

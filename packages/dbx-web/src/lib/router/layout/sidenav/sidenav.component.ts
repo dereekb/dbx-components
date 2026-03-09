@@ -1,17 +1,17 @@
-import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
-import { MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
+import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, type OnInit } from '@angular/core';
+import { type MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
-import { AbstractTransitionWatcherDirective, cleanSubscription, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, cleanSubscription, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { SideNavDisplayMode } from './sidenav';
 import { NgClass } from '@angular/common';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
+import { distinctUntilChanged, map, type Observable, shareReplay } from 'rxjs';
 import { DbxColorDirective } from '../../../layout/style/style.color.directive';
-import { DbxThemeColor } from '../../../layout/style/style';
-import { ThemePalette } from '@angular/material/core';
+import { type DbxThemeColor } from '../../../layout/style/style';
+import { type ThemePalette } from '@angular/material/core';
 
 export interface DbxSidenavSidebarState {
   readonly mode: SideNavDisplayMode;

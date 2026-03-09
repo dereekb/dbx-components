@@ -1,7 +1,7 @@
 import { BehaviorSubject, throttleTime } from 'rxjs';
-import { OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
+import { type OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ResizedEvent } from '../../screen/resize';
+import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';
 
 /**

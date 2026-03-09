@@ -1,5 +1,5 @@
 import { computed, Directive, input } from '@angular/core';
-import { Pixels, PixelsString, type Maybe } from '@dereekb/util';
+import { type Pixels, type PixelsString, type Maybe } from '@dereekb/util';
 
 export type DbxContentPitScrollableInput = boolean | DbxContentPitScrollableHeight;
 export type DbxContentPitScrollableHeight = Pixels | PixelsString | DbxContentPitScrollableHeightSetting;

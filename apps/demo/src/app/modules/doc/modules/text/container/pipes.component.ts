@@ -1,7 +1,7 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, type OnDestroy } from '@angular/core';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { dateTimeField, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, delay, map, of, shareReplay } from 'rxjs';
 import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxDetailBlockComponent } from '@dereekb/dbx-web';

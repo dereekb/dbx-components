@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, provideDbxListViewWrapper, DbxLoadingComponent, DbxSelectionValueListViewContentComponent, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule } from '@dereekb/dbx-web';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type ListSelectionState, addConfigToValueListItems, type DbxListSelectionMode, provideDbxListViewWrapper, DbxLoadingComponent, DbxSelectionValueListViewContentComponent, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { map, shareReplay } from 'rxjs';
-import { PickableValueFieldDisplayValue } from './pickable';
-import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';
+import { type PickableValueFieldDisplayValue } from './pickable';
+import { AbstractDbxPickableItemFieldDirective, type PickableItemFieldItem } from './pickable.field.directive';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatInputModule } from '@angular/material/input';

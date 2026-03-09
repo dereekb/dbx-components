@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ClickableAnchorLink, ClickableAnchorLinkTree, DbxAppContextStateDirective } from '@dereekb/dbx-core';
+import { type ClickableAnchorLink, type ClickableAnchorLinkTree, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DOC_HOME_ROUTE, DOC_ROUTES } from '../doc';
 import { DbxSidenavComponent, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';

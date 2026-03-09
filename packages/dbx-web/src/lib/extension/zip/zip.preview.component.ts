@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, model } from '@angular/core';
 import { cleanLoadingContext } from '@dereekb/dbx-core';
 import { DbxLoadingComponent } from '../../loading';
-import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, distinctUntilChanged, from, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { beginLoading, errorResult, LoadingState, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { combineLatest, distinctUntilChanged, from, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { beginLoading, errorResult, type LoadingState, startWithBeginLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
 
 /**

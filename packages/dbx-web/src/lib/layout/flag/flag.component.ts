@@ -1,5 +1,5 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
+import { type ThemePalette } from '@angular/material/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
 /**

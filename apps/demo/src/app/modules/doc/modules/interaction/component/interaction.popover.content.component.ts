@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Output, type OnDestroy } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 
 @Component({

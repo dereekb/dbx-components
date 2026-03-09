@@ -1,6 +1,6 @@
-import { DbxPopupComponent, DbxPopupComponentConfig, APP_POPUP_NORMAL_HEIGHT, APP_POPUP_NORMAL_WIDTH } from './popup.component';
+import { DbxPopupComponent, type DbxPopupComponentConfig, APP_POPUP_NORMAL_HEIGHT, APP_POPUP_NORMAL_WIDTH } from './popup.component';
 import { Injectable, Injector, inject } from '@angular/core';
-import { NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
+import { NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
 export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T> {

@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, input } from '@angular/core';
-import { CssClassesArray, getValueFromGetter, latLngPointFunction, spaceSeparatedCssClasses, type Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, type OnDestroy, computed, inject, input } from '@angular/core';
+import { type CssClassesArray, getValueFromGetter, latLngPointFunction, spaceSeparatedCssClasses, type Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
-import { DbxMapboxMarker } from './mapbox.marker';
+import { type DbxMapboxMarker } from './mapbox.marker';
 import { MarkerComponent } from 'ngx-mapbox-gl';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';

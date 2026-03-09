@@ -1,5 +1,5 @@
 import { Directive, effect, inject, input } from '@angular/core';
-import { CompactMode } from './compact';
+import { type CompactMode } from './compact';
 import { CompactContextStore } from './compact.store';
 
 /**

@@ -1,6 +1,6 @@
 import { appZohoSignModuleMetadata } from './sign.module';
-import { DynamicModule, Module } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { type DynamicModule, Module } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoSignApi } from './sign.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import { type ZohoSignRequest, type ZohoSignRequestData } from '@dereekb/zoho';
