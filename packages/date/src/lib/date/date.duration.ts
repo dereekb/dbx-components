@@ -1,6 +1,5 @@
 import { type DateRelativeState, type FractionalHour, type Minutes, minutesToFractionalHours, type Maybe, safeCompareEquality } from '@dereekb/util';
-import { Expose, Type } from 'class-transformer';
-import { IsNumber, Min } from 'class-validator';
+import { type } from 'arktype';
 import { addMinutes, differenceInMinutes } from 'date-fns';
 import { type DateRange, dateRangeRelativeState } from './date.range';
 import { isSameDate } from './date';
@@ -15,23 +14,13 @@ export interface DateDurationSpan {
   duration: Minutes;
 }
 
-export class DateDurationSpan {
-  @Expose()
-  @Type(() => Date)
-  startsAt!: Date;
-
-  @Expose()
-  @IsNumber()
-  @Min(0) // minimum duration of 0
-  duration!: Minutes;
-
-  constructor(template?: DateDurationSpan) {
-    if (template != null) {
-      this.startsAt = template.startsAt;
-      this.duration = template.duration;
-    }
-  }
-}
+/**
+ * ArkType schema for {@link DateDurationSpan}.
+ */
+export const dateDurationSpanType = type({
+  startsAt: 'Date',
+  duration: 'number >= 0'
+});
 
 /**
  * Computes the end date for a duration span by adding the duration to the start time.

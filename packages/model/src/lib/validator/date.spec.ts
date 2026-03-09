@@ -1,29 +1,14 @@
-import { ISO8601DayString } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsOptional, validate } from 'class-validator';
-import { IsISO8601DayString } from './date';
+import { type } from 'arktype';
+import { iso8601DayStringType } from './date';
 
-class TestModelClass {
-  @Expose()
-  @IsOptional()
-  @IsISO8601DayString()
-  day!: ISO8601DayString;
-}
-
-describe('IsISO8601DayString', () => {
-  it('should pass valid days', async () => {
-    const instance = new TestModelClass();
-    instance.day = '1970-01-01';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('iso8601DayStringType', () => {
+  it('should pass valid days', () => {
+    const result = iso8601DayStringType('1970-01-01');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should fail on invalid days', async () => {
-    const instance = new TestModelClass();
-    instance.day = 'notadate';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should fail on invalid days', () => {
+    const result = iso8601DayStringType('notadate');
+    expect(result instanceof type.errors).toBe(true);
   });
 });

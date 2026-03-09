@@ -1,12 +1,15 @@
-import { Expose } from 'class-transformer';
-import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
 
-export class UpdateProfileParams extends InferredTargetModelParams { }
+export type UpdateProfileParams = InferredTargetModelParams;
 
-export class FinishOnboardingProfileParams extends InferredTargetModelParams { }
+export const updateProfileParamsType = inferredTargetModelParamsType as Type<UpdateProfileParams>;
+
+export type FinishOnboardingProfileParams = InferredTargetModelParams;
+
+export const finishOnboardingProfileParamsType = inferredTargetModelParamsType as Type<FinishOnboardingProfileParams>;
 
 /**
  * This is our FirebaseFunctionTypeMap for Profile. It defines all the functions that are available.
@@ -27,7 +30,7 @@ export type ProfileModelCrudFunctionsConfig = {
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
-    'update:_,onboard' as any, // use "any" once typescript complains about combinations
+    'update:_,onboard' as any // use "any" once typescript complains about combinations
   ]
 };
 

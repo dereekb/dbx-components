@@ -12,6 +12,7 @@
 
 /dist
 /coverage
+/setup/**/*.template.json
 
 /art
 /docker

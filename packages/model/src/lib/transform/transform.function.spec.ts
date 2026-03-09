@@ -1,27 +1,26 @@
+import { type } from 'arktype';
 import { transformAndValidateFunctionResultFactory, toTransformAndValidateFunctionResultFactory } from './transform.function';
 import { transformAndValidateObjectFactory } from './transform';
-import { Expose } from 'class-transformer';
-import { IsBoolean } from 'class-validator';
 
-class TestDto {
-  @Expose()
-  @IsBoolean()
-  valid?: boolean;
-}
+const testType = type({
+  'valid?': 'boolean'
+});
+
+type TestType = typeof testType.infer;
 
 describe('transformAndValidateFunctionResultFactory()', () => {
   const errorValue = { error: true };
   const factory = transformAndValidateFunctionResultFactory({ handleValidationError: async () => errorValue });
 
   it('should create a function', () => {
-    const fn = factory(TestDto, async (parsed) => ({ success: true }));
+    const fn = factory(testType, async (parsed) => ({ success: true }));
     expect(fn).toBeDefined();
     expect(typeof fn).toBe('function');
   });
 
   describe('function', () => {
     it('should return the result with params attached for valid input', async () => {
-      const fn = factory(TestDto, async (parsed) => ({ value: parsed.valid }));
+      const fn = factory(testType, async (parsed) => ({ value: parsed.valid }));
       const result = await fn({ valid: true });
 
       expect(result.params).toBeDefined();
@@ -30,11 +29,10 @@ describe('transformAndValidateFunctionResultFactory()', () => {
     });
 
     it('should handle validation error', async () => {
-      const fn = factory(TestDto, async (parsed) => ({ value: parsed.valid }));
-      const result = await fn({ invalid: 'not a boolean' });
+      const fn = factory(testType, async (parsed) => ({ value: parsed.valid }));
+      const result = await fn({ valid: 'not a boolean' as any });
 
-      expect(result.params).toBeDefined();
-      expect((result as typeof errorValue).error).toBe(true);
+      expect((result as unknown as typeof errorValue).error).toBe(true);
     });
   });
 });
@@ -45,14 +43,14 @@ describe('toTransformAndValidateFunctionResultFactory()', () => {
   const factory = toTransformAndValidateFunctionResultFactory(baseFactory);
 
   it('should create a function', () => {
-    const fn = factory(TestDto, async (parsed) => ({ success: true }));
+    const fn = factory(testType, async (parsed) => ({ success: true }));
     expect(fn).toBeDefined();
     expect(typeof fn).toBe('function');
   });
 
   describe('function', () => {
     it('should return the result with params attached for valid input', async () => {
-      const fn = factory(TestDto, async (parsed) => ({ value: parsed.valid }));
+      const fn = factory(testType, async (parsed) => ({ value: parsed.valid }));
       const result = await fn({ valid: true });
 
       expect(result.params).toBeDefined();

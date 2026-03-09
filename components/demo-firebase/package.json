@@ -5,8 +5,7 @@
     "@dereekb/firebase": "*",
     "@dereekb/model": "*",
     "@dereekb/util": "*",
-    "class-transformer": "*",
-    "class-validator": "*",
+    "arktype": "*",
     "firebase": "*",
     "core-js": "*"
   }

@@ -22,7 +22,6 @@
     "ts-essentials": "^10.0.0"
   },
   "devDependencies": {
-    "class-validator": "^0.15.1",
     "date-fns": "4.0.0"
   }
 }

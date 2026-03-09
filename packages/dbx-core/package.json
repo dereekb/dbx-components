@@ -12,7 +12,6 @@
     "@ngrx/effects": "^21.0.0",
     "@ngrx/store": "^21.0.0",
     "@uirouter/core": "^6.1.2",
-    "class-validator": "^0.15.1",
     "date-fns": "^4.0.0",
     "rxjs": "^7.8.0"
   },

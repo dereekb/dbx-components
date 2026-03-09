@@ -1,4 +1,4 @@
-import { isEmail, isPhoneNumber } from 'class-validator';
+import { isE164PhoneNumber } from './phone';
 import { randomEmailFactory, randomPhoneNumberFactory } from './random';
 
 describe('randomEmailFactory()', () => {
@@ -12,7 +12,7 @@ describe('randomEmailFactory()', () => {
       const result = factory();
 
       expect(result).toBeDefined();
-      expect(isEmail(result)).toBe(true);
+      expect(result).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
     });
   });
 });
@@ -26,7 +26,7 @@ describe('randomPhoneNumberFactory()', () => {
     it('should generate a valid phone number.', () => {
       const result = factory();
       expect(result).toBeDefined();
-      expect(isPhoneNumber(result)).toBe(true);
+      expect(isE164PhoneNumber(result)).toBe(true);
     });
   });
 });

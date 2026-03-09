@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { profileWithUsername, AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
+import { profileWithUsername, AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, type UpdateProfileParams, updateProfileParamsType } from 'FIREBASE_COMPONENTS_NAME';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 
@@ -67,7 +67,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 }
 
 export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection }: ProfileServerActionsContext) {
-  return firebaseServerActionTransformFunctionFactory(UpdateProfileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateProfileParamsType, async (params) => {
     const {} = params;
 
     return async (document: ProfileDocument) => {

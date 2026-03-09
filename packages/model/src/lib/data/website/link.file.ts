@@ -1,6 +1,5 @@
 import { filterFalsyAndEmptyValues, type ModelTypeString, splitJoinRemainder } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsString, IsNotEmpty, Matches, MaxLength, IsOptional } from 'class-validator';
+import { type } from 'arktype';
 import { type WebsiteLink, type WebsiteLinkEncodedData, WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH, WEBSITE_LINK_TYPE_MAX_LENGTH, WEBSITE_LINK_TYPE_REGEX } from './link';
 
 /**
@@ -84,61 +83,19 @@ export interface WebsiteFileLink {
 }
 
 /**
+ * ArkType schema for a {@link WebsiteFileLink}.
+ */
+export const websiteFileLinkType = type({
+  'type?': [WEBSITE_FILE_LINK_TYPE_REGEX, '&', `string <= ${WEBSITE_LINK_TYPE_MAX_LENGTH}`] as const,
+  'mime?': [WEBSITE_FILE_LINK_MIME_TYPE_REGEX, '&', `string <= ${WEBSITE_FILE_LINK_MIME_TYPE_MAX_LENGTH}`] as const,
+  'name?': `string <= ${WEBSITE_FILE_LINK_NAME_MAX_LENGTH}`,
+  data: [WEBSITE_FILE_LINK_DATA_REGEX, '&', `0 < string <= ${WEBSITE_FILE_LINK_DATA_MAX_LENGTH}`] as const
+});
+
+/**
  * A pipe-separated encoded string representation of a {@link WebsiteFileLink}.
  */
 export type EncodedWebsiteFileLink = WebsiteLinkEncodedData;
-
-/**
- * Class-validator DTO for a {@link WebsiteFileLink}.
- *
- * Validates the optional type, MIME type, and name fields along with the required data payload.
- *
- * @example
- * ```typescript
- * const fileLink = new WebsiteFileLink({
- *   type: 'img',
- *   mime: 'image/png',
- *   name: 'photo.png',
- *   data: 'https://example.com/photo.png'
- * });
- * ```
- */
-export class WebsiteFileLink {
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @Matches(WEBSITE_FILE_LINK_TYPE_REGEX)
-  @MaxLength(WEBSITE_LINK_TYPE_MAX_LENGTH)
-  type?: WebsiteFileLinkType;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @Matches(WEBSITE_FILE_LINK_MIME_TYPE_REGEX)
-  @MaxLength(WEBSITE_FILE_LINK_MIME_TYPE_MAX_LENGTH)
-  mime?: WebsiteFileLinkType;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(WEBSITE_FILE_LINK_NAME_MAX_LENGTH)
-  name?: WebsiteFileLinkName;
-
-  @IsString()
-  @IsNotEmpty()
-  @Matches(WEBSITE_FILE_LINK_DATA_REGEX)
-  @MaxLength(WEBSITE_FILE_LINK_DATA_MAX_LENGTH)
-  data!: WebsiteFileLinkData;
-
-  constructor(template?: WebsiteFileLink) {
-    if (template != null) {
-      this.type = template.type;
-      this.mime = template.mime;
-      this.name = template.name;
-      this.data = template.data;
-    }
-  }
-}
 
 /**
  * The {@link WebsiteLinkType} code used to identify a {@link WebsiteLink} as a file link.

@@ -2,11 +2,17 @@
 - Update Nx to v22
 - Update Angular to v21
 - Move to Vitest, Removal of Jest
+- Migration from class-validator/class-transformer to ArkType (v13.1.0)
 
 ## Overview
 This has been a big effort, and with the help of Claude, we were able to make the update in only a few days.
 
 This update was a fairly big effort and should solidify the foundation that dbx-components is going forward.
+
+### Migration to ArkType (v13.1.0)
+As of v13.1.0, all decorator-based validation (`class-validator` + `class-transformer`) has been replaced with [ArkType](https://arktype.io) runtime validation. This eliminates the need for `reflect-metadata` and `emitDecoratorMetadata`, reducing bundle size and simplifying the build pipeline.
+
+See [class-validator-to-arktype-migration.md](class-validator-to-arktype-migration.md) for the full migration guide for downstream projects.
 
 ### Angular 21
 The last update from v11 to v12 we took a big step towards moving towards Zoneless. 
@@ -28,6 +34,9 @@ Additionally, we added `@dereekb/vitest` as a new package since matchers from th
 We noticed we still had some `.babelrc` files in the codebase, but babel usage doesn't appear necessary anymore.
 
 We updated `@dereekb/util` to use `swc` for transpiling, but the rest of the app has a reliance on `reflect-metadata`, so we still use `tsc` for building the rest of the project.
+
+#### dbx-components v13.1.0 Update
+With the migration to ArkType (replacing `class-validator` and `class-transformer`), the `reflect-metadata` dependency has been removed entirely. `emitDecoratorMetadata` has also been removed from `tsconfig.base.json`. As a result, we can now use `swc` instead of `tsc` for all projects. This update also reduced the build size of the bundle by ~0.4mb.
 
 ## Migrations
 We are jumping from Nx version 20 to version 22. It is important to run two independent migrations to ensure everything gets up to date properly.

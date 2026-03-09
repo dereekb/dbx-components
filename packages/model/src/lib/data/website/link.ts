@@ -1,6 +1,5 @@
 import { type ModelTypeString } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
+import { type } from 'arktype';
 
 /**
  * Short string identifier for categorizing different kinds of website links (e.g., "fb" for Facebook, "w" for generic website).
@@ -45,6 +44,11 @@ export function isValidWebsiteLinkType(input: string): input is WebsiteLinkType 
 export type WebsiteLinkEncodedData = string;
 
 /**
+ * Maximum character length for the encoded data string in a {@link WebsiteLink}.
+ */
+export const WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH = 1000;
+
+/**
  * A compact representation of a typed link, storing a short type code and encoded data string.
  *
  * Used as the base structure for encoding social media profiles, file links, emails, and other external references.
@@ -61,38 +65,9 @@ export interface WebsiteLink {
 }
 
 /**
- * Maximum character length for the encoded data string in a {@link WebsiteLink}.
+ * ArkType schema for a {@link WebsiteLink}.
  */
-export const WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH = 1000;
-
-/**
- * Class-validator DTO for a {@link WebsiteLink}.
- *
- * Validates the type code and encoded data fields with length and format constraints.
- *
- * @example
- * ```typescript
- * const link = new WebsiteLink({ t: 'fb', d: 'username' });
- * ```
- */
-export class WebsiteLink {
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  @Matches(WEBSITE_LINK_TYPE_REGEX)
-  @MaxLength(WEBSITE_LINK_TYPE_MAX_LENGTH)
-  t!: WebsiteLinkType;
-
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH)
-  d!: WebsiteLinkEncodedData;
-
-  constructor(template?: WebsiteLink) {
-    if (template != null) {
-      this.t = template.t;
-      this.d = template.d;
-    }
-  }
-}
+export const websiteLinkType = type({
+  t: [WEBSITE_LINK_TYPE_REGEX, '&', `0 < string <= ${WEBSITE_LINK_TYPE_MAX_LENGTH}`] as const,
+  d: `0 < string <= ${WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH}`
+});

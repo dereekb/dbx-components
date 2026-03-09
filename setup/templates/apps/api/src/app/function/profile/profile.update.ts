@@ -1,4 +1,4 @@
-import { FinishOnboardingProfileParams, ProfileDocument, UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
+import { type FinishOnboardingProfileParams, type ProfileDocument, type UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
 import { APP_CODE_PREFIXUpdateModelFunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';

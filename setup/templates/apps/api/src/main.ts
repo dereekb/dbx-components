@@ -1,5 +1,4 @@
 import { environment } from './environments/environment';
-import "reflect-metadata";
 import { onRequest } from 'firebase-functions/v2/https';
 import admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
@@ -14,10 +13,7 @@ const { server, nest } = initNestServer(app, { environment });
 export const api = onRequest({}, server);
 
 // App Functions
-export const {
-  exampleSetUsername,
-  callModel
-} = allAppFunctions(nest);
+export const { exampleSetUsername, callModel } = allAppFunctions(nest);
 
 // Scheduled Functions
 const allScheduledFunctions = allScheduledAppFunctions(nest);

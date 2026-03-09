@@ -6,7 +6,6 @@ import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSeguePar
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';
 import { Injectable, inject } from '@angular/core';
-import { isArray } from 'class-validator';
 import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 
 /**
@@ -44,7 +43,7 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
       const segueRef = asSegueRef(inputSegueRef);
       const ref = segueRef.ref;
 
-      if (isArray(ref)) {
+      if (Array.isArray(ref)) {
         return this.router.navigate(ref as unknown[], {
           ...segueRef.refOptions,
           queryParams: segueRef.refParams

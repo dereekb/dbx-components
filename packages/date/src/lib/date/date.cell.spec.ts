@@ -3,7 +3,8 @@ import { type DateRange, type DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addMilliseconds } from 'date-fns';
 import {
   dateCellTiming,
-  DateCellTiming,
+  type DateCellTiming,
+  dateCellTimingType,
   isValidDateCellIndex,
   isValidDateCellTiming,
   isValidDateCellTimingStartDate,
@@ -26,7 +27,7 @@ import {
 import { MS_IN_DAY, MINUTES_IN_DAY, type TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { guessCurrentTimezone, requireCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
-import { plainToInstance } from 'class-transformer';
+import { type } from 'arktype';
 import { wrapDateTests } from '../../test.spec';
 
 wrapDateTests(() => {
@@ -48,20 +49,16 @@ wrapDateTests(() => {
     });
   });
 
-  describe('DateCellTiming', () => {
-    it('should be parsed by class validator.', () => {
+  describe('dateCellTimingType', () => {
+    it('should validate a valid DateCellTiming', () => {
       const data = dateCellTiming({ startsAt: new Date(), duration: 60 }, 10);
-      const json: object = JSON.parse(JSON.stringify(data));
+      const result = dateCellTimingType(data);
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
 
-      const result = plainToInstance(DateCellTiming, json, {
-        excludeExtraneousValues: true
-      });
-
-      expect(result.startsAt).toBeDefined();
-      expect(result.end).toBeDefined();
-      expect(result.duration).toBe(data.duration);
-      expect(result.timezone).toBe(data.timezone);
-      expect(result.startsAt).toBeSameSecondAs(data.startsAt);
+    it('should reject invalid data', () => {
+      const result = dateCellTimingType({ startsAt: 'not-a-date', duration: 60, end: new Date(), timezone: 'UTC' });
+      expect(result).toBeInstanceOf(type.errors);
     });
   });
 

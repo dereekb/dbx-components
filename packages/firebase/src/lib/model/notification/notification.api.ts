@@ -1,12 +1,13 @@
-import { Type, Expose } from 'class-transformer';
-import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirestoreModelKey, type FirebaseAuthUserId } from '../../common';
+import { type, type Type } from 'arktype';
+import { type TargetModelParams, type FirestoreModelKey, type FirebaseAuthUserId } from '../../common';
+import { firestoreModelIdType, firestoreModelKeyType } from '../../common/model/model/model.validator';
+import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
-import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum, IsDate } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
-import { IsE164PhoneNumber } from '@dereekb/model';
+import { clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -22,268 +23,149 @@ export const NOTIFICATION_MESSAGE_MAX_LENGTH = 1000;
 /**
  * Config entries are inserted, unless marked as remove.
  */
-export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements NotificationBoxRecipientTemplateConfigArrayEntry {
-  @Expose()
-  @IsString()
-  type!: string;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  sd?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  se?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  st?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  sp?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  sn?: Maybe<boolean>;
-
-  /**
-   * If true, removes this configuration
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  remove?: Maybe<boolean>;
+export interface NotificationBoxRecipientTemplateConfigArrayEntryParam extends NotificationBoxRecipientTemplateConfigArrayEntry {
+  readonly type: string;
+  readonly sd?: Maybe<boolean>;
+  readonly se?: Maybe<boolean>;
+  readonly st?: Maybe<boolean>;
+  readonly sp?: Maybe<boolean>;
+  readonly sn?: Maybe<boolean>;
+  readonly remove?: Maybe<boolean>;
 }
+
+export const notificationBoxRecipientTemplateConfigArrayEntryParamType = type({
+  type: 'string > 0',
+  'sd?': clearable('boolean'),
+  'se?': clearable('boolean'),
+  'st?': clearable('boolean'),
+  'sp?': clearable('boolean'),
+  'sn?': clearable('boolean'),
+  'remove?': clearable('boolean')
+});
 
 /**
  * Used for creating a new NotificationUser for a user.
  */
-export class CreateNotificationUserParams {
-  /**
-   * UID of the user to create the NotificationUser for.
-   */
-  @Expose()
-  @IsOptional()
-  @IsFirestoreModelId()
-  uid!: FirebaseAuthUserId;
+export interface CreateNotificationUserParams {
+  readonly uid: FirebaseAuthUserId;
 }
+
+export const createNotificationUserParamsType = type({
+  uid: firestoreModelIdType
+}) as Type<CreateNotificationUserParams>;
 
 /**
  * Used for updating the global or default config on a NotificationUser.
  */
-export class UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams implements Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c'> {
-  /**
-   * NotificationBox recipient to update. Is ignored if UID is provided and matches a user. Used for external recipients/users.
-   */
-  @Expose()
-  @IsOptional()
-  @IsNumber()
-  i?: Maybe<IndexNumber>;
-
-  /**
-   * Override email address
-   */
-  @Expose()
-  @IsOptional()
-  @IsEmail()
-  e?: Maybe<EmailAddress>;
-
-  /**
-   * Override phone number
-   */
-  @Expose()
-  @IsOptional()
-  @IsE164PhoneNumber()
-  t?: Maybe<E164PhoneNumber>;
-
-  /**
-   * Array of configs that correspond with "c"
-   */
-  @Expose()
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => NotificationBoxRecipientTemplateConfigArrayEntryParam)
-  configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
-
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  lk?: Maybe<boolean>;
-
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  bk?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsEnum(NotificationBoxRecipientFlag)
-  f?: Maybe<NotificationBoxRecipientFlag>;
+export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams extends Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c'> {
+  readonly i?: Maybe<IndexNumber>;
+  readonly e?: Maybe<EmailAddress>;
+  readonly t?: Maybe<E164PhoneNumber>;
+  readonly configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
+  readonly lk?: Maybe<boolean>;
+  readonly bk?: Maybe<boolean>;
+  readonly f?: Maybe<NotificationBoxRecipientFlag>;
 }
 
-export class UpdateNotificationBoxRecipientLikeParams {
-  /**
-   * Override email address
-   */
-  @Expose()
-  @IsOptional()
-  @IsEmail()
-  e?: Maybe<EmailAddress>;
+export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = type({
+  'i?': clearable('number'),
+  'e?': clearable('string.email'),
+  't?': clearable(e164PhoneNumberType),
+  'configs?': clearable(notificationBoxRecipientTemplateConfigArrayEntryParamType.array()),
+  'lk?': clearable('boolean'),
+  'bk?': clearable('boolean'),
+  'f?': clearable(type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT))
+}) as Type<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
 
-  /**
-   * Override phone number
-   */
-  @Expose()
-  @IsOptional()
-  @IsE164PhoneNumber()
-  t?: Maybe<E164PhoneNumber>;
-
-  /**
-   * Notification summary id
-   */
-  @Expose()
-  @IsOptional()
-  @IsPhoneNumber()
-  s?: Maybe<NotificationSummaryId>;
-
-  /**
-   * Array of configs
-   */
-  @Expose()
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => NotificationBoxRecipientTemplateConfigArrayEntryParam)
-  configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
+export interface UpdateNotificationBoxRecipientLikeParams {
+  readonly e?: Maybe<EmailAddress>;
+  readonly t?: Maybe<E164PhoneNumber>;
+  readonly s?: Maybe<NotificationSummaryId>;
+  readonly configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
 }
+
+export const updateNotificationBoxRecipientLikeParamsType = type({
+  'e?': clearable('string.email'),
+  't?': clearable(e164PhoneNumberType),
+  's?': clearable('string'),
+  'configs?': clearable(notificationBoxRecipientTemplateConfigArrayEntryParamType.array())
+}) as Type<UpdateNotificationBoxRecipientLikeParams>;
 
 /**
  * Used for updating the target NotificationUserNotificationBoxRecipientConfig.
  */
-export class UpdateNotificationUserNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams {
-  /**
-   * NotificationBox config to update
-   */
-  @Expose()
-  @IsFirestoreModelId()
-  nb!: NotificationBoxId;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  rm?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  lk?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  bk?: Maybe<boolean>;
-
-  @Expose()
-  @IsOptional()
-  @IsEnum(() => NotificationBoxRecipientFlag)
-  f?: Maybe<NotificationBoxRecipientFlag>;
-
-  /**
-   * Whether or not to delete this configuration entirely.
-   *
-   * Will only delete if rm is true and ns is false. Is ignored otherwise.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  deleteRemovedConfig?: Maybe<boolean>;
+export interface UpdateNotificationUserNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams {
+  readonly nb: NotificationBoxId;
+  readonly rm?: Maybe<boolean>;
+  readonly lk?: Maybe<boolean>;
+  readonly bk?: Maybe<boolean>;
+  readonly f?: Maybe<NotificationBoxRecipientFlag>;
+  readonly deleteRemovedConfig?: Maybe<boolean>;
 }
+
+export const updateNotificationUserNotificationBoxRecipientParamsType = updateNotificationBoxRecipientLikeParamsType.merge({
+  nb: firestoreModelIdType,
+  'rm?': clearable('boolean'),
+  'lk?': clearable('boolean'),
+  'bk?': clearable('boolean'),
+  'f?': clearable(type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT)),
+  'deleteRemovedConfig?': clearable('boolean')
+}) as Type<UpdateNotificationUserNotificationBoxRecipientParams>;
 
 /**
  * Used for updating the NotificationUser.
  */
-export class UpdateNotificationUserParams extends TargetModelParams {
-  // TODO: update configs...
-
-  @Expose()
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams)
-  gc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
-
-  @Expose()
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams)
-  dc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
-
-  @Expose()
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateNotificationUserNotificationBoxRecipientParams)
-  bc?: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
+export interface UpdateNotificationUserParams extends TargetModelParams {
+  readonly gc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
+  readonly dc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
+  readonly bc?: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
 }
 
-export class ResyncNotificationUserParams extends TargetModelParams {}
+export const updateNotificationUserParamsType = targetModelParamsType.merge({
+  'gc?': clearable(updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType),
+  'dc?': clearable(updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType),
+  'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array())
+}) as Type<UpdateNotificationUserParams>;
+
+export interface ResyncNotificationUserParams extends TargetModelParams {}
+
+export const resyncNotificationUserParamsType = targetModelParamsType as Type<ResyncNotificationUserParams>;
 
 export interface ResyncNotificationUserResult {
-  /**
-   * Total number of notification boxes updated.
-   */
   readonly notificationBoxesUpdated: number;
 }
 
-export class ResyncAllNotificationUserParams {}
+export interface ResyncAllNotificationUserParams {}
+
+export const resyncAllNotificationUserParamsType = type({}) as Type<ResyncAllNotificationUserParams>;
 
 export interface ResyncAllNotificationUsersResult extends ResyncNotificationUserResult {
-  /**
-   * Total number of users updated.
-   */
   readonly notificationUsersResynced: number;
 }
 
 /**
  * Used for creating a new NotificationSummary for a model.
  */
-export class CreateNotificationSummaryParams {
-  /**
-   * Model to create the NotificationSummary for.
-   */
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  model!: FirestoreModelKey;
+export interface CreateNotificationSummaryParams {
+  readonly model: FirestoreModelKey;
 }
+
+export const createNotificationSummaryParamsType = type({
+  model: firestoreModelKeyType
+}) as Type<CreateNotificationSummaryParams>;
 
 /**
  * Used for updating the NotificationSummary.
  */
-export class UpdateNotificationSummaryParams extends TargetModelParams {
-  /**
-   * Updates the "rat" time to now.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
+export interface UpdateNotificationSummaryParams extends TargetModelParams {
   readonly flagAllRead?: Maybe<boolean>;
-
-  /**
-   * Sets the "rat" time to the given date, or clears it.
-   */
-  @Expose()
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   readonly setReadAtTime?: Maybe<Date>;
 }
+
+export const updateNotificationSummaryParamsType = targetModelParamsType.merge({
+  'flagAllRead?': clearable('boolean'),
+  'setReadAtTime?': clearable('string.date.parse')
+}) as Type<UpdateNotificationSummaryParams>;
 
 /**
  * Used for creating or initializing a new NotificationBox for a model.
@@ -292,27 +174,28 @@ export class UpdateNotificationSummaryParams extends TargetModelParams {
  *
  * The preferred way is to create a NotificationBox through a Notification.
  */
-export class CreateNotificationBoxParams {
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  model!: FirestoreModelKey;
+export interface CreateNotificationBoxParams {
+  readonly model: FirestoreModelKey;
 }
+
+export const createNotificationBoxParamsType = type({
+  model: firestoreModelKeyType
+}) as Type<CreateNotificationBoxParams>;
 
 /**
  * Used for initializing an uninitialized model like NotificationBox or NotificationSummary.
  */
-export class InitializeNotificationModelParams extends TargetModelParams {
-  /**
-   * Whether or not to throw an error if the notification has already been sent or is being sent.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  throwErrorIfAlreadyInitialized?: boolean;
+export interface InitializeNotificationModelParams extends TargetModelParams {
+  readonly throwErrorIfAlreadyInitialized?: boolean;
 }
 
-export class InitializeAllApplicableNotificationBoxesParams {}
+export const initializeNotificationModelParamsType = targetModelParamsType.merge({
+  'throwErrorIfAlreadyInitialized?': 'boolean'
+}) as Type<InitializeNotificationModelParams>;
+
+export interface InitializeAllApplicableNotificationBoxesParams {}
+
+export const initializeAllApplicableNotificationBoxesParamsType = type({}) as Type<InitializeAllApplicableNotificationBoxesParams>;
 
 export interface InitializeAllApplicableNotificationBoxesResult {
   readonly notificationBoxesVisited: number;
@@ -321,7 +204,9 @@ export interface InitializeAllApplicableNotificationBoxesResult {
   readonly notificationBoxesAlreadyInitialized: number;
 }
 
-export class InitializeAllApplicableNotificationSummariesParams {}
+export interface InitializeAllApplicableNotificationSummariesParams {}
+
+export const initializeAllApplicableNotificationSummariesParamsType = type({}) as Type<InitializeAllApplicableNotificationSummariesParams>;
 
 export interface InitializeAllApplicableNotificationSummariesResult {
   readonly notificationSummariesVisited: number;
@@ -333,321 +218,131 @@ export interface InitializeAllApplicableNotificationSummariesResult {
 /**
  * Used for updating the NotificationBox.
  */
-export class UpdateNotificationBoxParams extends TargetModelParams {}
+export interface UpdateNotificationBoxParams extends TargetModelParams {}
+
+export const updateNotificationBoxParamsType = targetModelParamsType as Type<UpdateNotificationBoxParams>;
 
 /**
  * Used to create/update a notification box recipient.
  */
-export class UpdateNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams implements TargetModelParams {
-  /**
-   * NotificationBox key to update.
-   */
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  key!: FirestoreModelKey;
-
-  /**
-   * NotificationBox recipient to update. Is ignored if UID is provided and matches a user. Used for external recipients/users.
-   */
-  @Expose()
-  @IsOptional()
-  @IsNumber()
-  i?: Maybe<IndexNumber>;
-
-  /**
-   * Notification recipient to update by UID, if applicable.
-   */
-  @Expose()
-  @IsOptional()
-  @IsFirestoreModelId()
-  uid?: Maybe<FirebaseAuthUserId>;
-
-  /**
-   * Whether or not to create the user if they currently do not exist. Defaults to false.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  insert?: Maybe<boolean>;
-
-  /**
-   * Whether or not to enable/disable the recipient from recieving items from this box.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  enabled?: Maybe<boolean>;
-
-  /**
-   * Whether or not to remove the user if they exist. Defaults to false.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  remove?: Maybe<boolean>;
-
-  /**
-   * If true, the target recipient will have this NotificationBox added to their exclusion list.
-   * If false, the target recipient will have this NotificationBox removed from their exclusion list.
-   *
-   * If set, the other functions are ignored.
-   *
-   * If targeting the user by the index, the NotificationBox must exist, and the user must have a uid, otherwise an error will be thrown.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  setExclusion?: Maybe<boolean>;
+export interface UpdateNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams, TargetModelParams {
+  readonly key: FirestoreModelKey;
+  readonly i?: Maybe<IndexNumber>;
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+  readonly insert?: Maybe<boolean>;
+  readonly enabled?: Maybe<boolean>;
+  readonly remove?: Maybe<boolean>;
+  readonly setExclusion?: Maybe<boolean>;
 }
 
-export class NotificationRecipientParams {
-  /**
-   * User to send the notification to.
-   */
-  @Expose()
-  @IsOptional()
-  @IsFirestoreModelId()
-  uid?: Maybe<FirebaseAuthUserId>;
+export const updateNotificationBoxRecipientParamsType = updateNotificationBoxRecipientLikeParamsType.merge({
+  key: firestoreModelKeyType,
+  'i?': clearable('number'),
+  'uid?': clearable(firestoreModelIdType),
+  'insert?': clearable('boolean'),
+  'enabled?': clearable('boolean'),
+  'remove?': clearable('boolean'),
+  'setExclusion?': clearable('boolean')
+}) as Type<UpdateNotificationBoxRecipientParams>;
 
-  /**
-   * Recipient Name
-   */
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MinLength(NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH)
-  @MaxLength(NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH)
-  un?: Maybe<string>;
-
-  /**
-   * Email address
-   */
-  @Expose()
-  @IsOptional()
-  @IsEmail()
-  e?: Maybe<EmailAddress>;
-
-  /**
-   * Phone number
-   */
-  @Expose()
-  @IsOptional()
-  @IsPhoneNumber()
-  p?: Maybe<E164PhoneNumber>;
+export interface NotificationRecipientParams {
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+  readonly un?: Maybe<string>;
+  readonly e?: Maybe<EmailAddress>;
+  readonly p?: Maybe<E164PhoneNumber>;
 }
+
+export const notificationRecipientParamsType = type({
+  'uid?': clearable(firestoreModelIdType),
+  'un?': clearable(`string >= ${NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH} & string <= ${NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH}`),
+  'e?': clearable('string.email'),
+  'p?': clearable('string')
+}) as Type<NotificationRecipientParams>;
 
 /**
  * Used for sending the notification immediately, if it has not already been sent.
  */
-export class SendNotificationParams extends TargetModelParams {
-  /**
-   * Whether or not to ignore the send at time. Defaults to false.
-   *
-   * If true, the send at time will be ignored and the notification will be sent immediately.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  ignoreSendAtThrottle?: Maybe<boolean>;
-
-  /**
-   * Whether or not to throw an error if the notification has already been sent or is being sent.
-   *
-   * Defaults to false.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  throwErrorIfSent?: Maybe<boolean>;
+export interface SendNotificationParams extends TargetModelParams {
+  readonly ignoreSendAtThrottle?: Maybe<boolean>;
+  readonly throwErrorIfSent?: Maybe<boolean>;
 }
+
+export const sendNotificationParamsType = targetModelParamsType.merge({
+  'ignoreSendAtThrottle?': clearable('boolean'),
+  'throwErrorIfSent?': clearable('boolean')
+}) as Type<SendNotificationParams>;
 
 /**
  * Params class used for subscribing a system user to a NotificationBox for a model.
  */
-export abstract class AbstractSubscribeToNotificationBoxParams extends TargetModelParams {
-  /**
-   * Notification recipient to subscribe to notifications
-   */
-  @Expose()
-  @IsFirestoreModelId()
-  uid!: FirebaseAuthUserId;
+export interface AbstractSubscribeToNotificationBoxParams extends TargetModelParams {
+  readonly uid: FirebaseAuthUserId;
 }
 
-export abstract class AbstractSubscribeOrUnsubscribeToNotificationBoxParams extends AbstractSubscribeToNotificationBoxParams {
-  /**
-   * If true, unsubscribes from the notification box instead.
-   */
-  @Expose()
-  @IsOptional()
-  @IsBoolean()
-  unsubscribe?: Maybe<boolean>;
+export const abstractSubscribeToNotificationBoxParamsType = targetModelParamsType.merge({
+  uid: firestoreModelIdType
+}) as Type<AbstractSubscribeToNotificationBoxParams>;
+
+export interface AbstractSubscribeOrUnsubscribeToNotificationBoxParams extends AbstractSubscribeToNotificationBoxParams {
+  readonly unsubscribe?: Maybe<boolean>;
 }
+
+export const abstractSubscribeOrUnsubscribeToNotificationBoxParamsType = abstractSubscribeToNotificationBoxParamsType.merge({
+  'unsubscribe?': clearable('boolean')
+}) as Type<AbstractSubscribeOrUnsubscribeToNotificationBoxParams>;
 
 export interface SendNotificationResultOnSendCompleteResult<T = unknown> {
-  /**
-   * Value, if returned by the onSendSuccess callback.
-   */
   readonly value?: T;
-  /**
-   * Error value if the onSendSuccess callback throws an error.
-   */
   readonly error?: Maybe<unknown>;
 }
 
 export interface SendNotificationResult {
-  /**
-   * Attempted notification type
-   */
   readonly notificationTemplateType: Maybe<NotificationTemplateType>;
-  /**
-   * Whether or not the notification was of a known type.
-   */
   readonly isKnownTemplateType: Maybe<boolean>;
-  /**
-   * Whether or not the notification was of a task type.
-   */
   readonly isNotificationTask: boolean;
-  /**
-   * True if the notification task is flagged as unique.
-   */
   readonly isUniqueNotificationTask: boolean;
-  /**
-   * True if the notification task is flagged as unique and there was a conflict where a new notification task was created while the old one was mid-task.
-   */
   readonly uniqueNotificationTaskConflict: boolean;
-  /**
-   * Whether or not the notification was of a configured type.
-   */
   readonly isConfiguredTemplateType: Maybe<boolean>;
-  /**
-   * Whether or not the try was aborted due to being throttled.
-   */
   readonly throttled: boolean;
-  /**
-   * Whether or not the run was successful.
-   *
-   * In cases where the Notification is set to SEND_IF_BOX_EXISTS and the box does not exist, this will return true.
-   */
   readonly success: boolean;
-  /**
-   * Completion type for the notification task, if applicable.
-   */
   readonly notificationTaskCompletionType?: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
-  /**
-   * Number of parts of the notification task that were run.
-   *
-   * Set only if the notification was a task.
-   */
   readonly notificationTaskPartsRunCount?: Maybe<number>;
-  /**
-   * Whether or not the notification task was triggered by the looping protection.
-   */
   readonly notificationTaskLoopingProtectionTriggered?: Maybe<boolean>;
-  /**
-   * Whether or not the notification was marked as done.
-   *
-   * May occur in cases where success is false, but the notification reached the max number of send attempts.
-   */
   readonly notificationMarkedDone: boolean;
-  /**
-   * Whether or not the NotificationBox was created.
-   */
   readonly createdBox: boolean;
-  /**
-   * Whether or not the NotificationBox exists but still needs initialization.
-   */
   readonly notificationBoxNeedsInitialization: boolean;
-  /**
-   * Whether or not the notification was deleted.
-   *
-   * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist, or the notification has reached the maximum number of send attempts.
-   */
   readonly deletedNotification: boolean;
-  /**
-   * Whether or not the notification exists.
-   */
   readonly exists: boolean;
-  /**
-   * Whether or not the NotificationBox exists.
-   */
   readonly boxExists: boolean;
-  /**
-   * Whether or not the run was tried.
-   */
   readonly tryRun: boolean;
-  /**
-   * Send emails result.
-   *
-   * Undefined if not attempted or a task notification.
-   */
   readonly sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
-  /**
-   *
-   * Send texts result.
-   *
-   * Undefined if not attempted or a task notification.
-   */
   readonly sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
-  /**
-   * Send notification summaries result.
-   *
-   * Undefined if not attempted or a task notification.
-   */
   readonly sendNotificationSummaryResult: Maybe<NotificationSendNotificationSummaryMessagesResult>;
-  /**
-   * Failed while attempting to loada the proper message function
-   */
   readonly loadMessageFunctionFailure: boolean;
-  /**
-   * Failed while attempting to build a message
-   */
   readonly buildMessageFailure: boolean;
-  /**
-   * Result of the onSendAttempted callback, if called.
-   */
   readonly onSendAttemptedResult?: Maybe<SendNotificationResultOnSendCompleteResult>;
-  /**
-   * Result of the onSendSuccess callback, if called.
-   */
   readonly onSendSuccessResult?: Maybe<SendNotificationResultOnSendCompleteResult>;
 }
 
 /**
  * Used for sending queued notifications in the system.
  */
-export class SendQueuedNotificationsParams {
-  /**
-   * The max number of send loops to run.
-   *
-   * No limit by default.
-   */
-  @Expose()
-  @IsOptional()
-  @IsNumber()
+export interface SendQueuedNotificationsParams {
   readonly maxSendNotificationLoops?: Maybe<number>;
-
-  /**
-   * The max number of parallel send tasks to run.
-   *
-   * Defaults to 5.
-   */
-  @Expose()
-  @IsOptional()
-  @IsNumber()
   readonly maxParellelSendTasks?: Maybe<number>;
-
-  /**
-   * The threshold to use when to log a warning for an excessive of notification loops.
-   */
-  @Expose()
-  @IsOptional()
-  @IsNumber()
   readonly sendNotificationLoopsTaskExcessThreshold?: Maybe<number>;
 }
 
-export interface SendQueuedNotificationsResult
-  extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+export const sendQueuedNotificationsParamsType = type({
+  'maxSendNotificationLoops?': clearable('number'),
+  'maxParellelSendTasks?': clearable('number'),
+  'sendNotificationLoopsTaskExcessThreshold?': clearable('number')
+}) as Type<SendQueuedNotificationsParams>;
+
+export interface SendQueuedNotificationsResult extends Omit<
+  SendNotificationResult,
+  'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'
+> {
   readonly excessLoopsDetected: boolean;
   readonly notificationLoopCount: number;
   readonly notificationBoxesCreated: number;
@@ -662,12 +357,11 @@ export interface SendQueuedNotificationsResult
 /**
  * Used for sending queued notifications in the system.
  */
-export class CleanupSentNotificationsParams {}
+export interface CleanupSentNotificationsParams {}
+
+export const cleanupSentNotificationsParamsType = type({}) as Type<CleanupSentNotificationsParams>;
 
 export interface CleanupSentNotificationsResult {
-  /**
-   * Number of total updates. May include the same notification box more than once.
-   */
   readonly notificationBoxesUpdatesCount: number;
   readonly notificationTasksDeletedCount: number;
   readonly notificationsDeleted: number;

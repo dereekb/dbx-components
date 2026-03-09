@@ -1,70 +1,36 @@
-import { E164PhoneNumber, type E164PhoneNumberWithExtension } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsOptional, validate } from 'class-validator';
-import { IsE164PhoneNumber, IsE164PhoneNumberWithOptionalExtension } from './phone';
+import { type } from 'arktype';
+import { e164PhoneNumberType, e164PhoneNumberWithOptionalExtensionType } from './phone';
 
-class TestModelClassWithOptionalExtension {
-  @Expose()
-  @IsOptional()
-  @IsE164PhoneNumberWithOptionalExtension()
-  phone!: E164PhoneNumber | E164PhoneNumberWithExtension;
-}
-
-class TestModelClassWithNoExtension {
-  @Expose()
-  @IsOptional()
-  @IsE164PhoneNumber()
-  phone!: E164PhoneNumber;
-}
-
-describe('IsE164PhoneNumber', () => {
-  it('should pass a valid IsE164PhoneNumber', async () => {
-    const instance = new TestModelClassWithNoExtension();
-    instance.phone = '+12345678910';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('e164PhoneNumberType', () => {
+  it('should pass a valid E.164 phone number', () => {
+    const result = e164PhoneNumberType('+12345678910');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should not pass a valid IsE164PhoneNumberWithExtension', async () => {
-    const instance = new TestModelClassWithNoExtension();
-    instance.phone = '+12345678910#1234';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not pass a phone number with extension', () => {
+    const result = e164PhoneNumberType('+12345678910#1234');
+    expect(result instanceof type.errors).toBe(true);
   });
 
-  it('should not pass an invalid IsE164PhoneNumber', async () => {
-    const instance = new TestModelClassWithNoExtension();
-    instance.phone = '245678910' as any;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not pass an invalid phone number', () => {
+    const result = e164PhoneNumberType('245678910');
+    expect(result instanceof type.errors).toBe(true);
   });
 });
 
-describe('IsE164PhoneNumberWithOptionalExtension', () => {
-  it('should pass a valid IsE164PhoneNumber', async () => {
-    const instance = new TestModelClassWithOptionalExtension();
-    instance.phone = '+12345678910';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('e164PhoneNumberWithOptionalExtensionType', () => {
+  it('should pass a valid E.164 phone number', () => {
+    const result = e164PhoneNumberWithOptionalExtensionType('+12345678910');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should pass a valid IsE164PhoneNumberWithExtension', async () => {
-    const instance = new TestModelClassWithOptionalExtension();
-    instance.phone = '+12345678910#1234';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should pass a phone number with extension', () => {
+    const result = e164PhoneNumberWithOptionalExtensionType('+12345678910#1234');
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should not pass an invalid IsE164PhoneNumber', async () => {
-    const instance = new TestModelClassWithOptionalExtension();
-    instance.phone = '245678910' as any;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not pass an invalid phone number', () => {
+    const result = e164PhoneNumberWithOptionalExtensionType('245678910');
+    expect(result instanceof type.errors).toBe(true);
   });
 });

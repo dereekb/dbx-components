@@ -1,51 +1,29 @@
-import { Expose } from 'class-transformer';
-import { validate } from 'class-validator';
-import { IsMinuteOfDay } from './number';
+import { type } from 'arktype';
+import { minuteOfDayType } from './number';
 
-class TestScheduleDto {
-  @Expose()
-  @IsMinuteOfDay()
-  startMinute!: number;
-}
-
-describe('IsMinuteOfDay', () => {
-  it('should pass for minute 0', async () => {
-    const instance = new TestScheduleDto();
-    instance.startMinute = 0;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('minuteOfDayType', () => {
+  it('should pass for minute 0', () => {
+    const result = minuteOfDayType(0);
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should pass for minute 1439 (last minute of the day)', async () => {
-    const instance = new TestScheduleDto();
-    instance.startMinute = 1439;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should pass for minute 1439 (last minute of the day)', () => {
+    const result = minuteOfDayType(1439);
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should pass for a mid-day minute', async () => {
-    const instance = new TestScheduleDto();
-    instance.startMinute = 720;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should pass for a mid-day minute', () => {
+    const result = minuteOfDayType(720);
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should fail for negative values', async () => {
-    const instance = new TestScheduleDto();
-    instance.startMinute = -1;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should fail for negative values', () => {
+    const result = minuteOfDayType(-1);
+    expect(result instanceof type.errors).toBe(true);
   });
 
-  it('should fail for values >= 1440', async () => {
-    const instance = new TestScheduleDto();
-    instance.startMinute = 1440;
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should fail for values >= 1440', () => {
+    const result = minuteOfDayType(1440);
+    expect(result instanceof type.errors).toBe(true);
   });
 });

@@ -1,9 +1,8 @@
-import { ExampleDocument, SetExampleUsernameParams } from 'FIREBASE_COMPONENTS_NAME';
+import { type ExampleDocument, type SetExampleUsernameParams } from 'FIREBASE_COMPONENTS_NAME';
 import { inAuthContext } from '@dereekb/firebase-server';
 import { onCallWithAPP_CODE_PREFIXNestContext } from '../function';
 import { userHasNoExampleError } from '../../common/model/example/example.error';
 import { exampleForUser } from './example.util';
-
 
 export const exampleSetUsername = onCallWithAPP_CODE_PREFIXNestContext<SetExampleUsernameParams>(
   inAuthContext(async (request) => {

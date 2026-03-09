@@ -1,40 +1,41 @@
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { type, type Type } from 'arktype';
 import { type FirestoreModelKey, type FirestoreModelKeyRef } from '../../firestore/collection/collection';
-import { IsFirestoreModelId, IsFirestoreModelKey } from './model.validator';
+import { firestoreModelIdType, firestoreModelKeyType } from './model.validator';
 
 /**
- * Simple annotated params that implements FirestoreModelKeyRef.
+ * Simple params that implements FirestoreModelKeyRef.
  */
-export class TargetModelParams implements FirestoreModelKeyRef {
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  key!: FirestoreModelKey;
+export interface TargetModelParams extends FirestoreModelKeyRef {
+  readonly key: FirestoreModelKey;
 }
 
-export class InferredTargetModelParams implements Partial<FirestoreModelKeyRef> {
-  @Expose()
-  @IsOptional()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  key?: FirestoreModelKey;
+export const targetModelParamsType = type({
+  key: firestoreModelKeyType
+}) as Type<TargetModelParams>;
+
+export interface InferredTargetModelParams extends Partial<FirestoreModelKeyRef> {
+  readonly key?: FirestoreModelKey;
 }
+
+export const inferredTargetModelParamsType = type({
+  'key?': firestoreModelKeyType
+}) as Type<InferredTargetModelParams>;
 
 /**
- * Simple annotated params that implements FirestoreModelKeyRef but key is a FirestoreModelId.
+ * Simple params that implements FirestoreModelKeyRef but key is a FirestoreModelId.
  */
-export class TargetModelIdParams implements FirestoreModelKeyRef {
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelId()
-  key!: FirestoreModelKey;
+export interface TargetModelIdParams extends FirestoreModelKeyRef {
+  readonly key: FirestoreModelKey;
 }
 
-export class InferredTargetModelIdParams implements Partial<FirestoreModelKeyRef> {
-  @Expose()
-  @IsOptional()
-  @IsNotEmpty()
-  @IsFirestoreModelId()
-  key?: FirestoreModelKey;
+export const targetModelIdParamsType = type({
+  key: firestoreModelIdType
+}) as Type<TargetModelIdParams>;
+
+export interface InferredTargetModelIdParams extends Partial<FirestoreModelKeyRef> {
+  readonly key?: FirestoreModelKey;
 }
+
+export const inferredTargetModelIdParamsType = type({
+  'key?': firestoreModelIdType
+}) as Type<InferredTargetModelIdParams>;

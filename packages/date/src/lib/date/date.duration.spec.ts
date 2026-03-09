@@ -1,25 +1,25 @@
 import { subDays, addDays, addMinutes as dfnsAddMinutes } from 'date-fns';
-import { DateDurationSpan, dateDurationSpanEndDate, durationSpanToDateRange, durationSpanFromDateRange, durationSpanDateRelativeState, fractionalHoursInDurationSpan, isSameDurationSpan } from './date.duration';
+import { type DateDurationSpan, dateDurationSpanEndDate, durationSpanToDateRange, durationSpanFromDateRange, durationSpanDateRelativeState, fractionalHoursInDurationSpan, isSameDurationSpan, dateDurationSpanType } from './date.duration';
 import { type DateRange } from './date.range';
 import { wrapDateTests } from '../../test.spec';
 import { type Minutes } from '@dereekb/util';
+import { type } from 'arktype';
 
 wrapDateTests(() => {
-  describe('DateDurationSpan', () => {
-    it('should create an instance with undefined properties if no template is provided', () => {
-      const span = new DateDurationSpan();
-      expect(span.startsAt).toBeUndefined();
-      expect(span.duration).toBeUndefined();
+  describe('dateDurationSpanType', () => {
+    it('should validate a valid DateDurationSpan', () => {
+      const result = dateDurationSpanType({ startsAt: new Date(), duration: 60 });
+      expect(result).not.toBeInstanceOf(type.errors);
     });
 
-    it('should create an instance with properties from the template', () => {
-      const template: DateDurationSpan = {
-        startsAt: new Date(),
-        duration: 60 as Minutes
-      };
-      const span = new DateDurationSpan(template);
-      expect(span.startsAt).toEqual(template.startsAt);
-      expect(span.duration).toEqual(template.duration);
+    it('should reject a negative duration', () => {
+      const result = dateDurationSpanType({ startsAt: new Date(), duration: -1 });
+      expect(result).toBeInstanceOf(type.errors);
+    });
+
+    it('should reject missing startsAt', () => {
+      const result = dateDurationSpanType({ duration: 60 });
+      expect(result).toBeInstanceOf(type.errors);
     });
   });
 

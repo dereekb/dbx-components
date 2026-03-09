@@ -1,12 +1,13 @@
 import { FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap, SystemStateTypes, ModelFirebaseFunctionMap, ModelFirebaseCrudFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
-import { Expose } from 'class-transformer';
-import { IsString } from 'class-validator';
+import { type, type Type } from 'arktype';
 
-export class ExampleReadParams {
-  @Expose()
-  @IsString()
-  message!: string;
+export interface ExampleReadParams {
+  readonly message: string;
 }
+
+export const exampleReadParamsType = type({
+  message: 'string'
+}) as Type<ExampleReadParams>;
 
 export interface ExampleReadResponse {
   read: boolean;

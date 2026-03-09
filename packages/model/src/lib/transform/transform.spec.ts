@@ -1,15 +1,15 @@
+import { type } from 'arktype';
 import { transformAndValidateObjectResult, type TransformAndValidateObjectResultFunction, type TransformAndValidateObjectSuccessResultOutput, type TransformAndValidateObjectErrorResultOutput, transformAndValidateObjectFactory } from './transform';
 import { transformAndValidateResultFactory } from './transform.result';
-import { Expose } from 'class-transformer';
-import { IsBoolean } from 'class-validator';
 
-export class TestTransformAndValidateEmptyClass {}
+const testType = type({
+  valid: 'boolean'
+});
 
-export class TestTransformAndValidateClass {
-  @Expose()
-  @IsBoolean()
-  valid?: boolean;
-}
+type TestType = typeof testType.infer;
+
+const emptyType = type({});
+type EmptyType = typeof emptyType.infer;
 
 describe('transformAndValidateObjectFactory()', () => {
   const errorValue = 0;
@@ -18,7 +18,7 @@ describe('transformAndValidateObjectFactory()', () => {
   it('should create a transformAndValidateFunction', async () => {
     const successValue = 100;
 
-    const fn = factory(TestTransformAndValidateClass, async () => successValue);
+    const fn = factory(testType, async () => successValue);
     expect(fn).toBeDefined();
     expect(typeof fn).toBe('function');
   });
@@ -26,7 +26,7 @@ describe('transformAndValidateObjectFactory()', () => {
   describe('function', () => {
     it('should return the success value for valid input.', async () => {
       const successValue = 100;
-      const fn = factory(TestTransformAndValidateClass, async () => successValue);
+      const fn = factory(testType, async () => successValue);
 
       const result = await fn({ valid: true });
       expect(result.object).toBeDefined();
@@ -35,9 +35,9 @@ describe('transformAndValidateObjectFactory()', () => {
     });
 
     it('should handle the validation error', async () => {
-      const fn = factory(TestTransformAndValidateClass, async () => 0);
+      const fn = factory(testType, async () => 0);
 
-      const result = await fn({ valid: true });
+      const result = await fn({ valid: 'not-a-boolean' as any });
       expect(result.result).toBe(errorValue);
     });
   });
@@ -50,7 +50,7 @@ describe('transformAndValidateResultFactory()', () => {
   it('should create a transformAndValidateFunction', async () => {
     const successValue = 100;
 
-    const fn = factory(TestTransformAndValidateClass, async () => successValue);
+    const fn = factory(testType, async () => successValue);
     expect(fn).toBeDefined();
     expect(typeof fn).toBe('function');
   });
@@ -58,31 +58,31 @@ describe('transformAndValidateResultFactory()', () => {
   describe('function', () => {
     it('should return the success value for valid input.', async () => {
       const successValue = 100;
-      const fn = factory(TestTransformAndValidateClass, async () => successValue);
+      const fn = factory(testType, async () => successValue);
 
       const result = await fn({ valid: true });
       expect(result).toBe(successValue);
     });
 
     it('should handle the validation error', async () => {
-      const fn = factory(TestTransformAndValidateClass, async () => 0);
+      const fn = factory(testType, async () => 0);
 
-      const result = await fn({ valid: true });
+      const result = await fn({ valid: 'not-a-boolean' as any });
       expect(result).toBe(errorValue);
     });
   });
 });
 
 describe('transformAndValidateObjectResult()', () => {
-  const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateClass, { value: TestTransformAndValidateClass }> = transformAndValidateObjectResult({
-    classType: TestTransformAndValidateClass,
+  const transformResult: TransformAndValidateObjectResultFunction<TestType, { value: TestType }> = transformAndValidateObjectResult({
+    schema: testType,
     fn: async (value) => {
       return { value };
     }
   });
 
   it('should return success when the input is valid', async () => {
-    const result = (await transformResult({ valid: true })) as TransformAndValidateObjectSuccessResultOutput<TestTransformAndValidateClass, { value: TestTransformAndValidateClass }>;
+    const result = (await transformResult({ valid: true })) as TransformAndValidateObjectSuccessResultOutput<TestType, { value: TestType }>;
 
     expect(result.object).toBeDefined();
     expect(result.success).toBe(true);
@@ -92,49 +92,24 @@ describe('transformAndValidateObjectResult()', () => {
   });
 
   it('should return validation errors when the input is invalid', async () => {
-    const result = (await transformResult({ invalid: true })) as TransformAndValidateObjectErrorResultOutput<TestTransformAndValidateClass>;
+    const result = (await transformResult({ invalid: true })) as TransformAndValidateObjectErrorResultOutput;
 
-    expect(result.object).toBeDefined();
     expect(result.success).toBe(false);
-    expect(result.validationErrors.length > 0).toBe(true);
-    expect(result.validationErrors[0].property).toBe('valid'); // missing
+    expect(result.validationErrors).toBeDefined();
+    expect(result.validationErrors.summary).toBeDefined();
   });
 
-  describe('class with no expose annotations', () => {
-    const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateEmptyClass, { value: TestTransformAndValidateEmptyClass }> = transformAndValidateObjectResult({
-      classType: TestTransformAndValidateEmptyClass,
+  describe('empty schema', () => {
+    const transformResult: TransformAndValidateObjectResultFunction<EmptyType, { value: EmptyType }> = transformAndValidateObjectResult({
+      schema: emptyType,
       fn: async (value) => {
         return { value };
       }
     });
 
-    it('should not throw an error', async () => {
+    it('should pass with empty input', async () => {
       const result = await transformResult({});
-
-      expect(result.object).toBeInstanceOf(TestTransformAndValidateEmptyClass);
       expect(result.success).toBe(true);
     });
-
-    describe('explicitly forbidUnknownValues', () => {
-      const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateEmptyClass, { value: TestTransformAndValidateEmptyClass }> = transformAndValidateObjectResult({
-        classType: TestTransformAndValidateEmptyClass,
-        fn: async (value) => {
-          return { value };
-        },
-        defaultValidationOptions: {
-          forbidUnknownValues: true
-        }
-      });
-
-      it('should throw an error', async () => {
-        const result = (await transformResult({})) as TransformAndValidateObjectErrorResultOutput<TestTransformAndValidateClass>;
-
-        expect(result.object).toBeInstanceOf(TestTransformAndValidateEmptyClass);
-        expect(result.success).toBe(false);
-        expect(result.validationErrors.length).toBe(1);
-      });
-    });
   });
-
-  // TODO(TEST): Add context/groups for validation tests
 });

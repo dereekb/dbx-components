@@ -1,5 +1,4 @@
 import { type Maybe } from '@dereekb/util';
-import { isBoolean } from 'class-validator';
 import { type Observable, of, map } from 'rxjs';
 
 export enum CompactMode {
@@ -19,7 +18,7 @@ export interface CompactModeDefaultOptions<T> extends CompactModeOptions<T> {
 export type CompactModeOption = CompactMode | boolean;
 
 export function compactModeFromInput(input: CompactMode | boolean): CompactMode {
-  if (isBoolean(input)) {
+  if (typeof input === 'boolean') {
     input = input ? CompactMode.COMPACT : CompactMode.FULL;
   }
 
