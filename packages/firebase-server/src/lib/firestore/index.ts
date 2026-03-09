@@ -3,3 +3,4 @@ export * from './driver.accessor';
 export * from './driver.query';
 export * from './firestore';
 export * from './increment';
+export * from './snapshot';

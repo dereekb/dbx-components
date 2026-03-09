@@ -28,6 +28,9 @@
           },
           {
             "command": "npx nx run nestjs-typeform:build-base"
+          },
+          {
+            "command": "npx nx run nestjs-discord:build-base"
           }
         ],
         "parallel": false
@@ -100,6 +103,10 @@
           {
             "description": "run nestjs-typeform tests",
             "command": "npx nx test nestjs-typeform"
+          },
+          {
+            "description": "run nestjs-discord tests",
+            "command": "npx nx test nestjs-discord"
           }
         ],
         "color": true,

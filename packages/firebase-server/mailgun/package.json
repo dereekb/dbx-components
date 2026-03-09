@@ -1,13 +1,13 @@
 {
   "name": "@dereekb/firebase-server/mailgun",
-  "version": "13.1.0",
+  "version": "13.2.0",
   "peerDependencies": {
-    "@dereekb/firebase": "13.1.0",
-    "@dereekb/firebase-server": "13.1.0",
-    "@dereekb/date": "13.1.0",
-    "@dereekb/nestjs": "13.1.0",
-    "@dereekb/model": "13.1.0",
-    "@dereekb/rxjs": "13.1.0",
-    "@dereekb/util": "13.1.0"
+    "@dereekb/firebase": "13.2.0",
+    "@dereekb/firebase-server": "13.2.0",
+    "@dereekb/date": "13.2.0",
+    "@dereekb/nestjs": "13.2.0",
+    "@dereekb/model": "13.2.0",
+    "@dereekb/rxjs": "13.2.0",
+    "@dereekb/util": "13.2.0"
   }
 }

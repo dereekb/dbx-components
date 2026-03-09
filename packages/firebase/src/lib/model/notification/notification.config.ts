@@ -357,7 +357,7 @@ export const firestoreNotificationBoxRecipient = firestoreSubObject<Notification
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
       s: optionalFirestoreString(),
-      f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
+      f: optionalFirestoreEnum<NotificationBoxRecipientFlag>({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
       c: firestoreNotificationBoxRecipientTemplateConfigRecord(),
       lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       x: optionalFirestoreBoolean({ dontStoreValueIf: false })
@@ -372,7 +372,7 @@ export const firestoreNotificationUserDefaultNotificationBoxRecipientConfig = fi
       bk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
-      f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
+      f: optionalFirestoreEnum<NotificationBoxRecipientFlag>({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
       c: firestoreNotificationBoxRecipientTemplateConfigRecord()
     }
   }
@@ -392,7 +392,7 @@ export const firestoreNotificationUserNotificationBoxRecipientConfig = firestore
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
       s: optionalFirestoreString(),
-      f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
+      f: optionalFirestoreEnum<NotificationBoxRecipientFlag>({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
       c: firestoreNotificationBoxRecipientTemplateConfigRecord()
     }
   }

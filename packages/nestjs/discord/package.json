@@ -1,0 +1,12 @@
+{
+  "name": "@dereekb/nestjs/discord",
+  "version": "13.2.0",
+  "peerDependencies": {
+    "@dereekb/nestjs": "13.2.0",
+    "@dereekb/util": "13.2.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.0",
+    "discord.js": "^14.25.1",
+    "express": "^5.0.0"
+  }
+}
