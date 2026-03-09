@@ -49,6 +49,12 @@ export const demoProfileFutureState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/profile/profile.module').then((m) => m.DemoProfileModule)
 };
 
+export const demoOAuthFutureState: Ng2StateDeclaration = {
+  name: 'demo.app.oauth.**',
+  url: '/oauth',
+  loadChildren: () => import('./modules/oauth/oauth.module').then((m) => m.DemoAppOAuthModule)
+};
+
 export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   //
   demoAppState,
@@ -57,5 +63,6 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   settingsState,
   notificationState,
   demoGuestbookFutureState,
-  demoProfileFutureState
+  demoProfileFutureState,
+  demoOAuthFutureState
 ];

@@ -212,10 +212,10 @@ Note: `nest-oidc-provider` was not used — we integrate `oidc-provider` directl
 - [x] Export from common barrel
 
 #### H2. Frontend integration
-- [ ] Add OAuth login route in demo app
-- [ ] Add consent route in demo app
-- [ ] Add DCR management route in demo app admin section
-- [ ] Wire components with demo app's existing auth flow
+- [x] Add OAuth login route in demo app
+- [x] Add consent route in demo app
+- [x] Add DCR management route in demo app admin section
+- [x] Wire components with demo app's existing auth flow
 
 #### H3. Verification
 - [x] `pnpm nx run firebase-server-oidc:build-base` — builds without errors

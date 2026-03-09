@@ -1,0 +1,36 @@
+<dbx-content-box>
+  @if (error) {
+    <div class="dbx-oauth-login-error">
+      <p>{{ error }}</p>
+    </div>
+  }
+  @if (submitting) {
+    <p>Completing login...</p>
+  } @else {
+    <div class="demo-oauth-login-view">
+      @switch (mode) {
+        @case ('login') {
+          <h3>Sign In to Continue</h3>
+          <p>An application is requesting access to your account.</p>
+          <dbx-firebase-login></dbx-firebase-login>
+          <p>
+            Need an account? Register
+            <dbx-link (click)="mode = 'register'">here</dbx-link>
+            .
+          </p>
+          <dbx-firebase-login-terms></dbx-firebase-login-terms>
+        }
+        @case ('register') {
+          <h3>Register to Continue</h3>
+          <dbx-firebase-register></dbx-firebase-register>
+          <p>
+            Have an account? Log in
+            <dbx-link (click)="mode = 'login'">here</dbx-link>
+            .
+          </p>
+          <dbx-firebase-login-terms></dbx-firebase-login-terms>
+        }
+      }
+    </div>
+  }
+</dbx-content-box>

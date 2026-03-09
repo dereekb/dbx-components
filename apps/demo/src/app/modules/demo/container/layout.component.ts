@@ -45,6 +45,11 @@ export class DemoLayoutComponent {
       icon: 'list'
     },
     {
+      title: 'OAuth Clients',
+      ref: 'demo.app.oauth',
+      icon: 'vpn_key'
+    },
+    {
       title: 'Your Profile',
       ref: 'demo.app.profile',
       icon: 'person'
