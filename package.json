@@ -76,6 +76,7 @@
     "ngx-infinite-scroll": "^21.0.0",
     "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
     "ngx-mat-input-tel": "^21.0.0",
+    "oidc-provider": "^9.7.0",
     "openai": "^6.25.0",
     "raw-body": "^3.0.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",

@@ -1,0 +1,45 @@
+{
+  "name": "firebase-server-oidc",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/firebase-server/oidc/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/firebase-server/oidc",
+        "outputPath": "dist/packages/firebase-server/oidc",
+        "tsConfig": "packages/firebase-server/oidc/tsconfig.lib.json",
+        "project": "packages/firebase-server/oidc/package.json",
+        "main": "packages/firebase-server/oidc/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "tsc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/firebase-server/oidc"
+      }
+    }
+  }
+}

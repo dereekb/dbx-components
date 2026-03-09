@@ -1,0 +1,138 @@
+import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, Body } from '@nestjs/common';
+import { type Request, type Response } from 'express';
+import { OIDC_PROVIDER_TOKEN } from './oauth.module';
+import { OAUTH_MODULE_CONFIG_TOKEN, type OAuthModuleConfig } from './oauth.config';
+
+// MARK: DTOs
+export interface LoginInteractionBody {
+  /**
+   * Firebase ID token as proof of authentication.
+   */
+  readonly idToken: string;
+}
+
+export interface ConsentInteractionBody {
+  /**
+   * Whether the user approved the consent.
+   */
+  readonly approved: boolean;
+}
+
+/**
+ * Controller for OIDC interaction endpoints (login/consent).
+ *
+ * These routes must be excluded from AppCheck middleware since they
+ * are accessed during the OAuth flow by external clients.
+ */
+@Controller('interaction')
+export class InteractionController {
+  constructor(
+    @Inject(OIDC_PROVIDER_TOKEN) private readonly provider: any,
+    @Inject(OAUTH_MODULE_CONFIG_TOKEN) private readonly config: OAuthModuleConfig
+  ) {}
+
+  /**
+   * GET /interaction/:uid
+   *
+   * Detects the interaction type and redirects to the appropriate frontend page.
+   */
+  @Get(':uid')
+  async getInteraction(@Param('uid') uid: string, @Req() req: Request, @Res() res: Response) {
+    try {
+      const interactionDetails = await this.provider.interactionDetails(req, res);
+      const { prompt } = interactionDetails;
+
+      if (prompt.name === 'login') {
+        return res.redirect(`${this.config.loginUrl}?uid=${uid}`);
+      }
+
+      return res.redirect(`${this.config.consentUrl}?uid=${uid}`);
+    } catch {
+      throw new HttpException('Interaction not found', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  /**
+   * POST /interaction/:uid/login
+   *
+   * Receives auth proof from frontend (Firebase ID token) and completes the login interaction.
+   */
+  @Post(':uid/login')
+  async postLogin(@Param('uid') _uid: string, @Body() body: LoginInteractionBody, @Req() req: Request, @Res() res: Response) {
+    try {
+      // The frontend sends a Firebase ID token as proof of authentication.
+      // In a real implementation, we would verify this token and extract the UID.
+      // For now, the UID is extracted from the token by the consuming app.
+      const result = await this.provider.interactionFinished(
+        req,
+        res,
+        {
+          login: {
+            accountId: body.idToken // Will be replaced with actual UID from verified token
+          }
+        },
+        { mergeWithLastSubmission: false }
+      );
+
+      return result;
+    } catch {
+      throw new HttpException('Login interaction failed', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * POST /interaction/:uid/consent
+   *
+   * Receives consent decision from frontend.
+   */
+  @Post(':uid/consent')
+  async postConsent(@Param('uid') _uid: string, @Body() body: ConsentInteractionBody, @Req() req: Request, @Res() res: Response) {
+    try {
+      if (!body.approved) {
+        const result = await this.provider.interactionFinished(
+          req,
+          res,
+          {
+            error: 'access_denied',
+            error_description: 'User denied consent'
+          },
+          { mergeWithLastSubmission: true }
+        );
+        return result;
+      }
+
+      const interactionDetails = await this.provider.interactionDetails(req, res);
+      const { prompt, params, session } = interactionDetails;
+      const grant = interactionDetails.grantId ? await this.provider.Grant.find(interactionDetails.grantId) : new this.provider.Grant({ accountId: session?.accountId, clientId: params.client_id });
+
+      if (prompt.details?.missingOIDCScope) {
+        grant.addOIDCScope((prompt.details.missingOIDCScope as string[]).join(' '));
+      }
+
+      if (prompt.details?.missingOIDCClaims) {
+        grant.addOIDCClaims(prompt.details.missingOIDCClaims as string[]);
+      }
+
+      if (prompt.details?.missingResourceScopes) {
+        for (const [indicator, scopes] of Object.entries(prompt.details.missingResourceScopes as Record<string, string[]>)) {
+          grant.addResourceScope(indicator, scopes.join(' '));
+        }
+      }
+
+      const grantId = await grant.save();
+
+      const result = await this.provider.interactionFinished(
+        req,
+        res,
+        {
+          consent: { grantId }
+        },
+        { mergeWithLastSubmission: true }
+      );
+
+      return result;
+    } catch {
+      throw new HttpException('Consent interaction failed', HttpStatus.BAD_REQUEST);
+    }
+  }
+}

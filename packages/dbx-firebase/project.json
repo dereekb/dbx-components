@@ -17,6 +17,10 @@
             "command": "npx nx run dbx-firebase:build-base:production"
           },
           {
+            "description": "build dbx-firebase-oidc production",
+            "command": "npx nx run dbx-firebase-oidc:build-base:production"
+          },
+          {
             "description": "finish dbx-firebase build script",
             "command": "sh packages/dbx-firebase/complete-dbx-firebase-build.sh"
           }

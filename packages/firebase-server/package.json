@@ -25,6 +25,12 @@
       "types": "./model/index.d.ts",
       "import": "./model/index.cjs.mjs",
       "default": "./model/index.cjs.js"
+    },
+    "./oidc": {
+      "module": "./oidc/index.esm.js",
+      "types": "./oidc/index.d.ts",
+      "import": "./oidc/index.cjs.mjs",
+      "default": "./oidc/index.cjs.js"
     }
   },
   "main": "./src/index.js",

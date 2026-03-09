@@ -25,6 +25,9 @@
           },
           {
             "command": "npx nx run firebase-server-model:build-base"
+          },
+          {
+            "command": "npx nx run firebase-server-oidc:build-base"
           }
         ],
         "parallel": false
