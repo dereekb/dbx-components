@@ -8,6 +8,23 @@ interface TestItem {
 
 const uniqueItemsType = uniqueKeyedType<TestItem>((x) => x.key);
 
+describe('uniqueKeyedType used in merge', () => {
+  const testType = type({
+    items: uniqueItemsType,
+    name: 'string'
+  });
+
+  it('should validate an object with unique items.', () => {
+    const result = testType({ items: [{ key: 'a' }, { key: 'b' }], name: 'test' });
+    expect(result instanceof type.errors).toBe(false);
+  });
+
+  it('should fail when items have duplicate keys.', () => {
+    const result = testType({ items: [{ key: 'a' }, { key: 'a' }], name: 'test' });
+    expect(result instanceof type.errors).toBe(true);
+  });
+});
+
 describe('uniqueKeyedType', () => {
   it('should pass if the keys are unique', () => {
     const result = uniqueItemsType([{ key: 'a' }, { key: 'b' }, { key: 'c' }]);

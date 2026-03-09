@@ -11,4 +11,4 @@ import { isKnownTimezone } from './timezone';
  * const result = knownTimezoneType('America/Denver');
  * ```
  */
-export const knownTimezoneType = type('string > 0').narrow((val, ctx) => isKnownTimezone(val) || ctx.mustBe('a known timezone'));
+export const knownTimezoneType = type('string > 0').narrow((val, ctx) => (val != null && isKnownTimezone(val)) || ctx.mustBe('a known timezone'));

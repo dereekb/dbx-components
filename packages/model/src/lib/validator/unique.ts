@@ -14,5 +14,5 @@ import { type } from 'arktype';
  */
 export function uniqueKeyedType<T>(readKey: ReadKeyFunction<T>) {
   const isUniqueKeyed = isUniqueKeyedFunction(readKey);
-  return type('unknown[]').narrow((val, ctx) => isUniqueKeyed(val as T[]) || ctx.mustBe('an array with unique keys'));
+  return type('unknown[]').narrow((val, ctx) => (val != null && isUniqueKeyed(val as T[])) || ctx.mustBe('an array with unique keys'));
 }

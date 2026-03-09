@@ -54,6 +54,59 @@ wrapDateTests(() => {
     });
   });
 
+  describe('validDateCellTimingType used in merge', () => {
+    const testType = type({
+      timing: validDateCellTimingType,
+      name: 'string'
+    });
+
+    it('should validate an object with a valid timing property.', () => {
+      const startsAt = setMinutes(setHours(new Date(), 12), 0);
+      const validTiming = dateCellTiming({ startsAt, duration: 60 }, 1);
+      const result = testType({ timing: validTiming, name: 'test' });
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should fail when the timing property is invalid.', () => {
+      const result = testType({ timing: { startsAt: new Date(), duration: -1, end: new Date(), timezone: 'America/Chicago' }, name: 'test' });
+      expect(result).toBeInstanceOf(type.errors);
+    });
+  });
+
+  describe('validDateCellRangeType used in merge', () => {
+    const testType = type({
+      range: validDateCellRangeType,
+      name: 'string'
+    });
+
+    it('should validate an object with a valid range property.', () => {
+      const result = testType({ range: { i: 0, to: 5 }, name: 'test' });
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should fail when the range property is invalid.', () => {
+      const result = testType({ range: { i: 5, to: 0 }, name: 'test' });
+      expect(result).toBeInstanceOf(type.errors);
+    });
+  });
+
+  describe('validDateCellRangeSeriesType used in merge', () => {
+    const testType = type({
+      ranges: validDateCellRangeSeriesType,
+      name: 'string'
+    });
+
+    it('should validate an object with a valid range series property.', () => {
+      const result = testType({ ranges: [{ i: 0 }, { i: 1 }], name: 'test' });
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should fail when the range series property is invalid.', () => {
+      const result = testType({ ranges: [{ i: 0, to: 0 }, { i: 0 }], name: 'test' });
+      expect(result).toBeInstanceOf(type.errors);
+    });
+  });
+
   describe('validDateCellRangeSeriesType', () => {
     it('should pass a valid range series.', () => {
       const result = validDateCellRangeSeriesType([{ i: 0 }]);
