@@ -29,15 +29,24 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     const { autoLogin = true, botToken } = this.config.discord;
 
+    let result: Promise<void>;
+
     if (autoLogin) {
-      await this.client.login(botToken);
-      this.logger.log(`Discord bot logged in as ${this.client.user?.tag ?? 'unknown'}.`);
+      result = this.client
+        .login(botToken)
+        .then(() => {})
+        .catch((e) => {
+          this.logger.error('Failed to log in to Discord', e);
+        });
+    } else {
+      result = Promise.resolve();
     }
+
+    return result;
   }
 
   async onModuleDestroy(): Promise<void> {
-    this.client.destroy();
-    this.logger.log('Discord bot client destroyed.');
+    return this.client.destroy();
   }
 
   /**
