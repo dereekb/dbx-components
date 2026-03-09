@@ -9,7 +9,18 @@ import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from './auth.service.error';
 import { type CallableContext } from '../type';
 
-export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' }); // 6 digits
+/**
+ * Generates a random 6-digit number for use as a temporary password or reset token.
+ *
+ * Used internally by {@link AbstractFirebaseServerAuthUserContext.beginResetPassword} and
+ * {@link AbstractFirebaseServerNewUserService.generateRandomSetupPassword} for one-time codes.
+ *
+ * @example
+ * ```typescript
+ * const pin = DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR(); // e.g. 482910
+ * ```
+ */
+export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' });
 
 export interface FirebaseServerAuthUserIdentifierContext {
   /**
@@ -18,99 +29,157 @@ export interface FirebaseServerAuthUserIdentifierContext {
   readonly uid: FirebaseAuthUserId;
 }
 
+/**
+ * Custom claims stored on a user during a password reset flow.
+ *
+ * Contains the temporary reset password and the timestamp of when the reset was initiated.
+ */
 export interface FirebaseServerAuthResetUserPasswordClaims extends FirebaseAuthResetUserPasswordClaimsData, AuthClaimsObject {}
 
+/**
+ * Provides operations for managing a single Firebase Auth user's record, claims, roles, and password.
+ *
+ * Acts as a scoped context bound to a specific user UID, enabling direct manipulation of that user's
+ * authentication state without requiring the caller to repeatedly pass the UID.
+ *
+ * @example
+ * ```typescript
+ * const userCtx = authService.userContext(uid);
+ * const exists = await userCtx.exists();
+ * const roles = await userCtx.loadRoles();
+ * await userCtx.addRoles(AUTH_ADMIN_ROLE);
+ * ```
+ */
 export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIdentifierContext {
   /**
-   * Returns true if the user exists.
+   * Checks whether the user exists in Firebase Auth.
    */
   exists(): Promise<boolean>;
 
   /**
-   * Loads the record of the user.
+   * Loads the full Firebase Auth {@link admin.auth.UserRecord} for this user.
+   *
+   * @throws Throws if the user does not exist.
    */
   loadRecord(): Promise<admin.auth.UserRecord>;
 
   /**
-   * Loads the details object of the user.
+   * Loads a normalized {@link FirebaseAuthDetails} snapshot of the user's auth profile.
+   *
+   * @throws Throws if the user does not exist.
    */
   loadDetails(): Promise<FirebaseAuthDetails>;
 
   /**
-   * Generates a random reset token and updates the user's password to start a password reset flow.
+   * Initiates a password reset flow by generating a random temporary password,
+   * storing reset claims on the user, and updating the user's password.
+   *
+   * The returned claims contain the generated password and a timestamp, which can be
+   * communicated to the user through an external channel (e.g., email).
    */
   beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims>;
 
   /**
-   * Returns the reset password claims if it exists.
+   * Loads the reset password claims if a password reset is currently active.
+   *
+   * @returns The reset claims, or `undefined` if no reset is in progress.
    */
   loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>>;
 
   /**
-   * Changes the user's password. Will also clear any claims data related to resetting a password.
+   * Updates the user's password and clears any active password reset claims.
+   *
+   * Intended to be called after the user has verified their identity with a reset token.
+   *
+   * @param password - The new password to set.
    */
   setPassword(password: PasswordString): Promise<admin.auth.UserRecord>;
 
   /**
-   * Updates a user's information.
+   * Applies an arbitrary update to the user's Firebase Auth record.
+   *
+   * @param template - The update fields to apply.
    */
   updateUser(template: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
 
   /**
-   * Loads the roles of the user.
+   * Loads the user's current {@link AuthRoleSet} by reading and converting their custom claims.
    */
   loadRoles(): Promise<AuthRoleSet>;
 
   /**
-   * Adds the given roles to the user.
+   * Merges the given roles into the user's existing roles via claim updates.
    *
-   * @param roles
+   * Does not affect roles not associated with the given input.
+   *
+   * @param roles - One or more roles to add.
    */
   addRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
 
   /**
-   * Removes the given roles from the user.
+   * Removes the given roles from the user by nullifying their corresponding claims.
    *
-   * @param roles
+   * Does not affect claims belonging to other roles.
+   *
+   * @param roles - One or more roles to remove.
    */
   removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
 
   /**
-   * Sets all the roles for the user.
+   * Replaces all of the user's role-based claims with those derived from the given roles.
    *
-   * @param roles
+   * All previous claims are cleared before the new role claims are applied.
+   *
+   * @param roles - The complete set of roles the user should have.
    */
   setRoles(roles: AuthRole[] | AuthRoleSet): Promise<void>;
 
   /**
-   * Loads the claims from the user.
+   * Loads the user's raw custom claims object from their Firebase Auth record.
+   *
+   * @throws Throws if the user does not exist.
    */
   loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>>;
 
   /**
-   * Updates the claims for a user by merging existing claims in with the input.
+   * Merges the input claims into the user's existing custom claims.
    *
-   * All null values are cleared from the existing claims. Undefined values are ignored.
+   * - Keys with `null` values are removed from the resulting claims.
+   * - Keys with `undefined` values are ignored (existing values are preserved).
    *
-   * @param claims
+   * @param claims - Partial claims to merge. Use `null` to delete a key.
    */
   updateClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaimsUpdate<T>): Promise<void>;
 
   /**
-   * Sets the claims for a user. All previous claims are cleared.
+   * Replaces the user's entire custom claims object. All previous claims are discarded.
    *
-   * @param claims
+   * @param claims - The new claims to set.
    */
   setClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaimsUpdate<T>): Promise<void>;
 
   /**
-   * Clears all claims for the user.
-   *
-   * @param claims
+   * Removes all custom claims from the user.
    */
   clearClaims(): Promise<void>;
 }
 
+/**
+ * Base implementation of {@link FirebaseServerAuthUserContext} that manages a single user's
+ * auth state (record, claims, roles, password) through the Firebase Admin Auth API.
+ *
+ * Caches the user record on first load and resets the cache automatically when claims are modified
+ * via {@link setClaims}. Subclass this to bind it to a specific {@link FirebaseServerAuthService} type.
+ *
+ * @example
+ * ```typescript
+ * export class MyAuthUserContext extends AbstractFirebaseServerAuthUserContext<MyAuthService> {}
+ *
+ * const ctx = new MyAuthUserContext(authService, 'some-uid');
+ * const roles = await ctx.loadRoles();
+ * await ctx.addRoles(AUTH_ADMIN_ROLE);
+ * ```
+ */
 export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseServerAuthService> implements FirebaseServerAuthUserContext {
   private readonly _service: S;
   private readonly _uid: FirebaseAuthUserId;
@@ -141,6 +210,9 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.loadRecord().then((record) => this.service.authDetailsForRecord(record));
   }
 
+  /**
+   * Generates a random numeric string for use as a temporary reset password.
+   */
   protected _generateResetPasswordKey(): string {
     return String(DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR());
   }
@@ -171,9 +243,6 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     }
   }
 
-  /**
-   * Sets the user's password.
-   */
   async setPassword(password: PasswordString): Promise<admin.auth.UserRecord> {
     const record = await this.updateUser({ password });
 
@@ -215,15 +284,19 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   /**
-   * Sets the claims using the input roles and roles set.
+   * Replaces all role-based claims with those derived from the given roles.
    *
-   * All other claims are cleared.
+   * All existing claims are cleared first. Use `claimsToRetain` to preserve non-role claims
+   * (e.g., setup or application-specific claims) through the replacement.
    *
-   * Use the claimsToRetain input to retain other claims that are outside of the roles.
+   * @param roles - The complete set of roles to assign.
+   * @param claimsToRetain - Additional claims to merge in alongside the role-derived claims.
    *
-   * @param roles
-   * @param claimsToRetain
-   * @returns
+   * @example
+   * ```typescript
+   * // Set roles while preserving a custom claim
+   * await userCtx.setRoles([AUTH_ADMIN_ROLE], { customFlag: 1 });
+   * ```
    */
   async setRoles<T extends AuthClaimsObject = AuthClaimsObject>(roles: AuthRole[] | AuthRoleSet, claimsToRetain?: Partial<T>): Promise<void> {
     const claims = {
@@ -234,8 +307,11 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.setClaims(claims);
   }
 
+  /**
+   * Converts roles to their corresponding claim keys, filtering out null/undefined entries
+   * that represent unrelated claims in the service's {@link FirebaseServerAuthService.claimsForRoles} output.
+   */
   protected _claimsForRolesChange(roles: ArrayOrValue<AuthRole>) {
-    // filter null/undefined since the claims will contain null values for claims that are not related.
     return filterNullAndUndefinedValues(this.service.claimsForRoles(asSet(roles)));
   }
 
@@ -274,43 +350,68 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 }
 
 // MARK: FirebaseServerAuthContext
+/**
+ * Read-only auth context derived from a Firebase callable function request.
+ *
+ * Provides access to the caller's identity, decoded token, roles, and admin/ToS status
+ * without requiring additional async lookups. Created by {@link FirebaseServerAuthService.context}
+ * after asserting that the request contains valid auth data.
+ *
+ * @example
+ * ```typescript
+ * const authCtx = authService.context(callableContext);
+ * if (authCtx.isAdmin) {
+ *   // handle admin-only logic
+ * }
+ * const roles = authCtx.authRoles;
+ * ```
+ */
 export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> extends FirebaseServerAuthUserIdentifierContext {
   /**
-   * The wrapped context.
+   * The original callable function context containing the authenticated request data.
    */
   readonly context: CallableContextWithAuthData;
 
   /**
-   * Returns the user context for this type.
+   * A {@link FirebaseServerAuthUserContext} for performing mutations on this user's auth record.
    */
   readonly userContext: U;
 
   /**
-   * Whether or not the context sees the user as an admin of the system.
+   * Whether the caller has the {@link AUTH_ADMIN_ROLE} based on their token claims.
    */
   readonly isAdmin: boolean;
 
   /**
-   * Whether or not the context sees the user as having signed the terms of service.
+   * Whether the caller has signed the terms of service based on their token claims.
    */
   readonly hasSignedTos: boolean;
 
   /**
-   * The auth roles provided by the token in this context.
+   * The full set of auth roles derived from the caller's token claims.
    */
   readonly authRoles: AuthRoleSet;
 
   /**
-   * The token in the context.
+   * The decoded ID token from the request.
    */
   readonly token: admin.auth.DecodedIdToken;
 
   /**
-   * The claims in the context.
+   * The raw custom claims from the decoded ID token.
    */
   readonly claims: AuthClaims;
 }
 
+/**
+ * Base implementation of {@link FirebaseServerAuthContext} with cached getters for roles, admin status,
+ * and ToS status to avoid redundant computation within a single request.
+ *
+ * @example
+ * ```typescript
+ * export class MyAuthContext extends AbstractFirebaseServerAuthContext<MyAuthContext, MyUserContext, MyAuthService> {}
+ * ```
+ */
 export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServerAuthContext, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, S extends FirebaseServerAuthService<U, C> = FirebaseServerAuthService<U, C>> implements FirebaseServerAuthContext {
   private readonly _service: S;
   private readonly _context: CallableContextWithAuthData;
@@ -364,8 +465,27 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
 }
 
 // MARK: New Account Initialization
+/**
+ * Custom claims stored on a user during account setup, containing the setup password
+ * and the last communication timestamp.
+ */
 export interface FirebaseServerAuthNewUserClaims extends FirebaseAuthNewUserClaimsData, AuthClaimsObject {}
 
+/**
+ * Configuration for creating and initializing a new Firebase Auth user.
+ *
+ * Supports creating users by email or phone, assigning a temporary setup password,
+ * and optionally sending setup content (e.g., an invitation email) immediately after creation.
+ *
+ * @example
+ * ```typescript
+ * await newUserService.initializeNewUser({
+ *   email: 'user@example.com',
+ *   sendSetupContent: true,
+ *   sendSetupThrowErrors: true
+ * });
+ * ```
+ */
 export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
   /**
    * Specific user identifier to use.
@@ -384,9 +504,9 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly phone?: E164PhoneNumber;
   /**
-   * Password to set on the user if not created yet.
+   * Temporary setup password assigned during account creation.
    *
-   * This is a setup password and should not be the user's permenant/final password.
+   * This is not the user's permanent password; it is replaced when the user completes setup.
    */
   readonly setupPassword?: FirebaseAuthSetupPassword;
   /**
@@ -419,11 +539,19 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
   readonly data?: D;
 }
 
+/**
+ * Result of creating a new Firebase Auth user, including the generated temporary setup password.
+ */
 export interface FirebaseServerAuthCreateNewUserResult {
   readonly user: admin.auth.UserRecord;
   readonly password: FirebaseAuthSetupPassword;
 }
 
+/**
+ * Configuration options for sending setup content (e.g., invitation emails) to a new user.
+ *
+ * Controls throttling, send-once behavior, and error handling for the delivery process.
+ */
 export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
   /**
    * Whether or not to force sending the test details. Usage differs between providers.
@@ -450,58 +578,142 @@ export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
   readonly data?: D;
 }
 
+/**
+ * Details about a user that is in the setup phase, including their user context,
+ * setup claims data, and the send configuration that was used.
+ */
 export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> extends FirebaseServerAuthNewUserSendSetupDetailsConfig<D> {
   readonly userContext: U;
   readonly claims: FirebaseAuthNewUserClaimsData;
 }
 
+/**
+ * Service for programmatically creating new Firebase Auth users and managing their setup lifecycle.
+ *
+ * Handles user creation, setup password assignment, setup content delivery (with throttling),
+ * and marking user setup as complete by clearing setup-related claims.
+ *
+ * @example
+ * ```typescript
+ * const newUserSvc = authService.newUser();
+ * const record = await newUserSvc.initializeNewUser({ email: 'user@example.com', sendSetupContent: true });
+ * // Later, after the user completes onboarding:
+ * await newUserSvc.markUserSetupAsComplete(record.uid);
+ * ```
+ */
 export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+  /**
+   * Creates a new user (or finds an existing one) and optionally sends setup content.
+   *
+   * If the user already exists, no new account is created. Setup content is only sent
+   * when explicitly requested via the input flags.
+   *
+   * @param input - Configuration for the new user and setup content delivery.
+   * @throws Throws if neither email, phone, nor uid is provided.
+   */
   initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord>;
   /**
-   * Adds setup claims to a user.
+   * Writes the setup password claim to the user's custom claims.
    *
-   * @param userContextOrUid
-   * @param setupPassword
+   * If no password is provided, a random one is generated.
+   *
+   * @param userContextOrUid - The user to update, as a context or UID string.
+   * @param setupPassword - Optional explicit setup password; auto-generated if omitted.
    */
   addNewUserSetupClaims(userContextOrUid: U | FirebaseAuthUserId, setupPassword?: FirebaseAuthSetupPassword): Promise<U>;
   /**
-   * Sends the setup content to the user. Returns true if content was sent or was already recently sent.
+   * Sends setup content (e.g., an invitation email) to the user.
    *
-   * @param uid
+   * Respects throttling and send-once constraints from the config. Returns `true` if
+   * content was actually sent, `false` if skipped due to throttling or send-once rules.
+   *
+   * @param uid - The target user's UID.
+   * @param data - Optional delivery configuration.
+   * @throws {FirebaseServerAuthNewUserSendSetupDetailsThrottleError} When throttled and `throwErrors` is true.
+   * @throws {FirebaseServerAuthNewUserSendSetupDetailsSendOnceError} When already sent and `sendSetupDetailsOnce` + `throwErrors` are true.
+   * @throws {FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError} When no setup claims exist and `throwErrors` is true.
    */
   sendSetupContent(uid: FirebaseAuthUserId, data?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean>;
   /**
-   * Loads the setup details for the user. If the user does not exist or does not need to be setup then undefined is returned.
+   * Loads the setup details for the user if they are in the setup phase.
    *
-   * @param uid
-   * @param config
+   * @param uid - The target user's UID.
+   * @param config - Optional config to forward to the details.
+   * @returns The setup details, or `undefined` if the user does not exist or has no setup claims.
    */
   loadSetupDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>>;
   /**
-   * Loads the setup details for the input user context. If the user does not exist or does not need to be setup then undefined is returned.
+   * Loads the setup details for a user context that is already resolved.
    *
-   * @param uid
-   * @param config
+   * @param userContext - The resolved user context.
+   * @param config - Optional config to forward to the details.
+   * @returns The setup details, or `undefined` if the user has no setup claims.
    */
   loadSetupDetailsForUserContext(userContext: U, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>>;
+  /**
+   * Clears all setup-related claims from the user, marking their setup as complete.
+   *
+   * @param uid - The target user's UID.
+   * @returns `true` if the user existed and was updated, `false` if the user was not found.
+   */
   markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean>;
 }
 
 /**
- * 1 hour
+ * Default throttle duration (1 hour) between setup content sends to prevent spam.
+ *
+ * Used by {@link AbstractFirebaseServerNewUserService.sendSetupContent} to rate-limit delivery.
  */
 export const DEFAULT_SETUP_COM_THROTTLE_TIME = hoursToMs(1);
 
+/**
+ * A user context instance or a raw UID string that can be resolved to one.
+ */
 export type UserContextOrUid<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> = U | FirebaseAuthUserId;
 
+/**
+ * Resolves a {@link UserContextOrUid} to a concrete user context instance.
+ *
+ * If a string UID is provided, creates a new user context via the auth service.
+ * If an existing context is provided, returns it as-is.
+ *
+ * @param authService - The auth service to create a context from if needed.
+ * @param userContextOrUid - A user context or UID string.
+ *
+ * @example
+ * ```typescript
+ * const ctx = userContextFromUid(authService, 'some-uid');
+ * const sameCtx = userContextFromUid(authService, ctx); // returns ctx unchanged
+ * ```
+ */
 export function userContextFromUid<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext>(authService: FirebaseServerAuthService<U>, userContextOrUid: UserContextOrUid<U>): U {
   const userContext: U = typeof userContextOrUid === 'string' ? authService.userContext(userContextOrUid) : userContextOrUid;
   return userContext;
 }
 
+/**
+ * Base implementation of {@link FirebaseServerNewUserService} that handles user creation,
+ * setup claims management, throttled setup content delivery, and setup completion.
+ *
+ * Subclasses must implement {@link sendSetupContentToUser} to define how setup content
+ * (e.g., invitation email, SMS) is delivered to the user.
+ *
+ * @example
+ * ```typescript
+ * export class MyNewUserService extends AbstractFirebaseServerNewUserService<MyUserContext> {
+ *   protected async sendSetupContentToUser(details: FirebaseServerAuthNewUserSetupDetails<MyUserContext>): Promise<void> {
+ *     await this.emailService.sendInvite(details.userContext.uid, details.claims.setupPassword);
+ *   }
+ * }
+ * ```
+ */
 export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D, U> {
   private readonly _authService: FirebaseServerAuthService<U, C>;
 
+  /**
+   * Minimum time between setup content sends. Defaults to {@link DEFAULT_SETUP_COM_THROTTLE_TIME} (1 hour).
+   * Override in subclasses to customize the throttle window.
+   */
   protected setupThrottleTime: Milliseconds = DEFAULT_SETUP_COM_THROTTLE_TIME;
 
   constructor(authService: FirebaseServerAuthService<U, C>) {
@@ -633,6 +845,9 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return details;
   }
 
+  /**
+   * Records the current timestamp as the last setup content communication date in the user's claims.
+   */
   protected async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void> {
     const setupCommunicationAt = toISODateString(new Date());
 
@@ -641,13 +856,6 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     });
   }
 
-  /**
-   * Update a user's claims to clear any setup-related content.
-   *
-   * Returns true if a user was updated.
-   *
-   * @param uid
-   */
   async markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean> {
     const userContext = this.authService.userContext(uid);
     const userExists = await userContext.exists();
@@ -659,6 +867,13 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return userExists;
   }
 
+  /**
+   * Creates a new Firebase Auth user from the initialization input.
+   *
+   * Generates a random setup password if none is provided. Override to customize user creation behavior.
+   *
+   * @throws Throws if the Firebase Admin SDK rejects the user creation.
+   */
   protected async createNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<FirebaseServerAuthCreateNewUserResult> {
     const { uid, displayName, email, phone: phoneNumber, setupPassword: inputPassword } = input;
     const password = inputPassword ?? this.generateRandomSetupPassword();
@@ -681,8 +896,18 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return `${DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR()}`;
   }
 
-  protected abstract sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void>;
+  /**
+   * Delivers setup content (e.g., invitation email, SMS) to the user.
+   *
+   * Subclasses must implement this to define the actual delivery mechanism.
+   *
+   * @param details - The user's setup details, including their context and setup claims.
+   */
+  protected abstract sendSetupContentToUser(details: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void>;
 
+  /**
+   * Clears setup-related claims (setup password and last communication date) from the user.
+   */
   protected async updateClaimsToClearUser(userContext: U): Promise<void> {
     await userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
       [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]: null,
@@ -691,8 +916,13 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   }
 }
 
+/**
+ * No-op implementation of {@link AbstractFirebaseServerNewUserService} that skips sending setup content.
+ *
+ * Used as the default {@link FirebaseServerNewUserService} when no custom delivery mechanism is configured.
+ */
 export class NoSetupContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> extends AbstractFirebaseServerNewUserService<U> {
-  protected async sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
+  protected async sendSetupContentToUser(_details: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
     // send nothing.
   }
 }
@@ -706,94 +936,148 @@ export interface FirebaseServerAuthServiceRef<S extends FirebaseServerAuthServic
 }
 
 /**
- * FirebaseServer auth service that provides accessors to auth-related components.
+ * Abstract contract for a Firebase Server authentication service.
+ *
+ * Provides the core API for creating auth contexts from callable requests, managing user contexts,
+ * checking admin/ToS status, converting between roles and claims, and creating new users.
+ *
+ * Implement this by extending {@link AbstractFirebaseServerAuthService}, which provides default
+ * implementations for most methods and only requires `readRoles`, `claimsForRoles`,
+ * `userContext`, and `_context` to be defined.
+ *
+ * @example
+ * ```typescript
+ * class MyAuthService extends AbstractFirebaseServerAuthService<MyUserContext, MyAuthContext> {
+ *   readRoles(claims: AuthClaims): AuthRoleSet { ... }
+ *   claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate { ... }
+ *   userContext(uid: string): MyUserContext { ... }
+ *   protected _context(ctx: CallableContextWithAuthData): MyAuthContext { ... }
+ * }
+ * ```
  */
 export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext> {
+  /**
+   * The underlying Firebase Admin Auth instance.
+   */
   abstract readonly auth: admin.auth.Auth;
 
   /**
-   * Creates a context with the input CallableContext. This creation also asserts that a uid is available to the request.
+   * Creates a {@link FirebaseServerAuthContext} from a callable function request.
    *
-   * If the input context is not a CallableContextWithAuthData, an exception is thrown.
+   * Asserts that the request contains valid auth data (a UID is present).
    *
-   * @param context
+   * @param context - The callable function context from a Firebase function invocation.
+   * @throws Throws if the context does not contain authenticated user data.
    */
   abstract context(context: CallableContext): C;
 
   /**
-   * Creates a FirebaseServerAuthUserContext instance for the input uid.
+   * Creates a {@link FirebaseServerAuthUserContext} for direct user manipulation.
    *
-   * The user's existence is not checked.
+   * Does not verify that the user exists; existence should be checked separately if needed.
    *
-   * @param uid
+   * @param uid - The Firebase Auth UID of the target user.
    */
   abstract userContext(uid: FirebaseAuthUserId): U;
 
   /**
-   * Whether or not the input claims indicate admin priviledges.
+   * Determines whether the given claims indicate admin privileges by converting
+   * claims to roles and checking for {@link AUTH_ADMIN_ROLE}.
    *
-   * @param claims
+   * @param claims - The user's custom claims.
    */
   abstract isAdmin(claims: AuthClaims): boolean;
 
   /**
-   * Whether or not the input claims indiciate the user has signed the ToS.
+   * Determines whether the given claims indicate the user has signed the Terms of Service
+   * by converting claims to roles and checking for {@link AUTH_TOS_SIGNED_ROLE}.
    *
-   * @param claims
+   * @param claims - The user's custom claims.
    */
   abstract hasSignedTos(claims: AuthClaims): boolean;
 
   /**
-   * Whether or not the input roles indicate admin priviledges.
+   * Checks whether the given role set includes the {@link AUTH_ADMIN_ROLE}.
    *
-   * @param roles
+   * @param roles - The pre-computed role set to check.
    */
   abstract isAdminInRoles(roles: AuthRoleSet): boolean;
 
   /**
-   * Whether or not the input roles indiciate the user has signed the ToS.
+   * Checks whether the given role set includes the {@link AUTH_TOS_SIGNED_ROLE}.
    *
-   * @param claims
+   * @param roles - The pre-computed role set to check.
    */
   abstract hasSignedTosInRoles(roles: AuthRoleSet): boolean;
 
   /**
-   * Reads the AuthRoleSet from the input claims.
+   * Converts raw custom claims into the application's {@link AuthRoleSet}.
    *
-   * @param claims
+   * This is the inverse of {@link claimsForRoles} and defines the claims-to-roles mapping.
+   *
+   * @param claims - The user's custom claims.
    */
   abstract readRoles(claims: AuthClaims): AuthRoleSet;
 
   /**
-   * Creates the claims that reflect the input roles.
+   * Converts an {@link AuthRoleSet} into the corresponding claims update object.
    *
-   * The resultant claims value should include ALL claim values, with those that are unset to be null.
+   * The result should include ALL known claim keys, with unset claims set to `null`
+   * so they can be cleared from the user's custom claims.
    *
-   * @param roles
+   * @param roles - The roles to convert to claims.
    */
   abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
 
   /**
-   * Builds a FirebaseAuthContextInfo for the input auth data context.
+   * Builds a {@link FirebaseAuthContextInfo} from an auth data reference, providing
+   * lazy accessors for roles, admin status, and claims.
    *
-   * @param context
+   * @param context - A reference containing auth data (e.g., from a request).
+   * @returns The context info, or `undefined` if no auth data is present.
    */
   abstract authContextInfo(context: AuthDataRef): Maybe<FirebaseAuthContextInfo>;
 
   /**
-   * Returns the new user service to create a new user programmatically.
+   * Returns a {@link FirebaseServerNewUserService} for programmatic user creation and setup management.
    */
   abstract newUser(): FirebaseServerNewUserService;
 
   /**
-   * Returns the auth details for the given UserRecord.
-   * @param record
+   * Converts a Firebase Admin {@link admin.auth.UserRecord} into a normalized {@link FirebaseAuthDetails} object.
+   *
+   * @param record - The user record to convert.
    */
   abstract authDetailsForRecord(record: admin.auth.UserRecord): FirebaseAuthDetails;
 }
 
 /**
- * Abstract FirebaseServerAuthService implementation.
+ * Base implementation of {@link FirebaseServerAuthService} providing standard admin/ToS checks,
+ * auth context creation with assertion, and a default no-op new user service.
+ *
+ * Subclasses must implement:
+ * - {@link _context} - to create the concrete auth context type.
+ * - {@link userContext} - to create the concrete user context type.
+ * - {@link readRoles} - to define the claims-to-roles mapping.
+ * - {@link claimsForRoles} - to define the roles-to-claims mapping.
+ *
+ * @example
+ * ```typescript
+ * export class MyAuthService extends AbstractFirebaseServerAuthService<MyUserContext, MyAuthContext> {
+ *   protected _context(context: CallableContextWithAuthData): MyAuthContext {
+ *     return new MyAuthContext(this, context);
+ *   }
+ *   userContext(uid: string): MyUserContext {
+ *     return new MyUserContext(this, uid);
+ *   }
+ *   readRoles(claims: AuthClaims): AuthRoleSet {
+ *     return MY_CLAIMS_SERVICE.toRoles(claims);
+ *   }
+ *   claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate {
+ *     return MY_CLAIMS_SERVICE.toClaims(roles);
+ *   }
+ * }
+ * ```
  */
 export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext<U> = FirebaseServerAuthContext<U>> implements FirebaseServerAuthService<U, C> {
   private readonly _auth: admin.auth.Auth;

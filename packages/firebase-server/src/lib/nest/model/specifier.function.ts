@@ -3,6 +3,7 @@ import { type Configurable, type Maybe, objectToMap, type PromiseOrValue, server
 import { type NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
+import { type OnCallApiDetailsRef, aggregateSpecifierApiDetails } from './api.details';
 
 export type OnCallSpecifierHandlerNestContextRequest<N, I = unknown> = NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
 export type OnCallSpecifierHandlerFunctionWithAuth<N, I = unknown, O = unknown> = ((request: OnCallSpecifierHandlerNestContextRequest<N, I>) => PromiseOrValue<O>) & {
@@ -26,7 +27,7 @@ export type OnCallSpecifierHandlerConfig<N> = {
   readonly [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
 };
 
-export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef {
+export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef & OnCallApiDetailsRef {
   const map = objectToMap(config);
 
   const fn = (request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I>) => {
@@ -42,6 +43,14 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
   };
 
   (fn as Configurable<OnCallWithAuthAwareNestRequireAuthRef>)._requireAuth = false;
+
+  // Aggregate _apiDetails from handler functions in the config
+  const specifierApiDetails = aggregateSpecifierApiDetails(config as { readonly [key: string]: Maybe<OnCallApiDetailsRef> });
+
+  if (specifierApiDetails != null) {
+    (fn as Configurable<OnCallApiDetailsRef>)._apiDetails = specifierApiDetails;
+  }
+
   return fn;
 }
 

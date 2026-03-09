@@ -1,5 +1,4 @@
 import { type Building, type DateOrDateString, type DateRelativeState, type FactoryWithRequiredInput, groupValues, type MapFunction, type Maybe, MS_IN_DAY, type ISO8601DayString, type DayOfWeek, dayOfWeek, daysOfWeekArray } from '@dereekb/util';
-import { type } from 'arktype';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
@@ -47,14 +46,6 @@ export const sortDateRangeStartAscendingCompareFunction = sortByDateFunction<Dat
 export interface DateRange extends DateRangeStart {
   end: Date;
 }
-
-/**
- * ArkType schema for {@link DateRange}.
- */
-export const dateRangeType = type({
-  start: 'Date',
-  end: 'Date'
-});
 
 /**
  * Counts the total number of calendar days spanned by the range, inclusive of both endpoints.
@@ -257,15 +248,6 @@ export interface DateRangeParams {
   date: Date;
   distance?: number;
 }
-
-/**
- * ArkType schema for {@link DateRangeParams}.
- */
-export const dateRangeParamsType = type({
-  type: type.enumerated(...Object.values(DateRangeType)),
-  date: 'Date',
-  'distance?': 'number'
-});
 
 export interface DateRangeTypedInput {
   type: DateRangeType;

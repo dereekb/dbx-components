@@ -1,37 +1,7 @@
-import { type } from 'arktype';
-import { type ModelRecurrenceInfo, modelRecurrenceInfoType, ModelRecurrenceInfoUtility } from './date.recurrence';
+import { ModelRecurrenceInfoUtility } from './date.recurrence';
 import { type CalendarDate, CalendarDateType } from '../date';
 
-describe('modelRecurrenceInfoType', () => {
-  it('should validate a valid ModelRecurrenceInfo', () => {
-    const info: ModelRecurrenceInfo = {
-      timezone: 'America/Chicago',
-      rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
-      start: new Date('2026-01-01'),
-      end: new Date('2026-01-15'),
-      forever: false
-    };
-
-    const result = modelRecurrenceInfoType(info);
-    expect(result).not.toBeInstanceOf(type.errors);
-  });
-
-  it('should validate without optional fields', () => {
-    const info = {
-      rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
-      start: new Date('2026-01-01'),
-      end: new Date('2026-01-15')
-    };
-
-    const result = modelRecurrenceInfoType(info);
-    expect(result).not.toBeInstanceOf(type.errors);
-  });
-
-  it('should reject missing required fields', () => {
-    const result = modelRecurrenceInfoType({ rrule: 'test' });
-    expect(result).toBeInstanceOf(type.errors);
-  });
-});
+// ArkType validation tests for modelRecurrenceInfoType have been moved to date.model.spec.ts
 
 describe('ModelRecurrenceInfoUtility', () => {
   describe('expandModelRecurrenceStartToModelRecurrenceInfo()', () => {

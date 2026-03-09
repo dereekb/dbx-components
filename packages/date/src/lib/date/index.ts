@@ -9,6 +9,7 @@ export * from './date.cell.week';
 export * from './date.calendar';
 export * from './date.duration';
 export * from './date.format';
+export * from './date.model';
 export * from './date.hashset';
 export * from './date.logical';
 export * from './date.range';

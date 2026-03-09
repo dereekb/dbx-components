@@ -4,7 +4,6 @@ import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfD
 import {
   dateCellTiming,
   type DateCellTiming,
-  dateCellTimingType,
   isValidDateCellIndex,
   isValidDateCellTiming,
   isValidDateCellTimingStartDate,
@@ -27,7 +26,6 @@ import {
 import { MS_IN_DAY, MINUTES_IN_DAY, type TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { guessCurrentTimezone, requireCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
-import { type } from 'arktype';
 import { wrapDateTests } from '../../test.spec';
 
 wrapDateTests(() => {
@@ -46,19 +44,6 @@ wrapDateTests(() => {
 
     it('should return true for 100.', () => {
       expect(isValidDateCellIndex(100)).toBe(true);
-    });
-  });
-
-  describe('dateCellTimingType', () => {
-    it('should validate a valid DateCellTiming', () => {
-      const data = dateCellTiming({ startsAt: new Date(), duration: 60 }, 10);
-      const result = dateCellTimingType(data);
-      expect(result).not.toBeInstanceOf(type.errors);
-    });
-
-    it('should reject invalid data', () => {
-      const result = dateCellTimingType({ startsAt: 'not-a-date', duration: 60, end: new Date(), timezone: 'UTC' });
-      expect(result).toBeInstanceOf(type.errors);
     });
   });
 
