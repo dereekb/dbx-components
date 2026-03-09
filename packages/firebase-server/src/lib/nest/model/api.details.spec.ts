@@ -69,7 +69,7 @@ describe('api.details', () => {
     it('should return _apiDetails from a wrapped function', () => {
       const details: OnCallModelFunctionApiDetails = { inputType: mockJsonSchemaRef('Test') };
       const handler = withApiDetails({ ...details, fn: mockHandler() });
-      expect(readApiDetails(handler)).toBe(details);
+      expect(readApiDetails(handler)).toStrictEqual(details);
     });
 
     it('should return undefined from an unwrapped function', () => {

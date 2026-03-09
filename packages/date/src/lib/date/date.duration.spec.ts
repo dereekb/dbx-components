@@ -1,28 +1,10 @@
 import { subDays, addDays, addMinutes as dfnsAddMinutes } from 'date-fns';
-import { type DateDurationSpan, dateDurationSpanEndDate, durationSpanToDateRange, durationSpanFromDateRange, durationSpanDateRelativeState, fractionalHoursInDurationSpan, isSameDurationSpan, dateDurationSpanType } from './date.duration';
+import { type DateDurationSpan, dateDurationSpanEndDate, durationSpanToDateRange, durationSpanFromDateRange, durationSpanDateRelativeState, fractionalHoursInDurationSpan, isSameDurationSpan } from './date.duration';
 import { type DateRange } from './date.range';
 import { wrapDateTests } from '../../test.spec';
 import { type Minutes } from '@dereekb/util';
-import { type } from 'arktype';
 
 wrapDateTests(() => {
-  describe('dateDurationSpanType', () => {
-    it('should validate a valid DateDurationSpan', () => {
-      const result = dateDurationSpanType({ startsAt: new Date(), duration: 60 });
-      expect(result).not.toBeInstanceOf(type.errors);
-    });
-
-    it('should reject a negative duration', () => {
-      const result = dateDurationSpanType({ startsAt: new Date(), duration: -1 });
-      expect(result).toBeInstanceOf(type.errors);
-    });
-
-    it('should reject missing startsAt', () => {
-      const result = dateDurationSpanType({ duration: 60 });
-      expect(result).toBeInstanceOf(type.errors);
-    });
-  });
-
   describe('dateDurationSpanEndDate', () => {
     it('should return the correct end date', () => {
       const startsAt = new Date(2024, 0, 1, 10, 0, 0);

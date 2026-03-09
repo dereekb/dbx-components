@@ -25,7 +25,6 @@ import {
   type Days,
   type DateRelativeDirection
 } from '@dereekb/util';
-import { type } from 'arktype';
 import { getDay, addMinutes } from 'date-fns';
 import { isDate, requireCurrentTimezone } from './date';
 import { calculateExpectedDateCellTimingDurationPair, type DateCell, type DateCellDurationSpan, type DateCellIndex, type DateCellTiming, type DateCellTimingDateRange, type DateCellTimingStartsAtEndRange, type FullDateCellTiming, isSameFullDateCellTiming, type DateCellTimingEventStartsAt, isFullDateCellTiming, type DateCellTimingTimezoneInput, dateCellTimingTimezoneNormalInstance, type DateCellIndexDatePair } from './date.cell';
@@ -433,15 +432,6 @@ export function isSameDateCellSchedule(a: Maybe<DateCellSchedule>, b: Maybe<Date
     return a == b;
   }
 }
-
-/**
- * ArkType schema for {@link DateCellSchedule}.
- */
-export const dateCellScheduleType = type({
-  w: [DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX, '&', 'string'] as const,
-  'd?': 'number.integer >= 0 []',
-  'ex?': 'number.integer >= 0 []'
-});
 
 /**
  * A DateCellSchedule combined with a DateRange and timezone, bounding the schedule to a specific date window.

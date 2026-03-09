@@ -1,7 +1,6 @@
 import { parseISO8601DayStringToUTCDate, type ISO8601DayString } from '@dereekb/util';
-import { type } from 'arktype';
 import { daysToMinutes } from './date';
-import { type DateDurationSpan, dateDurationSpanType } from './date.duration';
+import { type DateDurationSpan } from './date.duration';
 import { dateTimezoneUtcNormal } from './date.timezone';
 
 /**
@@ -25,13 +24,6 @@ export enum CalendarDateType {
 export interface CalendarDate extends DateDurationSpan {
   type: CalendarDateType;
 }
-
-/**
- * ArkType schema for {@link CalendarDate}.
- */
-export const calendarDateType = dateDurationSpanType.merge({
-  type: type.enumerated(...Object.values(CalendarDateType))
-});
 
 /**
  * Configuration for creating calendar dates with timezone handling.

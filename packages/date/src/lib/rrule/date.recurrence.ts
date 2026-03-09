@@ -1,4 +1,3 @@
-import { type } from 'arktype';
 import { type CalendarDate, type DateRange } from '../date';
 import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { DateRRuleParseUtility, type RRuleLines, type RRuleStringLineSet } from './date.rrule.parse';
@@ -33,17 +32,6 @@ export interface ModelRecurrenceInfo extends DateRange {
   /** True if the recurrence has no end. */
   forever?: boolean;
 }
-
-/**
- * ArkType schema for {@link ModelRecurrenceInfo}.
- */
-export const modelRecurrenceInfoType = type({
-  'timezone?': 'string',
-  rrule: 'string',
-  start: 'Date',
-  end: 'Date',
-  'forever?': 'boolean'
-});
 
 /**
  * Input used to create or update recurrence on a model, before it is

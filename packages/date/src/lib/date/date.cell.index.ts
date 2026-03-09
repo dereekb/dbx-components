@@ -1,5 +1,5 @@
 import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
-import { type DateCell, dateCellType, isValidDateCellIndex, type DateOrDateCellIndex, type DateCellIndex } from './date.cell';
+import { type DateCell, isValidDateCellIndex, type DateOrDateCellIndex, type DateCellIndex } from './date.cell';
 import { type DateRange } from './date.range';
 
 // MARK: DateCellRange
@@ -14,13 +14,6 @@ export interface DateCellRange extends DateCell {
    */
   to?: DateCellIndex;
 }
-
-/**
- * ArkType schema for {@link DateCellRange}.
- */
-export const dateCellRangeType = dateCellType.merge({
-  'to?': 'number.integer >= 0'
-});
 
 /**
  * Returns true if the input is a DateCellRange.

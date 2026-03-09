@@ -1,5 +1,4 @@
 import { type DateRelativeState, type FractionalHour, type Minutes, minutesToFractionalHours, type Maybe, safeCompareEquality } from '@dereekb/util';
-import { type } from 'arktype';
 import { addMinutes, differenceInMinutes } from 'date-fns';
 import { type DateRange, dateRangeRelativeState } from './date.range';
 import { isSameDate } from './date';
@@ -13,14 +12,6 @@ export interface DateDurationSpan {
   startsAt: Date;
   duration: Minutes;
 }
-
-/**
- * ArkType schema for {@link DateDurationSpan}.
- */
-export const dateDurationSpanType = type({
-  startsAt: 'Date',
-  duration: 'number >= 0'
-});
 
 /**
  * Computes the end date for a duration span by adding the duration to the start time.
