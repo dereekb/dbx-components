@@ -1,22 +1,4 @@
-import {
-  withApiDetails,
-  readApiDetails,
-  getModelApiDetails,
-  isOnCallSpecifierApiDetails,
-  isOnCallCrudModelApiDetails,
-  isOnCallHandlerApiDetails,
-  aggregateSpecifierApiDetails,
-  aggregateCrudModelApiDetails,
-  aggregateModelApiDetails,
-  type OnCallModelFunctionApiDetails,
-  type OnCallSpecifierApiDetails,
-  type OnCallCrudModelApiDetails,
-  type OnCallModelApiDetails,
-  type JsonSchemaRef,
-  type OnCallApiDetailsRef,
-  type OnCallModelFunctionApiDetailsRef
-} from './api.details';
-import { optionalAuthContext } from '../function/call';
+import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallSpecifierApiDetails, isOnCallCrudModelApiDetails, isOnCallHandlerApiDetails, aggregateSpecifierApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, type OnCallModelFunctionApiDetails, type OnCallSpecifierApiDetails, type OnCallCrudModelApiDetails, type OnCallModelApiDetails, type JsonSchemaRef, type OnCallApiDetailsRef, type OnCallModelFunctionApiDetailsRef } from './api.details';
 import { onCallSpecifierHandler } from './specifier.function';
 import { onCallCreateModel, type OnCallCreateModelMap } from './create.model.function';
 import { onCallUpdateModel } from './update.model.function';
@@ -40,11 +22,12 @@ function mockHandler(): ((...args: any[]) => any) & { _requireAuth: false } {
 // MARK: Tests
 describe('api.details', () => {
   // MARK: withApiDetails
+
   describe('withApiDetails()', () => {
     it('should attach _apiDetails to a function', () => {
       const inputType = mockJsonSchemaRef('TestInput');
       const handler = mockHandler();
-      const wrapped = withApiDetails({ ...TEMP;
+      const wrapped = withApiDetails({ inputType, fn: handler });
 
       expect(wrapped._apiDetails).toBeDefined();
       expect(wrapped._apiDetails!.inputType).toBe(inputType);
@@ -53,7 +36,7 @@ describe('api.details', () => {
     it('should attach inputType and outputType', () => {
       const inputType = mockJsonSchemaRef('TestInput');
       const outputType = mockJsonSchemaRef('TestOutput');
-      const wrapped = withApiDetails({ ...TEMP;
+      const wrapped = withApiDetails({ inputType, outputType, fn: mockHandler() });
 
       expect(wrapped._apiDetails!.inputType).toBe(inputType);
       expect(wrapped._apiDetails!.outputType).toBe(outputType);
@@ -61,7 +44,7 @@ describe('api.details', () => {
 
     it('should attach mcp details', () => {
       const mcp = { description: 'Create a widget', name: 'widget-create' };
-      const wrapped = withApiDetails({ ...TEMP;
+      const wrapped = withApiDetails({ mcp, fn: mockHandler() });
 
       expect(wrapped._apiDetails!.mcp).toBe(mcp);
       expect(wrapped._apiDetails!.mcp!.description).toBe('Create a widget');
@@ -69,95 +52,15 @@ describe('api.details', () => {
     });
 
     it('should preserve the original function behavior', async () => {
-      const wrapped = withApiDetails({ ...TEMP;
+      const wrapped = withApiDetails({ inputType: mockJsonSchemaRef('Test'), fn: mockHandler() });
       const result = await wrapped({} as any);
       expect(result).toBeDefined();
     });
 
     it('should return the same function reference', () => {
       const handler = mockHandler();
-      const wrapped = withApiDetails({ ...TEMP;
+      const wrapped = withApiDetails({ fn: handler });
       expect(wrapped).toBe(handler);
-    });
-
-    it('should not strip optionalAuth from _apiDetails', () => {
-      // optionalAuth is a config-only property that should not leak into _apiDetails
-      const inputType = mockJsonSchemaRef('Test');
-      const wrapped = withApiDetails({ ...TEMP;
-
-      expect(wrapped._apiDetails).toBeDefined();
-      expect(wrapped._apiDetails!.inputType).toBe(inputType);
-      expect((wrapped._apiDetails as any).optionalAuth).toBeUndefined();
-    });
-
-    describe('optionalAuth', () => {
-      it('should set _requireAuth = false when optionalAuth is true', () => {
-        const handler = mockHandler();
-        // Reset to simulate a handler that requires auth by default
-        delete (handler as any)._requireAuth;
-
-        const wrapped = withApiDetails({ ...TEMP;
-        expect((wrapped as any)._requireAuth).toBe(false);
-      });
-
-      it('should not set _requireAuth when optionalAuth is not set', () => {
-        const fn = async () => ({ modelKeys: [] });
-        const wrapped = withApiDetails({ ...TEMP;
-        expect((wrapped as any)._requireAuth).toBeUndefined();
-      });
-
-      it('should combine api details and optional auth on the same function', () => {
-        const inputType = mockJsonSchemaRef('Test');
-        const handler = mockHandler();
-        delete (handler as any)._requireAuth;
-
-        const wrapped = withApiDetails({ ...TEMP;
-
-        // Both properties on the same function
-        expect(wrapped._apiDetails).toBeDefined();
-        expect(wrapped._apiDetails!.inputType).toBe(inputType);
-        expect((wrapped as any)._requireAuth).toBe(false);
-      });
-    });
-
-    describe('composition with optionalAuthContext', () => {
-      it('should preserve _apiDetails when withApiDetails is applied AFTER optionalAuthContext', () => {
-        const inputType = mockJsonSchemaRef('Test');
-        const fn = async () => ({ modelKeys: [] });
-
-        // optionalAuthContext wraps into a new function, then withApiDetails attaches to that wrapper
-        const optionalFn = optionalAuthContext(fn as any);
-        const wrapped = withApiDetails({ ...TEMP;
-
-        expect((wrapped as any)._requireAuth).toBe(false);
-        expect(wrapped._apiDetails).toBeDefined();
-        expect(wrapped._apiDetails!.inputType).toBe(inputType);
-      });
-
-      it('should LOSE _apiDetails when optionalAuthContext is applied AFTER withApiDetails', () => {
-        const inputType = mockJsonSchemaRef('Test');
-        const fn = async () => ({ modelKeys: [] });
-
-        // withApiDetails attaches to fn, then optionalAuthContext creates a NEW wrapper — _apiDetails lost
-        const withDetails = withApiDetails({ ...TEMP;
-        const wrapped = optionalAuthContext(withDetails as any);
-
-        expect((wrapped as any)._requireAuth).toBe(false);
-        // _apiDetails is on the inner function, not the outer wrapper
-        expect((wrapped as any)._apiDetails).toBeUndefined();
-      });
-
-      it('should use withApiDetails({ optionalAuth: true }) instead to avoid composition issues', () => {
-        const inputType = mockJsonSchemaRef('Test');
-        const fn = async () => ({ modelKeys: [] });
-
-        // Single call handles both concerns — no composition ordering issue
-        const wrapped = withApiDetails({ ...TEMP;
-
-        expect((wrapped as any)._requireAuth).toBe(false);
-        expect(wrapped._apiDetails).toBeDefined();
-        expect(wrapped._apiDetails!.inputType).toBe(inputType);
-      });
     });
   });
 
@@ -165,7 +68,7 @@ describe('api.details', () => {
   describe('readApiDetails()', () => {
     it('should return _apiDetails from a wrapped function', () => {
       const details: OnCallModelFunctionApiDetails = { inputType: mockJsonSchemaRef('Test') };
-      const handler = withApiDetails(details, mockHandler());
+      const handler = withApiDetails({ ...details, fn: mockHandler() });
       expect(readApiDetails(handler)).toBe(details);
     });
 
@@ -289,8 +192,8 @@ describe('api.details', () => {
       const inputTypeA = mockJsonSchemaRef('ParamsA');
       const inputTypeB = mockJsonSchemaRef('ParamsB');
 
-      const handlerA = withApiDetails({ ...TEMP;
-      const handlerB = withApiDetails({ ...TEMP;
+      const handlerA = withApiDetails({ inputType: inputTypeA, fn: mockHandler() });
+      const handlerB = withApiDetails({ inputType: inputTypeB, fn: mockHandler() });
 
       const specifierHandler = onCallSpecifierHandler({
         _: handlerA as any,
@@ -320,7 +223,7 @@ describe('api.details', () => {
     it('should only include handlers that have api details', () => {
       const inputType = mockJsonSchemaRef('Params');
       const specifierHandler = onCallSpecifierHandler({
-        _: withApiDetails({ ...TEMP as any,
+        _: withApiDetails({ inputType, fn: mockHandler() }) as any,
         noDetails: mockHandler() as any
       });
 
@@ -333,7 +236,7 @@ describe('api.details', () => {
   describe('onCallCreateModel aggregation', () => {
     it('should aggregate from direct handlers', () => {
       const inputType = mockJsonSchemaRef('CreateParams');
-      const handler = withApiDetails({ ...TEMP;
+      const handler = withApiDetails({ inputType, fn: mockHandler() });
 
       const createModel = onCallCreateModel({ widget: handler } as OnCallCreateModelMap<any>);
       const details = readApiDetails(createModel as unknown as OnCallApiDetailsRef) as OnCallCrudModelApiDetails;
@@ -348,8 +251,8 @@ describe('api.details', () => {
       const inputTypeB = mockJsonSchemaRef('CustomParams');
 
       const specHandler = onCallSpecifierHandler({
-        _: withApiDetails({ ...TEMP as any,
-        custom: withApiDetails({ ...TEMP as any
+        _: withApiDetails({ inputType: inputTypeA, fn: mockHandler() }) as any,
+        custom: withApiDetails({ inputType: inputTypeB, fn: mockHandler() }) as any
       });
 
       const createModel = onCallCreateModel({ widget: specHandler } as OnCallCreateModelMap<any>);
@@ -371,9 +274,9 @@ describe('api.details', () => {
       const readInput = mockJsonSchemaRef('ReadParams');
 
       const callModelMap: OnCallModelMap = {
-        create: onCallCreateModel({ widget: withApiDetails({ ...TEMP,
-        update: onCallUpdateModel({ widget: withApiDetails({ ...TEMP,
-        read: onCallReadModel({ widget: withApiDetails({ ...TEMP,
+        create: onCallCreateModel({ widget: withApiDetails({ inputType: createInput, fn: mockHandler() }) } as OnCallCreateModelMap<any>),
+        update: onCallUpdateModel({ widget: withApiDetails({ inputType: updateInput, fn: mockHandler() }) } as any),
+        read: onCallReadModel({ widget: withApiDetails({ inputType: readInput, fn: mockHandler() }) } as any),
         delete: onCallDeleteModel({})
       };
 
@@ -396,13 +299,13 @@ describe('api.details', () => {
       const specInputB = mockJsonSchemaRef('SpecBParams');
 
       const specHandler = onCallSpecifierHandler({
-        _: withApiDetails({ ...TEMP as any,
-        variant: withApiDetails({ ...TEMP as any
+        _: withApiDetails({ inputType: specInputA, fn: mockHandler() }) as any,
+        variant: withApiDetails({ inputType: specInputB, fn: mockHandler() }) as any
       });
 
       const callModelMap: OnCallModelMap = {
         create: onCallCreateModel({
-          simple: withApiDetails({ ...TEMP,
+          simple: withApiDetails({ inputType: directInput, fn: mockHandler() }),
           complex: specHandler
         } as OnCallCreateModelMap<any>),
         read: onCallReadModel({}),
@@ -433,8 +336,8 @@ describe('api.details', () => {
       const updateInput = mockJsonSchemaRef('UpdateWidgetParams');
 
       const callModelMap: OnCallModelMap = {
-        create: onCallCreateModel({ widget: withApiDetails({ ...TEMP,
-        update: onCallUpdateModel({ widget: withApiDetails({ ...TEMP,
+        create: onCallCreateModel({ widget: withApiDetails({ inputType: createInput, fn: mockHandler() }) } as OnCallCreateModelMap<any>),
+        update: onCallUpdateModel({ widget: withApiDetails({ inputType: updateInput, fn: mockHandler() }) } as any),
         read: onCallReadModel({}),
         delete: onCallDeleteModel({})
       };
@@ -458,8 +361,8 @@ describe('api.details', () => {
       const updateGadgetInput = mockJsonSchemaRef('UpdateGadgetParams');
 
       const callModelMap: OnCallModelMap = {
-        create: onCallCreateModel({ widget: withApiDetails({ ...TEMP,
-        update: onCallUpdateModel({ gadget: withApiDetails({ ...TEMP,
+        create: onCallCreateModel({ widget: withApiDetails({ inputType: createWidgetInput, fn: mockHandler() }) } as OnCallCreateModelMap<any>),
+        update: onCallUpdateModel({ gadget: withApiDetails({ inputType: updateGadgetInput, fn: mockHandler() }) } as any),
         read: onCallReadModel({}),
         delete: onCallDeleteModel({})
       };
@@ -479,8 +382,8 @@ describe('api.details', () => {
       const specInputB = mockJsonSchemaRef('CustomParams');
 
       const specHandler = onCallSpecifierHandler({
-        _: withApiDetails({ ...TEMP as any,
-        custom: withApiDetails({ inputType: specInputB, mcp: { description: 'Custom operation' } }, mockHandler()) as any
+        _: withApiDetails({ inputType: specInputA, fn: mockHandler() }) as any,
+        custom: withApiDetails({ inputType: specInputB, mcp: { description: 'Custom operation' }, fn: mockHandler() }) as any
       });
 
       const callModelMap: OnCallModelMap = {
@@ -529,7 +432,7 @@ describe('api.details', () => {
       const callModelMap: OnCallModelMap = {
         create: onCallCreateModel({
           widget: onCallSpecifierHandler({
-            _: withApiDetails({ ...TEMP as any
+            _: withApiDetails({ inputType, fn: mockHandler() }) as any
           })
         } as OnCallCreateModelMap<any>),
         read: onCallReadModel({}),

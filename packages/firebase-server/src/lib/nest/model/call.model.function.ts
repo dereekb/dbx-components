@@ -1,9 +1,10 @@
-import { type PromiseOrValue, serverError } from '@dereekb/util';
+import { type Configurable, type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelType, type FirestoreModelTypes, type ModelFirebaseCrudFunctionSpecifierRef, type OnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestContext, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext, type OnCallWithNestContextRequest } from '../function/call';
 import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { type NestContextCallableRequest } from '../function/nest';
+import { type OnCallApiDetailsRef, aggregateCrudModelApiDetails, aggregateModelApiDetails } from './api.details';
 
 // MARK: Function
 export type OnCallModelMap = {
@@ -20,10 +21,10 @@ export interface OnCallModelConfig {
  * @param map
  * @returns
  */
-export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> {
+export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> & OnCallApiDetailsRef {
   const { preAssert = () => undefined } = config;
 
-  return (request) => {
+  const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
     const call = request.data?.call;
 
     if (call) {
@@ -40,6 +41,15 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
       throw onCallModelMissingCallTypeError();
     }
   };
+
+  // Aggregate _apiDetails from CRUD handlers in the map
+  const modelApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
+
+  if (modelApiDetails != null) {
+    (fn as Configurable<OnCallApiDetailsRef>)._apiDetails = modelApiDetails;
+  }
+
+  return fn;
 }
 
 export function onCallModelMissingCallTypeError() {
@@ -77,10 +87,10 @@ export interface OnCallWithCallTypeModelConfig<N> {
   readonly throwOnUnknownModelType: (modelType: FirestoreModelType) => Error;
 }
 
-export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N>, config: OnCallWithCallTypeModelConfig<N>): OnCallWithAuthAwareNestContext<N, OnCallTypedModelParams, unknown> {
+export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N>, config: OnCallWithCallTypeModelConfig<N>): OnCallWithAuthAwareNestContext<N, OnCallTypedModelParams, unknown> & OnCallApiDetailsRef {
   const { callType, crudType, preAssert = () => undefined, throwOnUnknownModelType } = config;
 
-  return (request: OnCallWithNestContextRequest<N, OnCallTypedModelParams>) => {
+  const fn = (request: OnCallWithNestContextRequest<N, OnCallTypedModelParams>) => {
     const modelType = request.data?.modelType;
     const crudFn = map[modelType];
 
@@ -97,4 +107,13 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
       throw throwOnUnknownModelType(modelType);
     }
   };
+
+  // Aggregate _apiDetails from model type handlers in the map
+  const crudModelApiDetails = aggregateCrudModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
+
+  if (crudModelApiDetails != null) {
+    (fn as Configurable<OnCallApiDetailsRef>)._apiDetails = crudModelApiDetails;
+  }
+
+  return fn;
 }

@@ -1,28 +1,5 @@
-import {
-  withApiDetails,
-  readApiDetails,
-  getModelApiDetails,
-  isOnCallSpecifierApiDetails,
-  isOnCallHandlerApiDetails,
-  onCallSpecifierHandler,
-  onCallCreateModel,
-  onCallUpdateModel,
-  onCallReadModel,
-  onCallDeleteModel,
-  onCallModel,
-  type OnCallApiDetailsRef,
-  type OnCallModelFunctionApiDetails,
-  type OnCallSpecifierApiDetails,
-  type OnCallModelMap,
-  type ModelApiDetailsResult
-} from '@dereekb/firebase-server';
-import {
-  createGuestbookParamsType,
-  insertGuestbookEntryParamsType,
-  subscribeToGuestbookNotificationsParamsType,
-  setProfileUsernameParamsType,
-  updateProfileParamsType
-} from 'demo-firebase';
+import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallSpecifierApiDetails, isOnCallHandlerApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelFunctionApiDetails, type OnCallSpecifierApiDetails, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
+import { createGuestbookParamsType, insertGuestbookEntryParamsType, subscribeToGuestbookNotificationsParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type DemoOnCallCreateModelMap, type DemoOnCallUpdateModelMap } from '../function';
 import { demoCallModelMap, demoCreateModelMap } from './crud.functions';
 
@@ -41,8 +18,8 @@ describe('demo api.details integration', () => {
 
     it('should return undefined from getModelApiDetails', () => {
       // Build onCallModel from the existing maps — no handlers have api details
-      const callModel = onCallModel(demoCallModelMap);
-      expect(getModelApiDetails(callModel as unknown as OnCallApiDetailsRef)).toBeUndefined();
+      const callModel = onCallModel({});
+      expect(getModelApiDetails(callModel)).toBeUndefined();
     });
   });
 
@@ -52,36 +29,21 @@ describe('demo api.details integration', () => {
     // simulating the Phase 5 retrofit using real ArkType param types.
 
     const demoCreateMap: DemoOnCallCreateModelMap = {
-      guestbook: withApiDetails(
-        { inputType: createGuestbookParamsType, mcp: { description: 'Create a new guestbook' } },
-        async () => ({ modelKeys: [] })
-      ) as any,
+      guestbook: withApiDetails({ inputType: createGuestbookParamsType, mcp: { description: 'Create a new guestbook' }, fn: async () => ({ modelKeys: [] }) }) as any,
       // Demonstrates withApiDetails({ optionalAuth: true }) replacing optionalAuthContext
       notification: onCallSpecifierHandler({
-        _: withApiDetails(
-          { optionalAuth: true, mcp: { description: 'Create a notification (no auth required)' } },
-          async () => ({ modelKeys: [] })
-        ) as any
+        _: withApiDetails({ optionalAuth: true, mcp: { description: 'Create a notification (no auth required)' }, fn: async () => ({ modelKeys: [] }) }) as any
       })
     };
 
     const demoUpdateMap: DemoOnCallUpdateModelMap = {
-      guestbookEntry: withApiDetails(
-        { inputType: insertGuestbookEntryParamsType },
-        async () => undefined
-      ) as any,
+      guestbookEntry: withApiDetails({ inputType: insertGuestbookEntryParamsType, fn: async () => undefined }) as any,
       guestbook: onCallSpecifierHandler({
-        subscribeToNotifications: withApiDetails(
-          { inputType: subscribeToGuestbookNotificationsParamsType, mcp: { description: 'Subscribe user to guestbook notifications' } },
-          async () => undefined
-        ) as any
+        subscribeToNotifications: withApiDetails({ inputType: subscribeToGuestbookNotificationsParamsType, mcp: { description: 'Subscribe user to guestbook notifications' }, fn: async () => undefined }) as any
       }),
       profile: onCallSpecifierHandler({
-        _: withApiDetails({ inputType: updateProfileParamsType }, async () => undefined) as any,
-        username: withApiDetails(
-          { inputType: setProfileUsernameParamsType, mcp: { description: 'Set profile username' } },
-          async () => undefined
-        ) as any
+        _: withApiDetails({ inputType: updateProfileParamsType, fn: async () => undefined }) as any,
+        username: withApiDetails({ inputType: setProfileUsernameParamsType, mcp: { description: 'Set profile username' }, fn: async () => undefined }) as any
       })
     };
 

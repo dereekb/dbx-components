@@ -1,3 +1,4 @@
+export * from './api.details';
 export * from './permission.error';
 export * from './specifier.function';
 export * from './call.model.function';
