@@ -159,9 +159,9 @@ describe('optionalFirestoreEncryptedField()', () => {
     const field = optionalFirestoreEncryptedField<{ key: string }>({ secret });
     const { from, to } = modelFieldMapFunctions(field);
 
-    it('should return null when null is provided', () => {
-      expect(from(null)).toBeNull();
-      expect(from(undefined)).toBeNull();
+    it('should return undefined when null is provided', () => {
+      expect(from(null)).toBeUndefined();
+      expect(from(undefined)).toBeUndefined();
     });
 
     it('should pass through null on write', () => {

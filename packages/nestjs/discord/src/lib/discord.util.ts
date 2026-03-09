@@ -1,4 +1,4 @@
-import { GatewayIntentBits, type ClientOptions } from 'discord.js';
+import { type GatewayIntentBits, type ClientOptions } from 'discord.js';
 import { DISCORD_DEFAULT_INTENTS } from './discord.config';
 
 /**
