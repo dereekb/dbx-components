@@ -1,3 +1,28 @@
+# [13.2.0](https://github.com/dereekb/dbx-components/compare/v13.1.0-dev...v13.2.0) (2026-03-09)
+
+
+### Bug Fixes
+
+- arktype narrow null guard for type intersection ([ba3938ee](https://github.com/dereekb/dbx-components/commit/ba3938eeebe55cc595863b2b51299ef8bae3a763))
+
+
+### Build System
+
+- lint fix ([b0a2a3c5](https://github.com/dereekb/dbx-components/commit/b0a2a3c5e575bdf34eb9b2e59425814859ec3ece))
+
+
+### Code Refactoring
+
+- added firestoreEncryptedField to firebase-server ([9fdd3ee9](https://github.com/dereekb/dbx-components/commit/9fdd3ee94003c807d4905145e337e42cc6054972))
+
+
+### Features
+
+- added @dereekb/nestjs/discord integration ([#36](https://github.com/dereekb/dbx-components/issues/36)) ([4f9bc99e](https://github.com/dereekb/dbx-components/commit/4f9bc99ebba372e0e8bf243b1163f406b48093ba)), closes [#36](https://github.com/dereekb/dbx-components/issues/36)
+
+
+
+
 # [13.1.0](https://github.com/dereekb/dbx-components/compare/v13.0.7-dev...v13.1.0) (2026-03-09)
 
 
