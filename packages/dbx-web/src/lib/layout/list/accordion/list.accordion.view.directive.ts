@@ -1,7 +1,7 @@
 import { Directive, NgModule } from '@angular/core';
 import { AbstractDbxListViewDirective } from '../list.view.directive';
-import { DbxValueListAccordionViewComponent, DbxValueListAccordionViewConfig } from './list.accordion.view.component';
-import { DbxValueAsListItem } from '../list.view.value';
+import { DbxValueListAccordionViewComponent, type DbxValueListAccordionViewConfig } from './list.accordion.view.component';
+import { type DbxValueAsListItem } from '../list.view.value';
 
 export const DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-list-accordion-view [config]="config"></dbx-list-accordion-view>';
 

@@ -1,6 +1,6 @@
-import { Component, ElementRef, OnInit } from '@angular/core';
-import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { Component, type ElementRef, type OnInit } from '@angular/core';
+import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
+import { type NgPopoverRef } from 'ng-overlay-container';
 import { MatButton } from '@angular/material/button';
 import { DocInteractionExamplePopoverContentComponent } from './interaction.popover.content.component';
 

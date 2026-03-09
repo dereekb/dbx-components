@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "13.0.7",
+  "version": "13.1.0",
   "exports": {
     "./test": {
       "module": "./test/index.esm.js",
@@ -22,7 +22,6 @@
     "ts-essentials": "^10.0.0"
   },
   "devDependencies": {
-    "class-validator": "^0.15.1",
     "date-fns": "4.0.0"
   }
 }

@@ -1,5 +1,5 @@
-import { Injectable, Type } from '@angular/core';
-import { Maybe, filterMaybeArrayValues, mapIterable, StringErrorCode } from '@dereekb/util';
+import { Injectable, type Type } from '@angular/core';
+import { type Maybe, filterMaybeArrayValues, mapIterable, type StringErrorCode } from '@dereekb/util';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 
 export const DEFAULT_ERROR_WIDGET_CODE = 'DEFAULT_ERROR_WIDGET';

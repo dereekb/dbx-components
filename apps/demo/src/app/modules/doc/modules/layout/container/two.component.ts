@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { SegueRef, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { type SegueRef, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

@@ -20,7 +20,16 @@ export interface Destroyable {
 export type DestroyFunction = () => void;
 
 /**
- * Retains a reference to a single destroy function. When replaced, the previous destroy function is removed.
+ * Retains a reference to a single destroy function. When a new function is set via {@link setDestroyFunction},
+ * the previous one is called first. Useful for managing cleanup of subscriptions or resources that change over time.
+ *
+ * @example
+ * ```ts
+ * const obj = new DestroyFunctionObject();
+ * obj.setDestroyFunction(() => console.log('cleanup A'));
+ * obj.setDestroyFunction(() => console.log('cleanup B')); // logs 'cleanup A'
+ * obj.destroy(); // logs 'cleanup B'
+ * ```
  */
 export class DestroyFunctionObject implements Destroyable {
   private _destroy?: Maybe<DestroyFunction>;

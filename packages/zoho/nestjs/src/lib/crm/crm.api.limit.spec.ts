@@ -1,9 +1,9 @@
 import { appZohoCrmModuleMetadata } from './crm.module';
-import { DynamicModule, Module } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { type DynamicModule, Module } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoCrmApi } from './crm.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
-import { ZohoCrmRecord } from '@dereekb/zoho';
+import { type ZohoCrmRecord } from '@dereekb/zoho';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 

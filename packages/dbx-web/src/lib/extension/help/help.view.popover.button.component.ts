@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { AbstractPopoverRefDirective } from '../../interaction/popover/abstract.popover.ref.directive';
 import { DbxPopoverService } from '../../interaction/popover/popover.service';
-import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxHelpViewPopoverComponent, DbxHelpViewPopoverConfigWithoutOrigin } from './help.view.popover.component';
-import { DbxButtonDisplay } from '@dereekb/dbx-core';
-import { DbxButtonComponent, DbxButtonStyle } from '../../button';
+import { type NgPopoverRef } from 'ng-overlay-container';
+import { DbxHelpViewPopoverComponent, type DbxHelpViewPopoverConfigWithoutOrigin } from './help.view.popover.component';
+import { type DbxButtonDisplay } from '@dereekb/dbx-core';
+import { DbxButtonComponent, type DbxButtonStyle } from '../../button';
 
 export interface DbxHelpViewPopoverButtonConfig extends DbxHelpViewPopoverConfigWithoutOrigin {
   /**

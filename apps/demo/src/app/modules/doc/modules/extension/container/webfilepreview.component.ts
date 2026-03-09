@@ -1,4 +1,4 @@
-import { DbxButtonComponent, DbxContentContainerDirective, DbxContentLayoutModule, DbxWebFilePreviewComponent, DbxWebFilePreviewComponentConfig, DbxWebFilePreviewService } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxContentContainerDirective, DbxContentLayoutModule, DbxWebFilePreviewComponent, type DbxWebFilePreviewComponentConfig, DbxWebFilePreviewService } from '@dereekb/dbx-web';
 import { Component, inject } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

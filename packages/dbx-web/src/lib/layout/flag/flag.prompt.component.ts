@@ -1,7 +1,7 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
+import { type ThemePalette } from '@angular/material/core';
 import { DbxFlagComponent } from './flag.component';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Pre-configured dbx-flag prompt to do something.

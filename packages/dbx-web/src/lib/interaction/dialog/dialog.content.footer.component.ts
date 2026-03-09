@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { ThemePalette } from '@angular/material/core';
+import { type ThemePalette } from '@angular/material/core';
 import { type Maybe } from '@dereekb/util';
 
 export interface DbxDialogContentFooterConfig {

@@ -10,6 +10,9 @@ import { incrementingNumberFactory, type NumberFactory } from '../number/factory
 import { randomNumberFactory } from '../number/random';
 
 // MARK: Email
+/**
+ * Configuration for generating random email addresses.
+ */
 export interface RandomEmailFactoryConfig {
   /**
    * Set of email prefixes to use
@@ -25,6 +28,9 @@ export interface RandomEmailFactoryConfig {
   numberFactory?: NumberFactory;
 }
 
+/**
+ * Default configuration that uses incrementing numbers and a test domain for safety in tests.
+ */
 export const DEFAULT_RANDOM_EMAIL_FACTORY_CONFIG: RandomEmailFactoryConfig = {
   prefixes: 'email.',
   domains: 'test.dereekb.com',
@@ -33,6 +39,12 @@ export const DEFAULT_RANDOM_EMAIL_FACTORY_CONFIG: RandomEmailFactoryConfig = {
 
 export type RandomEmailFactory = Factory<EmailAddress>;
 
+/**
+ * Creates a factory that generates random email addresses using configurable prefixes, domains, and number generators.
+ *
+ * @param inputConfig - Optional configuration overrides
+ * @returns A factory function that produces random email address strings
+ */
 export function randomEmailFactory(inputConfig?: RandomEmailFactoryConfig): RandomEmailFactory {
   const config = mergeObjects([DEFAULT_RANDOM_EMAIL_FACTORY_CONFIG, inputConfig], KeyValueTypleValueFilter.FALSY_AND_EMPTY);
 
@@ -50,6 +62,9 @@ export function randomEmailFactory(inputConfig?: RandomEmailFactoryConfig): Rand
 }
 
 // MARK: Phone
+/**
+ * Configuration for generating random E.164 phone numbers.
+ */
 export interface RandomPhoneNumberFactoryConfig {
   /**
    * Set of interntional numbers to use.
@@ -61,6 +76,9 @@ export interface RandomPhoneNumberFactoryConfig {
   numberFactory?: NumberFactory;
 }
 
+/**
+ * Default configuration using US area codes and random 7-digit number generation.
+ */
 export const DEFAULT_RANDOM_PHONE_NUMBER_FACTORY_CONFIG: RandomPhoneNumberFactoryConfig = {
   internationalAreaCodes: [1210, 1979, 1512, 1303],
   numberFactory: randomNumberFactory({
@@ -72,6 +90,12 @@ export const DEFAULT_RANDOM_PHONE_NUMBER_FACTORY_CONFIG: RandomPhoneNumberFactor
 
 export type RandomPhoneNumberFactory = Factory<E164PhoneNumber>;
 
+/**
+ * Creates a factory that generates random E.164 phone numbers using configurable area codes and number generators.
+ *
+ * @param inputConfig - Optional configuration overrides
+ * @returns A factory function that produces random E.164 phone number strings
+ */
 export function randomPhoneNumberFactory(inputConfig?: RandomPhoneNumberFactoryConfig): RandomPhoneNumberFactory {
   const config = mergeObjects([DEFAULT_RANDOM_PHONE_NUMBER_FACTORY_CONFIG, inputConfig], KeyValueTypleValueFilter.FALSY_AND_EMPTY);
 

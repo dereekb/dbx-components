@@ -1,10 +1,10 @@
-import { map, Observable } from 'rxjs';
+import { map, type Observable } from 'rxjs';
 import { inContextFirebaseModelsServiceFactory } from '@dereekb/firebase';
-import { DbxFirebaseAuthService, DbxFirebaseInContextFirebaseModelServiceInstance, dbxFirebaseInContextFirebaseModelServiceInstanceFactory, DbxFirebaseModelContextService, dbxFirebaseModelContextServiceInfoInstanceFactory, firebaseContextServiceEntityMap } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, type DbxFirebaseInContextFirebaseModelServiceInstance, dbxFirebaseInContextFirebaseModelServiceInstanceFactory, type DbxFirebaseModelContextService, dbxFirebaseModelContextServiceInfoInstanceFactory, firebaseContextServiceEntityMap } from '@dereekb/dbx-firebase';
 import { inject, Injectable } from '@angular/core';
-import { ModelKey } from '@dereekb/util';
-import { ObservableOrValue } from '@dereekb/rxjs';
-import { DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollections, GuestbookDocument, GuestbookRoles } from 'demo-firebase';
+import { type ModelKey } from '@dereekb/util';
+import { type ObservableOrValue } from '@dereekb/rxjs';
+import { type DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollections, type GuestbookDocument, type GuestbookRoles } from 'demo-firebase';
 
 /**
  * Used to access the demoFirebaseModelServices() on the client side.

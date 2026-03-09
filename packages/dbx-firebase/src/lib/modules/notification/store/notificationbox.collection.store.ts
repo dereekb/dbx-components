@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { AbstractDbxFirebaseCollectionStore } from '../../../model/modules/store';
-import { NotificationFirestoreCollections, NotificationBox, NotificationBoxDocument } from '@dereekb/firebase';
+import { NotificationFirestoreCollections, type NotificationBox, type NotificationBoxDocument } from '@dereekb/firebase';
 
 @Injectable()
 export class NotificationBoxCollectionStore extends AbstractDbxFirebaseCollectionStore<NotificationBox, NotificationBoxDocument> {

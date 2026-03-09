@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ClientWebAppHost, ClientWebAppUrl } from './client';
+import { type ClientWebAppHost, type ClientWebAppUrl } from './client';
 import { ClientAppServiceConfig } from './client.config';
 
 /**

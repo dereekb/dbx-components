@@ -1,8 +1,8 @@
 import { urlWithoutParameters } from '@dereekb/util';
-import { DBX_FIREBASE_APP_OPTIONS_TOKEN, DbxFirebaseAppOptions } from '../../firebase/firebase.options';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
+import { DBX_FIREBASE_APP_OPTIONS_TOKEN, type DbxFirebaseAppOptions } from '../../firebase/firebase.options';
+import { type HttpInterceptor, type HttpRequest, type HttpHandler, type HttpEvent } from '@angular/common/http';
 import { getToken } from 'firebase/app-check';
-import { Observable, switchMap, first, map, from } from 'rxjs';
+import { type Observable, switchMap, first, map, from } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { AppCheck } from '@angular/fire/app-check';
 

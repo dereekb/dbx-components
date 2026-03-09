@@ -1,8 +1,8 @@
-import { shareReplay, map, Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
+import { shareReplay, map, type Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
 import { Directive, inject, input, output } from '@angular/core';
-import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset, ClickableFilterPresetOrPartialPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
-import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { FilterWithPreset } from '@dereekb/rxjs';
+import { type ClickableFilterPreset, type ClickableAnchorLink, FilterSourceDirective, type ClickablePartialFilterPreset, type ClickableFilterPresetOrPartialPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
+import { getValueFromGetter, type Maybe, objectHasNoKeys } from '@dereekb/util';
+import { type FilterWithPreset } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 @Directive()

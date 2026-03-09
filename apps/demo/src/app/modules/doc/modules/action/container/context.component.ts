@@ -1,4 +1,4 @@
-import { DbxActionDirective, DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
+import { type DbxActionDirective, DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

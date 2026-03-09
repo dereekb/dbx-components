@@ -1,8 +1,8 @@
 import { Injectable, Injector, inject } from '@angular/core';
 import { capitalCase } from 'change-case-all';
-import { map, shareReplay, Observable, BehaviorSubject } from 'rxjs';
-import { ArrayOrValue, Building, ModelTypeString, useIterableOrValue } from '@dereekb/util';
-import { DbxModelTypeConfiguration, DbxModelTypeConfigurationMap } from './model.types';
+import { map, shareReplay, type Observable, BehaviorSubject } from 'rxjs';
+import { type ArrayOrValue, type Building, type ModelTypeString, useIterableOrValue } from '@dereekb/util';
+import { type DbxModelTypeConfiguration, type DbxModelTypeConfigurationMap } from './model.types';
 
 export interface DbxModelTypeInfo extends Omit<DbxModelTypeConfiguration, 'srefFactory'> {
   /**

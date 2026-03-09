@@ -1,12 +1,12 @@
-import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, Observable, delay } from 'rxjs';
-import { Component, ElementRef, OnDestroy, OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, Signal, effect } from '@angular/core';
+import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, type Observable, delay } from 'rxjs';
+import { Component, ElementRef, type OnDestroy, type OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, type Signal, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { type Maybe } from '@dereekb/util';
-import { DbxColorDirective, DbxResizedDirective, DbxThemeColor, ResizedEvent } from '@dereekb/dbx-web';
+import { DbxColorDirective, DbxResizedDirective, type DbxThemeColor, type ResizedEvent } from '@dereekb/dbx-web';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
-import { MapboxEaseTo } from './mapbox';
+import { type MapboxEaseTo } from './mapbox';
 import { NgClass } from '@angular/common';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
-import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar';
-import { MatProgressSpinner, ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { type ThemePalette } from '@angular/material/core';
+import { MatProgressBar, type ProgressBarMode } from '@angular/material/progress-bar';
+import { MatProgressSpinner, type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../layout/style/style';
 import { NgClass } from '@angular/common';

@@ -1,4 +1,79 @@
-import { beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, isPageLoadingStateMetadataEqual, mapLoadingStateResults, mergeLoadingStates, successResult, isLoadingStateInSuccessState } from './loading.state';
+import { beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, isPageLoadingStateMetadataEqual, mapLoadingStateResults, mergeLoadingStates, successResult, isLoadingStateInSuccessState, isLoadingStateEqual, loadingStateType, LoadingStateType, idleLoadingState, isLoadingStateWithDefinedValue, isAnyLoadingStateInLoadingState, areAllLoadingStatesFinishedLoading } from './loading.state';
+
+describe('isLoadingStateEqual()', () => {
+  it('should return true for two equivalent success results', () => {
+    const value = 'hello';
+    const a = successResult(value);
+    const b = successResult(value);
+    expect(isLoadingStateEqual(a, b)).toBe(true);
+  });
+
+  it('should return false for a success result and a loading state', () => {
+    const a = successResult('hello');
+    const c = beginLoading<string>();
+    expect(isLoadingStateEqual(a, c)).toBe(false);
+  });
+});
+
+describe('loadingStateType()', () => {
+  it('should return LOADING for a loading state', () => {
+    expect(loadingStateType(beginLoading())).toBe(LoadingStateType.LOADING);
+  });
+
+  it('should return SUCCESS for a success result', () => {
+    expect(loadingStateType(successResult(42))).toBe(LoadingStateType.SUCCESS);
+  });
+
+  it('should return ERROR for an error result', () => {
+    expect(loadingStateType(errorResult(new Error()))).toBe(LoadingStateType.ERROR);
+  });
+
+  it('should return IDLE for a non-loading state with no value or error', () => {
+    expect(loadingStateType({ loading: false })).toBe(LoadingStateType.IDLE);
+  });
+});
+
+describe('idleLoadingState()', () => {
+  it('should create an idle state with loading false', () => {
+    const state = idleLoadingState();
+    expect(state.loading).toBe(false);
+    expect(loadingStateType(state)).toBe(LoadingStateType.IDLE);
+  });
+});
+
+describe('isLoadingStateWithDefinedValue()', () => {
+  it('should return true for a success result with a value', () => {
+    expect(isLoadingStateWithDefinedValue(successResult('hello'))).toBe(true);
+  });
+
+  it('should return true for a success result with null (null is defined)', () => {
+    expect(isLoadingStateWithDefinedValue(successResult(null))).toBe(true);
+  });
+
+  it('should return false for a loading state', () => {
+    expect(isLoadingStateWithDefinedValue(beginLoading())).toBe(false);
+  });
+});
+
+describe('isAnyLoadingStateInLoadingState()', () => {
+  it('should return true when one state is loading', () => {
+    expect(isAnyLoadingStateInLoadingState([successResult(1), beginLoading()])).toBe(true);
+  });
+
+  it('should return false when all states are finished', () => {
+    expect(isAnyLoadingStateInLoadingState([successResult(1), successResult(2)])).toBe(false);
+  });
+});
+
+describe('areAllLoadingStatesFinishedLoading()', () => {
+  it('should return true when all states are finished', () => {
+    expect(areAllLoadingStatesFinishedLoading([successResult(1), successResult(2)])).toBe(true);
+  });
+
+  it('should return false when one state is loading', () => {
+    expect(areAllLoadingStatesFinishedLoading([successResult(1), beginLoading()])).toBe(false);
+  });
+});
 
 describe('beginLoading()', () => {
   it('should return a loading state that is loading.', () => {

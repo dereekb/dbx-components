@@ -1,7 +1,7 @@
-import { Directive, OnDestroy, effect, inject, input } from '@angular/core';
+import { Directive, type OnDestroy, effect, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { ActionContextStoreSource } from '../../action.store.source';
-import { ActionContextStoreSourceMap, ActionKey } from './action.map';
+import { ActionContextStoreSourceMap, type ActionKey } from './action.map';
 
 /**
  * Used to communicate with an dbxActionMap and set the ActionContextStore to the store based on the key.

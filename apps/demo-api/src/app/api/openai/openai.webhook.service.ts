@@ -1,6 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { OpenAIApi, OpenAIWebhookEvent, OpenAIWebhookService } from '@dereekb/nestjs/openai';
+import { OpenAIApi, type OpenAIWebhookEvent, OpenAIWebhookService } from '@dereekb/nestjs/openai';
 
 @Injectable()
 export class DemoApiOpenAiWebhookService {

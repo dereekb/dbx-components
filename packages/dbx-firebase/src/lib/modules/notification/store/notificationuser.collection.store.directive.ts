@@ -1,7 +1,7 @@
 import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
 import { NotificationUserCollectionStore } from './notificationuser.collection.store';
-import { NotificationUser, NotificationUserDocument } from '@dereekb/firebase';
+import { type NotificationUser, type NotificationUserDocument } from '@dereekb/firebase';
 
 @Directive({
   selector: '[dbxFirebaseNotificationUserCollection]',

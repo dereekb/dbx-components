@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxWidgetViewComponentConfig } from './widget';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type DbxWidgetViewComponentConfig } from './widget';
 import { DbxWidgetService } from './widget.service';
 import { NgTemplateOutlet } from '@angular/common';
 

@@ -1,47 +1,60 @@
 import {
   type FirestoreContextReference,
-  InitializeStorageFileFromUploadParams,
+  type InitializeStorageFileFromUploadParams,
+  initializeStorageFileFromUploadParamsType,
   type AsyncStorageFileCreateAction,
   type StorageFileFirestoreCollections,
-  ProcessStorageFileParams,
+  type ProcessStorageFileParams,
+  processStorageFileParamsType,
   type StorageFileDocument,
   type ProcessStorageFileResult,
-  CreateStorageFileParams,
+  type CreateStorageFileParams,
+  createStorageFileParamsType,
   type AsyncStorageFileUpdateAction,
-  UpdateStorageFileParams,
+  type UpdateStorageFileParams,
+  updateStorageFileParamsType,
   type NotificationFirestoreCollections,
   UPLOADS_FOLDER_PATH,
   iterateStorageListFilesByEachFile,
   type FirebaseStorageAccessorFile,
   type InitializeAllStorageFilesFromUploadsResult,
-  InitializeAllStorageFilesFromUploadsParams,
+  type InitializeAllStorageFilesFromUploadsParams,
+  initializeAllStorageFilesFromUploadsParamsType,
   type StorageFileKey,
   StorageFileProcessingState,
   StorageFileState,
   storageFileProcessingNotificationTaskTemplate,
   createNotificationDocument,
-  ProcessAllQueuedStorageFilesParams,
+  type ProcessAllQueuedStorageFilesParams,
+  processAllQueuedStorageFilesParamsType,
   type ProcessAllQueuedStorageFilesResult,
   iterateFirestoreDocumentSnapshotPairs,
-  DeleteAllQueuedStorageFilesParams,
+  type DeleteAllQueuedStorageFilesParams,
+  deleteAllQueuedStorageFilesParamsType,
   type DeleteAllQueuedStorageFilesResult,
-  DeleteStorageFileParams,
+  type DeleteStorageFileParams,
+  deleteStorageFileParamsType,
   storageFilesQueuedForProcessingQuery,
   type AsyncStorageFileDeleteAction,
   type StorageFile,
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
   storageFilesQueuedForDeleteQuery,
   firestoreDummyKey,
-  DownloadStorageFileParams,
+  type DownloadStorageFileParams,
+  downloadStorageFileParamsType,
   type DownloadStorageFileResult,
-  SyncStorageFileWithGroupsParams,
-  SyncAllFlaggedStorageFilesWithGroupsParams,
+  type SyncStorageFileWithGroupsParams,
+  syncStorageFileWithGroupsParamsType,
+  type SyncAllFlaggedStorageFilesWithGroupsParams,
+  syncAllFlaggedStorageFilesWithGroupsParamsType,
   type SyncAllFlaggedStorageFilesWithGroupsResult,
   type SyncStorageFileWithGroupsResult,
   type FirestoreDocumentSnapshotDataPairWithData,
-  RegenerateAllFlaggedStorageFileGroupsContentParams,
+  type RegenerateAllFlaggedStorageFileGroupsContentParams,
+  regenerateAllFlaggedStorageFileGroupsContentParamsType,
   type RegenerateAllFlaggedStorageFileGroupsContentResult,
-  RegenerateStorageFileGroupContentParams,
+  type RegenerateStorageFileGroupContentParams,
+  regenerateStorageFileGroupContentParamsType,
   type RegenerateStorageFileGroupContentResult,
   type StorageFileGroupDocument,
   storageFileFlaggedForSyncWithGroupsQuery,
@@ -50,7 +63,8 @@ import {
   getDocumentSnapshotDataPairs,
   storageFileGroupsFlaggedForContentRegenerationQuery,
   type AsyncStorageFileGroupCreateAction,
-  CreateStorageFileGroupParams,
+  type CreateStorageFileGroupParams,
+  createStorageFileGroupParamsType,
   type Transaction,
   type StorageFileGroup,
   loadStorageFileGroupDocumentForReferencePair,
@@ -66,7 +80,8 @@ import {
   type StorageFileGroupZipStorageFileMetadata,
   type SendNotificationResult,
   type StorageFileGroupId,
-  UpdateStorageFileGroupParams,
+  type UpdateStorageFileGroupParams,
+  updateStorageFileGroupParamsType,
   type StorageFileGroupEmbeddedFile
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
@@ -149,7 +164,7 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
 export function createStorageFileFactory(context: BaseStorageFileServerActionsContext) {
   const { storageFileCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(CreateStorageFileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createStorageFileParamsType, async (params) => {
     const {} = params;
 
     return async () => {
@@ -166,7 +181,7 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
   const { storageService, firebaseServerActionTransformFunctionFactory } = context;
   const _initializeStorageFileFromUploadFile = _initializeStorageFileFromUploadFileFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeAllStorageFilesFromUploadsParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(initializeAllStorageFilesFromUploadsParamsType, async (params) => {
     const { folderPath, maxFilesToInitialize, overrideUploadsFolderPath } = params;
     const fullPath = mergeSlashPaths([overrideUploadsFolderPath ?? UPLOADS_FOLDER_PATH, folderPath]); // only targets the uploads folder
 
@@ -352,7 +367,7 @@ export function initializeStorageFileFromUploadFactory(context: StorageFileServe
   const { storageService, firebaseServerActionTransformFunctionFactory } = context;
   const _initializeStorageFileFromUploadFile = _initializeStorageFileFromUploadFileFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeStorageFileFromUploadParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(initializeStorageFileFromUploadParamsType, async (params) => {
     const { bucketId, pathString, expediteProcessing } = params;
 
     return async () => {
@@ -365,7 +380,7 @@ export function initializeStorageFileFromUploadFactory(context: StorageFileServe
 export function updateStorageFileFactory(context: BaseStorageFileServerActionsContext) {
   const { storageFileCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(UpdateStorageFileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateStorageFileParamsType, async (params) => {
     const { sdat } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
@@ -382,7 +397,7 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
 export function updateStorageFileGroupFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(UpdateStorageFileGroupParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateStorageFileGroupParamsType, async (params) => {
     const { entries } = params;
 
     return async (storageFileGroupDocument: StorageFileGroupDocument) => {
@@ -423,7 +438,7 @@ export function processAllQueuedStorageFilesFactory(context: StorageFileServerAc
   const { storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
   const processStorageFile = processStorageFileFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(ProcessAllQueuedStorageFilesParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(processAllQueuedStorageFilesParamsType, async (params) => {
     return async () => {
       let storageFilesVisited = 0;
       let storageFilesProcessStarted = 0;
@@ -582,7 +597,7 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
   const { firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
   const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(ProcessStorageFileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(processStorageFileParamsType, async (params) => {
     const { runImmediately } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
@@ -622,7 +637,7 @@ export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerAct
   const { storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
   const deleteStorageFile = deleteStorageFileFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(DeleteAllQueuedStorageFilesParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(deleteAllQueuedStorageFilesParamsType, async (params) => {
     return async () => {
       let storageFilesVisited = 0;
       let storageFilesDeleted = 0;
@@ -671,7 +686,7 @@ export function deleteStorageFileFactory(context: StorageFileServerActionsContex
   const { firestoreContext, storageService, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
   const syncStorageFileWithGroupsInTransaction = _syncStorageFileWithGroupsInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(DeleteStorageFileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(deleteStorageFileParamsType, async (params) => {
     const { force } = params;
     return async (inputStorageFileDocument: StorageFileDocument) => {
       await firestoreContext.runTransaction(async (transaction) => {
@@ -704,7 +719,7 @@ export function deleteStorageFileFactory(context: StorageFileServerActionsContex
 export function downloadStorageFileFactory(context: StorageFileServerActionsContext) {
   const { storageService, firebaseServerActionTransformFunctionFactory, storageFileCollection } = context;
 
-  return firebaseServerActionTransformFunctionFactory(DownloadStorageFileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(downloadStorageFileParamsType, async (params) => {
     const { key: targetStorageFileDocumentKey, asAdmin, expiresAt, expiresIn: inputExpiresIn, responseDisposition, responseContentType } = params;
 
     return async (storageFileDocument?: Maybe<StorageFileDocument>) => {
@@ -806,7 +821,7 @@ export function createStorageFileGroupFactory(context: StorageFileServerActionsC
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const createStorageFileGroupInTransaction = createStorageFileGroupInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(CreateStorageFileGroupParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createStorageFileGroupParamsType, async (params) => {
     const { model, storageFileId } = params;
 
     const storageFileGroupRelatedModelKey = model ? model : storageFileId ? inferKeyFromTwoWayFlatFirestoreModelKey(storageFileId) : undefined;
@@ -934,7 +949,7 @@ export function syncStorageFileWithGroupsFactory(context: StorageFileServerActio
   const { firestoreContext, storageFileCollection, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
   const syncStorageFileWithGroupsInTransaction = _syncStorageFileWithGroupsInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(SyncStorageFileWithGroupsParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(syncStorageFileWithGroupsParamsType, async (params) => {
     const { force } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
@@ -947,7 +962,7 @@ export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFile
   const { firebaseServerActionTransformFunctionFactory, storageFileCollection } = context;
   const syncStorageFileWithGroups = syncStorageFileWithGroupsFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(SyncAllFlaggedStorageFilesWithGroupsParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(syncAllFlaggedStorageFilesWithGroupsParamsType, async (params) => {
     return async () => {
       const syncStorageFileWithGroupsInstance = await syncStorageFileWithGroups({
         key: firestoreDummyKey(),
@@ -1003,7 +1018,7 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
   const { firestoreContext, storageService, storageFileCollection, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
   const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(RegenerateStorageFileGroupContentParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(regenerateStorageFileGroupContentParamsType, async (params) => {
     const { force } = params;
 
     const createStorageFileDocumentPair = createStorageFileDocumentPairFactory({
@@ -1081,7 +1096,7 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
   const { firebaseServerActionTransformFunctionFactory, storageFileGroupCollection } = context;
   const regenerateStorageFileGroupContent = regenerateStorageFileGroupContentFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(RegenerateAllFlaggedStorageFileGroupsContentParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(regenerateAllFlaggedStorageFileGroupsContentParamsType, async (params) => {
     return async () => {
       const regenerateStorageFileGroupContentInstance = await regenerateStorageFileGroupContent({
         key: firestoreDummyKey()

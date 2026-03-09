@@ -1,10 +1,10 @@
 import { Component, inject, input, computed } from '@angular/core';
-import { FirestoreModelKey, twoWayFlatFirestoreModelKey, flatFirestoreModelKey, firestoreModelId } from '@dereekb/firebase';
-import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstance } from './model.types.service';
+import { type FirestoreModelKey, twoWayFlatFirestoreModelKey, flatFirestoreModelKey, firestoreModelId } from '@dereekb/firebase';
+import { DbxFirebaseModelTypesService, type DbxFirebaseModelTypesServiceInstance } from './model.types.service';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, of } from 'rxjs';
 import { DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxAnchorComponent, DbxButtonComponent } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * An interactive display for a FirestoreModelKey.

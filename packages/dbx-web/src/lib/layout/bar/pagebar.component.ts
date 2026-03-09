@@ -1,6 +1,6 @@
 import { Component, input, ChangeDetectionStrategy, computed } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DbxBarColor } from './bar';
+import { type DbxBarColor } from './bar';
 import { NgClass } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 

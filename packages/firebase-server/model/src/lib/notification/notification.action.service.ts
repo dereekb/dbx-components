@@ -3,21 +3,30 @@ import {
   type AsyncNotificationSummaryCreateAction,
   type AsyncNotificationUserCreateAction,
   type AsyncNotificationUserUpdateAction,
-  CleanupSentNotificationsParams,
-  CreateNotificationBoxParams,
-  CreateNotificationSummaryParams,
-  CreateNotificationUserParams,
+  type CleanupSentNotificationsParams,
+  cleanupSentNotificationsParamsType,
+  type CreateNotificationBoxParams,
+  createNotificationBoxParamsType,
+  type CreateNotificationSummaryParams,
+  createNotificationSummaryParamsType,
+  type CreateNotificationUserParams,
+  createNotificationUserParamsType,
   NotificationSendState,
   NotificationSendType,
   type NotificationSummary,
   type NotificationSummaryDocument,
   type NotificationUser,
   type NotificationUserDocument,
-  SendNotificationParams,
-  SendQueuedNotificationsParams,
-  UpdateNotificationBoxParams,
-  UpdateNotificationBoxRecipientParams,
-  UpdateNotificationUserParams,
+  type SendNotificationParams,
+  sendNotificationParamsType,
+  type SendQueuedNotificationsParams,
+  sendQueuedNotificationsParamsType,
+  type UpdateNotificationBoxParams,
+  updateNotificationBoxParamsType,
+  type UpdateNotificationBoxRecipientParams,
+  updateNotificationBoxRecipientParamsType,
+  type UpdateNotificationUserParams,
+  updateNotificationUserParamsType,
   firestoreDummyKey,
   getDocumentSnapshotData,
   getDocumentSnapshotDataPairs,
@@ -55,7 +64,8 @@ import {
   type ResyncAllNotificationUserParams,
   type ResyncAllNotificationUsersResult,
   type ResyncNotificationUserResult,
-  ResyncNotificationUserParams,
+  type ResyncNotificationUserParams,
+  resyncNotificationUserParamsType,
   loadDocumentsForIds,
   type NotificationBoxId,
   type AppNotificationTemplateTypeInfoRecordServiceRef,
@@ -68,7 +78,8 @@ import {
   type NotificationSendTextMessagesResult,
   mergeNotificationSendMessagesResult,
   type AsyncNotificationSummaryUpdateAction,
-  UpdateNotificationSummaryParams,
+  type UpdateNotificationSummaryParams,
+  updateNotificationSummaryParamsType,
   type NotificationMessage,
   type NotificationBoxDocumentReferencePair,
   loadNotificationBoxDocumentForReferencePair,
@@ -143,7 +154,7 @@ export function notificationServerActions(context: NotificationServerActionsCont
 export function createNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(CreateNotificationUserParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createNotificationUserParamsType, async (params) => {
     const { uid } = params;
 
     return async () => {
@@ -179,7 +190,7 @@ export function createNotificationUserFactory(context: NotificationServerActions
 export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(UpdateNotificationUserParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateNotificationUserParamsType, async (params) => {
     const { gc: inputGc, dc: inputDc, bc: inputBc } = params;
 
     return async (notificationUserDocument: NotificationUserDocument) => {
@@ -262,7 +273,7 @@ const MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH = 50;
 export function resyncNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(ResyncNotificationUserParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(resyncNotificationUserParamsType, async () => {
     return async (notificationUserDocument: NotificationUserDocument) => {
       // run updates in batches
 
@@ -471,7 +482,7 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
 export function createNotificationSummaryFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
 
-  return firebaseServerActionTransformFunctionFactory(CreateNotificationSummaryParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createNotificationSummaryParamsType, async (params) => {
     const { model } = params;
 
     return async () => {
@@ -488,7 +499,7 @@ export function createNotificationSummaryFactory(context: NotificationServerActi
 export function updateNotificationSummaryFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(UpdateNotificationSummaryParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateNotificationSummaryParamsType, async (params) => {
     const { setReadAtTime, flagAllRead } = params;
 
     return async (notificationSummaryDocument: NotificationSummaryDocument) => {
@@ -558,7 +569,7 @@ export function createNotificationBoxFactory(context: NotificationServerActionsC
   const { firestoreContext, notificationBoxCollection, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(CreateNotificationBoxParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createNotificationBoxParamsType, async (params) => {
     const { model } = params;
 
     return async () => {
@@ -573,7 +584,7 @@ export function createNotificationBoxFactory(context: NotificationServerActionsC
 }
 
 export function updateNotificationBoxFactory({ firebaseServerActionTransformFunctionFactory }: NotificationServerActionsContext) {
-  return firebaseServerActionTransformFunctionFactory(UpdateNotificationBoxParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(updateNotificationBoxParamsType, async () => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       // does nothing currently.
 
@@ -854,7 +865,7 @@ export function updateNotificationBoxRecipientFactory(context: NotificationServe
   const updateNotificationBoxRecipientInTransaction = updateNotificationBoxRecipientInTransactionFactory(context);
   const updateNotificationBoxRecipientExclusionInTransaction = updateNotificationBoxRecipientExclusionInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(UpdateNotificationBoxRecipientParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateNotificationBoxRecipientParamsType, async (params) => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       await firestoreContext.runTransaction(async (transaction) => {
         if (params.setExclusion != null) {
@@ -907,7 +918,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
   const notificationUserAccessor = notificationUserCollection.documentAccessor();
 
-  return firebaseServerActionTransformFunctionFactory(SendNotificationParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(sendNotificationParamsType, async (params) => {
     const { ignoreSendAtThrottle } = params;
 
     return async (inputNotificationDocument: NotificationDocument) => {
@@ -1672,7 +1683,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
   const { firebaseServerActionTransformFunctionFactory, notificationCollectionGroup } = context;
   const sendNotification = sendNotificationFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(SendQueuedNotificationsParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(sendQueuedNotificationsParamsType, async (params) => {
     const { maxSendNotificationLoops } = params;
     const maxLoops = maxSendNotificationLoops ?? Number.MAX_SAFE_INTEGER;
     const sendNotificationLoopsTaskExcessThreshold = params.sendNotificationLoopsTaskExcessThreshold ?? SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD;
@@ -1787,7 +1798,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(CleanupSentNotificationsParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(cleanupSentNotificationsParamsType, async () => {
     return async () => {
       let notificationBoxesUpdatesCount: number = 0;
       let notificationsDeleted: number = 0;

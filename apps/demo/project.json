@@ -22,7 +22,7 @@
         "outputPath": "dist/apps/demo",
         "browser": "apps/demo/src/main.ts",
         "index": "apps/demo/src/index.html",
-        "polyfills": ["zone.js", "reflect-metadata"],
+        "polyfills": ["zone.js"],
         "tsConfig": "apps/demo/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -35,7 +35,7 @@
             "output": "assets/dbx-firebase"
           }
         ],
-        "allowedCommonJsDependencies": ["core-js", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
+        "allowedCommonJsDependencies": ["make-error", "date-fns", "date-fns-tz", "mapbox-gl"],
         "stylePreprocessorOptions": {
           "includePaths": ["packages", ""]
         },

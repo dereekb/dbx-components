@@ -1,9 +1,9 @@
 import { Directive, effect, inject, input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseStorageFileUploadStore } from '../store/storagefile.upload.store';
-import { storageFileUploadFiles, StorageFileUploadFilesFinalResult, StorageFileUploadHandler } from './storagefile.upload.handler';
+import { storageFileUploadFiles, type StorageFileUploadFilesFinalResult, type StorageFileUploadHandler } from './storagefile.upload.handler';
 import { clean, cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
-import { errorResult, LoadingState, startWithBeginLoading, successResult, WorkUsingContext } from '@dereekb/rxjs';
+import { errorResult, type LoadingState, startWithBeginLoading, successResult, type WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, filter, map, of, switchMap, tap, throttleTime } from 'rxjs';
 import { StorageFileUploadFilesError } from './storagefile.upload.error';

@@ -1,6 +1,25 @@
 import { type MapFunction } from './map';
 import { type Maybe } from './maybe.type';
-import { type MappedUseFunction, mappedUseFunction, mappedUseAsyncFunction, type MappedUseAsyncFunction, wrapUseFunction, wrapUseAsyncFunction } from './use';
+import { useValue, type MappedUseFunction, mappedUseFunction, useAsync, mappedUseAsyncFunction, type MappedUseAsyncFunction, wrapUseFunction, wrapUseAsyncFunction } from './use';
+
+describe('useValue()', () => {
+  it('should apply the use function when input is defined', () => {
+    const result = useValue(5, (x) => x * 2);
+    expect(result).toBe(10);
+  });
+
+  it('should return the default value when input is undefined', () => {
+    const fallback = useValue(undefined, (x: number) => x * 2, 0);
+    expect(fallback).toBe(0);
+  });
+});
+
+describe('useAsync()', () => {
+  it('should apply the use function and resolve the promise', async () => {
+    const result = await useAsync(1, (x) => Promise.resolve(x * 2));
+    expect(result).toBe(2);
+  });
+});
 
 describe('mappedUseFunction()', () => {
   const mapFn: MapFunction<number, string> = (number: number) => String(number);

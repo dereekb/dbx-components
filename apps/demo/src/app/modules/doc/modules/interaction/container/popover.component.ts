@@ -1,6 +1,6 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
-import { NgPopoverCloseEvent } from 'ng-overlay-container';
-import { ChangeDetectorRef, ElementRef, Component, inject, AfterViewInit, viewChild } from '@angular/core';
+import { type NgPopoverCloseEvent } from 'ng-overlay-container';
+import { ChangeDetectorRef, ElementRef, Component, inject, type AfterViewInit, viewChild } from '@angular/core';
 import { DbxPopoverService, DbxContentContainerDirective, DbxSpacerDirective } from '@dereekb/dbx-web';
 import { DocInteractionExamplePopoverComponent } from '../component/interaction.popover.component';
 import { first } from 'rxjs';

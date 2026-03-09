@@ -1,7 +1,7 @@
-import { Component, inject, ChangeDetectionStrategy, input, computed, Signal } from '@angular/core';
-import { CalendarMonthViewDay } from 'angular-calendar';
+import { Component, inject, ChangeDetectionStrategy, input, computed, type Signal } from '@angular/core';
+import { type CalendarMonthViewDay } from 'angular-calendar';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
-import { CalendarScheduleSelectionCellContent, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
+import { type CalendarScheduleSelectionCellContent, type CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
 import { MatIconModule } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, shareReplay, switchMap } from 'rxjs';

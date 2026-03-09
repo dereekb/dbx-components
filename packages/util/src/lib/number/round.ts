@@ -8,6 +8,12 @@ export type FloorOrCeilRounding = 'floor' | 'ceil';
 export type NumberRounding = 'none' | FloorOrCeilRounding | 'round';
 export type RoundingFunction = MapFunction<number, number>;
 
+/**
+ * Returns a rounding function for the specified rounding type.
+ *
+ * @param type - The rounding strategy: 'floor', 'ceil', 'round', or 'none'
+ * @returns The corresponding Math function, or an identity function for 'none'
+ */
 export function roundingFunction(type: NumberRounding): RoundingFunction {
   let fn: RoundingFunction;
 
@@ -39,11 +45,13 @@ export type RoundingInput = NumberRounding | RoundingFunction;
 export type NumberPrecision = number;
 
 /**
- * Same as cutToPrecision, but can take in a string or null/undefined.
+ * Truncates a number (or number string) to the specified decimal precision without rounding.
  *
- * @param input
- * @param precision
- * @returns
+ * Accepts strings and null/undefined via {@link asNumber}.
+ *
+ * @param input - Number, number string, or null/undefined
+ * @param precision - Number of decimal places to retain
+ * @returns The truncated number value
  */
 export function cutValueToPrecision(input: AsNumberInput, precision: NumberPrecision): number {
   return cutValueToPrecisionFunction(precision)(input);
@@ -55,8 +63,10 @@ export function cutValueToPrecision(input: AsNumberInput, precision: NumberPreci
 export const CUT_VALUE_TO_ZERO_PRECISION = cutValueToPrecisionFunction(0);
 
 /**
+ * Truncates a value to an integer by cutting to zero decimal precision.
  *
- * @returns
+ * @param input - Number, number string, or null/undefined
+ * @returns The truncated integer value
  */
 export function cutValueToInteger(input: AsNumberInput): number {
   return CUT_VALUE_TO_ZERO_PRECISION(input);
@@ -70,10 +80,11 @@ export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {
 };
 
 /**
- * Creates a CutValueToPrecisionFunction
+ * Creates a {@link CutValueToPrecisionFunction} that truncates values to the configured precision.
  *
- * @param precision
- * @returns
+ * @param precision - Number of decimal places to retain
+ * @param roundingType - Rounding strategy; defaults to 'cut' (truncation)
+ * @returns A function that accepts a number or string and returns the truncated number
  */
 export function cutValueToPrecisionFunction(precision: NumberPrecision, roundingType: RoundToPrecisionFunctionType = 'cut'): CutValueToPrecisionFunction {
   const roundFn = roundToPrecisionFunction(precision, roundingType);
@@ -97,11 +108,11 @@ export type RoundToPrecisionFunction = MapFunction<number, number>;
 export type RoundToPrecisionFunctionType = NumberRounding | 'cut';
 
 /**
- * Creates a RoundToPrecisionFunction
+ * Creates a function that rounds numbers to the specified precision using a configurable rounding strategy.
  *
- * @param precision
- * @param roundFn
- * @returns
+ * @param precision - Number of decimal places
+ * @param roundFn - Rounding strategy; defaults to 'round'. Use 'cut' for truncation.
+ * @returns A function that rounds numbers to the configured precision
  */
 export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: RoundToPrecisionFunctionType = 'round'): RoundToPrecisionFunction {
   if (roundFn === 'cut') {
@@ -113,22 +124,25 @@ export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: Ro
 }
 
 /**
- * Rounds the input number to the given precision using a specific rounding function.
+ * Rounds a number to the specified decimal precision using `Math.round`.
  *
- * @param value
- * @param precision
- * @returns
+ * @param value - Number to round
+ * @param precision - Number of decimal places to retain
+ * @returns The rounded number
  */
 export function roundToPrecision(value: number, precision: NumberPrecision): number {
   return +(Math.round(Number(value + 'e+' + precision)) + 'e-' + precision);
 }
 
 /**
- * Cuts the input number to the given precision. For example, 1.25 with precision 1 will not be rounded up to 1.3, but instead be "cut" to 1.2
+ * Truncates a number to the specified decimal precision without rounding.
  *
- * @param value
- * @param precision
- * @returns
+ * Uses `Math.floor` for positive numbers and `Math.ceil` for negative numbers to truncate toward zero.
+ * For example, 1.25 with precision 1 becomes 1.2 (not 1.3).
+ *
+ * @param value - Number to truncate
+ * @param precision - Number of decimal places to retain
+ * @returns The truncated number
  */
 export function cutToPrecision(value: number, precision: NumberPrecision): number {
   // use floor for positive numbers, ceil for negative numbers
@@ -148,13 +162,11 @@ export type StepNumber = number;
 export type StepOrigin = number;
 
 /**
- * Rounds the number up to a specific "step" that contains it.
+ * Rounds a number up to the nearest multiple of the step size using `Math.ceil`.
  *
- * For example, with the value of 2, and a step size of 5, the value will be rounded up to 1.
- *
- * @param value Input value.
- * @param step Step size.
- * @returns Step that contains the value.
+ * @param value - Input value
+ * @param step - Step size to round up to
+ * @returns The nearest multiple of step that is >= value
  */
 export function roundNumberUpToStep(value: number, step: number): number {
   return Math.ceil(value / step) * step;
@@ -189,6 +201,15 @@ export type RoundNumberToStepFunction = ((input: Maybe<number>) => number) & {
   readonly _round: RoundNumberToStepFunctionConfig;
 };
 
+/**
+ * Creates a function that rounds numbers to the nearest step multiple using a configurable rounding strategy.
+ *
+ * Accepts either a step number (uses 'ceil' rounding) or a full config with step, rounding type, and origin.
+ *
+ * @param input - Step size or full configuration
+ * @returns A function that rounds input numbers to the nearest step
+ * @throws Error if step is 0 or undefined
+ */
 export function roundNumberToStepFunction(input: RoundNumberToStepFunctionInput): RoundNumberToStepFunction {
   const config: RoundNumberToStepFunctionConfig = typeof input === 'number' ? { step: input, round: 'ceil' } : input;
   const { step, round } = config;

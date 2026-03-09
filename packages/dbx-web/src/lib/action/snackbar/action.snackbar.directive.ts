@@ -1,10 +1,10 @@
-import { Directive, OnInit, inject, input } from '@angular/core';
+import { Directive, type OnInit, inject, input } from '@angular/core';
 import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
+import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarEvent, type DbxActionSnackbarType } from './action.snackbar';
 import { DbxActionSnackbarService } from './action.snackbar.service';
-import { DbxActionSnackbarDisplayConfigGeneratorFunction, DbxActionSnackbarGeneratorInput, DbxActionSnackbarGeneratorUndoInput } from './action.snackbar.generator';
-import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs';
+import { type DbxActionSnackbarDisplayConfigGeneratorFunction, type DbxActionSnackbarGeneratorInput, type DbxActionSnackbarGeneratorUndoInput } from './action.snackbar.generator';
+import { type LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs';
 
 /**
  * Action directive that displays a snackbar when the action context hits a certain state.

@@ -1,5 +1,22 @@
 import { iterablesAreSetEquivalent } from '../set/set';
-import { compareEqualityWithValueFromItemsFunctionFactory, safeCompareEquality } from './comparator';
+import { compareEqualityWithValueFromItemsFunctionFactory, safeCompareEquality, safeEqualityComparatorFunction } from './comparator';
+
+describe('safeEqualityComparatorFunction()', () => {
+  it('should compare values when both are non-null', () => {
+    const safeCompare = safeEqualityComparatorFunction((a: number, b: number) => a === b);
+    expect(safeCompare(1, 1)).toBe(true);
+  });
+
+  it('should return true when both values are null', () => {
+    const safeCompare = safeEqualityComparatorFunction((a: number, b: number) => a === b);
+    expect(safeCompare(null, null)).toBe(true);
+  });
+
+  it('should return false when null is compared to undefined', () => {
+    const safeCompare = safeEqualityComparatorFunction((a: number, b: number) => a === b);
+    expect(safeCompare(null, undefined)).toBe(false);
+  });
+});
 
 describe('safeCompareEquality()', () => {
   it('should compare the values if they are both non-null', () => {

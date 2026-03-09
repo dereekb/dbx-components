@@ -1,10 +1,10 @@
 import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
-import { Injectable, InjectionToken, Type, inject } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
-import { Milliseconds, Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
-import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarType } from './action.snackbar';
-import { DbxActionSnackbarGeneratorInput, DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from './action.snackbar.generator';
+import { Injectable, InjectionToken, type Type, inject } from '@angular/core';
+import { MatSnackBar, type MatSnackBarConfig, type MatSnackBarRef } from '@angular/material/snack-bar';
+import { type Milliseconds, type Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
+import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarType } from './action.snackbar';
+import { type DbxActionSnackbarGeneratorInput, type DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from './action.snackbar.generator';
 
 export const DBX_ACTION_SNACKBAR_SERVICE_CONFIG = new InjectionToken('DbxActionSnackbarServiceConfig');
 

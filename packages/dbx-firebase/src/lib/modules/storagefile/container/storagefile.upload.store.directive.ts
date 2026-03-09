@@ -1,10 +1,10 @@
 import { Directive, inject, input } from '@angular/core';
 import { skipAllInitialMaybe } from '@dereekb/rxjs';
 import { DbxFirebaseStorageFileUploadStore } from '../store';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';
-import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
+import { type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**

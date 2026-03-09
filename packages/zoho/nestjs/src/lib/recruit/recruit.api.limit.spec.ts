@@ -1,10 +1,10 @@
 import { appZohoRecruitModuleMetadata } from './recruit.module';
-import { DynamicModule, Module } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { type DynamicModule, Module } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import {
-  ZohoRecruitRecord
+  type ZohoRecruitRecord
 } from '@dereekb/zoho';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();

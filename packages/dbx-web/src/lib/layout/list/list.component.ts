@@ -1,10 +1,10 @@
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
-import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, first, distinctUntilChanged, combineLatest } from 'rxjs';
-import { Component, OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, PageLoadingState } from '@dereekb/rxjs';
-import { invertMaybeBoolean, Maybe, Milliseconds } from '@dereekb/util';
-import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
+import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, type Observable, first, distinctUntilChanged, combineLatest } from 'rxjs';
+import { Component, type OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { SubscriptionObject, type ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, type PageLoadingState } from '@dereekb/rxjs';
+import { invertMaybeBoolean, type Maybe, type Milliseconds } from '@dereekb/util';
+import { type DbxListSelectionMode, type DbxListView, type ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../loading/loading.component';
 

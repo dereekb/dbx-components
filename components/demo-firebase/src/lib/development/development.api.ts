@@ -1,19 +1,18 @@
-import { DevelopmentFirebaseFunctionConfigMap, DevelopmentFirebaseFunctionMap, developmentFirebaseFunctionMapFactory, FirebaseDevelopmentFunctions, FirebaseDevelopmentFunctionTypeMap, FirebaseFunctionMapFunction } from '@dereekb/firebase';
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { type DevelopmentFirebaseFunctionConfigMap, type DevelopmentFirebaseFunctionMap, developmentFirebaseFunctionMapFactory, FirebaseDevelopmentFunctions, type FirebaseDevelopmentFunctionTypeMap, type FirebaseFunctionMapFunction } from '@dereekb/firebase';
+import { type, type Type } from 'arktype';
 
 export const DEMO_DEVELOPMENT_EXAMPLE_MAX_MESSAGE_LENGTH = 200;
 
-export class DemoDevelopmentExampleParams {
-  @Expose()
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(DEMO_DEVELOPMENT_EXAMPLE_MAX_MESSAGE_LENGTH)
-  message!: string;
+export interface DemoDevelopmentExampleParams {
+  readonly message: string;
 }
 
-export class DemoDevelopmentExampleResult {
-  message!: string;
+export const demoDevelopmentExampleParamsType = type({
+  message: `string > 0 & string <= ${DEMO_DEVELOPMENT_EXAMPLE_MAX_MESSAGE_LENGTH}`
+}) as Type<DemoDevelopmentExampleParams>;
+
+export interface DemoDevelopmentExampleResult {
+  message: string;
 }
 
 export const DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER = 'example';

@@ -1,6 +1,6 @@
 import { Directive, inject, input } from '@angular/core';
 import { cleanSubscriptionWithLockSet } from '../../../rxjs';
-import { distinctUntilChanged, filter, switchMap, Observable, EMPTY } from 'rxjs';
+import { distinctUntilChanged, filter, switchMap, type Observable, EMPTY } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { isNotFalse } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';

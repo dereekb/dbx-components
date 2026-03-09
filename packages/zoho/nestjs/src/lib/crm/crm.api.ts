@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
-  ZohoCrm,
-  ZohoCrmContext,
+  type ZohoCrm,
+  type ZohoCrmContext,
   zohoCrmCreateNotes,
   zohoCrmCreateNotesForRecord,
   zohoCrmDeleteNotes,

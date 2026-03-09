@@ -1,6 +1,6 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, type PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DateRange, formatToTimeRangeString } from '@dereekb/date';
+import { type DateRange, formatToTimeRangeString } from '@dereekb/date';
 
 @Pipe({
   name: 'dateTimeRangeOnly',

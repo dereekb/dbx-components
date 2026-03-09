@@ -1,6 +1,6 @@
 import { Directive, effect, input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig, injectCopyToClipboardFunctionWithSnackbarMessage } from './clipboard';
+import { type Maybe } from '@dereekb/util';
+import { type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig, injectCopyToClipboardFunctionWithSnackbarMessage } from './clipboard';
 
 @Directive()
 export class AbstractDbxClipboardDirective {

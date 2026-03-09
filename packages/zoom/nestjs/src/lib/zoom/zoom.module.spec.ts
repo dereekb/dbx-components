@@ -1,6 +1,6 @@
 import { appZoomModuleMetadata } from './zoom.module';
-import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { type DynamicModule, Module, type Provider } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { fileZoomOAuthAccessTokenCacheService, ZoomOAuthAccessTokenCacheService } from '../oauth/oauth.service';
 import { ZoomOAuthApi } from '../oauth';
 import { appZoomOAuthModuleMetadata } from '../oauth/oauth.module';

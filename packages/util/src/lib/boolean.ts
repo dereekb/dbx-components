@@ -42,6 +42,14 @@ export function invertMaybeBoolean(x: Maybe<boolean>): Maybe<boolean> {
  * @param array - Array of boolean values to reduce.
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, a TypeError will be thrown.
  * @returns The result of ANDing all boolean values in the array.
+ * @throws {TypeError} If the array is empty and no emptyArrayValue is provided.
+ *
+ * @example
+ * ```ts
+ * reduceBooleansWithAnd([true, true, true]);   // true
+ * reduceBooleansWithAnd([true, false, true]);   // false
+ * reduceBooleansWithAnd([], true);              // true (emptyArrayValue)
+ * ```
  */
 export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithAndFn(emptyArrayValue)(array);
@@ -53,6 +61,7 @@ export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolea
  * @param array - Array of boolean values to reduce.
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, a TypeError will be thrown.
  * @returns The result of ORing all boolean values in the array.
+ * @throws {TypeError} If the array is empty and no emptyArrayValue is provided.
  */
 export function reduceBooleansWithOr(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithOrFn(emptyArrayValue)(array);
@@ -63,6 +72,14 @@ export function reduceBooleansWithOr(array: boolean[], emptyArrayValue?: boolean
  *
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError.
  * @returns A function that takes an array of booleans and returns the result of ANDing them.
+ *
+ * @example
+ * ```ts
+ * const reduceAnd = reduceBooleansWithAndFn(true);
+ * reduceAnd([true, true]);  // true
+ * reduceAnd([true, false]); // false
+ * reduceAnd([]);            // true (emptyArrayValue)
+ * ```
  */
 export function reduceBooleansWithAndFn(emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   return reduceBooleansFn((a, b) => a && b, emptyArrayValue);
@@ -73,6 +90,14 @@ export function reduceBooleansWithAndFn(emptyArrayValue?: boolean): (array: bool
  *
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError.
  * @returns A function that takes an array of booleans and returns the result of ORing them.
+ *
+ * @example
+ * ```ts
+ * const reduceOr = reduceBooleansWithOrFn(false);
+ * reduceOr([false, true]);  // true
+ * reduceOr([false, false]); // false
+ * reduceOr([]);             // false (emptyArrayValue)
+ * ```
  */
 export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   return reduceBooleansFn((a, b) => a || b, emptyArrayValue);
@@ -84,6 +109,13 @@ export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boole
  * @param reduceFn - Function that takes two boolean values and returns a single boolean.
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError because `Array.prototype.reduce` on an empty array without an initial value throws.
  * @returns A function that takes an array of booleans and returns the result of reducing them.
+ *
+ * @example
+ * ```ts
+ * const xorReduce = reduceBooleansFn((a, b) => a !== b, false);
+ * xorReduce([true, false]); // true
+ * xorReduce([]);            // false (emptyArrayValue)
+ * ```
  */
 export function reduceBooleansFn(reduceFn: (a: boolean, b: boolean) => boolean, emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   const rFn = (array: boolean[]) => Boolean(array.reduce(reduceFn));
@@ -122,6 +154,15 @@ export interface BooleanFactoryConfig {
  *
  * @param config - Configuration for the boolean factory, including the chance of returning true.
  * @returns A factory function (`BooleanFactory`) that generates random boolean values based on the configured chance.
+ *
+ * @example
+ * ```ts
+ * const alwaysTrue = booleanFactory({ chance: 100 });
+ * alwaysTrue(); // true
+ *
+ * const coinFlip = booleanFactory({ chance: 50 });
+ * coinFlip(); // true or false with equal probability
+ * ```
  */
 export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
   const { chance: inputChance } = config;
@@ -151,6 +192,14 @@ export function randomBoolean(chance: BooleanTrueChance = 50): boolean {
  * @param value - The string to convert to a boolean.
  * @param defaultValue - The default value to return if the string cannot be converted to a boolean (default: undefined).
  * @returns The boolean value corresponding to the string, or the default value if the string cannot be converted.
+ *
+ * @example
+ * ```ts
+ * stringToBoolean('yes');          // true
+ * stringToBoolean('FALSE');        // false
+ * stringToBoolean('maybe');        // undefined
+ * stringToBoolean('maybe', true);  // true (defaultValue)
+ * ```
  */
 export function stringToBoolean(value: Maybe<string | boolean>): Maybe<boolean>;
 export function stringToBoolean(value: Maybe<string>, defaultValue: boolean): boolean;
@@ -183,7 +232,11 @@ export function stringToBoolean(value: Maybe<string | boolean>, defaultValue?: M
 }
 
 /**
- * Converts the input value to a boolean, or null if the value is nullish.
+ * Converts a boolean to its `'true'` or `'false'` string representation.
+ * Returns null/undefined if the input is nullish.
+ *
+ * @param value - The boolean value to convert.
+ * @returns The string `'true'` or `'false'`, or the nullish input unchanged.
  */
 export function trueOrFalseString(value: boolean): TrueOrFalseString;
 export function trueOrFalseString(value?: MaybeNot): MaybeNot;

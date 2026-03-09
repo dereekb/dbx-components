@@ -1,8 +1,8 @@
 import { Directive, input } from '@angular/core';
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { ArrayOrValue, Maybe, Modifier } from '@dereekb/util';
-import { map, Observable } from 'rxjs';
-import { DbxValueListItem } from '../../../layout/list/list.view.value';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
+import { type ArrayOrValue, type Maybe, type Modifier } from '@dereekb/util';
+import { map, type Observable } from 'rxjs';
+import { type DbxValueListItem } from '../../../layout/list/list.view.value';
 import { AbstractDbxValueListItemModifierDirective } from '../../../layout/list/modifier/list.view.value.modifier.directive';
 import { toObservable } from '@angular/core/rxjs-interop';
 

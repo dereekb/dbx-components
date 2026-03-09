@@ -1,4 +1,4 @@
-import { Observable, startWith } from 'rxjs';
+import { type Observable, startWith } from 'rxjs';
 import { Directive, inject } from '@angular/core';
 import { DbxRouterTransitionService } from '../service/router.transition.service';
 import { successTransition } from './transition.rxjs';

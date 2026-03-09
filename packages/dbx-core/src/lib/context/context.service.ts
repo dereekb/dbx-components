@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { DbxAppContextState } from './context';
+import { type DbxAppContextState } from './context';
 import { onDbxAppContext, fromDbxAppContext } from './state';
-import { DbxAppContextFullState } from './state/state';
+import { type DbxAppContextFullState } from './state/state';
 
 /**
  * State for accessing the app's DbxAppContextState defined within the DbxAppContextFullState for the ngrx store.

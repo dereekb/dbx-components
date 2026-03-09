@@ -92,6 +92,39 @@ describe('LockSet', () => {
     );
   });
 
+  describe('removeLock', () => {
+    it(
+      'should remove the lock and update the locked state',
+      callbackTest((done) => {
+        const key = 'test';
+        lockSet.addLock(key, of(true));
+
+        lockSet.removeLock(key);
+
+        sub.subscription = lockSet.isLocked$.pipe(first()).subscribe((isLocked) => {
+          expect(isLocked).toBe(false);
+          done();
+        });
+      })
+    );
+  });
+
+  describe('addLock return function', () => {
+    it(
+      'should remove the lock when the returned function is called',
+      callbackTest((done) => {
+        const remove = lockSet.addLock('saving', of(true));
+
+        remove();
+
+        sub.subscription = lockSet.isLocked$.pipe(first()).subscribe((isLocked) => {
+          expect(isLocked).toBe(false);
+          done();
+        });
+      })
+    );
+  });
+
   describe('setParentLockSet', () => {
     let parentLockSet: LockSet;
 

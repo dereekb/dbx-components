@@ -1,6 +1,6 @@
 import { Directive, inject } from '@angular/core';
-import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, DbxHelpWidgetEntryData } from './help.widget';
-import { DbxHelpContextKey } from './help';
+import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, type DbxHelpWidgetEntryData } from './help.widget';
+import { type DbxHelpContextKey } from './help';
 
 /**
  * Abstract help widget directive that injects the help widget data.

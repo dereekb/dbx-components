@@ -1,9 +1,19 @@
 import { AbstractTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextFixtureClearInstanceFunction } from './shared';
 
+/**
+ * Abstract base class for wrapping an existing test fixture to add additional context or behavior.
+ *
+ * Subclasses extend this to provide a richer test API while delegating to the underlying fixture.
+ */
 export abstract class AbstractWrappedFixture<F> {
   constructor(readonly fixture: F) {}
 }
 
+/**
+ * Abstract base class for a wrapped fixture that also manages its own test instance.
+ *
+ * Combines fixture wrapping with per-test instance lifecycle management from {@link AbstractTestContextFixture}.
+ */
 export abstract class AbstractWrappedFixtureWithInstance<I, F> extends AbstractTestContextFixture<I> {
   constructor(readonly parent: F) {
     super();
@@ -44,7 +54,7 @@ export interface WrapTestContextConfig<W, F, E = any> {
 /**
  * Wraps the input TestContextFactory to emit another type of Fixture for tests.
  *
- * @returns
+ * @returns a function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
  */
 export function wrapTestContextFactory<W, F, E = any>(config: WrapTestContextConfig<W, F, E>): (factory: TestContextFactory<F>) => TestContextFactory<W> {
   return (factory: TestContextFactory<F>) => {
@@ -96,6 +106,15 @@ export interface InstanceWrapTestContextConfig<I, W extends AbstractWrappedFixtu
   teardownInstance?: (instance: I) => void | Promise<void>;
 }
 
+/**
+ * Wraps a {@link TestContextFactory} to produce a fixture that manages its own instance lifecycle.
+ *
+ * Built on top of {@link wrapTestContextFactory}, this variant automatically creates, sets, and tears down
+ * an instance on the wrapped fixture for each test, using the provided {@link InstanceWrapTestContextConfig}.
+ *
+ * @param config - configuration for wrapping the fixture and managing instance lifecycle
+ * @returns a function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
+ */
 export function instanceWrapTestContextFactory<I, W extends AbstractWrappedFixtureWithInstance<I, F>, F>(config: InstanceWrapTestContextConfig<I, W, F>): (factory: TestContextFactory<F>) => TestContextFactory<W> {
   return wrapTestContextFactory<W, F, TestContextFixtureClearInstanceFunction>({
     wrapFixture: config.wrapFixture,

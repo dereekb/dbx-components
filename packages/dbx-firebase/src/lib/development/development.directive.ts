@@ -1,7 +1,7 @@
-import { HostListener, AfterViewInit, Directive, inject } from '@angular/core';
+import { HostListener, type AfterViewInit, Directive, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DbxPopupService } from '@dereekb/dbx-web';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseDevelopmentPopupComponent } from './development.popup.component';
 import { DbxFirebaseDevelopmentService } from './development.service';
 import { clean } from '@dereekb/dbx-core';

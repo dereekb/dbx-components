@@ -1,13 +1,13 @@
-import { Observable, shareReplay } from 'rxjs';
-import { Component, ChangeDetectionStrategy, input, computed, signal, Signal } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
-import { ProgressBarMode } from '@angular/material/progress-bar';
-import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
-import { ErrorInput, type Maybe } from '@dereekb/util';
+import { type Observable, shareReplay } from 'rxjs';
+import { Component, ChangeDetectionStrategy, input, computed, signal, type Signal } from '@angular/core';
+import { type ThemePalette } from '@angular/material/core';
+import { type ProgressBarMode } from '@angular/material/progress-bar';
+import { type LoadingContext, type LoadingContextEvent, type MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
+import { type ErrorInput, type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
-import { DbxLoadingIsLoadingOrProgress } from './loading';
+import { type DbxLoadingIsLoadingOrProgress } from './loading';
 
 /**
  * State of a DbxLoadingComponent.

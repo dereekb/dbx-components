@@ -1,6 +1,6 @@
 import { Directive, inject } from '@angular/core';
 import { NotificationBoxCollectionStore } from './notificationbox.collection.store';
-import { NotificationBox, NotificationBoxDocument } from '@dereekb/firebase';
+import { type NotificationBox, type NotificationBoxDocument } from '@dereekb/firebase';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
 
 @Directive({

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
-import { DocInteractionTestFilter } from './filter';
+import { type DocInteractionTestFilter } from './filter';
 import { DbxContentContainerDirective, DbxFilterWrapperComponent } from '@dereekb/dbx-web';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './filter.custom.form.component';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';

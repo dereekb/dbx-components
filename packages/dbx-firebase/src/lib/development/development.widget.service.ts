@@ -1,7 +1,7 @@
 import { iterableToArray } from '@dereekb/util';
 import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
-import { DbxWidgetService, DbxWidgetType } from '@dereekb/dbx-web';
-import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
+import { DbxWidgetService, type DbxWidgetType } from '@dereekb/dbx-web';
+import { type DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 
 /**
  * Default providers to inject.

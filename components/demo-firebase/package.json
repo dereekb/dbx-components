@@ -1,12 +1,11 @@
 {
   "name": "demo-firebase",
-  "version": "13.0.7",
+  "version": "13.1.0",
   "dependencies": {
     "@dereekb/firebase": "*",
     "@dereekb/model": "*",
     "@dereekb/util": "*",
-    "class-transformer": "*",
-    "class-validator": "*",
+    "arktype": "*",
     "firebase": "*",
     "core-js": "*"
   }

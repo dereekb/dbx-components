@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OpenAIApi } from './openai.api';
 import { OPENAI_API_KEY_ENV_VAR, OPENAI_BASE_URL_ENV_VAR, OPENAI_ORGANIZATION_ID_ENV_VAR, OPENAI_PROJECT_ID_ENV_VAR, OpenAIServiceConfig } from './openai.config';
-import { OpenAIApiKey, OpenAIOrganizationId, OpenAIProjectId } from './openai.type';
+import { type OpenAIApiKey, type OpenAIOrganizationId, type OpenAIProjectId } from './openai.type';
 
 export function openAIServiceConfigFactory(configService: ConfigService): OpenAIServiceConfig {
   const config: OpenAIServiceConfig = {

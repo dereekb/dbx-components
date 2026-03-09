@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
-import { FirebaseStorageAccessorFile, StoragePathInput } from '@dereekb/firebase';
+import { type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
+import { type FirebaseStorageAccessorFile, type StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { ArrayOrValue, asArray, Maybe, PercentDecimal } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Maybe, type PercentDecimal } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { StorageFileUploadFilesEvent, StorageFileUploadFilesFinalResult } from '../container';
+import { type StorageFileUploadFilesEvent, type StorageFileUploadFilesFinalResult } from '../container';
 
 /**
  * The stage of the upload process.

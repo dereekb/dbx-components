@@ -38,6 +38,23 @@ export interface ErrorOnEmissionsInPeriodConfig<T> {
   readonly errorMessage?: string;
 }
 
+/**
+ * RxJS operator that throws an error (or switches to an alternative observable) when too many
+ * emissions occur within a rolling time period.
+ *
+ * Useful as a safety valve to detect infinite loops or runaway observables.
+ *
+ * @example
+ * ```ts
+ * source$.pipe(
+ *   errorOnEmissionsInPeriod({ maxEmissionsPerPeriod: 100, period: 1000 })
+ * ).subscribe();
+ * // throws if more than 100 emissions occur within 1 second
+ * ```
+ *
+ * @param config - period duration, max emissions, and error/fallback handling
+ * @returns an operator that monitors emission frequency
+ */
 export function errorOnEmissionsInPeriod<T>(config: ErrorOnEmissionsInPeriodConfig<T>): MonoTypeOperatorFunction<T> {
   const { period = 1000, maxEmissionsPerPeriod, onError, errorFactory: inputErrorFactory, errorMessage: inputErrorMessage, switchToObs } = config;
   const errorMessage = inputErrorMessage ?? 'errorOnEmissionsInPeriod(): Too many emissions in time period.';

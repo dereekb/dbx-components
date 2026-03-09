@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Maybe, randomNumber, readableError, ReadableError, serverError } from '@dereekb/util';
+import { type Maybe, randomNumber, readableError, type ReadableError, serverError } from '@dereekb/util';
 import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE } from '../component/error.custom.inline.widget.component';

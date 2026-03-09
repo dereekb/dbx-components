@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, input, model, viewChild } from '@angular/core';
-import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { type WorkUsingObservable, type LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { Observable, first, of, shareReplay, switchMap } from 'rxjs';
-import { DownloadTextContent } from './download.text';
+import { type Observable, first, of, shareReplay, switchMap } from 'rxjs';
+import { type DownloadTextContent } from './download.text';
 import { DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../../loading/loading.component';
@@ -10,7 +10,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { DbxActionModule } from '../../../action/action.module';
 import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
-import { DbxDownloadBlobButtonComponent, DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
+import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
 import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive';
 import { DbxContentPitDirective } from '../../../layout/content/content.pit.directive';
 

@@ -2,38 +2,47 @@ import { type ArrayOrValue, forEachWithArray } from '../array';
 import { type Maybe } from './maybe.type';
 
 /**
- * Modifier key
+ * String key that uniquely identifies a modifier within a {@link ModifierMap}.
  */
 export type ModifierKey = string;
 
 /**
- * Modifies the input value.
+ * Function that mutates the input value in place.
  */
 export type ModifierFunction<T> = (input: T) => void;
 
 /**
- * Retains a reference to a ModifierFunction
+ * Holds a reference to a {@link ModifierFunction}.
  */
 export interface ModifierFunctionRef<T> {
   readonly modify: ModifierFunction<T>;
 }
 
 /**
- * A modifier that has a key and modify function.
+ * A keyed modifier that pairs a unique {@link ModifierKey} with a {@link ModifierFunction}.
+ *
+ * The key allows modifiers to be added, replaced, or removed from a {@link ModifierMap} by identity.
  */
 export interface Modifier<T> extends ModifierFunctionRef<T> {
   /**
-   * Modifier key.
+   * Unique key identifying this modifier.
    */
   readonly key: ModifierKey;
 }
 
 /**
- * Creates a new modifier
+ * Creates a {@link Modifier} with the given key and modify function.
  *
- * @param key
- * @param modify
- * @returns
+ * @param key - unique identifier for the modifier
+ * @param modify - function that mutates the target value
+ *
+ * @example
+ * ```ts
+ * const uppercaseName = modifier<{ name: string }>('uppercase', (x) => { x.name = x.name.toUpperCase(); });
+ * const obj = { name: 'alice' };
+ * uppercaseName.modify(obj);
+ * // obj.name === 'ALICE'
+ * ```
  */
 export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<T> {
   return {
@@ -43,22 +52,30 @@ export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<
 }
 
 /**
- * No operation modifier.
+ * A no-operation modifier that does nothing to the input. Useful as a default/fallback.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NOOP_MODIFIER: ModifierFunction<any> = () => undefined;
 
 /**
- * Map of Modifiers keyed by the modifier key.
+ * Map of {@link Modifier} instances keyed by their {@link ModifierKey}, enabling lookup, replacement, and removal by key.
  */
 export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
 
 /**
- * Adds a modifier to the modifier map and returns the map.
+ * Adds one or more modifiers to the map, creating a new map if none is provided.
  *
- * @param modifier
- * @param map
- * @returns
+ * If a modifier with the same key already exists, it is replaced.
+ *
+ * @param modifiers - modifier(s) to add
+ * @param map - existing map to add to, or undefined to create a new one
+ *
+ * @example
+ * ```ts
+ * const mod = modifier<{ x: number }>('double', (o) => { o.x *= 2; });
+ * const map = addModifiers(mod);
+ * map.has('double'); // true
+ * ```
  */
 export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Maybe<ModifierMap<T>>): ModifierMap<T> {
   if (!map) {
@@ -71,10 +88,18 @@ export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Mayb
 }
 
 /**
- * Removes a modifier from the modifier map and returns the map.
+ * Removes one or more modifiers from the map by key. Returns an empty map if no map is provided.
  *
- * @param modifier
- * @param map
+ * @param modifiers - modifier(s) whose keys should be removed
+ * @param map - the map to remove from
+ *
+ * @example
+ * ```ts
+ * const mod = modifier<{ x: number }>('double', (o) => { o.x *= 2; });
+ * const map = addModifiers(mod);
+ * const result = removeModifiers(mod, map);
+ * result.has('double'); // false
+ * ```
  */
 export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Maybe<ModifierMap<T>>): ModifierMap<T> {
   if (map) {
@@ -86,15 +111,33 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
   return map;
 }
 
+/**
+ * Converts a {@link ModifierMap} to a single {@link ModifierFunction} that applies all modifiers in sequence.
+ *
+ * Returns {@link NOOP_MODIFIER} if the map is nullish or empty.
+ *
+ * @param map - the modifier map to convert
+ *
+ * @example
+ * ```ts
+ * const mod = modifier<{ x: number }>('inc', (o) => { o.x += 1; });
+ * const map = addModifiers(mod);
+ * const fn = modifierMapToFunction(map);
+ * const obj = { x: 0 };
+ * fn(obj);
+ * // obj.x === 1
+ * ```
+ */
 export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFunction<T> {
   return maybeModifierMapToFunction(map) ?? NOOP_MODIFIER;
 }
 
 /**
- * Converts a ModifierMap to a ModifierFunction if the map is input or has functions. Otherwise returns undefined.
+ * Converts a {@link ModifierMap} to a single {@link ModifierFunction} if the map is non-null.
  *
- * @param map
- * @returns
+ * Returns undefined if no map is provided, allowing callers to distinguish "no modifiers" from "empty modifiers".
+ *
+ * @param map - the modifier map to convert
  */
 export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe<ModifierFunction<T>> {
   let fn: Maybe<ModifierFunction<T>>;
@@ -109,20 +152,32 @@ export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe
 }
 
 /**
- * Merges all modifiers into a single function.
+ * Merges an array of {@link ModifierFunction} values into a single function that applies them all in order.
  *
- * @param map
- * @returns
+ * Returns {@link NOOP_MODIFIER} if the array is empty or nullish.
+ *
+ * @param modifiers - array of modifier functions to merge
+ *
+ * @example
+ * ```ts
+ * const add1 = (o: { x: number }) => { o.x += 1; };
+ * const double = (o: { x: number }) => { o.x *= 2; };
+ * const merged = mergeModifiers([add1, double]);
+ * const obj = { x: 3 };
+ * merged(obj);
+ * // obj.x === 8 (3 + 1 = 4, then 4 * 2 = 8)
+ * ```
  */
 export function mergeModifiers<T>(modifiers: ModifierFunction<T>[]): ModifierFunction<T> {
   return maybeMergeModifiers(modifiers) ?? NOOP_MODIFIER;
 }
 
 /**
- * Merges all modifiers into a single function. If not modifier functions are input, returns
+ * Merges an array of {@link ModifierFunction} values into a single function. Returns undefined if the input is nullish.
  *
- * @param map
- * @returns
+ * If only one modifier is provided, returns it directly without wrapping.
+ *
+ * @param modifiers - array of modifier functions to merge, or undefined
  */
 export function maybeMergeModifiers<T>(modifiers: Maybe<ModifierFunction<T>[]>): Maybe<ModifierFunction<T>> {
   let result: Maybe<ModifierFunction<T>> = undefined;

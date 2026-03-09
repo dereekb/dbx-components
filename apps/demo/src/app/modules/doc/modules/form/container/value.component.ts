@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import {
   addressField,

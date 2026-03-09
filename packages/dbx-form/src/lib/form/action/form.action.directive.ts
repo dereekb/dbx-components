@@ -1,10 +1,10 @@
-import { Directive, OnInit, inject, input } from '@angular/core';
+import { Directive, type OnInit, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
-import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult, cleanLockSet } from '@dereekb/dbx-core';
-import { SubscriptionObject, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable, IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
+import { type Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
+import { DbxActionContextStoreSourceInstance, type DbxActionValueGetterResult, cleanLockSet } from '@dereekb/dbx-core';
+import { SubscriptionObject, type IsModifiedFunction, type IsValidFunction, type ObservableOrValue, asObservable, type IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
-import { IsModified, IsValid, MapFunction, Maybe } from '@dereekb/util';
+import { type IsModified, type IsValid, type MapFunction, type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';

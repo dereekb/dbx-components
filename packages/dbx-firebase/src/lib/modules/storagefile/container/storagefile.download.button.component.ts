@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { DbxActionDialogDirective, DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, DbxButtonStyle, DbxWebFilePreviewService } from '@dereekb/dbx-web';
-import { StorageFileDownloadUrl, StorageFileKey } from '@dereekb/firebase';
-import { ContentTypeMimeType, dateFromDateOrTimeSecondsNumber, DateOrUnixDateTimeSecondsNumber, isPast, Maybe, MS_IN_SECOND } from '@dereekb/util';
-import { DbxFirebaseStorageFileDownloadService, DbxFirebaseStorageFileDownloadServiceCustomSource } from '../service/storagefile.download.service';
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue, WorkInstance, WorkUsingContext } from '@dereekb/rxjs';
+import { DbxActionDialogDirective, type DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, type DbxButtonStyle, DbxWebFilePreviewService } from '@dereekb/dbx-web';
+import { type StorageFileDownloadUrl, type StorageFileKey } from '@dereekb/firebase';
+import { type ContentTypeMimeType, dateFromDateOrTimeSecondsNumber, type DateOrUnixDateTimeSecondsNumber, isPast, type Maybe, MS_IN_SECOND } from '@dereekb/util';
+import { DbxFirebaseStorageFileDownloadService, type DbxFirebaseStorageFileDownloadServiceCustomSource } from '../service/storagefile.download.service';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
+import { type MaybeObservableOrValue, maybeValueFromObservableOrValue, type WorkInstance, type WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, distinctUntilChanged, interval, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { combineLatest, distinctUntilChanged, interval, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { type DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
+import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { isSameDate } from '@dereekb/date';
 
 export interface DbxFirebaseStorageFileDownloadDetails {

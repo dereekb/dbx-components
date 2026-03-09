@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { DbxHelpContextKey } from './help';
+import { type DbxHelpContextKey } from './help';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { asObservable, distinctUntilHasDifferentValues, ObservableOrValue } from '@dereekb/rxjs';
-import { map, Observable, of, shareReplay, switchMap } from 'rxjs';
+import { asObservable, distinctUntilHasDifferentValues, type ObservableOrValue } from '@dereekb/rxjs';
+import { map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { DbxHelpWidgetService } from './help.widget.service';
 import { DbxHelpViewListEntryComponent } from './help.view.list.entry.component';
-import { ArrayOrValue, asArray, Maybe, sortByNumberFunction } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Maybe, sortByNumberFunction } from '@dereekb/util';
 import { MatAccordion } from '@angular/material/expansion';
 import { DbxListEmptyContentComponent } from '../../layout/list/list.content.empty.component';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 @Component({
   selector: 'dbx-help-view-list',

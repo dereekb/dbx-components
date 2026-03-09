@@ -1,10 +1,10 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, type Observable } from 'rxjs';
 import { Component } from '@angular/core';
-import { ComponentFixture } from '@angular/core/testing';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type ComponentFixture } from '@angular/core/testing';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractAsyncFormlyFormDirective, formlyField, provideFormlyContext } from '../lib';
 import { DbxFormlyComponent } from '../lib/formly/formly.form.component';
-import { AbstractControl } from '@angular/forms';
+import { type AbstractControl } from '@angular/forms';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 
 export interface TestFormValue {

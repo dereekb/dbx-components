@@ -16,6 +16,9 @@ export enum SetDeltaChange {
  */
 export type SetValueIsModifiedFunction<T> = (past: T, next: T) => boolean;
 
+/**
+ * Represents the change status of a single value between two sets, including its past and next values.
+ */
 export interface SetDeltaChangePair<T, K extends PrimativeKey = PrimativeKey> {
   /**
    * Key for this pair
@@ -48,6 +51,9 @@ export interface SetDeltaChangePair<T, K extends PrimativeKey = PrimativeKey> {
  */
 export type SetDeltaFunction<T, K extends PrimativeKey = PrimativeKey> = (past: Iterable<T>, next: Iterable<T>) => SetDeltaChangePair<T, K>[];
 
+/**
+ * Configuration for creating a {@link SetDeltaFunction}.
+ */
 export interface SetDeltaFunctionConfig<T, K extends PrimativeKey = PrimativeKey> {
   /**
    * Reads the identifying key from each input value.
@@ -59,6 +65,13 @@ export interface SetDeltaFunctionConfig<T, K extends PrimativeKey = PrimativeKey
   isModifiedFunction?: SetValueIsModifiedFunction<T>;
 }
 
+/**
+ * Creates a {@link SetDeltaFunction} that computes the differences between two iterables,
+ * identifying which items were added, removed, or unchanged.
+ *
+ * @param config - Configuration with the key reader and optional modification detector.
+ * @returns A function that compares two iterables and returns an array of change pairs.
+ */
 export function setDeltaFunction<T>(config: SetDeltaFunctionConfig<T>): SetDeltaFunction<T> {
   const { readKey, isModifiedFunction = () => undefined } = config;
 
@@ -121,10 +134,10 @@ export interface SetDeltaChangeKeys<K extends PrimativeKey = PrimativeKey> {
 }
 
 /**
- * Creates a SetDeltaChangeKeys from the input SetDeltaChangePair values.
+ * Groups the keys from an array of {@link SetDeltaChangePair} values by their change type.
  *
- * @param pairs
- * @returns
+ * @param pairs - The delta change pairs to categorize.
+ * @returns An object with `added`, `removed`, and `none` key arrays.
  */
 export function setDeltaChangeKeys<T, K extends PrimativeKey = PrimativeKey>(pairs: SetDeltaChangePair<T, K>[]): SetDeltaChangeKeys<K> {
   const removed: K[] = [];

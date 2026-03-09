@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
-import { WorkUsingObservable, IsModifiedFunction } from '@dereekb/rxjs';
+import { type WorkUsingObservable, type IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { map, shareReplay, Observable, of } from 'rxjs';
-import { DbxScheduleSelectionCalendarDateDaysFormComponent, DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
+import { map, shareReplay, type Observable, of } from 'rxjs';
+import { DbxScheduleSelectionCalendarDateDaysFormComponent, type DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxActionModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';

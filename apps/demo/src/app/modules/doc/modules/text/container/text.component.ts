@@ -1,7 +1,7 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, type DbxLinkifyConfig, DbxLinkifyService, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
+import { type TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, type DbxLinkifyConfig, DbxLinkifyService, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, type NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
 import { Component, inject } from '@angular/core';
-import { UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
+import { type UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DbxClickToCopyTextComponent } from 'packages/dbx-web/src/lib/layout/text/copy.text.component';

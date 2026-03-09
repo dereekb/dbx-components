@@ -1,6 +1,6 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { asObservableFromGetter, ObservableOrValueGetter } from '@dereekb/rxjs';
-import { Observable } from 'rxjs';
+import { Pipe, type PipeTransform } from '@angular/core';
+import { asObservableFromGetter, type ObservableOrValueGetter } from '@dereekb/rxjs';
+import { type Observable } from 'rxjs';
 
 /**
  * Pipes an ObservableOrValueGetter to an Observable value.

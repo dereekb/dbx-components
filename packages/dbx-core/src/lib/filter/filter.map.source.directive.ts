@@ -1,5 +1,5 @@
-import { FilterSource, FilterMapKey } from '@dereekb/rxjs';
-import { switchMap, first, Observable } from 'rxjs';
+import { type FilterSource, type FilterMapKey } from '@dereekb/rxjs';
+import { switchMap, first, type Observable } from 'rxjs';
 import { Directive, effect, input } from '@angular/core';
 import { provideFilterSource } from './filter.content';
 import { AbstractDbxFilterMapInstanceDirective } from './filter.map.instance.directive';

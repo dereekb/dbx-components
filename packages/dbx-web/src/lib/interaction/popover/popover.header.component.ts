@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, inject, input } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Component used to format a header for a popover.

@@ -1,4 +1,4 @@
-import { ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
+import { type ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
 import { DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent } from '@dereekb/dbx-web';
@@ -177,16 +177,11 @@ export class LandingLayoutComponent {
     },
     {
       name: '@dereekb/model',
-      description: 'Utilities for dealing with models and extensions for the class-transformer and class-validator packages.',
+      description: 'Utilities for dealing with models, data transformation, and runtime validation using ArkType.',
       packages: [
         {
-          title: 'class-transformer',
-          url: 'https://github.com/typestack/class-transformer',
-          target: '_blank'
-        },
-        {
-          title: 'class-validator',
-          url: 'https://github.com/typestack/class-validator',
+          title: 'arktype',
+          url: 'https://arktype.io',
           target: '_blank'
         }
       ]

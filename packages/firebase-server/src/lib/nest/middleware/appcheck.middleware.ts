@@ -2,7 +2,7 @@ import admin from 'firebase-admin';
 import { ForbiddenException, Inject, Injectable, Logger, Optional, type NestMiddleware } from '@nestjs/common';
 import { type Request } from 'firebase-functions/v2/https';
 import { type Response } from 'express';
-import { SlashPath, type Maybe } from '@dereekb/util';
+import { type SlashPath, type Maybe } from '@dereekb/util';
 import { type AppCheckRequest } from './appcheck';
 import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
 import { GlobalRoutePrefixConfig } from './globalprefix';

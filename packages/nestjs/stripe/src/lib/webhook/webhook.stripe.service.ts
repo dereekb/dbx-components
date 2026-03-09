@@ -1,9 +1,9 @@
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Request } from 'express';
+import { type Request } from 'express';
 import { stripeEventHandlerConfigurerFactory, stripeEventHandlerFactory } from './webhook.stripe';
 import { StripeApi } from '../stripe.api';
-import { Handler } from '@dereekb/util';
+import { type Handler } from '@dereekb/util';
 
 /**
  * Service that makes system changes based on Stripe webhook events.

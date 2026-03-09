@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DbxFirebaseLoginMode, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
+import { type DbxFirebaseLoginMode, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
 
 import { DbxLinkComponent } from '@dereekb/dbx-web';
 

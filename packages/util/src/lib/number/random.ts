@@ -29,10 +29,13 @@ export interface RandomNumberFactoryConfig {
 export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;
 
 /**
- * Used to generate a RandomNumberFunction that returns a number between the input and the maximum (exclusive).
+ * Creates a factory that generates random numbers within a configured range.
  *
- * @param maxOrArgs
- * @returns
+ * Accepts either a simple max number or a full config object with min, max, and rounding options.
+ *
+ * @param maxOrArgs - Maximum value (exclusive) or full configuration object
+ * @param roundingInput - Optional rounding mode override
+ * @returns A factory function that produces random numbers within the range
  */
 export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundingInput?: RoundingInput): RandomNumberFactory {
   const config: RandomNumberFactoryConfig = typeof maxOrArgs === 'number' ? { min: 0, max: maxOrArgs } : maxOrArgs;
@@ -56,6 +59,13 @@ export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundin
   return fn;
 }
 
+/**
+ * Generates a single random number using {@link randomNumberFactory}. Convenience function for one-off usage.
+ *
+ * @param maxOrArgs - Maximum value (exclusive) or full configuration object
+ * @param roundingInput - Optional rounding mode
+ * @returns A single random number
+ */
 export function randomNumber(maxOrArgs: RandomNumberFactoryInput, roundingInput?: RoundingInput) {
   return randomNumberFactory(maxOrArgs, roundingInput)();
 }

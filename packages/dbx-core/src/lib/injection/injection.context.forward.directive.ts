@@ -1,5 +1,5 @@
 import { Directive, inject } from '@angular/core';
-import { DbxInjectionContext, DbxInjectionContextConfig } from './injection.context';
+import { DbxInjectionContext, type DbxInjectionContextConfig } from './injection.context';
 
 /**
  * Abstract DbxInjectionContext implementation that forwards commands to a host DbxInjectionContext.

@@ -63,8 +63,15 @@ export interface ExponentialPromiseRateLimiterConfig {
   readonly exponentRate?: number;
 }
 
+/**
+ * A fully resolved {@link ExponentialPromiseRateLimiterConfig} with all fields required.
+ */
 export type FullExponentialPromiseRateLimiterConfig = Required<ExponentialPromiseRateLimiterConfig>;
 
+/**
+ * An exponential backoff rate limiter that increases wait times exponentially based on usage,
+ * with a configurable cooldown that reduces the effective count over time.
+ */
 export interface ExponentialPromiseRateLimiter extends EnableTogglePromiseRateLimiter {
   /**
    * Returns the current config.
@@ -80,6 +87,13 @@ export interface ExponentialPromiseRateLimiter extends EnableTogglePromiseRateLi
   reset(): void;
 }
 
+/**
+ * Creates an {@link ExponentialPromiseRateLimiter} that computes wait times using exponential
+ * growth with a configurable cooldown that reduces the effective count over time.
+ *
+ * @param initialConfig - Optional initial configuration. Defaults are applied for any omitted fields.
+ * @returns An ExponentialPromiseRateLimiter instance.
+ */
 export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialPromiseRateLimiterConfig>): ExponentialPromiseRateLimiter {
   const DEFAULT_START_LIMIT_AT = 1;
   const DEFAULT_COOLDOWN_RATE = 1;
@@ -176,6 +190,10 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
 }
 
 // MARK: Count Down limiter
+/**
+ * Configuration for a {@link ResetPeriodPromiseRateLimiter} that resets its remaining count
+ * periodically and applies exponential backoff when the limit is exhausted.
+ */
 export interface ResetPeriodPromiseRateLimiterConfig extends Partial<ExponentialPromiseRateLimiterConfig> {
   /**
    * The number of times the rate limiter can be used before it needs to be reset.
@@ -230,9 +248,11 @@ export interface ResetPeriodPromiseRateLimiter extends EnableTogglePromiseRateLi
 }
 
 /**
- * Creates a ResetPeriodPromiseRateLimiter.
+ * Creates a {@link ResetPeriodPromiseRateLimiter} that limits the number of operations per time period,
+ * resetting the count at regular intervals and applying exponential backoff when the limit is exceeded.
  *
- * @param limit
+ * @param initialConfig - Configuration specifying the limit count, reset period, and optional exponential backoff settings.
+ * @returns A ResetPeriodPromiseRateLimiter instance.
  */
 export function resetPeriodPromiseRateLimiter(initialConfig: ResetPeriodPromiseRateLimiterConfig): ResetPeriodPromiseRateLimiter {
   const DEFAULT_EXPONENT_RATE = 1.5;

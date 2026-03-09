@@ -1,38 +1,12 @@
-import { isWebsiteUrl, isWebsiteUrlWithPrefix, type ObjectWithConstructor } from '@dereekb/util';
-import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
+import { isWebsiteUrl, isWebsiteUrlWithPrefix } from '@dereekb/util';
+import { type } from 'arktype';
 
 /**
- * isWebsiteUrl validator
+ * ArkType schema for a valid website URL (with or without protocol prefix).
  */
-export function IsWebsiteUrl(validationOptions?: ValidationOptions) {
-  return function (object: ObjectWithConstructor, propertyName: string) {
-    registerDecorator({
-      name: 'isWebsiteUrl',
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      validator: {
-        validate: isWebsiteUrl,
-        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a valid website url.`, validationOptions)
-      }
-    });
-  };
-}
+export const websiteUrlType = type('string > 0').narrow((val, ctx) => isWebsiteUrl(val) || ctx.mustBe('a valid website URL'));
 
 /**
- * isWebsiteUrlWithPrefix validator
+ * ArkType schema for a valid website URL that starts with `http://` or `https://`.
  */
-export function IsWebsiteUrlWithPrefix(validationOptions?: ValidationOptions) {
-  return function (object: ObjectWithConstructor, propertyName: string) {
-    registerDecorator({
-      name: 'isWebsiteUrlWithPrefix',
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      validator: {
-        validate: isWebsiteUrlWithPrefix,
-        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a valid website url that starts with a http/https prefix.`, validationOptions)
-      }
-    });
-  };
-}
+export const websiteUrlWithPrefixType = type('string > 0').narrow((val, ctx) => isWebsiteUrlWithPrefix(val) || ctx.mustBe('a valid website URL starting with http:// or https://'));

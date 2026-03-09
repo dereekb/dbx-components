@@ -1,14 +1,14 @@
-import { Component, ElementRef, input, computed, ChangeDetectionStrategy, viewChild, Signal } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
-import { ProgressBarMode } from '@angular/material/progress-bar';
-import { ErrorInput, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
+import { Component, ElementRef, input, computed, ChangeDetectionStrategy, viewChild, type Signal } from '@angular/core';
+import { type ThemePalette } from '@angular/material/core';
+import { type ProgressBarMode } from '@angular/material/progress-bar';
+import { type ErrorInput, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
-import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { DbxErrorComponent } from '../error/error.component';
 import { type DbxThemeColor } from '../layout/style/style';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { NgTemplateOutlet } from '@angular/common';
-import { DbxLoadingIsLoadingOrProgress, DbxLoadingProgress } from './loading';
+import { type DbxLoadingIsLoadingOrProgress, type DbxLoadingProgress } from './loading';
 
 /**
  * DbxBasicLoadingComponent loading state.

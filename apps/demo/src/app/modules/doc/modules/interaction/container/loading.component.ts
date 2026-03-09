@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingModule, DbxLoadingProgressComponent } from '@dereekb/dbx-web';
-import { readableError, ReadableError } from '@dereekb/util';
+import { readableError, type ReadableError } from '@dereekb/util';
 import { interval, map, shareReplay } from 'rxjs';
 
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

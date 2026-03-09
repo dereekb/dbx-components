@@ -1,7 +1,7 @@
-import { OnInit, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
+import { type OnInit, type OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
-import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
 
 /**
  * No configurable value for now.

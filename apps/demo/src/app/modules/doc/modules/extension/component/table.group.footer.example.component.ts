@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { ExampleTableData, ExampleTableGroupData } from './table.item';
-import { DbxTableItemGroup } from '@dereekb/dbx-web/table';
+import { type ExampleTableData, type ExampleTableGroupData } from './table.item';
+import { type DbxTableItemGroup } from '@dereekb/dbx-web/table';
 
 @Component({
   template: `

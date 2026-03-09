@@ -7,14 +7,22 @@ import { minutesToHoursAndMinutes } from '../date/hour';
 export type CronExpression = string;
 
 /**
- * Creates a CronExpression for the input number of minutes.
+ * Creates a {@link CronExpression} that repeats at approximately every N minutes.
  *
- * Note that if the number of minutes is greater than 60, it will generate an expression that
- * isn't exactly n number of minutes apart from the previous execution, but instead create
- * an expression that is n/60 hours apart and take place on the n%60th minute.
+ * For values under 60, produces a cron expression using minute intervals (e.g., 5 produces every 5th minute).
+ * For values of 60 or more, the expression is split into hours and minutes (e.g., 90 minutes becomes
+ * every 1 hour at minute 30), which means intervals won't be exactly N minutes apart.
  *
- * @param inputMinutes
- * @returns
+ * @param inputMinutes - interval in minutes between executions
+ *
+ * @example
+ * ```ts
+ * // For intervals under 60 minutes:
+ * cronExpressionRepeatingEveryNMinutes(5);  // returns a cron for every 5th minute
+ *
+ * // For intervals of 60+ minutes:
+ * cronExpressionRepeatingEveryNMinutes(90); // returns a cron for every 1 hour at minute 30
+ * ```
  */
 export function cronExpressionRepeatingEveryNMinutes(inputMinutes: Minutes): CronExpression {
   let expression: CronExpression;

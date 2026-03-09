@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { NotificationId, NotificationItem } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type NotificationId, type NotificationItem } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 

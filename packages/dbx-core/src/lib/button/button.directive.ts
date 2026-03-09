@@ -1,8 +1,8 @@
-import { Directive, Signal, computed, input, output, signal } from '@angular/core';
+import { Directive, type Signal, computed, input, output, signal } from '@angular/core';
 import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
 import { cleanSubscription, completeOnDestroy } from '../rxjs';
-import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, DbxButtonWorking, provideDbxButton } from './button';
+import { type DbxButton, type DbxButtonDisplay, type DbxButtonDisplayType, dbxButtonDisplayType, type DbxButtonInterceptor, type DbxButtonWorking, provideDbxButton } from './button';
 import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 
 /**

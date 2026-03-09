@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { shareReplay, map, Observable, combineLatest } from 'rxjs';
-import { DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';
+import { shareReplay, map, type Observable, combineLatest } from 'rxjs';
+import { type DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldComponent } from './latlng.field.component';
 import { type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';

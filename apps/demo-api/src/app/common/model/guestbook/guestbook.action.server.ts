@@ -1,5 +1,23 @@
 import { type FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
-import { type GuestbookFirestoreCollections, InsertGuestbookEntryParams, type AsyncGuestbookEntryUpdateAction, type GuestbookEntryDocument, type GuestbookEntry, CreateGuestbookParams, type AsyncGuestbookCreateAction, type GuestbookDocument, guestbookEntryCreatedNotificationTemplate, LikeGuestbookEntryParams, guestbookEntryLikedNotificationTemplate, SubscribeToGuestbookNotificationsParams, type AsyncGuestbookUpdateAction } from 'demo-firebase';
+import {
+  type GuestbookFirestoreCollections,
+  type InsertGuestbookEntryParams,
+  insertGuestbookEntryParamsType,
+  type AsyncGuestbookEntryUpdateAction,
+  type GuestbookEntryDocument,
+  type GuestbookEntry,
+  type CreateGuestbookParams,
+  createGuestbookParamsType,
+  type AsyncGuestbookCreateAction,
+  type GuestbookDocument,
+  guestbookEntryCreatedNotificationTemplate,
+  type LikeGuestbookEntryParams,
+  likeGuestbookEntryParamsType,
+  guestbookEntryLikedNotificationTemplate,
+  type SubscribeToGuestbookNotificationsParams,
+  subscribeToGuestbookNotificationsParamsType,
+  type AsyncGuestbookUpdateAction
+} from 'demo-firebase';
 import { type FirestoreContextReference, type NotificationFirestoreCollections, type UpdateNotificationBoxRecipientParams, createNotificationDocument, firestoreDummyKey } from '@dereekb/firebase';
 import { type BaseNotificationServerActionsContext, updateNotificationBoxRecipientInTransactionFactory } from '@dereekb/firebase-server/model';
 
@@ -32,7 +50,7 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
 
 // MARK: Actions
 export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection }: GuestbookServerActionsContext) {
-  return firebaseServerActionTransformFunctionFactory(CreateGuestbookParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createGuestbookParamsType, async (params) => {
     const guestbookAccessor = guestbookCollection.documentAccessor();
     const { name, published } = params;
 
@@ -54,7 +72,7 @@ export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformF
 export function guestbookEntryInsertEntryFactory(context: GuestbookServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, guestbookCollection, guestbookEntryCollectionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(InsertGuestbookEntryParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(insertGuestbookEntryParamsType, async (params) => {
     const { message, signed, published } = params;
 
     return async (document: GuestbookEntryDocument) => {
@@ -106,7 +124,7 @@ export function guestbookEntryInsertEntryFactory(context: GuestbookServerActions
 export function likeGuestbookEntryFactory(context: GuestbookServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection, guestbookEntryCollectionGroup } = context;
 
-  return firebaseServerActionTransformFunctionFactory(LikeGuestbookEntryParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(likeGuestbookEntryParamsType, async (params) => {
     return async (document: GuestbookEntryDocument) => {
       await firestoreContext.runTransaction(async (transaction) => {
         const guestbookEntryDocumentInTransaction = guestbookEntryCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(document);
@@ -138,7 +156,7 @@ export function subscribeToGuestbookNotificationsFactory(context: GuestbookServe
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection } = context;
   const updateNotificationBoxRecipientInTransaction = updateNotificationBoxRecipientInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(SubscribeToGuestbookNotificationsParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(subscribeToGuestbookNotificationsParamsType, async (params) => {
     const { uid } = params;
 
     return async (document: GuestbookDocument) => {

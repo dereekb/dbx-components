@@ -1,37 +1,24 @@
-import { Maybe, type TimezoneString } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsOptional, validate } from 'class-validator';
-import { IsKnownTimezone } from './timezone.validator';
+import { type } from 'arktype';
+import { knownTimezoneType } from './timezone.validator';
 
-class TestIsKnownTimezoneModelClass {
-  @Expose()
-  @IsOptional()
-  @IsKnownTimezone()
-  timezone!: Maybe<TimezoneString>;
-}
-
-describe('IsKnownTimezone', () => {
-  it('should validate the UTC timezone', async () => {
-    const instance = new TestIsKnownTimezoneModelClass();
-    instance.timezone = 'UTC';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('knownTimezoneType', () => {
+  it('should validate the UTC timezone', () => {
+    const result = knownTimezoneType('UTC');
+    expect(result).not.toBeInstanceOf(type.errors);
   });
 
-  it('should validate the America/Denver timezone', async () => {
-    const instance = new TestIsKnownTimezoneModelClass();
-    instance.timezone = 'America/Denver';
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should validate the America/Denver timezone', () => {
+    const result = knownTimezoneType('America/Denver');
+    expect(result).not.toBeInstanceOf(type.errors);
   });
 
-  it('should not validate the NotATimezone timezone', async () => {
-    const instance = new TestIsKnownTimezoneModelClass();
-    instance.timezone = 'NotATimezone';
+  it('should not validate the NotATimezone timezone', () => {
+    const result = knownTimezoneType('NotATimezone');
+    expect(result).toBeInstanceOf(type.errors);
+  });
 
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not validate an empty string', () => {
+    const result = knownTimezoneType('');
+    expect(result).toBeInstanceOf(type.errors);
   });
 });

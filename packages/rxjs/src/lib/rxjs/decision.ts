@@ -7,11 +7,13 @@ import { combineLatest, map, type MonoTypeOperatorFunction, type Observable, of,
 export type ObservableDecisionFunction<T> = (value: T) => Observable<boolean>;
 
 /**
- * Used to invert an ObservableDecisionFunction's result.
+ * Wraps an {@link ObservableDecisionFunction} to negate its boolean result.
  *
- * @param filterFn
- * @param invert whether or not to apply the inversion.
- * @returns
+ * When `invert` is false, returns the original function unchanged.
+ *
+ * @param decisionFn - the decision function to invert
+ * @param invert - whether to apply the inversion (defaults to true)
+ * @returns the inverted (or original) decision function
  */
 export function invertObservableDecision<F extends ObservableDecisionFunction<any>>(decisionFn: F, invert = true): F {
   if (invert) {
@@ -25,10 +27,14 @@ export function invertObservableDecision<F extends ObservableDecisionFunction<an
 }
 
 /**
- * Operator function that uses SwitchMap and filters each of the input values using an ObservableDecisionFunction, and returns them as an array.
+ * RxJS operator that filters an emitted array by evaluating each item through an async {@link ObservableDecisionFunction}.
  *
- * @param observableDecisionFunction
- * @returns
+ * Items where the decision returns true are kept; others are removed. Results are throttled
+ * to prevent excessive re-emissions.
+ *
+ * @param observableDecisionFunction - async predicate to evaluate each item
+ * @param throttle - throttle duration in ms (defaults to 20)
+ * @returns an operator that async-filters array elements
  */
 export function filterItemsWithObservableDecision<T>(observableDecisionFunction: ObservableDecisionFunction<T>, throttle: Milliseconds = 20): MonoTypeOperatorFunction<T[]> {
   const filterAndMap = filterAndMapFunction<[T, boolean], T>(

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DbxSectionHeaderConfig, DbxSectionLayoutModule } from '@dereekb/dbx-web';
+import { type DbxSectionHeaderConfig, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
-import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
 
 export type DbxFormSectionConfig = DbxSectionHeaderConfig;
 

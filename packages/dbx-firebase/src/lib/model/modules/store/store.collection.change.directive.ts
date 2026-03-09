@@ -1,9 +1,9 @@
 import { Directive, effect, inject, input } from '@angular/core';
-import { FirestoreDocument } from '@dereekb/firebase';
-import { DbxFirebaseCollectionStore } from './store.collection';
+import { type FirestoreDocument } from '@dereekb/firebase';
+import { type DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
-import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../../loader/collection.change.watcher';
-import { Observable } from 'rxjs';
+import { type DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, type DbxFirebaseCollectionChangeWatcherEvent, type DbxFirebaseCollectionChangeWatcherTriggerMode } from '../../loader/collection.change.watcher';
+import { type Observable } from 'rxjs';
 import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../../loader/collection.change.trigger';
 import { clean } from '@dereekb/dbx-core';
 

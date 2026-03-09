@@ -1,11 +1,11 @@
-import { AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
+import { type AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
 import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
-import { NotificationItem } from '@dereekb/firebase';
+import { type NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
-import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
+import { type LoadingState, type WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
 import { ProfileDocumentStore } from 'demo-components';
 import { UIView } from '@uirouter/angular';
 import { AsyncPipe } from '@angular/common';

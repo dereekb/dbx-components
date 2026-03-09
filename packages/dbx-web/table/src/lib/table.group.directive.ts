@@ -4,7 +4,7 @@ import { Directive, inject, input } from '@angular/core';
 import { distinctUntilChanged } from 'rxjs';
 import { DbxTableStore } from './table.store';
 import { type Maybe } from '@dereekb/util';
-import { DbxTableItemGroup } from './table';
+import { type DbxTableItemGroup } from './table';
 
 /**
  * Abstract directive that has an element input.

@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, Signal } from '@angular/core';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, type Signal } from '@angular/core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
-import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, DbxHelpWidgetEntryData, DbxHelpWidgetServiceEntry } from './help.widget';
-import { getValueFromGetter, Maybe } from '@dereekb/util';
+import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, type DbxHelpWidgetEntryData, type DbxHelpWidgetServiceEntry } from './help.widget';
+import { getValueFromGetter, type Maybe } from '@dereekb/util';
 import { DbxHelpWidgetService } from './help.widget.service';
 
 @Component({

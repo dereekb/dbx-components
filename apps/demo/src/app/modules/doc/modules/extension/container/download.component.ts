@@ -1,7 +1,7 @@
-import { DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent, DbxDownloadBlobButtonConfig, DbxDownloadBlobButtonComponent } from '@dereekb/dbx-web';
+import { type DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent, type DbxDownloadBlobButtonConfig, DbxDownloadBlobButtonComponent } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
 import { randomNumberFactory, randomPhoneNumberFactory, range, waitForMs } from '@dereekb/util';
-import { Observable, delay, map, of } from 'rxjs';
+import { type Observable, delay, map, of } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

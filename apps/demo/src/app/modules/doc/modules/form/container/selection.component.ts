@@ -1,7 +1,7 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
-import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
-import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit, inject } from '@angular/core';
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
+import { ChangeDetectorRef, Component, type OnDestroy, type Type, type OnInit, inject } from '@angular/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import {
   DbxFormFormlyDbxListFieldModule,
   DbxFormFormlyPickableFieldModule,
@@ -15,24 +15,24 @@ import {
   searchableChipField,
   searchableStringChipField,
   searchableTextField,
-  SearchableValueFieldDisplayFn,
-  SearchableValueFieldDisplayValue,
-  SearchableValueFieldStringSearchFn,
-  SearchableValueFieldValue,
+  type SearchableValueFieldDisplayFn,
+  type SearchableValueFieldDisplayValue,
+  type SearchableValueFieldStringSearchFn,
+  type SearchableValueFieldValue,
   sourceSelectField,
-  SourceSelectLoadSource,
+  type SourceSelectLoadSource,
   valueSelectionField,
-  ValueSelectionOptionWithValue,
+  type ValueSelectionOptionWithValue,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective
 } from '@dereekb/dbx-form';
-import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
-import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
-import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
+import { type ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
+import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, type IndexRef, type ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
+import { type DocFormExampleSelectionValue, type DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
-import { DocValue } from '../../layout/component/item.list';
+import { type DocValue } from '../../layout/component/item.list';
 import { DocSelectionItemListComponent } from '../../layout/component/item.list.selection.component';
-import { AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { type AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';

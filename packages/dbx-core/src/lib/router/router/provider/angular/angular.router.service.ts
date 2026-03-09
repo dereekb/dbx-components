@@ -1,13 +1,12 @@
-import { map, Observable, combineLatest, firstValueFrom } from 'rxjs';
-import { asObservable, filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
-import { DbxRouterService } from '../../service/router.service';
-import { DbxRouterTransitionService } from '../../service/router.transition.service';
-import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
-import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
-import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';
+import { map, type Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { asObservable, filterMaybe, type ObservableOrValue } from '@dereekb/rxjs';
+import { type DbxRouterService } from '../../service/router.service';
+import { type DbxRouterTransitionService } from '../../service/router.transition.service';
+import { asSegueRef, type SegueRef, type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../../segue';
+import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
+import { ActivatedRoute, type NavigationBehaviorOptions, NavigationEnd, type NavigationExtras, NavigationStart, Router, type UrlTree } from '@angular/router';
 import { Injectable, inject } from '@angular/core';
-import { isArray } from 'class-validator';
-import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
 
 /**
  * AngularRouter implementation of DbxRouterService and DbxRouterTransitionService.
@@ -44,7 +43,7 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
       const segueRef = asSegueRef(inputSegueRef);
       const ref = segueRef.ref;
 
-      if (isArray(ref)) {
+      if (Array.isArray(ref)) {
         return this.router.navigate(ref as unknown[], {
           ...segueRef.refOptions,
           queryParams: segueRef.refParams

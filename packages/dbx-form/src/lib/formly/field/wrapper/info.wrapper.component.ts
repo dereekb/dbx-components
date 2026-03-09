@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { FieldWrapper, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { FieldWrapper, type FormlyFieldConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 

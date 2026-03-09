@@ -1,7 +1,7 @@
 import { Directive, input } from '@angular/core';
-import { DbxHelpContextKey } from './help';
-import { ArrayOrValue, asArray } from '@dereekb/util';
-import { map, Observable } from 'rxjs';
+import { type DbxHelpContextKey } from './help';
+import { type ArrayOrValue, asArray } from '@dereekb/util';
+import { map, type Observable } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { registerHelpContextKeysWithDbxHelpContextService } from './help.context';
 

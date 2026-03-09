@@ -1,7 +1,7 @@
 import { StripeWebhookService, StripeApi } from '@dereekb/nestjs/stripe';
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 
 @Injectable()
 export class DemoApiStripeExampleService {

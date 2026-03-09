@@ -1,12 +1,12 @@
-import { Guestbook } from 'demo-firebase';
+import { type Guestbook } from 'demo-firebase';
 import { Component } from '@angular/core';
 import {
   AbstractDbxSelectionListWrapperDirective,
   AbstractDbxValueListViewItemComponent,
   AbstractDbxSelectionListViewDirective,
-  DbxSelectionValueListViewConfig,
+  type DbxSelectionValueListViewConfig,
   provideDbxListView,
-  DbxValueAsListItem,
+  type DbxValueAsListItem,
   provideDbxListViewWrapper,
   DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   DbxSelectionValueListViewComponentImportsModule,

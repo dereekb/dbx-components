@@ -1,6 +1,6 @@
 import { Directive, NgModule, output } from '@angular/core';
-import { MatSelectionListChange } from '@angular/material/list';
-import { ListSelectionState, ListSelectionStateItem } from './list.view';
+import { type MatSelectionListChange } from '@angular/material/list';
+import { type ListSelectionState, type ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';
 import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 

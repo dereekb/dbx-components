@@ -1,5 +1,4 @@
 import { environment } from './environments/environment';
-import 'reflect-metadata';
 import { onRequest } from 'firebase-functions/v2/https';
 import admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';

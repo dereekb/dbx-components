@@ -6,6 +6,9 @@ import { type DecisionFunction } from '../value';
  */
 export type IsSelectedDecisionFunctionFactory<T, K extends PrimativeKey = PrimativeKey> = (selectedValues: Iterable<K>) => DecisionFunction<T>;
 
+/**
+ * Configuration for {@link isSelectedDecisionFunctionFactory}.
+ */
 export interface IsSelectedDecisionFunctionConfig<T, K extends PrimativeKey = PrimativeKey> {
   /**
    * Reads the key from the input value.
@@ -20,10 +23,11 @@ export interface IsSelectedDecisionFunctionConfig<T, K extends PrimativeKey = Pr
 }
 
 /**
- * Creates a IsSelectedDecisionFunctionFactory
+ * Creates an {@link IsSelectedDecisionFunctionFactory} that produces decision functions
+ * checking whether a value's key is included in a set of selected values.
  *
- * @param config
- * @returns
+ * @param config - Configuration with the key reader and default behavior.
+ * @returns A factory that creates decision functions from a set of selected keys.
  */
 export function isSelectedDecisionFunctionFactory<T, K extends PrimativeKey = PrimativeKey>(config: IsSelectedDecisionFunctionConfig<T, K>): IsSelectedDecisionFunctionFactory<T, K> {
   const { readKey, defaultIfKeyNull = false } = config;

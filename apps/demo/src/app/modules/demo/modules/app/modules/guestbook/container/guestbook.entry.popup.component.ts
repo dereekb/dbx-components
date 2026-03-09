@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { AbstractDialogDirective, DbxActionModule, DbxButtonModule, DbxDialogModule, DbxErrorComponent } from '@dereekb/dbx-web';
-import { MatDialog } from '@angular/material/dialog';
-import { WorkUsingContext, switchMapWhileTrue, IsEqualFunction } from '@dereekb/rxjs';
-import { DemoGuestbookEntryFormComponent, DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from 'demo-components';
+import { type MatDialog } from '@angular/material/dialog';
+import { type WorkUsingContext, switchMapWhileTrue, type IsEqualFunction } from '@dereekb/rxjs';
+import { DemoGuestbookEntryFormComponent, type DemoGuestbookEntryFormValue, type GuestbookEntryDocumentStore } from 'demo-components';
 import { map } from 'rxjs';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';

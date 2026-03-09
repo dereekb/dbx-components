@@ -1,7 +1,7 @@
-import { Injectable, Provider } from '@angular/core';
+import { Injectable, type Provider } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Subject, distinct, map } from 'rxjs';
-import { completeOnDestroy, SegueRef } from '@dereekb/dbx-core';
+import { completeOnDestroy, type SegueRef } from '@dereekb/dbx-core';
 import { isMaybeNot, type Maybe } from '@dereekb/util';
 
 export interface TwoColumnsState {

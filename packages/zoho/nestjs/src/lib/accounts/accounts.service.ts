@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ZohoAccessToken, ZohoAccessTokenCache, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { Maybe, forEachKeyValue, Configurable, filterMaybeArrayValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
+import { type ZohoAccessToken, type ZohoAccessTokenCache, type ZohoServiceAccessTokenKey } from '@dereekb/zoho';
+import { type Maybe, forEachKeyValue, type Configurable, filterMaybeArrayValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
 import { dirname } from 'path';
 import { readFile, writeFile, rm, mkdirSync } from 'fs';
 

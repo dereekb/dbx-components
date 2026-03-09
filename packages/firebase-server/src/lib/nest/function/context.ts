@@ -1,6 +1,5 @@
-import { type ValidationError } from 'class-validator';
-import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory, type TransformAndValidateObjectFactoryDefaults } from '@dereekb/model';
-import { type HttpException, ValidationPipe } from '@nestjs/common';
+import { type ArkErrors } from 'arktype';
+import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory } from '@dereekb/model';
 import { mapIdentityFunction } from '@dereekb/util';
 import { badRequestError } from '../../function/error';
 
@@ -54,51 +53,41 @@ export function firebaseServerActionsTransformContext(options?: FirebaseServerAc
 export const FIREBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
 
 /**
- *
- * @param validationError
- * @returns
+ * Creates a server error object from ArkType validation errors.
  */
-export function firebaseServerValidationServerError(validationError: ValidationError[]) {
-  const nestValidationExceptionFactory = new ValidationPipe({
-    forbidUnknownValues: false
-  }).createExceptionFactory();
-  const nestError = nestValidationExceptionFactory(validationError);
-  const data = (nestError as HttpException).getResponse();
-
+export function firebaseServerValidationServerError(validationErrors: ArkErrors) {
   return {
     message: 'One or more data/form validation errors occurred.',
     code: FIREBASE_SERVER_VALIDATION_ERROR_CODE,
-    data
+    data: {
+      message: validationErrors.summary
+    }
   };
 }
 
 /**
  * Creates a new badRequestError with the validation error details as the response data.
- *
- * @param validationError
- * @returns
  */
-export function firebaseServerValidationError(validationError: ValidationError[]) {
-  const serverError = firebaseServerValidationServerError(validationError);
+export function firebaseServerValidationError(validationErrors: ArkErrors) {
+  const serverError = firebaseServerValidationServerError(validationErrors);
   return badRequestError(serverError);
 }
 
-export interface FirebaseServerActionsTransformFactoryOptions extends Pick<TransformAndValidateObjectFactoryDefaults<any>, 'defaultValidationOptions'> {
+export interface FirebaseServerActionsTransformFactoryOptions {
   readonly logError?: FirebaseServerActionsTransformFactoryLogErrorFunctionInput;
 }
 
 export function firebaseServerActionsTransformFactory(options?: FirebaseServerActionsTransformFactoryOptions): TransformAndValidateObjectFactory {
-  const { logError, defaultValidationOptions } = options ?? {};
+  const { logError } = options ?? {};
 
   const logErrorFunction = logError !== false ? (typeof logError === 'function' ? logError : defaultFirebaseServerActionsTransformFactoryLogErrorFunction) : mapIdentityFunction;
 
   return transformAndValidateObjectFactory({
-    handleValidationError: (validationError: ValidationError[]) => {
-      const serverError = firebaseServerValidationServerError(validationError);
+    handleValidationError: async (validationErrors: ArkErrors) => {
+      const serverError = firebaseServerValidationServerError(validationErrors);
       const { data } = serverError;
       logErrorFunction(data as object);
       throw badRequestError(serverError);
-    },
-    defaultValidationOptions
+    }
   });
 }

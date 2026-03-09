@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { OpenAIWebhookService } from './webhook.openai.service';
 import { OPENAI_WEBHOOK_SECRET_TOKEN_ENV_VAR, OpenAIWebhookServiceConfig } from './webhook.openai.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { OpenAIWebhookSecret } from '../openai.type';
+import { type OpenAIWebhookSecret } from '../openai.type';
 import { OpenAIModule } from '../openai.module';
 
 export function openAIWebhookServiceConfigFactory(configService: ConfigService): OpenAIWebhookServiceConfig {

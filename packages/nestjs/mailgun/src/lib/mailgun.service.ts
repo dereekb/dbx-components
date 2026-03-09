@@ -1,6 +1,6 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { Inject, Injectable } from '@nestjs/common';
-import { MailgunTemplateEmailRequest, MailgunEmailMessageSendResult, convertMailgunTemplateEmailRequestToMailgunMessageData } from './mailgun';
+import { type MailgunTemplateEmailRequest, type MailgunEmailMessageSendResult, convertMailgunTemplateEmailRequestToMailgunMessageData } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 
 @Injectable()

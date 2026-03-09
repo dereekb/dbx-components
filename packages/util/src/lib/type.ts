@@ -19,20 +19,22 @@ export type ObjectWithConstructor = {
 };
 
 /**
- * Returns true if the input object is an object with a constructor.
+ * Returns true if the input is a function-like value with a prototype and constructor (i.e., a class or named function declaration).
+ * Returns false for arrow functions, class instances, plain objects, and primitives.
  *
- * @param obj
- * @returns
+ * @param obj - The value to check.
+ * @returns Whether the value is a function with a constructor.
  */
 export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor {
   return typeof obj === 'function' && !!obj.prototype && !!obj.constructor && !!obj.prototype.constructor.name;
 }
 
 /**
- * Returns true if the input object is a class type that requires using "new".
+ * Returns true if the input is a class (requires `new` to instantiate). Distinguishes classes from regular functions
+ * by checking that the prototype is non-writable.
  *
- * @param obj
- * @returns
+ * @param obj - The value to check.
+ * @returns Whether the value is a class type.
  */
 export function isClassLikeType(obj: unknown): obj is ClassLikeType {
   return isObjectWithConstructor(obj) && !Object.getOwnPropertyDescriptor(obj, 'prototype')?.writable;
@@ -41,10 +43,11 @@ export function isClassLikeType(obj: unknown): obj is ClassLikeType {
 export type FunctionType = 'function' | 'class' | 'arrow';
 
 /**
- * Returns the input value's function type, or null if not a function.
+ * Determines the function type of the input value: `'class'`, `'function'`, or `'arrow'`.
+ * Returns `null` if the input is not a function.
  *
- * @param x
- * @returns
+ * @param x - The value to inspect.
+ * @returns The {@link FunctionType}, or `null` for non-functions.
  */
 export function getFunctionType(x: unknown): Maybe<FunctionType> {
   // https://stackoverflow.com/a/69316645 // check writable to distinguish between a class type and an object
@@ -52,10 +55,10 @@ export function getFunctionType(x: unknown): Maybe<FunctionType> {
 }
 
 /**
- * Returns true if the input is a non-class function.
+ * Returns true if the input is a function but not a class (i.e., a regular function or arrow function).
  *
- * @param x
- * @returns
+ * @param x - The value to check.
+ * @returns Whether the value is a non-class function.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function isNonClassFunction(x: unknown): x is Function {
@@ -209,7 +212,7 @@ export type StringOrder<S extends string, SEPARATOR extends string> =
       ? Exclude<S, SELF> extends never
         ? SELF
         : // This works because the values of S are always sorted and interpreted in an ascending order
-          `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
+            `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
       : never
     : never;
 

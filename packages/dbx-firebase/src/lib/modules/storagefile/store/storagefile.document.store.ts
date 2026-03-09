@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreCrudFunction, firebaseDocumentStoreDeleteFunction, firebaseDocumentStoreReadFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { StorageFile, StorageFileDocument, StorageFileFirestoreCollections, StorageFileFunctions } from '@dereekb/firebase';
+import { type StorageFile, type StorageFileDocument, StorageFileFirestoreCollections, StorageFileFunctions } from '@dereekb/firebase';
 
 @Injectable()
 export class StorageFileDocumentStore extends AbstractDbxFirebaseDocumentStore<StorageFile, StorageFileDocument> {

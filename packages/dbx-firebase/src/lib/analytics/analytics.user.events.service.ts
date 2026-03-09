@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { DbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Destroyable, Initialized } from '@dereekb/util';
+import { type Destroyable, type Initialized } from '@dereekb/util';
 import { first } from 'rxjs';
 import { DbxFirebaseAuthService } from '../auth/service/firebase.auth.service';
 import { DbxFirebaseAnalyticsUserSource } from './analytics.user.source';

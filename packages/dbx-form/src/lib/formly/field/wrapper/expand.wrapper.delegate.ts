@@ -1,8 +1,8 @@
-import { Maybe, objectIsEmpty } from '@dereekb/util';
-import { FieldWrapper, FormlyFieldProps, FormlyFieldConfig } from '@ngx-formly/core';
+import { type Maybe, objectIsEmpty } from '@dereekb/util';
+import { FieldWrapper, type FormlyFieldProps, type FormlyFieldConfig } from '@ngx-formly/core';
 import { map, shareReplay, startWith, switchMap, BehaviorSubject, of, distinctUntilChanged } from 'rxjs';
-import { Directive, OnDestroy, OnInit } from '@angular/core';
-import { AbstractControl } from '@angular/forms';
+import { Directive, type OnDestroy, type OnInit } from '@angular/core';
+import { type AbstractControl } from '@angular/forms';
 import { filterMaybe } from '@dereekb/rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 

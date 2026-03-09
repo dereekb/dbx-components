@@ -6,14 +6,17 @@ import { type DateRange, type TransformDateRangeDatesFunction, transformDateRang
 import { dateFromLogicalDate } from './date.logical';
 
 /**
+ * A Date whose UTC components represent "wall-clock" time in an arbitrary timezone.
+ *
  * Inherited from the RRule library where RRule only deals with UTC date/times, dates going into it must always be in UTC.
+ * We strip the timezone concept entirely: if it's 11 AM in Los Angeles, the BaseDateAsUTC reads 11:00 UTC.
+ * This lets us perform date math (start-of-day, add-hours, etc.) without worrying about DST or offset changes,
+ * then convert back to a real timezone-aware date when needed via {@link DateTimezoneUtcNormalInstance.baseDateToTargetDate}.
  *
- * We use this "weird" date when transforming an instance (11AM in Los Angeles) into a UTC date that says the same thing,
- * 11AM UTC.
- *
- * BaseDateAsUTC lets us simplify time changes and printing time strings by removing the concept of timezones, as we can now assume 2AM is always "2AM".
- *
- * When using base dates, we can target any timezone after performing date conversions without worrying about things such as daylight savings, etc.
+ * Three date "spaces" exist in this module:
+ * - **base** — wall-clock time encoded as UTC (`BaseDateAsUTC`). Safe for arithmetic.
+ * - **target** — a real instant in the configured timezone.
+ * - **system** — a real instant in the host machine's local timezone.
  */
 export type BaseDateAsUTC = Date;
 
@@ -51,10 +54,16 @@ export interface DateTimezoneConversionConfig {
 }
 
 /**
- * Returns true if any DateTimezoneConversionConfig configuration value is provided.
+ * Returns true if the config contains at least one meaningful conversion setting
+ * (useSystemTimezone, timezone, timezoneOffset, or noConversion).
  *
- * @param input
- * @returns
+ * Useful for guarding against empty/default configs before creating a converter instance.
+ *
+ * @example
+ * ```ts
+ * isValidDateTimezoneConversionConfig({ timezone: 'America/Chicago' }); // true
+ * isValidDateTimezoneConversionConfig({}); // false
+ * ```
  */
 export function isValidDateTimezoneConversionConfig(input: DateTimezoneConversionConfig): boolean {
   return input.useSystemTimezone || input.timezone != null || input.timezoneOffset != null || input.noConversion || false;
@@ -68,11 +77,14 @@ export type DateTimezoneConversionConfigUseSystemTimezone = {
 };
 
 /**
- * Returns true if both inputs are considered equivalent.
+ * Compares two configs for logical equivalence, accounting for the fact that
+ * `undefined` timezone and `'UTC'` timezone are treated as the same value.
  *
- * @param a
- * @param b
- * @returns
+ * @example
+ * ```ts
+ * isSameDateTimezoneConversionConfig({ timezone: 'UTC' }, { timezone: undefined }); // true
+ * isSameDateTimezoneConversionConfig({ useSystemTimezone: true }, { timezone: 'America/Denver' }); // false
+ * ```
  */
 export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConfig, b: DateTimezoneConversionConfig) {
   let isSame = false;
@@ -87,12 +99,20 @@ export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConf
 }
 
 /**
- * Returns the current offset in milliseconds.
+ * Returns the system timezone's UTC offset for the given date, in milliseconds.
  *
- * The offset corresponds positively with the UTC offset, so UTC-6 is negative 6 hours, in milliseconds.
+ * Sign matches the UTC convention: UTC-6 returns a negative value (-21600000).
+ * The date parameter is required because DST may change the offset throughout the year.
  *
- * @param date Date is required to get the correct offset for the given date.
- * @returns
+ * Uses native `getTimezoneOffset()` to avoid a DST edge case in date-fns-tz's `toZonedTime`.
+ *
+ * @example
+ * ```ts
+ * // On a system in UTC-6 (no DST)
+ * getCurrentSystemOffsetInMs(new Date('2024-06-15T12:00:00Z')); // -21600000
+ * ```
+ *
+ * @param date - required to determine the correct offset for that instant (DST-aware)
  */
 export function getCurrentSystemOffsetInMs(date: Date): Milliseconds {
   // Use native getTimezoneOffset() instead of calculateTimezoneOffset() to avoid
@@ -102,38 +122,55 @@ export function getCurrentSystemOffsetInMs(date: Date): Milliseconds {
 }
 
 /**
- * Returns the current system time offset in hours.
+ * Returns the system timezone's UTC offset for the given date, truncated to whole hours.
  *
- * @param date
- * @returns
+ * @example
+ * ```ts
+ * // On a system in UTC-6
+ * getCurrentSystemOffsetInHours(new Date('2024-06-15T12:00:00Z')); // -6
+ * ```
+ *
+ * @param date - required to determine the correct offset for that instant (DST-aware)
  */
 export function getCurrentSystemOffsetInHours(date: Date): Hours {
   return millisecondsToHours(getCurrentSystemOffsetInMs(date));
 }
 
 /**
- * Returns the system offset for the input date, in minutes.
+ * Returns the system timezone's UTC offset for the given date, in minutes.
  *
- * The offset corresponds positively with the UTC offset, so UTC-6 is negative 6 hours, in milliseconds.
+ * Sign matches the UTC convention: UTC-6 returns -360. Useful for timezones with
+ * non-hour offsets (e.g. UTC+5:30 returns 330).
  *
- * @param date
- * @returns
+ * @example
+ * ```ts
+ * // On a system in UTC-6
+ * getCurrentSystemOffsetInMinutes(new Date('2024-06-15T12:00:00Z')); // -360
+ * ```
+ *
+ * @param date - required to determine the correct offset for that instant (DST-aware)
  */
 export function getCurrentSystemOffsetInMinutes(date: Date): Minutes {
   return millisecondsToMinutes(getCurrentSystemOffsetInMs(date));
 }
 
 /**
- * Returns the timezone offset in milliseconds.
+ * Computes the UTC offset for any IANA timezone at a given instant, in milliseconds.
  *
- * This is preferential to Date.getTimezoneOffset() or date-fns's getTimezoneOffset() as those are currently wrong for the first
- * two hours when daylight savings changes.
+ * Preferred over `Date.getTimezoneOffset()` and date-fns-tz's `getTimezoneOffset()` because both
+ * return incorrect values during the first two hours after a DST transition.
+ * See: https://github.com/marnusw/date-fns-tz/issues/227
  *
- * I.E. GMT-5 = -5 hours (in milliseconds)
+ * Sign matches the UTC convention: GMT-5 returns -18000000.
  *
- * @param timezone
- * @param date
- * @returns
+ * @example
+ * ```ts
+ * calculateTimezoneOffset('America/Chicago', new Date('2024-06-15T12:00:00Z')); // -18000000 (UTC-5 CDT)
+ * calculateTimezoneOffset('UTC', new Date()); // 0
+ * ```
+ *
+ * @param timezone - IANA timezone string (e.g. 'America/New_York')
+ * @param date - the instant to evaluate, since DST may shift the offset
  */
 export function calculateTimezoneOffset(timezone: TimezoneString, date: Date): Milliseconds {
   let tzOffset: Milliseconds;
@@ -175,40 +212,53 @@ export type DateTimezoneConversionTarget = 'target' | 'base' | 'system';
 
 export type DateTimezoneOffsetFunction = (date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget) => Milliseconds;
 
+/**
+ * Provides bidirectional conversions between the three date spaces: base, target, and system.
+ *
+ * See {@link BaseDateAsUTC} for an explanation of these spaces.
+ */
 export interface DateTimezoneBaseDateConverter {
+  /**
+   * Returns the offset in milliseconds required to convert a date from one space to another.
+   */
   getCurrentOffset: DateTimezoneOffsetFunction;
   /**
-   * Converts the given date into a date relative to the UTC's date by
-   * adding the timezone offset for the current timezone.
+   * Strips the target timezone offset, encoding the wall-clock time as a {@link BaseDateAsUTC}.
    *
-   * This is generally used for cases where you are dealing with conversational strings, such as "2AM today". By using the base UTC date,
-   * as 2PM we can get "2PM" in UTC, then convert back using baseDateToTargetDate avoid timezone conversion issues and other headaches.
+   * Useful when you need to do date math (start-of-day, add-hours, etc.) without DST interference,
+   * then convert back via {@link baseDateToTargetDate}.
    *
-   * For example, if it is 2PM in the input time, the resulting time will be 2PM UTC.
+   * For example, if it is 2PM in the target timezone, the result will be 2PM UTC:
    * - Input: 2021-08-16T14:00:00.000-06:00
    * - Output: 2021-08-16T14:00:00.000Z
-   *
-   * @param date
-   * @param addOffset
    */
   targetDateToBaseDate(date: Date): Date;
   /**
-   * Converts the given date into a date relative to the system's date.
+   * Re-interprets a target-timezone date as an instant in the system's local timezone.
    *
-   * This is available for cases where the system uses Date's internal functionality (and therefore the system's timezone),
-   * and conversions need to be done to/from the system time to the target timezone.
+   * Needed when interfacing with browser/Node APIs that implicitly use the system timezone,
+   * such as `startOfDay()` from date-fns.
    *
-   * For example, if it is 2PM in the input time, the resulting time will be 2PM in the current system time.
+   * For example, 2PM target becomes 2PM in the system timezone:
    * - Input: 2021-08-16T14:00:00.000-06:00
    * - Output: 2021-08-16T14:00:00.000+02:00
-   *
-   * @param date
-   * @param addOffset
    */
   targetDateToSystemDate(date: Date): Date;
+  /**
+   * Applies the target timezone offset to a {@link BaseDateAsUTC}, producing a real instant in the target timezone.
+   */
   baseDateToTargetDate(date: Date): Date;
+  /**
+   * Converts a {@link BaseDateAsUTC} to the system's local timezone.
+   */
   baseDateToSystemDate(date: Date): Date;
+  /**
+   * Converts a system-local date to the target timezone.
+   */
   systemDateToTargetDate(date: Date): Date;
+  /**
+   * Converts a system-local date to a {@link BaseDateAsUTC}.
+   */
   systemDateToBaseDate(date: Date): Date;
 }
 
@@ -239,6 +289,15 @@ export type DateTimezoneUtcNormalInstanceInput = Maybe<TimezoneString> | DateTim
 
 export type DateTimezoneUtcNormalInstanceTransformType = 'targetDateToBaseDate' | 'targetDateToSystemDate' | 'baseDateToTargetDate' | 'baseDateToSystemDate' | 'systemDateToTargetDate' | 'systemDateToBaseDate';
 
+/**
+ * Returns the reverse transform type, so a round-trip conversion can be performed.
+ *
+ * @example
+ * ```ts
+ * inverseDateTimezoneUtcNormalInstanceTransformType('targetDateToBaseDate'); // 'baseDateToTargetDate'
+ * inverseDateTimezoneUtcNormalInstanceTransformType('systemDateToTargetDate'); // 'targetDateToSystemDate'
+ * ```
+ */
 export function inverseDateTimezoneUtcNormalInstanceTransformType(input: DateTimezoneUtcNormalInstanceTransformType): DateTimezoneUtcNormalInstanceTransformType {
   let result: DateTimezoneUtcNormalInstanceTransformType;
 
@@ -267,9 +326,23 @@ export function inverseDateTimezoneUtcNormalInstanceTransformType(input: DateTim
 }
 
 /**
- * Used for converting Dates to/from a UTC "base date" to a "normal date".
+ * Central class for converting dates between the three date spaces (base, target, system).
  *
- * This can generally be used for converting from/to the target offset as well.
+ * Wraps a timezone configuration and provides all conversion methods. Instances are typically
+ * created via the {@link dateTimezoneUtcNormal} factory or by passing a config/timezone string
+ * to the constructor.
+ *
+ * @example
+ * ```ts
+ * const normal = new DateTimezoneUtcNormalInstance('America/Denver');
+ *
+ * // Convert a target-timezone date to a BaseDateAsUTC for safe arithmetic
+ * const base = normal.targetDateToBaseDate(new Date('2024-06-15T14:00:00-06:00'));
+ * // base reads 14:00 UTC — the wall-clock time is preserved
+ *
+ * // Convert back when done
+ * const target = normal.baseDateToTargetDate(base);
+ * ```
  */
 export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConverter {
   readonly config: DateTimezoneConversionConfig;
@@ -595,6 +668,29 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
 export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceInput | DateTimezoneUtcNormalInstance | TimezoneString | Milliseconds;
 
+/**
+ * Factory that creates or passes through a {@link DateTimezoneUtcNormalInstance}.
+ *
+ * Accepts a wide range of inputs for convenience: an existing instance (returned as-is),
+ * a timezone string, a raw millisecond offset, or a full config object.
+ *
+ * @example
+ * ```ts
+ * // From IANA timezone string
+ * const denver = dateTimezoneUtcNormal('America/Denver');
+ *
+ * // From millisecond offset (UTC-6)
+ * const utcMinus6 = dateTimezoneUtcNormal(-6 * 60 * 60 * 1000);
+ *
+ * // From config object
+ * const system = dateTimezoneUtcNormal({ useSystemTimezone: true });
+ *
+ * // Pass-through if already an instance
+ * const same = dateTimezoneUtcNormal(denver); // same reference
+ * ```
+ *
+ * @throws Error if the input type is not recognized
+ */
 export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput): DateTimezoneUtcNormalInstance {
   let instance: DateTimezoneUtcNormalInstance;
 
@@ -622,63 +718,133 @@ export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput
 }
 
 /**
- * Default DateTimezoneUtcNormalInstance configured with useSystemTimezone=true
+ * Singleton instance that converts between the host system's local timezone and base/target spaces.
+ *
+ * Uses `useSystemTimezone: true`, so offsets adjust automatically if the system timezone changes (e.g. DST).
  */
 export const SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE = new DateTimezoneUtcNormalInstance({ useSystemTimezone: true });
 
 /**
- * Default DateTimezoneUtcNormalInstance configured with useSystemTimezone=true
+ * Singleton instance configured for UTC. All conversions are identity (offset is always 0),
+ * making it a safe no-op converter for code paths that require a {@link DateTimezoneUtcNormalInstance}.
  */
 export const UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE = new DateTimezoneUtcNormalInstance({ timezone: UTC_TIMEZONE_STRING });
 
 /**
- * Returns a DateTimezoneUtcNormalInstance configured with useSystemTimezone=true.
+ * Returns the shared {@link SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE} singleton.
  *
- * @returns
+ * Prefer this over constructing a new instance when you need system-timezone conversions,
+ * as the singleton avoids unnecessary allocations.
  */
 export function systemDateTimezoneUtcNormal(): DateTimezoneUtcNormalInstance {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
 }
 
+/**
+ * Convenience function that applies the timezone offset to a {@link BaseDateAsUTC},
+ * producing a real instant in the specified timezone.
+ *
+ * Creates a temporary {@link DateTimezoneUtcNormalInstance} internally; prefer
+ * reusing an instance if calling this in a loop.
+ *
+ * @example
+ * ```ts
+ * const base = new Date('2024-06-15T14:00:00.000Z'); // wall-clock 2PM
+ * const target = baseDateToTargetDate(base, 'America/Denver');
+ * // target is 2024-06-15T14:00:00.000-06:00 (2PM MDT)
+ * ```
+ */
 export function baseDateToTargetDate(date: Date, timezone: Maybe<TimezoneString>): Date {
   const instance = new DateTimezoneUtcNormalInstance(timezone);
   const result = instance.baseDateToTargetDate(date);
   return result;
 }
 
+/**
+ * Convenience function that strips the timezone offset from a target-timezone date,
+ * producing a {@link BaseDateAsUTC} whose UTC components match the original wall-clock time.
+ *
+ * Creates a temporary {@link DateTimezoneUtcNormalInstance} internally; prefer
+ * reusing an instance if calling this in a loop.
+ *
+ * @example
+ * ```ts
+ * const target = new Date('2024-06-15T14:00:00.000-06:00'); // 2PM MDT
+ * const base = targetDateToBaseDate(target, 'America/Denver');
+ * // base is 2024-06-15T14:00:00.000Z — wall-clock 2PM preserved as UTC
+ * ```
+ */
 export function targetDateToBaseDate(date: Date, timezone: Maybe<TimezoneString>): Date {
   return new DateTimezoneUtcNormalInstance(timezone).targetDateToBaseDate(date);
 }
 
+/**
+ * Converts a {@link BaseDateAsUTC} to a target date in the system's local timezone
+ * using the shared system-timezone instance.
+ */
 export function systemBaseDateToNormalDate(date: Date): BaseDateAsUTC {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.baseDateToTargetDate(date);
 }
 
+/**
+ * Converts a target date in the system's local timezone back to a {@link BaseDateAsUTC}
+ * using the shared system-timezone instance.
+ */
 export function systemNormalDateToBaseDate(date: BaseDateAsUTC): Date {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDate(date);
 }
 
+/**
+ * Returns the millisecond offset needed to convert a {@link BaseDateAsUTC} to a target date
+ * in the system's local timezone.
+ */
 export function systemBaseDateToNormalDateOffset(date: Date): Milliseconds {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.baseDateToTargetDateOffset(date);
 }
 
+/**
+ * Returns the millisecond offset needed to convert a target date in the system's
+ * local timezone back to a {@link BaseDateAsUTC}.
+ */
 export function systemNormalDateToBaseDateOffset(date: Date): Milliseconds {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDateOffset(date);
 }
 
+/**
+ * Returns whether the system's local timezone observes daylight saving time in the given year.
+ *
+ * Compares the offset on January 1 and July 1; if they differ, DST is in effect for part of the year.
+ */
 export function systemExperiencesDaylightSavings(year: Date): boolean {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetTimezoneExperiencesDaylightSavings(year);
 }
 
 // MARK: Transform Date in Normal
 /**
- * Transforms the date using a specific DateTimezoneUtcNormalInstanceTransformType type, processes a transformation in that normal, then reverses the result back to the original timezone.
+ * Converts a date into a target date space, applies a transformation, then converts the result back.
+ *
+ * This pattern lets you use date-fns functions (startOfDay, addHours, etc.) as if the date were in
+ * the target timezone, without timezone/DST artifacts.
  */
 export type TransformDateInTimezoneNormalFunction = ((date: Date, transform: MapSameFunction<Date>) => Date) & {
   readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
   readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
 };
 
+/**
+ * Creates a {@link TransformDateInTimezoneNormalFunction} that converts a date into the
+ * specified date space, applies a user-provided transformation, then converts back.
+ *
+ * @example
+ * ```ts
+ * const fn = transformDateInTimezoneNormalFunction('America/Denver', 'systemDateToTargetDate');
+ *
+ * // Get start-of-day in Denver, even if the system is in a different timezone
+ * const result = fn(someDate, (d) => startOfDay(d));
+ * ```
+ *
+ * @param transformType - defaults to `'systemDateToTargetDate'`
+ */
 export function transformDateInTimezoneNormalFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateInTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
   const transformToNormal = timezoneInstance.transformFunction(transformType);
@@ -697,13 +863,20 @@ export function transformDateInTimezoneNormalFunction(timezoneInput: DateTimezon
 
 // MARK: Transform DateRange In Normal
 /**
- * Transforms the start and end dates in a date range to a specific timezone
+ * Converts the start and end dates of a {@link DateRange} to a specific timezone,
+ * retaining a reference to the instance and transform type used.
  */
 export type TransformDateRangeToTimezoneFunction = TransformDateRangeDatesFunction & {
   readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
   readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
 };
 
+/**
+ * Creates a {@link TransformDateRangeToTimezoneFunction} that converts both dates in
+ * a {@link DateRange} using the specified transform type.
+ *
+ * @param transformType - defaults to `'systemDateToTargetDate'`
+ */
 export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeToTimezoneFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
   const fn = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformType)) as Building<TransformDateRangeToTimezoneFunction>;
@@ -713,13 +886,21 @@ export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezone
 }
 
 /**
- * Transforms the start and end dates in a date range using a specific DateTimezoneUtcNormalInstanceTransformType type, processes a transformation in that normal, then reverses the result back to the original timezone.
+ * Like {@link TransformDateInTimezoneNormalFunction} but operates on a {@link DateRange}.
+ *
+ * Converts the range into the target date space, applies a range transformation, then converts back.
  */
 export type TransformDateRangeInTimezoneNormalFunction = ((dateRange: DateRange, transform: TransformDateRangeDatesFunction) => DateRange) & {
   readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
   readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
 };
 
+/**
+ * Creates a {@link TransformDateRangeInTimezoneNormalFunction} that converts a date range
+ * into the specified date space, applies a user-provided range transformation, then converts back.
+ *
+ * @param transformType - defaults to `'systemDateToTargetDate'`
+ */
 export function transformDateRangeInTimezoneNormalFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeInTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
   const transformToNormal = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformType));
@@ -738,21 +919,35 @@ export function transformDateRangeInTimezoneNormalFunction(timezoneInput: DateTi
 
 // MARK: StartOfDayInTimezoneDayStringFactory
 /**
- * Parses the input day to the start of the day in the given timezone.
+ * Parses an {@link ISO8601DayString} (e.g. `'2024-06-15'`) and returns the start-of-day
+ * instant in the configured timezone.
  */
 export type StartOfDayInTimezoneDayStringFactory = (day: ISO8601DayString) => Date;
 
+/**
+ * Creates a {@link StartOfDayInTimezoneDayStringFactory} bound to the given timezone.
+ *
+ * @example
+ * ```ts
+ * const startOfDayInDenver = startOfDayInTimezoneDayStringFactory('America/Denver');
+ * const midnight = startOfDayInDenver('2024-06-15');
+ * // midnight is 2024-06-15T06:00:00.000Z (midnight MDT = 6AM UTC)
+ * ```
+ */
 export function startOfDayInTimezoneDayStringFactory(timezone?: DateTimezoneUtcNormalFunctionInput): StartOfDayInTimezoneDayStringFactory {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
   return (day) => timezoneInstance.startOfDayInTargetTimezone(day);
 }
 
 /**
- * Loads the start of the day in the given timezone.
+ * One-shot convenience that parses an {@link ISO8601DayString} and returns the start-of-day
+ * instant in the given timezone. Creates a temporary instance internally; prefer
+ * {@link startOfDayInTimezoneDayStringFactory} when processing multiple days.
  *
- * @param day
- * @param timezone
- * @returns
+ * @example
+ * ```ts
+ * const midnight = startOfDayInTimezoneFromISO8601DayString('2024-06-15', 'America/Denver');
+ * ```
  */
 export function startOfDayInTimezoneFromISO8601DayString(day: ISO8601DayString, timezone?: DateTimezoneUtcNormalFunctionInput): Date {
   return startOfDayInTimezoneDayStringFactory(timezone)(day);
@@ -820,7 +1015,18 @@ export type SetOnDateWithTimezoneNormalFunction = ((input: SetOnDateWithTimezone
 };
 
 /**
- * Creates a new SetONDateFunction using the input
+ * Creates a {@link SetOnDateWithTimezoneNormalFunction} bound to the given timezone.
+ *
+ * The returned function sets hours/minutes on a date while correctly handling
+ * timezone conversions and DST boundaries. It converts the input to base date space,
+ * applies the hour/minute changes, then converts back to the requested output space.
+ *
+ * @example
+ * ```ts
+ * const setOnDate = setOnDateWithTimezoneNormalFunction('America/Denver');
+ * const result = setOnDate({ date: someDate, hours: 14, minutes: 30, inputType: 'target' });
+ * // result is someDate with hours set to 14:30 in Denver time
+ * ```
  */
 export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNormalFunctionInput): SetOnDateWithTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
@@ -898,24 +1104,34 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
 
 // MARK: Timezone Utilities
 /**
- * Convenience function for calling copyHoursAndMinutesFromDatesWithTimezoneNormal() with now.
+ * Copies the current wall-clock hours and minutes (from "now") onto the input date,
+ * respecting the given timezone. Shorthand for calling
+ * {@link copyHoursAndMinutesFromDateWithTimezoneNormal} with `'now'`.
  *
- * @param input
- * @param timezone
- * @returns
+ * @param input - the date whose day is preserved
+ * @param timezone - the timezone context for the hour/minute interpretation
  */
 export function copyHoursAndMinutesFromNowWithTimezoneNormal(input: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
   return copyHoursAndMinutesFromDateWithTimezoneNormal(input, 'now', timezone);
 }
 
 /**
- * Converts the two input dates, which are dates in the same timezone/normal instead of the current system, using the input DateTimezoneUtcNormalFunctionInput.
+ * Copies hours and minutes from `copyFrom` onto `input`, where both dates are interpreted
+ * in the target timezone. Internally converts to base date space, applies the copy, and converts back.
  *
- * This converts the dates to the system timezone normal, copies the values, then back to the original timezone normal.
+ * @example
+ * ```ts
+ * // Set the time on a Denver date to match another Denver date's time
+ * const result = copyHoursAndMinutesFromDateWithTimezoneNormal(
+ *   targetDate,
+ *   sourceDate,
+ *   'America/Denver'
+ * );
+ * ```
  *
- * @param input
- * @param copyFrom
- * @param timezone
+ * @param input - the date whose day is preserved
+ * @param copyFrom - the date (or `'now'`) whose hours/minutes are copied
+ * @param timezone - the timezone context for interpreting both dates
  */
 export function copyHoursAndMinutesFromDateWithTimezoneNormal(input: Date, copyFrom: LogicalDate, timezone: DateTimezoneUtcNormalFunctionInput): Date {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);

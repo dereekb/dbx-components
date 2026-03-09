@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { AbstractPopoverRefDirective, DbxIconButtonComponent, DbxPopoverService } from '@dereekb/dbx-web';
-import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxFirebaseModelHistoryPopoverComponent, DbxFirebaseModelHistoryPopoverConfigWithoutOrigin } from './model.history.popover.component';
-import { Maybe } from '@dereekb/util';
+import { type NgPopoverRef } from 'ng-overlay-container';
+import { DbxFirebaseModelHistoryPopoverComponent, type DbxFirebaseModelHistoryPopoverConfigWithoutOrigin } from './model.history.popover.component';
+import { type Maybe } from '@dereekb/util';
 
 export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistoryPopoverConfigWithoutOrigin;
 

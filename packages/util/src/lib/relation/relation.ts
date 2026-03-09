@@ -38,14 +38,39 @@ export const RelationChange = {
   INSERT: 'insert' as const
 } as const;
 
+/**
+ * Union of all valid {@link RelationChange} values.
+ */
 export type RelationChangeType = (typeof RelationChange)[keyof typeof RelationChange];
 
+/**
+ * A string-based relation identifier.
+ */
 export type RelationString = string;
+
+/**
+ * A relation target that is either a string key or an object containing relation data.
+ */
 export type RelationObject = RelationString | object;
+
+/**
+ * A string identifying the type/category of a relation model.
+ */
 export type RelationModelType = string;
+
+/**
+ * A unique key identifying a relation model, either a string or number.
+ */
 export type RelationKey = string | number;
 
+/**
+ * Extracts the unique key from a relation model.
+ */
 export type ReadRelationKeyFn<T> = (model: T) => RelationKey;
+
+/**
+ * Extracts the model type string from a relation model.
+ */
 export type ReadRelationModelTypeFn<T> = (model: T) => RelationModelType;
 
 /**
@@ -58,6 +83,9 @@ export type MergeRelationObjectsFn<T> = (a: T, b: T) => T;
  */
 export type ChangeRelationObjectsMaskFn<T> = (x: T) => boolean;
 
+/**
+ * Configuration for modifying a single-type relation collection via {@link ModelRelationUtility}.
+ */
 export interface UpdateRelationConfig<T> {
   readKey: ReadRelationKeyFn<T>;
   merge: MergeRelationObjectsFn<T>;
@@ -74,6 +102,9 @@ export interface UpdateRelationConfig<T> {
   mask?: ChangeRelationObjectsMaskFn<T>;
 }
 
+/**
+ * Extends {@link UpdateRelationConfig} with a type reader for multi-type relation collections.
+ */
 export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T> {
   readType: ReadRelationModelTypeFn<T>;
 }
@@ -84,10 +115,28 @@ export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T
  * For instance, a string collection of keys.
  */
 export class ModelRelationUtility {
+  /**
+   * Convenience method that modifies a collection of plain string relations.
+   *
+   * @param current - The current string collection.
+   * @param change - The type of relation change to perform.
+   * @param mods - The string values to apply as modifications.
+   * @returns The modified string collection.
+   */
   static modifyStringCollection(current: Maybe<RelationString[]>, change: RelationChangeType, mods: RelationString[]): RelationString[] {
     return ModelRelationUtility.modifyCollection(current, change, mods, { readKey: (x) => x, merge: (a, b) => b });
   }
 
+  /**
+   * Applies a {@link RelationChangeType} operation to a typed collection of relation objects.
+   * Supports single-type and multi-type collections depending on the config.
+   *
+   * @param current - The current collection of relation objects.
+   * @param change - The relation change operation to perform.
+   * @param mods - The modification objects to apply.
+   * @param config - Configuration providing key/type readers, merge function, and optional mask.
+   * @returns The modified collection.
+   */
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T>): T[];
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
@@ -157,12 +206,29 @@ export class ModelRelationUtility {
     }
   }
 
+  /**
+   * Merges update objects into matching existing items in the collection. Items without a match are ignored.
+   *
+   * @param current - The current collection.
+   * @param update - The objects to merge into matching items.
+   * @param config - Configuration with key/type readers and merge function.
+   * @returns The updated collection.
+   */
   static updateCollection<T extends RelationObject>(current: T[], update: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { readKey, readType, merge } = config as UpdateMiltiTypeRelationConfig<T>;
     ModelRelationUtility._assertMergeProvided(merge);
     return ModelRelationUtility._modifyCollection(current, update, (x, y) => ModelRelationUtility._updateSingleTypeCollection(x, y, { readKey, merge }), readType);
   }
 
+  /**
+   * Inserts objects into the collection: merges with existing items that share a key,
+   * and adds new items that have no match.
+   *
+   * @param current - The current collection.
+   * @param update - The objects to insert or merge.
+   * @param config - Configuration with key/type readers and merge function.
+   * @returns The collection with insertions and merges applied.
+   */
   static insertCollection<T extends RelationObject>(current: T[], update: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { readKey, readType, merge } = config as UpdateMiltiTypeRelationConfig<T>;
     ModelRelationUtility._assertMergeProvided(merge);
@@ -240,11 +306,30 @@ export class ModelRelationUtility {
     return ModelRelationUtility.addToCollection(current, updateValues, readKey);
   }
 
+  /**
+   * Adds items to the collection, replacing any existing items with the same key.
+   * New items take precedence over existing ones with duplicate keys.
+   *
+   * @param current - The current collection.
+   * @param add - The items to add.
+   * @param readKey - Function to extract the unique key from each item.
+   * @returns The collection with added items.
+   */
   static addToCollection<T extends RelationObject>(current: Maybe<T[]>, add: T[], readKey: ReadRelationKeyFn<T>): T[] {
     current = current ?? [];
     return add?.length ? ModelRelationUtility.removeDuplicates([...add, ...current], readKey) : current; // Will keep any "added" before any existing ones.
   }
 
+  /**
+   * Removes items from the collection by matching keys. Optionally uses a `shouldRemove`
+   * predicate to conditionally skip removal of matched items.
+   *
+   * @param current - The current collection.
+   * @param remove - The items whose keys identify which items to remove.
+   * @param readKey - Function to extract the unique key from each item.
+   * @param shouldRemove - Optional predicate that must return true for a matched item to actually be removed.
+   * @returns The collection with matching items removed.
+   */
   static removeFromCollection<T extends RelationObject>(current: Maybe<T[]>, remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
     if (current?.length) {
       if (shouldRemove) {
@@ -269,10 +354,27 @@ export class ModelRelationUtility {
     }
   }
 
+  /**
+   * Removes items from the collection whose keys match any of the given keys to remove.
+   *
+   * @param current - The current collection.
+   * @param keysToRemove - The keys identifying items to remove.
+   * @param readKey - Function to extract the unique key from each item.
+   * @returns The collection with matching items removed.
+   */
   static removeKeysFromCollection<T extends RelationObject>(current: Maybe<T[]>, keysToRemove: RelationKey[], readKey: ReadRelationKeyFn<T>): T[] {
     return ModelRelationUtility.removeDuplicates(current, readKey, keysToRemove);
   }
 
+  /**
+   * Removes duplicate items from the collection by key, keeping the first occurrence.
+   * Optionally excludes items whose keys appear in an additional keys list.
+   *
+   * @param relations - The collection to deduplicate.
+   * @param readKey - Function to extract the unique key from each item.
+   * @param additionalKeys - Extra keys to treat as already seen (items with these keys are excluded).
+   * @returns The deduplicated collection.
+   */
   static removeDuplicates<T>(relations: Maybe<T[]>, readKey: ReadRelationKeyFn<T>, additionalKeys: RelationKey[] = []): T[] {
     return relations?.length ? filterUniqueValues(relations, readKey, additionalKeys) : [];
   }

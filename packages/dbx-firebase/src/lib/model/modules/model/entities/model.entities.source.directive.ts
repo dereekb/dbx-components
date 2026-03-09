@@ -1,7 +1,7 @@
 import { Directive } from '@angular/core';
-import { DbxFirebaseModelEntitiesSource, DbxFirebaseModelEntity } from './model.entities';
+import { DbxFirebaseModelEntitiesSource, type DbxFirebaseModelEntity } from './model.entities';
 import { DbxFirebaseDocumentStoreContextStore } from '../../store/store.document.context.store';
-import { map, Observable } from 'rxjs';
+import { map, type Observable } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 
 export const dbxFirebaseDocumentStoreContextModelEntitiesSourceFactory = (storeContextStore: DbxFirebaseDocumentStoreContextStore): DbxFirebaseModelEntitiesSource => {

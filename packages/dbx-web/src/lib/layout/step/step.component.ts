@@ -1,6 +1,6 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 // TODO: Incomplete component. Requires styling.
 

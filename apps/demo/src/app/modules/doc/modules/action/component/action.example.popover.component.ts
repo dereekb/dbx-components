@@ -1,8 +1,8 @@
-import { DocActionFormExampleValue, DocActionFormExampleFormComponent } from './action.example.form.component';
-import { Component, ElementRef } from '@angular/core';
-import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
-import { NgPopoverRef } from 'ng-overlay-container';
-import { WorkUsingObservable } from '@dereekb/rxjs';
+import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from './action.example.form.component';
+import { Component, type ElementRef } from '@angular/core';
+import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
+import { type NgPopoverRef } from 'ng-overlay-container';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of } from 'rxjs';
 import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';

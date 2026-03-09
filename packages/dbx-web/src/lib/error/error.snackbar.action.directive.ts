@@ -1,8 +1,8 @@
 import { Directive, inject, input } from '@angular/core';
 import { DbxActionContextStoreSourceInstance, cleanSubscriptionWithLockSet } from '@dereekb/dbx-core';
 import { DbxErrorSnackbarService } from './error.snackbar.service';
-import { Maybe, Milliseconds, toReadableError } from '@dereekb/util';
-import { DbxErrorSnackbarConfig } from './error.snackbar.component';
+import { type Maybe, type Milliseconds, toReadableError } from '@dereekb/util';
+import { type DbxErrorSnackbarConfig } from './error.snackbar.component';
 import { filterMaybe } from '@dereekb/rxjs';
 
 /**

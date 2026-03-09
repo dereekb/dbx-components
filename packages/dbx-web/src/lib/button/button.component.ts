@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { ThemePalette } from '@angular/material/core';
+import { type ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
-import { Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
-import { DbxProgressButtonConfig } from './progress/button.progress.config';
+import { type Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
+import { type DbxProgressButtonConfig } from './progress/button.progress.config';
 import { type DbxThemeColor } from '../layout/style/style';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
-import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { NgTemplateOutlet } from '@angular/common';
-import { DbxButtonStyle, DbxButtonType } from './button';
+import { type DbxButtonStyle, type DbxButtonType } from './button';
 
 /**
  * Complex button that supports loading states.

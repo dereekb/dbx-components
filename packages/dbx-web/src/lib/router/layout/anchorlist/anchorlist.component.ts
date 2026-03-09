@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, Signal } from '@angular/core';
-import { ClickableAnchorLinkTree, DbxInjectionComponent, ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
-import { Configurable, type Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, computed, input, type Signal } from '@angular/core';
+import { type ClickableAnchorLinkTree, DbxInjectionComponent, type ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
+import { type Configurable, type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from '../anchor/anchor.component';
 import { MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatNavList } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';

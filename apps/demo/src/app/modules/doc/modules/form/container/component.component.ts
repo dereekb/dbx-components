@@ -1,4 +1,4 @@
-import { DocFormExampleComponentFormConfig, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent, DocFormExampleComponentFormComponent } from './../component/component.example.form.component';
+import { type DocFormExampleComponentFormConfig, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent, DocFormExampleComponentFormComponent } from './../component/component.example.form.component';
 import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxBarDirective, DbxButtonSpacerDirective, DbxSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

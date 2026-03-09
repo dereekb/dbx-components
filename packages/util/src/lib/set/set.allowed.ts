@@ -17,11 +17,13 @@ export interface AllowedSet<T> {
 }
 
 /**
- * Determines whether the input values are "allowed" for the given AllowedSet.
+ * Determines whether the input values are "allowed" for the given {@link AllowedSet}.
+ * A value is allowed if it matches the `allowed` set (or `allowed` is not specified)
+ * and does not match the `disallowed` set.
  *
- * @param input
- * @param allowedSet
- * @returns
+ * @param input - The value or array of values to check.
+ * @param allowedSet - The allowed/disallowed configuration.
+ * @returns `true` if the values are allowed.
  */
 export function isAllowed<T>(input: ArrayOrValue<T>, allowedSet: AllowedSet<T>): boolean {
   const { allowed, disallowed } = allowedSet;

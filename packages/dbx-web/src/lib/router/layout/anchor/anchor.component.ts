@@ -1,6 +1,6 @@
 import { skipAllInitialMaybe } from '@dereekb/rxjs';
 import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed, ElementRef } from '@angular/core';
-import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
+import { AbstractDbxAnchorDirective, type DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet, NgClass } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';

@@ -1,11 +1,11 @@
-import { WorkUsingContext } from '@dereekb/rxjs';
-import { Component, OnInit } from '@angular/core';
+import { type WorkUsingContext } from '@dereekb/rxjs';
+import { Component, type OnInit, inject } from '@angular/core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { randomNumber } from '@dereekb/util';
 import { ProfileDocumentStore } from '../profile';
 import { GuestbookDocumentStore } from '../guestbook';
-import { DbxActionDirective , DbxActionValueDirective , DbxActionHandlerDirective , DbxActionButtonDirective } from '@dereekb/dbx-core';
-import { DbxButtonComponent , DbxErrorComponent , DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './setup.widget.component.html',
@@ -14,12 +14,9 @@ import { DbxButtonComponent , DbxErrorComponent , DbxActionErrorDirective } from
   imports: [DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoSetupDevelopmentWidgetComponent implements OnInit {
-  constructor(
-    //
-    readonly profileDocumentStore: ProfileDocumentStore,
-    readonly guestbookDocumentStore: GuestbookDocumentStore,
-    readonly auth: DbxFirebaseAuthService
-  ) {}
+  readonly profileDocumentStore = inject(ProfileDocumentStore);
+  readonly guestbookDocumentStore = inject(GuestbookDocumentStore);
+  readonly auth = inject(DbxFirebaseAuthService);
 
   ngOnInit(): void {
     this.profileDocumentStore.setId(this.auth.uid$);

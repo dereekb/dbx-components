@@ -1,7 +1,7 @@
 import { Directive, inject, input, effect } from '@angular/core';
 import { DbxTableStore } from './table.store';
 import { type Maybe } from '@dereekb/util';
-import { DbxTableContextDataDelegate, DbxTableViewDelegate } from './table';
+import { type DbxTableContextDataDelegate, type DbxTableViewDelegate } from './table';
 
 /**
  * Directive for providing and configuring a DbxTableStore

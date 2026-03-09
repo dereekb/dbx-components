@@ -32,4 +32,49 @@ describe('ValuesLoadingContext', () => {
       });
     })
   );
+
+  describe('check()', () => {
+    it(
+      'should set loading to false when all check values are defined',
+      callbackTest((done) => {
+        const valueA: string | undefined = 'hello';
+        const valueB: string | undefined = 'world';
+
+        context = new ValuesLoadingContext({
+          checkDone: () => [valueA, valueB]
+        });
+
+        context.check();
+
+        context.stream$.pipe(first()).subscribe(({ loading }) => {
+          expect(loading).toBe(false);
+          done();
+        });
+      })
+    );
+
+    it(
+      'should keep loading true when some check values are undefined',
+      callbackTest((done) => {
+        const valueA: string | undefined = 'hello';
+        let valueB: string | undefined;
+
+        context = new ValuesLoadingContext({
+          checkDone: () => [valueA, valueB]
+        });
+
+        context.check();
+
+        context.stream$.pipe(first()).subscribe(({ loading }) => {
+          expect(loading).toBe(true);
+          done();
+        });
+      })
+    );
+
+    it('should throw when no check function is configured', () => {
+      context = new ValuesLoadingContext();
+      expect(() => context.check()).toThrow();
+    });
+  });
 });

@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { AbstractFilterSourceDirective, provideFilterSourceDirective, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
-import { DbxPresetFilterMenuConfig, DbxPartialPresetFilterMenuComponent } from '@dereekb/dbx-web';
-import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PARTIAL_PRESETS } from './filter';
+import { Component, type OnInit } from '@angular/core';
+import { AbstractFilterSourceDirective, provideFilterSourceDirective, type ClickablePartialFilterPreset } from '@dereekb/dbx-core';
+import { type DbxPresetFilterMenuConfig, DbxPartialPresetFilterMenuComponent } from '@dereekb/dbx-web';
+import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PARTIAL_PRESETS } from './filter';
 
 @Component({
   selector: 'doc-interaction-test-filter-partial-preset-menu',

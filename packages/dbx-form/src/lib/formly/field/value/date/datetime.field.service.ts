@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { DateTimePresetConfiguration } from './datetime';
+import { type DateTimePresetConfiguration } from './datetime';
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 

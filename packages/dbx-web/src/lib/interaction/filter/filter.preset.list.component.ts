@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { FilterWithPreset } from '@dereekb/rxjs';
+import { type FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
 import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlist.component';
 

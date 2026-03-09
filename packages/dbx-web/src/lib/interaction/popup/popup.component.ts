@@ -1,12 +1,12 @@
-import { Component, Type, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type Type, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { Maybe, PixelsString } from '@dereekb/util';
+import { type Maybe, type PixelsString } from '@dereekb/util';
 import { CompactContextStore } from '../../layout/compact/compact.store';
 import { CompactMode } from '../../layout/compact/compact';
 import { BehaviorSubject, Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
-import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
-import { AbstractTransitionWatcherDirective, completeOnDestroy, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxPopupController, DbxPopupKey, DbxPopupWindowState, DbxPopupWindowStateType } from './popup';
+import { PopupGlobalPositionStrategy, type PopupPosition, type PopupPositionOffset } from './popup.position.strategy';
+import { AbstractTransitionWatcherDirective, completeOnDestroy, DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxPopupController, type DbxPopupKey, DbxPopupWindowState, type DbxPopupWindowStateType } from './popup';
 import { DbxPopupCoordinatorComponent } from './popup.coordinator.component';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';

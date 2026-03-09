@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Injector, inject, input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { DbxScheduleSelectionCalendarDateDialogComponent, DbxScheduleSelectionCalendarDatePopupContentConfig } from './calendar.schedule.selection.dialog.component';
+import { DbxScheduleSelectionCalendarDateDialogComponent, type DbxScheduleSelectionCalendarDatePopupContentConfig } from './calendar.schedule.selection.dialog.component';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent } from '@dereekb/dbx-web';
 

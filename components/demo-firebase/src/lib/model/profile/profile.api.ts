@@ -1,47 +1,45 @@
-import { Expose } from 'class-transformer';
-import { DownloadStorageFileParams, DownloadStorageFileResult, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { type DownloadStorageFileParams, downloadStorageFileParamsType, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
-import { ProfileTypes } from './profile';
+import { clearable } from '@dereekb/model';
+import { type ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
-export class ProfileCreateTestNotificationParams extends InferredTargetModelParams {
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  skipSend?: Maybe<boolean>;
-
-  /**
-   * If true, will expedite the sending of the notification.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  expediteSend?: Maybe<boolean>;
+export interface ProfileCreateTestNotificationParams extends InferredTargetModelParams {
+  readonly skipSend?: Maybe<boolean>;
+  readonly expediteSend?: Maybe<boolean>;
 }
 
-export class SetProfileUsernameParams extends InferredTargetModelParams {
-  @Expose()
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(PROFILE_USERNAME_MAX_LENGTH)
-  username!: string;
+export const profileCreateTestNotificationParamsType = inferredTargetModelParamsType.merge({
+  'skipSend?': clearable('boolean'),
+  'expediteSend?': clearable('boolean')
+}) as Type<ProfileCreateTestNotificationParams>;
+
+export interface SetProfileUsernameParams extends InferredTargetModelParams {
+  readonly username: string;
 }
 
-export class UpdateProfileParams extends InferredTargetModelParams {
-  @Expose()
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(PROFILE_BIO_MAX_LENGTH)
-  bio?: Maybe<string>;
+export const setProfileUsernameParamsType = inferredTargetModelParamsType.merge({
+  username: `string > 0 & string <= ${PROFILE_USERNAME_MAX_LENGTH}`
+}) as Type<SetProfileUsernameParams>;
+
+export interface UpdateProfileParams extends InferredTargetModelParams {
+  readonly bio?: Maybe<string>;
 }
 
-export class FinishOnboardingProfileParams extends InferredTargetModelParams {}
+export const updateProfileParamsType = inferredTargetModelParamsType.merge({
+  'bio?': clearable(`string > 0 & string <= ${PROFILE_BIO_MAX_LENGTH}`)
+}) as Type<UpdateProfileParams>;
 
-export class DownloadProfileArchiveParams extends DownloadStorageFileParams {}
+export type FinishOnboardingProfileParams = InferredTargetModelParams;
+
+export const finishOnboardingProfileParamsType = inferredTargetModelParamsType as Type<FinishOnboardingProfileParams>;
+
+export type DownloadProfileArchiveParams = DownloadStorageFileParams;
+
+export const downloadProfileArchiveParamsType = downloadStorageFileParamsType as Type<DownloadProfileArchiveParams>;
 
 export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 

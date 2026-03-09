@@ -28,6 +28,14 @@ export interface ModelMapFunctions<V extends object, D extends object> {
   to: ModelMapToFunction<V, D>;
 }
 
+/**
+ * Creates bidirectional map functions (`from` and `to`) from a set of {@link ModelFieldConversions}.
+ *
+ * The `to` function converts from the model (V) to data (D), while `from` converts back from data (D) to model (V).
+ *
+ * @param fields - Field conversion definitions for each key in the model
+ * @returns Object with `from` and `to` mapping functions
+ */
 export function makeModelMapFunctions<V extends object, D extends object>(fields: ModelFieldConversions<V, D>): ModelMapFunctions<V, D> {
   const keys = filterKeyValueTuples(fields);
   const conversionsByKey: [keyof V, ModelFieldMapFunctions][] = keys.map(([key, field]) => [key, field]) as [keyof V, ModelFieldMapFunctions][];
@@ -62,6 +70,14 @@ export interface ModelConversionOptions<I extends object> {
  */
 export type ModelConversionFieldValuesFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I>>;
 
+/**
+ * Creates a conversion function that maps fields from an input object to an output object using per-field conversion functions.
+ *
+ * Supports optional filtering by field names and skipping undefined values via {@link ModelConversionOptions}.
+ *
+ * @param fields - Array of `[key, convertFn]` tuples defining how each field is converted
+ * @returns A function that converts an input object to an output object
+ */
 export function makeModelConversionFieldValuesFunction<I extends object, O extends object>(fields: ModelConversionFieldValuesConfig<I>): ModelConversionFieldValuesFunction<I, O> {
   return (input: Maybe<I>, inputTarget?: Maybe<Partial<O>>, options?: Maybe<ModelConversionOptions<I>>) => {
     const target = (inputTarget ?? {}) as Building<TypedMappedModelData<I, O>>;
@@ -103,6 +119,12 @@ export type ModelFieldConversionsConfig<V extends object, D extends object> = Re
   [K in keyof V]: ModelFieldMapFunctionsConfig<V[K], TypedMappedModelData<V, D>[K]>;
 }>;
 
+/**
+ * Converts a {@link ModelFieldConversionsConfig} (with raw config per field) into resolved {@link ModelFieldConversions} (with compiled map functions per field).
+ *
+ * @param config - Configuration object with a conversion config for each model field
+ * @returns Resolved field conversions with compiled `from` and `to` functions
+ */
 export function modelFieldConversions<V extends object, D extends object>(config: ModelFieldConversionsConfig<V, D>): ModelFieldConversions<V, D> {
   return mapObjectMap(config, (x) => modelFieldMapFunctions(x) as any);
 }
@@ -122,6 +144,12 @@ export type ModelFieldMapFunctionsWithDefaultsConfig<I = unknown, O = unknown> =
   readonly to: ModelFieldMapToWithDefaultConfig<I, O>;
 };
 
+/**
+ * Compiles a {@link ModelFieldMapFunctionsConfig} into resolved {@link ModelFieldMapFunctions} with `from` and `to` mapping functions.
+ *
+ * @param config - Configuration with `from` and `to` field map configs
+ * @returns Compiled field map functions
+ */
 export function modelFieldMapFunctions<I = unknown, O = unknown>(config: ModelFieldMapFunctionsConfig<I, O>): ModelFieldMapFunctions<I, O> {
   return {
     from: modelFieldMapFunction(config.from),
@@ -171,10 +199,15 @@ export type ModelFieldMapFromFunction<I, O> = ModelFieldMapFunction<O, I>;
 export type ModelFieldMapToFunction<I, O> = ModelFieldMapFunction<I, O>;
 
 /**
- * Creates a ModelFieldMapFunction.
+ * Creates a {@link ModelFieldMapFunction} from a config that handles Maybe input values.
  *
- * @param config
- * @returns
+ * The function handles three cases:
+ * - Non-null input: uses `convert` to transform the value
+ * - Null/undefined input with `convertMaybe`: delegates to that function
+ * - Null/undefined input with `default` or `defaultInput`: uses the appropriate fallback
+ *
+ * @param config - Configuration specifying how to convert values and handle null/undefined
+ * @returns A function that maps Maybe input values to output values
  */
 export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): ModelFieldMapFunction<I, O> {
   const convert = (config as ModelFieldMapMaybeWithDefaultConfig<I, O>).convert;
@@ -218,10 +251,12 @@ export type ModelFieldConversionsRef<T extends object, O extends object> = {
 export type ToModelFieldConversionsInput<T extends object, O extends object> = ModelFieldConversionsConfigRef<T, O> | ModelFieldConversionsRef<T, O>;
 
 /**
- * Converts the input to a ModelFieldConversions value.
+ * Resolves a {@link ToModelFieldConversionsInput} to a {@link ModelFieldConversions} value.
  *
- * @param input
- * @returns
+ * Accepts either a pre-built `fieldConversions` reference or a `fields` config that will be compiled.
+ *
+ * @param input - Either a config ref or a pre-built conversions ref
+ * @returns Resolved field conversions
  */
 export function toModelFieldConversions<T extends object, O extends object>(input: ToModelFieldConversionsInput<T, O>) {
   const conversions: ModelFieldConversions<T, O> = (input as ModelFieldConversionsRef<T, O>).fieldConversions ?? modelFieldConversions<T, O>((input as ModelFieldConversionsConfigRef<T, O>).fields);
@@ -234,6 +269,14 @@ export type ModelMapFunctionsRef<T extends object, O extends object> = {
 
 export type ToModelMapFunctionsInput<T extends object, O extends object> = ToModelFieldConversionsInput<T, O> | ModelMapFunctionsRef<T, O>;
 
+/**
+ * Resolves a {@link ToModelMapFunctionsInput} to {@link ModelMapFunctions}.
+ *
+ * Accepts a pre-built `mapFunctions` reference, a `fieldConversions` ref, or a `fields` config.
+ *
+ * @param input - Input that can be resolved to model map functions
+ * @returns Bidirectional model map functions
+ */
 export function toModelMapFunctions<T extends object, O extends object>(input: ToModelMapFunctionsInput<T, O>): ModelMapFunctions<T, O> {
   let mapFunctions: ModelMapFunctions<T, O>;
 

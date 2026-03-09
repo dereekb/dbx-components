@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DbxFlexGroupDirective, ScreenMediaWidthType } from '@dereekb/dbx-web';
-import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
+import { DbxFlexGroupDirective, type ScreenMediaWidthType } from '@dereekb/dbx-web';
+import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFlexWrapperConfig {
   /**

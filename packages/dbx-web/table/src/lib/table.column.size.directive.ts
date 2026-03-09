@@ -1,8 +1,8 @@
-import { computed, Directive, ElementRef, inject, input, OnInit } from '@angular/core';
+import { computed, Directive, ElementRef, inject, input, type OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { clean, completeOnDestroy } from '@dereekb/dbx-core';
 import { resizeSignal } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 
 export type DbxColumnSizeColumnValue = 'head' | 'tail' | number;

@@ -1,7 +1,7 @@
 import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
 import { StorageFileCollectionStore } from './storagefile.collection.store';
-import { StorageFile, StorageFileDocument } from '@dereekb/firebase';
+import { type StorageFile, type StorageFileDocument } from '@dereekb/firebase';
 
 @Directive({
   selector: '[dbxFirebaseStorageFileCollection]',

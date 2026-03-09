@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
-import { DocInteractionTestFilter, DOC_INTERACTION_TEST_FULL_AND_PARTIAL_PRESETS } from './filter';
+import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_FULL_AND_PARTIAL_PRESETS } from './filter';
 import { DbxPresetFilterListComponent } from '@dereekb/dbx-web';
 
 @Component({

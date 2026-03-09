@@ -2,7 +2,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { switchMap } from 'rxjs';
-import { SecondaryActionContextStoreSource, ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
+import { type SecondaryActionContextStoreSource, type ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
 import { provideSecondaryActionStoreSource } from '../../action.store.source.provide';
 import { toObservable } from '@angular/core/rxjs-interop';
 

@@ -1,4 +1,4 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Directive, input } from '@angular/core';
 import { provideFormlyContext } from './formly.context';
 import { AbstractAsyncFormlyFormDirective } from './formly.directive';

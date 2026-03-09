@@ -5,16 +5,40 @@ import { filterMaybe, preventComplete } from '../rxjs';
 import { SubscriptionObject } from '../subscription';
 
 /**
- * Delegate for WorkInstance
+ * Delegate that receives lifecycle callbacks from a {@link WorkInstance} as work progresses
+ * through its start, success, and rejection phases.
  */
 export interface WorkInstanceDelegate<O = unknown> {
+  /**
+   * Called when work begins.
+   */
   startWorking(): void;
+  /**
+   * Called when work completes successfully.
+   */
   success(result?: Maybe<O>): void;
+  /**
+   * Called when work fails.
+   */
   reject(error?: Maybe<unknown>): void;
 }
 
 /**
- * Instance that tracks doing an arbitrary piece of asynchronous work that has an input value and an output value.
+ * Tracks the lifecycle of an asynchronous work unit from start through completion (success or error).
+ *
+ * Exposes reactive streams for monitoring progress (`hasStarted$`, `isComplete$`, `loadingState$`)
+ * and provides methods for starting work via observables, promises, or direct state management.
+ *
+ * @example
+ * ```ts
+ * const instance = new WorkInstance(inputValue, {
+ *   startWorking: () => console.log('started'),
+ *   success: (result) => console.log('done:', result),
+ *   reject: (err) => console.error('failed:', err)
+ * });
+ *
+ * instance.startWorkingWithObservable(of('result'));
+ * ```
  */
 export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   private readonly _value: I;

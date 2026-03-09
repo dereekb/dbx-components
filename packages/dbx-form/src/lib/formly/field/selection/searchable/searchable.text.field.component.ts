@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, OnDestroy, OnInit } from '@angular/core';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
+import { ChangeDetectionStrategy, Component, computed, type OnDestroy, type OnInit } from '@angular/core';
+import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { AbstractDbxSearchableValueFieldDirective, type SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { map, shareReplay } from 'rxjs';
-import { PrimativeKey } from '@dereekb/util';
+import { type PrimativeKey } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
@@ -12,7 +12,7 @@ import { DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.
 import { NgClass } from '@angular/common';
 import { MatInput } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
-import { SearchableValueFieldDisplayValue } from './searchable';
+import { type SearchableValueFieldDisplayValue } from './searchable';
 
 export interface SearchableTextValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldProps<T, M, H> {
   readonly showSelectedValue?: boolean;

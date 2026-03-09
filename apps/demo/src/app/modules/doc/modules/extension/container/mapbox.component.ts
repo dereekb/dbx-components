@@ -1,17 +1,17 @@
-import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { ChangeDetectorRef, Component, type OnDestroy, type OnInit, inject } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import {
-  KnownMapboxStyle,
-  DbxMapboxLayoutSide,
-  DbxMapboxMarker,
-  DbxMapboxMarkerFactory,
+  type KnownMapboxStyle,
+  type DbxMapboxLayoutSide,
+  type DbxMapboxMarker,
+  type DbxMapboxMarkerFactory,
   dbxMapboxColoredDotStyle,
   filterByMapboxViewportBound,
   DbxMapboxChangeService,
-  MapboxFitPositions,
+  type MapboxFitPositions,
   DbxMapboxInjectionStore,
   DbxMapboxModule,
   DbxMapboxInjectionComponent,
@@ -23,9 +23,9 @@ import {
   DbxMapboxMarkersComponent,
   DbxMapboxMenuComponent
 } from '@dereekb/dbx-web/mapbox';
-import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of, first } from 'rxjs';
+import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
-import { DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
+import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

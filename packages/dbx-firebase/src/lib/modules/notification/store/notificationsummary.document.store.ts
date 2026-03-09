@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { isSameDate } from '@dereekb/date';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { NotificationFirestoreCollections, NotificationFunctions, NotificationItem, NotificationItemMetadata, NotificationSummary, NotificationSummaryDocument, UnreadNotificationItemsResult, unreadNotificationItems } from '@dereekb/firebase';
-import { LoadingState, ObservableOrValue, asObservable, mapLoadingStateValueWithOperator } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
-import { map, shareReplay, distinctUntilChanged, Observable, combineLatest } from 'rxjs';
+import { NotificationFirestoreCollections, NotificationFunctions, type NotificationItem, type NotificationItemMetadata, type NotificationSummary, type NotificationSummaryDocument, type UnreadNotificationItemsResult, unreadNotificationItems } from '@dereekb/firebase';
+import { type LoadingState, type ObservableOrValue, asObservable, mapLoadingStateValueWithOperator } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
+import { map, shareReplay, distinctUntilChanged, type Observable, combineLatest } from 'rxjs';
 
 @Injectable()
 export class NotificationSummaryDocumentStore extends AbstractDbxFirebaseDocumentStore<NotificationSummary, NotificationSummaryDocument> {

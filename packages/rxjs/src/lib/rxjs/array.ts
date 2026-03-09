@@ -1,6 +1,14 @@
 import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, type MonoTypeOperatorFunction, type Observable, type OperatorFunction, switchMap, combineLatest, of, first, type ObservableInput } from 'rxjs';
 import { type Maybe, type ArrayOrValue, pushItemOrArrayItemsIntoArray, forEachWithArray, pushArrayItemsIntoArray, asArray, type MapFunction } from '@dereekb/util';
 
+/**
+ * `distinctUntilChanged` variant that only emits when the array length changes.
+ *
+ * Optionally accepts an accessor function to extract the array from a complex value.
+ *
+ * @param getArray - optional function to extract the array from the emitted value
+ * @returns an operator that filters emissions with unchanged array lengths
+ */
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => unknown[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
 export function distinctUntilArrayLengthChanges<A>(inputGetArray?: (value: A) => unknown[]): MonoTypeOperatorFunction<A> {
@@ -16,9 +24,21 @@ export interface ScanIntoArrayConfig {
 }
 
 /**
- * Scans values from the observable into an array.
+ * Accumulates emitted values into a growing array using `scan`.
  *
- * Can configure whether or not the accumulator array is immutable or not.
+ * Each emission adds to the accumulated array. When `immutable` is true (default),
+ * a new array is created on each emission via `concat`. When false, the array is mutated in place.
+ *
+ * @example
+ * ```ts
+ * of(1, 2, 3).pipe(
+ *   scanIntoArray()
+ * ).subscribe(console.log);
+ * // [1], [1, 2], [1, 2, 3]
+ * ```
+ *
+ * @param config - optional immutability setting
+ * @returns an operator that accumulates values into an array
  */
 export function scanIntoArray<T>(config?: ScanIntoArrayConfig): OperatorFunction<Maybe<ArrayOrValue<T>>, T[]>;
 export function scanIntoArray<T>(config?: ScanIntoArrayConfig): OperatorFunction<Maybe<T>, T[]>;
@@ -57,15 +77,14 @@ export interface ScanBuildArrayConfig<T> {
 export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfig<T>;
 
 /**
- * Used to lazy build an array from two observables.
+ * Lazily builds an array from a seed observable and an accumulator observable.
  *
- * The piped observable is for retrieving the seed value, and the accumulatorObs observable is used for
- * retrieving values going forward.
+ * The piped observable provides the seed state, while `accumulatorObs` provides values that
+ * are incrementally appended. Useful when loading large datasets where the initial page and
+ * subsequent pages come from different sources.
  *
- * This is useful in cases where values are very large.
- *
- * @param param0
- * @returns
+ * @param init - function that receives the seed state and returns the accumulator config
+ * @returns an operator that emits the growing array
  */
 export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): OperatorFunction<S, T[]> {
   return exhaustMap((seedState: S) => {
@@ -93,10 +112,10 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
 
 // MARK: MapForEach
 /**
- * Convenience function that calls forEachWithArray() and returns the original array.
+ * RxJS operator that executes a side-effect on each element of the emitted array, then passes the array through.
  *
- * @param forEach
- * @returns
+ * @param forEach - callback to run for each element, or null/undefined to pass through unchanged
+ * @returns an operator that taps each element in emitted arrays
  */
 export function mapForEach<T>(forEach: Maybe<(value: T) => void>): MonoTypeOperatorFunction<T[]> {
   return forEach ? map((x) => forEachWithArray(x, forEach)) : map((x) => x);
@@ -111,7 +130,14 @@ export interface MapEachAsyncConfig {
 }
 
 /**
- * Operator function that maps each value in the array independently using Observables, then combines the all results.
+ * RxJS operator that maps each element in an emitted array through an async observable function,
+ * then combines all results using `combineLatest`.
+ *
+ * Emits `[]` for empty arrays. When `onlyFirst` is true, takes only the first combined emission.
+ *
+ * @param mapFunction - function that maps each item to an ObservableInput
+ * @param config - optional config (e.g., `onlyFirst`)
+ * @returns an operator that async-maps each array element
  */
 export function mapEachAsync<I, O>(mapFunction: MapFunction<I, ObservableInput<O>>, config?: MapEachAsyncConfig): OperatorFunction<I[], O[]> {
   const { onlyFirst = false } = config ?? {};

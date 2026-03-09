@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { asObservable, beginLoading, filterMaybe, LoadingState, mapLoadingStateValueWithOperator, PageListLoadingState, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { asObservable, beginLoading, filterMaybe, type LoadingState, mapLoadingStateValueWithOperator, type PageListLoadingState, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { spaceSeparatedCssClasses, type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of } from 'rxjs';
-import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, DbxTableItemGroup, DbxTableViewDelegate, defaultDbxTableItemGroup } from './table';
+import { type Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of } from 'rxjs';
+import { type DbxTableColumn, type DbxTableContextData, type DbxTableContextDataDelegate, type DbxTableItemGroup, type DbxTableViewDelegate, defaultDbxTableItemGroup } from './table';
 
 export interface DbxTableStoreState<I, C, T, G> {
   /**

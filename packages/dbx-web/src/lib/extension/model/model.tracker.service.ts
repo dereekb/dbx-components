@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
-import { first, Observable } from 'rxjs';
-import { DbxModelViewTrackerEvent, DbxModelViewTrackerEventSet, ModelViewContext } from './model.tracker';
+import { type Maybe, type ModelKeyTypeNamePair } from '@dereekb/util';
+import { first, type Observable } from 'rxjs';
+import { type DbxModelViewTrackerEvent, type DbxModelViewTrackerEventSet, type ModelViewContext } from './model.tracker';
 import { DbxModelViewTrackerStorage } from './model.tracker.view.storage';
 
 /**

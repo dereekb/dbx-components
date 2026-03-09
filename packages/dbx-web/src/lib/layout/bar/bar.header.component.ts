@@ -1,6 +1,6 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DbxBarColor } from './bar';
+import { type DbxBarColor } from './bar';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxBarDirective } from './bar.directive';
 

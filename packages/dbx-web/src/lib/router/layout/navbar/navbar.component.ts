@@ -1,10 +1,10 @@
-import { Observable, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
-import { ScreenMediaWidthType } from '../../../screen/screen';
+import { type Observable, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
+import { type ScreenMediaWidthType } from '../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, findNext, type Maybe } from '@dereekb/util';
 import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
-import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
-import { HorizontalConnectionPos } from '@angular/cdk/overlay';
+import { type ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, type DbxButtonDisplay } from '@dereekb/dbx-core';
+import { type HorizontalConnectionPos } from '@angular/cdk/overlay';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxAnchorComponent } from '../anchor';
 import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';

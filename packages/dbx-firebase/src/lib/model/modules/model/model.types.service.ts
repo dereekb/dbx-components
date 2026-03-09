@@ -1,13 +1,13 @@
-import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest, of, catchError } from 'rxjs';
-import { FirestoreCollectionType, FirestoreDocument, FirestoreDocumentData, FirestoreModelIdentity, FirestoreModelKey } from '@dereekb/firebase';
-import { DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
-import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
-import { ClickableAnchorLinkSegueRef, IconAndTitle, SegueRef } from '@dereekb/dbx-core';
-import { ObservableOrValue, filterMaybe, filterMaybeArray } from '@dereekb/rxjs';
-import { GrantedRole } from '@dereekb/model';
+import { distinctUntilChanged, map, type Observable, shareReplay, switchMap, combineLatest, of, catchError } from 'rxjs';
+import { type FirestoreCollectionType, type FirestoreDocument, type FirestoreDocumentData, type FirestoreModelIdentity, type FirestoreModelKey } from '@dereekb/firebase';
+import { type DbxModelTypeInfo, type DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
+import { type ArrayOrValue, asArray, type Configurable, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { type ClickableAnchorLinkSegueRef, type IconAndTitle, type SegueRef } from '@dereekb/dbx-core';
+import { type ObservableOrValue, filterMaybe, filterMaybeArray } from '@dereekb/rxjs';
+import { type GrantedRole } from '@dereekb/model';
 import { Injectable, inject, Inject } from '@angular/core';
 import { DbxFirebaseModelContextService } from '../../service/model.context.service';
-import { DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../service/model.context';
+import { type DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../service/model.context';
 
 /**
  * Configuration provided in the root module for configuring entries.

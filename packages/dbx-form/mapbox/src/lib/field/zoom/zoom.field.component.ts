@@ -1,12 +1,12 @@
-import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { type AbstractControl, type FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit, inject } from '@angular/core';
+import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { BehaviorSubject, shareReplay, startWith, switchMap, Observable } from 'rxjs';
+import { BehaviorSubject, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { ZoomLevel, Maybe, LatLngPoint, latLngPoint } from '@dereekb/util';
-import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL, DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import { type ZoomLevel, type Maybe, type LatLngPoint, latLngPoint } from '@dereekb/util';
+import { DbxMapboxService, DbxMapboxMapStore, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL, DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { NgClass } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';

@@ -1,46 +1,36 @@
-import { Expose, Type } from 'class-transformer';
-import { TargetModelParams, OnCallCreateModelResult, FirestoreModelKey, IsFirestoreModelKey, IsFirestoreModelId } from '../../common';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
-import { IsString, IsBoolean, IsOptional, IsNumber, IsDate, Min, IsMimeType, IsNotEmpty, ValidateNested, IsArray } from 'class-validator';
-import { StorageFileSignedDownloadUrl, StorageFileTypes } from './storagefile';
+import { type, type Type } from 'arktype';
+import { type TargetModelParams, type OnCallCreateModelResult, type FirestoreModelKey } from '../../common';
+import { firestoreModelKeyType, firestoreModelIdType } from '../../common/model/model/model.validator';
+import { targetModelParamsType } from '../../common/model/model/model.param';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
+import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type StorageFileId } from './storagefile.id';
 import { type SendNotificationResult } from '../notification/notification.api';
+import { clearable } from '@dereekb/model';
 
 /**
  * Used for directly create a new StorageFile.
  */
-export class CreateStorageFileParams {}
+export interface CreateStorageFileParams {}
+
+export const createStorageFileParamsType = type({}) as Type<CreateStorageFileParams>;
 
 /**
  * Initializes all StorageFiles in the uploads folder.
  */
-export class InitializeAllStorageFilesFromUploadsParams {
-  /**
-   * The maximum number of files to initialize at once.
-   */
-  @Expose()
-  @IsNumber()
-  @IsOptional()
-  maxFilesToInitialize?: Maybe<number>;
-
-  /**
-   * The specific folder under the uploads folder to search for files and initialize
-   */
-  @Expose()
-  @IsString()
-  @IsOptional()
-  folderPath?: Maybe<StorageSlashPath>;
-
-  /**
-   * Overrides the default uploads folder path.
-   */
-  @Expose()
-  @IsString()
-  @IsOptional()
-  overrideUploadsFolderPath?: Maybe<StorageSlashPath>;
+export interface InitializeAllStorageFilesFromUploadsParams {
+  readonly maxFilesToInitialize?: Maybe<number>;
+  readonly folderPath?: Maybe<StorageSlashPath>;
+  readonly overrideUploadsFolderPath?: Maybe<StorageSlashPath>;
 }
+
+export const initializeAllStorageFilesFromUploadsParamsType = type({
+  'maxFilesToInitialize?': clearable('number'),
+  'folderPath?': clearable('string'),
+  'overrideUploadsFolderPath?': clearable('string')
+}) as Type<InitializeAllStorageFilesFromUploadsParams>;
 
 export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreateModelResult {
   readonly filesVisited: number;
@@ -51,208 +41,102 @@ export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreate
 /**
  * Initializes a StorageFile from the document at the given path.
  */
-export class InitializeStorageFileFromUploadParams implements Pick<StoragePath, 'pathString'> {
-  /**
-   * Specific bucketId to use.
-   *
-   * If not defined, the default bucket will be used.
-   */
-  @Expose()
-  @IsOptional()
-  @IsString()
-  bucketId?: Maybe<StorageBucketId>;
-
-  @Expose()
-  @IsString()
-  pathString!: StorageSlashPath;
-
-  /**
-   * Whether or not to attempt to expedite the processing of the created StorageFile, if it is queued for processing.
-   *
-   * If it cannot be processed, this argument will have no effect.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  expediteProcessing?: boolean;
+export interface InitializeStorageFileFromUploadParams extends Pick<StoragePath, 'pathString'> {
+  readonly bucketId?: Maybe<StorageBucketId>;
+  readonly pathString: StorageSlashPath;
+  readonly expediteProcessing?: boolean;
 }
 
-export class ProcessStorageFileParams extends TargetModelParams {
-  /**
-   * If set, will start/run the processing immediately instead of waiting for the next scheduled run.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  runImmediately?: Maybe<boolean>;
+export const initializeStorageFileFromUploadParamsType = type({
+  'bucketId?': clearable('string'),
+  pathString: 'string > 0',
+  'expediteProcessing?': 'boolean'
+}) as Type<InitializeStorageFileFromUploadParams>;
 
-  /**
-   * If set, will check and retry processing if the StorageFile is in a failed processing state.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  checkRetryProcessing?: Maybe<boolean>;
-
-  /**
-   * Used with checkRetryProcessing.
-   *
-   * If set, will forcibly create a new processing task even if the existing processing task appears to be ok, or if processing was already marked complete.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  forceRestartProcessing?: Maybe<boolean>;
-
-  /**
-   * If set, will start the processing again if the StorageFile is in a successful processing state.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  processAgainIfSuccessful?: Maybe<boolean>;
+export interface ProcessStorageFileParams extends TargetModelParams {
+  readonly runImmediately?: Maybe<boolean>;
+  readonly checkRetryProcessing?: Maybe<boolean>;
+  readonly forceRestartProcessing?: Maybe<boolean>;
+  readonly processAgainIfSuccessful?: Maybe<boolean>;
 }
+
+export const processStorageFileParamsType = targetModelParamsType.merge({
+  'runImmediately?': clearable('boolean'),
+  'checkRetryProcessing?': clearable('boolean'),
+  'forceRestartProcessing?': clearable('boolean'),
+  'processAgainIfSuccessful?': clearable('boolean')
+}) as Type<ProcessStorageFileParams>;
 
 export interface ProcessStorageFileResult {
-  /**
-   * Whether or not the StorageFile was run immediately.
-   */
   readonly runImmediately: boolean;
-  /**
-   * The expedite result, if runImmediately returned true.
-   */
   readonly expediteResult: Maybe<SendNotificationResult>;
 }
 
 /**
  * Processes all StorageFiles that are queued for processing.
  */
-export class ProcessAllQueuedStorageFilesParams {}
+export interface ProcessAllQueuedStorageFilesParams {}
+
+export const processAllQueuedStorageFilesParamsType = type({}) as Type<ProcessAllQueuedStorageFilesParams>;
 
 export interface ProcessAllQueuedStorageFilesResult {
-  /**
-   * The total number of StorageFiles visited.
-   */
   readonly storageFilesVisited: number;
-  /**
-   * The total number of StorageFiles that started processing.
-   */
   readonly storageFilesProcessStarted: number;
-  /**
-   * The total number of StorageFiles that failed to start processing.
-   */
   readonly storageFilesFailedStarting: number;
 }
 
-export class UpdateStorageFileParams extends TargetModelParams {
-  /**
-   * Sets the delete at time for the given StorageFileDocument, and queues the file for deletion.
-   */
-  @Expose()
-  @IsDate()
-  @IsOptional()
-  @Type(() => Date)
-  sdat?: Maybe<Date>;
+export interface UpdateStorageFileParams extends TargetModelParams {
+  readonly sdat?: Maybe<Date>;
 }
 
-export class DeleteStorageFileParams extends TargetModelParams {
-  /**
-   * If true, will force the deletion of the StorageFile even if it is not queued for deletion.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  force?: Maybe<boolean>;
+export const updateStorageFileParamsType = targetModelParamsType.merge({
+  'sdat?': clearable('string.date.parse')
+}) as Type<UpdateStorageFileParams>;
+
+export interface DeleteStorageFileParams extends TargetModelParams {
+  readonly force?: Maybe<boolean>;
 }
+
+export const deleteStorageFileParamsType = targetModelParamsType.merge({
+  'force?': clearable('boolean')
+}) as Type<DeleteStorageFileParams>;
 
 /**
  * Processes all StorageFiles that are queued for processing.
  */
-export class DeleteAllQueuedStorageFilesParams {}
+export interface DeleteAllQueuedStorageFilesParams {}
+
+export const deleteAllQueuedStorageFilesParamsType = type({}) as Type<DeleteAllQueuedStorageFilesParams>;
 
 export interface DeleteAllQueuedStorageFilesResult {
-  /**
-   * The total number of StorageFiles visited.
-   */
   readonly storageFilesVisited: number;
-  /**
-   * The total number of StorageFiles that were deleted.
-   */
   readonly storageFilesDeleted: number;
-  /**
-   * The total number of StorageFiles that failed to delete.
-   */
   readonly storageFilesFailedDeleting: number;
 }
 
-export class DownloadStorageFileParams extends TargetModelParams {
-  /**
-   * Date to expire the download URL.
-   */
-  @Expose()
-  @IsDate()
-  @IsOptional()
-  @Type(() => Date)
-  expiresAt?: Maybe<Date>;
-
-  /**
-   * Duration in milliseconds to expire the download URL from now.
-   */
-  @Expose()
-  @Min(0)
-  @IsNumber()
-  @IsOptional()
-  expiresIn?: Maybe<Milliseconds>;
-
-  /**
-   * The content disposition for the response to use.
-   */
-  @Expose()
-  @IsOptional()
-  @IsString()
-  responseDisposition?: Maybe<ContentDispositionString>;
-
-  /**
-   * The content type for the response to use.
-   *
-   * Only available to admins.
-   */
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @IsMimeType()
-  responseContentType?: Maybe<ContentTypeMimeType>;
-
-  /**
-   * Whether or not an admin is creating the link.
-   *
-   * Allows a longer expiration.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  asAdmin?: Maybe<boolean>;
+export interface DownloadStorageFileParams extends TargetModelParams {
+  readonly expiresAt?: Maybe<Date>;
+  readonly expiresIn?: Maybe<Milliseconds>;
+  readonly responseDisposition?: Maybe<ContentDispositionString>;
+  readonly responseContentType?: Maybe<ContentTypeMimeType>;
+  readonly asAdmin?: Maybe<boolean>;
 }
+
+export const downloadStorageFileParamsType = targetModelParamsType.merge({
+  'expiresAt?': clearable('string.date.parse'),
+  'expiresIn?': clearable('number >= 0'),
+  'responseDisposition?': clearable('string'),
+  'responseContentType?': clearable('string'),
+  'asAdmin?': clearable('boolean')
+}) as Type<DownloadStorageFileParams>;
 
 /**
  * Result of downloading a StorageFile.
  */
 export interface DownloadStorageFileResult {
-  /**
-   * The download URL.
-   */
   readonly url: StorageFileSignedDownloadUrl;
-  /**
-   * The name of the StorageFile, if available.
-   */
   readonly fileName?: Maybe<string>;
-  /**
-   * The mime type of the StorageFile, if available.
-   */
   readonly mimeType?: Maybe<ContentTypeMimeType>;
-  /**
-   * Expiration time as a UnixDateTimeSecondsNumber value.
-   */
   readonly expiresAt?: Maybe<UnixDateTimeSecondsNumber>;
 }
 
@@ -263,132 +147,92 @@ export interface DownloadStorageFileResult {
  *
  * The preferred way is to create a StorageFileGroup through a StorageFile.
  */
-export class CreateStorageFileGroupParams {
-  /**
-   * ModelKey to use for creating the StorageFileGroup.
-   */
-  @Expose()
-  @IsOptional()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  model?: Maybe<FirestoreModelKey>;
-
-  /**
-   * StorageFileId to use for creating the StorageFileGroup.
-   */
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelId()
-  storageFileId?: Maybe<StorageFileId>;
+export interface CreateStorageFileGroupParams {
+  readonly model?: Maybe<FirestoreModelKey>;
+  readonly storageFileId?: Maybe<StorageFileId>;
 }
 
-export class SyncStorageFileWithGroupsParams extends TargetModelParams {
-  /**
-   * If true, will force syncing even if the StorageFile is not flagged for a resync.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  force?: boolean;
+export const createStorageFileGroupParamsType = type({
+  'model?': clearable(firestoreModelKeyType),
+  'storageFileId?': clearable(firestoreModelIdType)
+}) as Type<CreateStorageFileGroupParams>;
+
+export interface SyncStorageFileWithGroupsParams extends TargetModelParams {
+  readonly force?: boolean;
 }
+
+export const syncStorageFileWithGroupsParamsType = targetModelParamsType.merge({
+  'force?': 'boolean'
+}) as Type<SyncStorageFileWithGroupsParams>;
 
 export interface SyncStorageFileWithGroupsResult {
-  /**
-   * The number of StorageFileGroups that were created.
-   */
   readonly storageFilesGroupsCreated: number;
-  /**
-   * The number of StorageFileGroups that were updated.
-   */
   readonly storageFilesGroupsUpdated: number;
 }
 
-export class SyncAllFlaggedStorageFilesWithGroupsParams {}
+export interface SyncAllFlaggedStorageFilesWithGroupsParams {}
+
+export const syncAllFlaggedStorageFilesWithGroupsParamsType = type({}) as Type<SyncAllFlaggedStorageFilesWithGroupsParams>;
 
 export interface SyncAllFlaggedStorageFilesWithGroupsResult {
-  /**
-   * The total number of StorageFiles that were synced.
-   */
   readonly storageFilesSynced: number;
-  /**
-   * The total number of StorageFileGroups that were created.
-   */
   readonly storageFilesGroupsCreated: number;
-  /**
-   * The total number of StorageFileGroups that were updated.
-   */
   readonly storageFilesGroupsUpdated: number;
 }
 
-export class UpdateStorageFileGroupParams extends TargetModelParams {
-  /**
-   * Entries to update, if selected.
-   */
-  @Expose()
-  @IsArray()
-  @IsOptional()
-  @Type(() => UpdateStorageFileGroupEntryParams)
-  @ValidateNested({ each: true })
-  entries?: Maybe<UpdateStorageFileGroupEntryParams[]>;
+export interface UpdateStorageFileGroupEntryParams {
+  readonly s: StorageFileId;
+  readonly n?: Maybe<string>;
 }
 
-export class UpdateStorageFileGroupEntryParams {
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelId()
-  s!: StorageFileId;
+export const updateStorageFileGroupEntryParamsType = type({
+  s: firestoreModelIdType,
+  'n?': clearable('string > 0')
+}) as Type<UpdateStorageFileGroupEntryParams>;
 
-  @Expose()
-  @IsString()
-  @IsOptional()
-  @IsNotEmpty()
-  n?: Maybe<string>;
+export interface UpdateStorageFileGroupParams extends TargetModelParams {
+  readonly entries?: Maybe<UpdateStorageFileGroupEntryParams[]>;
 }
 
-export class RegenerateStorageFileGroupContentParams extends TargetModelParams {
-  /**
-   * If true, will force syncing even if the StorageFile is not flagged for a resync.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  force?: boolean;
+export const updateStorageFileGroupParamsType = targetModelParamsType.merge({
+  'entries?': clearable(updateStorageFileGroupEntryParamsType.array())
+}) as Type<UpdateStorageFileGroupParams>;
+
+export interface RegenerateStorageFileGroupContentParams extends TargetModelParams {
+  readonly force?: boolean;
 }
+
+export const regenerateStorageFileGroupContentParamsType = targetModelParamsType.merge({
+  'force?': 'boolean'
+}) as Type<RegenerateStorageFileGroupContentParams>;
 
 export interface RegenerateStorageFileGroupContentResult {
-  /**
-   * The total number of "content" StorageFiles that were flagged for processing again.
-   */
   readonly contentStorageFilesFlaggedForProcessing: number;
 }
 
-export class RegenerateAllFlaggedStorageFileGroupsContentParams {}
+export interface RegenerateAllFlaggedStorageFileGroupsContentParams {}
+
+export const regenerateAllFlaggedStorageFileGroupsContentParamsType = type({}) as Type<RegenerateAllFlaggedStorageFileGroupsContentParams>;
 
 export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
-  /**
-   * The number of StorageFileGroups that were updated.
-   */
   readonly storageFileGroupsUpdated: number;
-  /**
-   * The number of "content" StorageFiles that were flagged for processing again.
-   */
   readonly contentStorageFilesFlaggedForProcessing: number;
 }
 
 /**
  * Used for initializing an uninitialized model like NotificationBox or NotificationSummary.
  */
-export class InitializeStorageFileModelParams extends TargetModelParams {
-  /**
-   * Whether or not to throw an error if the notification has already been sent or is being sent.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  throwErrorIfAlreadyInitialized?: boolean;
+export interface InitializeStorageFileModelParams extends TargetModelParams {
+  readonly throwErrorIfAlreadyInitialized?: boolean;
 }
 
-export class InitializeAllApplicableStorageFileGroupsParams {}
+export const initializeStorageFileModelParamsType = targetModelParamsType.merge({
+  'throwErrorIfAlreadyInitialized?': 'boolean'
+}) as Type<InitializeStorageFileModelParams>;
+
+export interface InitializeAllApplicableStorageFileGroupsParams {}
+
+export const initializeAllApplicableStorageFileGroupsParamsType = type({}) as Type<InitializeAllApplicableStorageFileGroupsParams>;
 
 export interface InitializeAllApplicableStorageFileGroupsResult {
   readonly storageFileGroupsVisited: number;

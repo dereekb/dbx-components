@@ -1,10 +1,10 @@
-import { Directive, OnInit, OnDestroy, ViewContainerRef, inject, input, effect } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { HookResult, Transition, TransitionService } from '@uirouter/core';
-import { Observable, of, race, delay, first, map, mergeMap, tap, BehaviorSubject, combineLatest, firstValueFrom } from 'rxjs';
+import { Directive, type OnInit, type OnDestroy, ViewContainerRef, inject, input, effect } from '@angular/core';
+import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
+import { type HookResult, type Transition, TransitionService } from '@uirouter/core';
+import { type Observable, of, race, delay, first, map, mergeMap, tap, BehaviorSubject, combineLatest, firstValueFrom } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
-import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
-import { Maybe } from '@dereekb/util';
+import { type DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * How to handle transitions.

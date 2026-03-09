@@ -1,15 +1,15 @@
-import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core';
 import { DbxLoadingComponent } from './loading.component';
 import { DbxActionLoadingContextDirective } from './loading.action.directive';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { DbxErrorComponent } from '../error';
-import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
+import { DbxBasicLoadingComponent, type LoadingComponentState } from './basic-loading.component';
 import { filter, first } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 

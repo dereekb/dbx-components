@@ -1,14 +1,14 @@
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
-import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues, Configurable } from '@dereekb/util';
-import { Directive, OnDestroy, OnInit, viewChild } from '@angular/core';
-import { FormControl, AbstractControl } from '@angular/forms';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
+import { type PrimativeKey, convertMaybeToArray, makeValuesGroupMap, type Maybe, type ArrayOrValue, separateValues, filterUniqueValues, type Configurable } from '@dereekb/util';
+import { Directive, type OnDestroy, type OnInit, viewChild } from '@angular/core';
+import { FormControl, type AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
-import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
-import { PickableValueFieldDisplayFunction, PickableValueFieldDisplayValue, PickableValueFieldFilterFunction, PickableValueFieldHashFunction, PickableValueFieldLoadValuesFunction, PickableValueFieldValue } from './pickable';
-import { DbxValueListItem } from '@dereekb/dbx-web';
+import { BehaviorSubject, combineLatest, type Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from './pickable';
+import { type DbxValueListItem } from '@dereekb/dbx-web';
 import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
 

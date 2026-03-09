@@ -1,3 +1,28 @@
+# [13.1.0](https://github.com/dereekb/dbx-components/compare/v13.0.7-dev...v13.1.0) (2026-03-09)
+
+
+### Bug Fixes
+
+- dateCellTimingStartPair DST cross-timezone bug ([9d16da29](https://github.com/dereekb/dbx-components/commit/9d16da291dafe02bfd429d8974d250753180de90))
+
+
+### Build System
+
+- lint fix ([de0b6d1c](https://github.com/dereekb/dbx-components/commit/de0b6d1c5b523ec652fcca1c4fed06de9bb252ef))
+
+
+### Code Refactoring
+
+- updated jsdocs for util, rxjs, model, and date ([#34](https://github.com/dereekb/dbx-components/issues/34)) ([fe49828c](https://github.com/dereekb/dbx-components/commit/fe49828ca694f385f903843f599bfd3e0df47af7)), closes [#34](https://github.com/dereekb/dbx-components/issues/34)
+
+
+### Features
+
+- arktype migration ([#35](https://github.com/dereekb/dbx-components/issues/35)) ([fe87948b](https://github.com/dereekb/dbx-components/commit/fe87948bf30948352a55db18b0057bcd1b4673ee)), closes [#35](https://github.com/dereekb/dbx-components/issues/35)
+
+
+
+
 ## [13.0.7](https://github.com/dereekb/dbx-components/compare/v13.0.6-dev...v13.0.7) (2026-03-07)
 
 

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ExampleTableData } from './table.item';
+import { type ExampleTableData } from './table.item';
 
 @Component({
   template: `

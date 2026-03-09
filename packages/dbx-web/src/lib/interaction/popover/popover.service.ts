@@ -1,6 +1,6 @@
 import { DbxPopoverComponent, type DbxPopoverComponentConfig, type FullDbxPopoverComponentConfig } from './popover.component';
 import { Injectable, Injector, inject } from '@angular/core';
-import { NgOverlayContainerConfiguration, NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
+import { type NgOverlayContainerConfiguration, NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
 export type DbxPopoverConfigSizing = Pick<NgOverlayContainerConfiguration, 'originX' | 'originY' | 'height' | 'width' | 'minHeight' | 'minWidth' | 'isResizable'>;

@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { SystemState, SystemStateDocument, SystemStateFirestoreCollections } from '@dereekb/firebase';
+import { type SystemState, type SystemStateDocument, SystemStateFirestoreCollections } from '@dereekb/firebase';
 import { AbstractDbxFirebaseCollectionStore } from '../modules/store/store.collection';
 
 @Injectable()

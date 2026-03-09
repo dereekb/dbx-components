@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';
+import { AbstractDbxPickableItemFieldDirective, type PickableItemFieldItem } from './pickable.field.directive';
 import { MatChipsModule } from '@angular/material/chips';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { MatDivider } from '@angular/material/divider';

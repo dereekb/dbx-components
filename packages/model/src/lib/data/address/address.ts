@@ -1,62 +1,60 @@
-import { type AddressLineString, type CityString, type StateString, type StateCodeString, type ZipCodeString, type UnitedStatesAddress, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { US_STATE_CODE_STRING_REGEX } from '@dereekb/util';
+import { type } from 'arktype';
 
+/**
+ * Maximum character length for address line fields (line1, line2).
+ */
 export const ADDRESS_LINE_MAX_LENGTH = 50;
 
+/**
+ * Maximum character length for city names.
+ */
 export const ADDRESS_CITY_MAX_LENGTH = 80;
+
+/**
+ * Maximum character length for full state names (e.g., "Texas").
+ */
 export const ADDRESS_STATE_MAX_LENGTH = 30;
+
+/**
+ * Maximum character length for two-letter state codes (e.g., "TX").
+ */
 export const ADDRESS_STATE_CODE_MAX_LENGTH = 2;
 
+/**
+ * Maximum character length for ZIP codes, accommodating ZIP+4 format (e.g., "77834-1234").
+ */
 export const ADDRESS_ZIP_MAX_LENGTH = 11;
+
+/**
+ * Maximum character length for country names.
+ */
 export const ADDRESS_COUNTRY_MAX_LENGTH = 80;
 
-export abstract class AbstractUnitedStatesAddressWithoutStateParams {
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(ADDRESS_LINE_MAX_LENGTH)
-  line1!: AddressLineString;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(ADDRESS_LINE_MAX_LENGTH)
-  line2?: AddressLineString;
-
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(ADDRESS_CITY_MAX_LENGTH)
-  city!: CityString;
-
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  @Matches(ZIP_CODE_STRING_REGEX)
-  @MaxLength(ADDRESS_ZIP_MAX_LENGTH)
-  zip!: ZipCodeString;
-}
+/**
+ * Base ArkType schema for United States address fields without the state.
+ */
+const baseUnitedStatesAddressType = type({
+  line1: `0 < string <= ${ADDRESS_LINE_MAX_LENGTH}`,
+  'line2?': `string <= ${ADDRESS_LINE_MAX_LENGTH}`,
+  city: `0 < string <= ${ADDRESS_CITY_MAX_LENGTH}`,
+  zip: [/^\d{5}(-\d{4})?$/, '&', `string <= ${ADDRESS_ZIP_MAX_LENGTH}`] as const
+});
 
 /**
- * UnitedStatesAddress that enforces a StateCode for the state value.
+ * ArkType schema for a United States address with a two-letter state code (e.g., "TX").
  */
-export class UnitedStatesAddressWithStateCodeParams extends AbstractUnitedStatesAddressWithoutStateParams implements UnitedStatesAddress {
-  @Expose()
-  @IsString()
-  @Matches(US_STATE_CODE_STRING_REGEX)
-  @MinLength(ADDRESS_STATE_CODE_MAX_LENGTH)
-  @MaxLength(ADDRESS_STATE_CODE_MAX_LENGTH)
-  state!: StateCodeString;
-}
+export const unitedStatesAddressWithStateCodeType = baseUnitedStatesAddressType.merge({
+  state: [US_STATE_CODE_STRING_REGEX, '&', `${ADDRESS_STATE_CODE_MAX_LENGTH} <= string <= ${ADDRESS_STATE_CODE_MAX_LENGTH}`] as const
+});
+
+export type UnitedStatesAddressWithStateCodeParams = typeof unitedStatesAddressWithStateCodeType.infer;
 
 /**
- * UnitedStatesAddress that enforces a State for the state value.
+ * ArkType schema for a United States address with a full state name (e.g., "Texas").
  */
-export class UnitedStatesAddressWithStateStringParams extends AbstractUnitedStatesAddressWithoutStateParams implements UnitedStatesAddress {
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(ADDRESS_STATE_MAX_LENGTH)
-  state!: StateString;
-}
+export const unitedStatesAddressWithStateStringType = baseUnitedStatesAddressType.merge({
+  state: `0 < string <= ${ADDRESS_STATE_MAX_LENGTH}`
+});
+
+export type UnitedStatesAddressWithStateStringParams = typeof unitedStatesAddressWithStateStringType.infer;

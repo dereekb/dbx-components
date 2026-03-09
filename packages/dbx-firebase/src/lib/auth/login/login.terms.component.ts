@@ -1,4 +1,4 @@
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseAuthLoginService } from './login.service';

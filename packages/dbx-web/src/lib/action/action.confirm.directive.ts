@@ -1,8 +1,8 @@
 import { Directive, inject, input } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
-import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
+import { type DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * DbxActionConfirmDirective configuration.

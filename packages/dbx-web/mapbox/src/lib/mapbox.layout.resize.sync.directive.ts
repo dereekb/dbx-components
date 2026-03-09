@@ -1,4 +1,4 @@
-import { shareReplay, map, distinctUntilChanged, Subscription } from 'rxjs';
+import { shareReplay, map, distinctUntilChanged, type Subscription } from 'rxjs';
 import { Directive, inject } from '@angular/core';
 import { isSameVector } from '@dereekb/util';
 import { DbxMapboxLayoutComponent } from './mapbox.layout.component';

@@ -1,9 +1,9 @@
 import { DbxAuthService } from '@dereekb/dbx-core';
-import { tap, switchMap, BehaviorSubject, Observable, interval, combineLatest, map, exhaustMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { Initialized, Milliseconds, runAsyncTasksForValues } from '@dereekb/util';
+import { tap, switchMap, BehaviorSubject, type Observable, interval, combineLatest, map, exhaustMap, distinctUntilChanged, shareReplay } from 'rxjs';
+import { type Initialized, type Milliseconds, runAsyncTasksForValues } from '@dereekb/util';
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { lazyFrom, SubscriptionObject, switchMapWhileTrue } from '@dereekb/rxjs';
-import { FirebaseDevelopmentFunctions, ScheduledFunctionDevelopmentFirebaseFunctionListEntry, ScheduledFunctionDevelopmentFirebaseFunctionListResult, ScheduledFunctionDevelopmentFunctionTypeEnum } from '@dereekb/firebase';
+import { FirebaseDevelopmentFunctions, type ScheduledFunctionDevelopmentFirebaseFunctionListEntry, type ScheduledFunctionDevelopmentFirebaseFunctionListResult, ScheduledFunctionDevelopmentFunctionTypeEnum } from '@dereekb/firebase';
 
 /**
  * Whether or not the scheduler should be enabled.

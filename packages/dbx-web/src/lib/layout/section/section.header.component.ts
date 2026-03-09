@@ -1,6 +1,6 @@
 import { Component, computed, input, ChangeDetectionStrategy, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
+import { type DbxSectionHeaderConfig, type DbxSectionHeaderHType } from './section';
 import { MatIconModule } from '@angular/material/icon';
 import { NgTemplateOutlet } from '@angular/common';
 

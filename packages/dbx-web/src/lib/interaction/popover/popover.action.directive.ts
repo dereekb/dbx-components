@@ -1,8 +1,8 @@
-import { first, Observable, map } from 'rxjs';
+import { first, type Observable, map } from 'rxjs';
 import { Directive, ElementRef, inject, input } from '@angular/core';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { type NgPopoverRef } from 'ng-overlay-container';
 import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
-import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
+import { type IsEqualFunction, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
 export interface DbxActionPopoverFunctionParams {

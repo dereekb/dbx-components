@@ -24,10 +24,17 @@ export type GrantedAdminRole = typeof GRANTED_ADMIN_ROLE_KEY;
 export const GRANTED_ADMIN_ROLE_KEY = 'admin';
 
 /**
- * Returns true if the input role is a GrantedAdminRole or a GrantedOwnerRole.
+ * Checks whether the given role represents an admin-level permission (either "admin" or "owner").
  *
- * @param role
- * @returns
+ * @param role - the role to check
+ * @returns true if the role is an admin or owner role
+ *
+ * @example
+ * ```typescript
+ * isGrantedAdminLevelRole('admin');  // true
+ * isGrantedAdminLevelRole('owner');  // true
+ * isGrantedAdminLevelRole('read');   // false
+ * ```
  */
 export function isGrantedAdminLevelRole(role: GrantedRole): boolean {
   return role === GRANTED_ADMIN_ROLE_KEY || role === GRANTED_OWNER_ROLE_KEY;
@@ -67,12 +74,29 @@ export type NoAccessRoleMap = {
   [NO_ACCESS_ROLE_KEY]: true;
 };
 
+/**
+ * Creates a {@link GrantedRoleMap} that explicitly denies all access.
+ *
+ * @returns a role map with only the no-access marker set
+ *
+ * @example
+ * ```typescript
+ * const map = noAccessRoleMap();
+ * isNoAccessRoleMap(map); // true
+ * ```
+ */
 export function noAccessRoleMap<R extends string = string>(): GrantedRoleMap<R> {
   return {
     [NO_ACCESS_ROLE_KEY]: true
   };
 }
 
+/**
+ * Type guard that checks whether a role map is a no-access map.
+ *
+ * @param input - the role map to check
+ * @returns true if the map has the no-access marker
+ */
 export function isNoAccessRoleMap<R extends string = string>(input: GrantedRoleMap<R> | NoAccessRoleMap): input is NoAccessRoleMap {
   return (input as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY] === true;
 }
@@ -81,12 +105,29 @@ export type FullAccessRoleMap = {
   [FULL_ACCESS_ROLE_KEY]: true;
 };
 
+/**
+ * Creates a {@link GrantedRoleMap} that grants full access to all roles.
+ *
+ * @returns a role map with the full-access marker set
+ *
+ * @example
+ * ```typescript
+ * const map = fullAccessRoleMap();
+ * isFullAccessRoleMap(map); // true
+ * ```
+ */
 export function fullAccessRoleMap<R extends string = string>(): GrantedRoleMap<R> {
   return {
     [FULL_ACCESS_ROLE_KEY]: true
   };
 }
 
+/**
+ * Type guard that checks whether a role map is a full-access map.
+ *
+ * @param input - the role map to check
+ * @returns true if the map has the full-access marker
+ */
 export function isFullAccessRoleMap<R extends string = string>(input: GrantedRoleMap<R> | FullAccessRoleMap): input is FullAccessRoleMap {
   return (input as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY] === true;
 }
@@ -107,11 +148,12 @@ export type GrantedRoleTruthMapObject<T, R extends GrantedRole> = Partial<{
 /**
  * Output that removes the keys of all roles that are not contained.
  */
-export type GrantedRoleTruthMap<M extends GrantedRoleTruthMapObject<any, any>> = M extends GrantedRoleTruthMapObject<infer T, infer R>
-  ? Partial<{
-      [K in R]: T;
-    }>
-  : never;
+export type GrantedRoleTruthMap<M extends GrantedRoleTruthMapObject<any, any>> =
+  M extends GrantedRoleTruthMapObject<infer T, infer R>
+    ? Partial<{
+        [K in R]: T;
+      }>
+    : never;
 
 /**
  * Reader used for parsing/reading role values from a given context.
@@ -146,10 +188,24 @@ export interface GrantedRoleMapReader<R extends GrantedRole = GrantedRole> {
 }
 
 /**
- * Creates a GrantedRoleMapReader.
+ * Creates a {@link GrantedRoleMapReader} for querying granted roles from a role map.
  *
- * @param map
- * @returns
+ * The reader handles full-access and no-access maps as special cases, and provides methods
+ * for checking individual roles or sets of roles.
+ *
+ * @param map - the granted role map to read from
+ * @returns a reader instance for querying the map
+ *
+ * @example
+ * ```typescript
+ * const roleMap: GrantedRoleMap = { read: true, first: true };
+ * const reader = grantedRoleMapReader(roleMap);
+ *
+ * reader.hasRole('read');                   // true
+ * reader.hasRole('delete');                 // false
+ * reader.containsRoles('any', ['read']);    // true
+ * reader.containsRoles('all', ['read', 'delete']); // false
+ * ```
  */
 export function grantedRoleMapReader<R extends GrantedRole = string>(map: GrantedRoleMap<R>): GrantedRoleMapReader<R> {
   return new GrantedRoleMapReaderInstance(map);
@@ -224,10 +280,17 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
 }
 
 /**
- * Converts the input array of roles to a GrantedRoleKeysMap.
+ * Converts an array of role strings into a {@link GrantedRoleKeysMap} where each role is mapped to the given boolean value.
  *
- * @param roles
- * @returns
+ * @param roles - the role strings to include
+ * @param value - the boolean value to assign to each role (defaults to true)
+ * @returns a map of roles to boolean values
+ *
+ * @example
+ * ```typescript
+ * const map = grantedRoleKeysMapFromArray(['read', 'update']);
+ * // { read: true, update: true }
+ * ```
  */
 export function grantedRoleKeysMapFromArray<R extends GrantedRole = string>(roles: R[], value = true): GrantedRoleKeysMap<R> {
   return arrayToObject(

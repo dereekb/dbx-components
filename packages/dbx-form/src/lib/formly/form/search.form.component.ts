@@ -1,8 +1,8 @@
 import { Component, output } from '@angular/core';
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { map, Observable } from 'rxjs';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { map, type Observable } from 'rxjs';
 import { AbstractConfigAsyncFormlyFormDirective } from '../formly.directive';
-import { dbxFormSearchFormFields, DbxFormSearchFormFieldsConfig, DbxFormSearchFormFieldsValue } from './form.form';
+import { dbxFormSearchFormFields, type DbxFormSearchFormFieldsConfig, type DbxFormSearchFormFieldsValue } from './form.form';
 import { DbxFormlyFormComponentImportsModule, dbxFormlyFormComponentProviders } from '../formly.component.template';
 import { DbxFormValueChangeDirective } from '../../form/io/form.change.directive';
 

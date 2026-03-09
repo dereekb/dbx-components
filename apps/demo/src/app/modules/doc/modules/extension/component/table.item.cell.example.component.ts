@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { DbxTableColumn } from '@dereekb/dbx-web/table';
-import { ExampleTableData } from './table.item';
+import { type DbxTableColumn } from '@dereekb/dbx-web/table';
+import { type ExampleTableData } from './table.item';
 
 @Component({
   template: `

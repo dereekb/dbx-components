@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { DbxFirebaseModelEntity, DbxFirebaseModelEntityWithStore, isDbxFirebaseModelEntityWithStore } from './model.entities';
+import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithStore, isDbxFirebaseModelEntityWithStore } from './model.entities';
 import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, distinctUntilChanged, map, Observable, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { DbxFirebaseModelEntitiesWidgetService } from './model.entities.widget.service';
 import { DbxFirebaseModelTypesService, type DbxFirebaseModelDisplayInfo, type DbxFirebaseModelTypeInfo } from '../model.types.service';

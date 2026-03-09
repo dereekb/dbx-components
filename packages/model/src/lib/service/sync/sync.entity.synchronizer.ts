@@ -56,6 +56,26 @@ export interface SyncEntitySynchronizerConfig {
   readonly commonTypeSynchronizers: SyncEntityCommonTypeSynchronizer[];
 }
 
+/**
+ * Creates a {@link SyncEntitySynchronizer} from the given configuration.
+ *
+ * Registers common type synchronizers and provides lookup by common type. Throws
+ * {@link UnregisteredSyncEntityCommonTypeError} if an unregistered common type is requested.
+ *
+ * @param config - contains the list of common type synchronizers to register
+ * @returns a synchronizer that delegates to the appropriate common type synchronizer
+ * @throws {UnregisteredSyncEntityCommonTypeError} when requesting an unregistered common type
+ *
+ * @example
+ * ```typescript
+ * const synchronizer = syncEntitySynchronizer({
+ *   commonTypeSynchronizers: [userSynchronizer, orderSynchronizer]
+ * });
+ *
+ * const instance = await synchronizer.synchronizeInstance({ commonType: 'user', commonId: '123' });
+ * const result = await instance.synchronize();
+ * ```
+ */
 export function syncEntitySynchronizer(config: SyncEntitySynchronizerConfig): SyncEntitySynchronizer {
   const map = new Map<SyncEntityCommonType, SyncEntityCommonTypeSynchronizer>(config.commonTypeSynchronizers.map((x) => [x.commonType, x]));
   const commonTypes = Array.from(map.keys());

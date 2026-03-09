@@ -14,6 +14,13 @@ triggers:
 
 Guide for writing commit messages in the dbx-components workspace.
 
+## Auto-Commit Behavior
+
+When this skill is invoked without additional arguments (e.g., the user runs `/dbx-commit-messages` with no other instructions), **immediately proceed to commit changes** using the conventions below. Do not ask for confirmation — analyze the changes, draft an appropriate commit message, stage the relevant files, and create the commit.
+
+- If you have context about what you were just working on, **only commit the files related to that work**. Stage them by name rather than using `git add -A`.
+- If you have no prior context about recent work, commit all staged and unstaged changes.
+
 ## Convention
 
 This project uses **@commitlint/config-angular** with a restricted set of commit types defined in `.commitlintrc.json`.

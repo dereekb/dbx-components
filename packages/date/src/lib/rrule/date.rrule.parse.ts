@@ -30,6 +30,9 @@ export type RRuleRawParamString = string;
  */
 export type RRuleRawValueSetString = CommaSeparatedString;
 
+/**
+ * A single raw value from an RRule value set.
+ */
 export type RRuleRawValueString = string;
 
 /**
@@ -81,6 +84,9 @@ export type RFC5545DateString = string;
  */
 export type RFC5545DateTimeString = string;
 
+/**
+ * Result of separating an RRule string set into basic rules and parsed EXDATE exclusions.
+ */
 export interface RRuleStringSetSeparation {
   /**
    * All of the original input.
@@ -112,9 +118,37 @@ export interface RRuleExdateAttribute {
   dates: Date[];
 }
 
+/**
+ * Delimiter separating the property name/params from values in an RRule line.
+ */
 export const RRuleStringSplitter = ':';
 
+/**
+ * Utility class for parsing and manipulating RFC 5545 RRule strings.
+ *
+ * Provides static methods for separating EXDATE rules, parsing RFC 5545 date-time strings,
+ * and converting between raw line formats and structured property representations.
+ *
+ * @example
+ * ```ts
+ * const lines = DateRRuleParseUtility.toRRuleStringSet(rruleString);
+ * const { basic, exdates } = DateRRuleParseUtility.separateRRuleStringSetValues(lines);
+ * ```
+ */
 export class DateRRuleParseUtility {
+  /**
+   * Splits an RRule line set into basic rules and parsed EXDATE exclusion dates.
+   *
+   * @example
+   * ```ts
+   * const result = DateRRuleParseUtility.separateRRuleStringSetValues([
+   *   'RRULE:FREQ=DAILY',
+   *   'EXDATE:20210611T110000Z'
+   * ]);
+   * // result.basic = ['RRULE:FREQ=DAILY']
+   * // result.exdates contains the parsed exclusion dates
+   * ```
+   */
   static separateRRuleStringSetValues(input: RRuleStringLineSet): RRuleStringSetSeparation {
     const basic: RRuleStringLineSet = [];
     const exdateRules: RRuleStringLineSet = [];
@@ -147,12 +181,20 @@ export class DateRRuleParseUtility {
   }
 
   // MARK: Rules Parsing
+  /**
+   * Parses an EXDATE line into its timezone and date components.
+   *
+   * @throws Error if the line is not an EXDATE property.
+   */
   static parseExdateAttributeFromLine(line: RRuleLineString): RRuleExdateAttribute {
     const property = this.parseProperty(line);
     DateRRuleParseUtility.assertPropertyType('EXDATE', property);
     return DateRRuleParseUtility.parseExdateAttributeFromProperty(property);
   }
 
+  /**
+   * Extracts timezone and UTC-normalized dates from an already-parsed EXDATE property.
+   */
   static parseExdateAttributeFromProperty(property: RRuleProperty): RRuleExdateAttribute {
     const timezone: Maybe<TimezoneString> = property.params.find((x) => x.key === 'TZID')?.value;
     const rawDates: (RFC5545DateString | RFC5545DateTimeString)[] = property.values.split(',');
@@ -165,14 +207,22 @@ export class DateRRuleParseUtility {
     };
   }
 
+  /**
+   * Convenience wrapper that creates a timezone converter and delegates to {@link parseDateTimeString}.
+   *
+   * @throws Error if the date string is not UTC and no timezone is provided.
+   */
   static parseDateTimeStringWithTimezone(rfcDateString: RFC5545DateString | RFC5545DateTimeString, timezone: Maybe<string>): Date {
     return DateRRuleParseUtility.parseDateTimeString(rfcDateString, timezone ? new DateTimezoneUtcNormalInstance({ timezone }) : undefined);
   }
 
   /**
-   * Parses the input Date-Time string.
+   * Parses an RFC 5545 date or date-time string into a JavaScript Date.
    *
-   * Timezone used to convert date to UTC if date is not specified in UTC (ends in Z).
+   * If the string does not end in `Z` (indicating UTC), the converter is used to normalize
+   * the local date representation to its true UTC equivalent.
+   *
+   * @throws Error if the string cannot be parsed or a non-UTC string lacks a converter.
    */
   static parseDateTimeString(rfcDateString: RFC5545DateString | RFC5545DateTimeString, converter: Maybe<DateTimezoneBaseDateConverter>): Date {
     const RFC5545_DATE_TIME_FORMAT = /^((\d{4})(\d{2})(\d{2}))(T(\d{2})(\d{2})(\d{2})Z?)?$/;
@@ -203,15 +253,30 @@ export class DateRRuleParseUtility {
     return date;
   }
 
+  /**
+   * Formats a Date as an RFC 5545 UTC date-time string (e.g., `"20210611T110000Z"`).
+   *
+   * @example
+   * ```ts
+   * DateRRuleParseUtility.formatDateTimeString(new Date('2021-06-11T11:00:00Z'));
+   * // => '20210611T110000Z'
+   * ```
+   */
   static formatDateTimeString(date: Date): RFC5545DateTimeString {
     return format(date, `yyyyMMdd'T'HHmmss'Z'`);
   }
 
+  /**
+   * Parses a full RRule line string into a structured {@link RRuleProperty}.
+   */
   static parseProperty(line: RRuleLineString): RRuleProperty {
     const rawLine: RRuleRawLine = DateRRuleParseUtility.parseRawLine(line);
     return DateRRuleParseUtility.propertyFromRawLine(rawLine);
   }
 
+  /**
+   * Converts an {@link RRuleRawLine} into a structured {@link RRuleProperty} by splitting the type and params.
+   */
   static propertyFromRawLine(rawLine: RRuleRawLine): RRuleProperty {
     const typeAndParams = rawLine.params.split(';');
     const type = typeAndParams[0].toUpperCase();
@@ -224,6 +289,9 @@ export class DateRRuleParseUtility {
     };
   }
 
+  /**
+   * Splits a raw param string (e.g., `"TZID=America/New_York"`) into key-value form.
+   */
   static parseRawParam(param: RRuleRawParamString): RRuleParam {
     const [key, value] = splitJoinRemainder(param, '=', 2);
     return {
@@ -232,6 +300,10 @@ export class DateRRuleParseUtility {
     };
   }
 
+  /**
+   * Splits a raw line at the colon delimiter into params and values portions.
+   * Falls back to treating a single-segment line as an RRULE value.
+   */
   static parseRawLine(line: RRuleLineString): RRuleRawLine {
     const [params, values] = splitJoinRemainder(line, RRuleStringSplitter, 2);
 
@@ -249,15 +321,26 @@ export class DateRRuleParseUtility {
   }
 
   // MARK: String
+  /**
+   * Splits a newline-delimited RRule string into individual line strings.
+   */
   static toRRuleStringSet(lines: RRuleLines): RRuleStringLineSet {
     return lines.split('\n');
   }
 
+  /**
+   * Joins an array of RRule line strings into a single newline-delimited string.
+   */
   static toRRuleLines(rruleStringSet: RRuleStringLineSet): RRuleLines {
     return rruleStringSet.join('\n');
   }
 
   // MARK: Assert
+  /**
+   * Asserts that the property has the expected type, throwing if it does not match.
+   *
+   * @throws Error if the property type does not match the expected type.
+   */
   static assertPropertyType(type: RRulePropertyType, property: RRuleProperty): void {
     if (property.type !== type) {
       throw new Error(`Expected type ${type} but got ${property.type}`);

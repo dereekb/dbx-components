@@ -1,7 +1,7 @@
 import { isValid } from 'date-fns';
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, type PipeTransform } from '@angular/core';
 import { toJsDate } from '@dereekb/date';
-import { DateOrDateString, type Maybe } from '@dereekb/util';
+import { type DateOrDateString, type Maybe } from '@dereekb/util';
 
 @Pipe({
   name: 'toJsDate',

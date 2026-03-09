@@ -1,21 +1,14 @@
-import { type ObjectWithConstructor } from '@dereekb/util';
-import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
+import { type } from 'arktype';
 import { isKnownTimezone } from './timezone';
 
 /**
- * isKnownTimezone validator
+ * ArkType schema that validates a string is a recognized IANA timezone.
+ *
+ * Delegates to {@link isKnownTimezone} for the actual check.
+ *
+ * @example
+ * ```ts
+ * const result = knownTimezoneType('America/Denver');
+ * ```
  */
-export function IsKnownTimezone(validationOptions?: ValidationOptions) {
-  return function (object: ObjectWithConstructor, propertyName: string) {
-    registerDecorator({
-      name: 'isKnownTimezone',
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      validator: {
-        validate: isKnownTimezone,
-        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a known timezone.`, validationOptions)
-      }
-    });
-  };
-}
+export const knownTimezoneType = type('string > 0').narrow((val, ctx) => isKnownTimezone(val) || ctx.mustBe('a known timezone'));

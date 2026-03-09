@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { delay, Observable } from 'rxjs';
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { delay, type Observable } from 'rxjs';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { type Maybe } from '@dereekb/util';
 import { MatButtonModule } from '@angular/material/button';

@@ -19,6 +19,17 @@ export interface CopyModelFieldConfig<V = unknown> {
  */
 export type CopyModelFieldFunction<T> = (from: Partial<T>, target: Partial<T>) => void;
 
+/**
+ * Creates a function that copies a single field from a partial source object to a partial target object.
+ *
+ * If the field exists on the source, its value (or the configured default if null) is assigned to the target.
+ * If the field does not exist on the source but a default is configured, the default is used.
+ * Otherwise, the target is left unchanged.
+ *
+ * @param key - The property key to copy
+ * @param inputConfig - Optional config with a default value for the field
+ * @returns A function that copies the field from source to target
+ */
 export function makeCopyModelFieldFunction<T extends object>(key: keyof T, inputConfig?: Maybe<CopyModelFieldConfig>): CopyModelFieldFunction<T> {
   const config = inputConfig ?? {};
   const hasDefault = objectHasKey(config, 'default');

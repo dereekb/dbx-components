@@ -9,6 +9,9 @@ export interface Filter<F> {
   filter?: F;
 }
 
+/**
+ * A filter reference where the filter is optional.
+ */
 export type OptionalFilter<F> = Partial<Filter<F>>;
 
 /**
@@ -17,10 +20,12 @@ export type OptionalFilter<F> = Partial<Filter<F>>;
 export type FilterFunction<T = unknown> = (value: T, index: number) => boolean;
 
 /**
- * Merges the input FilterFunction values into a single FilterFunction.
+ * Merges multiple FilterFunction values into a single FilterFunction.
+ * The merged function returns true only if all individual filters pass (AND logic).
+ * Null/undefined filters are ignored.
  *
- * @param inputFilters
- * @returns
+ * @param inputFilters - The filter functions to merge
+ * @returns A single FilterFunction that applies all filters
  */
 export function mergeFilterFunctions<T>(...inputFilters: Maybe<FilterFunction<T>>[]): FilterFunction<T> {
   const filters = filterMaybeArrayValues(inputFilters);
@@ -42,10 +47,10 @@ export function mergeFilterFunctions<T>(...inputFilters: Maybe<FilterFunction<T>
 }
 
 /**
- * Used to invert a filter function by returning the opposite of what it returns.
+ * Inverts a filter function so it returns the opposite boolean value.
  *
- * @param filterFn
- * @param invert whether or not to apply the inversion.
- * @returns
+ * @param filterFn - The filter function to invert
+ * @param invert - Whether to apply the inversion (defaults to true)
+ * @returns The inverted filter function, or the original if invert is false
  */
 export const invertFilter: <T = unknown, F extends FilterFunction<T> = FilterFunction<T>>(filterFn: F, invert?: boolean) => F = invertBooleanReturnFunction;

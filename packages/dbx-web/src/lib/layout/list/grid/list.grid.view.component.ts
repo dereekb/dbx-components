@@ -1,15 +1,15 @@
-import { ChangeDetectionStrategy, Component, Directive, Signal, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, type Signal, computed, inject, input } from '@angular/core';
 import { of } from 'rxjs';
-import { DbxValueListItem } from '../list.view.value';
+import { type DbxValueListItem } from '../list.view.value';
 import { AbstractDbxValueListViewDirective } from '../list.view.value.directive';
-import { Maybe, mergeObjects, spaceSeparatedCssClasses } from '@dereekb/util';
-import { DbxValueListViewContentComponent, DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from '../list.view.value.component';
+import { type Maybe, mergeObjects, spaceSeparatedCssClasses } from '@dereekb/util';
+import { DbxValueListViewContentComponent, type DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from '../list.view.value.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatRipple } from '@angular/material/core';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { DbxAnchorComponent } from '../../../router/layout/anchor/anchor.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { DbxValueListItemGroup } from '../group/list.view.value.group';
+import { type DbxValueListItemGroup } from '../group/list.view.value.group';
 
 export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
   grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;

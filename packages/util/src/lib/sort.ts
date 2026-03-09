@@ -66,11 +66,22 @@ export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFuncti
 }
 
 /**
- * Creates a new SortCompareFunction that can sort values of one type mapped to another type and sorted with a different sort function.
+ * Creates a {@link SortCompareFunction} that maps values to a different type before comparing.
+ * Useful for sorting objects by a derived property.
  *
- * @param mapValue
- * @param sortValuesFunction
- * @returns
+ * @param mapValue - Maps each value to the type used for comparison.
+ * @param comparesFunction - Compares the mapped values.
+ * @returns A sort comparison function for the original type.
+ *
+ * @example
+ * ```ts
+ * const byName = compareWithMappedValuesFunction(
+ *   (user: { name: string }) => user.name,
+ *   (a, b) => a.localeCompare(b)
+ * );
+ * [{ name: 'Bob' }, { name: 'Alice' }].sort(byName);
+ * // [{ name: 'Alice' }, { name: 'Bob' }]
+ * ```
  */
 export function compareWithMappedValuesFunction<T, V>(mapValue: MapFunction<T, V>, comparesFunction: SortCompareFunction<V>): SortCompareFunction<T> {
   return (a, b) => {
@@ -106,13 +117,13 @@ export type SortValuesInput<T> = MaybeMap<Partial<SortCompareFunctionRef<T>>> & 
    * Whether or not to always return a copy of the input values, even if no sorting occurs.
    */
   readonly alwaysReturnCopy?: Maybe<boolean>;
-}
+};
 
 /**
- * Sorts the input values using the input.
+ * Sorts values using the configuration in {@link SortValuesInput}. Optionally sorts on a copy to avoid mutating the original array.
  *
- * @param input
- * @returns
+ * @param input - Configuration including values, sort function, and copy behavior.
+ * @returns The sorted array (may be the original or a copy depending on configuration).
  */
 export function sortValues<T>(input: SortValuesInput<T>): T[] {
   const { values, alwaysReturnCopy, sortOnCopy, sortWith } = input;
@@ -131,10 +142,11 @@ export function sortValues<T>(input: SortValuesInput<T>): T[] {
 }
 
 /**
- * Creates a SortValuesFunction using the input.
+ * Creates a {@link SortValuesFunction} from a {@link SortCompareFunctionRef}.
  *
- * @param sortRef
- * @returns
+ * @param sortRef - Reference containing the sort comparison function.
+ * @param sortOnCopyDefault - Whether to sort on a copy by default (default: true).
+ * @returns A function that sorts arrays using the configured comparison.
  */
 export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault: boolean = true): SortValuesFunction<T> {
   const sortWith = sortRef?.sortWith;
@@ -150,11 +162,11 @@ export function sortValuesFunctionOrMapIdentityWithSortRef<T>(sortRef: Maybe<Par
 }
 
 /**
- * Equivalent to sortValuesFunctionOrMapIdentityWithSortRef(), but returns a SimpleSortValuesFunction instead.
+ * Equivalent to {@link sortValuesFunctionOrMapIdentityWithSortRef}, but returns a {@link SimpleSortValuesFunction} instead.
  *
- * @param sortRef
- * @param sortOnCopyDefault
- * @returns
+ * @param sortRef - Reference containing the sort comparison function.
+ * @param sortOnCopyDefault - Whether to sort on a copy by default.
+ * @returns A simple sort function or identity function.
  */
 export const simpleSortValuesFunctionWithSortRef: <T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean) => SimpleSortValuesFunction<T> = sortValuesFunctionOrMapIdentityWithSortRef;
 
@@ -174,9 +186,17 @@ export type MinAndMaxFunctionResult<T> = MinAndMax<T> | null;
 export type MinAndMaxFunction<T> = (values: Iterable<T>) => MinAndMaxFunctionResult<T>;
 
 /**
- * Creates a MinAndMaxFunction using the input compare.
+ * Creates a {@link MinAndMaxFunction} that finds the minimum and maximum values from an iterable using the provided comparison function.
  *
- * @param compare
+ * @param compareFn - Ascending sort comparison function used to determine min/max.
+ * @returns A function that returns `{ min, max }` or `null` for empty iterables.
+ *
+ * @example
+ * ```ts
+ * const fn = minAndMaxFunction<number>((a, b) => a - b);
+ * fn([3, 1, 4, 1, 5]); // { min: 1, max: 5 }
+ * fn([]);               // null
+ * ```
  */
 export function minAndMaxFunction<T>(compareFn: SortCompareFunction<T>): MinAndMaxFunction<T> {
   return (values: Iterable<T>) => {

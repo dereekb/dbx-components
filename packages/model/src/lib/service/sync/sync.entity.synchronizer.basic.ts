@@ -128,6 +128,21 @@ export interface BasicSyncEntityCommonTypeSynchronizerConfig {
   readonly entitySourceContextLoader: BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoader;
 }
 
+/**
+ * Creates a {@link BasicSyncEntityCommonTypeSynchronizer} that orchestrates synchronization across multiple sources
+ * for a specific entity common type.
+ *
+ * The synchronizer follows a primary/secondary/replica flow:
+ * 1. The primary source is synchronized first (exactly one required).
+ * 2. Secondary sources are synchronized sequentially; if a secondary reports deletion while primary did not, the sync restarts once.
+ * 3. Replica sources are synchronized concurrently (up to 3 in parallel).
+ *
+ * @param config - common type, sources, and context loader
+ * @returns a synchronizer for the configured common type
+ * @throws {NoPrimarySyncSourceError} when no primary source is found
+ * @throws {MultiplePrimarySyncSourceError} when more than one primary source is found
+ * @throws {SynchronizationFailedError} when primary or secondary sync returns failed/error
+ */
 export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: BasicSyncEntityCommonTypeSynchronizerConfig): BasicSyncEntityCommonTypeSynchronizer {
   const { commonType, sources, entitySourceContextLoader, dynamicSources = false } = config;
   const syncEntityCommonTypeIdPairForType = syncEntityCommonTypeIdPairFactory(commonType);

@@ -1,5 +1,5 @@
 import { computed, Directive, input } from '@angular/core';
-import { DbxThemeColor } from '../style/style';
+import { type DbxThemeColor } from '../style/style';
 
 /**
  * Section used to wrap content in a border with internal padding.

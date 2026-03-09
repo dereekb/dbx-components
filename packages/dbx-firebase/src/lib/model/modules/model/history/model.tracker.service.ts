@@ -1,10 +1,10 @@
-import { ArrayOrValue, DecisionFunction, Maybe, asArray, invertDecision } from '@dereekb/util';
-import { FirestoreModelIdentity } from '@dereekb/firebase';
-import { map, Observable, switchMap, shareReplay, startWith, of, catchError } from 'rxjs';
+import { type ArrayOrValue, type DecisionFunction, type Maybe, asArray, invertDecision } from '@dereekb/util';
+import { type FirestoreModelIdentity } from '@dereekb/firebase';
+import { map, type Observable, switchMap, shareReplay, startWith, of, catchError } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { allDbxModelViewTrackerEventModelKeys, DbxModelTrackerService } from '@dereekb/dbx-web';
-import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
-import { filterItemsWithObservableDecision, filterMaybeArray, invertObservableDecision, mapEachAsync, ObservableDecisionFunction } from '@dereekb/rxjs';
+import { DbxFirebaseModelTypesService, type DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
+import { filterItemsWithObservableDecision, filterMaybeArray, invertObservableDecision, mapEachAsync, type ObservableDecisionFunction } from '@dereekb/rxjs';
 
 export interface DbxFirebaseModelTrackerFilterItem {
   readonly instancePair: DbxFirebaseModelTypesServiceInstancePair;

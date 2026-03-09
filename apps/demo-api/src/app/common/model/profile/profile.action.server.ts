@@ -1,5 +1,5 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, type ProfileDocument, type ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from 'demo-firebase';
+import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, profileWithUsername, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, type NotificationSummaryId } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
@@ -76,7 +76,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
-  return firebaseServerActionTransformFunctionFactory(SetProfileUsernameParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(setProfileUsernameParamsType, async (params) => {
     const { username: inputUsername } = params;
     const username = inputUsername.toLowerCase();
 
@@ -122,7 +122,7 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
 }
 
 export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection }: ProfileServerActionsContext) {
-  return firebaseServerActionTransformFunctionFactory(UpdateProfileParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(updateProfileParamsType, async (params) => {
     const { bio } = params;
 
     return async (document: ProfileDocument) => {
@@ -138,7 +138,7 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
 export function createTestNotificationFactory(context: ProfileServerActionsContext) {
   const { notificationExpediteService, firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
 
-  return firebaseServerActionTransformFunctionFactory(ProfileCreateTestNotificationParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(profileCreateTestNotificationParamsType, async (params) => {
     const { skipSend, expediteSend } = params;
 
     return async (document: ProfileDocument) => {

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { DbxPromptComponent } from './prompt.component';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxPromptConfirmConfig {
   readonly title?: string;

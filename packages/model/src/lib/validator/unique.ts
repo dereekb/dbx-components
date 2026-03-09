@@ -1,22 +1,18 @@
-import { type ObjectWithConstructor, type ReadKeyFunction, isUniqueKeyedFunction } from '@dereekb/util';
-import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
+import { type ReadKeyFunction, isUniqueKeyedFunction } from '@dereekb/util';
+import { type } from 'arktype';
 
 /**
- * isUniqueKeyedFunction validator
+ * Creates an ArkType schema that validates an array has no duplicate keys.
+ *
+ * @param readKey - function that extracts the key from each array element
+ * @returns an ArkType schema that narrows `T[]` to ensure uniqueness
+ *
+ * @example
+ * ```typescript
+ * const uniqueItemsType = uniqueKeyedType((item: Item) => item.id);
+ * ```
  */
-export function IsUniqueKeyed<T>(readKey: ReadKeyFunction<T>, validationOptions?: ValidationOptions) {
+export function uniqueKeyedType<T>(readKey: ReadKeyFunction<T>) {
   const isUniqueKeyed = isUniqueKeyedFunction(readKey);
-
-  return function (object: ObjectWithConstructor, propertyName: string) {
-    registerDecorator({
-      name: 'isUniqueKeyed',
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      validator: {
-        validate: isUniqueKeyed,
-        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value has one or more values with the same key. Keys must be unique.`, validationOptions)
-      }
-    });
-  };
+  return type('unknown[]').narrow((val, ctx) => isUniqueKeyed(val as T[]) || ctx.mustBe('an array with unique keys'));
 }

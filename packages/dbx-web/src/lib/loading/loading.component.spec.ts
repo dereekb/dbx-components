@@ -1,13 +1,13 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { ValuesLoadingContext } from '@dereekb/rxjs';
 import { DbxErrorComponent } from '../error';
-import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
+import { DbxBasicLoadingComponent, type LoadingComponentState } from './basic-loading.component';
 import { filter, first } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxLoadingComponent } from './loading.component';
 import { callbackTest } from '@dereekb/util/test';
 

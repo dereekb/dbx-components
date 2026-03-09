@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { DbxContentContainerDirective, DbxContentPitDirective, DbxHelpContextService, DbxHelpViewPopoverButtonConfig, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentPitDirective, DbxHelpContextService, type DbxHelpViewPopoverButtonConfig, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { toSignal } from '@angular/core/rxjs-interop';

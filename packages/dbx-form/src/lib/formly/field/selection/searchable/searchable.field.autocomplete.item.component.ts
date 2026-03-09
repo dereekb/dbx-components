@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, Directive, inject, InjectionToken, input } from '@angular/core';
-import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
+import { type ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { mergeArraysIntoArray } from '@dereekb/util';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 

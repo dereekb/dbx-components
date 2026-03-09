@@ -1,7 +1,7 @@
-import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { type CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { asDecisionFunction, cachedGetter, DecisionFunction, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, type Maybe } from '@dereekb/util';
-import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps, FormlyModule } from '@ngx-formly/core';
+import { asDecisionFunction, cachedGetter, type DecisionFunction, type FactoryWithRequiredInput, type Getter, getValueFromGetter, type IndexRef, makeGetter, type Maybe } from '@dereekb/util';
+import { type FieldArrayTypeConfig, FieldArrayType, type FormlyFieldConfig, type FormlyFieldProps, FormlyModule } from '@ngx-formly/core';
 import { DbxBarDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSubSectionComponent } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';

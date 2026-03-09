@@ -1,6 +1,6 @@
 import { Directive, effect, inject, input } from '@angular/core';
 import { DbxAppContextService } from './context.service';
-import { DbxAppContextState } from './context';
+import { type DbxAppContextState } from './context';
 import { type Maybe } from '@dereekb/util';
 
 /**

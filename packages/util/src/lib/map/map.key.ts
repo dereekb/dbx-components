@@ -11,10 +11,10 @@ import { expandArrayMapTuples, mapToTuples } from './map';
 export type KeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey> = (values: T[]) => Map<K, T>;
 
 /**
- * Creates a KeyValueMapFactory with the input ReadKeyFunction.
+ * Creates a KeyValueMapFactory that maps values by their key using a ReadKeyFunction.
  *
- * @param read
- * @returns
+ * @param read - Function that extracts a key from each value
+ * @returns A factory that creates Maps from arrays of values
  */
 export function keyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(read: ReadKeyFunction<T, K>): KeyValueMapFactory<T, K> {
   return (values: T[]) => {
@@ -35,19 +35,20 @@ export function keyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(rea
 /**
  * Reads keys off the input values and places them in a Map using a ReadKeyFunction.
  *
- * @param values
- * @param read
- * @returns
+ * @param values - The array of values to map
+ * @param read - Function that extracts a key from each value
+ * @returns A Map keyed by the extracted keys
  */
 export function readKeysToMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], read: ReadKeyFunction<T, K>): Map<K, T> {
   return keyValueMapFactory(read)(values);
 }
 
 /**
- * Creates a KeyValueMapFactory with the input ReadMultipleKeysFunction.
+ * Creates a KeyValueMapFactory that maps values by multiple keys using a ReadMultipleKeysFunction.
+ * Each value can appear under multiple keys.
  *
- * @param read
- * @returns
+ * @param read - Function that extracts multiple keys from each value
+ * @returns A factory that creates Maps from arrays of values
  */
 export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(read: ReadMultipleKeysFunction<T, K>): KeyValueMapFactory<T, K> {
   return (values: T[]) => {
@@ -63,11 +64,11 @@ export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey
 }
 
 /**
- * Reads keys off the input values and places them in a Map using a ReadMultipleKeysFunction.
+ * Reads multiple keys off the input values and places them in a Map using a ReadMultipleKeysFunction.
  *
- * @param values
- * @param read
- * @returns
+ * @param values - The array of values to map
+ * @param read - Function that extracts multiple keys from each value
+ * @returns A Map keyed by the extracted keys
  */
 export function readMultipleKeysToMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], read: ReadMultipleKeysFunction<T, K>): Map<K, T> {
   return multiKeyValueMapFactory(read)(values);
@@ -140,9 +141,9 @@ export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> 
 }
 
 /**
- * Creates a new MultiValueMapBuilder
+ * Creates a new MultiValueMapBuilder for building Maps where each key maps to an array of values.
  *
- * @returns
+ * @returns A new MultiValueMapBuilder instance
  */
 export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>(): MultiValueMapBuilder<T, K> {
   const map = new Map<Maybe<K>, T[]>();

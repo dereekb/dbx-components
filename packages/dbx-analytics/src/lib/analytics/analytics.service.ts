@@ -1,9 +1,9 @@
-import { Observable, Subject, BehaviorSubject, of, Subscription, first, shareReplay, switchMap, distinctUntilChanged } from 'rxjs';
+import { type Observable, Subject, BehaviorSubject, of, type Subscription, first, shareReplay, switchMap, distinctUntilChanged } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
-import { DbxAnalyticsEvent, DbxAnalyticsEventData, DbxAnalyticsEventName, DbxAnalyticsUser, NewUserAnalyticsEventData, DbxUserAnalyticsEvent } from './analytics';
-import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
-import { Maybe, Destroyable, safeCompareEquality } from '@dereekb/util';
+import { type DbxAnalyticsEvent, type DbxAnalyticsEventData, type DbxAnalyticsEventName, type DbxAnalyticsUser, type NewUserAnalyticsEventData, type DbxUserAnalyticsEvent } from './analytics';
+import { type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
+import { type Maybe, type Destroyable, safeCompareEquality } from '@dereekb/util';
 
 export abstract class DbxAnalyticsEventEmitterService {
   abstract sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void;

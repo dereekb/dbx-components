@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
+import { ChangeDetectionStrategy, Component, type OnInit } from '@angular/core';
+import { type FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 import { delay } from 'rxjs';
 
 /**

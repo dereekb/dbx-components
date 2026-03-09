@@ -1,5 +1,4 @@
-import { Expose } from 'class-transformer';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { type, type Type } from 'arktype';
 
 export type ScheduledFunctionDevelopmentFunctionType = 'list' | 'run';
 
@@ -8,19 +7,15 @@ export enum ScheduledFunctionDevelopmentFunctionTypeEnum {
   RUN = 'run'
 }
 
-export class ScheduledFunctionDevelopmentFirebaseFunctionParams {
-  @Expose()
-  @IsEnum(ScheduledFunctionDevelopmentFunctionTypeEnum)
-  type!: ScheduledFunctionDevelopmentFunctionTypeEnum;
-
-  /**
-   * Name of function to run.
-   */
-  @Expose()
-  @IsString()
-  @IsOptional()
-  run?: string;
+export interface ScheduledFunctionDevelopmentFirebaseFunctionParams {
+  readonly type: ScheduledFunctionDevelopmentFunctionTypeEnum;
+  readonly run?: string;
 }
+
+export const scheduledFunctionDevelopmentFirebaseFunctionParamsType = type({
+  type: "'list' | 'run'",
+  'run?': 'string'
+}) as Type<ScheduledFunctionDevelopmentFirebaseFunctionParams>;
 
 export class ScheduledFunctionDevelopmentFirebaseFunctionListEntry {
   name!: string;

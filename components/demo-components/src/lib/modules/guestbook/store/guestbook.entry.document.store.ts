@@ -1,16 +1,19 @@
-import { first, Observable, shareReplay, from, switchMap } from 'rxjs';
-import { Optional, Injectable, inject } from '@angular/core';
-import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
+import { first, type Observable, shareReplay, from, switchMap } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { type LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { AbstractDbxFirebaseDocumentWithParentStore } from '@dereekb/dbx-firebase';
-import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookFunctions, InsertGuestbookEntryParams } from 'demo-firebase';
+import { DemoFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, GuestbookFunctions, type InsertGuestbookEntryParams } from 'demo-firebase';
 import { GuestbookDocumentStore } from './guestbook.document.store';
 
 @Injectable()
 export class GuestbookEntryDocumentStore extends AbstractDbxFirebaseDocumentWithParentStore<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument> {
   readonly guestbookFunctions = inject(GuestbookFunctions);
 
-  constructor(collections: DemoFirestoreCollections, @Optional() parent: GuestbookDocumentStore) {
+  constructor() {
+    const collections = inject(DemoFirestoreCollections);
     super({ collectionFactory: collections.guestbookEntryCollectionFactory, firestoreCollectionLike: collections.guestbookEntryCollectionGroup });
+    const parent = inject(GuestbookDocumentStore, { optional: true });
+
     if (parent) {
       this.setParentStore(parent);
     }

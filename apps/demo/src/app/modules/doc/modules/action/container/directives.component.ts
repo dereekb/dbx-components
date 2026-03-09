@@ -1,5 +1,5 @@
-import { Component, OnDestroy } from '@angular/core';
-import { WorkUsingObservable } from '@dereekb/rxjs';
+import { Component, type OnDestroy } from '@angular/core';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, BehaviorSubject } from 'rxjs';
 import { DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

@@ -1,10 +1,10 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Component, OnDestroy } from '@angular/core';
-import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { Component, type OnDestroy } from '@angular/core';
+import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, type DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { BehaviorSubject, Observable, delay, interval, map, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
+import { BehaviorSubject, type Observable, delay, interval, map, of } from 'rxjs';
+import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

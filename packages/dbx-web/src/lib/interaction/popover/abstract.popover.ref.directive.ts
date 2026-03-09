@@ -1,6 +1,6 @@
-import { Directive, ElementRef, output } from '@angular/core';
+import { Directive, type ElementRef, output } from '@angular/core';
 import { cleanSubscription } from '@dereekb/dbx-core';
-import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
+import { type NgPopoverCloseEvent, type NgPopoverRef } from 'ng-overlay-container';
 
 /**
  * Abstract class for showing and handling a popover ref.

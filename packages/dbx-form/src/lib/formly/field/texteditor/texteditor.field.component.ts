@@ -1,7 +1,7 @@
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { type FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit, inject } from '@angular/core';
+import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime, filter } from 'rxjs';

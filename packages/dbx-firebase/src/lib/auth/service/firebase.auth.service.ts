@@ -1,13 +1,13 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
-import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier, NoAuthUserIdentifier } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY } from 'rxjs';
-import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
-import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
+import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
+import { reauthenticateWithPopup, Auth, authState, idToken, type User, type IdTokenResult, type ParsedToken, GoogleAuthProvider, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY } from 'rxjs';
+import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
+import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
-import { FirebaseAuthContextInfo } from '@dereekb/firebase';
+import { type FirebaseAuthContextInfo } from '@dereekb/firebase';
 
 /**
  * Returns an observable that returns the state of the

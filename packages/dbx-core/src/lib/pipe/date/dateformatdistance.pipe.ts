@@ -1,7 +1,7 @@
-import { Pipe, PipeTransform, LOCALE_ID, inject } from '@angular/core';
+import { Pipe, type PipeTransform, LOCALE_ID, inject } from '@angular/core';
 import { formatDate } from '@angular/common';
 import { formatDistanceToNow, isValid } from 'date-fns';
-import { DateOrDateString, type Maybe } from '@dereekb/util';
+import { type DateOrDateString, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
 
 /**

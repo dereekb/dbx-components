@@ -9,8 +9,10 @@ import {
   type FirestoreCollectionName,
   type StorageFileFirestoreCollections,
   type StorageFileGroupDocument,
-  InitializeStorageFileModelParams,
-  InitializeAllApplicableStorageFileGroupsParams,
+  type InitializeStorageFileModelParams,
+  initializeStorageFileModelParamsType,
+  type InitializeAllApplicableStorageFileGroupsParams,
+  initializeAllApplicableStorageFileGroupsParamsType,
   type InitializeAllApplicableStorageFileGroupsResult,
   storageFileGroupsFlaggedForNeedsInitializationQuery,
   type StorageFileGroup,
@@ -170,7 +172,7 @@ export function initializeStorageFileGroupFactory(context: StorageFileInitServer
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const initializeStorageFileGroupInTransaction = initializeStorageFileGroupInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeStorageFileModelParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(initializeStorageFileModelParamsType, async (params) => {
     return async (storageFileGroupDocument: StorageFileGroupDocument) => {
       await firestoreContext.runTransaction((transaction) => initializeStorageFileGroupInTransaction(params, storageFileGroupDocument, transaction));
       return storageFileGroupDocument;
@@ -182,7 +184,7 @@ export function initializeAllApplicableStorageFileGroupsFactory(context: Storage
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, storageFileGroupCollection } = context;
   const initializeStorageFileGroupInTransaction = initializeStorageFileGroupInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeAllApplicableStorageFileGroupsParams, async () => {
+  return firebaseServerActionTransformFunctionFactory(initializeAllApplicableStorageFileGroupsParamsType, async () => {
     return async () => {
       let storageFileGroupsVisited: number = 0;
       let storageFileGroupsSucceeded: number = 0;

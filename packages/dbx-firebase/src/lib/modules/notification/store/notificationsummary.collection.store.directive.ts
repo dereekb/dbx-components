@@ -1,7 +1,7 @@
 import { Directive, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
 import { NotificationSummaryCollectionStore } from './notificationsummary.collection.store';
-import { NotificationSummary, NotificationSummaryDocument } from '@dereekb/firebase';
+import { type NotificationSummary, type NotificationSummaryDocument } from '@dereekb/firebase';
 
 @Directive({
   selector: '[dbxFirebaseNotificationSummaryCollection]',

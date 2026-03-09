@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxButtonModule } from '../../button/button.module';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { WorkInstance } from '@dereekb/rxjs';
+import { type WorkInstance } from '@dereekb/rxjs';
 
 /**
  * Action component used to simplify creating a filter form.

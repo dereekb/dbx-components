@@ -1,4 +1,4 @@
-import { Directive, OnInit, inject, output } from '@angular/core';
+import { Directive, type OnInit, inject, output } from '@angular/core';
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { first, mergeMap, delay, map } from 'rxjs';

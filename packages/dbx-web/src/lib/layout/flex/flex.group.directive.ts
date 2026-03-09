@@ -1,4 +1,4 @@
-import { ScreenMediaWidthType } from '../../screen/screen';
+import { type ScreenMediaWidthType } from '../../screen/screen';
 import { DbxScreenMediaService } from '../../screen/screen.service';
 import { Directive, inject, input } from '@angular/core';
 import { map, distinctUntilChanged, shareReplay } from 'rxjs';

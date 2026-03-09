@@ -1,6 +1,6 @@
-import { DbxButton, DbxButtonInterceptor } from '@dereekb/dbx-core';
-import { Directive, OnInit, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { DbxButton, type DbxButtonInterceptor } from '@dereekb/dbx-core';
+import { Directive, type OnInit, inject } from '@angular/core';
+import { type Observable, map } from 'rxjs';
 import { DbxPromptConfirm } from './prompt.confirm';
 
 /**

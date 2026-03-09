@@ -1,49 +1,26 @@
 import { type Maybe } from '@dereekb/util';
-import { Expose } from 'class-transformer';
-import { IsArray, IsOptional, IsString, ValidateNested, validate } from 'class-validator';
-import { IsUniqueKeyed } from './unique';
+import { type } from 'arktype';
+import { uniqueKeyedType } from './unique';
 
-class TestModelClass {
-  @Expose()
-  @IsArray()
-  @IsUniqueKeyed((x: EmbeddedTestModelClass) => x.key)
-  @ValidateNested({ each: true })
-  models!: EmbeddedTestModelClass[];
-}
-
-class EmbeddedTestModelClass {
-  @Expose()
-  @IsOptional()
-  @IsString()
+interface TestItem {
   key?: Maybe<string>;
-
-  constructor(key?: Maybe<string>) {
-    this.key = key;
-  }
 }
 
-describe('IsUniqueKeyed', () => {
-  it('should pass if the keys of the embedded models are unique', async () => {
-    const instance = new TestModelClass();
-    instance.models = [new EmbeddedTestModelClass('a'), new EmbeddedTestModelClass('b'), new EmbeddedTestModelClass('c')];
+const uniqueItemsType = uniqueKeyedType<TestItem>((x) => x.key);
 
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+describe('uniqueKeyedType', () => {
+  it('should pass if the keys are unique', () => {
+    const result = uniqueItemsType([{ key: 'a' }, { key: 'b' }, { key: 'c' }]);
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should pass if the keys of the embedded models are unique and some are undefined', async () => {
-    const instance = new TestModelClass();
-    instance.models = [new EmbeddedTestModelClass('a'), new EmbeddedTestModelClass('b'), new EmbeddedTestModelClass()];
-
-    const result = await validate(instance);
-    expect(result.length).toBe(0);
+  it('should pass if the keys are unique and some are undefined', () => {
+    const result = uniqueItemsType([{ key: 'a' }, { key: 'b' }, {}]);
+    expect(result instanceof type.errors).toBe(false);
   });
 
-  it('should not pass if the keys of one or more of the embedded models are not unique', async () => {
-    const instance = new TestModelClass();
-    instance.models = [new EmbeddedTestModelClass('a'), new EmbeddedTestModelClass('a'), new EmbeddedTestModelClass('c')];
-
-    const result = await validate(instance);
-    expect(result.length).toBe(1);
+  it('should not pass if one or more keys are duplicated', () => {
+    const result = uniqueItemsType([{ key: 'a' }, { key: 'a' }, { key: 'c' }]);
+    expect(result instanceof type.errors).toBe(true);
   });
 });

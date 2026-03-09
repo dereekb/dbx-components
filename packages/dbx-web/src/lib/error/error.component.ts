@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, inject, signal } from '@angular/core';
-import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableError, Configurable } from '@dereekb/util';
+import { type Maybe, type ErrorInput, toReadableError, type ReadableError, isDefaultReadableError, type Configurable } from '@dereekb/util';
 import { DbxErrorPopoverComponent } from './error.popover.component';
-import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxErrorViewButtonEvent, DbxErrorViewComponent } from './error.view.component';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type DbxErrorViewButtonEvent, DbxErrorViewComponent } from './error.view.component';
 import { DbxErrorWidgetService } from './error.widget.service';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
-import { NgPopoverRef } from 'ng-overlay-container';
+import { type NgPopoverRef } from 'ng-overlay-container';
 
 type DbxErrorComponentViewType = 'none' | 'default' | 'custom';
 
