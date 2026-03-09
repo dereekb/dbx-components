@@ -141,6 +141,7 @@
     "autoprefixer": "^10.4.0",
     "conventional-changelog": "^7.1.1",
     "conventional-recommended-bump": "^11.2.0",
+    "discord.js": "^14.25.1",
     "env-cmd": "11.0.0",
     "envfile": "7.1.0",
     "eslint": "9.39.3",
