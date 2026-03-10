@@ -7,20 +7,45 @@ import { type FirebaseFunctionTypeMap, type FirebaseFunctionMap } from './functi
 import { mapHttpsCallable } from './function.callable';
 import { type FirebaseFunctionTypeConfigMap } from './function.factory';
 
+/**
+ * Type map for development-only Firebase functions.
+ */
 export type DevelopmentFirebaseFunctionTypeMap = FirebaseFunctionTypeMap;
 
 /**
- * The configuration for a types map.
+ * Configuration map for development functions, mapping each function key to optional config.
  */
 export type DevelopmentFirebaseFunctionConfigMap<M extends DevelopmentFirebaseFunctionTypeMap> = FirebaseFunctionTypeConfigMap<M>;
 
+/**
+ * Map of instantiated development Firebase callable functions.
+ */
 export type DevelopmentFirebaseFunctionMap<M extends DevelopmentFirebaseFunctionTypeMap> = FirebaseFunctionMap<M>;
 
 /**
- * Used for building a FirebaseFunctionMap<M> for a specific Functions instance.
+ * Factory that creates a {@link DevelopmentFirebaseFunctionMap} for a given `Functions` instance.
  */
 export type DevelopmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseFunctionTypeMap> = (functionsInstance: Functions) => DevelopmentFirebaseFunctionMap<M>;
 
+/**
+ * Creates a {@link DevelopmentFirebaseFunctionMapFactory} that routes all development function calls
+ * through the single `runDevFunction` Cloud Function endpoint (identified by {@link RUN_DEV_FUNCTION_APP_FUNCTION_KEY}).
+ *
+ * Similar to {@link callModelFirebaseFunctionMapFactory}, all development functions are multiplexed
+ * through a single endpoint. The function specifier and data are wrapped via {@link onCallDevelopmentParams}.
+ *
+ * @param configMap - maps each development function key to optional configuration
+ *
+ * @example
+ * ```ts
+ * const factory = developmentFirebaseFunctionMapFactory<DevFnMap>({
+ *   resetData: null,
+ *   seedDatabase: null
+ * });
+ * const devFns = factory(getFunctions());
+ * await devFns.resetData();
+ * ```
+ */
 export function developmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseFunctionTypeMap>(configMap: DevelopmentFirebaseFunctionConfigMap<M>): DevelopmentFirebaseFunctionMapFactory<M> {
   return (functionsInstance: Functions) => {
     const _devFn = cachedGetter(() => httpsCallable(functionsInstance, RUN_DEV_FUNCTION_APP_FUNCTION_KEY));

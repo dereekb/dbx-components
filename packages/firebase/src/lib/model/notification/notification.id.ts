@@ -1,62 +1,146 @@
+/**
+ * @module notification.id
+ *
+ * ID types and generation functions for notification model documents.
+ *
+ * Notification documents use "two-way flat keys" as their document IDs. A two-way flat key
+ * encodes a hierarchical Firestore model key (e.g., `'collection/id'`) into a flat string
+ * (e.g., `'collection_id'`) that can be used as a document ID while remaining reversible
+ * back to the original key via {@link inferNotificationBoxRelatedModelKey}.
+ *
+ * This pattern allows {@link NotificationBox} and {@link NotificationSummary} documents
+ * to be stored in top-level collections while maintaining a bidirectional link to the
+ * model they represent.
+ */
 import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, type FirestoreModelIdInput, firestoreModelId, type FirestoreCollectionName } from '../../common';
 
 /**
- * The NotificationBox's id is the two way flat firestore model key of the object that it represents.
+ * Document ID for a {@link NotificationBox}. Encoded as a two-way flat key of the model it represents.
+ *
+ * @example
+ * ```ts
+ * const boxId: NotificationBoxId = notificationBoxIdForModel('project/abc123');
+ * // boxId === 'project_abc123'
+ * ```
  */
 export type NotificationBoxId = FlatFirestoreModelKey;
+
+/**
+ * Full Firestore model key path for a {@link NotificationBox} document (e.g., `'notificationBox/project_abc123'`).
+ */
 export type NotificationBoxKey = FirestoreModelKey;
 
 /**
- * A notification box id (or firestore collection name) that is used to exclude a user from receiving notifications from that box or any notification boxes that start with the same prefix.
+ * A box ID or collection name prefix used to exclude a user from receiving notifications.
  *
- * This is used in cases where a user might be removed from access temporarily and should not recieve any notifications from that box or any child boxes.
+ * Supports prefix matching: excluding `'ab_123'` also excludes child boxes like `'ab_123_cd_456'`.
+ * Used when a user temporarily loses access to a resource and should stop receiving its notifications.
  *
- * For example, if a box with id ab_123 is excluded, then any notifications to child boxes that start with ab_123 (e.g. ab_123_cd_456) will also be excluded.
+ * @see {@link NotificationUser.x} where exclusions are stored
  */
 export type NotificationBoxSendExclusion = FirestoreCollectionName | NotificationBoxId;
 
 /**
- * List of notification box exclusions.
+ * List of {@link NotificationBoxSendExclusion} entries for a user.
  */
 export type NotificationBoxSendExclusionList = NotificationBoxSendExclusion[];
 
 /**
- * Creates a NotificationBoxId from the input FirestoreModelKey.
+ * Converts a Firestore model key to a {@link NotificationBoxId} using two-way flat key encoding.
  *
- * @param modelKey
- * @returns
+ * @example
+ * ```ts
+ * const boxId = notificationBoxIdForModel('project/abc123');
+ * // boxId === 'project_abc123'
+ * ```
  */
 export const notificationBoxIdForModel = twoWayFlatFirestoreModelKey;
+
+/**
+ * Reverses a {@link NotificationBoxId} back to the original Firestore model key.
+ *
+ * @example
+ * ```ts
+ * const modelKey = inferNotificationBoxRelatedModelKey('project_abc123');
+ * // modelKey === 'project/abc123'
+ * ```
+ */
 export const inferNotificationBoxRelatedModelKey = inferKeyFromTwoWayFlatFirestoreModelKey;
 
+/**
+ * Document ID for a {@link NotificationUser}. Encoded as a flat key derived from the user's auth identity.
+ */
 export type NotificationUserId = FlatFirestoreModelKey;
+
+/**
+ * Full Firestore model key path for a {@link NotificationUser} document.
+ */
 export type NotificationUserKey = FirestoreModelKey;
 
+/**
+ * Document ID for a {@link NotificationSummary}. Encoded as a two-way flat key of the model it represents.
+ */
 export type NotificationSummaryId = FlatFirestoreModelKey;
+
+/**
+ * Full Firestore model key path for a {@link NotificationSummary} document.
+ */
 export type NotificationSummaryKey = FirestoreModelKey;
 
 /**
- * Creates a NotificationSummaryId from the input FirestoreModelKey.
+ * Converts a Firestore model key to a {@link NotificationSummaryId} using two-way flat key encoding.
  *
- * @param modelKey
- * @returns
+ * @example
+ * ```ts
+ * const summaryId = notificationSummaryIdForModel('project/abc123');
+ * // summaryId === 'project_abc123'
+ * ```
  */
 export const notificationSummaryIdForModel = twoWayFlatFirestoreModelKey;
 
 /**
- * Function used to retrieve a NotificationSummaryId given the input FirestoreAuthUserId.
+ * Factory function that produces a {@link NotificationSummaryId} from a user's auth UID.
+ *
+ * Used to find the notification summary for a specific user's model identity.
  */
 export type NotificationSummaryIdForUidFunction = FactoryWithRequiredInput<NotificationSummaryId, FirebaseAuthUserId>;
 
+/**
+ * Creates a {@link NotificationSummaryIdForUidFunction} that generates summary IDs
+ * by combining the given user model identity with the provided UID.
+ *
+ * @param userModelIdentity - the root identity for user models (e.g., `profileIdentity`)
+ *
+ * @example
+ * ```ts
+ * const summaryIdForUid = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);
+ * const summaryId = summaryIdForUid('user-uid-123');
+ * // summaryId === 'profile_user-uid-123'
+ * ```
+ */
 export function notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(userModelIdentity: RootFirestoreModelIdentity): NotificationSummaryIdForUidFunction {
   return (uid) => twoWayFlatFirestoreModelKey(firestoreModelKey(userModelIdentity, uid));
 }
 
+/**
+ * Document ID for a {@link NotificationWeek} (a {@link YearWeekCode} string).
+ */
 export type NotificationWeekId = FirestoreModelId;
+
+/**
+ * Full Firestore model key path for a {@link NotificationWeek} document.
+ */
 export type NotificationWeekKey = FirestoreModelKey;
 
+/**
+ * Document ID for a {@link Notification}.
+ */
 export type NotificationId = FirestoreModelId;
+
+/**
+ * Full Firestore model key path for a {@link Notification} document.
+ */
 export type NotificationKey = FirestoreModelKey;
 
 /**

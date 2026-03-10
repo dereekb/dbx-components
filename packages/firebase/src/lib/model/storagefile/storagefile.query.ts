@@ -7,19 +7,39 @@ import { type FirebaseAuthUserId } from '../../common/auth/auth';
 
 // MARK: StorageFile
 /**
- * Returns a query constraint for StorageFiles that are queued for processing.
+ * Returns query constraints for StorageFiles with `ps == QUEUED_FOR_PROCESSING`.
+ *
+ * Used by the server action service to find files awaiting processing task creation.
+ *
+ * @example
+ * ```ts
+ * const constraints = storageFilesQueuedForProcessingQuery();
+ * const results = await collection.query(constraints);
+ * ```
  */
 export function storageFilesQueuedForProcessingQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFile>('ps', '==', StorageFileProcessingState.QUEUED_FOR_PROCESSING)];
 }
 
 /**
- * Returns a query constraint for StorageFiles that are queued for deletion and are past their scheduled delete date.
+ * Returns query constraints for StorageFiles whose scheduled delete date (`sdat`) has passed.
+ *
+ * Used by the cleanup service to find files ready for permanent deletion.
+ *
+ * @param now - reference time for comparison; defaults to current time
+ *
+ * @example
+ * ```ts
+ * const constraints = storageFilesQueuedForDeleteQuery();
+ * ```
  */
 export function storageFilesQueuedForDeleteQuery(now?: Maybe<Date>): FirestoreQueryConstraint[] {
   return [whereDateIsBefore<StorageFile>('sdat', now ?? new Date())];
 }
 
+/**
+ * Input for querying StorageFiles by purpose and owning user, with optional subgroup filtering.
+ */
 export interface StorageFilePurposeAndUserQueryInput {
   readonly user: FirebaseAuthUserId;
   readonly purpose: StorageFilePurpose;
@@ -29,6 +49,18 @@ export interface StorageFilePurposeAndUserQueryInput {
   readonly purposeSubgroup?: Maybe<StorageFilePurposeSubgroup>;
 }
 
+/**
+ * Returns query constraints for StorageFiles matching a specific purpose and user,
+ * with optional subgroup filtering.
+ *
+ * @example
+ * ```ts
+ * const constraints = storageFilePurposeAndUserQuery({
+ *   user: 'user123',
+ *   purpose: 'avatar'
+ * });
+ * ```
+ */
 export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQueryInput): FirestoreQueryConstraint[] {
   const constraints: FirestoreQueryConstraint[] = [where<StorageFile>('p', '==', input.purpose), where<StorageFile>('u', '==', input.user)];
 
@@ -39,36 +71,56 @@ export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQ
   return constraints;
 }
 
+/**
+ * Returns query constraints for StorageFiles flagged for group synchronization (`gs == true`).
+ *
+ * Used by the sync service to find files whose group memberships need to be propagated.
+ *
+ * @example
+ * ```ts
+ * const constraints = storageFileFlaggedForSyncWithGroupsQuery();
+ * ```
+ */
 export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFile>('gs', '==', true)];
 }
 
 // MARK: StorageFileGroup
 /**
- * Query for storageFileGroups that are flagged for initialization.
+ * Returns query constraints for StorageFileGroups that need initialization (`s == true`).
  *
- * @param now
- * @returns
+ * Used by the initialization service to find newly-created groups that haven't been synced yet.
+ *
+ * @example
+ * ```ts
+ * const constraints = storageFileGroupsFlaggedForNeedsInitializationQuery();
+ * ```
  */
 export function storageFileGroupsFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('s', '==', true)];
 }
 
 /**
- * Query for storageFileGroups that are flagged for content regeneration.
+ * Returns query constraints for StorageFileGroups flagged for content regeneration (`re == true`).
  *
- * @param now
- * @returns
+ * @example
+ * ```ts
+ * const constraints = storageFileGroupsFlaggedForContentRegenerationQuery();
+ * ```
  */
 export function storageFileGroupsFlaggedForContentRegenerationQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('re', '==', true)];
 }
 
 /**
- * Query for storageFileGroups that are flagged as invalid.
+ * Returns query constraints for StorageFileGroups flagged as invalid (`fi == true`).
  *
- * @param now
- * @returns
+ * Invalid groups are typically cleaned up (deleted along with their associated files).
+ *
+ * @example
+ * ```ts
+ * const constraints = storageFileGroupsFlaggedInvalidQuery();
+ * ```
  */
 export function storageFileGroupsFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('fi', '==', true)];

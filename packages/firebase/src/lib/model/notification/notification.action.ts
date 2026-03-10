@@ -1,3 +1,11 @@
+/**
+ * @module notification.action
+ *
+ * Generic CRUD action type aliases for each notification document type.
+ * These types parameterize the server-side action factories in `@dereekb/firebase-server/model`.
+ *
+ * Sync variants return the result directly; Async variants return a Promise.
+ */
 import { type AsyncFirebaseFunctionCreateAction, type AsyncFirebaseFunctionDeleteAction, type AsyncFirebaseFunctionUpdateAction, type FirebaseFunctionCreateAction, type FirebaseFunctionDeleteAction, type FirebaseFunctionUpdateAction } from '../../common';
 import { type NotificationSummaryDocument, type NotificationBoxDocument, type NotificationDocument, type NotificationWeekDocument, type NotificationUserDocument } from './notification';
 

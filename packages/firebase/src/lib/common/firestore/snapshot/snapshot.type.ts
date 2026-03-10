@@ -1,6 +1,7 @@
 import { type ApplyMapFunctionWithOptions, type ArrayOrValue, type MaybeMap, type ModelFieldConversionsConfigRef, type ModelFieldConversionsRef, type ModelMapFunctions, type PartialModelModifier, type TypedMappedModelData } from '@dereekb/util';
 import { type FirestoreDataConverter, type DocumentSnapshot, type SetOptions, type SnapshotOptions } from '../types';
 
+// MARK: Constants
 /**
  * The default empty value used in Firestore documents.
  *

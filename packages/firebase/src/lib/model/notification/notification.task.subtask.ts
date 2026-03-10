@@ -1,43 +1,61 @@
+/**
+ * @module notification.task.subtask
+ *
+ * Subtask system for breaking complex notification tasks into "processing" and "cleanup" phases.
+ *
+ * A subtask wraps a notification task with two ordered checkpoints:
+ * 1. `'processing'` — the main work (e.g., external API calls, file generation)
+ * 2. `'cleanup'` — post-processing cleanup (e.g., updating related documents, deleting temporary files)
+ *
+ * Each subtask maintains its own checkpoint progress and metadata within the parent task's data payload.
+ */
 import { type Maybe, MS_IN_HOUR } from '@dereekb/util';
 import { type NotificationTaskCheckpointString } from './notification';
 import { type NotificationItemMetadata } from './notification.item';
 import { notificationTaskComplete, notificationTaskPartiallyComplete, type NotificationTaskServiceHandleNotificationTaskResult } from './notification.task';
 
 /**
- * Used as a descriminator to determine which processing configuration to run for the input value.
+ * Discriminator string that routes the subtask to the correct processing configuration.
  */
 export type NotificationTaskSubtaskTarget = string;
 
 /**
- * A subtask checkpoint.
- *
- * It is similar to NotificationTaskCheckpointString, but is stored within the subtask data.
+ * Checkpoint string for subtask-level progress, stored within the {@link NotificationTaskSubtaskData}.
  */
 export type NotificationTaskSubtaskCheckpointString = NotificationTaskCheckpointString;
 
 /**
- * Metadata for a subtask.
- *
- * It is similar to NotificationItemMetadata, but is stored within the subtask data.
+ * Metadata type for subtask-level state, stored within the {@link NotificationTaskSubtaskData}.
  */
 export type NotificationTaskSubtaskMetadata = NotificationItemMetadata;
 
 /**
- * A base NotificationTask's subtask data structure.
+ * Data structure embedded in the parent task's {@link NotificationItem} metadata to track subtask progress.
+ *
+ * Field abbreviations:
+ * - `sfps` — subtask finished processing steps (completed checkpoint strings)
+ * - `sd` — subtask data (arbitrary metadata for the subtask handler)
  */
 export interface NotificationTaskSubtaskData<M extends NotificationTaskSubtaskMetadata = NotificationTaskSubtaskMetadata, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> {
   /**
-   * The steps of the underlying subtask that have already been completed.
+   * Completed subtask checkpoint strings.
    */
   readonly sfps?: Maybe<S[]>;
   /**
-   * Arbitrary metadata that is stored by the underlying subtask.
+   * Arbitrary metadata managed by the subtask handler.
    */
   readonly sd?: Maybe<M>;
 }
 
 // MARK: Notification Task Subtask Checkpoints
+/**
+ * Checkpoint string for the main processing phase of a subtask.
+ */
 export const NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING: NotificationTaskCheckpointString = 'processing';
+
+/**
+ * Checkpoint string for the cleanup phase that runs after processing completes.
+ */
 export const NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP: NotificationTaskCheckpointString = 'cleanup';
 
 /**
@@ -61,16 +79,28 @@ export const DEFAULT_NOTIFICATION_TASK_SUBTASK_CLEANUP_RETRY_DELAY = MS_IN_HOUR;
 export type NotificationTaskSubtaskCheckpoint = typeof NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING | typeof NOTIFICATION_TASK_SUBTASK_CHECKPOINT_CLEANUP;
 
 /**
- * Returned by a subtask to complete the processing step and schedule the cleanup step.
+ * Internal helper that marks the `'processing'` checkpoint complete and schedules the `'cleanup'` phase.
  *
- * This is used internally in subtask running. Do not use this directly. Use of notificationSubtaskComplete() is preferred.
+ * Prefer using {@link notificationSubtaskComplete} in subtask handlers instead of calling this directly.
  */
 export function completeSubtaskProcessingAndScheduleCleanupTaskResult<D extends NotificationTaskSubtaskData>(): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
   return notificationTaskPartiallyComplete(['processing']);
 }
 
 /**
- * Similar to notificationTaskComplete, but is customized for a subtask with the intent of running the cleanup checkpoint.
+ * Returns a completion result for a subtask that has finished its processing.
+ *
+ * Unlike {@link notificationTaskComplete}, this signals that the cleanup checkpoint should still run.
+ * Use `canRunNextCheckpoint: true` in options to run cleanup immediately in the same execution.
+ *
+ * @example
+ * ```ts
+ * // Processing done, schedule cleanup for next run
+ * return notificationSubtaskComplete();
+ *
+ * // Processing done, run cleanup immediately
+ * return notificationSubtaskComplete({ canRunNextCheckpoint: true });
+ * ```
  */
 export function notificationSubtaskComplete<D extends NotificationTaskSubtaskData>(options?: Maybe<Pick<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>, 'updateMetadata' | 'canRunNextCheckpoint'>>): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
   return {

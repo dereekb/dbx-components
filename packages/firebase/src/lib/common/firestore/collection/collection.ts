@@ -810,7 +810,15 @@ export interface FirestoreModelKeyRef {
 
 // MARK: FirestoreCollectionLike
 /**
- * Instance that provides several accessors for accessing documents of a collection.
+ * Base interface for accessing documents in a Firestore collection.
+ *
+ * Combines document accessor factories, query capabilities, and iteration support into a single
+ * interface. This is the foundation for both {@link FirestoreCollection} (full access) and
+ * collection group queries (limited access without collection reference).
+ *
+ * @template T - The document data type
+ * @template D - The concrete FirestoreDocument subclass
+ * @template A - The accessor type (limited or full)
  */
 export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>
   extends FirestoreContextReference, FirestoreModelIdentityRef, QueryLikeReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreQueryFactory<T>, LimitedFirestoreDocumentAccessorFactory<T, D, A>, LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>, LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>, FirestoreCollectionQueryFactory<T, D> {}
@@ -822,9 +830,18 @@ export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = Fir
 export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextReference, FirestoreDrivers, Omit<FirestoreItemPageIterationBaseConfig<T>, 'queryLike'>, Partial<QueryLikeReferenceRef<T>>, FirestoreDocumentAccessorFactoryConfig<T, D> {}
 
 /**
- * Instance that provides several accessors for accessing documents of a collection.
+ * Full Firestore collection interface with document CRUD, querying, iteration, and context support.
  *
- * Provides a full FirestoreDocumentAccessor instead of limited accessors.
+ * This is the primary interface used to interact with a Firestore collection. It provides:
+ * - **Document access**: Create, load, and manage documents via {@link FirestoreDocumentAccessor}
+ * - **Querying**: Build typed queries via the query factory
+ * - **Iteration**: Paginate through results via firestore iteration factories
+ * - **Context support**: Create accessors for transactions and write batches
+ *
+ * Created via {@link makeFirestoreCollection}.
+ *
+ * @template T - The document data type
+ * @template D - The concrete FirestoreDocument subclass
  */
 export interface FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreCollectionLike<T, D, FirestoreDocumentAccessor<T, D>>, CollectionReferenceRef<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D> {
   readonly config: FirestoreCollectionConfig<T, D>;

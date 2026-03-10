@@ -4,7 +4,25 @@ import { type FirebaseAuthUserId, type StorageBucketId } from '../../common';
 import { type StoredFileReader } from './storagefile.file';
 
 /**
- * The level of confidence in the determined upload type.
+ * @module storagefile.upload.determiner
+ *
+ * Provides the upload type determination system for classifying uploaded files.
+ *
+ * Determiners inspect a file's path, name, metadata, or content to assign an
+ * {@link UploadedFileTypeIdentifier} with a confidence level. Multiple determiners
+ * can be combined via {@link combineUploadFileTypeDeterminers}, and user detection
+ * can be added via {@link determineUserByFolderWrapperFunction}.
+ *
+ * Built-in determiners:
+ * - {@link determineByFileName} — match by file name or prefix
+ * - {@link determineByFolderName} — match by parent folder name
+ * - {@link determineByFilePath} — match by full path pattern with optional bucket filtering
+ */
+
+/**
+ * Confidence level of a file type determination. Higher values indicate higher confidence.
+ *
+ * When multiple determiners match, the one with the highest level wins.
  *
  * Higher values indicate higher confidence.
  *
@@ -74,7 +92,11 @@ export interface UploadedFileTypeDeterminerResult {
 export type UploadedFileTypeDeterminationFunction = (input: StoredFileReader) => PromiseOrValue<Maybe<UploadedFileTypeDeterminerResult>>;
 
 /**
- * Determines the upload type of a StorageFile.
+ * Strategy interface for determining the upload type of a file in Firebase Storage.
+ *
+ * Implement custom determiners for application-specific file type classification,
+ * or use the built-in factory functions ({@link determineByFileName}, {@link determineByFolderName},
+ * {@link determineByFilePath}).
  */
 export interface UploadedFileTypeDeterminer {
   /**
@@ -116,10 +138,21 @@ export interface DetermineByFileNameConfig {
 }
 
 /**
- * Creates an UploadedFileTypeDeterminer that determines the upload type based on the file name.
+ * Creates a determiner that classifies files by their file name.
  *
- * @param config The configuration for the determiner.
- * @returns The determiner.
+ * If the match string includes a file extension (e.g., `avatar.png`), only exact matches succeed
+ * at {@link EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL}. Otherwise, prefix matching is used
+ * (e.g., `image` matches `image.png`, `image-test.jpg`) at {@link HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL}.
+ *
+ * @param config - file type, match string, and optional determination levels
+ *
+ * @example
+ * ```ts
+ * const avatarDeterminer = determineByFileName({
+ *   fileType: 'avatar',
+ *   match: 'avatar.png'
+ * });
+ * ```
  */
 export function determineByFileName(config: DetermineByFileNameConfig): UploadedFileTypeDeterminer {
   const { fileType, match, exactMatchDeterminationLevel: inputExactMatchDeterminationLevel, nameMatchDeterminationLevel: inputNameMatchDeterminationLevel } = config;
@@ -167,10 +200,20 @@ export interface DetermineByFolderNameConfig {
 }
 
 /**
- * Creates an UploadedFileTypeDeterminer that determines the upload type based on the folder name.
+ * Creates a determiner that classifies files by their parent folder name.
  *
- * @param config The configuration for the determiner.
- * @returns The determiner.
+ * Matches at {@link EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL} when the folder path
+ * exactly equals the configured match string.
+ *
+ * @param config - file type and folder name to match
+ *
+ * @example
+ * ```ts
+ * const photoDeterminer = determineByFolderName({
+ *   fileType: 'photo',
+ *   match: 'photos'
+ * });
+ * ```
  */
 export function determineByFolderName(config: DetermineByFolderNameConfig): UploadedFileTypeDeterminer {
   const { fileType, match } = config;
@@ -222,10 +265,22 @@ export interface DetermineByFilePathConfig {
 }
 
 /**
- * Creates an UploadedFileTypeDeterminer that determines the upload type based on the file name.
+ * Creates a determiner that classifies files by their full storage path, with optional
+ * bucket filtering and additional file details matching.
  *
- * @param config The configuration for the determiner.
- * @returns The determiner.
+ * Uses {@link slashPathPathMatcher} for path pattern matching. Most flexible of the
+ * built-in determiners.
+ *
+ * @param config - file type, path match config, optional bucket/file filters
+ *
+ * @example
+ * ```ts
+ * const reportDeterminer = determineByFilePath({
+ *   fileType: 'report',
+ *   match: { targetPath: 'reports', matchType: 'startsWith' },
+ *   matchBucket: (bucket) => bucket === 'my-bucket'
+ * });
+ * ```
  */
 export function determineByFilePath(config: DetermineByFilePathConfig): UploadedFileTypeDeterminer {
   const { fileType, match, matchDeterminationLevel: inputMatchDeterminationLevel, matchBucket: inputMatchBucket, matchFileDetails: inputMatchFile } = config;
@@ -299,9 +354,22 @@ export interface DetermineUserByFolderWrapperFunctionConfig {
 export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: UploadedFileTypeDeterminer) => UploadedFileTypeDeterminer;
 
 /**
- * Wraps a separate UploadedFileTypeDeterminer and adds user determination based on folder path structure.
+ * Creates a wrapper function that adds user detection to any {@link UploadedFileTypeDeterminer}
+ * by inspecting the folder path structure.
  *
- * @param config Configuration.
+ * Extracts the user ID from a path like `{rootFolder}/{userFolderPrefix}/{userId}/{file}`.
+ * If `requireUser` is true, the determination fails when no user can be detected.
+ *
+ * @param config - root folder, user prefix, and matching options
+ *
+ * @example
+ * ```ts
+ * const addUser = determineUserByFolderWrapperFunction({
+ *   rootFolder: 'uploads',
+ *   userFolderPrefix: 'u'
+ * });
+ * const withUser = addUser(myDeterminer);
+ * ```
  */
 export function determineUserByFolderWrapperFunction(config: DetermineUserByFolderWrapperFunctionConfig): DetermineUserByFolderDeterminerWrapperFunction {
   const { rootFolder, userFolderPrefix, requireUser = false, allowSubPaths: inputAllowSubPaths = true } = config;
@@ -351,6 +419,15 @@ export function determineUserByFolderWrapperFunction(config: DetermineUserByFold
   };
 }
 
+/**
+ * Convenience wrapper pre-configured for the standard uploads folder structure (`uploads/u/{userId}/...`).
+ *
+ * @example
+ * ```ts
+ * const addUser = determineUserByUserUploadsFolderWrapperFunction();
+ * const withUser = addUser(myDeterminer);
+ * ```
+ */
 export function determineUserByUserUploadsFolderWrapperFunction(config?: Omit<DetermineUserByFolderWrapperFunctionConfig, 'rootFolder' | 'userFolderPrefix'>): DetermineUserByFolderDeterminerWrapperFunction {
   return determineUserByFolderWrapperFunction({
     ...config,
@@ -394,10 +471,17 @@ export interface LimitUploadFileTypeDeterminerConfig {
 }
 
 /**
- * Wraps an UploadedFileTypeDeterminer to only allow respond to certain file types.
+ * Wraps an {@link UploadedFileTypeDeterminer} to only return results for the specified file types.
  *
- * @param determiner The determiner to wrap.
- * @param types The file types to allow.
+ * Useful for scoping a broad determiner to a subset of types in a specific context.
+ *
+ * @param determiner - the determiner to filter
+ * @param types - allowed file type identifier(s)
+ *
+ * @example
+ * ```ts
+ * const limited = limitUploadFileTypeDeterminer(broadDeterminer, ['avatar', 'photo']);
+ * ```
  */
 export function limitUploadFileTypeDeterminer(determiner: UploadedFileTypeDeterminer, types: ArrayOrValue<UploadedFileTypeIdentifier>): UploadedFileTypeDeterminer {
   const allowedTypes = asArray(types);
@@ -436,12 +520,21 @@ export interface CombineUploadFileTypeDeterminerConfig {
 }
 
 /**
- * Combines multiple UploadedFileTypeDeterminer instances into a single determiner.
+ * Combines multiple {@link UploadedFileTypeDeterminer} instances into a single determiner
+ * that tries each in order and returns the highest-confidence match.
  *
- * If a single determiner is provided, it will be returned and not wrapped.
+ * If only one determiner is provided, it is returned unwrapped. The search can be
+ * short-circuited via `completeSearchOnFirstMatch` or `completeSearchAtLevel`.
  *
- * @param determiners The determiners to combine.
- * @returns The combined determiner.
+ * @param config - determiners to combine and optional early-exit settings
+ *
+ * @example
+ * ```ts
+ * const combined = combineUploadFileTypeDeterminers({
+ *   determiners: [avatarDeterminer, photoDeterminer, documentDeterminer],
+ *   completeSearchOnFirstMatch: true
+ * });
+ * ```
  */
 export function combineUploadFileTypeDeterminers(config: CombineUploadFileTypeDeterminerConfig): UploadedFileTypeDeterminer {
   const { determiners, completeSearchAtLevel: inputCompleteSearchAtLevel, completeSearchOnFirstMatch: inputCompleteSearchOnFirstMatch } = config;

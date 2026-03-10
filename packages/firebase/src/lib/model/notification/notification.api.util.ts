@@ -1,3 +1,9 @@
+/**
+ * @module notification.api.util
+ *
+ * Utility functions for applying {@link UpdateNotificationUserParams} changes to notification config objects.
+ * Used by the server action service when processing user config update requests.
+ */
 import { type Maybe, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
 import { type NotificationBoxRecipientTemplateConfigRecord, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationUserNotificationBoxRecipientConfig, notificationBoxRecipientTemplateConfigArrayToRecord, notificationBoxRecipientTemplateConfigRecordToArray, updateNotificationRecipient } from './notification.config';
 import { type NotificationBoxRecipientTemplateConfigArrayEntryParam, type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, type UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
@@ -5,11 +11,12 @@ import { type AppNotificationTemplateTypeInfoRecordService } from './notificatio
 import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } from './notification.id';
 
 /**
- * Updates a NotificationUserDefaultNotificationBoxRecipientConfig with the input UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams.
+ * Applies an array of config entry params to a {@link NotificationBoxRecipientTemplateConfigRecord},
+ * inserting new entries, merging updates, and removing entries marked with `remove: true`.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - existing config record
+ * @param b - array of update params to apply
+ * @param limitToAllowedConfigTypes - when provided, filters the result to only include these template types
  */
 export function updateNotificationBoxRecipientTemplateConfigRecord(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigArrayEntryParam[], limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationBoxRecipientTemplateConfigRecord | undefined {
   let c: NotificationBoxRecipientTemplateConfigRecord | undefined;
@@ -37,11 +44,12 @@ export function updateNotificationBoxRecipientTemplateConfigRecord(a: Notificati
 }
 
 /**
- * Updates a NotificationUserDefaultNotificationBoxRecipientConfig with the input UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams.
+ * Applies {@link UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams} to an existing
+ * {@link NotificationUserDefaultNotificationBoxRecipientConfig}, producing an updated config.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - existing config
+ * @param b - update params to apply
+ * @param limitToAllowedConfigTypes - when provided, filters config types to only allowed template types
  */
 export function updateNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationUserDefaultNotificationBoxRecipientConfig {
   const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk } = b;
@@ -56,6 +64,12 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(a: N
   };
 }
 
+/**
+ * Applies update params to a {@link NotificationUserNotificationBoxRecipientConfig} and returns the updated config
+ * only if it actually changed. Returns `undefined` if no changes were detected.
+ *
+ * Automatically sets `ns = true` (needs sync) when changes are detected and the recipient has been indexed.
+ */
 export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a: NotificationUserNotificationBoxRecipientConfig, b: UpdateNotificationUserNotificationBoxRecipientParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationUserNotificationBoxRecipientConfig | undefined {
   const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk } = b;
   const c = (inputC != null ? updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes) : undefined) ?? a.c;
@@ -84,12 +98,13 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
 }
 
 /**
- * Updates the target NotificationUserNotificationBoxRecipientConfig array with the input UpdateNotificationUserNotificationBoxRecipientParams.
+ * Batch-applies an array of {@link UpdateNotificationUserNotificationBoxRecipientParams} to the user's
+ * per-box config array. Only updates configs for boxes that already exist in the user's config.
  *
- * If the target NotificationBox does not exist in the config, it is ignored.
+ * Handles deletion of removed configs (when `deleteRemovedConfig` is set) and filters template types
+ * through the optional {@link AppNotificationTemplateTypeInfoRecordService}.
  *
- * @param a
- * @param b
+ * Returns `undefined` if no changes were made.
  */
 export function updateNotificationUserNotificationBoxRecipientConfigs(a: NotificationUserNotificationBoxRecipientConfig[], b: UpdateNotificationUserNotificationBoxRecipientParams[], filterWithService?: AppNotificationTemplateTypeInfoRecordService): NotificationUserNotificationBoxRecipientConfig[] | undefined {
   const boxesMap = makeModelMap(a, (x) => x.nb);

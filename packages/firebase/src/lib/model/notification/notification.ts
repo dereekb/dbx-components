@@ -1,3 +1,20 @@
+/**
+ * @module notification
+ *
+ * Core notification model types and Firestore collection definitions for the multi-channel notification system.
+ *
+ * The notification system is built around five Firestore document types organized in a hierarchy:
+ *
+ * - {@link NotificationUser} — Per-user notification preferences and box subscriptions (top-level collection)
+ * - {@link NotificationSummary} — Aggregated notification items for a model, identified by two-way flat key (top-level collection)
+ * - {@link NotificationBox} — Root notification container for a model, holds recipients and spawns child notifications (top-level collection)
+ * - {@link Notification} — Individual notification or async task, child of NotificationBox (subcollection)
+ * - {@link NotificationWeek} — Weekly archive of sent notification items, child of NotificationBox (subcollection)
+ *
+ * Server-side processing is handled by the `NotificationServerActions` service in `@dereekb/firebase-server/model`.
+ *
+ * @see {@link NotificationFirestoreCollections} for the abstract collection accessor class
+ */
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { inferNotificationBoxRelatedModelKey, type NotificationBoxSendExclusionList, type NotificationBoxId } from './notification.id';
@@ -34,6 +51,14 @@ import {
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
+/**
+ * Abstract class providing access to all notification-related Firestore collections.
+ *
+ * Implementations provide concrete collection instances wired to a specific {@link FirestoreContext}.
+ * Used by both client and server code to access notification documents.
+ *
+ * @see `NotificationServerActions` in `@dereekb/firebase-server/model` for server-side action processing
+ */
 export abstract class NotificationFirestoreCollections {
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
   abstract readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
@@ -44,6 +69,9 @@ export abstract class NotificationFirestoreCollections {
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
 }
 
+/**
+ * Union of all notification model identity types, used for type-safe identity discrimination.
+ */
 export type NotificationTypes = typeof notificationUserIdentity | typeof notificationSummaryIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity;
 
 /**
@@ -72,48 +100,54 @@ export interface InitializedNotificationModel {
 export const notificationUserIdentity = firestoreModelIdentity('notificationUser', 'nu');
 
 /**
- * A global notification User in the system.
+ * A global notification user profile that tracks notification preferences and box subscriptions.
  *
- * Keeps track of the NotificationBoxes the user is subscribed to, as well as other global subscriptions.
+ * Each user in the notification system has a single NotificationUser document (keyed by uid) that stores:
+ * - Which {@link NotificationBox} instances they are subscribed to (`b`)
+ * - Per-box, direct/default, and global notification preferences (`bc`, `dc`, `gc`)
+ * - Box exclusions for temporary opt-outs (`x`)
  *
- * The NotificationUser is created automatically by the NotificationBox as a user is created.
+ * Created automatically when a user is first added as a recipient to any {@link NotificationBox}.
+ * Configuration changes here propagate to the corresponding NotificationBox recipient entries during sync.
+ *
+ * @see {@link NotificationBoxRecipient} for the per-box recipient entry that mirrors these configs
+ * @see `NotificationServerActions.updateNotificationUser` in `@dereekb/firebase-server/model` for server-side sync logic
  */
 export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
-   * List of notification boxes this user is associated with. Cannot be changed directly.
+   * Notification box IDs this user is subscribed to. Managed by the server — not directly editable by clients.
    */
   b: NotificationBoxId[];
   /**
-   * Notification box id exclusion list. This value is treated used to generated send opt-outs.
+   * Box exclusion list. Entries cause the user to be excluded from receiving notifications from matching boxes.
    *
-   * This list is used to exclude a user from recieving notifications from the NotificationBoxes in this list.
+   * Supports prefix matching: excluding `ab_123` also excludes child boxes like `ab_123_cd_456`.
+   * Populated by server-side model logic (e.g., when a user loses access to a resource).
+   * Exclusions are synced to the corresponding `bc` configs, which then propagate to the NotificationBoxes.
    *
-   * Values in this list are usually populated from functions from the model controlling the NotificationBox.
-   *
-   * The user must be associated with atleast one NotificationBoxId that matches items in this list, otherwise non-matching items are removed.
-   *
-   * The exclusions are sync'd to the corresponding bc values, which are then sync'd to the NotificationBoxes.
+   * Non-matching entries (where the user isn't associated with a matching box) are automatically removed.
    */
   x: NotificationBoxSendExclusionList;
   /**
-   * Global config override.
+   * Global config override. Overrides all other configs (both per-box `bc` and direct/default `dc`) at send time.
    *
-   * This config effectively overrides all other configs, both NotificationBox configs and direct/default configs when used.
-   * It does not however get copied to dc/bc when updated.
+   * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply as a final override during notification delivery.
    */
   gc: NotificationUserDefaultNotificationBoxRecipientConfig;
   /**
-   * Direct/default config.
+   * Direct/default config. Used when a recipient is added ad-hoc (by uid) to a notification that isn't associated with any of their subscribed boxes.
    *
-   * This config is retrieved and used for cases where the recipient isn't associated with the NotificationBox but was added on an ad-hoc basis as an additional user as a uid.
+   * Acts as the fallback config when no per-box config (`bc`) matches.
    */
   dc: NotificationUserDefaultNotificationBoxRecipientConfig;
   /**
-   * List of NotificationBox configurations.
+   * Per-box recipient configurations. Each entry corresponds to one of the user's subscribed notification boxes.
+   *
+   * These configs are synced bidirectionally with the {@link NotificationBoxRecipient} entries on the corresponding {@link NotificationBox}.
    */
   bc: NotificationUserNotificationBoxRecipientConfig[];
   /**
-   * Whether or not the user has one or more configs that need to be synced.
+   * Whether one or more configs need to be synced to their corresponding NotificationBox recipients.
    */
   ns?: Maybe<NeedsSyncBoolean>;
 }
@@ -126,6 +160,9 @@ export class NotificationUserDocument extends AbstractFirestoreDocument<Notifica
   }
 }
 
+/**
+ * Firestore snapshot converter for {@link NotificationUser} documents.
+ */
 export const notificationUserConverter = snapshotConverterFunctions<NotificationUser>({
   fields: {
     uid: firestoreUID(),
@@ -140,12 +177,21 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
   }
 });
 
+/**
+ * Creates a Firestore collection reference for {@link NotificationUser} documents.
+ */
 export function notificationUserCollectionReference(context: FirestoreContext): CollectionReference<NotificationUser> {
   return context.collection(notificationUserIdentity.collectionName);
 }
 
+/**
+ * Typed Firestore collection for {@link NotificationUser} documents.
+ */
 export type NotificationUserFirestoreCollection = FirestoreCollection<NotificationUser, NotificationUserDocument>;
 
+/**
+ * Creates a typed {@link NotificationUserFirestoreCollection} bound to the given Firestore context.
+ */
 export function notificationUserFirestoreCollection(firestoreContext: FirestoreContext): NotificationUserFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: notificationUserIdentity,
@@ -158,7 +204,7 @@ export function notificationUserFirestoreCollection(firestoreContext: FirestoreC
 
 // MARK: NotificationSummary
 /**
- * An arbitrary summary object
+ * Identity for {@link NotificationSummary} documents. Collection name: `'notificationSummary'`, short code: `'ns'`.
  */
 export const notificationSummaryIdentity = firestoreModelIdentity('notificationSummary', 'ns');
 
@@ -178,41 +224,41 @@ export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH 
 export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH = 500;
 
 /**
- * Used to hold arbitrary NotificationItems in the system for an object. The id for this is the two-way flat key of the object it represents.
+ * Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries
+ * that summarize recent notifications, similar to an activity feed.
  *
- * Notification Items can be delivered here.
+ * The document ID is a two-way flat key derived from the model it represents (see {@link notificationSummaryIdForModel}).
+ * Items are capped at {@link NOTIFICATION_SUMMARY_ITEM_LIMIT} entries.
+ *
+ * Implements {@link InitializedNotificationModel} — requires server-side initialization to populate the owner (`o`) field.
  */
 export interface NotificationSummary extends InitializedNotificationModel {
   /**
-   * Notification Summary creation date
+   * Creation date of this summary document.
    */
   cat: Date;
   /**
-   * Model key of the model this box is assigned to.
+   * Model key of the model this summary represents (e.g., `'project/abc123'`).
    */
   m: FirestoreModelKey;
   /**
-   * Owner model key of the model this box is assigned to.
-   *
-   * Is created with a dummy value until it is initialized.
+   * Owner model key. Set to a dummy value on creation and populated during server-side initialization.
    */
   o: FirestoreModelKey;
   /**
-   * Notification items.
-   *
-   * They are sorted in ascending order, with the newest items at the end.
+   * Embedded notification items, sorted ascending by date (newest at end).
    */
   n: NotificationItem[];
   /**
-   * Date of the latest notification.
+   * Timestamp of the most recently added notification item.
    */
   lat?: Maybe<Date>;
   /**
-   * Date of the last read at time so notifications can be marked as read.
+   * Timestamp of when the user last read this summary. Items with dates after this are considered unread.
    */
   rat?: Maybe<Date>;
   /**
-   * True if this NotificationSummary needs to be sync'd/initialized with the original model.
+   * Whether this summary needs server-side sync/initialization with its source model.
    */
   s?: Maybe<NeedsSyncBoolean>;
 }
@@ -228,6 +274,9 @@ export class NotificationSummaryDocument extends AbstractFirestoreDocument<Notif
   }
 }
 
+/**
+ * Firestore snapshot converter for {@link NotificationSummary} documents.
+ */
 export const notificationSummaryConverter = snapshotConverterFunctions<NotificationSummary>({
   fields: {
     cat: firestoreDate(),
@@ -243,12 +292,21 @@ export const notificationSummaryConverter = snapshotConverterFunctions<Notificat
   }
 });
 
+/**
+ * Creates a Firestore collection reference for {@link NotificationSummary} documents.
+ */
 export function notificationSummaryCollectionReference(context: FirestoreContext): CollectionReference<NotificationSummary> {
   return context.collection(notificationSummaryIdentity.collectionName);
 }
 
+/**
+ * Typed Firestore collection for {@link NotificationSummary} documents.
+ */
 export type NotificationSummaryFirestoreCollection = FirestoreCollection<NotificationSummary, NotificationSummaryDocument>;
 
+/**
+ * Creates a typed {@link NotificationSummaryFirestoreCollection} bound to the given Firestore context.
+ */
 export function notificationSummaryFirestoreCollection(firestoreContext: FirestoreContext): NotificationSummaryFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: notificationSummaryIdentity,
@@ -260,53 +318,58 @@ export function notificationSummaryFirestoreCollection(firestoreContext: Firesto
 }
 
 // MARK: NotificationBox
+/**
+ * Identity for {@link NotificationBox} documents. Collection name: `'notificationBox'`, short code: `'nb'`.
+ */
 export const notificationBoxIdentity = firestoreModelIdentity('notificationBox', 'nb');
 
 /**
- * A Notification Box in the system for an object. The id for this is the two-way flat key of the object it represents.
+ * Root notification container for a model. The document ID is the two-way flat key of the model it represents
+ * (see {@link notificationBoxIdForModel} in `notification.id.ts`).
  *
- * This object is the root collection for notifications for the corresponding object.
+ * A NotificationBox is the parent collection for {@link Notification} and {@link NotificationWeek} subcollections.
+ * It holds the list of recipients (`r`) who receive notifications, and tracks which notification template types
+ * are available via the application's `NotificationTemplateTypeInfoRecord`.
  *
- * Additional information about what notification templates are available to this type are available on a per-application basis, typically through the
- * NotificationTemplateTypeInfoRecord configured for the app.
+ * Recipient configs are synced from the corresponding {@link NotificationUser} documents.
  *
- * Update to each recipient is propogated from NotificationUser values.
+ * Implements {@link InitializedNotificationModel} — requires server-side initialization to populate the owner (`o`) field.
+ *
+ * @see {@link NotificationBoxRecipient} for per-recipient configuration embedded in this document
+ * @see `NotificationServerActions.createNotificationBox` in `@dereekb/firebase-server/model` for creation logic
  */
 export interface NotificationBox extends InitializedNotificationModel {
   /**
-   * Notification Box creation date
+   * Creation date of this NotificationBox document.
    */
   cat: Date;
   /**
-   * Model key of the model this box is assigned to.
+   * Model key of the model this box is assigned to (e.g., `'project/abc123'`).
    */
   m: FirestoreModelKey;
   /**
-   * Owner model key of the model this box is assigned to.
-   *
-   * Is created with a dummy value until it is initialized.
+   * Owner model key. Set to a dummy value on creation and populated during server-side initialization.
    */
   o: FirestoreModelKey;
   /**
-   * Embedded recipients.
+   * Embedded recipient entries. Each entry represents a user who can receive notifications from this box.
+   *
+   * Synced from the corresponding {@link NotificationUser} `bc` configs.
    */
   r: NotificationBoxRecipient[];
   /**
-   * Latest week.
+   * Year-week code of the latest {@link NotificationWeek} subcollection document.
    */
   w: YearWeekCode;
   /**
-   * True if this NotificationBox needs to be sync'd/initialized with the original model.
-   *
-   * Is set false if/when "fi" is set true.
+   * Whether this box needs server-side sync/initialization with its source model.
+   * Cleared when `fi` is set true (flagged invalid).
    */
   s?: Maybe<NeedsSyncBoolean>;
   /**
-   * True if this NotificationBox has been flagged invalid.
+   * Flagged invalid — set when the box cannot be properly initialized (e.g., source model deleted).
    *
-   * This is for cases where the NotificationBox cannot be properly initiialized.
-   *
-   * NOTE: The server can also be configured to automatically delete matching boxes instead of marking them as invalid.
+   * The server can be configured to either flag or auto-delete invalid boxes.
    */
   fi?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -329,6 +392,9 @@ export class NotificationBoxDocument extends AbstractFirestoreDocument<Notificat
   }
 }
 
+/**
+ * Firestore snapshot converter for {@link NotificationBox} documents.
+ */
 export const notificationBoxConverter = snapshotConverterFunctions<NotificationBox>({
   fields: {
     cat: firestoreDate(),
@@ -343,12 +409,21 @@ export const notificationBoxConverter = snapshotConverterFunctions<NotificationB
   }
 });
 
+/**
+ * Creates a Firestore collection reference for {@link NotificationBox} documents.
+ */
 export function notificationBoxCollectionReference(context: FirestoreContext): CollectionReference<NotificationBox> {
   return context.collection(notificationBoxIdentity.collectionName);
 }
 
+/**
+ * Typed Firestore collection for {@link NotificationBox} documents.
+ */
 export type NotificationBoxFirestoreCollection = FirestoreCollection<NotificationBox, NotificationBoxDocument>;
 
+/**
+ * Creates a typed {@link NotificationBoxFirestoreCollection} bound to the given Firestore context.
+ */
 export function notificationBoxFirestoreCollection(firestoreContext: FirestoreContext): NotificationBoxFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: notificationBoxIdentity,
@@ -360,8 +435,17 @@ export function notificationBoxFirestoreCollection(firestoreContext: FirestoreCo
 }
 
 // MARK: Notification Data
+/**
+ * Identity for {@link Notification} documents. Subcollection of {@link NotificationBox}. Collection name: `'notification'`, short code: `'nbn'`.
+ */
 export const notificationIdentity = firestoreModelIdentity(notificationBoxIdentity, 'notification', 'nbn');
 
+/**
+ * Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.
+ *
+ * Determines whether the box must exist, should be created on demand, or can be bypassed entirely.
+ * Task-type notifications (`TASK_NOTIFICATION`) bypass the box system and run async workflows instead.
+ */
 export enum NotificationSendType {
   /**
    * Sends only if the NotificationBox exists.
@@ -385,6 +469,16 @@ export enum NotificationSendType {
   TASK_NOTIFICATION = 3
 }
 
+/**
+ * Lifecycle state of a notification delivery channel (text, email, push, or summary).
+ *
+ * Each channel on a {@link Notification} tracks its own send state independently via {@link NotificationSendFlags}.
+ *
+ * State transitions:
+ * - `QUEUED` → `SENT` (success) | `SENT_PARTIAL` (partial success) | `SEND_ERROR` | `BUILD_ERROR` | `CONFIG_ERROR`
+ * - `QUEUED` → `SKIPPED` (box settings) | `NO_TRY` (permanently skipped)
+ * - `NONE` indicates the channel was never queued for this notification
+ */
 export enum NotificationSendState {
   /**
    * Notification will not be sent.
@@ -450,25 +544,28 @@ export enum NotificationRecipientSendFlag {
   ONLY_GLOBAL_RECIPIENTS = 4
 }
 
+/**
+ * Per-channel delivery state flags on a {@link Notification}. Each field tracks the send state for one delivery channel independently.
+ */
 export interface NotificationSendFlags {
   /**
-   * Text send state
+   * Text/SMS send state.
    */
   ts: NotificationSendState;
   /**
-   * Email send state
+   * Email send state.
    */
   es: NotificationSendState;
   /**
-   * Push notification send state
+   * Push notification send state.
    */
   ps: NotificationSendState;
   /**
-   * Notification summary send state
+   * In-app notification summary send state (delivery to {@link NotificationSummary}).
    */
   ns: NotificationSendState;
   /**
-   * Push notification recipient send flag. Determines who will recieve the notifications, and if it should be saved to the NotificationWeek once sent.
+   * Recipient send flag controlling who receives this notification and whether it should be archived to {@link NotificationWeek} after delivery.
    */
   rf?: Maybe<NotificationRecipientSendFlag>;
 }
@@ -479,99 +576,105 @@ export interface NotificationSendFlags {
 export type NotificationTaskCheckpointString = string;
 
 /**
- * Contains information about which recipients were already sent their messages, etc.
+ * Tracks delivery progress for a {@link Notification} to enable idempotent retries.
+ *
+ * Stores which recipients have already been contacted via each channel, plus task checkpoint progress.
+ * The server checks these sets before re-sending to avoid duplicate deliveries.
  */
 export interface NotificationSendCheckpoints {
   /**
-   * Set of numbers the notification was sent to via text/sms.
+   * Phone numbers that have already received the text/SMS for this notification.
    */
   tsr: E164PhoneNumber[];
   /**
-   * Set of emails that the notification was set to via email.
+   * Email addresses that have already received the email for this notification.
    */
   esr: EmailAddress[];
   /**
-   * Set of checkpoint strings that denote checkpoint progress for a task.
+   * Completed checkpoint strings for multi-step task notifications.
    *
-   * Used for multi-step tasks.
+   * @see {@link NotificationTaskCheckpointString}
    */
   tpr: NotificationTaskCheckpointString[];
 }
 
+/**
+ * Individual notification document, stored as a subcollection of {@link NotificationBox}.
+ *
+ * Represents either a standard multi-channel notification or an async task notification, depending on the {@link NotificationSendType}.
+ * Standard notifications are delivered via text, email, push, and/or in-app summary channels.
+ * Task notifications run server-side async workflows with checkpoint-based progress tracking.
+ *
+ * After all channels are delivered, the notification is marked as done (`d = true`), its content is archived
+ * to a {@link NotificationWeek} document, and the notification document is deleted.
+ *
+ * @see {@link NotificationSendFlags} for per-channel delivery state
+ * @see {@link NotificationSendCheckpoints} for idempotent retry tracking
+ * @see `NotificationServerActions.sendQueuedNotifications` in `@dereekb/firebase-server/model` for the send pipeline
+ */
 export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
   /**
-   * Created at date/time
+   * Creation timestamp.
    */
   cat: Date;
   /**
-   * Send type
+   * Send type controlling how this notification interacts with its parent NotificationBox.
    */
   st: NotificationSendType;
   /**
-   * Notification item
+   * Embedded notification content (subject, message, template type, metadata).
    */
   n: NotificationItem;
   /**
-   * Additional embedded recipients.
+   * Additional per-notification recipients with inline config overrides.
    *
-   * Any values for the NotificationBoxRecipientTemplateConfig-related parameters will be used when considering explicit opt-in/op-out.
-   * (I.E. setting "st" to true for a user with no other config for the notification template type will mark them as opt-in for texts, and
-   * can only be overridden by the user's own config)
+   * Any `NotificationBoxRecipientTemplateConfig` values on these recipients affect opt-in/opt-out resolution.
+   * For example, setting `st: true` opts a user into text/SMS for this notification's template type,
+   * unless overridden by the user's own {@link NotificationUser} config.
    */
   r: NotificationRecipientWithConfig[];
   /**
-   * Explicit opt-in send only.
+   * Explicit opt-in send only. When true, only sends to users who have explicitly opted in for each channel.
    *
-   * If true, will only send to users that have explicitly opted in to recieving notifications via specific methods.
-   *
-   * This setting takes priority over the system's configured default for this notification's template type.
+   * Overrides the system-level default for this notification's template type.
    */
   ois?: Maybe<SavedToFirestoreIfTrue>;
   /**
-   * Explicit opt-in text/sms send only.
+   * Opt-in text/SMS override. When false, sends text/SMS to all users even if they haven't explicitly opted in
+   * (still respects explicit opt-outs).
    *
-   * If false, will send text/sms to all users regardless if they have not explicitly opted in to text/sms. Will still take their opt-out into account.
-   *
-   * This setting takes priority over the system's configured default for this notification's template type.
+   * Overrides the system-level default for this notification's template type.
    */
   ots?: Maybe<SavedToFirestoreIfFalse>;
   /**
-   * Minimum time at which this notification should be sent.
+   * Scheduled send time. The notification is guaranteed to be sent only after this time.
    *
-   * The notification is only guranteed to be sent after this time.
-   *
-   * This value is also used for locking/retrying. When locked for sending it is updated to push sat back a few minutes and increase the send attempts.
+   * Also serves as a lock mechanism: during active sending, `sat` is pushed forward by a few minutes
+   * and the attempt counter is incremented, preventing concurrent send attempts.
    */
   sat: Date;
   /**
-   * Total sending attempts count.
-   *
-   * Only incremented when sending encounters an issue/error.
+   * Total error attempt count. Incremented only when sending encounters an error (not on success).
    */
   a: number;
   /**
-   * Current task sending and delays attempts count.
+   * Current task attempt count for the active checkpoint. Incremented on delay or failure responses.
    *
-   * Only incremented when sending returns a delay or a failure for the current task checkpoint.
-   *
-   * Reset when a non-failure is returned, and when a checkpoint is completed.
+   * Reset to 0 when a checkpoint completes successfully or when a new checkpoint begins.
    */
   at?: Maybe<number>;
   /**
-   * Notification has been delivered or should be archived.
+   * Delivery complete flag. When true, content has been delivered and is ready to archive to {@link NotificationWeek}.
    *
-   * This is now safe to sync to the NotificationWeek (not applicable for task-type notifications) and then delete this.
-   *
-   * For Task-type notifications, this is always set to false, as when the task is completed it is deleted.
+   * For task-type notifications this is always false — tasks are deleted upon completion instead of archived.
    */
   d: boolean;
   /**
-   * Unique Notification Task flag
+   * Unique task flag. Only used for task-type notifications.
    *
-   * Only used for tasks.
-   *
-   * If flagged true, this task will be re-read and compared with the created at time before a task step is saved/completed when running the task.
-   * If the created at time is different, the task changes are abandoned, and a success is returned.
+   * When true, the server re-reads the document and compares `cat` before committing a task step.
+   * If `cat` has changed (indicating the task was replaced), the step is abandoned silently.
+   * This prevents stale task executions when a unique task ID is reused.
    */
   ut?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -585,6 +688,9 @@ export class NotificationDocument extends AbstractFirestoreDocumentWithParent<No
   }
 }
 
+/**
+ * Firestore snapshot converter for {@link Notification} documents.
+ */
 export const notificationConverter = snapshotConverterFunctions<Notification>({
   fields: {
     cat: firestoreDate({ saveDefaultAsNow: true }),
@@ -611,15 +717,28 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
   }
 });
 
+/**
+ * Creates a factory that produces {@link Notification} subcollection references for a given {@link NotificationBoxDocument} parent.
+ */
 export function notificationCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<Notification> {
   return (notificationBox: NotificationBoxDocument) => {
     return context.subcollection(notificationBox.documentRef, notificationIdentity.collectionName);
   };
 }
 
+/**
+ * Typed Firestore subcollection for {@link Notification} documents under a {@link NotificationBox} parent.
+ */
 export type NotificationFirestoreCollection = FirestoreCollectionWithParent<Notification, NotificationBox, NotificationDocument, NotificationBoxDocument>;
+
+/**
+ * Factory function that creates a {@link NotificationFirestoreCollection} for a given {@link NotificationBoxDocument} parent.
+ */
 export type NotificationFirestoreCollectionFactory = (parent: NotificationBoxDocument) => NotificationFirestoreCollection;
 
+/**
+ * Creates a {@link NotificationFirestoreCollectionFactory} bound to the given Firestore context.
+ */
 export function notificationFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationFirestoreCollectionFactory {
   const factory = notificationCollectionReferenceFactory(firestoreContext);
 
@@ -635,12 +754,21 @@ export function notificationFirestoreCollectionFactory(firestoreContext: Firesto
   };
 }
 
+/**
+ * Creates a collection group reference for querying all {@link Notification} documents across all {@link NotificationBox} parents.
+ */
 export function notificationCollectionReference(context: FirestoreContext): CollectionGroup<Notification> {
   return context.collectionGroup(notificationIdentity.collectionName);
 }
 
+/**
+ * Typed collection group for querying {@link Notification} documents across all parents.
+ */
 export type NotificationFirestoreCollectionGroup = FirestoreCollectionGroup<Notification, NotificationDocument>;
 
+/**
+ * Creates a typed {@link NotificationFirestoreCollectionGroup} bound to the given Firestore context.
+ */
 export function notificationFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: notificationIdentity,
@@ -652,6 +780,9 @@ export function notificationFirestoreCollectionGroup(firestoreContext: Firestore
 }
 
 // MARK: Notification Week Data
+/**
+ * Identity for {@link NotificationWeek} documents. Subcollection of {@link NotificationBox}. Collection name: `'notificationWeek'`, short code: `'nbnw'`.
+ */
 export const notificationWeekIdentity = firestoreModelIdentity(notificationBoxIdentity, 'notificationWeek', 'nbnw');
 
 /**
@@ -660,15 +791,20 @@ export const notificationWeekIdentity = firestoreModelIdentity(notificationBoxId
 export const NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT = 5000;
 
 /**
- * Notification week. Contains all notifications in the box for the given week.
+ * Weekly archive of delivered notification items within a {@link NotificationBox}.
+ *
+ * The document ID is the {@link YearWeekCode} string (same as the `w` field). Items are appended after
+ * a {@link Notification} completes delivery and is cleaned up. Capped at {@link NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT} items.
+ *
+ * Used for historical browsing of past notifications per box.
  */
 export interface NotificationWeek {
   /**
-   * YearWeekCode value. Same as the id.
+   * Year-week code identifying this week. Matches the document ID.
    */
   w: YearWeekCode;
   /**
-   * Notification items.
+   * Archived notification items delivered during this week.
    */
   n: NotificationItem[];
 }
@@ -681,6 +817,9 @@ export class NotificationWeekDocument extends AbstractFirestoreDocumentWithParen
   }
 }
 
+/**
+ * Firestore snapshot converter for {@link NotificationWeek} documents.
+ */
 export const notificationWeekConverter = snapshotConverterFunctions<NotificationWeek>({
   fields: {
     w: firestoreNumber({ default: UNKNOWN_YEAR_WEEK_CODE }),
@@ -690,15 +829,28 @@ export const notificationWeekConverter = snapshotConverterFunctions<Notification
   }
 });
 
+/**
+ * Creates a factory that produces {@link NotificationWeek} subcollection references for a given {@link NotificationBoxDocument} parent.
+ */
 export function notificationWeekCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationWeek> {
   return (notificationBox: NotificationBoxDocument) => {
     return context.subcollection(notificationBox.documentRef, notificationWeekIdentity.collectionName);
   };
 }
 
+/**
+ * Typed Firestore subcollection for {@link NotificationWeek} documents under a {@link NotificationBox} parent.
+ */
 export type NotificationWeekFirestoreCollection = FirestoreCollectionWithParent<NotificationWeek, NotificationBox, NotificationWeekDocument, NotificationBoxDocument>;
+
+/**
+ * Factory function that creates a {@link NotificationWeekFirestoreCollection} for a given {@link NotificationBoxDocument} parent.
+ */
 export type NotificationWeekFirestoreCollectionFactory = (parent: NotificationBoxDocument) => NotificationWeekFirestoreCollection;
 
+/**
+ * Creates a {@link NotificationWeekFirestoreCollectionFactory} bound to the given Firestore context.
+ */
 export function notificationWeekFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionFactory {
   const factory = notificationWeekCollectionReferenceFactory(firestoreContext);
 
@@ -714,12 +866,21 @@ export function notificationWeekFirestoreCollectionFactory(firestoreContext: Fir
   };
 }
 
+/**
+ * Creates a collection group reference for querying all {@link NotificationWeek} documents across all {@link NotificationBox} parents.
+ */
 export function notificationWeekCollectionReference(context: FirestoreContext): CollectionGroup<NotificationWeek> {
   return context.collectionGroup(notificationWeekIdentity.collectionName);
 }
 
+/**
+ * Typed collection group for querying {@link NotificationWeek} documents across all parents.
+ */
 export type NotificationWeekFirestoreCollectionGroup = FirestoreCollectionGroup<NotificationWeek, NotificationWeekDocument>;
 
+/**
+ * Creates a typed {@link NotificationWeekFirestoreCollectionGroup} bound to the given Firestore context.
+ */
 export function notificationWeekFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: notificationWeekIdentity,

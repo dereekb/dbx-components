@@ -4,7 +4,10 @@ import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { type Readable } from 'stream';
 
 /**
- * Used for accessing files and folders in the storage.
+ * Core interface for accessing files and folders in Firebase Cloud Storage.
+ *
+ * Provides a bucket-aware entry point to obtain {@link FirebaseStorageAccessorFile} and
+ * {@link FirebaseStorageAccessorFolder} handles. Typically obtained from a {@link FirebaseStorageContext}.
  */
 export interface FirebaseStorageAccessor {
   defaultBucket: () => StorageBucketId;
@@ -20,7 +23,10 @@ export interface FirebaseStorageAccessorRef {
 }
 
 /**
- * Generic interface for accessing data from a file at the given path.
+ * Handle for a single file in Firebase Cloud Storage, providing read, write, and metadata operations.
+ *
+ * Methods marked "optional" are only available on certain platforms (client vs server).
+ * The `R` type parameter exposes the underlying SDK reference type for advanced usage.
  */
 export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef {
   /**
@@ -235,7 +241,9 @@ export interface StorageListFilesResult<R = unknown> {
 }
 
 /**
- * Generic interface for accessing "folder" information at the given path.
+ * Handle for a folder (prefix) in Firebase Cloud Storage, providing listing operations.
+ *
+ * Folders in Cloud Storage are virtual — they exist only as shared path prefixes of files.
  */
 export interface FirebaseStorageAccessorFolder<R = unknown> extends StoragePathRef {
   readonly reference: R;
@@ -256,7 +264,10 @@ export type FirebaseStorageAccessorDriverFileFunction<R = unknown> = (storage: F
 export type FirebaseStorageAccessorDriverFolderFunction<R = unknown> = (storage: FirebaseStorage, path: StoragePath) => FirebaseStorageAccessorFolder<R>;
 
 /**
- * A driver to use for storage functionality.
+ * Low-level driver that creates file and folder accessors from a {@link FirebaseStorage} instance.
+ *
+ * Implementations exist for the Firebase client SDK and the Google Cloud server SDK.
+ * Used internally by {@link FirebaseStorageContext} — consumers typically don't interact with this directly.
  */
 export interface FirebaseStorageAccessorDriver {
   /**

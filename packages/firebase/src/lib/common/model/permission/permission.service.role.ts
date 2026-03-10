@@ -5,6 +5,15 @@ import { type SetIncludesMode, type ArrayOrValue } from '@dereekb/util';
 import { type FirebasePermissionErrorContext } from './permission.context';
 import { type FirebaseContextGrantedModelRoles, type FirebasePermissionServiceModel } from './permission';
 
+/**
+ * Reads and asserts granted roles for a specific model in a given context.
+ *
+ * Combines the computed {@link GrantedRoleMap} with the model's data and provides methods to
+ * check and assert roles. Used as the primary interface for permission-guarded operations.
+ *
+ * Chainable assertion methods (`assertExists`, `assertHasRole`, `assertHasRoles`) return `this`
+ * for fluent usage.
+ */
 export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends GrantedRoleMapReader<R>, FirebasePermissionServiceModel<T, D> {
   readonly roleMap: GrantedRoleMap<R>;
   readonly contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>;
@@ -15,6 +24,12 @@ export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErro
   throwPermissionError(role?: R): never;
 }
 
+/**
+ * Default implementation of {@link ContextGrantedModelRolesReader}.
+ *
+ * Wraps a {@link FirebaseContextGrantedModelRoles} result and delegates role reading
+ * to a {@link GrantedRoleMapReader}. Throws context-specific errors via the permission error context.
+ */
 export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> implements ContextGrantedModelRolesReader<C, T, D, R> {
   private readonly _contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>;
   private readonly _roleReader: GrantedRoleMapReader<R>;

@@ -1,34 +1,51 @@
 import { type SlashPath, slashPathFactory, type SlashPathFolder } from '@dereekb/util';
 import { readFirestoreModelKey, type ReadFirestoreModelKeyInput } from '../../firestore/collection/collection';
 
+/**
+ * Base storage path prefix for all model-related files.
+ *
+ * All model storage files are nested under `/model/` in the storage bucket.
+ */
 export const BASE_MODEL_STORAGE_FILE_PATH: SlashPathFolder = '/model/';
 
 /**
- * Shared and configured slashPathFactory configuration for the model storage file path.
+ * Pre-configured {@link slashPathFactory} that produces absolute paths under {@link BASE_MODEL_STORAGE_FILE_PATH}.
  */
 export const MODEL_STORAGE_FILE_SLASH_PATH_FACTORY = slashPathFactory({ startType: 'absolute', basePath: BASE_MODEL_STORAGE_FILE_PATH });
 
+/**
+ * Configuration for {@link modelStorageSlashPathFactory}.
+ */
 export interface ModelStorageSlashPathFactoryConfig {
   /**
-   * Additional base path to provide.
+   * Additional base path segment appended after `/model/`.
    *
-   * This value is merged with the BASE_MODEL_STORAGE_FILE_PATH (/model/) base path configured for all ModelStorageSlashPathFactory values
+   * For example, `'uploads'` produces paths like `/model/uploads/<modelKey>/...`.
    */
   readonly basePath?: string;
 }
 
 /**
- * Factory for SlashPath values using input ReadFirestoreModelKeyInput values.
+ * Factory that generates storage {@link SlashPath} values for Firestore model documents.
  *
- * Can optionally specify an additional path to append.
+ * Takes a model document or key as input and returns a storage path rooted under `/model/<modelKey>/`.
+ * An optional additional path can be appended.
  */
 export type ModelStorageSlashPathFactory<T extends object = object> = (input: ReadFirestoreModelKeyInput<T>, path?: SlashPath) => SlashPath;
 
 /**
- * Creates a ModelStorageSlashPathFactory.
+ * Creates a {@link ModelStorageSlashPathFactory} that maps Firestore model keys to storage paths.
  *
- * @param config
- * @returns
+ * The generated paths follow the convention `/model/[basePath/]<modelKey>/[path]`.
+ *
+ * @param config - optional base path to nest under
+ *
+ * @example
+ * ```ts
+ * const pathFactory = modelStorageSlashPathFactory({ basePath: 'avatars' });
+ * const path = pathFactory(userDocument, 'profile.png');
+ * // path === '/model/avatars/users/abc123/profile.png'
+ * ```
  */
 export function modelStorageSlashPathFactory<T extends object = object>(config?: ModelStorageSlashPathFactoryConfig): ModelStorageSlashPathFactory<T> {
   const { basePath } = config ?? {};

@@ -1,28 +1,39 @@
 // MARK: Function
 /**
- * Used to specify which function to direct requests to.
+ * Identifies a specific development function endpoint to route requests to.
+ *
+ * Used in dev/test environments to invoke specific server-side functions by name.
  */
 export type DevelopmentFirebaseFunctionSpecifier = string;
 
 /**
- * Provides a reference to a DevelopmentFirebaseFunctionSpecifier if available.
+ * Contains a reference to a {@link DevelopmentFirebaseFunctionSpecifier}.
  */
 export type DevelopmentFirebaseFunctionSpecifierRef = {
   specifier: DevelopmentFirebaseFunctionSpecifier;
 };
 
 // MARK: Params
+/**
+ * Parameters for calling a development-only Firebase function via the `dev` endpoint.
+ *
+ * Routes the call to a specific function via `specifier` and passes arbitrary data.
+ */
 export interface OnCallDevelopmentParams<T = unknown> {
   specifier: string;
   data: T;
 }
 
 /**
- * Creates an OnCallDevelopmentParams
+ * Creates an {@link OnCallDevelopmentParams} envelope for a development function call.
  *
- * @param modelType
- * @param data
- * @returns
+ * @param specifier - the development function to invoke
+ * @param data - the call payload
+ *
+ * @example
+ * ```ts
+ * const params = onCallDevelopmentParams('resetDatabase', { confirm: true });
+ * ```
  */
 export function onCallDevelopmentParams<T>(specifier: string, data: T): OnCallDevelopmentParams<T> {
   const result: OnCallDevelopmentParams<T> = {

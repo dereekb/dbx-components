@@ -1,6 +1,15 @@
 import { cachedGetter, type Maybe } from '@dereekb/util';
 import { type StorageListFilesPageToken, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFileResult, type StorageListFilesOptions, type StorageListFilesResult, type StorageListFolderResult, type StorageListItemResult } from './accessor';
 
+/**
+ * Delegate that adapts platform-specific list results into the generic {@link StorageListFilesResult} interface.
+ *
+ * Implementations extract items, pagination tokens, and convert raw results into typed file/folder accessors.
+ * Used by {@link storageListFilesResultFactory} to create the normalized result objects.
+ *
+ * @template S - the storage instance type (client or server SDK)
+ * @template R - the raw list result type from the underlying SDK
+ */
 export interface StorageListFilesResultFactoryDelegate<S, R> {
   hasItems(result: R): boolean;
   hasNext(result: R): boolean;
@@ -12,8 +21,26 @@ export interface StorageListFilesResultFactoryDelegate<S, R> {
   foldersFromResult(result: R, folder: FirebaseStorageAccessorFolder): StorageListItemResult[];
 }
 
+/**
+ * Factory function that transforms a raw SDK list result into a normalized {@link StorageListFilesResult}.
+ */
 export type StorageListFilesResultFactory<S, R> = (storage: S, folder: FirebaseStorageAccessorFolder, options: StorageListFilesOptions | undefined, result: R) => StorageListFilesResult;
 
+/**
+ * Creates a {@link StorageListFilesResultFactory} from a platform-specific delegate.
+ *
+ * The returned factory lazily computes file and folder arrays (via {@link cachedGetter}) and
+ * provides cursor-based pagination through the `next()` method.
+ *
+ * @param delegate - platform-specific implementation for extracting results
+ *
+ * @example
+ * ```ts
+ * const factory = storageListFilesResultFactory(myDelegate);
+ * const result = factory(storage, folder, { maxResults: 50 }, rawSdkResult);
+ * const files = result.files();
+ * ```
+ */
 export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesResultFactoryDelegate<S, R>): StorageListFilesResultFactory<S, R> {
   return (storage: S, folder: FirebaseStorageAccessorFolder, options: StorageListFilesOptions | undefined, result: R) => {
     function fileResult(item: StorageListItemResult): StorageListFileResult {
@@ -55,6 +82,9 @@ export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesRe
   };
 }
 
+/**
+ * Creates an error thrown when `next()` is called on a list result that has no more pages.
+ */
 export function storageListFilesResultHasNoNextError() {
   return new Error('hasNext is false, there are no more results available.');
 }

@@ -22,11 +22,23 @@ import { type FirestoreQueryConstraintFunctionsDriver, type FirestoreQueryDriver
 import { type Query, type QuerySnapshot, type SnapshotListenOptions, type Transaction } from '../../common/firestore/types';
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
+/**
+ * Accumulates Firestore query constraints alongside the base query reference.
+ *
+ * Used internally by the client query driver to build up constraints before
+ * combining them into a final query via the `firebase/firestore` `query()` function.
+ */
 export interface FirebaseFirestoreQueryBuilder {
   readonly query: Query;
   readonly constraints: QueryConstraint[];
 }
 
+/**
+ * Appends one or more `QueryConstraint` values to the builder, returning a new builder instance.
+ *
+ * @param builder - current query builder state
+ * @param constraint - constraint(s) to append
+ */
 export function addConstraintToBuilder(builder: FirebaseFirestoreQueryBuilder, constraint: ArrayOrValue<QueryConstraint>): FirebaseFirestoreQueryBuilder {
   return {
     query: builder.query,
@@ -34,6 +46,11 @@ export function addConstraintToBuilder(builder: FirebaseFirestoreQueryBuilder, c
   };
 }
 
+/**
+ * Maps each abstract {@link FirestoreQueryConstraintType} to its client-side `firebase/firestore`
+ * implementation. The `FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE` is `undefined` because Firestore
+ * client SDK does not support offset-based pagination (server-only feature).
+ */
 export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQueryConstraintHandlersMapping<FirebaseFirestoreQueryBuilder> = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, limit(data.limit)),
   [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, limitToLast(data.limit)),
@@ -50,6 +67,12 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
   [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endBefore(data.snapshot as DocumentSnapshot))
 };
 
+/**
+ * Creates a {@link FirestoreQueryConstraintFunctionsDriver} for the client `firebase/firestore` SDK.
+ *
+ * Converts abstract query constraints into `firebase/firestore` `QueryConstraint` objects
+ * and composes them into an executable `Query`.
+ */
 export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQueryConstraintFunctionsDriver {
   return makeFirestoreQueryConstraintFunctionsDriver({
     mapping: FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING,
@@ -59,6 +82,19 @@ export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQuer
   });
 }
 
+/**
+ * Creates the client-side {@link FirestoreQueryDriver} that executes queries, counts, and streams
+ * using the `firebase/firestore` SDK.
+ *
+ * Note: Transactions are not supported for queries on the client; passing a `transaction` to `getDocs`
+ * will throw an error.
+ *
+ * @example
+ * ```ts
+ * const queryDriver = firebaseFirestoreQueryDriver();
+ * // Used internally by firebaseFirestoreClientDrivers()
+ * ```
+ */
 export function firebaseFirestoreQueryDriver(): FirestoreQueryDriver {
   return {
     ...firebaseFirestoreQueryConstraintFunctionsDriver(),

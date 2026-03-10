@@ -1,14 +1,21 @@
 import { type AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, type AuthRoleClaimsFactoryConfigEntrySimpleOptions } from '@dereekb/util';
 
 /**
- * Used as a flag to disable uploads for a user.
+ * Claim value type used to restrict file uploads for a user.
+ *
+ * When set to true in the user's custom claims, the `uploads` role is revoked
+ * (inverse claim pattern).
  */
 export type StorageFileUploadUserRestriction = typeof AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
 
 /**
- * Claims value for disabling uploads for a user.
+ * Custom claims shape for controlling a user's file upload permission.
  *
- * Can be used in conjuction with the Storage security roles to prevent users from uploading files.
+ * Uses an inverse claim pattern: when `fr` is set to true, the `uploads` role
+ * is removed from the user, preventing file uploads. When absent or false,
+ * the user retains the `uploads` role by default.
+ *
+ * Used with Firebase Storage security rules to enforce upload restrictions.
  */
 export type StorageFileUploadUserClaims = {
   /**
@@ -25,7 +32,17 @@ export type StorageFileUploadUserClaims = {
 export const STORAGE_FILE_UPLOAD_USER_ROLE = 'uploads';
 
 /**
- * AuthRoleClaimsFactoryConfigEntrySimpleOptions configuration for adding the "uploads" role to the user when the disable uploads claim is not present.
+ * Pre-configured claims entry that grants the `uploads` role by default and revokes it
+ * when the `fr` claim is set (inverse pattern).
+ *
+ * Pass this to an `AuthRoleClaimsFactory` to integrate upload restrictions into your auth system.
+ *
+ * @example
+ * ```ts
+ * const claimsConfig = {
+ *   fr: storageFileUploadUserSimpleClaimsConfiguration
+ * };
+ * ```
  */
 export const storageFileUploadUserSimpleClaimsConfiguration: AuthRoleClaimsFactoryConfigEntrySimpleOptions<StorageFileUploadUserRestriction> = {
   roles: STORAGE_FILE_UPLOAD_USER_ROLE,

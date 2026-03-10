@@ -7,14 +7,38 @@ import { type CollectionReference } from '../../common/firestore/types';
 import { firestorePassThroughField } from '../../common/firestore/snapshot/snapshot.field';
 import { mapObjectMap, type ModelFieldMapFunctionsConfig, cachedGetter } from '@dereekb/util';
 
+/**
+ * @module system
+ *
+ * Defines the SystemState Firestore model for storing system-wide singleton state and settings.
+ *
+ * Each {@link SystemState} document is identified by a {@link SystemStateTypeIdentifier} and acts
+ * as a singleton for that type — storing arbitrary key-value data about the state of a system
+ * subcomponent (e.g., last migration timestamp, feature flags, processing checkpoints).
+ *
+ * Supports per-type data conversion via the `converterFactory` pattern in
+ * {@link systemStateFirestoreCollection}.
+ */
+
 // MARK: Collection
+/**
+ * Abstract base providing access to the SystemState Firestore collection.
+ *
+ * Implement this in your app module to wire up dependency injection.
+ */
 export abstract class SystemStateFirestoreCollections {
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
 }
 
+/**
+ * Union of all SystemState-related model identity types.
+ */
 export type SystemStateTypes = typeof systemStateIdentity;
 
-// MARK: Mock Item
+// MARK: SystemState
+/**
+ * Model identity for the SystemState collection (collection name: `systemState`, prefix: `sys`).
+ */
 export const systemStateIdentity = firestoreModelIdentity('systemState', 'sys');
 
 /**
@@ -33,18 +57,30 @@ export type SystemStateId = SystemStateTypeIdentifier;
 export type SystemStateStoredData = Record<string, any>;
 
 /**
- * A collection used for recording the current state of system subcomponents. System states for a given identifier are treated as a system-wide singleton/state/setting.
+ * A singleton Firestore document storing the current state of a system subcomponent.
  *
- * For example, a SystemState with a specific SystemStateId may be relied on for information about the previous update, etc.
+ * Each document is identified by a {@link SystemStateTypeIdentifier} and stores arbitrary
+ * key-value data. Used for tracking migration progress, feature flags, processing checkpoints,
+ * or any system-wide state that needs persistence.
+ *
+ * @template T - shape of the stored data record
  */
 export interface SystemState<T extends SystemStateStoredData = SystemStateStoredData> {
   data: T;
 }
 
+/**
+ * Permission roles for SystemState operations. Restricted to system administrators.
+ */
 export type SystemStateRoles = GrantedSysAdminRole;
 
 /**
- * Refers to a singleton SystemState based on this model's identifier.
+ * Firestore document wrapper for a {@link SystemState} singleton.
+ *
+ * The document ID serves as the {@link SystemStateTypeIdentifier}, making each
+ * SystemState a singleton keyed by its type.
+ *
+ * @template T - shape of the stored data record
  */
 export class SystemStateDocument<T extends SystemStateStoredData = SystemStateStoredData> extends AbstractFirestoreDocument<SystemState<T>, SystemStateDocument<T>, typeof systemStateIdentity> {
   get modelIdentity() {
@@ -52,12 +88,26 @@ export class SystemStateDocument<T extends SystemStateStoredData = SystemStateSt
   }
 }
 
+/**
+ * Default snapshot converter for {@link SystemState} documents.
+ *
+ * Uses pass-through conversion for the `data` field. Per-type converters can be
+ * supplied via the `converterFactory` in {@link systemStateFirestoreCollection}.
+ */
 export const systemStateConverter = snapshotConverterFunctions<SystemState>({
   fields: {
     data: firestorePassThroughField()
   }
 });
 
+/**
+ * Returns the raw Firestore CollectionReference for the SystemState collection.
+ *
+ * @example
+ * ```ts
+ * const colRef = systemStateCollectionReference(firestoreContext);
+ * ```
+ */
 export function systemStateCollectionReference(context: FirestoreContext): CollectionReference<SystemState> {
   return context.collection(systemStateIdentity.collectionName);
 }
@@ -65,14 +115,41 @@ export function systemStateCollectionReference(context: FirestoreContext): Colle
 export type SystemStateFirestoreCollection<T extends SystemStateStoredData = SystemStateStoredData> = FirestoreCollection<SystemState<T>, SystemStateDocument<T>>;
 
 /**
- * A ModelFieldMapFunctionsConfig used for data conversion.
+ * Field conversion config for a specific SystemState data type.
+ *
+ * Maps the typed `data` field to/from Firestore using {@link ModelFieldMapFunctionsConfig}.
+ *
+ * @template T - shape of the stored data
  */
 export type SystemStateStoredDataFieldConverterConfig<T extends SystemStateStoredData = SystemStateStoredData> = ModelFieldMapFunctionsConfig<T, any>;
 
+/**
+ * Map of {@link SystemStateTypeIdentifier} to their data field converters.
+ *
+ * Each entry defines how a specific SystemState type's `data` field is serialized/deserialized.
+ */
 export type SystemStateStoredDataConverterMap = {
   [key: string]: SystemStateStoredDataFieldConverterConfig<any>;
 };
 
+/**
+ * Creates a {@link SystemStateFirestoreCollection} with per-type data converters.
+ *
+ * The `converters` map is used via a `converterFactory` that selects the appropriate
+ * converter based on the document ID (which is the {@link SystemStateTypeIdentifier}).
+ * Documents with no matching converter use the default pass-through converter.
+ *
+ * @param firestoreContext - the Firestore context
+ * @param converters - map of type identifiers to their data field converters
+ *
+ * @example
+ * ```ts
+ * const collection = systemStateFirestoreCollection(firestoreContext, {
+ *   'migration_v2': { fields: { lastRun: firestoreDate() } }
+ * });
+ * const doc = collection.documentAccessor().loadDocumentForId('migration_v2');
+ * ```
+ */
 export function systemStateFirestoreCollection(firestoreContext: FirestoreContext, converters: SystemStateStoredDataConverterMap): SystemStateFirestoreCollection {
   const mappedConvertersGetter = cachedGetter(() =>
     mapObjectMap(converters, (dataConverter) => {

@@ -7,6 +7,21 @@ import { transactionDocumentContext } from './driver.accessor.transaction';
 import { type TransactionFirestoreDocumentContextFactory } from '../../common/firestore/accessor/context.transaction';
 import { type WriteBatchFirestoreDocumentContextFactory } from '../../common/firestore/accessor/context.batch';
 
+/**
+ * Creates a client-side {@link FirestoreAccessorDriver} that maps the abstract accessor interface
+ * to the `firebase/firestore` SDK functions (`doc`, `collection`, `collectionGroup`, `runTransaction`, `writeBatch`).
+ *
+ * This driver provides:
+ * - Document, collection, and subcollection reference factories
+ * - Transaction and write batch context factories for atomic operations
+ * - A default (non-transactional) document context
+ *
+ * @example
+ * ```ts
+ * const driver = firestoreClientAccessorDriver();
+ * // Used internally by firebaseFirestoreClientDrivers()
+ * ```
+ */
 export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: doc as unknown as FirestoreAccessorDriverDocumentRefFunction,
