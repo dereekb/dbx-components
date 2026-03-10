@@ -4,11 +4,19 @@ import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';
 
 /**
- * Wrapper of a block that is broken into two parts, with the bottom content's height
- * being set to 100% of the height minus the top's height.
+ * A two-section layout block where the top section has a measured height and the bottom
+ * section fills the remaining vertical space.
  *
- * The block is made up of two divs, a top and a bottom. The top is assigned a static height, and the bottom is given the remainder.
- * The height is calculated from 100%.
+ * The top section's height is dynamically measured via resize observation. Use the `[top]`
+ * content slot for the fixed-height area and default content for the flexible bottom area.
+ *
+ * @example
+ * ```html
+ * <dbx-two-block [fixedTop]="true">
+ *   <div top>Fixed header area</div>
+ *   <div>Scrollable content area</div>
+ * </dbx-two-block>
+ * ```
  */
 @Component({
   selector: 'dbx-two-block',

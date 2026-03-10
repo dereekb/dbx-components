@@ -4,6 +4,17 @@ import { type Maybe } from '@dereekb/util';
 import { type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig } from '../../util';
 import { MatIcon } from '@angular/material/icon';
 
+/**
+ * Wraps projected content with click-to-copy functionality and a copy icon button.
+ *
+ * Clicking the text or the icon copies the text to the clipboard and optionally shows a snackbar confirmation.
+ *
+ * @example
+ * ```html
+ * <dbx-click-to-copy-text copyText="some-value">some-value</dbx-click-to-copy-text>
+ * <dbx-click-to-copy-text [clickIconToCopyOnly]="true">Click icon only</dbx-click-to-copy-text>
+ * ```
+ */
 @Component({
   selector: 'dbx-click-to-copy-text',
   template: `

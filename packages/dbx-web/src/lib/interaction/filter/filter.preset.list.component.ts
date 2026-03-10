@@ -3,6 +3,14 @@ import { type FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
 import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlist.component';
 
+/**
+ * Displays filter presets as a clickable anchor list.
+ *
+ * @example
+ * ```html
+ * <dbx-preset-filter-list [presets]="myPresets" (presetSelected)="onPreset($event)"></dbx-preset-filter-list>
+ * ```
+ */
 @Component({
   selector: 'dbx-preset-filter-list',
   template: `

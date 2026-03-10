@@ -2,9 +2,19 @@ import { Injectable, type Type } from '@angular/core';
 import { type Maybe, filterMaybeArrayValues, mapIterable, type StringErrorCode } from '@dereekb/util';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 
+/**
+ * Error code used to identify the default error widget entry in {@link DbxErrorWidgetService}.
+ */
 export const DEFAULT_ERROR_WIDGET_CODE = 'DEFAULT_ERROR_WIDGET';
+
+/**
+ * Error code used to identify the unknown/fallback error widget entry in {@link DbxErrorWidgetService}.
+ */
 export const UNKNOWN_ERROR_WIDGET_CODE = 'UNKNOWN_ERROR_WIDGET';
 
+/**
+ * Registration entry that maps an error code to one or more widget component classes for rendering that error.
+ */
 export interface DbxErrorWidgetEntry {
   /**
    * Error code to respond to.
@@ -34,6 +44,9 @@ export interface DbxErrorWidgetEntry {
   readonly widgetComponentClass?: Maybe<Type<unknown>>;
 }
 
+/**
+ * A {@link DbxErrorWidgetEntry} that is guaranteed to have a `popupComponentClass` defined.
+ */
 export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntry, 'popupComponentClass'> & { popupComponentClass: Type<unknown> };
 
 /**

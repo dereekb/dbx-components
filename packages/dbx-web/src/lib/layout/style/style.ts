@@ -29,6 +29,9 @@ export type DbxStyleClassCleanSuffix = CharacterPrefixSuffixCleanString;
  */
 export type DbxStyleClassDashSuffix = DashPrefixString;
 
+/**
+ * Strips a leading dash from a style class suffix string, producing a clean suffix.
+ */
 export const dbxStyleClassCleanSuffix = DASH_CHARACTER_PREFIX_INSTANCE.cleanString;
 
 /**
@@ -40,8 +43,14 @@ export const dbxStyleClassCleanSuffix = DASH_CHARACTER_PREFIX_INSTANCE.cleanStri
  */
 export type DbxStyleClass = string | `${DbxStyleName}${DbxStyleClassSuffix}`;
 
+/**
+ * The standard suffix used for dark mode styling.
+ */
 export const DBX_DARK_STYLE_CLASS_SUFFIX: DbxStyleClassSuffix = '-dark';
 
+/**
+ * Configuration for an application's style, including the root style class and allowed suffixes for variant modes (e.g., dark mode).
+ */
 export interface DbxStyleConfig {
   /**
    * Root style class name.
@@ -54,10 +63,29 @@ export interface DbxStyleConfig {
 }
 
 // MARK: Theme
+/**
+ * The three core Material Design theme palette colors.
+ */
 export type DbxThemeColorMain = 'primary' | 'accent' | 'warn';
+
+/**
+ * Additional semantic theme colors beyond the core Material palettes.
+ */
 export type DbxThemeColorExtra = 'notice' | 'ok' | 'success' | 'grey';
+
+/**
+ * Secondary theme colors representing neutral or inactive states.
+ */
 export type DbxThemeColorExtraSecondary = 'default' | 'disabled';
+
+/**
+ * Union of main and extra theme colors, excluding secondary states.
+ */
 export type DbxThemeColorMainOrExtra = DbxThemeColorMain | DbxThemeColorExtra;
+
+/**
+ * All available theme colors, including main, extra, and secondary variants.
+ */
 export type DbxThemeColor = DbxThemeColorMainOrExtra | DbxThemeColorExtraSecondary;
 
 export const DBX_THEME_COLORS_MAIN: DbxThemeColorMain[] = ['primary', 'accent', 'warn'];
@@ -65,6 +93,15 @@ export const DBX_THEME_COLORS_EXTRA: DbxThemeColorExtra[] = ['notice', 'ok', 'su
 export const DBX_THEME_COLORS_EXTRA_SECONDARY: DbxThemeColorExtraSecondary[] = ['default', 'disabled'];
 export const DBX_THEME_COLORS: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...DBX_THEME_COLORS_EXTRA, ...DBX_THEME_COLORS_EXTRA_SECONDARY];
 
+/**
+ * Returns the CSS class name for a themed background color.
+ *
+ * @example
+ * ```ts
+ * dbxColorBackground('primary'); // 'dbx-primary-bg'
+ * dbxColorBackground(undefined); // 'dbx-default'
+ * ```
+ */
 export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
   let cssClass = 'dbx-default'; // background by default
 

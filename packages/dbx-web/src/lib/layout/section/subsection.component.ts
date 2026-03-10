@@ -3,7 +3,17 @@ import { DbxSectionComponent } from './section.component';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
- * A subsection.
+ * Renders a subsection within a parent section, using a smaller heading (defaults to h4).
+ * Useful for grouping related content under a `dbx-section`.
+ *
+ * @example
+ * ```html
+ * <dbx-section header="Parent Section">
+ *   <dbx-subsection header="Details" icon="settings">
+ *     <p>Subsection content here.</p>
+ *   </dbx-subsection>
+ * </dbx-section>
+ * ```
  */
 @Component({
   selector: 'dbx-subsection',

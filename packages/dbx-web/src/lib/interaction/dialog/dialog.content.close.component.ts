@@ -3,7 +3,12 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 /**
- * Component used to show a close button at the top of a dialog, floating in a corner.
+ * Renders a floating close button positioned in the corner of a dialog.
+ *
+ * @example
+ * ```html
+ * <dbx-dialog-content-close (close)="onClose()" [padded]="true"></dbx-dialog-content-close>
+ * ```
  */
 @Component({
   selector: 'dbx-dialog-content-close',

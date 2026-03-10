@@ -1,5 +1,15 @@
 import { Directive, input } from '@angular/core';
 
+/**
+ * Applies prompt box styling with optional elevation to its host element.
+ *
+ * @example
+ * ```html
+ * <dbx-prompt-box [elevate]="true">
+ *   <dbx-prompt [header]="'Sign In'"></dbx-prompt>
+ * </dbx-prompt-box>
+ * ```
+ */
 @Directive({
   selector: 'dbx-prompt-box, [dbxPromptBox]',
   host: {

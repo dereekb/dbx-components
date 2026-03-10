@@ -1,9 +1,14 @@
 import { Directive, ElementRef, Injector, inject } from '@angular/core';
 
 /**
- * Used to reference a cdRef, injector, and element at the given element.
+ * Exposes the Angular {@link Injector} and {@link ElementRef} at the host element, enabling child components to inject a reference to a well-placed parent element.
  *
- * Generally used for child views to reference a well-placed parent view.
+ * @example
+ * ```html
+ * <div dbxStructure>
+ *   <!-- Children can inject DbxStructureDirective to access this element's injector -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxStructure]',

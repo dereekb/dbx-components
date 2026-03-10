@@ -12,12 +12,24 @@ import { MatListModule, MatNavList } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 
+/**
+ * Configuration for a {@link DbxValueListViewComponent}. Extends the base config with an option to emit click events for all items, including those with anchors.
+ */
 export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
+  /**
+   * When true, emits click events for all items regardless of whether they have anchors.
+   */
   readonly emitAllClicks?: boolean;
 }
 
 /**
- * Content view for a DbxValueListView. It can be used directly in cases where the items are already configured, or want to be configured in a non-standard fashion.
+ * Renders a single group of list items within a {@link DbxValueListViewContentComponent}. Displays an optional header,
+ * a list of items using `mat-list-item`, and an optional footer.
+ *
+ * @example
+ * ```html
+ * <dbx-list-view-content-group [group]="group"></dbx-list-view-content-group>
+ * ```
  */
 @Component({
   selector: 'dbx-list-view-content-group',
@@ -83,10 +95,19 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
 }
 
 // MARK: DbxValueListViewContentComponent
+/**
+ * Default track-by function that tracks items by their index position.
+ */
 export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index: number) => index;
 
 /**
- * Content view for a DbxValueListView. It can be used directly in cases where the items are already configured, or want to be configured in a non-standard fashion.
+ * Renders a Material nav list of grouped value list items. Can be used directly when items are pre-configured,
+ * or as part of the standard list rendering pipeline via {@link DbxValueListViewComponent}.
+ *
+ * @example
+ * ```html
+ * <dbx-list-view-content [items]="configuredItems" [emitAllClicks]="true"></dbx-list-view-content>
+ * ```
  */
 @Component({
   selector: 'dbx-list-view-content',
@@ -143,7 +164,12 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 
 // MARK: DbxValueListViewComponent
 /**
- * Renders a list view using input configuration. Requires a parent DbxListView.
+ * Renders a value-based list view using a configuration input. Must be used within a parent {@link DbxListView} context.
+ *
+ * @example
+ * ```html
+ * <dbx-list-view [config]="listViewConfig"></dbx-list-view>
+ * ```
  */
 @Component({
   selector: 'dbx-list-view',

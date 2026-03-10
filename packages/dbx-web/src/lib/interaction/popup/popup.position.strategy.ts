@@ -1,12 +1,26 @@
 import { GlobalPositionStrategy } from '@angular/cdk/overlay';
 
+/**
+ * Predefined screen positions for a popup overlay.
+ */
 export type PopupPosition = 'center' | 'bottom_left' | 'bottom_right';
 
+/**
+ * X/Y offset for fine-tuning popup positioning.
+ */
 export interface PopupPositionOffset {
   readonly x?: string;
   readonly y?: string;
 }
 
+/**
+ * Global position strategy for popups that supports named positions (center, bottom_left, bottom_right) with optional offsets.
+ *
+ * @example
+ * ```ts
+ * const strategy = new PopupGlobalPositionStrategy('bottom_right', { x: '16px', y: '16px' });
+ * ```
+ */
 export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {
   private _position!: PopupPosition;
   private _offset: PopupPositionOffset = {};

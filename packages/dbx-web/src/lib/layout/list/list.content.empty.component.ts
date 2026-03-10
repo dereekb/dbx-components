@@ -1,7 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /**
- * Component that is centered for use within an empty list.
+ * Displays centered placeholder content within an empty list. Projects its content into a styled container.
+ *
+ * @example
+ * ```html
+ * <dbx-list-empty-content>
+ *   <p>No results found.</p>
+ * </dbx-list-empty-content>
+ * ```
  */
 @Component({
   selector: 'dbx-list-empty-content',

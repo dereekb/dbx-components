@@ -10,6 +10,14 @@ import { DbxEmbedComponent, type DbxEmbedComponentElement } from '../../interact
  */
 export const DBX_WEB_FILE_PREVIEW_SERVICE_ENTRIES_TOKEN = new InjectionToken<DbxWebFilePreviewServiceEntry[]>('DefaultDbxWebFilePreviewServiceEntries');
 
+/**
+ * Creates a provider that registers the given entries with the {@link DbxWebFilePreviewService} via the {@link DBX_WEB_FILE_PREVIEW_SERVICE_ENTRIES_TOKEN}.
+ *
+ * @example
+ * ```typescript
+ * provideDbxWebFilePreviewServiceEntries([DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY]);
+ * ```
+ */
 export function provideDbxWebFilePreviewServiceEntries(entries: DbxWebFilePreviewServiceEntry[]) {
   return {
     provide: DBX_WEB_FILE_PREVIEW_SERVICE_ENTRIES_TOKEN,
@@ -20,6 +28,9 @@ export function provideDbxWebFilePreviewServiceEntries(entries: DbxWebFilePrevie
 // MARK: Default Functions
 /**
  * Default preset for previewing a file using a DbxEmbedDialogComponent.
+ */
+/**
+ * Default preview component function that embeds files using {@link DbxEmbedComponent}. Images are rendered with an `img` element; all other types use `embed`.
  */
 export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PREVIEW_COMPONENT_FUNCTION: DbxWebFilePreviewServicePreviewComponentFunction = (input) => {
   const { blob, srcUrl, embedMimeType, sanitizeSrcUrl } = input;
@@ -52,6 +63,9 @@ export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PREVIEW_COMPONENT_FUNCTION: Db
   };
 };
 
+/**
+ * Default dialog-with-component function that opens the preview component inside a {@link DbxInjectionDialogComponent} with a close button.
+ */
 export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_DIALOG_WITH_COMPONENT_FUNCTION: DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input) => {
   const { matDialog, componentConfig } = input;
   return DbxInjectionDialogComponent.openDialog(matDialog, {

@@ -6,7 +6,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { clean } from '@dereekb/dbx-core';
 
 /**
- * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.
+ * Coordinates popup display by registering with {@link DbxPopupCoordinatorService} and only rendering content when this popup is the active one for its key.
+ *
+ * @example
+ * ```html
+ * <dbx-popup-coordinator>
+ *   <div>Popup content rendered only when active.</div>
+ * </dbx-popup-coordinator>
+ * ```
  */
 @Component({
   selector: 'dbx-popup-coordinator',

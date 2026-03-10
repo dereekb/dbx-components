@@ -4,7 +4,15 @@ import { map } from 'rxjs';
 import { DbxPopupController, DbxPopupWindowState } from './popup';
 
 /**
- * Popup content wrapper component.
+ * Wraps popup body content, hiding the body when the popup is minimized while keeping the controls visible.
+ *
+ * @example
+ * ```html
+ * <dbx-popup-content>
+ *   <dbx-popup-controls controls [header]="'My Popup'"></dbx-popup-controls>
+ *   <p>Body content here.</p>
+ * </dbx-popup-content>
+ * ```
  */
 @Component({
   selector: 'dbx-popup-content',

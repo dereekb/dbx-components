@@ -6,7 +6,14 @@ import { type Maybe } from '@dereekb/util';
 import { type DbxStyleClass } from './style';
 
 /**
- * Used to retrieve the current app styling from the DbxStyleService.
+ * Applies the current application style class from {@link DbxStyleService} to the host element.
+ *
+ * Use this directive to propagate the active style class onto any element or component.
+ *
+ * @example
+ * ```html
+ * <div dbxStyle>Styled content</div>
+ * ```
  */
 @Directive({
   selector: 'dbx-style, [dbxStyle], .dbx-style',

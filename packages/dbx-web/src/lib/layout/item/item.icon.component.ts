@@ -3,7 +3,16 @@ import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
 
 /**
- * Section piece that puts an icon on the left, and arbitrary content on the right with a header.
+ * Displays an icon on the left with a header and projected content on the right.
+ *
+ * Useful for building descriptive list items or info rows where each entry is identified by a Material icon.
+ *
+ * @example
+ * ```html
+ * <dbx-icon-item [icon]="'email'" [header]="'Contact'">
+ *   <a href="mailto:hello@example.com">hello@example.com</a>
+ * </dbx-icon-item>
+ * ```
  */
 @Component({
   selector: 'dbx-icon-item',

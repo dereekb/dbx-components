@@ -2,7 +2,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.component';
 
 /**
- * Popup Controls
+ * Renders the popup control bar with a header title and window management buttons (minimize, fullscreen, close).
+ *
+ * @example
+ * ```html
+ * <dbx-popup-controls [header]="'My Popup'"></dbx-popup-controls>
+ * ```
  */
 @Component({
   selector: 'dbx-popup-controls',

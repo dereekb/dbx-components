@@ -5,7 +5,17 @@ import { DbxSidenavButtonComponent } from './sidenav.button.component';
 import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
 
 /**
- * Pre-configured pagebar used with DbxSidenavComponent.
+ * Pagebar component pre-configured with a sidenav toggle button for use inside a {@link DbxSidenavPageComponent}.
+ *
+ * Extends {@link DbxPagebarComponent} and adds the sidenav menu button on the left side.
+ *
+ * @example
+ * ```html
+ * <dbx-sidenav-pagebar sidenavMenuIcon="menu" color="primary">
+ *   <span left>Left Content</span>
+ *   <span>Right Content</span>
+ * </dbx-sidenav-pagebar>
+ * ```
  */
 @Component({
   selector: 'dbx-sidenav-pagebar',

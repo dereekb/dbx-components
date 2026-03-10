@@ -12,7 +12,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxSpacerDirective } from '../../layout/style/spacer.directive';
 
 /**
- * Component for a snackbar that contains an action.
+ * Renders the content of an action snackbar, including a message, optional close button,
+ * and an optional interactive action (e.g. "Undo"). Automatically dismisses after the
+ * configured duration or after the action completes successfully.
+ *
+ * This component is opened programmatically by {@link DbxActionSnackbarService} and is not used directly in templates.
  */
 @Component({
   templateUrl: './action.snackbar.component.html',

@@ -13,6 +13,9 @@ import { DbxPopoverInteractionModule } from '../popover';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 
+/**
+ * Configuration for opening a filter popover, extending the base filter config with origin positioning.
+ */
 export interface DbxFilterPopoverComponentConfig<F extends object = object> extends DbxFilterComponentConfig<F> {
   /**
    * Origin to add the popover to.
@@ -20,8 +23,25 @@ export interface DbxFilterPopoverComponentConfig<F extends object = object> exte
   readonly origin: ElementRef;
 }
 
+/**
+ * Default popover key used by filter popovers to ensure only one filter popover is open at a time.
+ */
 export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
 
+/**
+ * Popover component that renders custom and/or preset filter components with toggling support.
+ *
+ * Use the static `openPopover` method to programmatically open the filter popover.
+ *
+ * @example
+ * ```ts
+ * DbxFilterPopoverComponent.openPopover(popoverService, {
+ *   origin: elementRef,
+ *   connector: filterConnector,
+ *   customFilterComponentClass: MyFilterComponent
+ * });
+ * ```
+ */
 @Component({
   templateUrl: './filter.popover.component.html',
   imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButtonModule, DbxButtonSpacerDirective],

@@ -4,7 +4,9 @@ import { DbxStepComponent } from './step.component';
 const importsAndExports = [DbxStepComponent];
 
 /**
- * @deprecated import DbxStepComponent directly instead.
+ * Module that exports {@link DbxStepComponent}.
+ *
+ * @deprecated Import `DbxStepComponent` directly instead.
  */
 @NgModule({
   imports: importsAndExports,

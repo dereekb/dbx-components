@@ -6,12 +6,27 @@ import { AbstractDbxValueListItemModifierDirective } from './list.view.value.mod
 import { toObservable } from '@angular/core/rxjs-interop';
 import { transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 
+/**
+ * Modifier key used to identify the selection modifier in the modifier map.
+ */
 export const DBX_LIST_ITEM_IS_SELECTED_ITEM_MODIFIER_KEY = 'is_selected_item_modifier';
 
+/**
+ * Default decision function that returns the item's current `selected` state (defaulting to false).
+ */
 export const DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION: DbxValueListItemDecisionFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
   return item.selected ?? false;
 };
 
+/**
+ * Modifier directive that sets the `selected` property on list items based on a custom decision function.
+ * Useful for programmatically controlling which items appear selected in a list view.
+ *
+ * @example
+ * ```html
+ * <dbx-list-view [dbxListItemIsSelectedModifier]="isItemSelected" [config]="listViewConfig"></dbx-list-view>
+ * ```
+ */
 @Directive({
   selector: 'dbxListItemIsSelectedModifier,[dbxListItemIsSelectedModifier]',
   standalone: true

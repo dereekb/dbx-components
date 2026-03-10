@@ -7,12 +7,27 @@ import { DbxStyleService } from './style.service';
 import { type DbxStyleConfig, type DbxStyleClass, type DbxStyleName } from './style';
 import { toObservable } from '@angular/core/rxjs-interop';
 
+/**
+ * Determines how the style is applied by {@link DbxSetStyleDirective}.
+ *
+ * - `'global'` - Sets the style on the parent {@link DbxStyleService} for the entire app.
+ * - `'self'` - Applies the style class only to the host element.
+ * - `'both'` - Applies the style both globally and to the host element.
+ */
 export type DbxSetStyleMode = 'both' | 'global' | 'self';
 
 /**
- * Used to denote which app style to use for all children below this.
+ * Sets the active application style for child elements and/or the global {@link DbxStyleService}.
  *
- * Will update the parent DbxStyleService if mode is "global".
+ * Accepts a {@link DbxStyleName} and optional suffixes, then applies the computed style class
+ * depending on the configured {@link DbxSetStyleMode}.
+ *
+ * @example
+ * ```html
+ * <div [dbxSetStyle]="'my-app'" [setStyleMode]="'both'" [suffixes]="'dark'">
+ *   <!-- Children inherit 'my-app' or 'my-app-dark' styling -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxSetStyle]',

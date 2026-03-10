@@ -12,6 +12,9 @@ import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component'
 import { DbxWindowKeyDownListenerDirective } from '../../keypress';
 import { DbxStyleDirective } from '../../layout/style/style.directive';
 
+/**
+ * Extended popover controller that supports an optional async closing value function.
+ */
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
   getClosingValueFn?: (value?: I) => Promise<O>;
 }
@@ -58,12 +61,17 @@ export interface DbxPopoverComponentConfig<O, I, T> {
   readonly init?: (component: T, controller: DbxPopoverController<O, I>) => void;
 }
 
+/**
+ * Full popover configuration including overlay container settings. Used internally.
+ */
 export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T> {
   configuration: NgOverlayContainerConfiguration;
 }
 
 /**
- * Popover component.
+ * Core popover component that renders injected content with position strategy, transition watching, and keyboard close support.
+ *
+ * Coordinates with {@link DbxPopoverCoordinatorService} to ensure only one popover per key is active at a time.
  */
 @Component({
   template: `

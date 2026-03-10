@@ -6,14 +6,35 @@ import { DbxPromptConfirmComponent, type DbxPromptConfirmConfig } from './prompt
 import { type Maybe } from '@dereekb/util';
 import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
 
+/**
+ * Default configuration used when no custom config is provided to the confirm dialog.
+ */
 export const DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG = {
   title: 'Confirm?'
 };
 
+/**
+ * Configuration for the confirmation dialog, extending prompt config with an optional injected component.
+ */
 export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
   component?: DbxInjectionComponentConfig;
 }
 
+/**
+ * Dialog component that displays a confirmation prompt and returns a boolean result.
+ *
+ * Use the static `openDialog` method to programmatically open the dialog.
+ *
+ * @example
+ * ```ts
+ * const ref = DbxPromptConfirmDialogComponent.openDialog(matDialog, {
+ *   title: 'Delete item?',
+ *   prompt: 'This action cannot be undone.',
+ *   confirmText: 'Delete'
+ * });
+ * ref.afterClosed().subscribe(confirmed => { ... });
+ * ```
+ */
 @Component({
   template: `
     <dbx-dialog-content>

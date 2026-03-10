@@ -4,6 +4,9 @@ import { type DbxHelpContextKey } from './help';
 import { type DbxHelpWidgetServiceEntry } from './help.widget';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
+/**
+ * Abstract configuration class for providing initial settings to the {@link DbxHelpWidgetService}, including default entries, icons, and component configs.
+ */
 export abstract class DbxHelpWidgetServiceConfig {
   /**
    * All help widget service entries.

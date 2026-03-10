@@ -5,6 +5,9 @@ import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type DbxPopoverConfigSizing } from '../popover/popover.service';
 
+/**
+ * Configuration for the filter popover component, defining custom and preset filter components along with display options.
+ */
 export interface DbxFilterComponentConfig<F extends object = object, P extends string = string, CF extends FilterSource<F> = FilterSource<F>, PF extends PresetFilterSource<F, P> = PresetFilterSource<F, P>> extends DbxPopoverConfigSizing {
   /**
    * Custom icon

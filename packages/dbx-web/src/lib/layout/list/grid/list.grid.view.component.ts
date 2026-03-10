@@ -11,10 +11,19 @@ import { DbxAnchorComponent } from '../../../router/layout/anchor/anchor.compone
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { type DbxValueListItemGroup } from '../group/list.view.value.group';
 
+/**
+ * Configuration for a {@link DbxValueListGridViewComponent}. Extends the standard list view config with optional grid layout sizing.
+ */
 export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
+  /**
+   * Optional grid sizing configuration for column layout and gap spacing.
+   */
   grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
 }
 
+/**
+ * Defines the CSS grid layout dimensions for a grid-based list view.
+ */
 export interface DbxValueListGridItemViewGridSizeConfig {
   /**
    * Gap size in %, px, vw, vh
@@ -28,13 +37,23 @@ export interface DbxValueListGridItemViewGridSizeConfig {
   readonly columns: string;
 }
 
+/**
+ * Default grid size configuration with responsive auto-fill columns (minimum 320px) and 8px gap.
+ */
 export const DEFAULT_LIST_GRID_SIZE_CONFIG: DbxValueListGridItemViewGridSizeConfig = {
   columns: 'repeat(auto-fill, minmax(320px, 1fr))',
   gap: '8px'
 };
 
 /**
- * Optional parent directive used to control grid size.
+ * Structural directive that provides grid size configuration to descendant {@link DbxValueListGridViewContentComponent} instances.
+ *
+ * @example
+ * ```html
+ * <div [dbxListGridSize]="{ columns: 'repeat(3, 1fr)', gap: '16px' }">
+ *   <dbx-list-grid-view-content [items]="items"></dbx-list-grid-view-content>
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxListGridSize]',
@@ -47,7 +66,12 @@ export class DbxValueListGridSizeDirective {
 
 // MARK: DbxValueListGridViewContentGroupComponent
 /**
- * Renders a single group of items within the grid view.
+ * Renders a single group of items within a CSS grid layout, including optional header/footer and ripple effects on items.
+ *
+ * @example
+ * ```html
+ * <dbx-list-grid-view-content-group [group]="group"></dbx-list-grid-view-content-group>
+ * ```
  */
 @Component({
   selector: 'dbx-list-grid-view-content-group',
@@ -103,7 +127,13 @@ export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueL
 
 // MARK: DbxValueListGridViewContentComponent
 /**
- * Content view for a DbxValueListGridView. It can be used directly in cases where the items are already configured, or want to be configured in a non-standard fashion.
+ * Renders grouped list items in a CSS grid layout. Supports configurable grid sizing via the `grid` input
+ * or a parent {@link DbxValueListGridSizeDirective}.
+ *
+ * @example
+ * ```html
+ * <dbx-list-grid-view-content [items]="configuredItems" [grid]="{ columns: 'repeat(4, 1fr)', gap: '12px' }"></dbx-list-grid-view-content>
+ * ```
  */
 @Component({
   selector: 'dbx-list-grid-view-content',
@@ -132,7 +162,12 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
 
 // MARK: DbxValueListGridViewComponent
 /**
- * Renders a grid view using input configuration. Requires a parent DbxListView.
+ * Renders a value list as a CSS grid using a configuration input. Requires a parent {@link DbxListView} context.
+ *
+ * @example
+ * ```html
+ * <dbx-list-grid-view [config]="gridViewConfig"></dbx-list-grid-view>
+ * ```
  */
 @Component({
   selector: 'dbx-list-grid-view',

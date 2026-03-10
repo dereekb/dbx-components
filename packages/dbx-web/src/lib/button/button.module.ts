@@ -17,7 +17,8 @@ const importsAndExports = [
 ];
 
 /**
- * Provides all base @dereekb/dbx-core and @dereekb/dbx-web button components.
+ * Convenience module that bundles all button components and directives from
+ * both @dereekb/dbx-core and @dereekb/dbx-web, including progress buttons and icon buttons.
  */
 @NgModule({
   imports: importsAndExports,

@@ -2,7 +2,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { type ReadableError, type ServerError, ServerErrorResponse, UnauthorizedServerErrorResponse, build } from '@dereekb/util';
 
 /**
- * Converts the error response to a POJO.
+ * Converts an HTTP error response into a plain JSON-serializable {@link ServerError} object.
+ *
+ * Ensures that the error data is safe for serialization by running it through `JSON.stringify`/`JSON.parse`.
+ * Non-serializable data is stripped with a console warning.
+ *
+ * @example
+ * ```typescript
+ * const pojoError = convertToPOJOServerErrorResponse(httpErrorResponse);
+ * console.log(pojoError.message);
+ * ```
  */
 export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | object): ServerError {
   const result: ServerErrorResponse | undefined = convertToServerErrorResponse(httpError);
@@ -25,10 +34,18 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
 }
 
 /**
- * Converts an HTTP Error Response to a ServerErrorResponse type.
+ * Converts an {@link HttpErrorResponse} or generic error object into a {@link ServerErrorResponse}.
  *
- * @param error
- * @returns
+ * Handles HTTP 401 responses specially by returning an {@link UnauthorizedServerErrorResponse}.
+ * Returns `undefined` if the input is falsy.
+ *
+ * @example
+ * ```typescript
+ * const serverError = convertToServerErrorResponse(httpErrorResponse);
+ * if (serverError) {
+ *   console.log(serverError.status, serverError.message);
+ * }
+ * ```
  */
 export function convertToServerErrorResponse(error: HttpErrorResponse | object): ServerErrorResponse | undefined {
   let result: ServerErrorResponse | undefined;

@@ -3,7 +3,17 @@ import { DbxTwoColumnComponent } from '../two/two.column.component';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.column.store';
 
 /**
- * Pre-configured Two-columns view that only has a left view and shows full left.
+ * Pre-configured single-column layout that wraps {@link DbxTwoColumnComponent} with full-left mode enabled.
+ *
+ * Provides its own {@link TwoColumnsContextStore} and projects content into the left slot only.
+ *
+ * @example
+ * ```html
+ * <dbx-one-column>
+ *   <div top>Top content</div>
+ *   <div left>Main content</div>
+ * </dbx-one-column>
+ * ```
  */
 @Component({
   selector: 'dbx-one-column',
@@ -23,6 +33,10 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.col
 })
 export class DbxOneColumnComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
+  /**
+   * Whether this column is within a section page layout. Defaults to `true`.
+   */
   readonly inSectionPage = input<boolean>(true);
 
   constructor() {

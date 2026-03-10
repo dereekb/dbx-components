@@ -9,7 +9,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
 
 /**
- * Displays a button and menu for filtering partial preset values.
+ * Displays a dropdown button menu for selecting partial filter presets.
+ *
+ * @example
+ * ```html
+ * <dbx-partial-preset-filter-menu [partialPresets]="myPartialPresets" [config]="{ filterIcon: 'tune' }"></dbx-partial-preset-filter-menu>
+ * ```
  */
 @Component({
   selector: 'dbx-partial-preset-filter-menu',

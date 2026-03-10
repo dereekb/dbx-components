@@ -10,7 +10,12 @@ import { DbxModelTrackerEffects } from './state/effects/tracker.effects';
 import { DbxModelObjectStateService } from './model.state.service';
 
 /**
- * Factory function for creating a StorageAccessor for the model view tracker.
+ * Creates a {@link StorageAccessor} for persisting model view tracker events using the `mtvs` storage prefix.
+ *
+ * @example
+ * ```typescript
+ * const accessor = defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory);
+ * ```
  */
 export function defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory: SimpleStorageAccessorFactory): StorageAccessor<DbxModelViewTrackerEventSet> {
   const accessor = storageAccessorFactory.createStorageAccessor<DbxModelViewTrackerEventSet>({

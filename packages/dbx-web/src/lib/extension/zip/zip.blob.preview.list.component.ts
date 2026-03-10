@@ -5,12 +5,31 @@ import { type DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
 import { DatePipe } from '@angular/common';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 
+/**
+ * A zip preview entry tree node wrapped as a list item for use in selection-based list views.
+ */
 export type DbxZipPreviewEntryWithSelection = DbxValueAsListItem<DbxZipBlobPreviewEntryTreeNode>;
 
+/**
+ * Returns the appropriate Material icon name for a zip entry tree node: "folder" for directories, "note" for files with a known MIME type, or "question_mark" for unknown files.
+ *
+ * @example
+ * ```typescript
+ * const icon = iconForDbxZipPreviewEntryWithSelection(treeNode); // 'folder', 'note', or 'question_mark'
+ * ```
+ */
 export function iconForDbxZipPreviewEntryWithSelection(entry: DbxZipBlobPreviewEntryTreeNode) {
   return entry.value.value.directory ? 'folder' : entry.value.mimeType ? 'note' : 'question_mark';
 }
 
+/**
+ * Selection list wrapper for displaying zip file entries with icons for directories and files.
+ *
+ * @example
+ * ```html
+ * <dbx-zip-preview-file-entry-list [values$]="entries$"></dbx-zip-preview-file-entry-list>
+ * ```
+ */
 @Component({
   selector: 'dbx-zip-preview-file-entry-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
@@ -28,6 +47,9 @@ export class DbxZipPreviewEntryListComponent extends AbstractDbxSelectionListWra
   }
 }
 
+/**
+ * Internal list view component for rendering zip file entry items with selection support. Used by {@link DbxZipPreviewEntryListComponent}.
+ */
 @Component({
   selector: 'dbx-zip-preview-file-entry-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
@@ -43,6 +65,9 @@ export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionLis
   };
 }
 
+/**
+ * Individual list item component for a zip entry, displaying the file name, last modified date, and a download button for non-directory entries.
+ */
 @Component({
   selector: 'dbx-zip-preview-file-entry-list-view-item',
   template: `

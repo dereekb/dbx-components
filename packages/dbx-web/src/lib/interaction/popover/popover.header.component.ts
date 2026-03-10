@@ -5,7 +5,14 @@ import { MatDivider } from '@angular/material/divider';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Component used to format a header for a popover.
+ * Renders a formatted header bar for a popover with an optional icon and projected action content.
+ *
+ * @example
+ * ```html
+ * <dbx-popover-header [header]="'Settings'" [icon]="'settings'">
+ *   <dbx-popover-close-button></dbx-popover-close-button>
+ * </dbx-popover-header>
+ * ```
  */
 @Component({
   selector: 'dbx-popover-header',

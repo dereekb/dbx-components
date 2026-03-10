@@ -6,6 +6,14 @@ import { DBX_HELP_WIDGET_ENTRY_DATA_TOKEN, type DbxHelpWidgetEntryData, type Dbx
 import { getValueFromGetter, type Maybe } from '@dereekb/util';
 import { DbxHelpWidgetService } from './help.widget.service';
 
+/**
+ * Renders a single help widget entry as a Material expansion panel. Dynamically injects the widget component and optional header component for the given help entry.
+ *
+ * @example
+ * ```html
+ * <dbx-help-view-list-entry [helpWidgetEntry]="entry"></dbx-help-view-list-entry>
+ * ```
+ */
 @Component({
   selector: 'dbx-help-view-list-entry',
   templateUrl: './help.view.list.entry.component.html',

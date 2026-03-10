@@ -29,10 +29,13 @@ export interface DbxValueListItemGroup<G, T, I extends DbxValueListItem<T>, H = 
 }
 
 /**
- * Function that generates an array of DbxValueListItemGroup values from a list of items.
+ * Function type that partitions a flat list of configured items into an array of {@link DbxValueListItemGroup} values.
  */
 export type DbxValueListViewGroupValuesFunction<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> = (items: DbxValueListItemConfig<T, I>[]) => ObservableOrValue<DbxValueListItemGroup<G, T, I, H, F>[]>;
 
+/**
+ * Default grouping function that places all items into a single unnamed group.
+ */
 export const defaultDbxValueListViewGroupValuesFunction = <T, I extends DbxValueListItem<T>>(items: DbxValueListItemConfig<T, I>[]) => {
   const data = {};
   const result: DbxValueListItemGroup<unknown, T, I> = {
@@ -45,7 +48,8 @@ export const defaultDbxValueListViewGroupValuesFunction = <T, I extends DbxValue
 };
 
 /**
- * Interface for a view that renders the items of a DbxList.
+ * Abstract delegate responsible for grouping list items into {@link DbxValueListItemGroup} instances.
+ * Provide a custom implementation to control how items are organized into visual groups.
  */
 export abstract class DbxValueListViewGroupDelegate<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>, H = unknown, F = unknown> {
   /**
@@ -54,6 +58,14 @@ export abstract class DbxValueListViewGroupDelegate<G, T, I extends DbxValueList
   abstract readonly groupValues: DbxValueListViewGroupValuesFunction<G, T, I, H, F>;
 }
 
+/**
+ * Creates a default {@link DbxValueListViewGroupDelegate} that places all items into a single ungrouped list.
+ *
+ * @example
+ * ```ts
+ * const delegate = defaultDbxValueListViewGroupDelegate<MyItem>();
+ * ```
+ */
 export function defaultDbxValueListViewGroupDelegate<T, I extends DbxValueListItem<T>>(): DbxValueListViewGroupDelegate<any, T, I> {
   const result = {
     groupValues: defaultDbxValueListViewGroupValuesFunction
@@ -62,6 +74,17 @@ export function defaultDbxValueListViewGroupDelegate<T, I extends DbxValueListIt
   return result;
 }
 
+/**
+ * Registers a class as a {@link DbxValueListViewGroupDelegate} provider for dependency injection.
+ *
+ * @example
+ * ```ts
+ * @Directive({
+ *   providers: provideDbxValueListViewGroupDelegate(MyGroupDelegate)
+ * })
+ * export class MyGroupDelegate extends DbxValueListViewGroupDelegate<MyGroup, MyItem> { ... }
+ * ```
+ */
 // eslint-disable-next-line
 export function provideDbxValueListViewGroupDelegate<D extends DbxValueListViewGroupDelegate<any, any, any, any>>(sourceType: Type<D>): Provider[] {
   // use of any here is allowed as typings are not relevant for providers

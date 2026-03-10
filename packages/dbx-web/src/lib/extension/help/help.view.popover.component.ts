@@ -12,8 +12,14 @@ import { DbxHelpContextService } from './help.context.service';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxHelpWidgetService } from './help.widget.service';
 
+/**
+ * Default popover key used when opening the help view popover.
+ */
 export const DEFAULT_DBX_HELP_VIEW_POPOVER_KEY = 'help';
 
+/**
+ * Configuration for the {@link DbxHelpViewPopoverComponent}, controlling which help contexts to show, the popover appearance, and sizing.
+ */
 export interface DbxHelpViewPopoverConfig {
   /**
    * Custom icon
@@ -69,10 +75,19 @@ export interface DbxHelpViewPopoverConfig {
   readonly popoverSizingConfig?: Maybe<DbxPopoverConfigSizing>;
 }
 
+/**
+ * {@link DbxHelpViewPopoverConfig} without the `origin` property, used when the origin element is provided separately.
+ */
 export type DbxHelpViewPopoverConfigWithoutOrigin = Omit<DbxHelpViewPopoverConfig, 'origin'>;
 
 /**
- * Popover component for displaying help contexts.
+ * Popover that displays a scrollable list of help widget entries for the active or specified help context keys.
+ * Opened via {@link DbxHelpViewPopoverComponent.openPopover} or through the {@link DbxHelpViewPopoverButtonComponent}.
+ *
+ * @example
+ * ```typescript
+ * DbxHelpViewPopoverComponent.openPopover(popoverService, { origin: elementRef, header: 'Help' });
+ * ```
  */
 @Component({
   templateUrl: './help.view.popover.component.html',

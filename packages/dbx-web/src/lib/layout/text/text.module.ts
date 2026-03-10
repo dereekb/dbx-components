@@ -13,6 +13,10 @@ import { DbxClickToCopyTextComponent } from './copy.text.component';
 
 const importsAndExports = [DbxUnitedStatesAddressComponent, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
 
+/**
+ * Angular module that bundles all text-related layout components and directives, including
+ * address display, chips, detail blocks, copy-to-clipboard, linkify, and number-with-limit.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

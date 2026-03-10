@@ -6,9 +6,17 @@ import { distinctUntilChanged, shareReplay, type Subscription } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Context used for linking an ReadableErrorComponent to a LoadingContext.
+ * Links a {@link DbxErrorComponent} to a {@link LoadingContext}, automatically displaying loading errors.
  *
- * The error from the context is given to the app error when available.
+ * Subscribes to the loading context's stream and forwards any errors to the host `<dbx-error>` component.
+ * Accepts a `LoadingContext` directly or an `Observable<LoadingContext>`.
+ *
+ * @example
+ * ```html
+ * <dbx-error [dbxLoadingError]="loadingContext"></dbx-error>
+ *
+ * <dbx-error [dbxLoadingError]="loadingContext$"></dbx-error>
+ * ```
  */
 @Directive({
   selector: '[dbxLoadingError]',

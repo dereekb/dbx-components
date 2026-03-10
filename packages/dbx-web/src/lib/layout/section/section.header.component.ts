@@ -5,7 +5,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { NgTemplateOutlet } from '@angular/common';
 
 /**
- * Component used to style a section's header.
+ * Renders a section header with a configurable heading level (h1-h5), optional icon, and hint text.
+ * Can be used as a standalone element or as an attribute directive on elements with the `.dbx-section-header` class.
+ * Serves as the base class for `DbxSectionComponent` and `DbxSectionPageComponent`.
+ *
+ * @example
+ * ```html
+ * <dbx-section-header header="My Header" [h]="2" icon="star" hint="A helpful hint"></dbx-section-header>
+ *
+ * <div class="dbx-section-header" header="Attribute Usage" [h]="3"></div>
+ *
+ * <dbx-section-header [headerConfig]="{ header: 'Config Object', h: 2, icon: 'info' }"></dbx-section-header>
+ * ```
  */
 @Component({
   selector: 'dbx-section-header,.dbx-section-header',

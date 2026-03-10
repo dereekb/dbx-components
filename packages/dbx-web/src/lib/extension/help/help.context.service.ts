@@ -5,7 +5,8 @@ import { distinctUntilHasDifferentValues } from '@dereekb/rxjs';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 
 /**
- * Service that tracks all active help context strings in the current context.
+ * Tracks all active help context keys across the component tree. Directives and components register/unregister their help context references,
+ * and consumers can observe the aggregated set of active keys.
  */
 @Injectable()
 export class DbxHelpContextService {

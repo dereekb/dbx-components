@@ -7,12 +7,22 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { NgClass } from '@angular/common';
 
+/**
+ * An expanded anchor link tree node with computed CSS classes for depth-based styling.
+ */
 export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLinkTree {
   readonly classes: string;
 }
 
 /**
- * Component that displays a list of ClickableAnchorLink values within a MatNavList.
+ * Displays a hierarchical list of {@link ClickableAnchorLinkTree} items inside a Material navigation list.
+ *
+ * Each anchor is expanded and assigned depth-based CSS classes for nested styling.
+ *
+ * @example
+ * ```html
+ * <dbx-anchor-list [anchors]="navLinks"></dbx-anchor-list>
+ * ```
  */
 @Component({
   selector: 'dbx-anchor-list',

@@ -2,7 +2,14 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Combines a dbx-label and arbitrary content.
+ * Displays a label header above projected content, useful for labeling form fields or data sections.
+ *
+ * @example
+ * ```html
+ * <dbx-label-block header="Email">
+ *   <span>user@example.com</span>
+ * </dbx-label-block>
+ * ```
  */
 @Component({
   selector: 'dbx-label-block',

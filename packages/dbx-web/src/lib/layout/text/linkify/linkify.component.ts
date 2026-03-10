@@ -5,6 +5,9 @@ import { mergeObjects, type Maybe } from '@dereekb/util';
 import { type DbxLinkifyStringType, type DbxLinkifyStringOptions } from './linkify';
 import { DbxLinkifyService } from './linkify.service';
 
+/**
+ * Inline configuration for {@link DbxLinkifyComponent}, allowing a type key and/or custom linkify options.
+ */
 export interface DbxLinkifyConfig {
   /**
    * The type to use for retrieving pre-configured configuration.
@@ -17,7 +20,15 @@ export interface DbxLinkifyConfig {
 }
 
 /**
- * Used to "linkify" the input text.
+ * Converts URLs and email addresses in plain text into clickable HTML links using the linkify-string library.
+ *
+ * Options are resolved from {@link DbxLinkifyService} by type, then merged with any inline config overrides.
+ *
+ * @example
+ * ```html
+ * <dbx-linkify [text]="'Visit https://example.com for more info.'"></dbx-linkify>
+ * <dbx-linkify [text]="description" [type]="'product-description'"></dbx-linkify>
+ * ```
  */
 @Component({
   selector: 'dbx-linkify',

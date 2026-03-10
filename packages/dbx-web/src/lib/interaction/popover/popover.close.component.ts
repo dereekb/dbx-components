@@ -4,7 +4,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 
 /**
- * Pre-configured close icon button for use within popover header.
+ * Renders a close icon button that closes the parent popover when clicked.
+ *
+ * @example
+ * ```html
+ * <dbx-popover-header [header]="'Settings'">
+ *   <dbx-popover-close-button></dbx-popover-close-button>
+ * </dbx-popover-header>
+ * ```
  */
 @Component({
   selector: 'dbx-popover-close-button',

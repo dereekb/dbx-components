@@ -4,6 +4,17 @@ import { type DbxBarColor } from './bar';
 import { NgClass } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
+/**
+ * A page-level toolbar with left and right content slots, built on Angular Material's mat-toolbar.
+ *
+ * @example
+ * ```html
+ * <dbx-pagebar color="primary">
+ *   <span left>Page Title</span>
+ *   <button right mat-icon-button><mat-icon>settings</mat-icon></button>
+ * </dbx-pagebar>
+ * ```
+ */
 @Component({
   selector: 'dbx-pagebar',
   template: `

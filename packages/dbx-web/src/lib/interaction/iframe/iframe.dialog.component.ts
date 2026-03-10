@@ -3,16 +3,20 @@ import { type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxIframeComponent } from './iframe.component';
 import { DbxInjectionDialogComponent } from '../dialog/dialog.injection.component';
 
+/**
+ * Configuration for opening an iframe dialog.
+ */
 export interface DbxIframeDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly contentUrl: WebsiteUrlWithPrefix;
 }
 
 /**
- * Opens a dialog with DbxEmbedComponent.
+ * Opens a dialog containing a {@link DbxIframeComponent} to display a URL in an iframe.
  *
- * @param matDialog The MatDialog instance to use.
- * @param config The configuration for the dialog.
- * @returns The MatDialogRef for the dialog.
+ * @example
+ * ```ts
+ * const ref = openIframeDialog(matDialog, { contentUrl: 'https://example.com' });
+ * ```
  */
 export function openIframeDialog(matDialog: MatDialog, config: DbxIframeDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxIframeComponent>, void> {
   return DbxInjectionDialogComponent.openDialog(matDialog, {

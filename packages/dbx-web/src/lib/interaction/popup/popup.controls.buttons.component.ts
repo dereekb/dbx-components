@@ -6,7 +6,12 @@ import { DbxButtonModule } from '../../button/button.module';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 
 /**
- * Popup Control Buttons.
+ * Renders the minimize, fullscreen/restore, and close buttons for controlling a popup's window state.
+ *
+ * @example
+ * ```html
+ * <dbx-popup-control-buttons></dbx-popup-control-buttons>
+ * ```
  */
 @Component({
   selector: 'dbx-popup-control-buttons',

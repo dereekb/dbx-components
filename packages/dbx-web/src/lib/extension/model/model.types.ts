@@ -13,6 +13,9 @@ export type DbxModelTypeConfigurationSrefFactory = (key: ModelKey, context?: Mod
  */
 export type DbxModelTypeConfigurationSrefFactoryBuilder = (injector: Injector) => DbxModelTypeConfigurationSrefFactory;
 
+/**
+ * Configuration for a single model type, defining its display label, icon, analytics name, and navigation segue reference.
+ */
 export interface DbxModelTypeConfiguration {
   /**
    * Popup label that can be used for these types.
@@ -40,6 +43,9 @@ export interface DbxModelTypeConfiguration {
   readonly icon?: string;
 }
 
+/**
+ * Map of model type strings to their {@link DbxModelTypeConfiguration} entries.
+ */
 export interface DbxModelTypeConfigurationMap {
   [key: string]: DbxModelTypeConfiguration;
 }

@@ -3,7 +3,14 @@ import { type Maybe } from '@dereekb/util';
 import { type DbxBarColor } from './bar';
 
 /**
- * Acts as a wrapper for content distributed along a bar.
+ * Renders a horizontal bar with a themed background color, used to visually group or separate content.
+ *
+ * @example
+ * ```html
+ * <dbx-bar color="primary">
+ *   <span>Bar content</span>
+ * </dbx-bar>
+ * ```
  */
 @Directive({
   selector: 'dbx-bar,[dbxBar]',

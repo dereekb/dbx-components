@@ -9,6 +9,17 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
 import { DbxColorDirective } from '../../layout/style/style.color.directive';
 
+/**
+ * Progress button that overlays a Material progress spinner on the button while working.
+ * Supports icon-only, FAB, and text button modes with automatic spinner sizing.
+ *
+ * @example
+ * ```html
+ * <dbx-progress-spinner-button [config]="buttonConfig" (btnClick)="onSubmit()">
+ *   Submit
+ * </dbx-progress-spinner-button>
+ * ```
+ */
 @Component({
   selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',

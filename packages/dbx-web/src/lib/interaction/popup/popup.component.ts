@@ -13,10 +13,16 @@ export const APP_POPUP_NORMAL_WIDTH = '700px';
 export const APP_POPUP_MINIMIZED_WIDTH = '300px';
 export const APP_POPUP_NORMAL_HEIGHT = 'auto';
 
+/**
+ * Extended popup controller that supports an optional async closing value function.
+ */
 export abstract class DbxPopupComponentController<O, I> extends DbxPopupController<O, I> {
   readonly getClosingValueFn?: (value?: I) => Promise<O>;
 }
 
+/**
+ * Configuration for opening a popup with dynamically injected content.
+ */
 export interface DbxPopupComponentConfig<O, I, T> {
   /**
    * Key used for uniquely identifying a limited instance.
@@ -36,7 +42,9 @@ export interface DbxPopupComponentConfig<O, I, T> {
 }
 
 /**
- * Popup component.
+ * Core popup component that renders injected content with support for minimize, fullscreen, and normal window states.
+ *
+ * Coordinates with {@link DbxPopupCoordinatorService} to ensure only one popup per key is active at a time.
  */
 @Component({
   template: `

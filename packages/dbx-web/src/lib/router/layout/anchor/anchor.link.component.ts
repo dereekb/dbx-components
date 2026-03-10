@@ -4,7 +4,14 @@ import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
 
 /**
- * Pre-styled text that can link to either a website or a ref using a dbx-anchor.
+ * Inline link component that wraps content in a {@link DbxAnchorComponent}. Accepts a router ref, an external href, or a full {@link ClickableAnchor} configuration.
+ *
+ * @example
+ * ```html
+ * <dbx-link ref="/home">Go Home</dbx-link>
+ * <dbx-link href="https://example.com">External</dbx-link>
+ * <dbx-link [anchor]="myAnchor">Custom Link</dbx-link>
+ * ```
  */
 @Component({
   selector: 'dbx-link',

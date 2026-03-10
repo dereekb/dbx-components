@@ -3,6 +3,18 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Header row for a detail block, displaying an optional icon and label with projected content.
+ *
+ * Used internally by {@link DbxDetailBlockComponent} but can also be used standalone.
+ *
+ * @example
+ * ```html
+ * <dbx-detail-block-header icon="email" header="Contact">
+ *   <button mat-button>Edit</button>
+ * </dbx-detail-block-header>
+ * ```
+ */
 @Component({
   selector: 'dbx-detail-block-header',
   template: `

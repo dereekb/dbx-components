@@ -9,10 +9,18 @@ import { type DbxValueListGridViewConfig } from '../../layout/list/grid/list.gri
 import { provideDbxListView } from '../../layout/list/list.view';
 import { AbstractDbxListWrapperDirective, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE } from '../../layout/list/list.directive';
 
+/**
+ * A {@link DbxWidgetDataPair} wrapped as a list item for use in selection-based list views.
+ */
 export type DbxWidgetDataPairWithSelection = DbxValueAsListItem<DbxWidgetDataPair>;
 
 /**
- * Demo DbxSelectionListWrapperDirective
+ * Grid-based list component that renders {@link DbxWidgetDataPair} items as widgets in a responsive grid layout.
+ *
+ * @example
+ * ```html
+ * <dbx-widget-grid [values$]="widgetPairs$"></dbx-widget-grid>
+ * ```
  */
 @Component({
   selector: 'dbx-widget-grid',
@@ -30,6 +38,9 @@ export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<
   }
 }
 
+/**
+ * Grid view component for rendering {@link DbxWidgetDataPair} items. Used internally by {@link DbxWidgetListGridComponent}.
+ */
 @Component({
   selector: 'dbx-widget-grid-view',
   template: DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
@@ -50,6 +61,9 @@ export class DbxWidgetListGridViewComponent extends AbstractDbxListGridViewDirec
   };
 }
 
+/**
+ * Individual grid item component that renders a single widget via {@link DbxWidgetViewComponent}.
+ */
 @Component({
   template: `
     <dbx-widget-view [config]="itemValue"></dbx-widget-view>

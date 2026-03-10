@@ -2,6 +2,9 @@ import { Injectable, type Type } from '@angular/core';
 import { type Maybe, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { type DbxWidgetType } from './widget';
 
+/**
+ * Maps a widget type identifier to its corresponding Angular component class for rendering by the {@link DbxWidgetService}.
+ */
 export interface DbxWidgetEntry {
   /**
    * Widget type to respond to.
@@ -14,7 +17,12 @@ export interface DbxWidgetEntry {
 }
 
 /**
- * Service used to register widgets.
+ * Registry service for widget components. Components are registered by type identifier and resolved by {@link DbxWidgetViewComponent} to render the appropriate widget for a given type/data pair.
+ *
+ * @example
+ * ```typescript
+ * widgetService.register({ type: 'my-widget', componentClass: MyWidgetComponent });
+ * ```
  */
 @Injectable({
   providedIn: 'root'

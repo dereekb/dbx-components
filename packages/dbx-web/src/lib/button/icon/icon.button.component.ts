@@ -5,7 +5,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core';
 
 /**
- * Simple dbx-button that displays a button with an icon.
+ * Lightweight button that renders as either an icon-only Material icon button or a text button
+ * with an icon prefix, depending on whether text is provided.
+ *
+ * @example
+ * ```html
+ * <dbx-icon-button icon="settings" (buttonClick)="openSettings()"></dbx-icon-button>
+ * ```
+ *
+ * @example
+ * ```html
+ * <dbx-icon-button icon="add" text="Add Item" (buttonClick)="addItem()"></dbx-icon-button>
+ * ```
  */
 @Component({
   selector: 'dbx-icon-button',

@@ -4,6 +4,12 @@ import { AbstractDbxErrorWidgetComponent } from './error.widget.directive';
 import { DbxLabelBlockComponent } from '../layout/text/label.block.component';
 import { JsonPipe } from '@angular/common';
 
+/**
+ * Default error widget that displays the error code, message, and optional server error data as JSON.
+ *
+ * Registered as both the default and unknown error widget in {@link DbxErrorWidgetService}.
+ * Extends {@link AbstractDbxErrorWidgetComponent} for access to the injected error data.
+ */
 @Component({
   template: `
     <dbx-label-block header="Error Code">{{ code }}</dbx-label-block>

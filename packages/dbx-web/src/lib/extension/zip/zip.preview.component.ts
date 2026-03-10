@@ -8,7 +8,12 @@ import { beginLoading, errorResult, type LoadingState, startWithBeginLoading, su
 import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
 
 /**
- * Used to display a corresponding widget based on the input data.
+ * Previews the contents of a zip archive from either a URL or a blob. Fetches and parses the zip file, then delegates rendering to {@link DbxZipBlobPreviewComponent}.
+ *
+ * @example
+ * ```html
+ * <dbx-zip-preview [srcUrl]="'https://example.com/archive.zip'" [downloadFileName]="'archive.zip'"></dbx-zip-preview>
+ * ```
  */
 @Component({
   selector: 'dbx-zip-preview',

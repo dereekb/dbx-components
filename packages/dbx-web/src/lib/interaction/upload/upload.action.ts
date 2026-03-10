@@ -4,7 +4,7 @@ import { type FileArrayAcceptMatchConfig } from './upload.accept';
 import { type DbxButtonWorking } from '@dereekb/dbx-core';
 
 /**
- * Compatable interface for DbxUploadActionDirective.
+ * Abstract interface for file upload components that can be controlled by the action system (disabled, working, multiple, accept states).
  */
 export abstract class DbxFileUploadActionCompatable {
   abstract setDisabled(disabled?: Maybe<boolean>): void;
@@ -14,7 +14,12 @@ export abstract class DbxFileUploadActionCompatable {
 }
 
 /**
- * Provides a DbxUploadActionCompatable for a given type.
+ * Provides a {@link DbxFileUploadActionCompatable} for dependency injection from the given component type.
+ *
+ * @example
+ * ```ts
+ * @Component({ providers: provideDbxFileUploadActionCompatable(MyUploadComponent) })
+ * ```
  */
 export function provideDbxFileUploadActionCompatable<S extends DbxFileUploadActionCompatable>(sourceType: Type<S>): Provider[] {
   return [

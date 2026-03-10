@@ -6,7 +6,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { overrideClickElementEffect } from '../../../util/click';
 
 /**
- * SegueAnchor implementation for UIRouter.
+ * Segue anchor component that renders a `uiSref`-based anchor element for UIRouter.
+ *
+ * Injected by {@link DbxAnchorComponent} via {@link DbxRouterWebProviderConfig} when the app is configured with {@link provideDbxRouterWebUiRouterProviderConfig}.
  */
 @Component({
   templateUrl: './anchor.component.html',

@@ -2,7 +2,14 @@ import { Directive } from '@angular/core';
 import { DbxStructureDirective } from './structure.structure.directive';
 
 /**
- * DbxStructureDirective used specifically on the body of the app.
+ * Specialized {@link DbxStructureDirective} intended for the application body element. Provides itself as a `DbxStructureDirective` so child components can inject a reference to the body's injector and element.
+ *
+ * @example
+ * ```html
+ * <div dbxBody>
+ *   <!-- App content that can inject DbxStructureDirective -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: 'dbxBody,[dbxBody]',

@@ -6,10 +6,20 @@ import { DbxActionErrorDirective } from '../../error/error.action.directive';
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 
+/**
+ * Possible outcomes of the transition safety dialog.
+ *
+ * - `'success'` - The action completed successfully; allow the transition.
+ * - `'stay'` - The user chose to stay on the current page.
+ * - `'discard'` - The user chose to discard changes and allow the transition.
+ * - `'none'` - The dialog was closed programmatically without a user decision.
+ */
 export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discard' | 'none';
 
 /**
- * Dialog that is shown/triggered as part of the DbxActionTransitionSafety
+ * Confirmation dialog displayed by {@link DbxActionTransitionSafetyDirective} when the user
+ * attempts to navigate away with unsaved changes. Offers options to stay on the page,
+ * discard changes, or save before leaving.
  */
 @Component({
   template: `

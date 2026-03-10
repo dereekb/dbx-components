@@ -3,12 +3,24 @@ import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
+/**
+ * Event emitted when the error icon button is clicked, containing the button's element reference for popover anchoring.
+ */
 export interface DbxErrorViewButtonEvent {
+  /** The element reference of the clicked button, used as the popover origin. */
   readonly origin: ElementRef;
 }
 
 /**
- * The basic error view. Shows an info button and an error message.
+ * Low-level error view that renders a Material icon button and an optional error message.
+ *
+ * Emits a {@link DbxErrorViewButtonEvent} when the button is clicked, which is typically used
+ * to open an error detail popover. Used internally by {@link DbxErrorComponent}.
+ *
+ * @example
+ * ```html
+ * <dbx-error-view icon="warning" [message]="'Something went wrong'" (buttonClick)="onErrorClick($event)"></dbx-error-view>
+ * ```
  */
 @Component({
   selector: 'dbx-error-view',

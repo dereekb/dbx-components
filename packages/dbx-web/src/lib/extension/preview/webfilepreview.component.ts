@@ -10,7 +10,12 @@ import { type DbxWebFilePreviewServicePreviewComponentFunctionInput } from './we
 export type DbxWebFilePreviewComponentConfig = DbxWebFilePreviewServicePreviewComponentFunctionInput;
 
 /**
- * Component used to preview a file using the DbxWebFilePreviewService's createPreviewConfig function for the given input.
+ * Previews a file by delegating to the {@link DbxWebFilePreviewService} to resolve the appropriate preview component for the given MIME type.
+ *
+ * @example
+ * ```html
+ * <dbx-web-file-preview [config]="{ srcUrl: 'https://example.com/doc.pdf', embedMimeType: 'application/pdf' }"></dbx-web-file-preview>
+ * ```
  */
 @Component({
   selector: 'dbx-web-file-preview',

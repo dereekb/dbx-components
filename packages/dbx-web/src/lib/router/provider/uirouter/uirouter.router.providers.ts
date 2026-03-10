@@ -3,9 +3,14 @@ import { DbxRouterWebProviderConfig } from '../router.provider.config';
 import { DbxUIRouterSegueAnchorComponent } from './anchor.component';
 
 /**
- * Provides a DbxRouterWebProviderConfig that configures the app to use UIRouter for anchors.
- 
- * @returns EnvironmentProviders
+ * Provides a {@link DbxRouterWebProviderConfig} that configures the application to use UIRouter for rendering segue-ref anchor links.
+ *
+ * @example
+ * ```typescript
+ * bootstrapApplication(AppComponent, {
+ *   providers: [provideDbxRouterWebUiRouterProviderConfig()]
+ * });
+ * ```
  */
 export function provideDbxRouterWebUiRouterProviderConfig(): EnvironmentProviders {
   const config: DbxRouterWebProviderConfig = {

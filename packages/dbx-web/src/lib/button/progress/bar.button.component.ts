@@ -10,6 +10,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
 import { DbxColorDirective } from '../../layout/style/style.color.directive';
 
+/**
+ * Progress button that displays a Material progress bar beneath the button while working.
+ *
+ * @example
+ * ```html
+ * <dbx-progress-bar-button [config]="buttonConfig" (btnClick)="onSave()">
+ *   Save
+ * </dbx-progress-bar-button>
+ * ```
+ */
 @Component({
   selector: 'dbx-progress-bar-button,dbx-bar-button',
   templateUrl: './bar.button.component.html',

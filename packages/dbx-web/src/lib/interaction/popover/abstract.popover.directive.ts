@@ -2,7 +2,7 @@ import { Directive, inject } from '@angular/core';
 import { DbxPopoverComponent } from './popover.component';
 
 /**
- * Abstract popover directive.
+ * Abstract base directive for components rendered inside a popover, providing access to close and return operations.
  */
 @Directive()
 export abstract class AbstractPopoverDirective<O = unknown, I = unknown, T = unknown> {

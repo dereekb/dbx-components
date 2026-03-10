@@ -29,6 +29,16 @@ export interface NumberWithLimit<T extends number = number> {
   readonly suffix?: Maybe<string>;
 }
 
+/**
+ * Displays a number value with an optional limit, automatically applying color-coded
+ * theming based on the ratio of value to limit (ok, notice, warn).
+ *
+ * @example
+ * ```html
+ * <dbx-number-with-limit [number]="{ value: 7, limit: 10 }"></dbx-number-with-limit>
+ * <dbx-number-with-limit [number]="{ value: 3, limit: 5, prefix: '$' }" [rounded]="true"></dbx-number-with-limit>
+ * ```
+ */
 @Component({
   selector: 'dbx-number-with-limit',
   template: `

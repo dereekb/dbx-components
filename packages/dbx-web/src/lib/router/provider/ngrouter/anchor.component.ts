@@ -4,7 +4,9 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { overrideClickElementEffect } from '../../../util/click';
 
 /**
- * SegueAnchor implementation for Angular Router.
+ * Segue anchor component that renders a `routerLink`-based anchor element for the Angular Router.
+ *
+ * Injected by {@link DbxAnchorComponent} via {@link DbxRouterWebProviderConfig} when the app is configured with {@link provideDbxRouterWebAngularRouterProviderConfig}.
  */
 @Component({
   templateUrl: './anchor.component.html',

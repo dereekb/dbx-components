@@ -6,7 +6,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxAnchorComponent } from './anchor.component';
 
 /**
- * Component that displays an anchor and a mat-button.
+ * Renders a Material icon button wrapped in a {@link DbxAnchorComponent} for navigation.
+ *
+ * The icon is sourced from the provided {@link ClickableIconAnchorLink}.
+ *
+ * @example
+ * ```html
+ * <dbx-anchor-icon [anchor]="{ icon: 'settings', url: '/settings' }"></dbx-anchor-icon>
+ * ```
  */
 @Component({
   selector: 'dbx-anchor-icon',

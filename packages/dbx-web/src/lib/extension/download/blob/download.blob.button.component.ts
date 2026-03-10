@@ -10,6 +10,9 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, from, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { NgClass } from '@angular/common';
 
+/**
+ * Configuration for the {@link DbxDownloadBlobButtonComponent} that controls what blob to download and how the button appears.
+ */
 export interface DbxDownloadBlobButtonConfig {
   /**
    * Button display customization.
@@ -40,7 +43,12 @@ export interface DbxDownloadBlobButtonConfig {
 }
 
 /**
- * Button used for downloading an arbitrary blob based on the input configuration.
+ * Button that downloads an arbitrary blob as a file when clicked. Supports both pre-loaded blobs and lazy-loaded blobs via a getter function.
+ *
+ * @example
+ * ```html
+ * <dbx-download-blob-button [config]="{ blob: myBlob, fileName: 'report.pdf' }"></dbx-download-blob-button>
+ * ```
  */
 @Component({
   selector: 'dbx-download-blob-button',

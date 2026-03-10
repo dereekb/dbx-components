@@ -7,6 +7,10 @@ import { DbxColorDirective } from './style.color.directive';
 
 const importsAndExports = [DbxColorDirective, DbxSpacerDirective, DbxStyleDirective, DbxSetStyleDirective, DbxStyleBodyDirective];
 
+/**
+ * Angular module that bundles all style-related directives: {@link DbxColorDirective}, {@link DbxSpacerDirective},
+ * {@link DbxStyleDirective}, {@link DbxSetStyleDirective}, and {@link DbxStyleBodyDirective}.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

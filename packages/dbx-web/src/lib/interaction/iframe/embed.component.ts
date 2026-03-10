@@ -6,8 +6,22 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { browserObjectUrlRef } from '@dereekb/browser';
 import { clean, cleanSubscription } from '@dereekb/dbx-core';
 
+/**
+ * The HTML element type used by {@link DbxEmbedComponent} to render content.
+ */
 export type DbxEmbedComponentElement = 'embed' | 'img';
 
+/**
+ * Embeds external content using an `<embed>` or `<img>` element, supporting both URL and Blob sources.
+ *
+ * Automatically determines the embed element based on the MIME type (images use `<img>`, others use `<embed>`).
+ *
+ * @example
+ * ```html
+ * <dbx-embed [srcUrl]="'https://example.com/doc.pdf'" [type]="'application/pdf'"></dbx-embed>
+ * <dbx-embed [blob]="myImageBlob"></dbx-embed>
+ * ```
+ */
 @Component({
   selector: 'dbx-embed',
   template: `

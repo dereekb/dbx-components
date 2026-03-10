@@ -1,11 +1,29 @@
 import { Directive, input, computed } from '@angular/core';
 
+/**
+ * Padding options for a content container. Controls the horizontal padding around the content.
+ */
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 
+/**
+ * Width constraint options for a content container. Controls the maximum width of the content area.
+ */
 export type DbxContentContainerWidth = 'small' | 'medium' | 'large' | 'wide' | 'full';
 
 /**
- * Component that limits the max-width of the content.
+ * Constrains content to a maximum width with configurable padding. Useful for centering
+ * page content and maintaining readable line lengths.
+ *
+ * @example
+ * ```html
+ * <dbx-content-container grow="medium" padding="small">
+ *   <p>Centered content with medium max-width.</p>
+ * </dbx-content-container>
+ *
+ * <div dbxContentContainer grow="full" padding="none" topPadding="small">
+ *   <p>Full-width content with top padding.</p>
+ * </div>
+ * ```
  */
 @Directive({
   selector: 'dbx-content-container,[dbxContentContainer],.dbx-content-container',

@@ -10,6 +10,16 @@ import { MatAccordion } from '@angular/material/expansion';
 import { DbxListEmptyContentComponent } from '../../layout/list/list.content.empty.component';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
+/**
+ * Displays a list of help widget entries in a Material accordion, resolved from the given help context keys. Supports optional header and footer injection, empty state content, and multi-expand mode.
+ *
+ * @example
+ * ```html
+ * <dbx-help-view-list [helpContextKeys]="['feature-a', 'feature-b']" [multi]="true">
+ *   <span empty>No help topics available.</span>
+ * </dbx-help-view-list>
+ * ```
+ */
 @Component({
   selector: 'dbx-help-view-list',
   template: `

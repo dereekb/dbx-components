@@ -7,8 +7,18 @@ import { DbxErrorWidgetService } from './error.widget.service';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { type NgPopoverRef } from 'ng-overlay-container';
 
+/**
+ * Determines how the error component renders its content.
+ *
+ * - `'none'` - No error to display.
+ * - `'default'` - Uses the built-in error view with icon and message.
+ * - `'custom'` - Uses a dynamically injected custom error widget component.
+ */
 type DbxErrorComponentViewType = 'none' | 'default' | 'custom';
 
+/**
+ * Internal state used by {@link DbxErrorComponent} to track the current error display configuration.
+ */
 interface DbxErrorComponentState {
   readonly viewType: DbxErrorComponentViewType;
   readonly isDefaultError?: Maybe<boolean>;
@@ -20,6 +30,18 @@ interface DbxErrorComponentState {
 
 /**
  * Root error component that displays content related to an error.
+ *
+ * Converts an {@link ErrorInput} into a {@link ReadableError} and renders either a default error view
+ * with an icon and message, or a custom error widget registered via {@link DbxErrorWidgetService}.
+ * Clicking the error icon opens a popover with detailed error information.
+ *
+ * @example
+ * ```html
+ * <dbx-error [error]="myError"></dbx-error>
+ *
+ * <!-- Icon-only mode, no message text -->
+ * <dbx-error [error]="myError" [iconOnly]="true"></dbx-error>
+ * ```
  */
 @Component({
   selector: 'dbx-error',

@@ -8,6 +8,14 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
   icon: 'filter_list'
 };
 
+/**
+ * Renders an icon button that opens a filter popover when clicked.
+ *
+ * @example
+ * ```html
+ * <dbx-filter-popover-button [config]="filterConfig" [buttonDisplay]="{ icon: 'filter_alt' }"></dbx-filter-popover-button>
+ * ```
+ */
 @Component({
   selector: 'dbx-filter-popover-button',
   template: `

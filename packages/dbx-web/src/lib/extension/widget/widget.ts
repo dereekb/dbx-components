@@ -15,6 +15,9 @@ export type DbxWidgetDataPair<T = unknown> = Readonly<ModelTypeDataPair<T>>;
  */
 export type DbxWidgetDataPairFactory<T> = MapFunction<T, DbxWidgetDataPair<T>>;
 
+/**
+ * Configuration for {@link DbxWidgetViewComponent} that extends {@link DbxWidgetDataPair} with an optional fallback type.
+ */
 export interface DbxWidgetViewComponentConfig<T = unknown> extends DbxWidgetDataPair<T> {
   /**
    * Alternative, default type to use if this type is not known/configured.

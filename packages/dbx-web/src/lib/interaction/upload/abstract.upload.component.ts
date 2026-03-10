@@ -5,11 +5,19 @@ import { type DbxFileUploadActionCompatable } from './upload.action';
 import { type DbxButtonWorking } from '@dereekb/dbx-core';
 
 // MARK: Abstract
+/**
+ * Event emitted when files are selected or dropped, containing both the raw file list and accept match results.
+ */
 export interface DbxFileUploadFilesChangedEvent {
   readonly allFiles: File[];
   readonly matchResult: FileArrayAcceptMatchResult;
 }
 
+/**
+ * Abstract base component for file upload components, managing disabled, working, multiple, and accept states.
+ *
+ * Implements {@link DbxFileUploadActionCompatable} for integration with the action system.
+ */
 @Directive({
   standalone: true
 })

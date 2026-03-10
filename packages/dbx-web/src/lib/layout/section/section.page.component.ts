@@ -2,21 +2,29 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
- * Scroll locking modes.
+ * Scroll locking modes for a section page.
  *
- * Types:
- * - all: The entire header + body is scrollable
- * - body: The header is locked while the body is scrollable
- * - locked: Overflow is locked and hidden
+ * - `'all'` - The entire header and body scroll together.
+ * - `'body'` - The header stays fixed while the body scrolls.
+ * - `'locked'` - All overflow is hidden and scrolling is disabled.
  */
 export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
 
 /**
- * Component used to style a page that is made up of app sections.
+ * Renders a full page section with a header (defaulting to h2) and scrollable body area.
+ * Supports nested section pages that retain proper fixed-height layout. Use for top-level
+ * page content that needs a prominent heading.
  *
- * Should be used on pages that need a section page heading.
+ * @example
+ * ```html
+ * <dbx-section-page header="Page Title" icon="dashboard">
+ *   <p>Page content here.</p>
+ * </dbx-section-page>
  *
- * Can be nested within eachother, retaining the proper fixed height.
+ * <dbx-section-page header="Scrollable Body" scroll="body" hint="Only the body scrolls">
+ *   <div style="height: 2000px">Tall content</div>
+ * </dbx-section-page>
+ * ```
  */
 @Component({
   selector: 'dbx-section-page',

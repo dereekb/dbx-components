@@ -3,7 +3,12 @@ import { type DbxThemeColor, dbxColorBackground } from './style';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Used to apply a background style using a color.
+ * Applies a themed background color to the host element based on a {@link DbxThemeColor} value.
+ *
+ * @example
+ * ```html
+ * <div [dbxColor]="'primary'">Themed background</div>
+ * ```
  */
 @Directive({
   selector: '[dbxColor]',

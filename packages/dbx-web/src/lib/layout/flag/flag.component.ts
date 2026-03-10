@@ -3,7 +3,14 @@ import { type ThemePalette } from '@angular/material/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
 /**
- * Toolbar-like component that wraps content. Generally sits at the top of a page.
+ * A themed toolbar banner that wraps projected content, typically placed at the top of a page to highlight status or actions.
+ *
+ * @example
+ * ```html
+ * <dbx-flag color="warn">
+ *   <span>Important notice</span>
+ * </dbx-flag>
+ * ```
  */
 @Component({
   selector: 'dbx-flag',

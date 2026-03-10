@@ -6,24 +6,50 @@ import { type Milliseconds, type Maybe, mergeObjects, MS_IN_SECOND } from '@dere
 import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarType } from './action.snackbar';
 import { type DbxActionSnackbarGeneratorInput, type DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from './action.snackbar.generator';
 
+/**
+ * Injection token for providing a custom {@link DbxActionSnackbarServiceConfig}.
+ */
 export const DBX_ACTION_SNACKBAR_SERVICE_CONFIG = new InjectionToken('DbxActionSnackbarServiceConfig');
 
+/**
+ * Default snackbar display duration in milliseconds (4 seconds).
+ */
 export const DEFAULT_SNACKBAR_DIRECTIVE_DURATION = MS_IN_SECOND * 4;
 
+/**
+ * Maps snackbar type keys (e.g. "save", "delete") to their generator configurations
+ * for producing display configs per loading state.
+ */
 export interface DbxActionSnackbarEventMakeConfig {
   [key: string]: DbxMakeActionSnackbarGeneratorConfiguration;
 }
 
+/**
+ * Root-level configuration for the snackbar service, controlling the component class,
+ * positioning, default durations, and per-type message configurations.
+ */
 export interface DbxActionSnackbarServiceConfig<C = unknown> {
+  /** Component class to render inside the snackbar. Defaults to {@link DbxActionSnackbarComponent}. */
   readonly componentClass: Type<C>;
+  /** Snackbar positioning overrides. */
   readonly snackbar?: Pick<MatSnackBarConfig, 'horizontalPosition' | 'verticalPosition'>;
+  /** Default duration for snackbars without an action. */
   readonly defaultDuration?: Milliseconds;
+  /** Default duration for snackbars that include an undo action. */
   readonly defaultUndoDuration?: Milliseconds;
+  /** Per-type message configurations (e.g. "save", "create", "delete"). */
   readonly eventTypeConfigs: DbxActionSnackbarEventMakeConfig;
 }
 
 /**
- * Used for managing/configuring the snackbar default values and pushing snackbar events.
+ * Application-wide service for opening action snackbars and generating display configurations
+ * from registered type presets. Merges user-provided config with built-in defaults.
+ *
+ * @example
+ * ```typescript
+ * const service = inject(DbxActionSnackbarService);
+ * service.openSnackbar({ message: 'Item saved!', button: 'Ok' });
+ * ```
  */
 @Injectable({
   providedIn: 'root'
@@ -49,10 +75,10 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
   }
 
   /**
-   * Opens a new snackbar given the input configuration.
+   * Opens a new snackbar with the given display configuration, merging with global defaults.
    *
-   * @param config
-   * @returns
+   * @param config - Display configuration for the snackbar content and behavior.
+   * @returns A reference to the opened Material snackbar.
    */
   openSnackbar<T = unknown, O = unknown>(config: DbxActionSnackbarDisplayConfig<T, O>): MatSnackBarRef<C> {
     const { snackbar: inputSnackbarConfig } = config;
@@ -80,6 +106,13 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
     return this.matSnackBar.openFromComponent(this.componentClass, matSnackbarConfig);
   }
 
+  /**
+   * Generates a snackbar display configuration for the given type and event input,
+   * using the registered event type configs. Returns `undefined` if no config is found for the type.
+   *
+   * @param type - The snackbar type key (e.g. "save", "delete"), or undefined to use "none".
+   * @param input - The generator input containing the event and optional undo configuration.
+   */
   generateDisplayConfig<T = unknown, O = unknown>(type: Maybe<DbxActionSnackbarType>, input: DbxActionSnackbarGeneratorInput<T, O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
     const configForType = this.eventTypeConfigs[type ?? 'none'];
     let result: Maybe<DbxActionSnackbarDisplayConfig<T, O>>;

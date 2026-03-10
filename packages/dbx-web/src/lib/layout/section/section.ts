@@ -1,7 +1,14 @@
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Heading level for a section header, corresponding to HTML heading elements h1 through h5.
+ */
 export type DbxSectionHeaderHType = 1 | 2 | 3 | 4 | 5;
 
+/**
+ * Configuration object for a section header's display properties, including
+ * heading level, text, icon, hint text, and padding options.
+ */
 export interface DbxSectionHeaderConfig {
   /**
    * Header sizing

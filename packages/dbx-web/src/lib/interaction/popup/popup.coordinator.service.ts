@@ -4,7 +4,9 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
- * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.
+ * Root-level service that tracks active popups by key, ensuring only one popup per key exists at a time.
+ *
+ * When a new popup is added with a key that already exists, the previous popup is closed automatically.
  */
 @Injectable({
   providedIn: 'root'

@@ -7,7 +7,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Component that displays an anchor and a span with the title.
+ * Displays the icon and title from a {@link ClickableAnchorLink}, either from an explicit input or inherited from a parent {@link DbxAnchorComponent}.
+ *
+ * Renders a Material icon followed by a title span when available.
+ *
+ * @example
+ * ```html
+ * <dbx-anchor [anchor]="myAnchor">
+ *   <dbx-anchor-content></dbx-anchor-content>
+ * </dbx-anchor>
+ *
+ * <dbx-anchor-content [anchor]="{ icon: 'home', title: 'Home' }"></dbx-anchor-content>
+ * ```
  */
 @Component({
   selector: 'dbx-anchor-content',

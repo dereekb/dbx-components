@@ -15,13 +15,28 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { DbxButtonSpacerDirective, DbxIconButtonComponent } from '../../button';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 
+/**
+ * Display mode for the zip blob preview: browsing directories or viewing a specific file entry.
+ */
 export type DbxZipBlobPreviewMode = 'view_directory' | 'view_entry';
 
+/**
+ * Group classification for zip preview entries: either a directory or a file.
+ */
 export type DbxZipBlobPreviewGroupValue = 'directory' | 'file';
+
+/**
+ * Group data used for sorting and titling directory/file groups in the zip preview list.
+ */
 export type DbxZipBlobPreviewGroupData = DbxListTitleGroupData<DbxZipBlobPreviewGroupValue> & { sort: number };
 
 /**
- * Used to display a zip preview based on the input blob.
+ * Displays an interactive file browser for a zip archive blob, allowing navigation through directories and previewing/downloading individual files.
+ *
+ * @example
+ * ```html
+ * <dbx-zip-blob-preview [blob]="zipBlob" [downloadFileName]="'archive.zip'"></dbx-zip-blob-preview>
+ * ```
  */
 @Component({
   selector: 'dbx-zip-blob-preview',

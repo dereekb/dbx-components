@@ -1,7 +1,19 @@
 import { Directive } from '@angular/core';
 
 /**
- * Button spacer directive.
+ * Adds inline spacing between adjacent buttons. Can be used as an element or attribute.
+ *
+ * @example
+ * ```html
+ * <dbx-button text="Cancel"></dbx-button>
+ * <dbx-button-spacer></dbx-button-spacer>
+ * <dbx-button text="Save" raised></dbx-button>
+ * ```
+ *
+ * @example
+ * ```html
+ * <span dbxButtonSpacer></span>
+ * ```
  */
 @Directive({
   selector: 'dbx-button-spacer,[dbxButtonSpacer]',

@@ -4,7 +4,15 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
 import { DbxErrorWidgetService } from './error.widget.service';
 
 /**
- * Used to display a corresponding error widget based on the input data.
+ * Resolves and displays an error widget component based on the error's code.
+ *
+ * Looks up the appropriate widget component from {@link DbxErrorWidgetService} using the error's code,
+ * falling back to the default or unknown widget entry as appropriate. Renders the widget via dynamic injection.
+ *
+ * @example
+ * ```html
+ * <dbx-error-widget-view [error]="readableError"></dbx-error-widget-view>
+ * ```
  */
 @Component({
   selector: 'dbx-error-widget-view',

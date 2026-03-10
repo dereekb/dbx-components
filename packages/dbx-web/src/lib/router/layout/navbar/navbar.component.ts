@@ -13,17 +13,39 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
 
+/**
+ * Internal representation of a navigation anchor with its selection state.
+ */
 interface NavAnchorLink {
   readonly selected: boolean;
   readonly anchor: ClickableAnchorLinkSegueRef;
 }
 
+/**
+ * Horizontal alignment for navbar content.
+ */
 export type NavBarContentAlign = 'center' | 'left' | 'right';
+
+/**
+ * Display mode for the navbar: tab bar, button with dropdown/rotate, or icon-only button.
+ */
 export type NavbarMode = 'bar' | 'button' | 'icon';
+
+/**
+ * Button behavior when the navbar collapses to button mode: show a dropdown menu or rotate through anchors on click.
+ */
 export type NavbarButtonMode = 'menu' | 'rotate';
 
 /**
- * Component that displays a navbar.
+ * Responsive navigation bar that displays anchor links as Material tabs, collapsing to a button menu or icon on smaller screens.
+ *
+ * Automatically selects the active anchor based on the current route and supports configurable breakpoints.
+ *
+ * @example
+ * ```html
+ * <dbx-navbar [anchors]="navAnchors" breakpoint="large" buttonMode="menu"></dbx-navbar>
+ * <dbx-navbar [anchors]="navAnchors" mode="icon" [showMenuCaret]="true"></dbx-navbar>
+ * ```
  */
 @Component({
   selector: 'dbx-navbar',

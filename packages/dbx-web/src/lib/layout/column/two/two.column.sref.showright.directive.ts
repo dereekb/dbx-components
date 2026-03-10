@@ -5,7 +5,18 @@ import { shareReplay, distinctUntilChanged, type Subscription } from 'rxjs';
 import { isNot } from '@dereekb/rxjs';
 
 /**
- * Used with a DbxTwoColumnComponent to control showing right when the current route is a child of the backRef.
+ * Automatically shows the right column when the current route is a child of the configured `backRef`.
+ *
+ * Works with {@link DbxTwoColumnSrefDirective} to determine when the user has navigated away from
+ * the back reference route, and shows the right column accordingly.
+ *
+ * @example
+ * ```html
+ * <dbx-two-column [dbxTwoColumnSref]="'/items'" dbxTwoColumnSrefShowRight>
+ *   <div left>Item list</div>
+ *   <dbx-two-column-right>Item detail (shown on child routes)</dbx-two-column-right>
+ * </dbx-two-column>
+ * ```
  */
 @Directive({
   selector: '[dbxTwoColumnSrefShowRight]',

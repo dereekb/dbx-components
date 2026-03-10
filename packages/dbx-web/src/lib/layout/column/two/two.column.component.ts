@@ -8,6 +8,10 @@ import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxResizedDirective } from '../../../screen/resize.directive';
 import { type ResizedEvent } from '../../../screen/resize';
 
+/**
+ * Represents the computed view state of a {@link DbxTwoColumnComponent}, capturing all layout flags
+ * that determine column visibility and sizing behavior.
+ */
 export interface DbxTwoColumnViewState {
   readonly showRight: boolean;
   readonly showFullLeft: boolean;
@@ -17,11 +21,20 @@ export interface DbxTwoColumnViewState {
 }
 
 /**
- * Responsive component meant to split a left and right column.
+ * Responsive two-column layout that splits content into a narrower left column and a wider right column.
  *
- * The left column is smaller than the right column, which contains the primary content.
+ * The right column contains the primary content. When the viewport is too narrow to fit both columns,
+ * the left column can be automatically hidden based on the configured minimum right width.
  *
- * Requires a TwoColumnsContextStore to be provided.
+ * Requires a {@link TwoColumnsContextStore} to be provided by a parent component or directive.
+ *
+ * @example
+ * ```html
+ * <dbx-two-column [reverseSizing]="false" [inSectionPage]="true">
+ *   <div left>Navigation sidebar</div>
+ *   <div right>Main content area</div>
+ * </dbx-two-column>
+ * ```
  */
 @Component({
   selector: 'dbx-two-column',
@@ -55,7 +68,14 @@ export class DbxTwoColumnComponent {
 
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
+  /**
+   * Whether to reverse the default column sizing so the left column is larger than the right.
+   */
   readonly reverseSizing = input<boolean>(false);
+
+  /**
+   * Whether this two-column layout is rendered within a section page context.
+   */
   readonly inSectionPage = input<boolean>(false);
 
   /**

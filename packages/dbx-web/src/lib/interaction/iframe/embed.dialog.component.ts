@@ -3,6 +3,9 @@ import { type ContentTypeMimeType, type Maybe, type WebsiteUrlWithPrefix } from 
 import { DbxEmbedComponent } from './embed.component';
 import { DbxInjectionDialogComponent } from '../dialog/dialog.injection.component';
 
+/**
+ * Configuration for opening an embed dialog, supporting both URL and Blob content sources.
+ */
 export interface DbxEmbedDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly srcUrl?: Maybe<WebsiteUrlWithPrefix>;
   readonly blob?: Maybe<Blob>;
@@ -11,11 +14,12 @@ export interface DbxEmbedDialogConfig extends Omit<MatDialogConfig, 'data'> {
 }
 
 /**
- * Opens a dialog with DbxEmbedComponent.
+ * Opens a dialog containing a {@link DbxEmbedComponent} to display embedded content from a URL or Blob.
  *
- * @param matDialog The MatDialog instance to use.
- * @param config The configuration for the dialog.
- * @returns The MatDialogRef for the dialog.
+ * @example
+ * ```ts
+ * const ref = openEmbedDialog(matDialog, { srcUrl: 'https://example.com/doc.pdf', embedMimeType: 'application/pdf' });
+ * ```
  */
 export function openEmbedDialog(matDialog: MatDialog, config: DbxEmbedDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxEmbedComponent>, void> {
   return DbxInjectionDialogComponent.openDialog(matDialog, {

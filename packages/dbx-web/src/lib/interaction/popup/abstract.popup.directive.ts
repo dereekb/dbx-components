@@ -2,7 +2,7 @@ import { Directive, inject } from '@angular/core';
 import { DbxPopupComponent } from './popup.component';
 
 /**
- * Abstract popup directive.
+ * Abstract base directive for components rendered inside a popup, providing access to the popup's close operation.
  */
 @Directive()
 export abstract class AbstractPopupDirective<O = unknown, I = unknown, T = unknown> {

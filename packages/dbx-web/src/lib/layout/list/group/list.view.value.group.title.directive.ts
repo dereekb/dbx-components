@@ -8,7 +8,13 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxListTitleGroupHeaderComponent, DBX_LIST_TITLE_GROUP_DATA } from './list.view.value.group.title.header.component';
 
 /**
- * Delegate used to for grouping DbxValueListItemConfig<T, I> values.
+ * Directive that groups list items into titled sections based on a {@link DbxListTitleGroupTitleDelegate}.
+ * Automatically provides itself as a {@link DbxValueListViewGroupDelegate} so list views can consume the grouping.
+ *
+ * @example
+ * ```html
+ * <dbx-list-view [dbxListTitleGroup]="myGroupDelegate" [config]="listViewConfig"></dbx-list-view>
+ * ```
  */
 @Directive({
   selector: '[dbxListTitleGroup]',

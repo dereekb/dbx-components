@@ -17,10 +17,17 @@ export interface ProvideDbxLinkifyConfig {
 }
 
 /**
- * Creates EnvironmentProviders for DbxLinkifyService.
+ * Creates environment-level providers for configuring {@link DbxLinkifyService} with a custom factory.
  *
- * @param config Configuration
- * @returns EnvironmentProviders
+ * @example
+ * ```ts
+ * provideDbxLinkify({
+ *   dbxLinkifyServiceConfigFactory: (injector) => ({
+ *     defaultEntry: { options: { defaultProtocol: 'https' } },
+ *     entries: [{ type: 'bio', options: { target: { url: '_blank' } } }]
+ *   })
+ * });
+ * ```
  */
 export function provideDbxLinkify(config: ProvideDbxLinkifyConfig): EnvironmentProviders {
   const { dbxLinkifyServiceConfigFactory } = config;

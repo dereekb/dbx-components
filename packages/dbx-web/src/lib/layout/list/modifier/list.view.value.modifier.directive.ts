@@ -8,7 +8,13 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { clean, cleanSubscription, completeOnDestroy, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 
 /**
- * DbxValueListViewModifier implementation
+ * Directive that implements {@link DbxValueListItemModifier}, managing a collection of item modifiers
+ * that transform list items before rendering. Accepts modifiers via the `dbxListItemModifier` input or programmatically.
+ *
+ * @example
+ * ```html
+ * <dbx-list-view [dbxListItemModifier]="myModifiers" [config]="listViewConfig"></dbx-list-view>
+ * ```
  */
 @Directive({
   selector: 'dbxListItemModifier,[dbxListItemModifier]',
@@ -38,7 +44,8 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
 }
 
 /**
- * Abstract directive used for managing modifyers for a DbxValueListView.
+ * Abstract base directive for creating custom list item modifiers. Automatically registers and unregisters
+ * its modifiers with the parent {@link DbxValueListItemModifier}. Extend this to build reusable modifier directives.
  */
 @Directive()
 export abstract class AbstractDbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {

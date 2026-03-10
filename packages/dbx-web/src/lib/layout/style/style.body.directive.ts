@@ -6,7 +6,14 @@ import { type DbxStyleClass } from './style';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Used to style the <body> element of the browser view/document using the style provided by DbxStyleService.
+ * Applies the current application style class from {@link DbxStyleService} to the document `<body>` element.
+ *
+ * Place this directive on a root-level element so that the body tag receives the active style class.
+ *
+ * @example
+ * ```html
+ * <div dbxStyleBody></div>
+ * ```
  */
 @Directive({
   selector: '[dbxStyleBody]',

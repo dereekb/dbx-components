@@ -2,6 +2,18 @@ import { Directive, type ElementRef, HostListener, input, model } from '@angular
 import { type Maybe } from '@dereekb/util';
 import { AbstractDbxClipboardDirective } from '../../util/clipboard.directive';
 
+/**
+ * Makes the host element clickable to copy text to the clipboard.
+ *
+ * If no explicit `dbxClickToCopyText` value is provided, copies the element's text content.
+ * Optionally highlights the element to indicate it is copyable.
+ *
+ * @example
+ * ```html
+ * <span [dbxClickToCopyText]="'Copy this value'">Copy this value</span>
+ * <span dbxClickToCopyText [highlighted]="false">Subtle copy</span>
+ * ```
+ */
 @Directive({
   selector: '[dbxClickToCopyText]',
   host: {
