@@ -4,6 +4,9 @@ import { type DbxWebFilePreviewServicePreviewComponentFunction, type DbxWebFileP
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 // MARK: Zip
+/**
+ * Preview component function preset that renders zip files using {@link DbxZipPreviewComponent}.
+ */
 export const DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_COMPONENT_PRESET: DbxWebFilePreviewServicePreviewComponentFunction = (input) => {
   const { srcUrl } = input;
   const config: DbxInjectionComponentConfig<DbxZipPreviewComponent> = {

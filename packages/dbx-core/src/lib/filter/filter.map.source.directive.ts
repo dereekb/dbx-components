@@ -6,7 +6,10 @@ import { AbstractDbxFilterMapInstanceDirective } from './filter.map.instance.dir
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Abstract directive that extends AbstractDbxFilterMapInstanceDirective and implements FilterSource.
+ * Abstract directive that extends {@link AbstractDbxFilterMapInstanceDirective} to also implement {@link FilterSource},
+ * emitting the filter values from the resolved filter map instance.
+ *
+ * @typeParam F - The filter type.
  */
 @Directive()
 export abstract class AbstractDbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstanceDirective<F> implements FilterSource<F> {
@@ -18,7 +21,16 @@ export abstract class AbstractDbxFilterMapSourceDirective<F> extends AbstractDbx
 }
 
 /**
- * Provides a FilterSource from a parent FilterMap.
+ * Concrete directive that provides a {@link FilterSource} from a keyed entry in a parent {@link FilterMap}.
+ *
+ * @example
+ * ```html
+ * <div dbxFilterMap>
+ *   <div [dbxFilterMapSource]="'listFilter'">
+ *     <my-filtered-list></my-filtered-list>
+ *   </div>
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxFilterMapSource]',

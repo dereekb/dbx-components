@@ -7,21 +7,34 @@ import { type DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransition
 import { type Maybe } from '@dereekb/util';
 
 /**
- * How to handle transitions.
+ * Strategy for handling route transitions when the action has unsaved changes.
  *
- * Values:
- * - none: Nothing occurs.
- * - dialog: Always show a dialog and act based on the result.
- * - auto: Try to auto-trigger if in a triggerable state. If it is modified but in a non-triggerable state, show a dialog. Should be used in conjuction with the auto-saver.
+ * - `'none'` - Allow the transition without any prompt.
+ * - `'dialog'` - Always show a confirmation dialog and act based on the user's choice.
+ * - `'auto'` - Attempt to auto-trigger the action if possible. If modified but not triggerable, fall back to showing a dialog. Best used with an auto-save mechanism.
  */
 export type DbxActionTransitionSafetyType = 'none' | 'dialog' | 'auto';
 
 /**
- * Context used for preventing a transition from occuring if the action is not complete or is in a modified state.
+ * Prevents UI Router transitions when the action has unsaved changes. Depending on the
+ * configured safety type, it can auto-trigger the action, show a confirmation dialog,
+ * or allow the transition without intervention.
  *
- * This can be configured to auto-trigger and wait, or show a dialog and wait for the user's feedback before doing anything.
+ * NOTE: This directive only works with UI-Router (not Angular Router).
  *
- * NOTE: This dialog only works for uirouter.
+ * @example
+ * ```html
+ * <form [dbxAction]="saveAction" [dbxActionTransitionSafety]="'dialog'">
+ *   <!-- Navigating away with unsaved changes shows a confirmation dialog -->
+ * </form>
+ * ```
+ *
+ * @example
+ * ```html
+ * <form [dbxAction]="autoSaveAction" [dbxActionTransitionSafety]="'auto'">
+ *   <!-- Auto-triggers save on navigation if possible, otherwise shows dialog -->
+ * </form>
+ * ```
  */
 @Directive({
   selector: '[dbxActionTransitionSafety]',

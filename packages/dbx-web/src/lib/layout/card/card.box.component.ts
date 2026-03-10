@@ -2,7 +2,17 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 /**
- * Component that formats a card-box of content.
+ * Displays a card-style box with an optional section header, icon, and projected content.
+ *
+ * Supports a named content slot `[sectionHeader]` for custom header actions beside the title.
+ *
+ * @example
+ * ```html
+ * <dbx-card-box [header]="'Settings'" [icon]="'settings'">
+ *   <button sectionHeader mat-icon-button><mat-icon>edit</mat-icon></button>
+ *   <p>Card body content goes here.</p>
+ * </dbx-card-box>
+ * ```
  */
 @Component({
   selector: 'dbx-card-box',

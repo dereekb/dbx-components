@@ -1,60 +1,130 @@
 import { InjectionToken, type Injector, type NgModuleRef, type StaticProvider, type TemplateRef, type Type, type ViewRef } from '@angular/core';
 import { type Configurable, type FactoryWithRequiredInput, filterMaybeArrayValues, type Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
 
+/**
+ * Injection token used to provide arbitrary data to dynamically created components.
+ *
+ * Components created via {@link DbxInjectionComponentConfig} can inject this token
+ * to access the `data` property from their configuration.
+ *
+ * @example
+ * ```typescript
+ * // In a dynamically injected component:
+ * readonly data = inject(DBX_INJECTION_COMPONENT_DATA);
+ * ```
+ */
 export const DBX_INJECTION_COMPONENT_DATA = new InjectionToken('DbxInjectionComponentConfigData');
 
+/**
+ * Configuration for dynamically creating and injecting an Angular component into a view container.
+ *
+ * This is the primary configuration interface for the dbx-injection system. It describes which component
+ * to create, how to configure its dependency injection context, and how to initialize it after creation.
+ *
+ * @typeParam T - The type of the component being created.
+ *
+ * @see {@link DbxInjectionInstance} - The runtime engine that processes this configuration.
+ * @see {@link DbxInjectionComponent} - The component that accepts this configuration as an input.
+ *
+ * @example
+ * ```typescript
+ * const config: DbxInjectionComponentConfig<MyComponent> = {
+ *   componentClass: MyComponent,
+ *   data: { id: 123 },
+ *   init: (instance) => { instance.title = 'Hello'; }
+ * };
+ * ```
+ */
 export interface DbxInjectionComponentConfig<T = unknown> {
   /**
-   * Type of Component to initialize.
+   * The Angular component class to dynamically instantiate.
    */
   readonly componentClass: Type<T>;
   /**
-   * (Optional) providers to provide to the existing injector.
+   * Optional static providers to add to the injector used when creating the component.
+   *
+   * These providers are merged with any data provider and made available to the created component.
    */
   readonly providers?: Maybe<StaticProvider[]>;
   /**
-   * (Optional) Custom parent injector to use when creating the component.
+   * Optional custom parent injector to use when creating the component.
+   *
+   * When not provided, the injector from the host {@link DbxInjectionInstance} is used.
    */
   readonly injector?: Maybe<Injector>;
   /**
-   * (Optional) Module ref to use when creating the component.
+   * Optional NgModule reference to associate with the created component.
+   *
+   * Useful when the component belongs to a lazily loaded module.
    */
   readonly ngModuleRef?: NgModuleRef<unknown>;
   /**
-   * (Optional) Custom initialization code when an instance is created.
+   * Optional initialization callback invoked after the component is created.
    *
-   * This is called in an Angular injection context of the created component, so that inject() is available and will be destroyed when the created component is destroyed.
+   * This is called within the Angular injection context of the created component,
+   * so `inject()` is available and any `DestroyRef` callbacks registered inside
+   * will be cleaned up when the created component is destroyed.
    */
   readonly init?: Maybe<(instance: T) => void>;
   /**
-   * unknown optional data to inject into the component.
+   * Optional arbitrary data to inject into the component via the {@link DBX_INJECTION_COMPONENT_DATA} token.
    */
   readonly data?: Maybe<unknown>;
 }
 
 /**
- * The injector may be important to where the dbxInjection is getting injected at. Some types may disallow setting a custom parent injector.
+ * A variant of {@link DbxInjectionComponentConfig} that omits the `injector` property.
+ *
+ * Used in scenarios where the injection site controls the parent injector and does not
+ * allow the configuration to override it (e.g., when the host component must be the injection root).
+ *
+ * @typeParam T - The type of the component being created.
  */
 export type DbxInjectionComponentConfigWithoutInjector<T = unknown> = Omit<DbxInjectionComponentConfig<T>, 'injector'>;
 
+/**
+ * A factory function that produces a {@link DbxInjectionComponentConfig} from a required input value.
+ *
+ * @typeParam I - The input type required by the factory.
+ * @typeParam T - The type of the component the produced config will create.
+ */
 export type DbxInjectionComponentConfigFactory<I, T = unknown> = FactoryWithRequiredInput<DbxInjectionComponentConfig<T>, I>;
 
+/**
+ * Configuration for injecting a template or view reference into a view container.
+ *
+ * This is an alternative to {@link DbxInjectionComponentConfig} for cases where you want to
+ * display a pre-existing template or view rather than dynamically creating a component.
+ *
+ * @typeParam T - The context type of the template reference.
+ *
+ * @example
+ * ```typescript
+ * const config: DbxInjectionTemplateConfig = {
+ *   templateRef: myTemplateRef
+ * };
+ * ```
+ */
 export interface DbxInjectionTemplateConfig<T = unknown> {
   /**
-   * Template ref to display.
+   * An Angular `TemplateRef` to render as an embedded view.
    */
   readonly templateRef?: Maybe<TemplateRef<T>>;
   /**
-   * View ref to inject.
+   * A pre-existing `ViewRef` to insert into the container.
    */
   readonly viewRef?: Maybe<ViewRef>;
 }
 
 /**
- * Merges multiple configurations into a single configuration.
+ * Merges multiple partial {@link DbxInjectionComponentConfig} objects into a single configuration.
  *
- * @param configs
- * @returns
+ * Provider arrays are concatenated (not overwritten) so that all providers from all configs
+ * are preserved. All other properties are merged with later values taking precedence.
+ *
+ * @typeParam T - The component type for the configuration.
+ * @param configs - An array of partial configs (may contain `undefined`/`null` entries which are filtered out).
+ * @returns A single merged partial configuration.
  */
 export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
   const providers = mergeArrays(filterMaybeArrayValues(configs).map((x) => x.providers));

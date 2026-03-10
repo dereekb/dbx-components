@@ -6,8 +6,14 @@ import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxValueListViewComponent } from './list.view.value.component';
 
+/**
+ * Default template string for value list view components that renders a `dbx-list-view` with a `config` binding.
+ */
 export const DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-list-view [config]="config"></dbx-list-view>';
 
+/**
+ * Convenience module that imports and exports {@link DbxValueListViewComponent}.
+ */
 @NgModule({
   exports: [DbxValueListViewComponent],
   imports: [DbxValueListViewComponent]
@@ -16,9 +22,10 @@ export class DbxValueListViewComponentImportsModule {}
 
 // MARK: Value List View
 /**
- * Abstract DbxListView implementation.
+ * Abstract base directive implementing {@link DbxListView}. Manages values, disabled state, selection mode, and click events.
  *
- * You might consider extending AbstractDbxSelectionListViewDirective instead, as it includes selection support.
+ * Extend this to create custom list view directives. If selection support is needed,
+ * consider extending {@link AbstractDbxSelectionListViewDirective} instead.
  */
 @Directive()
 export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T> {

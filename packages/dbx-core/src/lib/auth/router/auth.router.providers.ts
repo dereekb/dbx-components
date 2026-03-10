@@ -2,20 +2,38 @@ import { type EnvironmentProviders, type Provider, makeEnvironmentProviders } fr
 import { DbxAppAuthRoutes } from './auth.router';
 
 /**
- * Configuration for provideDbxAppAuthRouter().
+ * Configuration for {@link provideDbxAppAuthRouter}.
+ *
+ * @see {@link DbxAppAuthRoutes} for the route definitions.
  */
 export interface ProvideDbxAppAuthRouterConfig {
   /**
-   * DbxAppAuthRoutes configuration.
+   * The concrete {@link DbxAppAuthRoutes} instance that defines the application's auth-related routes
+   * (login, logout, onboarding, and main app).
    */
   readonly dbxAppAuthRoutes: DbxAppAuthRoutes;
 }
 
 /**
- * Creates EnvironmentProviders for providing DbxAppAuthRoutes configuration.
+ * Creates Angular `EnvironmentProviders` that register the {@link DbxAppAuthRoutes} configuration.
  *
- * @param config Configuration
- * @returns EnvironmentProviders
+ * This makes the auth routes available for injection throughout the application,
+ * primarily consumed by {@link DbxAppAuthRouterService} for programmatic navigation.
+ *
+ * @param config - Configuration containing the auth routes to register.
+ * @returns Angular `EnvironmentProviders` for the auth router.
+ *
+ * @example
+ * ```ts
+ * provideDbxAppAuthRouter({
+ *   dbxAppAuthRoutes: {
+ *     loginRef: '/auth/login',
+ *     appRef: '/app'
+ *   }
+ * });
+ * ```
+ *
+ * @see {@link provideDbxAppAuth} for the all-in-one provider that includes this.
  */
 export function provideDbxAppAuthRouter(config: ProvideDbxAppAuthRouterConfig): EnvironmentProviders {
   const { dbxAppAuthRoutes } = config;

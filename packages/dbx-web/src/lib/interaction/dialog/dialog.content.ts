@@ -1,8 +1,19 @@
 import { type MatDialogConfig } from '@angular/material/dialog';
 import { type Maybe, cssClassesSet } from '@dereekb/util';
 
+/**
+ * Configuration for dialog content, extending MatDialogConfig but omitting internal properties.
+ */
 export type DbxDialogContentConfig = Omit<MatDialogConfig, 'viewContainerRef' | 'injector' | 'id' | 'data'>;
 
+/**
+ * Sanitizes a {@link DbxDialogContentConfig} by normalizing the panelClass into an array.
+ *
+ * @example
+ * ```ts
+ * const config = sanitizeDbxDialogContentConfig({ panelClass: 'my-panel my-other-panel' });
+ * ```
+ */
 export function sanitizeDbxDialogContentConfig(input: Maybe<DbxDialogContentConfig>): DbxDialogContentConfig {
   const panelClass = input?.panelClass;
 

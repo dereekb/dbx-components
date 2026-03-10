@@ -8,7 +8,25 @@ import { DbxRouteModelIdDirectiveDelegate } from './model.router';
 import { clean, cleanSubscription } from '../../rxjs';
 
 /**
- * Used for retrieving the model's id from the current route using the configured parameter and passes it to its delegate.
+ * Directive that reads a model identifier from the current route's parameters and passes it to a {@link DbxRouteModelIdDirectiveDelegate}.
+ *
+ * Supports configurable parameter key, default value, redirect behavior, and custom decision logic for determining
+ * when to use the default value vs. the route parameter.
+ *
+ * @example
+ * ```html
+ * <!-- Basic usage: reads "id" param from route and passes to delegate -->
+ * <div dbxRouteModelId></div>
+ *
+ * <!-- Custom param key -->
+ * <div [dbxRouteModelId]="'modelId'"></div>
+ *
+ * <!-- With default value and redirect disabled -->
+ * <div dbxRouteModelId [dbxRouteModelIdDefault]="defaultId$" [dbxRouteModelIdDefaultRedirect]="false"></div>
+ * ```
+ *
+ * @see {@link DbxRouteModelIdDirectiveDelegate} for the delegate that receives the id observables
+ * @see {@link dbxRouteModelIdParamRedirect} for the underlying redirect logic
  */
 @Directive({
   selector: '[dbxRouteModelId]',

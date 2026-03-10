@@ -7,7 +7,15 @@ import { type SideNavDisplayMode } from './sidenav';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Structural directive that displays the content if the Sidenav has a specific sidenav size.
+ * Structural directive that conditionally renders its host element based on the current {@link SideNavDisplayMode} of the parent {@link DbxSidenavComponent}.
+ *
+ * Accepts one or more display modes and shows the content only when the sidenav matches.
+ *
+ * @example
+ * ```html
+ * <div *dbxIfSidenavDisplayMode="'full'">Visible only in full mode</div>
+ * <div *dbxIfSidenavDisplayMode="['mobile', 'icon']">Visible in mobile or icon mode</div>
+ * ```
  */
 @Directive({
   selector: '[dbxIfSidenavDisplayMode]',

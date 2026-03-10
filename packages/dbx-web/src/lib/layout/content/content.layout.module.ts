@@ -19,7 +19,8 @@ const importsAndExports = [
 ];
 
 /**
- * Module for container-type components.
+ * Bundles all content layout directives including content containers, borders, elevation,
+ * boxes, pits, and page-filling directives for convenient import.
  */
 @NgModule({
   imports: importsAndExports,

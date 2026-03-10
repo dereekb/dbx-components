@@ -6,7 +6,19 @@ import { type DbxErrorSnackbarConfig } from './error.snackbar.component';
 import { filterMaybe } from '@dereekb/rxjs';
 
 /**
- * Context used for displaying an error from an ActionContext a snackbar when an ReadableErrorComponent
+ * Displays action errors in a snackbar notification.
+ *
+ * Subscribes to the action context's error stream and shows a snackbar via {@link DbxErrorSnackbarService}
+ * whenever an error occurs. Accepts an optional configuration or a duration in milliseconds as input.
+ *
+ * @example
+ * ```html
+ * <!-- Auto-dismiss after 5 seconds -->
+ * <div dbxAction [dbxActionSnackbarError]="5000">...</div>
+ *
+ * <!-- Default behavior, no auto-dismiss -->
+ * <div dbxAction dbxActionSnackbarError>...</div>
+ * ```
  */
 @Directive({
   selector: '[dbxActionSnackbarError]',

@@ -5,7 +5,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { DbxBarDirective } from './bar.directive';
 
 /**
- * Acts as a divider between content and centers a label within a background.
+ * A themed header bar displaying an optional icon and text label, useful as a section divider.
+ *
+ * @example
+ * ```html
+ * <dbx-bar-header icon="info" text="Section Title" color="accent"></dbx-bar-header>
+ * ```
  */
 @Component({
   selector: 'dbx-bar-header',

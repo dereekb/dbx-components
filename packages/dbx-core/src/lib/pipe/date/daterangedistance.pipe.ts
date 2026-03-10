@@ -2,6 +2,21 @@ import { Pipe, type PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DateRange, formatDateDistance } from '@dereekb/date';
 
+/**
+ * Formats a {@link Date} or {@link DateRange} as a human-readable distance string relative to now using {@link formatDateDistance}.
+ *
+ * This is an impure pipe that recalculates on every change detection cycle to keep the distance up to date.
+ * Returns a fallback string when the input is `null` or `undefined`.
+ *
+ * @example
+ * ```html
+ * <span>{{ someDate | dateRangeDistance }}</span>
+ * <!-- Output: "3 hours ago" -->
+ *
+ * <span>{{ nullDate | dateRangeDistance:'Unknown' }}</span>
+ * <!-- Output: "Unknown" -->
+ * ```
+ */
 @Pipe({
   name: 'dateRangeDistance',
   standalone: true,

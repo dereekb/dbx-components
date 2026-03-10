@@ -5,7 +5,22 @@ import { onDbxAppContext, fromDbxAppContext } from './state';
 import { type DbxAppContextFullState } from './state/state';
 
 /**
- * State for accessing the app's DbxAppContextState defined within the DbxAppContextFullState for the ngrx store.
+ * Service for dispatching and selecting the application's {@link DbxAppContextState} from the NgRx store.
+ *
+ * Provided at the root level. Use to transition between app-level context states
+ * (e.g., public, auth, onboard, app).
+ *
+ * @example
+ * ```typescript
+ * @Component({ ... })
+ * export class AppComponent {
+ *   private readonly contextService = inject(DbxAppContextService);
+ *
+ *   onLogin(): void {
+ *     this.contextService.setState('app');
+ *   }
+ * }
+ * ```
  */
 @Injectable({
   providedIn: 'root'

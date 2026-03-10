@@ -10,9 +10,9 @@ import { DbxAnchorContentComponent } from './anchor.content.component';
 export const DBX_ROUTER_ANCHOR_COMPONENTS = [DbxAnchorComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxAnchorContentComponent];
 
 /**
- * Module that provides anchor and link components.
+ * NgModule that re-exports all standalone anchor and link components for backward compatibility.
  *
- * All components are now standalone. This module is provided for backward compatibility.
+ * Prefer importing individual standalone components directly in new code.
  */
 @NgModule({
   imports: DBX_ROUTER_ANCHOR_COMPONENTS,

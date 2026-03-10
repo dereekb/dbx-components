@@ -3,12 +3,24 @@ import { Injectable, Injector, inject } from '@angular/core';
 import { NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
+/**
+ * Full configuration for opening a popup via {@link DbxPopupService}, extending the component config with an optional injector.
+ */
 export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T> {
   readonly injector?: Injector;
 }
 
 /**
- * Used for displaying a popup.
+ * Root-level service for programmatically opening popup overlays with dynamic component content.
+ *
+ * @example
+ * ```ts
+ * const ref = popupService.open({
+ *   key: 'my-popup',
+ *   componentClass: MyPopupContentComponent,
+ *   position: 'bottom_right'
+ * });
+ * ```
  */
 @Injectable({
   providedIn: 'root'

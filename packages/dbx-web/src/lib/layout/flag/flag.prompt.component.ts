@@ -4,7 +4,16 @@ import { DbxFlagComponent } from './flag.component';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Pre-configured dbx-flag prompt to do something.
+ * A themed banner with a text prompt and a slot for action content (e.g., buttons).
+ *
+ * Built on {@link DbxFlagComponent}, this is convenient for call-to-action banners.
+ *
+ * @example
+ * ```html
+ * <dbx-flag-prompt text="Complete your profile" color="accent">
+ *   <button mat-button>Go</button>
+ * </dbx-flag-prompt>
+ * ```
  */
 @Component({
   selector: 'dbx-flag-prompt',

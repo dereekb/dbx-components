@@ -2,10 +2,22 @@ import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } fr
 import { type DbxProgressButtonGlobalConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 
 /**
- * Provides the global configuration for DbxProgressButtonComponent.
+ * Registers a global configuration for progress buttons, allowing default styles and
+ * behavior to be overridden application-wide by button ID.
  *
- * @param config
- * @returns
+ * @param config - Array of targeted configurations to apply globally.
+ * @returns Environment providers to include in your application bootstrap.
+ *
+ * @example
+ * ```typescript
+ * bootstrapApplication(AppComponent, {
+ *   providers: [
+ *     provideDbxProgressButtonGlobalConfig([
+ *       { id: 'primary-save', buttonType: 'raised', buttonColor: 'primary' }
+ *     ])
+ *   ]
+ * });
+ * ```
  */
 export function provideDbxProgressButtonGlobalConfig(config: DbxProgressButtonGlobalConfig): EnvironmentProviders {
   const providers: Provider[] = [

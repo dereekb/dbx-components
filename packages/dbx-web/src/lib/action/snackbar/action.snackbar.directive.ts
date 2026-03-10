@@ -7,7 +7,23 @@ import { type DbxActionSnackbarDisplayConfigGeneratorFunction, type DbxActionSna
 import { type LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs';
 
 /**
- * Action directive that displays a snackbar when the action context hits a certain state.
+ * Displays a Material snackbar notification when the parent action transitions between loading states
+ * (loading, success, error). Supports built-in message presets via `dbxActionSnackbarDefault` and
+ * custom generator functions via the `dbxActionSnackbar` input.
+ *
+ * @example
+ * ```html
+ * <form [dbxAction]="saveAction" dbxActionSnackbar dbxActionSnackbarDefault="save">
+ *   <!-- Shows "Saving...", "Saved", or "Save Failed" snackbars automatically -->
+ * </form>
+ * ```
+ *
+ * @example
+ * ```html
+ * <div [dbxAction]="deleteAction" [dbxActionSnackbar]="customSnackbarFn" [dbxActionSnackbarUndo]="undoRef">
+ *   <!-- Custom snackbar with undo support -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxActionSnackbar]',

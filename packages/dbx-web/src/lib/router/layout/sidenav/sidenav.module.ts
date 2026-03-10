@@ -7,6 +7,11 @@ import { DbxIfSidenavDisplayModeDirective } from './sidenav.ifdisplaymode.direct
 
 const importsAndExports = [DbxIfSidenavDisplayModeDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxSidenavPagebarComponent, DbxSidenavPageComponent];
 
+/**
+ * NgModule that re-exports all standalone sidenav-related components and directives for backward compatibility.
+ *
+ * Prefer importing individual standalone components directly in new code.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

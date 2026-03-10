@@ -1,6 +1,14 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { type Maybe, type UnitedStatesAddressWithContact } from '@dereekb/util';
 
+/**
+ * Displays a formatted United States address with optional contact fields (name, phone).
+ *
+ * @example
+ * ```html
+ * <dbx-us-address [address]="{ name: 'John', line1: '123 Main St', city: 'Austin', state: 'TX', zip: '78701' }"></dbx-us-address>
+ * ```
+ */
 // prettier-ignore
 @Component({
   selector: 'dbx-us-address',

@@ -4,10 +4,16 @@ import { BehaviorSubject, type Observable, combineLatest, distinctUntilChanged, 
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { DBX_DARK_STYLE_CLASS_SUFFIX, type DbxStyleClass, dbxStyleClassCleanSuffix, type DbxStyleClassCleanSuffix, type DbxStyleClassSuffix, type DbxStyleConfig } from './style';
 
+/**
+ * Injection token for providing the default {@link DbxStyleConfig} to {@link DbxStyleService}.
+ */
 export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 
 /**
- * Used for managing styles within an app.
+ * Manages application-wide style classes and suffix modes (e.g., dark mode).
+ *
+ * Consumers can set a default style config, override it with an observable config,
+ * and toggle style suffixes to switch between style variants at runtime.
  */
 @Injectable()
 export class DbxStyleService implements Destroyable {
@@ -87,22 +93,37 @@ export class DbxStyleService implements Destroyable {
     this._styleClassSuffix.next(suffixValue);
   }
 
+  /**
+   * Returns the current style class suffix, if one is set.
+   */
   get currentStyleClassSuffix(): Maybe<DbxStyleClassCleanSuffix> {
     return this._styleClassSuffix.value;
   }
 
+  /**
+   * Directly sets the active style class suffix, or clears it if null/undefined.
+   */
   setStyleClassSuffix(suffix: Maybe<DbxStyleClassSuffix>) {
     this._styleClassSuffix.next(suffix ? dbxStyleClassCleanSuffix(suffix) : undefined);
   }
 
+  /**
+   * Updates the default style configuration used when no override config is set.
+   */
   setDefaultConfig(defaultConfig: DbxStyleConfig) {
     this._defaultConfig.next(defaultConfig);
   }
 
+  /**
+   * Overrides the active style configuration with the given value or observable.
+   */
   setConfig(config: ObservableOrValue<DbxStyleConfig>) {
     this._config.next(asObservable(config));
   }
 
+  /**
+   * Clears the active config override if it matches the given reference, reverting to the default config.
+   */
   unsetConfig(config: ObservableOrValue<DbxStyleConfig>) {
     if (this._config.value === config) {
       this._config.next(undefined);

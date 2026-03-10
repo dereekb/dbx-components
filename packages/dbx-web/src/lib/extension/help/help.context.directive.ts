@@ -6,7 +6,18 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { registerHelpContextKeysWithDbxHelpContextService } from './help.context';
 
 /**
- * Directive that registers one or more help contexts to the current context.
+ * Directive that registers one or more help context keys with the {@link DbxHelpContextService}. Automatically unregisters when the host element is destroyed.
+ *
+ * @example
+ * ```html
+ * <div [dbxHelpContext]="'my-feature-help'">
+ *   <!-- Content with help context -->
+ * </div>
+ *
+ * <div [dbxHelpContext]="['topic-a', 'topic-b']">
+ *   <!-- Content with multiple help contexts -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxHelpContext]',

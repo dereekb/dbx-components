@@ -4,9 +4,21 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Directive used to calculate a dynamic height for an accordion header.
+ * Calculates and applies a dynamic height to a Material expansion panel header based on text content.
  *
- * If the height calculates to zero or nullish/undefined no height change is applied.
+ * Sets the `--mat-expansion-header-collapsed-state-height` and `--mat-expansion-header-expanded-state-height`
+ * CSS custom properties. On small screens, the estimated line count is scaled up to account for text wrapping.
+ * If the calculated height is zero or nullish, no style override is applied.
+ *
+ * @example
+ * ```html
+ * <mat-expansion-panel [dbxAccordionHeaderHeight]="64" [heightText]="item.description" [maxHeaderHeight]="120">
+ *   <mat-expansion-panel-header>
+ *     {{ item.title }}
+ *   </mat-expansion-panel-header>
+ *   <p>Panel content</p>
+ * </mat-expansion-panel>
+ * ```
  */
 @Directive({
   selector: '[dbxAccordionHeaderHeight]',

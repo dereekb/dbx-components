@@ -4,17 +4,27 @@ import { type DbxListTitleGroupData } from './list.view.value.group.title';
 import { MatIconModule } from '@angular/material/icon';
 import { NgClass } from '@angular/common';
 
+/**
+ * Injection token that provides the {@link DbxListTitleGroupData} to group header components.
+ */
 export const DBX_LIST_TITLE_GROUP_DATA = new InjectionToken<unknown>('DbxListTitleGroupData');
 
 /**
- * Abstract DbxListTitleGroupHeaderComponent that already has the data injected.
+ * Abstract base class for group header components. Automatically injects the {@link DbxListTitleGroupData}
+ * via the {@link DBX_LIST_TITLE_GROUP_DATA} token. Extend this to create custom group header renderers.
  */
 export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> {
   readonly data = inject<D>(DBX_LIST_TITLE_GROUP_DATA);
 }
 
 /**
- * The default group header component.
+ * Default group header component that displays a title, optional icon, and optional hint text.
+ * Used automatically by {@link DbxListTitleGroupDirective} unless a custom header component is specified.
+ *
+ * @example
+ * ```html
+ * <dbx-list-title-group-header></dbx-list-title-group-header>
+ * ```
  */
 @Component({
   selector: 'dbx-list-title-group-header',

@@ -6,7 +6,24 @@ import { authRolesSetContainsNoRolesFrom, DbxAuthService } from './service';
 import { AbstractIfDirective } from '../view/if.directive';
 
 /**
- * Structural decorator directive similar to ngIf that embeds content if the current auth user has none of the target role(s).
+ * Structural directive that conditionally renders its host element based on whether
+ * the currently authenticated user possesses **none** of the specified auth roles.
+ *
+ * This is the inverse of {@link DbxAuthHasAnyRoleDirective}. Content is shown only when
+ * the user does not have any of the listed roles. Useful for hiding content from
+ * privileged users or showing fallback UI for unprivileged users.
+ *
+ * @example
+ * ```html
+ * <!-- Show only if user does NOT have the 'admin' role -->
+ * <div *dbxAuthNotAnyRole="'admin'">Non-admin content</div>
+ *
+ * <!-- Show only if user has NEITHER 'banned' nor 'suspended' role -->
+ * <div *dbxAuthNotAnyRole="['banned', 'suspended']">Active user content</div>
+ * ```
+ *
+ * @see {@link DbxAuthHasRolesDirective} for requiring **all** specified roles.
+ * @see {@link DbxAuthHasAnyRoleDirective} for requiring **any** of the specified roles.
  */
 @Directive({
   selector: '[dbxAuthNotAnyRole]',

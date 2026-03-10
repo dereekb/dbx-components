@@ -5,7 +5,17 @@ import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';
 
 /**
- * Popover content wrapper component.
+ * Wraps popover body content, providing a resizable container that tracks its height for dynamic sizing.
+ *
+ * Supports a `[controls]` content projection slot for popover control elements.
+ *
+ * @example
+ * ```html
+ * <dbx-popover-content>
+ *   <dbx-popover-controls controls></dbx-popover-controls>
+ *   <p>Popover body content here.</p>
+ * </dbx-popover-content>
+ * ```
  */
 @Component({
   selector: 'dbx-popover-content',

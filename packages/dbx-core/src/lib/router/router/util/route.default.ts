@@ -6,7 +6,24 @@ import { SubscriptionObject, switchMapToDefault, type SwitchMapToDefaultFilterFu
 const DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY = defaultForwardFunctionFactory<SwitchMapToDefaultFilterFunction<unknown>>((value) => of(value == null));
 
 /**
- * Utility class used in conjuction with a DbxRouteParamReaderInstance to redirect when the default param is not valid.
+ * Utility class that works with a {@link DbxRouteParamReaderInstance} to automatically redirect the router
+ * when the current parameter value is determined to require a default substitution.
+ *
+ * When enabled and initialized, it monitors the parameter value and, if the configured filter function
+ * indicates the value should be replaced, updates the route to use the default value instead.
+ *
+ * @typeParam T - The type of the parameter value.
+ *
+ * @example
+ * ```ts
+ * const paramReader = dbxRouteParamReaderInstance<string>(routerService, 'id');
+ * const redirect = new DbxRouteParamDefaultRedirectInstance(paramReader);
+ * redirect.setUseDefaultFilter(value => of(value === '0'));
+ * redirect.init();
+ * ```
+ *
+ * @see {@link DbxRouteParamReaderInstance}
+ * @see {@link dbxRouteModelIdParamRedirect} for the model-specific usage pattern
  */
 export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Destroyable {
   private readonly instance: DbxRouteParamReaderInstance<T>;

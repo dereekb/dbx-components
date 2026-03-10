@@ -6,8 +6,19 @@ import { type Maybe } from '@dereekb/util';
 import { AbstractDbxFileUploadComponent, type DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
 import { provideDbxFileUploadActionCompatable } from './upload.action';
 
+/**
+ * Event emitted by {@link DbxFileUploadButtonComponent} when files are selected.
+ */
 export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEvent;
 
+/**
+ * File upload button that opens a native file picker and emits accepted/rejected file results.
+ *
+ * @example
+ * ```html
+ * <dbx-file-upload-button [text]="'Upload'" [icon]="'upload'" [accept]="['image/*']" [multiple]="true" (filesChanged)="onFiles($event)"></dbx-file-upload-button>
+ * ```
+ */
 @Component({
   selector: 'dbx-file-upload-button',
   template: `

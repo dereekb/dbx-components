@@ -7,6 +7,9 @@ import { DbxHelpViewPopoverComponent, type DbxHelpViewPopoverConfigWithoutOrigin
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxButtonComponent, type DbxButtonStyle } from '../../button';
 
+/**
+ * Configuration for the {@link DbxHelpViewPopoverButtonComponent}, combining popover settings with button display and style options.
+ */
 export interface DbxHelpViewPopoverButtonConfig extends DbxHelpViewPopoverConfigWithoutOrigin {
   /**
    * The display configuration for the button.
@@ -19,7 +22,12 @@ export interface DbxHelpViewPopoverButtonConfig extends DbxHelpViewPopoverConfig
 }
 
 /**
- * Button component that opens a help popover showing active help contexts.
+ * Button that opens a help popover displaying the currently active help context topics. Defaults to a "help_center" icon button.
+ *
+ * @example
+ * ```html
+ * <dbx-help-view-popover-button [config]="{ header: 'Help', icon: 'help' }"></dbx-help-view-popover-button>
+ * ```
  */
 @Component({
   selector: 'dbx-help-view-popover-button',

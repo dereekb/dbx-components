@@ -4,7 +4,23 @@ import { ActionContextStoreSource } from '../../action.store.source';
 import { ActionContextStoreSourceMap, type ActionKey } from './action.map';
 
 /**
- * Used to communicate with an dbxActionMap and set the ActionContextStore to the store based on the key.
+ * Directive that registers the host element's {@link ActionContextStoreSource} into an ancestor
+ * {@link ActionContextStoreSourceMap} under the provided key.
+ *
+ * When the key changes, the previous registration is removed and the new one is added.
+ * On destroy, the registration is cleaned up automatically.
+ *
+ * @example
+ * ```html
+ * <div dbxActionContextMap>
+ *   <div dbxAction [dbxActionMapSource]="'save'">
+ *     <button (click)="action.trigger()">Save</button>
+ *   </div>
+ * </div>
+ * ```
+ *
+ * @see {@link DbxActionContextMapDirective} for the parent map provider.
+ * @see {@link DbxActionFromMapDirective} for consuming registered actions by key.
  */
 @Directive({
   selector: '[dbxActionMapSource]',

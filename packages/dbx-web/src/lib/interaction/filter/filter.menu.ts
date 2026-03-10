@@ -20,6 +20,14 @@ export interface DbxPresetFilterMenuConfig {
   readonly usePresetIcon?: boolean;
 }
 
+/**
+ * Creates an observable that emits the button text for a preset filter menu based on the current selection.
+ *
+ * @example
+ * ```ts
+ * const text$ = dbxPresetFilterMenuButtonTextObservable(config$, selectedPreset$);
+ * ```
+ */
 export function dbxPresetFilterMenuButtonTextObservable(config$: Observable<DbxPresetFilterMenuConfig>, selection$: Observable<Maybe<Partial<Pick<ClickableAnchorLink, 'title'>>>>, defaultText = 'Filter') {
   return combineLatest([config$, selection$]).pipe(
     map(([config, preset]) => preset?.title ?? config.unknownSelectionText ?? defaultText),
@@ -28,6 +36,14 @@ export function dbxPresetFilterMenuButtonTextObservable(config$: Observable<DbxP
   );
 }
 
+/**
+ * Creates an observable that emits the button icon for a preset filter menu based on the current selection and config.
+ *
+ * @example
+ * ```ts
+ * const icon$ = dbxPresetFilterMenuButtonIconObservable(config$, selectedPreset$);
+ * ```
+ */
 export function dbxPresetFilterMenuButtonIconObservable(config$: Observable<DbxPresetFilterMenuConfig>, selection$: Observable<Maybe<Partial<Pick<ClickableAnchorLink, 'icon'>>>>, defaultIcon = 'arrow_drop_down') {
   return config$.pipe(
     switchMap((config) => {

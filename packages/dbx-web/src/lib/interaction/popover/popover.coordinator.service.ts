@@ -4,7 +4,9 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
- * Used for coordinating popovers and closing/replacing existing ones when a new popover of the same name appears.
+ * Root-level service that tracks active popovers by key, ensuring only one popover per key exists at a time.
+ *
+ * When a new popover is added with a key that already exists, the previous popover is closed automatically.
  */
 @Injectable({
   providedIn: 'root'

@@ -7,9 +7,16 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { type WorkInstance } from '@dereekb/rxjs';
 
 /**
- * Action component used to simplify creating a filter form.
+ * Wraps filter form content with apply/reset buttons, integrating with the action system.
  *
- * Provides a ActionContextStoreSource and configures the action to set the filter on a FilterSourceDirective when triggered.
+ * Provides an ActionContextStoreSource and applies the filter value to the nearest FilterSourceDirective on trigger.
+ *
+ * @example
+ * ```html
+ * <dbx-filter-wrapper [applyText]="'Apply'" [applyIcon]="'filter_list'">
+ *   <my-filter-form dbxActionForm></my-filter-form>
+ * </dbx-filter-wrapper>
+ * ```
  */
 @Component({
   selector: 'dbx-filter-wrapper',

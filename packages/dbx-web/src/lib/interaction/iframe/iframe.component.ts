@@ -5,6 +5,14 @@ import { type Maybe } from '@dereekb/util';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 
+/**
+ * Renders an iframe element with a dynamically configurable content URL and optional URL sanitization.
+ *
+ * @example
+ * ```html
+ * <dbx-iframe [contentUrl]="'https://example.com'" [scrolling]="'auto'" [sanitizeUrl]="true"></dbx-iframe>
+ * ```
+ */
 @Component({
   selector: 'dbx-iframe',
   template: `

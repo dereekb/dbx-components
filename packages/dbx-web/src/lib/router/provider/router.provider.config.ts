@@ -1,11 +1,10 @@
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 /**
- * Provider that describes to the app how to handle anchors.
+ * Abstract configuration that tells the application which component to use for rendering segue-ref anchor links.
  *
- * Use provideDbxRouterWebUiRouterProviderConfig() if using UIRouter in your application.
- *  or
- * Use provideDbxRouterWebAngularRouterProviderConfig() if using Angular Router in your application.
+ * Use {@link provideDbxRouterWebAngularRouterProviderConfig} for Angular Router or
+ * {@link provideDbxRouterWebUiRouterProviderConfig} for UIRouter.
  */
 export abstract class DbxRouterWebProviderConfig {
   /**

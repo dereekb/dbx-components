@@ -4,7 +4,22 @@ import { type DbxAppContextState } from './context';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Used to set the DbxAppContextState for an app to the input state using the DbxAppContextService.
+ * Sets the application's {@link DbxAppContextState} when the input value changes.
+ *
+ * Dispatches to the NgRx store via {@link DbxAppContextService}. Commonly placed
+ * on route-level components to declare which context the route belongs to.
+ *
+ * @example
+ * ```html
+ * <div [dbxAppContextState]="'app'">
+ *   <!-- App-level content rendered when context is 'app' -->
+ * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <router-outlet dbxAppContextState="public"></router-outlet>
+ * ```
  */
 @Directive({
   selector: '[dbxAppContextState]',

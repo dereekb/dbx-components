@@ -54,6 +54,12 @@ describe('dateDurationSpanType', () => {
     expect(result).toBeInstanceOf(type.errors);
   });
 
+  it('should accept a Date object for startsAt', () => {
+    const result = dateDurationSpanType({ startsAt: new Date(), duration: 60 });
+    expect(result).not.toBeInstanceOf(type.errors);
+    expect((result as { startsAt: Date }).startsAt).toBeInstanceOf(Date);
+  });
+
   it('should reject a non-date string for startsAt', () => {
     const result = dateDurationSpanType({ startsAt: 'not-a-date', duration: 60 });
     expect(result).toBeInstanceOf(type.errors);
@@ -69,6 +75,15 @@ describe('dateRangeType', () => {
 
   it('should parse start and end strings into Dates', () => {
     const result = dateRangeType({ start: '2024-01-01T00:00:00.000Z', end: '2024-01-31T00:00:00.000Z' });
+    expect(result).not.toBeInstanceOf(type.errors);
+    expect((result as { start: Date }).start).toBeInstanceOf(Date);
+    expect((result as { end: Date }).end).toBeInstanceOf(Date);
+  });
+
+  it('should accept Date objects for start and end', () => {
+    const start = new Date('2024-01-01T00:00:00.000Z');
+    const end = new Date('2024-01-31T00:00:00.000Z');
+    const result = dateRangeType({ start, end });
     expect(result).not.toBeInstanceOf(type.errors);
     expect((result as { start: Date }).start).toBeInstanceOf(Date);
     expect((result as { end: Date }).end).toBeInstanceOf(Date);
@@ -94,6 +109,12 @@ describe('dateRangeParamsType', () => {
 
   it('should parse the date string into a Date', () => {
     const result = dateRangeParamsType({ type: DateRangeType.DAY, date: '2024-06-15T00:00:00.000Z' });
+    expect(result).not.toBeInstanceOf(type.errors);
+    expect((result as { date: Date }).date).toBeInstanceOf(Date);
+  });
+
+  it('should accept a Date object for date', () => {
+    const result = dateRangeParamsType({ type: DateRangeType.DAY, date: new Date() });
     expect(result).not.toBeInstanceOf(type.errors);
     expect((result as { date: Date }).date).toBeInstanceOf(Date);
   });
@@ -172,6 +193,20 @@ wrapDateTests(() => {
       expect(parsed.end).toBeInstanceOf(Date);
     });
 
+    it('should accept Date objects for startsAt and end', () => {
+      const result = dateCellTimingType({
+        startsAt: new Date('2024-01-01T12:00:00.000Z'),
+        duration: 60,
+        end: new Date('2024-01-10T13:00:00.000Z'),
+        timezone: 'America/Denver'
+      });
+      expect(result).not.toBeInstanceOf(type.errors);
+
+      const parsed = result as { startsAt: Date; end: Date };
+      expect(parsed.startsAt).toBeInstanceOf(Date);
+      expect(parsed.end).toBeInstanceOf(Date);
+    });
+
     it('should reject a non-date string for startsAt', () => {
       const result = dateCellTimingType({ startsAt: 'not-a-date', duration: 60, end: '2024-01-10T13:00:00.000Z', timezone: 'UTC' });
       expect(result).toBeInstanceOf(type.errors);
@@ -198,6 +233,16 @@ describe('calendarDateType', () => {
   it('should parse the startsAt string into a Date', () => {
     const result = calendarDateType({
       startsAt: '2024-01-15T00:00:00.000Z',
+      duration: 60,
+      type: CalendarDateType.TIME
+    });
+    expect(result).not.toBeInstanceOf(type.errors);
+    expect((result as { startsAt: Date }).startsAt).toBeInstanceOf(Date);
+  });
+
+  it('should accept a Date object for startsAt', () => {
+    const result = calendarDateType({
+      startsAt: new Date('2024-01-15T00:00:00.000Z'),
       duration: 60,
       type: CalendarDateType.TIME
     });
@@ -268,6 +313,19 @@ describe('modelRecurrenceInfoType', () => {
     expect(result).not.toBeInstanceOf(type.errors);
   });
 
+  it('should accept Date objects for start and end', () => {
+    const result = modelRecurrenceInfoType({
+      rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
+      start: new Date('2026-01-01T00:00:00.000Z'),
+      end: new Date('2026-01-15T00:00:00.000Z')
+    });
+    expect(result).not.toBeInstanceOf(type.errors);
+
+    const parsed = result as { start: Date; end: Date };
+    expect(parsed.start).toBeInstanceOf(Date);
+    expect(parsed.end).toBeInstanceOf(Date);
+  });
+
   it('should reject missing required fields', () => {
     const result = modelRecurrenceInfoType({ rrule: 'test' });
     expect(result).toBeInstanceOf(type.errors);
@@ -289,6 +347,16 @@ wrapDateTests(() => {
       };
 
       const result = validDateCellTimingType(dto);
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should pass valid timings with Date objects.', () => {
+      const result = validDateCellTimingType({
+        startsAt: validTiming.startsAt,
+        duration: validTiming.duration,
+        end: validTiming.end,
+        timezone: validTiming.timezone
+      });
       expect(result).not.toBeInstanceOf(type.errors);
     });
 

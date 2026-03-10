@@ -39,9 +39,15 @@ export interface ActionContextStoreSourceMapReader<T = unknown, O = unknown> {
 }
 
 /**
- * Creates a new ActionContextStoreSourceMapReader from the input.
- 
- * @param actionKeySourceMap$ 
+ * Creates a new {@link ActionContextStoreSourceMapReader} from the given action key source map.
+ *
+ * The reader provides reactive utility functions to aggregate data across all stores
+ * in the map (e.g., checking if any store is working, or reducing values from all stores).
+ *
+ * @typeParam T - The input value type for the actions.
+ * @typeParam O - The output result type for the actions.
+ * @param actionKeySourceMap$ - Observable (or static value) of the action key to source map.
+ * @returns A reader with aggregate query functions over the map's stores.
  */
 export function actionContextStoreSourceMapReader<T = unknown, O = unknown>(actionKeySourceMap$: ObservableOrValue<Map<ActionKey, ActionContextStoreSource<T, O>>>): ActionContextStoreSourceMapReader<T, O> {
   const sourceMap$ = asObservable(actionKeySourceMap$);

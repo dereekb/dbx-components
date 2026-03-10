@@ -4,8 +4,14 @@ import { type ListSelectionState, type ListSelectionStateItem } from './list.vie
 import { AbstractDbxListViewDirective } from './list.view.directive';
 import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 
+/**
+ * Default template string for selection list view components that renders a `dbx-selection-list-view` with a `config` binding.
+ */
 export const DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>';
 
+/**
+ * Convenience module that imports and exports {@link DbxSelectionValueListViewComponent}.
+ */
 @NgModule({
   exports: [DbxSelectionValueListViewComponent],
   imports: [DbxSelectionValueListViewComponent]
@@ -14,7 +20,8 @@ export class DbxSelectionValueListViewComponentImportsModule {}
 
 // MARK: Selection List View
 /**
- * Abstract list view that has a pre-built-in selection change event for an Angular Material MatSelectionListChange.
+ * Abstract list view directive with built-in selection change support. Converts Angular Material {@link MatSelectionListChange}
+ * events into {@link ListSelectionState} emissions. Extend this for list views that need item selection.
  */
 @Directive()
 export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractDbxListViewDirective<T> {

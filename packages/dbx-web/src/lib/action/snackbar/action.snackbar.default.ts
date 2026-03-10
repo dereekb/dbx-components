@@ -1,5 +1,10 @@
 import { type DbxActionSnackbarEventMakeConfig } from './action.snackbar.service';
 
+/**
+ * Built-in default snackbar message configurations for common action types
+ * such as create, save, delete, merge, cancel, restore, and refresh.
+ * Each type provides loading, success, and error messages.
+ */
 export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
   create: {
     loading: {

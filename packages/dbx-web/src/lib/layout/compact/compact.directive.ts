@@ -3,7 +3,20 @@ import { type CompactMode } from './compact';
 import { CompactContextStore } from './compact.store';
 
 /**
- * CompactContextStore provider.
+ * Provides a {@link CompactContextStore} to descendant components, allowing them to react
+ * to compact vs. full display mode. The mode is set via the directive's input binding.
+ *
+ * @example
+ * ```html
+ * <div [dbxCompact]="true">
+ *   <!-- Child components can inject CompactContextStore to read the mode -->
+ *   <my-component></my-component>
+ * </div>
+ *
+ * <div [dbxCompact]="compactMode">
+ *   <my-adaptive-layout></my-adaptive-layout>
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxCompact]',

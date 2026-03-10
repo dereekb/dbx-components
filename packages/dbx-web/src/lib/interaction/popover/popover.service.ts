@@ -3,14 +3,31 @@ import { Injectable, Injector, inject } from '@angular/core';
 import { type NgOverlayContainerConfiguration, NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
+/**
+ * Sizing-related configuration options for a popover overlay.
+ */
 export type DbxPopoverConfigSizing = Pick<NgOverlayContainerConfiguration, 'originX' | 'originY' | 'height' | 'width' | 'minHeight' | 'minWidth' | 'isResizable'>;
 
+/**
+ * Full configuration for opening a popover via {@link DbxPopoverService}, combining component config with sizing and an optional injector.
+ */
 export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T>, DbxPopoverConfigSizing {
   readonly injector?: Injector;
 }
 
 /**
- * Used for displaying a popover.
+ * Root-level service for programmatically opening popover overlays with dynamic component content.
+ *
+ * @example
+ * ```ts
+ * const ref = popoverService.open({
+ *   key: 'my-popover',
+ *   origin: elementRef,
+ *   componentClass: MyPopoverContentComponent,
+ *   width: '400px',
+ *   height: '300px'
+ * });
+ * ```
  */
 @Injectable({
   providedIn: 'root'

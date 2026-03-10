@@ -11,12 +11,27 @@ import { NgTemplateOutlet } from '@angular/common';
 import { type DbxLoadingIsLoadingOrProgress, type DbxLoadingProgress } from './loading';
 
 /**
- * DbxBasicLoadingComponent loading state.
+ * Visual state of a {@link DbxBasicLoadingComponent}.
+ *
+ * - `none` — waiting for initial input (no loading or error yet)
+ * - `loading` — spinner/progress bar is visible
+ * - `content` — loading complete, projected content is shown
+ * - `error` — an error occurred, error view is shown
  */
 export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
 
 /**
- * Basic loading component.
+ * Low-level loading component that renders a spinner or progress bar, error state, and projected content.
+ *
+ * Prefer using {@link DbxLoadingComponent} (`<dbx-loading>`) which wraps this component with
+ * support for {@link LoadingContext} streams.
+ *
+ * @example
+ * ```html
+ * <dbx-basic-loading [loading]="true" color="accent" text="Loading data...">
+ *   <p>Content appears here when loading is false.</p>
+ * </dbx-basic-loading>
+ * ```
  */
 @Component({
   selector: 'dbx-basic-loading',

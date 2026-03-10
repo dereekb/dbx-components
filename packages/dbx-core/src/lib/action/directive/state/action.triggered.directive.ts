@@ -7,9 +7,19 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { transformEmptyStringInputToUndefined } from '../../../util/input';
 
 /**
- * Structural directive that displays the content when the store has been triggered.
+ * Structural directive that conditionally renders its content when the action has been triggered.
  *
- * Can be configured to hide for a temporary period.
+ * Shows content during the TRIGGERED state (after trigger, before value-ready/working).
+ * Optionally accepts a number (in milliseconds) to auto-hide the content after the specified duration.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <div *dbxActionTriggered>Preparing...</div>
+ * </div>
+ * ```
+ *
+ * @see {@link DbxActionIsWorkingDirective} for content shown during the working state.
  */
 @Directive({
   selector: '[dbxActionTriggered]',

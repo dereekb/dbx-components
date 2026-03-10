@@ -6,6 +6,11 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { type DbxButtonType } from '../button';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
+/**
+ * Abstract base for progress button components. Manages configuration merging with global defaults,
+ * working/disabled state computation, CSS class generation, and click event handling.
+ * Subclasses provide the specific template (spinner or bar).
+ */
 @Directive()
 export abstract class AbstractProgressButtonDirective {
   private readonly globalConfig = inject<DbxProgressButtonGlobalConfig>(DBX_PROGRESS_BUTTON_GLOBAL_CONFIG, { optional: true }) ?? [];

@@ -3,27 +3,29 @@ import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
- * Arbitrary string selector used to differentiate avatars.
+ * Arbitrary string selector used to differentiate avatars by category or context.
  */
 export type DbxAvatarSelector = string;
 
 /**
- * Arbitrary key that is used to configure an avatar path.
+ * Arbitrary key used to configure an avatar from a predefined set of avatar options.
  */
 export type DbxAvatarKey = string;
 
 /**
- * The avatar style.
+ * Shape style applied to the avatar container. Defaults to `'circle'` when not specified.
  */
 export type DbxAvatarStyle = 'circle' | 'square';
 
 /**
- * The avatar size.
+ * Size variant for the avatar display. Controls the rendered dimensions of the avatar.
  */
 export type DbxAvatarSize = 'small' | 'normal' | 'large';
 
 /**
- * Provides contextual information for displaying an avatar.
+ * Contextual information for displaying an avatar, including its image URL, fallback icon, style, and user association.
+ *
+ * Passed to avatar components via the {@link DBX_AVATAR_CONTEXT_DATA_TOKEN} injection token.
  */
 export interface DbxAvatarContext {
   /**

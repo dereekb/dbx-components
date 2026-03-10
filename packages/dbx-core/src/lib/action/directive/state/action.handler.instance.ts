@@ -4,10 +4,32 @@ import { DbxActionWorkInstanceDelegate } from '../../action.handler';
 import { type Maybe, type Destroyable, type Initialized, type GetterOrValue, asGetter, type FactoryWithInput } from '@dereekb/util';
 import { filterMaybe, SubscriptionObject, type Work, workFactory } from '@dereekb/rxjs';
 
+/**
+ * Lock key used by {@link DbxActionHandlerInstance} to prevent the source from being destroyed
+ * while a handler's work is still in progress.
+ */
 export const DBX_ACTION_HANDLER_LOCK_KEY = 'dbxActionHandler';
 
 /**
- * Context used for defining a function that performs an action using the input function to handle valueReady$ events from an action context.
+ * Manages the execution of a {@link Work} function in response to `valueReady$` events
+ * from an action context.
+ *
+ * When initialized, it subscribes to the source's `valueReady$` stream and executes
+ * the configured handler function (or handler value) using {@link workFactory}. The handler
+ * function drives the action through the working/success/reject lifecycle via a
+ * {@link DbxActionWorkInstanceDelegate}.
+ *
+ * Supports two modes:
+ * - **Handler function**: A full {@link Work} function that receives the value and a work context.
+ * - **Handler value**: A simple getter or factory that returns the result directly.
+ *
+ * A lock is added to the source's lock set during work execution to prevent premature cleanup.
+ *
+ * @typeParam T - The input value type for the action.
+ * @typeParam O - The output result type for the action.
+ *
+ * @see {@link DbxActionHandlerDirective} for the template directive that wraps this instance.
+ * @see {@link DbxActionWorkInstanceDelegate} for the delegate that bridges work events to the store.
  */
 export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initialized, Destroyable {
   private readonly _delegate: DbxActionWorkInstanceDelegate<T, O>;

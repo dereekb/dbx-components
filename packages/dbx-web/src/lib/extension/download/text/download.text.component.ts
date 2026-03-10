@@ -15,7 +15,12 @@ import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive
 import { DbxContentPitDirective } from '../../../layout/content/content.pit.directive';
 
 /**
- * View for previewing and downloading arbitrary text content.
+ * Displays a preview of text content with options to copy to clipboard and download as a file. Supports loading states for async content retrieval.
+ *
+ * @example
+ * ```html
+ * <dbx-download-text-view [content]="{ content: 'Hello World', name: 'greeting.txt', mimeType: 'text/plain' }" [showPreview]="true"></dbx-download-text-view>
+ * ```
  */
 @Component({
   templateUrl: './download.text.component.html',

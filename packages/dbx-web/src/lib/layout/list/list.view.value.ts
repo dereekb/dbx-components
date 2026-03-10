@@ -3,8 +3,14 @@ import { type ClickableAnchor, type DbxInjectionComponentConfig } from '@dereekb
 import { map, type Observable, of } from 'rxjs';
 import { type Configurable, type DecisionFunction, type Maybe } from '@dereekb/util';
 
+/**
+ * Injection token that provides the current {@link DbxValueListItem} to dynamically injected item components.
+ */
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<unknown>('DbxValueListViewItem');
 
+/**
+ * Describes a single item within a value-based list view, including its value, display options, and interaction state.
+ */
 export interface DbxValueListItem<T, M = unknown> {
   itemValue: T;
   /**
@@ -33,6 +39,9 @@ export interface DbxValueListItem<T, M = unknown> {
   anchor?: Maybe<ClickableAnchor>;
 }
 
+/**
+ * A decision function that operates on a {@link DbxValueListItem}, used to determine item-level behavior such as selection or ripple state.
+ */
 export type DbxValueListItemDecisionFunction<T> = DecisionFunction<DbxValueListItem<T>>;
 
 /**
@@ -45,10 +54,13 @@ export function dbxValueListItemDecisionFunction<T>(decisionFunction: DecisionFu
 }
 
 /**
- * Special type used with values that contain all the items of DbxValueListItem internally.
+ * Utility type for values that embed {@link DbxValueListItem} properties directly, avoiding the extra `itemValue` wrapper.
  */
 export type DbxValueAsListItem<T> = T & Omit<DbxValueListItem<DbxValueListItem<T>>, 'itemValue'>;
 
+/**
+ * Base configuration for a value list view, defining the component to render each item and an optional mapping function for transforming raw values into list items.
+ */
 export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxInjectionComponentConfig<V> {
   mapValuesToItemValues?(values: T[]): Observable<I[]>;
   /**
@@ -57,13 +69,27 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
   metaConfig?: DbxInjectionComponentConfig<any>;
 }
 
+/**
+ * Default mapping function that wraps each raw value into a {@link DbxValueListItem} with only the `itemValue` property set.
+ */
 export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueListItem<T>>(itemValues: T[]) => of(itemValues.map((itemValue) => ({ itemValue })) as I[]);
 
+/**
+ * A {@link DbxValueListItem} combined with its injection component configuration, ready for rendering by the list view.
+ */
 export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> = I & {
   config: DbxInjectionComponentConfig<V>;
   metaConfig?: DbxInjectionComponentConfig<any>;
 };
 
+/**
+ * Maps raw values into an observable of {@link DbxValueListItemConfig} items, applying the list view config's mapping function and attaching injection configuration.
+ *
+ * @example
+ * ```ts
+ * const items$ = mapValuesToValuesListItemConfigObs(listViewConfig, rawValues);
+ * ```
+ */
 export function mapValuesToValuesListItemConfigObs<T, I extends DbxValueListItem<T>, V = unknown>(listViewConfig: AbstractDbxValueListViewConfig<T, I, V>, itemValues: T[]): Observable<DbxValueListItemConfig<T, I, V>[]> {
   const makeObs = listViewConfig.mapValuesToItemValues ?? DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES;
   return makeObs(itemValues).pipe(
@@ -116,10 +142,25 @@ export function addConfigToValueListItems<T, I extends DbxValueListItem<T>, V = 
 }
 
 // MARK: ValueListView
+/**
+ * Abstract class representing a view that provides a stream of value list items. Used as an injection token
+ * so parent components can access the current list items.
+ */
 export abstract class DbxValueListView<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   abstract readonly items$: Observable<I[]>;
 }
 
+/**
+ * Registers a component as a {@link DbxValueListView} provider for dependency injection.
+ *
+ * @example
+ * ```ts
+ * @Component({
+ *   providers: provideDbxValueListView(MyValueListViewComponent)
+ * })
+ * export class MyValueListViewComponent extends DbxValueListView<MyItem> { ... }
+ * ```
+ */
 export function provideDbxValueListView<V extends DbxValueListView<unknown>>(sourceType: Type<V>): Provider[] {
   return [
     {

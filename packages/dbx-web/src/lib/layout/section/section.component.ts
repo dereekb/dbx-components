@@ -2,7 +2,20 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
- * Component used to format content on a page within a section.
+ * Displays a content section with a header and body area. The header defaults to an h3 heading
+ * and supports optional elevation styling.
+ *
+ * @example
+ * ```html
+ * <dbx-section header="My Section" icon="info" hint="Additional context">
+ *   <p>Section body content here.</p>
+ * </dbx-section>
+ *
+ * <dbx-section header="Elevated Section" [elevate]="true">
+ *   <button sectionHeader>Custom Header Action</button>
+ *   <p>Body content with elevated card styling.</p>
+ * </dbx-section>
+ * ```
  */
 @Component({
   selector: 'dbx-section',

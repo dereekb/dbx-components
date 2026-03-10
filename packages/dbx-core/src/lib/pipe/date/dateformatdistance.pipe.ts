@@ -5,7 +5,18 @@ import { type DateOrDateString, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
 
 /**
- * Pipe that takes in a date and appends the distance to it in parenthesis.
+ * Formats a date using a locale-aware format string and appends the relative distance to now in parentheses.
+ *
+ * Returns `undefined` if the input is falsy or not a valid date.
+ *
+ * @example
+ * ```html
+ * <span>{{ someDate | dateFormatDistance:'MMM d, y' }}</span>
+ * <!-- Output: "Jan 5, 2024 (3 days ago)" -->
+ *
+ * <span>{{ someDate | dateFormatDistance:'short':true }}</span>
+ * <!-- Output: "1/5/24, 2:30 PM (about 3 days ago)" with includeSeconds enabled -->
+ * ```
  */
 @Pipe({
   name: 'dateFormatDistance',

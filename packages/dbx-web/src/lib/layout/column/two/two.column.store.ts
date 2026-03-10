@@ -4,6 +4,10 @@ import { Subject, distinct, map } from 'rxjs';
 import { completeOnDestroy, type SegueRef } from '@dereekb/dbx-core';
 import { isMaybeNot, type Maybe } from '@dereekb/util';
 
+/**
+ * State model for the {@link TwoColumnsContextStore}, containing all configuration
+ * flags that control two-column layout visibility and sizing behavior.
+ */
 export interface TwoColumnsState {
   /**
    * Whether or not to reverse the sizing.
@@ -39,6 +43,9 @@ export interface TwoColumnsState {
   readonly minRightWidth: number;
 }
 
+/**
+ * Default minimum width in pixels for the right column before the left column is hidden.
+ */
 export const DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH = 320;
 
 const INITIAL_STATE: TwoColumnsState = {
@@ -49,6 +56,12 @@ const INITIAL_STATE: TwoColumnsState = {
   minRightWidth: DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH
 };
 
+/**
+ * NgRx ComponentStore that manages the reactive state for a two-column layout.
+ *
+ * Controls column visibility, sizing, back navigation, and responsive behavior.
+ * Typically provided via {@link provideTwoColumnsContext} or the {@link DbxTwoColumnContextDirective}.
+ */
 @Injectable()
 export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
   private readonly _back = completeOnDestroy(new Subject<void>());
@@ -171,6 +184,17 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
   }
 }
 
+/**
+ * Creates Angular providers for a new {@link TwoColumnsContextStore} instance.
+ *
+ * @example
+ * ```typescript
+ * @Component({
+ *   providers: provideTwoColumnsContext(),
+ * })
+ * export class MyColumnLayoutComponent { }
+ * ```
+ */
 export function provideTwoColumnsContext(): Provider[] {
   return [
     {

@@ -10,9 +10,20 @@ import { DbxTwoColumnColumnHeadDirective } from './two.column.head.directive';
 import { DbxAnchorComponent } from '../../../router';
 
 /**
- * Optional responsive component that wraps content on the right side and shows a navigation bar.
+ * Wraps right-column content within a {@link DbxTwoColumnComponent} and renders a navigation bar with a back button.
  *
- * When rendered it will trigger the context to show left.
+ * When this component is created, it automatically registers itself with the {@link TwoColumnsContextStore}
+ * to indicate that right-side content is present.
+ *
+ * @example
+ * ```html
+ * <dbx-two-column-right header="Detail View" [showBack]="true" [minRightWidth]="400">
+ *   <div nav>
+ *     <button mat-icon-button>Actions</button>
+ *   </div>
+ *   <p>Right column content here</p>
+ * </dbx-two-column-right>
+ * ```
  */
 @Component({
   selector: 'dbx-two-column-right',
@@ -52,10 +63,25 @@ import { DbxAnchorComponent } from '../../../router';
 export class DbxTwoColumnRightComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
+  /**
+   * Whether the header area should expand to full width.
+   */
   readonly full = input<boolean>(false);
+
+  /**
+   * Optional title text displayed in the navigation bar header.
+   */
   readonly header = input<Maybe<string>>();
+
+  /**
+   * Whether the header should use block-level display.
+   */
   readonly block = input<Maybe<boolean>>();
 
+  /**
+   * Whether to show the default back button. Defaults to `true`.
+   * If a `backRef` is set on the store, that anchor is used instead.
+   */
   readonly showBack = input<boolean>(true);
 
   readonly alternativeBackRef$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;

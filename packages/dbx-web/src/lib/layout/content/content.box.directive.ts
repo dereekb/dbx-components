@@ -1,7 +1,19 @@
 import { Directive, input } from '@angular/core';
 
 /**
- * Component used to wrap content in a box with optionally elevation.
+ * Wraps content in a box container with optional elevation (card-like shadow) and wide layout.
+ * Both `elevate` and `wide` default to `true`.
+ *
+ * @example
+ * ```html
+ * <dbx-content-box>
+ *   <p>Elevated wide box content.</p>
+ * </dbx-content-box>
+ *
+ * <div dbxContentBox [elevate]="false" [wide]="false">
+ *   <p>Flat, non-wide box content.</p>
+ * </div>
+ * ```
  */
 @Directive({
   selector: 'dbx-content-box, [dbxContentBox]',

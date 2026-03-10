@@ -4,7 +4,17 @@ import { type WorkInstanceDelegate } from '@dereekb/rxjs';
 import { type Observable } from 'rxjs';
 
 /**
- * WorkInstanceDelegate implementation using an DbxActionContextStoreSourceInstance.
+ * {@link WorkInstanceDelegate} implementation that bridges the `@dereekb/rxjs` work execution
+ * system with the action context store.
+ *
+ * This delegate translates work lifecycle events (startWorking, success, reject) into
+ * corresponding state transitions on the {@link DbxActionContextStoreSourceInstance},
+ * allowing {@link workFactory} to drive the action state machine.
+ *
+ * @typeParam T - The input value type for the action.
+ * @typeParam O - The output result type for the action.
+ *
+ * @see {@link DbxActionHandlerInstance} which uses this delegate to handle value-ready events.
  */
 export class DbxActionWorkInstanceDelegate<T = unknown, O = unknown> implements WorkInstanceDelegate<O> {
   private _source: DbxActionContextStoreSourceInstance<T, O>;

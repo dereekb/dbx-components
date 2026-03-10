@@ -8,7 +8,8 @@ import { DbxValueListItemModifier } from './list.view.value.modifier';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Abstract list directive that takes in items and a AbstractDbxValueItemListViewConfig configuration.
+ * Abstract directive that transforms raw list values into configured {@link DbxValueListItemConfig} items, applying any active modifiers.
+ * Requires a parent {@link DbxListView} and optionally uses a {@link DbxValueListItemModifier} to modify items before rendering.
  */
 @Directive()
 export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends AbstractDbxValueListViewConfig<T, I, V> = AbstractDbxValueListViewConfig<T, I, V>> implements DbxValueListView<T, I> {

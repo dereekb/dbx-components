@@ -6,7 +6,14 @@ import { DbxWidgetService } from './widget.service';
 import { NgTemplateOutlet } from '@angular/common';
 
 /**
- * Used to display a corresponding widget based on the input data.
+ * Resolves and renders a widget component based on the input type using the {@link DbxWidgetService}. Falls back to a `defaultType` if the primary type is not registered, and projects `[unknownWidget]` content when no matching widget is found.
+ *
+ * @example
+ * ```html
+ * <dbx-widget-view [config]="{ type: 'my-widget', data: someData }">
+ *   <span unknownWidget>Widget not found</span>
+ * </dbx-widget-view>
+ * ```
  */
 @Component({
   selector: 'dbx-widget-view',

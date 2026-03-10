@@ -27,10 +27,22 @@ export type FileAcceptFilterTypeString = MimeTypeWildcard | MimeTypeWithoutParam
  */
 export type FileAcceptFilterTypeStringArray = FileAcceptFilterTypeString[];
 
+/**
+ * Converts a comma-separated accept string or array into a {@link FileAcceptFilterTypeStringArray}.
+ *
+ * @example
+ * ```ts
+ * const types = fileAcceptFilterTypeStringArray('image/png, .pdf');
+ * // ['image/png', '.pdf']
+ * ```
+ */
 export function fileAcceptFilterTypeStringArray(accept: FileAcceptString | FileAcceptFilterTypeStringArray): FileAcceptFilterTypeStringArray {
   return typeof accept === 'string' ? accept.split(',').map((x) => x.trim()) : accept;
 }
 
+/**
+ * Configuration for matching an array of files against accept criteria with optional multiple file support.
+ */
 export interface FileArrayAcceptMatchConfig {
   readonly accept: FileAcceptFunction | FileAcceptString | FileAcceptFilterTypeStringArray;
   /**
@@ -41,6 +53,9 @@ export interface FileArrayAcceptMatchConfig {
   readonly multiple?: boolean;
 }
 
+/**
+ * Result of matching files against accept criteria, categorizing them into accepted and rejected lists.
+ */
 export interface FileArrayAcceptMatchResult {
   /**
    * If multiple is allowed or not.
@@ -78,7 +93,14 @@ export interface FileArrayAcceptMatchResult {
 export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMatchResult;
 
 /**
- * Creates a FileArrayAcceptMatchFunction from the input.
+ * Creates a {@link FileArrayAcceptMatchFunction} that filters and separates files based on accept criteria and multiple file support.
+ *
+ * @example
+ * ```ts
+ * const matchFn = fileArrayAcceptMatchFunction({ accept: 'image/*', multiple: false });
+ * const result = matchFn(fileList);
+ * console.log(result.accepted, result.rejected);
+ * ```
  */
 export function fileArrayAcceptMatchFunction(config: FileArrayAcceptMatchConfig): FileArrayAcceptMatchFunction {
   const multiple = config.multiple ?? true;
@@ -112,10 +134,14 @@ export type FileAcceptFunctionInput = Pick<File, 'name' | 'type'>;
 export type FileAcceptFunction = DecisionFunction<FileAcceptFunctionInput>;
 
 /**
- * Creates a FileAcceptFunction from the input.
+ * Creates a {@link FileAcceptFunction} that checks individual files against accept criteria (MIME types, wildcards, or file extensions).
  *
- * @param accept
- * @returns
+ * @example
+ * ```ts
+ * const isAccepted = fileAcceptFunction(['image/*', '.pdf']);
+ * isAccepted({ name: 'photo.png', type: 'image/png' }); // true
+ * isAccepted({ name: 'doc.txt', type: 'text/plain' }); // false
+ * ```
  */
 export function fileAcceptFunction(accept: FileAcceptString | FileAcceptFilterTypeStringArray): FileAcceptFunction {
   const acceptList = fileAcceptFilterTypeStringArray(accept);

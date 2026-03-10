@@ -3,18 +3,26 @@ import { type DbxActionContextSourceReference } from '@dereekb/dbx-core';
 import { type LoadingState, type LoadingStateType } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Identifies the snackbar category, used to select the appropriate default messages.
+ */
 export type DbxActionSnackbarType = string;
+
+/**
+ * Well-known snackbar types that have pre-configured default messages (e.g. "Saving...", "Saved", "Save Failed").
+ */
 export type DbxActionSnackbarKnownType = 'none' | 'create' | 'save' | 'delete' | 'merge' | 'send' | 'cancel' | 'restore' | 'refresh' | 'read' | 'unread';
 
 /**
- * ActionSnackbar event. Depending on the type, a value or error is also available.
+ * Represents a snackbar event derived from an action's loading state.
+ * Contains the loading state type and, depending on the outcome, either the result value or an error.
  */
 export interface DbxActionSnackbarEvent<O = unknown> extends Omit<LoadingState<O>, 'loading'> {
   type: LoadingStateType;
 }
 
 /**
- * Configuration for the actual snackbar popup.
+ * Configuration for rendering a snackbar popup, including the message, close button, optional action, and Material snackbar settings.
  */
 export interface DbxActionSnackbarDisplayConfig<T = unknown, O = unknown> {
   /**
@@ -36,7 +44,7 @@ export interface DbxActionSnackbarDisplayConfig<T = unknown, O = unknown> {
 }
 
 /**
- * Used for configuring an action on the snackbar component.
+ * Configuration for an interactive action button displayed within the snackbar, such as an "Undo" button.
  */
 export interface DbxActionSnackbarActionConfig<T = unknown, O = unknown> {
   /**

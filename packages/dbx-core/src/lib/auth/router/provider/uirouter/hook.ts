@@ -7,56 +7,128 @@ import { type Injector } from '@angular/core';
 import { timeoutStartWith } from '@dereekb/rxjs';
 
 /**
- * authTransitionHookFn() configuration. The values are handled as:
- * - true: continue to the state.
- * - false: redirect to the login page.
- * - StateOrName: redirect to the target page instead.
+ * Represents the outcome of an auth transition decision in a UIRouter hook.
+ *
+ * Possible values:
+ * - `true` - Allow the transition to proceed to the target state.
+ * - `false` - Reject the transition and redirect to the configured default redirect target.
+ * - `SegueRefOrSegueRefRouterLink` - Redirect to a specific route instead.
+ *
+ * @see {@link AuthTransitionHookConfig.makeDecisionsObs}
  */
 export type AuthTransitionDecision = true | false | SegueRefOrSegueRefRouterLink;
 
+/**
+ * Input provided to an {@link AuthTransitionRedirectTargetGetter} when determining
+ * where to redirect a user during an auth transition.
+ *
+ * Contains the current transition context, the Angular injector, and the auth service
+ * for making authorization decisions.
+ */
 export interface AuthTransitionDecisionGetterInput {
+  /** The UIRouter transition that triggered the auth check. */
   readonly transition: Transition;
+  /** The Angular injector for resolving additional dependencies. */
   readonly injector: Injector;
+  /** The auth service for querying the current authentication state. */
   readonly authService: DbxAuthService;
 }
 
+/**
+ * An observable that resolves to a redirect target (or `undefined` for no redirect).
+ */
 export type AuthTransitionRedirectTarget = Observable<Maybe<SegueRefOrSegueRefRouterLink>>;
+
+/**
+ * Factory function that produces an {@link AuthTransitionRedirectTarget} given the transition context.
+ *
+ * Used when the redirect destination needs to be computed dynamically based on the current
+ * auth state, transition, or other runtime factors.
+ */
 export type AuthTransitionRedirectTargetGetter = FactoryWithRequiredInput<AuthTransitionRedirectTarget, AuthTransitionDecisionGetterInput>;
+
+/**
+ * A redirect target that can be either a static route reference, a dynamic getter, or `undefined`.
+ *
+ * @see {@link AuthTransitionRedirectTargetGetter} for the dynamic variant.
+ */
 export type AuthTransitionRedirectTargetOrGetter = Maybe<SegueRefOrSegueRefRouterLink> | AuthTransitionRedirectTargetGetter;
 
+/**
+ * Options shared by all auth transition hook configurations.
+ *
+ * Controls where users are redirected when auth checks fail and how long to wait
+ * for the auth decision observable before timing out.
+ */
 export interface AuthTransitionHookOptions {
   /**
-   * The state to redirect the user to when their auth fails.
+   * The UIRouter state name to redirect the user to when their auth check fails.
    */
   defaultRedirectTarget: string;
 
   /**
-   * The state to redirect the user to. Defaults to defaultRedirectTarget.
+   * The UIRouter state name to redirect to when an error occurs during the auth check.
+   * Defaults to {@link defaultRedirectTarget} if not specified.
    */
   errorRedirectTarget?: string;
 
   /**
-   * Timeout time for the decision obs. Defaults to 1000ms.
+   * Maximum time in milliseconds to wait for the decision observable to emit.
+   * If the timeout is reached, the transition is treated as a `false` decision (redirect).
+   *
+   * @defaultValue 1000
    */
   timeoutTime?: Milliseconds;
 }
 
+/**
+ * Full configuration for creating an auth transition hook via {@link makeAuthTransitionHook}.
+ *
+ * Extends {@link AuthTransitionHookOptions} with the decision-making observable factory.
+ */
 export interface AuthTransitionHookConfig extends AuthTransitionHookOptions {
   /**
-   * Creates the decision observable for the transition that decides whether or not to redirect or continue.
+   * Factory that creates the decision observable for a given transition.
+   *
+   * The observable should emit an {@link AuthTransitionDecision} value:
+   * `true` to allow, `false` to redirect to the default target, or a route reference
+   * to redirect to a specific location.
    */
   makeDecisionsObs: (transition: Transition, authService: DbxAuthService, injector: UIInjector) => Observable<AuthTransitionDecision>;
 }
 
+/**
+ * Interface for UIRouter state `data` that supports custom redirect logic on auth failure.
+ *
+ * When a state's auth check fails, the `redirectTo` property determines where the user
+ * is sent. If not provided, the hook's `defaultRedirectTarget` is used.
+ *
+ * @see {@link AuthTransitionRedirectTargetOrGetter}
+ */
 export interface AuthTransitionStateData {
   /**
-   * Optional getter/decision maker when a role needs to be
+   * Optional static route reference or dynamic getter that determines the redirect destination
+   * when the auth check for this state fails.
    */
   redirectTo?: AuthTransitionRedirectTargetOrGetter;
 }
 
 /**
- * This generates a TransitionHookFn that can be used with redirecting routes.
+ * Creates a UIRouter `TransitionHookFn` that performs auth-based route guarding.
+ *
+ * The generated hook evaluates the `makeDecisionsObs` observable for each transition:
+ * - If it emits `true`, the transition proceeds normally.
+ * - If it emits `false`, the user is redirected to the default target or a custom redirect
+ *   specified in the state's `data.redirectTo` property.
+ * - If it emits a route reference, the user is redirected to that specific route.
+ * - If the observable does not emit within the configured timeout, the transition is rejected.
+ *
+ * @param config - The hook configuration including redirect targets and the decision observable factory.
+ * @returns A `TransitionHookFn` suitable for registration with UIRouter's `TransitionService`.
+ *
+ * @see {@link enableIsLoggedInHook} for a login-based usage.
+ * @see {@link enableHasAuthRoleHook} for a role-based usage.
+ * @see {@link enableHasAuthStateHook} for a state-based usage.
  */
 export function makeAuthTransitionHook(config: AuthTransitionHookConfig): TransitionHookFn {
   const { defaultRedirectTarget, errorRedirectTarget = defaultRedirectTarget, timeoutTime = 1000 } = config;

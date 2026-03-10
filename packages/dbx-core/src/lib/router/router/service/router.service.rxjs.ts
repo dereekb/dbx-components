@@ -5,10 +5,25 @@ import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../
 import { isSegueRefActiveFunction, type IsSegueRefActiveFunctionConfig } from './router.service.util';
 
 // MARK: Transition Events
+/**
+ * Filters the given transition event observable to only emit events of the specified type.
+ *
+ * @param events$ - The source observable of router transition events.
+ * @param type - The transition event type to filter for.
+ * @returns An observable that emits only events matching the given type.
+ */
 export function onRouterTransitionEventType(events$: Observable<DbxRouterTransitionEvent>, type: DbxRouterTransitionEventType): Observable<DbxRouterTransitionEvent> {
   return events$.pipe(filter((x) => x.type === type));
 }
 
+/**
+ * Filters the given transition event observable to only emit successful transition events.
+ *
+ * @param events$ - The source observable of router transition events.
+ * @returns An observable that emits only {@link DbxRouterTransitionEventType.SUCCESS} events.
+ *
+ * @see {@link onRouterTransitionEventType}
+ */
 export function onRouterTransitionSuccessEvent(events$: Observable<DbxRouterTransitionEvent>): Observable<DbxRouterTransitionEvent> {
   return onRouterTransitionEventType(events$, DbxRouterTransitionEventType.SUCCESS);
 }
@@ -28,6 +43,11 @@ export function isSegueRefActiveOnTransitionSuccess(config: IsSegueRefActiveFunc
   );
 }
 
+/**
+ * Configuration for the {@link isSegueRefActive} RxJS operator function.
+ *
+ * @see {@link isSegueRefActive}
+ */
 export interface IsSegueRefActiveConfig extends Pick<IsSegueRefActiveFunctionConfig, 'dbxRouterService' | 'activeExactly'> {
   /**
    * What to pipe if the input segueRef is null.

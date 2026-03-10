@@ -6,8 +6,14 @@ import { FullLocalStorageObject } from './storage.object.localstorage';
 import { MemoryStorageObject } from './storage.object.memory';
 
 /**
- * Default storage object factory function that creates a FullLocalStorageObject,
- * falling back to MemoryStorageObject if localStorage is not available.
+ * Creates the default {@link FullStorageObject}, preferring `localStorage` and
+ * falling back to an in-memory store if `localStorage` is unavailable.
+ *
+ * @example
+ * ```typescript
+ * const storage = defaultStorageObjectFactory();
+ * storage.setItem('key', 'value');
+ * ```
  */
 export function defaultStorageObjectFactory(): FullStorageObject {
   let storageObject: FullStorageObject = new FullLocalStorageObject(localStorage);
@@ -20,9 +26,16 @@ export function defaultStorageObjectFactory(): FullStorageObject {
 }
 
 /**
- * Creates EnvironmentProviders for providing a default storage object and SimpleStorageAccessorFactory.
+ * Registers the default storage object and {@link SimpleStorageAccessorFactory} as environment-level providers.
  *
- * @returns EnvironmentProviders
+ * Call in your application config to enable storage-based services throughout the app.
+ *
+ * @example
+ * ```typescript
+ * export const appConfig: ApplicationConfig = {
+ *   providers: [provideDbxStorage()],
+ * };
+ * ```
  */
 export function provideDbxStorage(): EnvironmentProviders {
   const providers: Provider[] = [

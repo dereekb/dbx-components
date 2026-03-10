@@ -5,14 +5,27 @@ import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
 import { type IsEqualFunction, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Parameters passed to a {@link DbxActionPopoverFunction} when opening a popover.
+ */
 export interface DbxActionPopoverFunctionParams {
   readonly origin: ElementRef;
 }
 
+/**
+ * A function that opens a popover and returns its reference. Used with {@link DbxActionPopoverDirective}.
+ */
 export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFunctionParams) => NgPopoverRef<unknown, Maybe<T>>;
 
 /**
- * Action directive that is used to trigger/display a popover, then watches that popover for a value.
+ * Action directive that opens a popover and captures the returned value as the action's value.
+ *
+ * The directive triggers the provided popover function, waits for the popover to close, and uses the result as the action value.
+ *
+ * @example
+ * ```html
+ * <button [dbxActionPopover]="openMyPopover" dbxActionButton></button>
+ * ```
  */
 @Directive({
   exportAs: 'dbxActionPopover',

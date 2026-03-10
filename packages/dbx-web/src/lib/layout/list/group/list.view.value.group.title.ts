@@ -2,6 +2,9 @@ import { type Type } from '@angular/core';
 import { type PrimativeKey, type SortCompareFunction, type CssClassesArray } from '@dereekb/util';
 import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
 
+/**
+ * Describes the display data for a title-based list group, including title text, optional icon, and hint.
+ */
 export interface DbxListTitleGroupData<O extends PrimativeKey> {
   /**
    * Data Value. Should generally be defined, but can be null if the group is a default group.
@@ -19,6 +22,10 @@ export interface DbxListTitleGroupData<O extends PrimativeKey> {
   readonly cssClasses?: CssClassesArray;
 }
 
+/**
+ * Delegate interface for grouping list items by a key value and producing titled group headers. Determines which group
+ * each item belongs to and generates the display data for each group's header.
+ */
 export interface DbxListTitleGroupTitleDelegate<T, O extends PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   /**
    * Returns a key value for the input item. If the item does not belong to a group, returns undefined.

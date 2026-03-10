@@ -9,13 +9,32 @@ import { from } from 'rxjs';
 import { DbxErrorComponent } from './error.component';
 import { clean, cleanSubscription } from '@dereekb/dbx-core';
 
+/**
+ * Configuration for error snackbar display, extending Material snackbar config but excluding `data` and `viewContainerRef`.
+ */
 export type DbxErrorSnackbarConfig = Omit<MatSnackBarConfig<any>, 'data' | 'viewContainerRef'>;
 
+/**
+ * Data passed to the error snackbar component via `MAT_SNACK_BAR_DATA`.
+ */
 export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
+  /** The error to display in the snackbar. */
   readonly error: T;
+  /** Optional auto-dismiss duration in milliseconds. If omitted, the snackbar persists until manually dismissed. */
   readonly duration?: number;
 }
 
+/**
+ * Snackbar component that displays an error with a dismiss button.
+ *
+ * Supports an optional auto-dismiss timer that pauses while an error detail popover is open.
+ * Typically opened via {@link DbxErrorSnackbarService} or the static {@link DbxErrorSnackbarComponent.showErrorSnackbar} method.
+ *
+ * @example
+ * ```typescript
+ * DbxErrorSnackbarComponent.showErrorSnackbar(matSnackBar, error, { duration: 5000 });
+ * ```
+ */
 @Component({
   selector: 'dbx-error-snackbar',
   template: `

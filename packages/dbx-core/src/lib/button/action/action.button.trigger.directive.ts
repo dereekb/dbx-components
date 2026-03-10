@@ -4,7 +4,15 @@ import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 
 /**
- * Context used for linking a button to an ActionContext and only look for triggers.
+ * Links a {@link DbxButton} click to an action context trigger, without synchronizing
+ * disabled or working states. Use {@link DbxActionButtonDirective} for full state binding.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <button dbxButton dbxActionButtonTrigger>Trigger Only</button>
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxActionButtonTrigger]',

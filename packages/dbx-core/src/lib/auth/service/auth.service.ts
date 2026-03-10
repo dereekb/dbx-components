@@ -3,7 +3,31 @@ import { type AuthRoleSet } from '@dereekb/util';
 import { type AuthUserIdentifier, type AuthUserState } from '../auth.user';
 
 /**
- * Client auth service used to retrieve info about the current state of client authentication and client roles they may have.
+ * Abstract service that provides reactive access to the current authentication state, user roles, and lifecycle events.
+ *
+ * This is the primary abstraction for authentication in dbx-core. Concrete implementations
+ * (e.g., Firebase-based auth) must provide all observable streams and the logout behavior.
+ *
+ * Components and services should inject this abstract class rather than a concrete implementation,
+ * enabling the auth provider to be swapped without changing consumer code.
+ *
+ * @example
+ * ```ts
+ * @Component({ ... })
+ * export class MyComponent {
+ *   private readonly authService = inject(DbxAuthService);
+ *
+ *   readonly isLoggedIn$ = this.authService.isLoggedIn$;
+ *   readonly roles$ = this.authService.authRoles$;
+ *
+ *   logout() {
+ *     this.authService.logOut();
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link AuthUserState} for the possible user states.
+ * @see {@link DbxAppAuthEffects} for how this service is bridged into the NgRx store.
  */
 export abstract class DbxAuthService {
   /**

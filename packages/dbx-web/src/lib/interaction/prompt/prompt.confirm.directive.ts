@@ -8,7 +8,9 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
 
 // MARK: Abstract
 /**
- * Directive that when triggered shows a dialog to accept or reject.
+ * Abstract base directive that opens a confirmation dialog and resolves with the user's boolean decision.
+ *
+ * Subclasses provide the default dialog configuration.
  */
 @Directive()
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
@@ -45,7 +47,12 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
 
 // MARK: Directive
 /**
- * Directive that shows a confirmation screen.
+ * Directive that provides a {@link DbxPromptConfirm} implementation, opening a confirmation dialog with the given config.
+ *
+ * @example
+ * ```html
+ * <button [dbxPromptConfirm]="{ title: 'Delete?', confirmText: 'Yes' }" dbxPromptConfirmButton>Delete</button>
+ * ```
  */
 @Directive({
   selector: '[dbxPromptConfirm]',

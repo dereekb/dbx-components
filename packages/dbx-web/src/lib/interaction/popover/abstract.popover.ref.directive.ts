@@ -3,7 +3,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
 import { type NgPopoverCloseEvent, type NgPopoverRef } from 'ng-overlay-container';
 
 /**
- * Abstract class for showing and handling a popover ref.
+ * Abstract base directive for creating and managing a popover reference lifecycle, including open and close events.
  */
 @Directive()
 export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> {
@@ -40,7 +40,7 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> {
 }
 
 /**
- * {@link AbstractPopoverRefDirective} extension that includes open/closed events.
+ * Extension of {@link AbstractPopoverRefDirective} that emits `popoverOpened` and `popoverClosed` output events.
  */
 @Directive()
 export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unknown> extends AbstractPopoverRefDirective<T, R> {

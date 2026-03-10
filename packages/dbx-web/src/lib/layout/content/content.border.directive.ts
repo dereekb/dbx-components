@@ -2,7 +2,19 @@ import { computed, Directive, input } from '@angular/core';
 import { type DbxThemeColor } from '../style/style';
 
 /**
- * Section used to wrap content in a border with internal padding.
+ * Wraps the host element in a themed border with internal padding. The border color
+ * can be set to any theme color (defaults to `'default'`).
+ *
+ * @example
+ * ```html
+ * <dbx-content-border color="primary">
+ *   <p>Content inside a primary-colored border.</p>
+ * </dbx-content-border>
+ *
+ * <div dbxContentBorder color="warn">
+ *   <p>Warning-bordered content.</p>
+ * </div>
+ * ```
  */
 @Directive({
   selector: 'dbx-content-border,[dbxContentBorder]',

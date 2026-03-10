@@ -3,7 +3,17 @@ import { Directive, inject } from '@angular/core';
 import { DbxLoadingComponent } from './loading.component';
 
 /**
- * Context used for linking a loadingComponent to an ActionContext by providing a LoadingContext.
+ * Links a {@link DbxLoadingComponent} to a {@link DbxActionContextStoreSourceInstance} by forwarding its loading state.
+ *
+ * Apply to a `<dbx-loading>` element that is within an action context to automatically
+ * reflect the action's loading state in the loading component.
+ *
+ * @example
+ * ```html
+ * <dbx-loading dbxActionLoadingContext>
+ *   <p>Content appears when the action's loading state resolves.</p>
+ * </dbx-loading>
+ * ```
  */
 @Directive({
   selector: '[dbxActionLoadingContext]',

@@ -43,6 +43,9 @@ export interface DbxHelpWidgetServiceEntry<D = unknown> {
 }
 
 // MARK: Injection
+/**
+ * Data injected into help widget components via {@link DBX_HELP_WIDGET_ENTRY_DATA_TOKEN}, providing access to the corresponding widget entry.
+ */
 export interface DbxHelpWidgetEntryData<D = unknown> {
   /**
    * Corresponding widget entry.

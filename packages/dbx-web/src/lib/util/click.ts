@@ -1,6 +1,10 @@
 import { DestroyRef, effect, type ElementRef, inject, type Signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Configuration for {@link overrideClickElementEffect} specifying the click target
+ * and the child element whose clicks should be intercepted.
+ */
 export interface OverrideClickElementEffectConfig {
   /**
    * Target to transfer "click" events to.
@@ -17,16 +21,24 @@ export interface OverrideClickElementEffectConfig {
 }
 
 /**
- * This effect exists to solve the issue of an injected element that utilizes event.stopPropogation() and doesn't also call event.preventDefault().
+ * Creates an Angular effect that intercepts clicks on a child element and redirects them
+ * to a parent click target, while preventing the default browser navigation.
  *
- * We didn't want to use css's pointer-events: none as that would disable the Angular Material button effects.
+ * Solves the problem where an injected element calls `event.stopPropagation()` without
+ * `event.preventDefault()` — for example, a `dbx-button` inside a router anchor would
+ * stop the router link from firing but still trigger the anchor's href navigation.
  *
- * For example, dbx-button would call event.stopPropagation() on click, which would prevent the uiSref from being triggered, but the default behavior
- * of the anchor element would still be triggered, causing the browser to load/reload the page at the given href instead of navigating to the new state using uiSref.
+ * Modifier clicks (ctrl, cmd, shift, middle-click) are allowed through for new tab/window behavior.
  *
- * NOTE: Those nested event listeners are still ultimately triggered.
+ * Must be called in an Angular injection context.
  *
- * Must be run in an Angular injection context.
+ * @example
+ * ```ts
+ * overrideClickElementEffect({
+ *   clickTarget: this.anchorElementRef,
+ *   childClickTarget: this.buttonElementRef
+ * });
+ * ```
  */
 export function overrideClickElementEffect(config: OverrideClickElementEffectConfig) {
   const { clickTarget, childClickTarget, disabledSignal } = config;

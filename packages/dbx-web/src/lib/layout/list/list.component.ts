@@ -10,7 +10,12 @@ import { DbxLoadingComponent } from '../../loading/loading.component';
 
 // MARK: DbxListInternalContentDirective
 /**
- * Used internally by DbxListComponent
+ * Internal directive used by {@link DbxListComponent} to track the scrollable content area and forward scroll events.
+ *
+ * @example
+ * ```html
+ * <div dbxListInternalContent [hide]="hideContent">...</div>
+ * ```
  */
 @Directive({
   selector: '[dbxListInternalContent]',
@@ -96,15 +101,32 @@ export interface DbxListConfig<T = unknown, V extends DbxListView<T> = DbxListVi
   readonly defaultSelectionMode?: Maybe<DbxListSelectionMode>;
 }
 
+/**
+ * Numeric scroll position emitted by the {@link DbxListComponent} when its content area is scrolled.
+ */
 export type DbxListComponentScrolledEventPosition = number;
 
+/**
+ * Default infinite scroll distance multiplier for triggering load-more events.
+ */
 export const DBX_LIST_DEFAULT_SCROLL_DISTANCE = 1.5;
+
+/**
+ * Default throttle duration in milliseconds for scroll events.
+ */
 export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
 
 /**
- * Used to display a potentially infinitely scrollable list of content.
+ * Displays a potentially infinitely scrollable list of content. Supports load-more triggers, selection modes, and empty/loading states.
  *
- * This component is generally wrapped by another component that provides this one configuration.
+ * This component is typically wrapped by a higher-level component that provides its configuration via the `config` input.
+ *
+ * @example
+ * ```html
+ * <dbx-list [state]="listState$" [config]="listConfig" [disabled]="isDisabled" [selectionMode]="'select'">
+ *   <ng-container empty>No items found.</ng-container>
+ * </dbx-list>
+ * ```
  */
 @Component({
   selector: 'dbx-list',

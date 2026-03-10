@@ -17,9 +17,35 @@ const DBX_ACTION_AUTO_TRIGGER_FAST_TRIGGER_DEBOUNCE = 200;
 const DBX_ACTION_AUTO_TRIGGER_INSTANT_TRIGGER_DEBOUNCE = 10;
 
 /**
- * Directive that automatically triggers the action periodically when it is in a modified state.
+ * Directive that automatically triggers the parent action when the action becomes modified and can be triggered.
  *
- * When using auto triggers be sure to make sure that the action is not triggering too often due to misconfiguration.
+ * Uses configurable debounce and throttle timers to prevent excessive triggering. Also
+ * supports error-aware throttling: as consecutive errors accumulate, the throttle interval
+ * increases to give transient issues time to resolve.
+ *
+ * Useful for auto-save scenarios where data changes should automatically submit without
+ * requiring an explicit user action. Use with care to avoid triggering loops.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container dbxActionAutoTrigger></ng-container>
+ *   <!-- form or value source here -->
+ * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- Fast trigger preset with limit -->
+ * <div dbxAction>
+ *   <ng-container dbxActionAutoTrigger useFastTriggerPreset [triggerLimit]="5"></ng-container>
+ * </div>
+ * ```
+ *
+ * @typeParam T - The input value type for the action.
+ * @typeParam O - The output result type for the action.
+ *
+ * @see {@link DbxActionAutoModifyDirective} for automatically marking the action as modified.
  */
 @Directive({
   selector: 'dbxActionAutoTrigger,[dbxActionAutoTrigger]',

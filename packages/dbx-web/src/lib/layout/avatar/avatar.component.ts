@@ -5,7 +5,20 @@ import { type AuthUserIdentifier, DbxInjectionComponent, type DbxInjectionCompon
 import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
- * Component that displays an avatar based on the input context.
+ * Renders an avatar by dynamically injecting the appropriate avatar view component based on the provided context.
+ *
+ * Merges individual input properties with the optional `context` input and delegates rendering
+ * to the component resolved by {@link DbxAvatarViewService}. Supports size variants via CSS classes.
+ *
+ * @example
+ * ```html
+ * <dbx-avatar [avatarUrl]="user.photoUrl" [avatarStyle]="'circle'" [avatarSize]="'large'"></dbx-avatar>
+ * ```
+ *
+ * @example
+ * ```html
+ * <dbx-avatar [context]="avatarContext"></dbx-avatar>
+ * ```
  */
 @Component({
   selector: 'dbx-avatar',

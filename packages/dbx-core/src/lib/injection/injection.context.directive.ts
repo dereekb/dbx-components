@@ -5,7 +5,37 @@ import { type DbxInjectionComponentConfig } from './injection';
 import { type PromiseOrValue, type PromiseReference, promiseReference, type Maybe } from '@dereekb/util';
 
 /**
- * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.
+ * Structural directive that implements {@link DbxInjectionContext}, allowing its host content
+ * to be temporarily replaced with a dynamically injected component and then restored.
+ *
+ * Unlike `*ngIf` or `*ngSwitch`, the original child content is **detached** (hidden) rather than
+ * destroyed, so component state is preserved while the injected context is active. When the
+ * context's promise resolves or {@link resetContext} is called, the original view is re-attached.
+ *
+ * The directive also accepts an optional `[dbxInjectionContext]` input to set a static component
+ * config directly, which replaces the default content until cleared.
+ *
+ * @typeParam O - The output type produced by {@link showContext}.
+ *
+ * @example
+ * ```html
+ * <!-- Wrap content that should be temporarily replaceable -->
+ * <div *dbxInjectionContext>
+ *   <p>Original content preserved while context is active</p>
+ * </div>
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Programmatically show a temporary editor overlay:
+ * const result = await injectionContext.showContext({
+ *   config: { componentClass: InlineEditorComponent },
+ *   use: (editor) => editor.waitForSave()
+ * });
+ * ```
+ *
+ * @see {@link DbxInjectionContext}
+ * @see {@link DbxInjectionContextConfig}
  */
 @Directive({
   selector: '[dbxInjectionContext]',
@@ -23,6 +53,10 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
 
+  /**
+   * Optional static component config input. When set, the directive replaces its content
+   * with the specified component. When cleared (`undefined`), the original content is restored.
+   */
   readonly config = input<Maybe<DbxInjectionComponentConfig<unknown>>>();
 
   protected readonly _configEffect = effect(() => {
@@ -52,6 +86,9 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     this._embeddedView?.destroy(); // destroy our embedded view too if it is set.
   }
 
+  /**
+   * {@inheritDoc DbxInjectionContext.showContext}
+   */
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {
     // clear the current context before showing something new.
     this.resetContext();
@@ -108,6 +145,9 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     }
   }
 
+  /**
+   * {@inheritDoc DbxInjectionContext.resetContext}
+   */
   resetContext(): boolean {
     let clearedValue = false;
 
@@ -129,6 +169,14 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     return clearedValue;
   }
 
+  /**
+   * Sets or clears the active component configuration.
+   *
+   * When a config is provided, the original embedded view is detached and the component is injected.
+   * When `undefined` is provided, the injected component is removed and the original view is re-attached.
+   *
+   * @param config - The component config to display, or `undefined` to restore the original content.
+   */
   setConfig(config: Maybe<DbxInjectionComponentConfig<unknown>>) {
     let reattach = false;
 

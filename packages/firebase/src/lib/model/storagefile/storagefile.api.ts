@@ -9,6 +9,7 @@ import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, ty
 import { type StorageFileId } from './storagefile.id';
 import { type SendNotificationResult } from '../notification/notification.api';
 import { clearable } from '@dereekb/model';
+import { ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 
 /**
  * Used for directly create a new StorageFile.
@@ -90,7 +91,7 @@ export interface UpdateStorageFileParams extends TargetModelParams {
 }
 
 export const updateStorageFileParamsType = targetModelParamsType.merge({
-  'sdat?': clearable('string.date.parse')
+  'sdat?': clearable(ARKTYPE_DATE_DTO_TYPE)
 }) as Type<UpdateStorageFileParams>;
 
 export interface DeleteStorageFileParams extends TargetModelParams {
@@ -123,7 +124,7 @@ export interface DownloadStorageFileParams extends TargetModelParams {
 }
 
 export const downloadStorageFileParamsType = targetModelParamsType.merge({
-  'expiresAt?': clearable('string.date.parse'),
+  'expiresAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'expiresIn?': clearable('number >= 0'),
   'responseDisposition?': clearable('string'),
   'responseContentType?': clearable('string'),

@@ -4,6 +4,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Configuration for the confirmation prompt display.
+ */
 export interface DbxPromptConfirmConfig {
   readonly title?: string;
   readonly prompt?: string;
@@ -12,7 +15,14 @@ export interface DbxPromptConfirmConfig {
 }
 
 /**
- * Displays a confirmation dialog.
+ * Renders a confirmation prompt with customizable title, message, confirm, and cancel buttons.
+ *
+ * @example
+ * ```html
+ * <dbx-prompt-confirm [config]="{ title: 'Delete?', prompt: 'This cannot be undone.' }" (confirm)="onConfirm()" (cancel)="onCancel()">
+ *   <p>Additional content here.</p>
+ * </dbx-prompt-confirm>
+ * ```
  */
 @Component({
   selector: 'dbx-prompt-confirm',

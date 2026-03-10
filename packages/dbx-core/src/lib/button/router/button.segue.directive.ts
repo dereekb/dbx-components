@@ -6,6 +6,23 @@ import { DbxRouterService } from '../../router/router/service/router.service';
 import { type SegueRef } from '../../router/segue';
 
 // MARK: Button Directives
+/**
+ * Navigates to a route when the host {@link DbxButton} is clicked, using the provided {@link SegueRef}.
+ *
+ * @example
+ * ```html
+ * <button dbxButton [dbxButtonSegue]="{ ref: '/dashboard' }">Go to Dashboard</button>
+ * ```
+ *
+ * @example
+ * ```typescript
+ * readonly segue: SegueRef = { ref: '/settings', refType: 'url' };
+ * ```
+ *
+ * ```html
+ * <button dbxButton [dbxButtonSegue]="segue">Settings</button>
+ * ```
+ */
 @Directive({
   selector: '[dbxButtonSegue]',
   standalone: true

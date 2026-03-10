@@ -3,7 +3,16 @@ import { type TimezoneString, type Maybe } from '@dereekb/util';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
 
 /**
- * Converts the input date and timezone to a target date that represents that date/time for the timezone.
+ * Converts a system (UTC-based) date to the equivalent local date in the given timezone using {@link dateTimezoneUtcNormal}.
+ *
+ * This is useful when you have a date in the system's timezone and need to display it as if it were in the target timezone.
+ * Returns `undefined` if either the input date or timezone is falsy.
+ *
+ * @example
+ * ```html
+ * <span>{{ systemDate | systemDateToTargetDate:'America/New_York' | date:'short' }}</span>
+ * <!-- Output: the date/time as it appears in the New York timezone -->
+ * ```
  */
 @Pipe({
   name: 'systemDateToTargetDate',

@@ -3,13 +3,21 @@ import { MatButtonModule } from '@angular/material/button';
 import { type ThemePalette } from '@angular/material/core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Configuration for the dialog content footer button appearance.
+ */
 export interface DbxDialogContentFooterConfig {
   readonly buttonColor?: ThemePalette;
   readonly closeText?: string;
 }
 
 /**
- * Component used to show a close button at the bottom of a dialog.
+ * Renders a close button at the bottom of a dialog with customizable text and color.
+ *
+ * @example
+ * ```html
+ * <dbx-dialog-content-footer [closeText]="'Done'" [buttonColor]="'primary'" (close)="onClose()"></dbx-dialog-content-footer>
+ * ```
  */
 @Component({
   selector: 'dbx-dialog-content-footer',

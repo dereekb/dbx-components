@@ -10,13 +10,25 @@ import { MatIconModule } from '@angular/material/icon';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+/**
+ * Configuration for a {@link DbxSelectionValueListViewComponent}. Extends the base config with an option for single or multiple selection.
+ */
 export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
+  /**
+   * Whether multiple items can be selected at once. Defaults to true.
+   */
   readonly multiple?: boolean;
 }
 
 // MARK: DbxSelectionValueListViewContentComponent
 /**
- * Content view for a DbxSelectionValueListView. It can be used directly in cases where the items are already configured, or want to be configured in a non-standard fashion.
+ * Renders a selection-capable list view. In 'select' mode, displays a `mat-selection-list` with checkboxes.
+ * In 'view' mode, falls back to the standard {@link DbxValueListViewContentComponent} rendering.
+ *
+ * @example
+ * ```html
+ * <dbx-selection-list-view-content [items]="items" [selectionMode]="'select'" [multiple]="true"></dbx-selection-list-view-content>
+ * ```
  */
 @Component({
   selector: 'dbx-selection-list-view-content',
@@ -72,7 +84,13 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
 
 // MARK: DbxSelectionValueListViewComponent
 /**
- * Renders a selection list view using input configuration. Requires a parent DbxListView.
+ * Renders a selection-capable list view using a configuration input. Requires a parent {@link DbxListView} context.
+ * Switches between selection mode (with checkboxes) and view mode (standard list) based on the parent's selection mode.
+ *
+ * @example
+ * ```html
+ * <dbx-selection-list-view [config]="selectionListViewConfig"></dbx-selection-list-view>
+ * ```
  */
 @Component({
   selector: 'dbx-selection-list-view',

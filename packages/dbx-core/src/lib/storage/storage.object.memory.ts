@@ -2,7 +2,16 @@ import { SHARED_MEMORY_STORAGE } from '@dereekb/util';
 import { FullLocalStorageObject } from './storage.object.localstorage';
 
 /**
- * FullStorageObject implementation that uses a localstorage that entirely resides in memory.
+ * In-memory {@link FullStorageObject} implementation that does not persist across page loads.
+ *
+ * Used as a fallback when `localStorage` is unavailable (e.g., private browsing, SSR)
+ * or for testing scenarios.
+ *
+ * @example
+ * ```typescript
+ * const storage = new MemoryStorageObject();
+ * storage.setItem('temp', 'data'); // stored only in memory
+ * ```
  */
 export class MemoryStorageObject extends FullLocalStorageObject {
   get isLastingStorage(): boolean {

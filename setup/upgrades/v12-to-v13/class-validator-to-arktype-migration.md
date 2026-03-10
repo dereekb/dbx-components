@@ -103,7 +103,7 @@ export const setUsernameParamsType = type({
 | `@IsBoolean()` | `'boolean'` |
 | `@IsOptional()` + `@IsBoolean()` | `clearable('boolean')` (with `?` key) |
 | `@IsOptional()` | Use `'key?'` syntax in schema; use `clearable()` if the field is `Maybe<T>` |
-| `@Type(() => Date)` | `'string.date.parse'` |
+| `@Type(() => Date)` | `'Date \| string.date.parse'` |
 | `@ValidateNested({ each: true })` | `nestedSchemaType.array()` |
 | Custom `@IsX()` validators | `.narrow((val, ctx) => predicate(val) \|\| ctx.mustBe('description'))` |
 | Enum validation | `type.enumerated(Enum.A, Enum.B, ...)` |
@@ -175,7 +175,7 @@ const updateParamsType = targetModelParamsType.merge({
   // clearable() accepts an ArkType string definition and returns `def | null | undefined`
   'bio?': clearable(`string > 0 & string <= ${BIO_MAX_LENGTH}`),
   'published?': clearable('boolean'),
-  'scheduledDate?': clearable('string.date.parse'),  // morph: string → Date | null | undefined
+  'scheduledDate?': clearable(ARKTYPE_DATE_DTO_TYPE),  // morph: Date | string → Date | null | undefined
   'email?': clearable('string.email'),
   'count?': clearable('number >= 0'),
 }) as Type<UpdateParams>;

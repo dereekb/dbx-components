@@ -7,7 +7,29 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { cleanSubscriptionWithLockSet } from '../../../rxjs';
 
 /**
- * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
+ * Directive that watches a value observable stream and automatically updates the action's
+ * modified state and provides the latest value when triggered.
+ *
+ * Each emission from the stream is checked against an optional `isModified` or `isEqual`
+ * function to determine if the action should be marked as modified. When the action is
+ * triggered, the latest value from the stream is passed to `readyValue()` only if modified.
+ *
+ * This is ideal for form-based workflows where the form value changes over time and
+ * should automatically track modification state.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container [dbxActionValueStream]="formValue$"></ng-container>
+ *   <button (click)="action.trigger()">Save</button>
+ * </div>
+ * ```
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
+ *
+ * @see {@link DbxActionValueDirective} for static/getter-based values.
+ * @see {@link DbxActionValueTriggerDirective} for lazy getter values on trigger.
  */
 @Directive({
   selector: '[dbxActionValueStream]',

@@ -9,8 +9,14 @@ import { AbstractDbxFileUploadComponent, type DbxFileUploadFilesChangedEvent } f
 import { provideDbxFileUploadActionCompatable } from './upload.action';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 
+/**
+ * Display mode for the file upload component: area-only, button-only, or both (default).
+ */
 export type DbxFileUploadMode = 'area' | 'button' | 'default';
 
+/**
+ * Configuration for the combined file upload component, controlling display mode, accept filters, and area/button appearance.
+ */
 export interface DbxFileUploadComponentConfig {
   readonly mode?: DbxFileUploadMode;
   readonly accept?: Maybe<FileArrayAcceptMatchConfig['accept']>;
@@ -35,7 +41,14 @@ export interface DbxFileUploadComponentConfig {
 }
 
 /**
- * Combines both the file upload area and button into a single component.
+ * Combines a drag-and-drop upload area with a file picker button into a single configurable component.
+ *
+ * Supports area-only, button-only, or combined (default) display modes.
+ *
+ * @example
+ * ```html
+ * <dbx-file-upload [mode]="'default'" [accept]="['image/*']" [multiple]="true" [hint]="'Drag files here'" [text]="'Browse'" (filesChanged)="onFiles($event)"></dbx-file-upload>
+ * ```
  */
 @Component({
   selector: 'dbx-file-upload',

@@ -5,12 +5,12 @@ import { map, mergeMap, catchError, type Observable, of, Subject, tap } from 'rx
 import { type DbxModelViewTrackerEventSet, type DbxModelViewTrackerEvent } from './model.tracker';
 
 /**
- * Token that corresponds to a StorageAccessor<DbxModelViewTrackerEventSet> that is used by DbxModelViewTrackerStorage.
+ * Injection token for a {@link StorageAccessor} used by {@link DbxModelViewTrackerStorage} to persist model view events.
  */
 export const DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN = new InjectionToken('DbxModelViewTrackerStorageAccessor');
 
 /**
- * Used for managing DbxModelViewTrackerEvent storage.
+ * Manages persistence of {@link DbxModelViewTrackerEvent} items in local storage. Handles deduplication, sorting by date, and folder-based partitioning of events.
  */
 @Injectable()
 export class DbxModelViewTrackerStorage {

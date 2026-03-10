@@ -7,12 +7,32 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
- * Performs the action on success.
+ * Callback function invoked when an action resolves successfully.
+ *
+ * @typeParam O - The output result type from the action.
  */
 export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
 
 /**
- * Directive that executes a function on ActionContextStore Success.
+ * Directive that executes a callback function each time the action resolves successfully.
+ *
+ * The provided function receives the action's result value. This is useful for
+ * performing side effects like navigation, showing notifications, or refreshing data
+ * after a successful action.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container [dbxActionSuccessHandler]="onSaveSuccess"></ng-container>
+ *   <button (click)="action.trigger()">Save</button>
+ * </div>
+ * ```
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
+ *
+ * @see {@link DbxActionHasSuccessDirective} for rendering content on success.
+ * @see {@link DbxActionErrorHandlerDirective} for handling errors.
  */
 @Directive({
   selector: '[dbxActionSuccessHandler]',

@@ -1,6 +1,15 @@
 import { Directive, input, computed } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Renders a styled chip element with optional small and block display modes.
+ *
+ * @example
+ * ```html
+ * <dbx-chip [small]="true">Tag</dbx-chip>
+ * <dbx-chip [block]="true">Full Width</dbx-chip>
+ * ```
+ */
 @Directive({
   selector: 'dbx-chip',
   host: {

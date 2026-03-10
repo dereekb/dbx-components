@@ -7,10 +7,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+/**
+ * Default icon displayed on the sidenav toggle button.
+ */
 export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
 
 /**
- * Button used to interface with a parent sidenav.
+ * Icon button that toggles the parent {@link DbxSidenavComponent} open or closed. Only visible when the sidenav is in mobile display mode.
+ *
+ * @example
+ * ```html
+ * <dbx-sidenav-button sidenavMenuIcon="menu"></dbx-sidenav-button>
+ * ```
  */
 @Component({
   selector: 'dbx-sidenav-button',

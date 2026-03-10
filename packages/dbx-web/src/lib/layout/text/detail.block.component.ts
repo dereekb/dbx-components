@@ -3,7 +3,17 @@ import { type Maybe } from '@dereekb/util';
 import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 
 /**
- * Header and details offset with an icon.
+ * A structured content block with a header row (icon + label) and a detail content area below.
+ *
+ * Use the `[header]` content slot for extra header-level content and default content for the detail area.
+ *
+ * @example
+ * ```html
+ * <dbx-detail-block icon="person" header="User Info">
+ *   <span header>Extra header content</span>
+ *   <p>Detail content goes here.</p>
+ * </dbx-detail-block>
+ * ```
  */
 @Component({
   selector: 'dbx-detail-block',

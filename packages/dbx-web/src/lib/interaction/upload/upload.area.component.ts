@@ -6,8 +6,21 @@ import { NgTemplateOutlet } from '@angular/common';
 import { AbstractDbxFileUploadComponent, type DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
 import { provideDbxFileUploadActionCompatable } from './upload.action';
 
+/**
+ * Event emitted by {@link DbxFileUploadAreaComponent} when files are dropped.
+ */
 export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
 
+/**
+ * Drag-and-drop file upload area that accepts dropped files and emits accepted/rejected results.
+ *
+ * @example
+ * ```html
+ * <dbx-file-upload-area [accept]="['image/*']" [multiple]="true" [hint]="true" (filesChanged)="onFiles($event)">
+ *   <p>Drop files here</p>
+ * </dbx-file-upload-area>
+ * ```
+ */
 @Component({
   selector: 'dbx-file-upload-area',
   template: `

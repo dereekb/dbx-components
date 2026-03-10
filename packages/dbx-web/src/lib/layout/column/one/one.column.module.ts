@@ -2,7 +2,9 @@ import { NgModule } from '@angular/core';
 import { DbxOneColumnComponent } from './one.column.component';
 
 /**
- * @deprecated import DbxOneColumnComponent directly instead.
+ * Module that exports {@link DbxOneColumnComponent}.
+ *
+ * @deprecated Import `DbxOneColumnComponent` directly instead.
  */
 @NgModule({
   imports: [DbxOneColumnComponent],

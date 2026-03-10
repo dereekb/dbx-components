@@ -6,9 +6,20 @@ import { distinctUntilChanged, shareReplay, type Subscription } from 'rxjs';
 import { cleanSubscription } from '../rxjs/subscription';
 
 /**
- * Context used for linking a button to a LoadingContext.
+ * Links a {@link DbxButton} to a {@link LoadingContext}, automatically setting the button
+ * to a working state whenever the loading context is actively loading.
  *
- * It will be set working when the context is set loading.
+ * @example
+ * ```html
+ * <button dbxButton [dbxLoadingButton]="loadingContext">
+ *   Loading...
+ * </button>
+ * ```
+ *
+ * @example
+ * ```typescript
+ * readonly loadingContext = cleanLoadingContext<MyData>(this.data$);
+ * ```
  */
 @Directive({
   selector: '[dbxLoadingButton]',

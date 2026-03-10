@@ -1,7 +1,19 @@
 import { Directive, input } from '@angular/core';
 
 /**
- * Section used to elevate content in a pre-configured manner.
+ * Applies elevation (box-shadow) styling to the host element, giving it a raised card appearance.
+ * Elevation is enabled by default and can be toggled off.
+ *
+ * @example
+ * ```html
+ * <dbx-content-elevate>
+ *   <p>Elevated content with shadow.</p>
+ * </dbx-content-elevate>
+ *
+ * <div dbxContentElevate [elevate]="false">
+ *   <p>Flat content, no elevation.</p>
+ * </div>
+ * ```
  */
 @Directive({
   selector: 'dbx-content-elevate,[dbxContentElevate]',

@@ -10,7 +10,28 @@ import { NgTemplateOutlet } from '@angular/common';
 import { type DbxButtonStyle, type DbxButtonType } from './button';
 
 /**
- * Complex button that supports loading states.
+ * Feature-rich button component that supports loading indicators, multiple Material button styles,
+ * custom colors, icons, and floating action button (FAB) mode. Integrates with the dbxAction system
+ * for automatic working/disabled state management.
+ *
+ * @example
+ * ```html
+ * <dbx-button [text]="'Save'" raised [dbxAction]="saveAction">
+ * </dbx-button>
+ * ```
+ *
+ * @example
+ * ```html
+ * <dbx-button icon="delete" flat color="warn" [dbxAction]="deleteAction">
+ * </dbx-button>
+ * ```
+ *
+ * @example
+ * ```html
+ * <dbx-button text="Upload" bar [working]="uploadProgress">
+ *   <!-- Uses a progress bar instead of spinner -->
+ * </dbx-button>
+ * ```
  */
 @Component({
   selector: 'dbx-button',

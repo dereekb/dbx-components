@@ -15,9 +15,12 @@ export interface ProvideDbxStyleServiceConfig {
 }
 
 /**
- * Provides EnvironmentalProviders for a DbxStyleService and the default config.
+ * Provides environment-level providers for {@link DbxStyleService} and its default configuration.
  *
- * @returns
+ * @example
+ * ```ts
+ * provideDbxStyleService({ dbxStyleConfig: { style: 'my-app', suffixes: new Set(['dark']) } });
+ * ```
  */
 export function provideDbxStyleService(config: ProvideDbxStyleServiceConfig): EnvironmentProviders {
   const { dbxStyleConfig } = config;

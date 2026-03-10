@@ -13,6 +13,9 @@ import { DbxColorDirective } from '../../../layout/style/style.color.directive';
 import { type DbxThemeColor } from '../../../layout/style/style';
 import { type ThemePalette } from '@angular/material/core';
 
+/**
+ * Describes the current state of the sidenav sidebar, including display mode, Material drawer mode, and open/closed state.
+ */
 export interface DbxSidenavSidebarState {
   readonly mode: SideNavDisplayMode;
   readonly drawer: MatDrawerMode;
@@ -20,7 +23,19 @@ export interface DbxSidenavSidebarState {
 }
 
 /**
- * Navigation component that sits at the side of an app.
+ * Responsive side navigation component that adapts its display mode based on screen width.
+ *
+ * Renders a Material sidenav with an anchor list and automatically transitions between mobile overlay, icon rail, and full sidebar modes.
+ * Closes automatically on route transitions in mobile mode.
+ *
+ * @example
+ * ```html
+ * <dbx-sidenav [anchors]="sidenavLinks" color="primary">
+ *   <div top>Header Content</div>
+ *   <div bottom>Footer Content</div>
+ *   <router-outlet></router-outlet>
+ * </dbx-sidenav>
+ * ```
  */
 @Component({
   selector: 'dbx-sidenav',

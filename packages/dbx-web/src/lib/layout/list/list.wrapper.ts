@@ -20,6 +20,17 @@ export abstract class DbxListViewWrapper<T = unknown, S extends ListLoadingState
   abstract setSelectionMode(selectionMode: MaybeObservableOrValue<DbxListSelectionMode>): void;
 }
 
+/**
+ * Registers a component as a {@link DbxListViewWrapper} provider for dependency injection.
+ *
+ * @example
+ * ```ts
+ * @Component({
+ *   providers: provideDbxListViewWrapper(MyListWrapperComponent)
+ * })
+ * export class MyListWrapperComponent extends DbxListViewWrapper<MyItem> { ... }
+ * ```
+ */
 export function provideDbxListViewWrapper<V extends DbxListViewWrapper>(sourceType: Type<V>): Provider[] {
   return [
     {

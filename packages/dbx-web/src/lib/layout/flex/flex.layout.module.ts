@@ -5,7 +5,9 @@ import { DbxFlexSizeDirective } from './flex.size.directive';
 const importsAndExports = [DbxFlexGroupDirective, DbxFlexSizeDirective];
 
 /**
- * @deprecated Import DbxFlexGroupDirective and DbxFlexSizeDirective instead.
+ * Module that exports {@link DbxFlexGroupDirective} and {@link DbxFlexSizeDirective}.
+ *
+ * @deprecated Import `DbxFlexGroupDirective` and `DbxFlexSizeDirective` directly instead.
  */
 @NgModule({
   imports: importsAndExports,

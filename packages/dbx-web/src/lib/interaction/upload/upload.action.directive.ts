@@ -3,7 +3,12 @@ import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance } fro
 import { DbxFileUploadActionCompatable } from './upload.action';
 
 /**
- * Context used for linking a button to an ActionContext.
+ * Syncs the disabled and working states from an ActionContextStoreSource to a {@link DbxFileUploadActionCompatable} component.
+ *
+ * @example
+ * ```html
+ * <dbx-file-upload-button dbxFileUploadActionSync (filesChanged)="onFiles($event)"></dbx-file-upload-button>
+ * ```
  */
 @Directive({
   selector: '[dbxFileUploadActionSync]',

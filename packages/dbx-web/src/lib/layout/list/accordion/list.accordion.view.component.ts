@@ -9,6 +9,9 @@ import { MatAccordion } from '@angular/material/expansion';
 import { type DbxValueListItemGroup } from '../group/list.view.value.group';
 
 // MARK: Config
+/**
+ * Configuration for a {@link DbxValueListAccordionViewComponent}. Extends the standard list view config with accordion-specific options.
+ */
 export interface DbxValueListAccordionViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
   /**
    * Whether the accordion allows multiple expanded panels simultaneously.
@@ -18,7 +21,12 @@ export interface DbxValueListAccordionViewConfig<T, I extends DbxValueListItem<T
 
 // MARK: DbxValueListAccordionViewContentGroupComponent
 /**
- * Renders a single group of items within the accordion view.
+ * Renders a single group of items within an accordion view, including optional header and footer injection points.
+ *
+ * @example
+ * ```html
+ * <dbx-list-accordion-view-content-group [group]="group"></dbx-list-accordion-view-content-group>
+ * ```
  */
 @Component({
   selector: 'dbx-list-accordion-view-content-group',
@@ -61,9 +69,13 @@ export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxV
 
 // MARK: DbxValueListAccordionViewContentComponent
 /**
- * Content view for a DbxValueListAccordionView. Renders items inside a mat-accordion.
+ * Content view that renders grouped list items inside a `mat-accordion`. Each item component is responsible
+ * for rendering its own `mat-expansion-panel` structure.
  *
- * Each item component is responsible for rendering its own mat-expansion-panel structure.
+ * @example
+ * ```html
+ * <dbx-list-accordion-view-content [items]="configuredItems" [multi]="true"></dbx-list-accordion-view-content>
+ * ```
  */
 @Component({
   selector: 'dbx-list-accordion-view-content',
@@ -87,7 +99,13 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
 
 // MARK: DbxValueListAccordionViewComponent
 /**
- * Renders an accordion view using input configuration. Requires a parent DbxListView.
+ * Renders a value list as an accordion using a configuration input. Each item renders its own expansion panel.
+ * Requires a parent {@link DbxListView} context.
+ *
+ * @example
+ * ```html
+ * <dbx-list-accordion-view [config]="accordionConfig"></dbx-list-accordion-view>
+ * ```
  */
 @Component({
   selector: 'dbx-list-accordion-view',

@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/nestjs/typeform",
-  "version": "13.2.1",
+  "version": "13.2.2",
   "peerDependencies": {
-    "@dereekb/date": "13.2.1",
-    "@dereekb/model": "13.2.1",
-    "@dereekb/nestjs": "13.2.1",
-    "@dereekb/rxjs": "13.2.1",
-    "@dereekb/util": "13.2.1",
+    "@dereekb/date": "13.2.2",
+    "@dereekb/model": "13.2.2",
+    "@dereekb/nestjs": "13.2.2",
+    "@dereekb/rxjs": "13.2.2",
+    "@dereekb/util": "13.2.2",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@typeform/api-client": "^2.5.1",

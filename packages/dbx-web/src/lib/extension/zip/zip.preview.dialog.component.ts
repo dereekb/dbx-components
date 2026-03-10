@@ -3,6 +3,9 @@ import { type WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
 import { DbxInjectionDialogComponent } from '../../interaction/dialog';
 import { DbxZipPreviewComponent } from './zip.preview.component';
 
+/**
+ * Configuration for opening a zip preview dialog, extending Material dialog config with zip-specific source options.
+ */
 export interface DbxZipPreviewDialogConfig extends Omit<MatDialogConfig, 'data'> {
   readonly srcUrl?: Maybe<WebsiteUrlWithPrefix>;
   readonly blob?: Maybe<Blob>;

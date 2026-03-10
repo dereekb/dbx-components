@@ -5,7 +5,16 @@ import { type Maybe, type DateOrDateString } from '@dereekb/util';
 import { formatToTimeString, toJsDate } from '@dereekb/date';
 
 /**
- * Pipe that takes in a date and number of minutes and outputs a formatted date.
+ * Formats a date as a "from - to" time range string given a start date, format string, and duration in minutes.
+ *
+ * The start date is formatted using the Angular locale-aware {@link formatDate}, and the end time
+ * is computed by adding the given minutes and formatted as a time-only string.
+ *
+ * @example
+ * ```html
+ * <span>{{ eventStart | dateFormatFromTo:'MMM d, h:mm a':90 }}</span>
+ * <!-- Output: "Jan 5, 2:00 PM - 3:30 PM" -->
+ * ```
  */
 @Pipe({
   name: 'dateFormatFromTo',

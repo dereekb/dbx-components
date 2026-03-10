@@ -4,7 +4,14 @@ import { type Observable, map } from 'rxjs';
 import { DbxPromptConfirm } from './prompt.confirm';
 
 /**
- * Directive that binds together a confirm dialog with the button.
+ * Intercepts button clicks to show a confirmation dialog before proceeding.
+ *
+ * Requires both a {@link DbxButton} and a {@link DbxPromptConfirm} on the host element.
+ *
+ * @example
+ * ```html
+ * <dbx-button [dbxPromptConfirm]="{ title: 'Are you sure?' }" dbxPromptConfirmButton text="Delete"></dbx-button>
+ * ```
  */
 @Directive({
   selector: '[dbxPromptConfirmButton]',

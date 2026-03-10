@@ -7,7 +7,7 @@ import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe }
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
-import { clearable, e164PhoneNumberType } from '@dereekb/model';
+import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -127,7 +127,7 @@ export const updateNotificationUserParamsType = targetModelParamsType.merge({
   'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array())
 }) as Type<UpdateNotificationUserParams>;
 
-export type ResyncNotificationUserParams = TargetModelParams
+export type ResyncNotificationUserParams = TargetModelParams;
 
 export const resyncNotificationUserParamsType = targetModelParamsType as Type<ResyncNotificationUserParams>;
 
@@ -164,7 +164,7 @@ export interface UpdateNotificationSummaryParams extends TargetModelParams {
 
 export const updateNotificationSummaryParamsType = targetModelParamsType.merge({
   'flagAllRead?': clearable('boolean'),
-  'setReadAtTime?': clearable('string.date.parse')
+  'setReadAtTime?': clearable(ARKTYPE_DATE_DTO_TYPE)
 }) as Type<UpdateNotificationSummaryParams>;
 
 /**
@@ -218,7 +218,7 @@ export interface InitializeAllApplicableNotificationSummariesResult {
 /**
  * Used for updating the NotificationBox.
  */
-export type UpdateNotificationBoxParams = TargetModelParams
+export type UpdateNotificationBoxParams = TargetModelParams;
 
 export const updateNotificationBoxParamsType = targetModelParamsType as Type<UpdateNotificationBoxParams>;
 

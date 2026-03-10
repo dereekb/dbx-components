@@ -5,7 +5,9 @@ import { filterUndefinedValues, firstValue, getValueFromGetter, type Maybe, obje
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Displays a button and menu for filtering partialPresets.
+ * Abstract base directive for partial preset filter menus that manages selection state and anchor generation.
+ *
+ * Subclasses render the list of partial preset anchors as either a list or a dropdown menu.
  */
 @Directive()
 export abstract class AbstractDbxPartialPresetFilterMenuDirective<F> {

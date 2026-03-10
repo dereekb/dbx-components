@@ -1,6 +1,20 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Formats a value as a pretty-printed JSON string using {@link JSON.stringify} with configurable indentation.
+ *
+ * Returns `undefined` for falsy input. If serialization fails, returns `'ERROR'` and logs the error to the console.
+ *
+ * @example
+ * ```html
+ * <pre>{{ myObject | prettyjson }}</pre>
+ * <!-- Output: formatted JSON with 2-space indentation -->
+ *
+ * <pre>{{ myObject | prettyjson:4 }}</pre>
+ * <!-- Output: formatted JSON with 4-space indentation -->
+ * ```
+ */
 @Pipe({
   name: 'prettyjson',
   standalone: true

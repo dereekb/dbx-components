@@ -3,7 +3,15 @@ import { asObservableFromGetter, type ObservableOrValueGetter } from '@dereekb/r
 import { type Observable } from 'rxjs';
 
 /**
- * Pipes an ObservableOrValueGetter to an Observable value.
+ * Converts an {@link ObservableOrValueGetter} into an {@link Observable}.
+ *
+ * Useful for normalizing values that may be plain values, getter functions, or Observables
+ * into a consistent Observable stream for use with the `async` pipe.
+ *
+ * @example
+ * ```html
+ * <span>{{ valueOrGetter | asObservable | async }}</span>
+ * ```
  */
 @Pipe({
   name: 'asObservable',

@@ -2,7 +2,16 @@ import { Directive, inject, ElementRef, output, effect } from '@angular/core';
 import { type ResizedEvent, resizeSignal } from './resize';
 
 /**
- * Directive that emits resize events when the parent element is resized.
+ * Emits {@link ResizedEvent} values whenever the host element is resized.
+ *
+ * Uses a `ResizeObserver` internally via {@link resizeSignal}.
+ *
+ * @example
+ * ```html
+ * <div dbxResized (dbxResized)="onResize($event)">
+ *   Resizable content
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxResized]',

@@ -8,6 +8,9 @@ import { type DbxListViewWrapper } from './list.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 // MARK: Wrapper
+/**
+ * Default HTML template for list wrapper components. Passes through state, config, and content projection slots to a child `dbx-list`.
+ */
 export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `
   <dbx-list [state]="currentState$" [config]="configSignal()" [hasMore]="hasMore()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
     <ng-content top select="[top]"></ng-content>
@@ -19,14 +22,24 @@ export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `
 
 const dbxListWrapperComponentImportsAndExports = [DbxListComponent];
 
+/**
+ * Convenience module that imports and exports {@link DbxListComponent} for use in list wrapper component templates.
+ */
 @NgModule({
   exports: dbxListWrapperComponentImportsAndExports,
   imports: dbxListWrapperComponentImportsAndExports
 })
 export class DbxListWrapperComponentImportsModule {}
 
+/**
+ * Configuration type for list wrapper directives. Omits `onClick` and `loadMore` since the wrapper converts those to output events.
+ */
 export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>;
 
+/**
+ * Abstract base directive for components that wrap a {@link DbxListComponent}. Manages state, config, selection mode,
+ * and emits `clickItem` and `loadMore` output events. Extend this to build custom list wrapper components.
+ */
 @Directive()
 export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy, DbxListViewWrapper<T, S> {
   private readonly _config = new BehaviorSubject<MaybeObservableOrValue<C>>(undefined);
@@ -90,8 +103,15 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 }
 
 // MARK: Selection Wrapper
+/**
+ * Configuration type for selection list wrappers. Further omits `onSelectionChange` since the wrapper emits it as an output event.
+ */
 export type DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListWrapperConfig<T, V>, 'onSelectionChange'>;
 
+/**
+ * Abstract base directive for list wrappers that also support selection change events. Extends {@link AbstractDbxListWrapperDirective}
+ * with a `selectionChange` output that emits whenever the user changes item selection.
+ */
 @Directive()
 export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> {
   readonly selectionChange = output<ListSelectionState<T>>();

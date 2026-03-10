@@ -5,7 +5,10 @@ import { DbxAnchorComponent } from './anchor.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Abstract implementation
+ * Abstract base directive for segue anchor implementations that bridges a parent {@link DbxAnchorComponent}
+ * with a router-specific anchor rendering (e.g., Angular Router or UIRouter).
+ *
+ * Provides access to the parent anchor observable, template configuration, and navigation target.
  */
 @Directive()
 export abstract class AbstractDbxSegueAnchorDirective {

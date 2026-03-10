@@ -4,6 +4,9 @@ import { map, shareReplay, type Observable, BehaviorSubject } from 'rxjs';
 import { type ArrayOrValue, type Building, type ModelTypeString, useIterableOrValue } from '@dereekb/util';
 import { type DbxModelTypeConfiguration, type DbxModelTypeConfigurationMap } from './model.types';
 
+/**
+ * Resolved model type information, extending configuration with computed properties like navigation capability.
+ */
 export interface DbxModelTypeInfo extends Omit<DbxModelTypeConfiguration, 'srefFactory'> {
   /**
    * Whether or not a response is expected for segues
@@ -12,14 +15,28 @@ export interface DbxModelTypeInfo extends Omit<DbxModelTypeConfiguration, 'srefF
   readonly canSegueToView: boolean;
 }
 
+/**
+ * Map of model type strings to their resolved {@link DbxModelTypeInfo} entries.
+ */
 export interface DbxModelTypesMap<I extends DbxModelTypeInfo> {
   readonly [type: string]: I;
 }
 
+/**
+ * Map of model type strings to their Material icon names.
+ */
 export interface DbxModelIconsMap {
   readonly [type: string]: string;
 }
 
+/**
+ * Registry service for model type configurations. Provides reactive access to model type information, icons, and navigation capability. Resolves labels, analytics names, and segue refs from registered configurations.
+ *
+ * @example
+ * ```typescript
+ * modelTypesService.addTypeConfigs({ modelType: 'user', label: 'User', icon: 'person' });
+ * ```
+ */
 @Injectable({
   providedIn: 'root'
 })

@@ -5,25 +5,25 @@ import { type DbxAvatarContext } from './avatar';
 import { type Maybe, type WebsitePath, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
- * The injection configuration for a DbxAvatar component.
+ * Injection component configuration for an avatar view, excluding the `injector` property.
  *
- * Not allowed to override the injector.
- *
- * The final injector that will be passed will provide DBX_AVATAR_CONTEXT_DATA_TOKEN.
+ * The injector is managed internally by {@link DbxAvatarComponent} to provide
+ * {@link DBX_AVATAR_CONTEXT_DATA_TOKEN} with the current avatar context.
  */
 export type DbxAvatarInjectionComponentConfig = Omit<DbxInjectionComponentConfig, 'injector'>;
 
 /**
- * Function that returns a DbxInjectionComponentConfig for the given context.
+ * Returns a component configuration for the given avatar context, allowing context-specific avatar rendering.
  *
- * Can return null/undefined if the default avatar component should be used.
- *
- * @param context The current context input.
+ * Return `null` or `undefined` to fall back to the default avatar component.
  */
 export type DbxAvatarComponentForContextFunction = (context: DbxAvatarContext) => Maybe<DbxAvatarInjectionComponentConfig>;
 
 /**
- * Configuration for a DbxAvatarViewService.
+ * Abstract configuration class for customizing the avatar view service defaults.
+ *
+ * Provide this via Angular DI to configure default URLs, icons, and component overrides
+ * for all avatar instances in the application.
  */
 export abstract class DbxAvatarViewServiceConfig {
   /**
@@ -49,7 +49,10 @@ export abstract class DbxAvatarViewServiceConfig {
 }
 
 /**
- * Service for registering avatars.
+ * Root-level service that manages avatar defaults and resolves the avatar component to render for a given context.
+ *
+ * Provides fallback URLs, icons, and component configurations used by {@link DbxAvatarComponent}
+ * and {@link DbxAvatarViewComponent}. Configure application-wide defaults by providing {@link DbxAvatarViewServiceConfig}.
  */
 @Injectable({
   providedIn: 'root'
@@ -67,6 +70,11 @@ export class DbxAvatarViewService {
 
   private _avatarComponentForContext?: DbxAvatarComponentForContextFunction = this._serviceConfig?.avatarComponentForContext;
 
+  /**
+   * Resolves the injection component configuration for the given avatar context.
+   *
+   * Falls back to the default component config if no custom resolver is configured or if it returns null.
+   */
   avatarComponentForContext(context: DbxAvatarContext): DbxAvatarInjectionComponentConfig {
     let config: DbxAvatarInjectionComponentConfig = this._defaultAvatarComponentConfig;
 
@@ -89,18 +97,22 @@ export class DbxAvatarViewService {
     return this._defaultAvatarErrorIcon;
   }
 
+  /** Sets the default avatar image URL used when no context-specific URL is provided. */
   setDefaultAvatarUrl(url: Maybe<WebsitePath | WebsiteUrlWithPrefix>) {
     this._defaultAvatarUrl = url;
   }
 
+  /** Sets the default Material icon name used as a fallback when no avatar image is available. */
   setDefaultAvatarIcon(icon: Maybe<string>) {
     this._defaultAvatarIcon = icon;
   }
 
+  /** Sets the Material icon name displayed when the avatar image fails to load. */
   setDefaultAvatarErrorIcon(icon: Maybe<string>) {
     this._defaultAvatarErrorIcon = icon;
   }
 
+  /** Overrides the default component used to render avatars when no context-specific component is resolved. */
   setDefaultAvatarComponentConfig(config: DbxAvatarInjectionComponentConfig) {
     this._defaultAvatarComponentConfig = config;
   }

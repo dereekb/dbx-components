@@ -1,7 +1,18 @@
 import { type FullStorageObject, type Maybe, type StorageObject, StorageObjectUtility, type StoredDataStorageKey } from '@dereekb/util';
 
 /**
- * StorageObject using LocalStorage.
+ * {@link FullStorageObject} implementation backed by the browser's `localStorage`.
+ *
+ * Wraps a `StorageObject` (the Web Storage API interface) and adds availability checking
+ * and a `removeAll` operation.
+ *
+ * @example
+ * ```typescript
+ * const storage = new FullLocalStorageObject(window.localStorage);
+ * if (storage.isAvailable) {
+ *   storage.setItem('key', 'value');
+ * }
+ * ```
  */
 export class FullLocalStorageObject implements FullStorageObject {
   private readonly _localStorage: StorageObject;

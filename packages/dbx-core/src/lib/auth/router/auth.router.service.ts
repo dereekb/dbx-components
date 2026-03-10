@@ -5,7 +5,27 @@ import { DbxRouterService } from '../../router/router/service/router.service';
 import { DbxAppAuthRoutes } from './auth.router';
 
 /**
- * Helper service for navigating to important auth-related routes.
+ * Angular service that provides programmatic navigation to key authentication-related routes.
+ *
+ * This service wraps {@link DbxRouterService} and {@link DbxAppAuthRoutes} to offer
+ * convenient methods for navigating to login, logout, onboarding, and main app routes.
+ * It also manages an `isAuthRouterEffectsEnabled` flag that controls whether
+ * {@link DbxAppAuthRouterEffects} should perform automatic navigation on auth events.
+ *
+ * @example
+ * ```ts
+ * @Component({ ... })
+ * export class LogoutButtonComponent {
+ *   private readonly authRouterService = inject(DbxAppAuthRouterService);
+ *
+ *   async onLogout() {
+ *     await this.authRouterService.goToLoggedOut();
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link DbxAppAuthRoutes} for the route configuration.
+ * @see {@link DbxAppAuthRouterEffects} for automatic navigation on auth state changes.
  */
 @Injectable({
   providedIn: 'root'
@@ -15,6 +35,8 @@ export class DbxAppAuthRouterService implements OnDestroy {
   readonly dbxAppAuthRoutes = inject(DbxAppAuthRoutes);
 
   private _isAuthRouterEffectsEnabled = new BehaviorSubject<boolean>(true);
+
+  /** Observable of whether auth router effects are currently enabled. */
   readonly isAuthRouterEffectsEnabled$ = this._isAuthRouterEffectsEnabled.asObservable();
 
   ngOnDestroy(): void {

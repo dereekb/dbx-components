@@ -3,7 +3,20 @@ import { type Maybe } from '@dereekb/util';
 import { MatButtonModule } from '@angular/material/button';
 
 /**
- * Component used to format content that displays an intro until a button is pressed.
+ * Displays an introductory message with a call-to-action button. When the button is clicked,
+ * the intro is replaced by the projected content. Useful for onboarding or first-time-use flows.
+ *
+ * @example
+ * ```html
+ * <dbx-intro-action-section
+ *   hint="Welcome! Click below to get started."
+ *   action="Get Started"
+ *   [showIntro]="isFirstVisit"
+ *   (showAction)="onGetStarted()">
+ *   <div info>Additional info shown in the intro state.</div>
+ *   <p>Main content shown after the action is clicked.</p>
+ * </dbx-intro-action-section>
+ * ```
  */
 @Component({
   selector: 'dbx-intro-action-section',

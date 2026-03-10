@@ -9,7 +9,15 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
 import { overrideClickElementEffect } from '../../../util/click';
 
 /**
- * Component that renders an anchor element depending on the input.
+ * Renders an anchor element that adapts its presentation based on the type of navigation link provided.
+ *
+ * Supports plain content, clickable actions, router segue references, external hrefs, and disabled states.
+ *
+ * @example
+ * ```html
+ * <dbx-anchor [anchor]="myAnchor">Click me</dbx-anchor>
+ * <span dbx-anchor [anchor]="myAnchor" [block]="true">Block anchor</span>
+ * ```
  */
 @Component({
   selector: 'dbx-anchor, [dbx-anchor]',

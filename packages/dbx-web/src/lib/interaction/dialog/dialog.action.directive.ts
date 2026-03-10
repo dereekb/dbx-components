@@ -5,10 +5,20 @@ import { type IsEqualFunction, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type MatDialogRef } from '@angular/material/dialog';
 
+/**
+ * A function that opens a MatDialog and returns the dialog reference. Used with {@link DbxActionDialogDirective}.
+ */
 export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, Maybe<T>>;
 
 /**
- * Action directive that is used to trigger/display a dialog, then watches that dialog for a value.
+ * Action directive that opens a dialog and captures the returned value as the action's value.
+ *
+ * The directive triggers the provided dialog function, waits for the dialog to close, and uses the result as the action value.
+ *
+ * @example
+ * ```html
+ * <button [dbxActionDialog]="openMyDialog" dbxActionButton></button>
+ * ```
  */
 @Directive({
   exportAs: 'dbxActionDialog',

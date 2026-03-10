@@ -6,7 +6,7 @@ import { DbxModelTrackerService } from '../../model.tracker.service';
 import { onDbxModel } from '..';
 
 /**
- * Used to pass Object Store events to the ObjectTracker.
+ * NgRx effects that bridge store actions to the {@link DbxModelTrackerService}. Tracks model view events and updates the tracker's default folder when the authenticated user changes.
  */
 @Injectable()
 export class DbxModelTrackerEffects {

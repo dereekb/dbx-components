@@ -5,20 +5,29 @@ import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, tran
 import { type Maybe } from '@dereekb/util';
 
 /**
- * DbxActionConfirmDirective configuration.
+ * Configuration for the action confirmation dialog, extending the base prompt configuration
+ * with an optional value to pass to the action when confirmed.
  */
 export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmConfig {
   /**
-   * Optionally set the readyValue passed to the instance.
+   * Value to pass to the action's ready state when the user confirms.
    */
   readonly readyValue?: T;
 }
 
 /**
- * Directive that when triggered shows a dialog to accept or reject.
+ * Displays a confirmation dialog when the action is triggered. If the user confirms,
+ * the configured ready value is passed to the action. If the user cancels, the action is rejected.
  *
- * This only works to pass a ready value or reject through, not to work with a button.
- * For button usage, use an appPromptConfirmButton directive.
+ * This directive works with action triggering only, not button clicks.
+ * For button-based confirmation, use an appPromptConfirmButton directive instead.
+ *
+ * @example
+ * ```html
+ * <form [dbxAction]="myAction" [dbxActionConfirm]="{ title: 'Confirm Delete', prompt: 'Are you sure?', readyValue: itemId }">
+ *   ...
+ * </form>
+ * ```
  */
 @Directive({
   selector: '[dbxActionConfirm]',

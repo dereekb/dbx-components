@@ -21,9 +21,13 @@ import { type type, type Type } from 'arktype';
 export function clearable<const def extends string>(definition: def): Type<type.infer<def> | null | undefined>;
 export function clearable<T>(definition: Type<T>): Type<T | null | undefined>;
 export function clearable(definition: string | Type): any {
+  let result: any;
+
   if (typeof definition === 'string') {
-    return `${definition} | null | undefined`;
+    result = `${definition} | null | undefined`;
+  } else {
+    result = definition.or('null').or('undefined');
   }
 
-  return definition.or('null').or('undefined');
+  return result;
 }

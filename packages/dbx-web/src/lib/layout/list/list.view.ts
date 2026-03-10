@@ -3,14 +3,24 @@ import { type ListLoadingState, type ListLoadingStateContext } from '@dereekb/rx
 import { forwardRef, type OutputEmitterRef, type Provider, type TrackByFunction, type Type } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Determines how list items behave when interacted with. In 'select' mode, items can be selected/deselected.
+ * In 'view' mode, items are simply clickable for navigation or viewing.
+ */
 export type DbxListSelectionMode = 'select' | 'view';
 
+/**
+ * Represents the selection state of a single list item, including whether it is disabled or selected.
+ */
 export interface ListSelectionStateItem<T> {
   readonly disabled?: boolean;
   readonly selected?: boolean;
   readonly itemValue: T;
 }
 
+/**
+ * Represents the aggregate selection state of all items in a list, emitted when selection changes occur.
+ */
 export interface ListSelectionState<T> {
   readonly items: ListSelectionStateItem<T>[];
 }
@@ -61,6 +71,17 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
   abstract setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void;
 }
 
+/**
+ * Registers a component as a {@link DbxListView} provider so it can be injected by parent list components.
+ *
+ * @example
+ * ```ts
+ * @Component({
+ *   providers: provideDbxListView(MyCustomListViewComponent)
+ * })
+ * export class MyCustomListViewComponent extends DbxListView<MyItem> { ... }
+ * ```
+ */
 // eslint-disable-next-line
 export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {
   // use of any here is allowed as typings are not relevant for providers

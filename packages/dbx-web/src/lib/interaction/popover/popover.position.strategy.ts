@@ -2,12 +2,23 @@ import { type FlexibleConnectedPositionStrategy, type HorizontalConnectionPos, t
 import { type ElementRef } from '@angular/core';
 import { type NgOverlayContainerConfiguration } from 'ng-overlay-container';
 
+/**
+ * Configuration for creating a popover position strategy.
+ */
 export interface PopoverPositionStrategyConfig {
   overlay: Overlay;
   elementRef: ElementRef;
   config: NgOverlayContainerConfiguration;
 }
 
+/**
+ * Creates a flexible connected position strategy for popovers with multiple fallback positions.
+ *
+ * @example
+ * ```ts
+ * const strategy = PopoverPositionStrategy.make(overlay, elementRef, overlayConfig);
+ * ```
+ */
 export class PopoverPositionStrategy {
   static make(overlay: Overlay, elementRef: ElementRef, config: NgOverlayContainerConfiguration): FlexibleConnectedPositionStrategy {
     const [originX, origin2ndX, origin3rdX]: HorizontalConnectionPos[] = config.originX === 'end' ? ['end', 'start', 'center'] : config.originX === 'start' ? ['start', 'end', 'center'] : ['center', 'start', 'end'];

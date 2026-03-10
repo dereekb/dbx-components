@@ -4,10 +4,21 @@ import { type ObservableOrValue, SubscriptionObject, type IsModifiedFunction, as
 import { type DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
- * DbxActionValueGetterInstance function. Returns an ObervableGetter that returns a value.
+ * Function that retrieves the input value for an action when triggered.
+ *
+ * Called by {@link DbxActionValueGetterInstance} when the action is triggered,
+ * returning the value (or an observable of the value) to pass to the action.
+ *
+ * @typeParam T - The value type to retrieve.
  */
 export type DbxActionValueGetterValueGetterFunction<T> = () => ObservableOrValue<Maybe<T>>;
 
+/**
+ * Result of a value getter invocation, containing either a value to proceed with
+ * or an error to reject the action.
+ *
+ * @typeParam T - The value type.
+ */
 export interface DbxActionValueGetterResult<T = unknown> {
   /**
    * The value to trigger with
@@ -20,7 +31,9 @@ export interface DbxActionValueGetterResult<T = unknown> {
 }
 
 /**
- * DbxActionValueGetterInstance configuration.
+ * Configuration for a {@link DbxActionValueGetterInstance}.
+ *
+ * @typeParam T - The value type for the action.
  */
 export interface DbxActionValueGetterInstanceConfig<T> {
   readonly source: DbxActionContextStoreSourceInstance<T, unknown>;
@@ -30,7 +43,19 @@ export interface DbxActionValueGetterInstanceConfig<T> {
 }
 
 /**
- * Utility class that handles trigger events to retrieve a value.
+ * Utility class that handles the trigger-to-value-ready phase of the action lifecycle.
+ *
+ * When initialized, it subscribes to the source's `triggered$` stream. On each trigger,
+ * it calls the configured {@link DbxActionValueGetterValueGetterFunction} to retrieve the value,
+ * runs an optional {@link IsModifiedFunction} check, and either calls `readyValue()` with
+ * the retrieved value or `reject()` if the value is null/undefined or an error occurred.
+ *
+ * This separates value retrieval from the trigger event, allowing lazy or async value computation.
+ *
+ * @typeParam T - The value type for the action.
+ *
+ * @see {@link DbxActionValueTriggerDirective} for the directive wrapper.
+ * @see {@link DbxActionValueDirective} for the simpler always-piped-value approach.
  */
 export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable {
   private readonly _valueGetterFunction = new BehaviorSubject<Maybe<DbxActionValueGetterValueGetterFunction<T>>>(undefined);

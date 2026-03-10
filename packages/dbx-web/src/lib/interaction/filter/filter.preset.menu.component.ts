@@ -10,7 +10,12 @@ import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component'
 import { NgClass } from '@angular/common';
 
 /**
- * Displays a button and menu for filtering presets.
+ * Displays a dropdown button menu for selecting filter presets with configurable icon and text.
+ *
+ * @example
+ * ```html
+ * <dbx-preset-filter-menu [presets]="myPresets" [config]="{ unknownSelectionText: 'All' }" (presetSelected)="onPreset($event)"></dbx-preset-filter-menu>
+ * ```
  */
 @Component({
   selector: 'dbx-preset-filter-menu',

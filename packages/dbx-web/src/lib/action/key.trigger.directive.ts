@@ -5,9 +5,22 @@ import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
 
 /**
- * Directive that triggers the action on a specific key up event.
+ * Triggers the parent action context when a specific keyboard key is released.
+ * Defaults to the "enter" key. Key names should be lowercase.
  *
- * Events/Keys to respond to should be lowercase.
+ * @example
+ * ```html
+ * <form [dbxAction]="saveAction" dbxActionKeyTrigger>
+ *   <!-- Pressing Enter triggers the action -->
+ * </form>
+ * ```
+ *
+ * @example
+ * ```html
+ * <div [dbxAction]="searchAction" [dbxActionKeyTrigger]="'escape'">
+ *   <!-- Pressing Escape triggers the action -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxActionKeyTrigger]',

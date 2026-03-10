@@ -6,7 +6,20 @@ import { ActionContextStore } from './action.store';
 import { type DbxActionDisabledKey } from './action';
 
 /**
- * Abstract class that can either use SecondaryActionContextStoreSource or create it's own.
+ * Base class for action context sources that can either reuse an existing
+ * {@link SecondaryActionContextStoreSource} or create their own internal {@link ActionContextStore}.
+ *
+ * If a secondary source is provided (typically via Angular DI), it is used directly,
+ * enabling store sharing across component boundaries. Otherwise, a new standalone store is created.
+ *
+ * This class also creates a {@link DbxActionContextStoreSourceInstance} for convenient access
+ * to the store's reactive streams and imperative methods.
+ *
+ * @typeParam T - The input value type for the action.
+ * @typeParam O - The output result type for the action.
+ *
+ * @see {@link DbxActionDirective} which extends this class.
+ * @see {@link DbxActionContextMachine} which extends this class for programmatic use.
  */
 export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, Destroyable {
   private readonly _inputSource: Maybe<SecondaryActionContextStoreSource<T, O>>;

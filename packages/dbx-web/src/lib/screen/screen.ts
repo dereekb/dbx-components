@@ -10,6 +10,9 @@
  */
 export type ScreenMediaWidthType = 'micro' | 'small' | 'tablet' | 'large' | 'full';
 
+/**
+ * Ordered numeric mapping of {@link ScreenMediaWidthType} for size comparisons.
+ */
 export const SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP = {
   micro: 0,
   small: 1,
@@ -28,17 +31,24 @@ export const SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP = {
 export type ScreenMediaHeightType = 'tiny' | 'normal';
 
 /**
- * Compares the breakpoint with the current width and determines if it is "active" or not.
+ * Returns `true` if the current screen width type is at least as wide as the given breakpoint.
  *
- * The current is considered active if it is bigger or equal to the breakpoint.
+ * @param current - the current screen width type
+ * @param breakpoint - the minimum width type to check against
  *
- * @param current
- * @param breakpoint
+ * @example
+ * ```ts
+ * screenMediaWidthTypeIsActive('tablet', 'small'); // true
+ * screenMediaWidthTypeIsActive('micro', 'tablet'); // false
+ * ```
  */
 export function screenMediaWidthTypeIsActive(current: ScreenMediaWidthType, breakpoint: ScreenMediaWidthType) {
   return compareScreenMediaWidthTypes(current, breakpoint, (a, b) => a >= b);
 }
 
+/**
+ * Compares two {@link ScreenMediaWidthType} values using a custom comparator on their numeric sizes.
+ */
 export function compareScreenMediaWidthTypes(a: ScreenMediaWidthType, b: ScreenMediaWidthType, compare: (a: number, b: number) => boolean) {
   return compare(SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP[a], SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP[b]);
 }

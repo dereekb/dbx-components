@@ -8,9 +8,20 @@ import { DbxSidenavPagebarComponent } from './sidenav.pagebar.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Pre-configured page used with DbxSidenavComponent.
+ * Page layout component designed for use inside a {@link DbxSidenavComponent}. Includes a sidenav-aware pagebar and a content area.
  *
- * Can optionally be configured to only show the pagebar while in mobile mode.
+ * When `mobileOnly` is true, the pagebar is hidden on non-mobile screen sizes.
+ *
+ * @example
+ * ```html
+ * <dbx-sidenav [anchors]="links">
+ *   <dbx-sidenav-page [mobileOnly]="true" color="primary">
+ *     <span navLeft>Left Nav Content</span>
+ *     <span navRight>Right Nav Content</span>
+ *     <p>Page body content</p>
+ *   </dbx-sidenav-page>
+ * </dbx-sidenav>
+ * ```
  */
 @Component({
   selector: 'dbx-sidenav-page',

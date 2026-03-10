@@ -5,6 +5,11 @@ import { getValueFromGetter, type Maybe, objectHasNoKeys } from '@dereekb/util';
 import { type FilterWithPreset } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
+/**
+ * Abstract base directive for preset filter menus that manages full and partial preset selection state.
+ *
+ * Subclasses render the list of preset anchors as either a list or a dropdown menu.
+ */
 @Directive()
 export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithPreset> {
   readonly filterSourceDirective = inject(FilterSourceDirective<F>);

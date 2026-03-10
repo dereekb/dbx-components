@@ -10,6 +10,9 @@ import { DbxTwoColumnSrefShowRightDirective } from './two.column.sref.showright.
 
 const importsAndExports = [DbxTwoColumnComponent, DbxTwoColumnRightComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnSrefDirective, DbxTwoColumnBackDirective, DbxTwoColumnFullLeftDirective, DbxTwoColumnContextDirective, DbxTwoColumnSrefShowRightDirective];
 
+/**
+ * Module that bundles all two-column layout components and directives for convenient importing.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

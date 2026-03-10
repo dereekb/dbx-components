@@ -5,7 +5,15 @@ import { DbxAvatarViewService } from './avatar.service';
 import { type DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarStyle } from './avatar';
 
 /**
- * Component that displays an avatar image. It has a configurable default avatar.
+ * Displays an avatar image with automatic fallback to a Material icon when no image is available or when the image fails to load.
+ *
+ * Supports circle and square styles, and can optionally hide entirely on image error.
+ * Receives context via the {@link DBX_AVATAR_CONTEXT_DATA_TOKEN} injection token or direct inputs.
+ *
+ * @example
+ * ```html
+ * <dbx-avatar-view [avatarUrl]="user.photoUrl" [avatarStyle]="'circle'" [avatarIcon]="'account_circle'"></dbx-avatar-view>
+ * ```
  */
 @Component({
   selector: 'dbx-avatar-view',

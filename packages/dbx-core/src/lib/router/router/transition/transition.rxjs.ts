@@ -7,23 +7,45 @@ import { type DbxRouterTransitionService } from '../service/router.transition.se
 import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from './transition';
 
 /**
- * Convenience function for filtering success from the input observable.
+ * Filters the given transition event observable to only emit successful transitions.
  *
- * @param obs
- * @returns
+ * Convenience function equivalent to applying {@link filterTransitionSuccess} as a pipe operator.
+ *
+ * @param obs - The source observable of router transition events.
+ * @returns An observable that emits only successful transition events.
+ *
+ * @see {@link filterTransitionSuccess}
  */
 export function successTransition(obs: Observable<DbxRouterTransitionEvent>): Observable<DbxRouterTransitionEvent> {
   return obs.pipe(filterTransitionSuccess());
 }
 
+/**
+ * RxJS operator that filters transition events to only pass through successful transitions.
+ *
+ * @returns A `MonoTypeOperatorFunction` that filters for {@link DbxRouterTransitionEventType.SUCCESS} events.
+ *
+ * @see {@link filterTransitionEvent}
+ */
 export function filterTransitionSuccess(): MonoTypeOperatorFunction<DbxRouterTransitionEvent> {
   return filterTransitionEvent(DbxRouterTransitionEventType.SUCCESS);
 }
 
+/**
+ * RxJS operator that filters transition events to only pass through events of the specified type.
+ *
+ * @param type - The transition event type to filter for.
+ * @returns A `MonoTypeOperatorFunction` that only passes matching events.
+ */
 export function filterTransitionEvent(type: DbxRouterTransitionEventType): MonoTypeOperatorFunction<DbxRouterTransitionEvent> {
   return filter((x) => x.type === type);
 }
 // MARK: LatestSuccessfulRoutesConfig
+/**
+ * Configuration for a single route to check for activity within {@link latestSuccessfulRoutes}.
+ *
+ * @see {@link LatestSuccessfulRoutesConfig}
+ */
 export interface LatestSuccessfulRoutesConfigRoute {
   /**
    * Route to check if it is active or not.
@@ -40,7 +62,11 @@ interface LatestSuccessfulRoutesConfigRouteItem<T> extends IndexRef {
 }
 
 /**
- * latestSuccessfulRoute() config
+ * Configuration for {@link latestSuccessfulRoutes}, specifying the router services and routes to monitor.
+ *
+ * @typeParam T - The route configuration type, extending {@link LatestSuccessfulRoutesConfigRoute}.
+ *
+ * @see {@link latestSuccessfulRoutes}
  */
 export interface LatestSuccessfulRoutesConfig<T extends LatestSuccessfulRoutesConfigRoute> {
   readonly dbxRouterTransitionService: DbxRouterTransitionService;
@@ -52,11 +78,17 @@ export interface LatestSuccessfulRoutesConfig<T extends LatestSuccessfulRoutesCo
 }
 
 /**
- * Creates a new observable that uses the input DbxRouterTransitionService and DbxRouterService to determine whether or not any of the configured routes are active.
+ * Creates an observable that emits the list of currently active routes after each successful transition.
  *
- * @param obs
- * @param config
- * @returns
+ * On each successful router transition, checks all configured routes against the router service
+ * and emits an array of those that are active. The result is deduplicated by index and shared.
+ *
+ * @typeParam T - The route configuration type, extending {@link LatestSuccessfulRoutesConfigRoute}.
+ * @param config - Configuration specifying the router services and routes to monitor.
+ * @returns An observable emitting an array of the currently active route configurations.
+ *
+ * @see {@link LatestSuccessfulRoutesConfig}
+ * @see {@link isLatestSuccessfulRoute} for a boolean variant
  */
 export function latestSuccessfulRoutes<T extends LatestSuccessfulRoutesConfigRoute>(config: LatestSuccessfulRoutesConfig<T>): Observable<T[]> {
   const { dbxRouterTransitionService, dbxRouterService, routes: inputRoutes } = config;
@@ -80,7 +112,9 @@ export function latestSuccessfulRoutes<T extends LatestSuccessfulRoutesConfigRou
 
 // MARK: IsLatestSuccessfulRouteConfig
 /**
- * isLatestSuccessfulRoute() config
+ * Configuration for {@link isLatestSuccessfulRoute}, specifying the router services, routes, and match mode.
+ *
+ * @see {@link isLatestSuccessfulRoute}
  */
 export interface IsLatestSuccessfulRouteConfig {
   readonly dbxRouterTransitionService: DbxRouterTransitionService;
@@ -96,11 +130,16 @@ export interface IsLatestSuccessfulRouteConfig {
 }
 
 /**
- * Creates a new observable that uses the input DbxRouterTransitionService and DbxRouterService to determine whether or not any of the configured routes are active.
+ * Creates an observable that emits `true` when any of the configured routes are active after a successful transition,
+ * and `false` otherwise.
  *
- * @param obs
- * @param config
- * @returns
+ * This is a simplified boolean variant of {@link latestSuccessfulRoutes}.
+ *
+ * @param config - Configuration specifying the router services, routes, and match mode.
+ * @returns An observable emitting `true` when at least one configured route is active, `false` otherwise.
+ *
+ * @see {@link IsLatestSuccessfulRouteConfig}
+ * @see {@link latestSuccessfulRoutes} for the full route list variant
  */
 export function isLatestSuccessfulRoute(config: IsLatestSuccessfulRouteConfig): Observable<boolean> {
   const { dbxRouterTransitionService, dbxRouterService, activeExactly } = config;
