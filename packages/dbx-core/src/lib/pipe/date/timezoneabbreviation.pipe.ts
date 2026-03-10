@@ -3,7 +3,20 @@ import { type TimezoneString, type Maybe } from '@dereekb/util';
 import { getTimezoneAbbreviation } from '@dereekb/date';
 
 /**
- * Converts the input date and timezone to the proper abbreviation. Uses the input date for the context, or uses now.
+ * Returns the abbreviated name for a timezone string (e.g., "EST", "PDT") using {@link getTimezoneAbbreviation}.
+ *
+ * Optionally accepts a reference date to determine the correct abbreviation (e.g., for daylight saving time).
+ * Defaults to the current date if no reference date is provided.
+ * Returns `undefined` if the timezone is falsy.
+ *
+ * @example
+ * ```html
+ * <span>{{ 'America/New_York' | timezoneAbbreviation }}</span>
+ * <!-- Output: "EST" or "EDT" depending on the current date -->
+ *
+ * <span>{{ timezone | timezoneAbbreviation:referenceDate }}</span>
+ * <!-- Output: abbreviation for the timezone at the given reference date -->
+ * ```
  */
 @Pipe({
   name: 'timezoneAbbreviation',

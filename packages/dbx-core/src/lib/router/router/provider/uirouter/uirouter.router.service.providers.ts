@@ -4,9 +4,25 @@ import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } fr
 import { DbxUIRouterService } from './uirouter.router.service';
 
 /**
- * Provides a DbxUIRouterService and configures it to provide for DbxRouterService and DbxRouterTransitionService.
+ * Creates Angular environment providers that register {@link DbxUIRouterService} as the implementation
+ * for both {@link DbxRouterService} and {@link DbxRouterTransitionService}.
  *
- * @returns EnvironmentProviders
+ * Use this function in the application's `bootstrapApplication` or `provideRouter` configuration
+ * when using UIRouter as the routing framework.
+ *
+ * @returns Angular `EnvironmentProviders` for the UIRouter-based router service.
+ *
+ * @example
+ * ```ts
+ * bootstrapApplication(AppComponent, {
+ *   providers: [
+ *     provideDbxUIRouterService()
+ *   ]
+ * });
+ * ```
+ *
+ * @see {@link DbxUIRouterService}
+ * @see {@link DbxCoreAngularRouterSegueModule} for the Angular Router alternative
  */
 export function provideDbxUIRouterService(): EnvironmentProviders {
   const providers: Provider[] = [

@@ -4,7 +4,30 @@ import { type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '
 import { DbxRouterTransitionService } from './router.transition.service';
 
 /**
- * Router service definition that can route the app and provide routing details.
+ * Abstract router service that provides navigation capabilities and routing state information.
+ *
+ * Extends {@link DbxRouterTransitionService} with navigation methods (`go`, `updateParams`) and
+ * route inspection methods (`isActive`, `isActiveExactly`, `comparePrecision`).
+ *
+ * Concrete implementations include {@link DbxAngularRouterService} (Angular Router) and
+ * {@link DbxUIRouterService} (UIRouter).
+ *
+ * @example
+ * ```ts
+ * // Inject and use in a component or service
+ * @Component({ ... })
+ * class MyComponent {
+ *   private readonly router = inject(DbxRouterService);
+ *
+ *   navigateToDashboard(): void {
+ *     this.router.go({ ref: 'app.dashboard', refParams: { tab: 'overview' } });
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link DbxRouterTransitionService} for transition event observables
+ * @see {@link DbxAngularRouterService} for the Angular Router implementation
+ * @see {@link DbxUIRouterService} for the UIRouter implementation
  */
 export abstract class DbxRouterService extends DbxRouterTransitionService {
   /**

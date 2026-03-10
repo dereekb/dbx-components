@@ -3,7 +3,11 @@ import { Directive, type OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 
 /**
- * Provides a FilterSource from a parent FilterMap.
+ * Abstract directive that resolves a specific filter instance from a parent {@link FilterMap} by key.
+ *
+ * Subclasses set the key via {@link setFilterMapKey} and access the resolved instance via `instance$`.
+ *
+ * @typeParam F - The filter type.
  */
 @Directive()
 export abstract class AbstractDbxFilterMapInstanceDirective<F> implements OnDestroy {

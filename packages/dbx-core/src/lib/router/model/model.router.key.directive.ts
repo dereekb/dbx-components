@@ -8,9 +8,26 @@ import { DbxRouterService } from '../router/service/router.service';
 import { DbxRouteModelKeyDirectiveDelegate } from './model.router';
 
 /**
- * Used for retrieving the model's key from the current route using the configured parameter and passes it to its delegate.
+ * Directive that reads a model key from the current route's parameters and passes it to a {@link DbxRouteModelKeyDirectiveDelegate}.
  *
- * If the key does not exist in the params, then the p
+ * Functions identically to {@link DbxRouteModelIdDirective} but uses a "key" parameter (defaulting to `'key'`)
+ * instead of "id". Supports configurable parameter key, default value, redirect behavior, and custom decision logic.
+ *
+ * @example
+ * ```html
+ * <!-- Basic usage: reads "key" param from route and passes to delegate -->
+ * <div dbxRouteModelKey></div>
+ *
+ * <!-- Custom param key -->
+ * <div [dbxRouteModelKey]="'slug'"></div>
+ *
+ * <!-- With default value and redirect disabled -->
+ * <div dbxRouteModelKey [dbxRouteModelKeyDefault]="defaultKey$" [dbxRouteModelKeyDefaultRedirect]="false"></div>
+ * ```
+ *
+ * @see {@link DbxRouteModelKeyDirectiveDelegate} for the delegate that receives the key observables
+ * @see {@link dbxRouteModelKeyParamRedirect} for the underlying redirect logic
+ * @see {@link DbxRouteModelIdDirective} for the id-based equivalent
  */
 @Directive({
   selector: '[dbxRouteModelKey]',

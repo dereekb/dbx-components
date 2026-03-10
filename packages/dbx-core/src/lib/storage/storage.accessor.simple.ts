@@ -3,6 +3,11 @@ import { isThrottled, unixDateTimeSecondsNumberForNow, DataDoesNotExistError, Da
 import { type StorageAccessor } from './storage.accessor';
 
 // MARK: SimpleStorageAccessor
+/**
+ * Strategy for converting values to and from their stored string representation.
+ *
+ * @typeParam T - The type of value being converted.
+ */
 export interface SimpleStorageAccessorConverter<T> {
   /**
    * Converts the input value to a string.
@@ -15,10 +20,18 @@ export interface SimpleStorageAccessorConverter<T> {
 }
 
 /**
- * SimpleStorageAccessor delegate.
+ * Combined interface providing both value conversion and raw string storage capabilities.
+ * Used as the backing delegate for {@link SimpleStorageAccessor}.
+ *
+ * @typeParam T - The type of value being stored.
  */
 export interface SimpleStorageAccessorDelegate<T> extends SimpleStorageAccessorConverter<T>, StorageAccessor<StoredDataString> {}
 
+/**
+ * Default {@link SimpleStorageAccessorConverter} that uses `JSON.stringify`/`JSON.parse` for conversion.
+ *
+ * @typeParam T - The type of value being converted.
+ */
 export class StringifySimpleStorageAccessorConverter<T> implements SimpleStorageAccessorConverter<T> {
   stringifyValue(value: T): StoredDataString {
     return JSON.stringify(value);
@@ -29,6 +42,12 @@ export class StringifySimpleStorageAccessorConverter<T> implements SimpleStorage
   }
 }
 
+/**
+ * Composes a {@link StorageAccessor} and a {@link SimpleStorageAccessorConverter} into a single
+ * {@link SimpleStorageAccessorDelegate} implementation.
+ *
+ * @typeParam T - The type of value being stored.
+ */
 export class WrapperSimpleStorageAccessorDelegate<T> implements SimpleStorageAccessorDelegate<T> {
   private readonly _delegate: StorageAccessor<StoredDataString>;
   private readonly _converter: SimpleStorageAccessorConverter<T>;
@@ -71,17 +90,28 @@ export class WrapperSimpleStorageAccessorDelegate<T> implements SimpleStorageAcc
   }
 }
 
+/**
+ * Configuration for a {@link SimpleStorageAccessor}, controlling key namespacing and expiration.
+ *
+ * @example
+ * ```typescript
+ * const config: SimpleStorageAccessorConfig = {
+ *   prefix: 'myapp_settings',
+ *   expiresIn: 24 * 60 * 60 * 1000, // 24 hours
+ * };
+ * ```
+ */
 export interface SimpleStorageAccessorConfig {
   /**
-   * Storage Key Prefix
+   * Prefix prepended to all storage keys to namespace entries.
    */
   readonly prefix: string;
   /**
-   * Optional prefix/value splitter.
+   * Separator between the prefix and the key. Defaults to `'::'`.
    */
   readonly prefixSplitter?: string;
   /**
-   * Number in milliseconds that objects stored will expire in.
+   * Time in milliseconds after which stored data is considered expired.
    */
   readonly expiresIn?: number;
 }
@@ -91,6 +121,11 @@ interface ConfiguredSimpleStorageAccessorConfig extends SimpleStorageAccessorCon
   readonly fullPrefix: string;
 }
 
+/**
+ * Validates that a storage key prefix is non-empty and does not contain the prefix splitter character.
+ *
+ * @throws {Error} If the prefix is invalid or the splitter is empty.
+ */
 export function assertValidStorageKeyPrefix(prefix: string, prefixSplitter: string): void {
   if (!prefixSplitter) {
     throw new Error('Invalid storage key prefix splitter. Must be defined and not empty.'); // TODO(FUTURE): Consider changing to a concrete error type
@@ -101,12 +136,35 @@ export function assertValidStorageKeyPrefix(prefix: string, prefixSplitter: stri
   }
 }
 
+/**
+ * Checks whether a storage key prefix is valid (non-empty and does not contain the splitter).
+ */
 export function isValidStorageKeyPrefix(prefix: string, prefixSpltter: string): boolean {
   return Boolean(prefix && prefix.indexOf(prefixSpltter) === -1);
 }
 
 /**
- * LimitedStorageAccessor implementation that uses a Delegate
+ * Full-featured {@link StorageAccessor} that adds key namespacing, JSON serialization,
+ * and optional time-based expiration on top of a raw string storage backend.
+ *
+ * Values are stored as JSON with metadata (timestamp) and automatically checked
+ * for expiration on read.
+ *
+ * @typeParam T - The type of values stored.
+ *
+ * @throws {DataDoesNotExistError} When reading a key that does not exist.
+ * @throws {DataIsExpiredError} When reading a key whose stored data has expired.
+ *
+ * @example
+ * ```typescript
+ * const accessor = factory.createStorageAccessor<UserSettings>({
+ *   prefix: 'user_prefs',
+ *   expiresIn: 3600000,
+ * });
+ *
+ * accessor.set('theme', { dark: true }).subscribe();
+ * accessor.get('theme').subscribe(settings => console.log(settings));
+ * ```
  */
 export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   static readonly PREFIX_SPLITTER = '::';

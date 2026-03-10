@@ -3,9 +3,19 @@ import { DbxAppEnviroment } from './environment';
 import { DbxAppEnviromentService } from './environment.service';
 
 /**
- * Provides the DbxAppEnviromentService and DbxAppEnviroment.
+ * Registers {@link DbxAppEnviroment} and {@link DbxAppEnviromentService} as environment-level providers.
  *
- * @param environment
+ * @param environment - The concrete environment configuration to provide.
+ *
+ * @example
+ * ```typescript
+ * // In app.config.ts:
+ * export const appConfig: ApplicationConfig = {
+ *   providers: [
+ *     provideDbxAppEnviroment({ production: true, staging: false }),
+ *   ],
+ * };
+ * ```
  */
 export function provideDbxAppEnviroment(environment: DbxAppEnviroment): EnvironmentProviders {
   const providers: Provider[] = [

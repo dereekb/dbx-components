@@ -3,12 +3,24 @@ import { type ActionContextStoreSource, actionContextStoreSourcePipe } from '../
 import { type Destroyable } from '@dereekb/util';
 
 /**
- * Arbitrary string used to identify an action.
+ * Arbitrary string key used to identify and look up an action within an {@link ActionContextStoreSourceMap}.
+ *
+ * Each key maps to a unique {@link ActionContextStoreSource}, allowing multiple independent
+ * actions to be managed and referenced by name in a single map context.
  */
 export type ActionKey = string;
 
 /**
- * Map that returns sources for ActionKey values.
+ * Abstract map that associates {@link ActionKey} values with {@link ActionContextStoreSource} instances.
+ *
+ * This allows multiple independent actions to be registered and retrieved by key,
+ * enabling coordination between related actions (e.g., disabling one while another is working).
+ *
+ * @typeParam T - The input value type for the actions.
+ * @typeParam O - The output result type for the actions.
+ *
+ * @see {@link actionContextStoreSourceMap} for the factory function.
+ * @see {@link DbxActionContextMapDirective} for the directive that provides this in templates.
  */
 export abstract class ActionContextStoreSourceMap<T = unknown, O = unknown> implements Destroyable {
   /**

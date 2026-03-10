@@ -7,9 +7,28 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { transformEmptyStringInputToUndefined } from '../../../util/input';
 
 /**
- * Structural directive that displays the content when the store is working.
+ * Structural directive that conditionally renders its content while the action is in a working state.
  *
- * Can specify a period in milliseconds that shows how long to show up after working for a particular number of seconds.
+ * Optionally accepts a number (in milliseconds) to auto-hide the content after a specified duration,
+ * even if the action is still working. This is useful for showing brief "loading" indicators
+ * that should disappear after a timeout.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <div *dbxActionWorking>Loading...</div>
+ * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- Hide after 3 seconds even if still working -->
+ * <div dbxAction>
+ *   <div *dbxActionIsWorking="3000">Loading...</div>
+ * </div>
+ * ```
+ *
+ * @see {@link DbxActionIdleDirective} for showing content when idle.
  */
 @Directive({
   selector: '[dbxActionWorking],[dbxActionIsWorking]',

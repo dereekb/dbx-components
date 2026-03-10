@@ -20,9 +20,23 @@ export const DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_KEY_PARAM_KEY = 'key';
 export const DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_USE_PARAM_VALUE = '0';
 
 /**
- * Used to read an id with a specific key from the current route.
+ * Reads a model identifier from the current route by parameter key, with support for automatic
+ * redirect when the parameter matches a placeholder value (e.g., `'0'`).
  *
- * Can be configured to redirect to a default route if a specific value is seen.
+ * Extends {@link DbxRouteParamReader} with redirect and decision logic so that routes with
+ * placeholder identifiers can be automatically resolved to a meaningful default.
+ *
+ * @example
+ * ```ts
+ * const redirect = dbxRouteModelIdParamRedirect(routerService);
+ * redirect.init();
+ *
+ * // Observe the resolved id (after redirect logic is applied)
+ * redirect.id$.subscribe(id => console.log('Model ID:', id));
+ * ```
+ *
+ * @see {@link DbxRouteParamReader}
+ * @see {@link dbxRouteModelIdParamRedirect} for creating instances
  */
 export interface DbxRouteModelIdParamRedirect extends DbxRouteParamReader<ModelKey> {
   /**
@@ -38,7 +52,12 @@ export interface DbxRouteModelIdParamRedirect extends DbxRouteParamReader<ModelK
 }
 
 /**
- *DbxRouteModelIdParamRedirect instance
+ * Full lifecycle instance of a {@link DbxRouteModelIdParamRedirect} that supports initialization and destruction.
+ *
+ * Provides mutable setters for the parameter key, default value, redirect enabled state, and decision function.
+ *
+ * @see {@link DbxRouteModelIdParamRedirect}
+ * @see {@link dbxRouteModelIdParamRedirect} for creating instances
  */
 export interface DbxRouteModelIdParamRedirectInstance extends DbxRouteModelIdParamRedirect, DbxRouteParamReader<ModelKey>, Initialized, Destroyable {
   readonly paramValue$: Observable<Maybe<string>>;
@@ -57,10 +76,35 @@ export interface DbxRouteModelIdParamRedirectInstance extends DbxRouteModelIdPar
   setParamValue(value: MaybeObservableOrValueGetter<string>): void;
 }
 
+/**
+ * Creates a {@link DbxRouteModelIdParamRedirectInstance} configured to read a "key" parameter from the current route.
+ *
+ * This is a convenience wrapper around {@link dbxRouteModelIdParamRedirect} that defaults the parameter key to `'key'`.
+ *
+ * @param dbxRouterService - The router service to read parameters from.
+ * @param defaultParamKey - The route parameter key to read. Defaults to `'key'`.
+ * @returns A new redirect instance.
+ *
+ * @see {@link dbxRouteModelIdParamRedirect}
+ */
 export function dbxRouteModelKeyParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_KEY_PARAM_KEY): DbxRouteModelIdParamRedirectInstance {
   return dbxRouteModelIdParamRedirect(dbxRouterService, defaultParamKey);
 }
 
+/**
+ * Creates a {@link DbxRouteModelIdParamRedirectInstance} that reads a model identifier from the current route
+ * and optionally redirects when the value matches a placeholder (defaulting to `'0'`).
+ *
+ * The instance must be initialized via `init()` to activate the redirect behavior, and destroyed via `destroy()`
+ * when no longer needed.
+ *
+ * @param dbxRouterService - The router service to read parameters from and perform redirects with.
+ * @param defaultParamKey - The route parameter key to read. Defaults to `'id'`.
+ * @returns A new redirect instance.
+ *
+ * @see {@link DbxRouteModelIdParamRedirectInstance}
+ * @see {@link dbxRouteModelKeyParamRedirect} for the key-based variant
+ */
 export function dbxRouteModelIdParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_ID_PARAM_KEY): DbxRouteModelIdParamRedirectInstance {
   const _paramReader = dbxRouteParamReaderInstance<ModelKey>(dbxRouterService, defaultParamKey);
   const _paramRedirect = new DbxRouteParamDefaultRedirectInstance<ModelKey>(_paramReader);

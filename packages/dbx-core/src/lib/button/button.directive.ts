@@ -6,7 +6,19 @@ import { type DbxButton, type DbxButtonDisplay, type DbxButtonDisplayType, dbxBu
 import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 
 /**
- * Abstract button component.
+ * Abstract base directive implementing the {@link DbxButton} interface with signal-based state management.
+ *
+ * Manages disabled state, working/progress state, display content (icon/text),
+ * and button click interception. Subclass this to create custom button directives.
+ *
+ * @example
+ * ```typescript
+ * @Directive({
+ *   selector: '[myButton]',
+ *   providers: provideDbxButton(MyButtonDirective),
+ * })
+ * export class MyButtonDirective extends AbstractDbxButtonDirective {}
+ * ```
  */
 @Directive()
 export abstract class AbstractDbxButtonDirective implements DbxButton {
@@ -119,7 +131,23 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
 
 // MARK: Implementation
 /**
- * Provides an DbxButton directive.
+ * Concrete button directive that provides a {@link DbxButton} instance via DI.
+ *
+ * Apply to any element to make it a managed button with reactive disabled,
+ * working, and display state.
+ *
+ * @example
+ * ```html
+ * <button dbxButton [icon]="'save'" [text]="'Save'" [disabled]="isSaving">
+ *   Save
+ * </button>
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- Access the button instance via template reference: -->
+ * <button dbxButton #btn="dbxButton" (click)="btn.clickButton()">Submit</button>
+ * ```
  */
 @Directive({
   selector: '[dbxButton]',

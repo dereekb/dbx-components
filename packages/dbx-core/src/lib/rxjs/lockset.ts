@@ -4,21 +4,28 @@ import { type Configurable, type DestroyFunction, type GetterOrValue, getValueFr
 import { cleanSubscription } from './subscription';
 import { type Unsubscribable } from 'rxjs';
 
+/**
+ * Configuration for {@link cleanLockSet}, controlling destruction timing and lifecycle callbacks.
+ */
 export interface CleanLockSetConfig {
   /**
-   * Arbitrary onDestroy function to call when onDestroy is called by the internal DestroyRef.
+   * Callback invoked when the Angular `DestroyRef` fires, before the lock set begins its unlock-and-destroy sequence.
    */
   readonly onDestroy?: Maybe<() => void>;
   /**
-   * Called when the LockSet is finally destroyed.
+   * Callback invoked when the lock set has fully completed destruction (after all locks are released).
    */
   readonly onLockSetDestroy?: Maybe<() => void>;
   /**
-   * Configures when the lockset should be destroyed.
+   * Timing configuration for the deferred destruction of the lock set.
    */
   readonly destroyLocksetTiming?: Maybe<DestroyOnNextUnlockConfig>;
 }
 
+/**
+ * A {@link LockSet} created by {@link cleanLockSet} that exposes a `_cleanDestroy` method
+ * for programmatically triggering the destroy sequence outside of Angular's `DestroyRef`.
+ */
 export type CleanLockSet = LockSet & { readonly _cleanDestroy: () => void };
 
 /**
@@ -89,7 +96,9 @@ export function cleanWithLockSet(lockSet: LockSet, onDestroy: DestroyFunction) {
 
 // MARK: cleanSubscriptionWithLockSet()
 /**
- * Config for cleanSubscriptionWithLockSet()
+ * Configuration for {@link cleanSubscriptionWithLockSet}, specifying the lock set and optional initial subscription.
+ *
+ * @typeParam T - The type of unsubscribable being managed.
  */
 export interface CleanSubscriptionWithLockSetConfig<T extends Unsubscribable = Unsubscribable> {
   readonly lockSet: LockSet;

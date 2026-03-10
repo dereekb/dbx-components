@@ -6,10 +6,34 @@ import { type DbxActionDisabledKey } from '../../action';
 import { actionContextStoreSourceMapReader } from './action.map.utility';
 import { ActionContextStoreSourceMap } from './action.map';
 
+/**
+ * Default disabled key used by {@link DbxActionMapWorkingDisableDirective} to track
+ * the "another action is working" disabled reason.
+ */
 export const DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY = 'action_map_working_disable';
 
 /**
- * Used to communicate with an dbxActionMap and set the ActionContextStore to be disabled if any other element in the map is working.
+ * Directive that disables the host action when any other action in the ancestor
+ * {@link ActionContextStoreSourceMap} is currently working.
+ *
+ * This prevents concurrent action execution within a group of related actions.
+ * When all other actions finish working, the host action is automatically re-enabled.
+ *
+ * A custom disabled key can be provided via the `dbxActionMapWorkingDisable` input.
+ *
+ * @example
+ * ```html
+ * <div dbxActionContextMap>
+ *   <div dbxAction [dbxActionMapSource]="'save'" dbxActionMapWorkingDisable>
+ *     <button (click)="action.trigger()">Save</button>
+ *   </div>
+ *   <div dbxAction [dbxActionMapSource]="'delete'" dbxActionMapWorkingDisable>
+ *     <button (click)="action.trigger()">Delete</button>
+ *   </div>
+ * </div>
+ * ```
+ *
+ * @see {@link DbxActionContextMapDirective} for the parent map provider.
  */
 @Directive({
   selector: '[dbxActionMapWorkingDisable]',

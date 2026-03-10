@@ -3,7 +3,24 @@ import { distinctUntilChanged, type Observable } from 'rxjs';
 import { cleanSubscription } from '../rxjs/subscription';
 
 /**
- * Abstract directive class that watches a show$ observable and behaves like *ngIf.
+ * Abstract structural directive that conditionally renders its template based on a reactive boolean observable,
+ * similar to `*ngIf` but driven by an `Observable<boolean>`.
+ *
+ * Subclasses provide the `show$` observable to control visibility. The template is created
+ * when `show$` emits `true` and cleared when it emits `false`.
+ *
+ * @example
+ * ```typescript
+ * @Directive({ selector: '[appShowIfAdmin]' })
+ * export class ShowIfAdminDirective extends AbstractIfDirective {
+ *   readonly show$ = inject(AuthService).isAdmin$;
+ * }
+ * ```
+ *
+ * @example
+ * ```html
+ * <div *appShowIfAdmin>Only visible to admins</div>
+ * ```
  */
 @Directive()
 export abstract class AbstractIfDirective implements OnInit {

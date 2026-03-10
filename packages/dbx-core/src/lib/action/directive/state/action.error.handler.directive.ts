@@ -7,12 +7,31 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
- * Performs the action on error.
+ * Callback function invoked when an action encounters an error.
+ *
+ * Receives the {@link ReadableError} if available, or undefined.
  */
 export type DbxActionErrorHandlerFunction = (error?: Maybe<ReadableError>) => void;
 
 /**
- * Directive that executes a function on ActionContextStore error.
+ * Directive that executes a callback function each time the action's error state changes.
+ *
+ * The provided function receives the {@link ReadableError} from the action context.
+ * This is useful for performing side effects like logging, showing error toasts, or
+ * handling specific error conditions programmatically.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container [dbxActionErrorHandler]="onError"></ng-container>
+ *   <button (click)="action.trigger()">Submit</button>
+ * </div>
+ * ```
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
+ *
+ * @see {@link DbxActionSuccessHandlerDirective} for handling success.
  */
 @Directive({
   selector: '[dbxActionErrorHandler]',

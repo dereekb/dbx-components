@@ -3,7 +3,16 @@ import { Observable, map, shareReplay } from 'rxjs';
 import { type StorageAccessor } from './storage.accessor';
 
 /**
- * Simple StorageAccessor implementation that wraps a FullStorageObject.
+ * {@link StorageAccessor} implementation that wraps a {@link FullStorageObject} and stores raw strings.
+ *
+ * Each operation completes synchronously within an observable wrapper.
+ *
+ * @example
+ * ```typescript
+ * const accessor = new StringStorageAccessor(localStorage);
+ * accessor.set('key', 'value').subscribe();
+ * accessor.get('key').subscribe(value => console.log(value)); // 'value'
+ * ```
  */
 export class StringStorageAccessor implements StorageAccessor<StoredDataString> {
   private readonly _storage: FullStorageObject;

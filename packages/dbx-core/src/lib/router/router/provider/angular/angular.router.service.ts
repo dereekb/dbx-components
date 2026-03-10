@@ -9,7 +9,24 @@ import { Injectable, inject } from '@angular/core';
 import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
 
 /**
- * AngularRouter implementation of DbxRouterService and DbxRouterTransitionService.
+ * Angular Router implementation of {@link DbxRouterService} and {@link DbxRouterTransitionService}.
+ *
+ * Maps Angular Router's `NavigationStart` and `NavigationEnd` events to {@link DbxRouterTransitionEvent} values
+ * and provides navigation via Angular's `Router.navigate()` and `Router.navigateByUrl()` methods.
+ *
+ * @example
+ * ```ts
+ * // Register via the module
+ * DbxCoreAngularRouterSegueModule.forRoot()
+ *
+ * // Or inject directly
+ * const router = inject(DbxRouterService);
+ * await router.go({ ref: '/dashboard' });
+ * ```
+ *
+ * @see {@link DbxRouterService}
+ * @see {@link DbxCoreAngularRouterSegueModule} for module-based registration
+ * @see {@link DbxUIRouterService} for the UIRouter alternative
  */
 @Injectable()
 export class DbxAngularRouterService implements DbxRouterService, DbxRouterTransitionService {

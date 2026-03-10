@@ -2,7 +2,13 @@ import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
 /**
- * Stored object accessor that can get/set/remove via a key, or be cleared entirely.
+ * Abstract storage accessor providing key-value get/set/remove operations and a clear-all method.
+ *
+ * All operations return observables for consistency across sync and async storage backends.
+ *
+ * @typeParam T - The type of values stored.
+ *
+ * @see {@link StorageAccessor} for extended functionality including key/value enumeration.
  */
 export abstract class LimitedStorageAccessor<T> {
   /**
@@ -18,7 +24,10 @@ export abstract class LimitedStorageAccessor<T> {
 }
 
 /**
- * LimitedStorageAccessor extension that has knowledge of all stored keys.
+ * Extended storage accessor that adds the ability to enumerate all stored keys and values,
+ * optionally filtered by a key prefix.
+ *
+ * @typeParam T - The type of values stored.
  */
 export abstract class StorageAccessor<T> extends LimitedStorageAccessor<T> {
   /**
@@ -33,7 +42,9 @@ export abstract class StorageAccessor<T> extends LimitedStorageAccessor<T> {
 }
 
 /**
- * StorageAccessor-like object that has immediate/synchronous functionality for get/set.
+ * Synchronous storage accessor for scenarios where blocking get/set/remove is acceptable.
+ *
+ * @typeParam T - The type of values stored.
  */
 export abstract class InstantStorageAccessor<T> {
   abstract getNow(key: string): T | undefined;

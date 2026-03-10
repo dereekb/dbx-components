@@ -3,59 +3,73 @@ import { type ChangeDetectorRef, type ViewRef, type ElementRef } from '@angular/
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Convenience function used within observables for views that need to detect changes after a value changes.
+ * RxJS operator that triggers `detectChanges()` on a `ChangeDetectorRef` after each emission.
  *
- * @deprecated reminder to move to Angular signals
+ * Wraps the detection call in a `setTimeout` to avoid triggering it during change detection cycles.
  *
- * @param cdRef
- * @param timeout
- * @returns
+ * @deprecated Use Angular signals instead.
+ *
+ * @param cdRef - The change detector to trigger. If `null`/`undefined`, the operator is a no-op.
+ * @param timeout - Delay in milliseconds before calling `detectChanges`.
+ *
+ * @example
+ * ```typescript
+ * this.data$.pipe(tapDetectChanges(this.cdRef)).subscribe();
+ * ```
  */
 export function tapDetectChanges<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0): MonoTypeOperatorFunction<T> {
   return cdRef ? tap(() => setTimeout(() => safeDetectChanges(cdRef), timeout)) : tap();
 }
 
 /**
- * Triggers a check for detecting any changes on the model safely to ve registered via detectChanges().
+ * Safely calls `detectChanges()` on a `ChangeDetectorRef`, skipping the call if the view is already destroyed.
  *
- * @deprecated reminder to move to Angular signals
+ * @deprecated Use Angular signals instead.
  *
- * @param cdRef
+ * @param cdRef - The change detector to trigger.
  */
 export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
   safeUseCdRef(cdRef, () => cdRef.detectChanges());
 }
 
 /**
- * Convenience function used within observables for views that use the OnPush ChangeDetectionStrategy and needs to call markForCheck when a new observable value is pushed.
+ * RxJS operator that calls `markForCheck()` on a `ChangeDetectorRef` after each emission.
  *
- * NOTE: If the observable is being consumed via the "async" pipe, this may not be necessary.
+ * Intended for components using `OnPush` change detection that subscribe to observables
+ * outside of the `async` pipe. Not needed when using the `async` pipe.
  *
- * @deprecated reminder to move to Angular signals
- * @param cdRef
- * @param timeout
- * @returns
+ * @deprecated Use Angular signals instead.
+ *
+ * @param cdRef - The change detector to mark. If `null`/`undefined`, the operator is a no-op.
+ * @param timeout - Delay in milliseconds before calling `markForCheck`.
+ *
+ * @example
+ * ```typescript
+ * this.data$.pipe(tapSafeMarkForCheck(this.cdRef)).subscribe();
+ * ```
  */
 export function tapSafeMarkForCheck<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0): MonoTypeOperatorFunction<T> {
   return cdRef ? tap(() => setTimeout(() => safeMarkForCheck(cdRef), timeout)) : tap();
 }
 
 /**
- * Marks the ChangeDetectorRef for changes as long as the view has not been destroyed.
+ * Safely calls `markForCheck()` on a `ChangeDetectorRef`, skipping the call if the view is already destroyed.
  *
- * @deprecated reminder to move to Angular signals
+ * @deprecated Use Angular signals instead.
  *
- * @param cdRef
+ * @param cdRef - The change detector to mark.
  */
 export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
   safeUseCdRef(cdRef, () => cdRef.markForCheck());
 }
 
 /**
- * Triggers a detection change on the input view as long as the view has not been destroyed.
+ * Executes a callback with the given `ChangeDetectorRef` only if its view has not been destroyed.
  *
- * @deprecated reminder to move to Angular signals
- * @param cdRef
+ * @deprecated Use Angular signals instead.
+ *
+ * @param cdRef - The change detector to guard.
+ * @param use - Callback to invoke with the change detector.
  */
 export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetectorRef) => void): void {
   if (!(cdRef as ViewRef).destroyed) {
@@ -64,17 +78,31 @@ export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetect
 }
 
 /**
- * Used to check an injected ElementRef that wraps an ng-content injection point whether or not any content was injected,
- * or more specifically if the parent component passed any target content to the child. This will still return true if
- * passed content is empty.
+ * Checks whether an `ng-content` wrapper element received any projected content from its parent.
  *
- * TS:
- * @ViewChild('customLoading', { static: false }) customCustom: ElementRef;
+ * Returns `true` if the element has any child nodes, even if the projected content is empty.
+ * Useful for conditionally showing fallback content when no projection is provided.
  *
- * HTML:
- * <div #customContent>
- *  <ng-content select="[content]"></ng-content>
+ * @param ref - Reference to the wrapper element around `ng-content`.
+ *
+ * @example
+ * ```typescript
+ * // In the component class:
+ * @ViewChild('contentWrapper', { static: false }) contentRef: ElementRef;
+ *
+ * get hasContent(): boolean {
+ *   return checkNgContentWrapperHasContent(this.contentRef);
+ * }
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- In the component template: -->
+ * <div #contentWrapper>
+ *   <ng-content select="[content]"></ng-content>
  * </div>
+ * <div *ngIf="!hasContent">No content provided</div>
+ * ```
  */
 export function checkNgContentWrapperHasContent(ref: Maybe<ElementRef<Element>>): boolean {
   // https://github.com/angular/angular/issues/26083

@@ -5,36 +5,96 @@ import { type AuthUserState } from '../../../auth.user';
 import { type DbxAuthService } from '../../../service/auth.service';
 import { type AuthTransitionDecision, type AuthTransitionHookOptions, type AuthTransitionStateData, makeAuthTransitionHook } from './hook';
 
+/**
+ * Configuration for the {@link enableHasAuthStateHook} UIRouter transition hook.
+ *
+ * @see {@link AuthTransitionHookOptions} for redirect and timeout configuration.
+ */
 export interface HasAuthStateHookConfig {
   options: AuthTransitionHookOptions;
 }
 
+/**
+ * Configuration for specifying which {@link AuthUserState} values are allowed or disallowed for a UIRouter state.
+ *
+ * Can be provided as:
+ * - A single `AuthUserState` string (e.g., `'user'`)
+ * - An array of `AuthUserState` strings (e.g., `['user', 'new']`)
+ * - A {@link HasAuthStateObjectConfig} for fine-grained allowed/disallowed control
+ *
+ * @see {@link HasAuthStateData} for how this is used in UIRouter state data.
+ */
 export type HasAuthStateConfig = ArrayOrValue<AuthUserState> | HasAuthStateObjectConfig;
 
+/**
+ * Detailed configuration for specifying allowed and disallowed {@link AuthUserState} values.
+ *
+ * Provides more control than a simple array by supporting both allow-lists and deny-lists.
+ * If a user's current auth state matches a disallowed state, the transition is rejected.
+ *
+ * @example
+ * ```ts
+ * const config: HasAuthStateObjectConfig = {
+ *   allowedStates: ['user'],
+ *   disallowedStates: ['none', 'error']
+ * };
+ * ```
+ */
 export interface HasAuthStateObjectConfig {
   /**
-   * Whether or not this state or any child state is considered "secure", which requires the user to be logged in.
+   * Auth user states that are permitted to access this route.
+   * If specified, only users in one of these states can proceed.
    */
   allowedStates?: ArrayOrValue<AuthUserState>;
 
   /**
-   * States that are not allowed. If the current state is this state, a rejection is returned.
+   * Auth user states that are explicitly forbidden from accessing this route.
+   * If the user is in one of these states, the transition is rejected.
    */
   disallowedStates?: ArrayOrValue<AuthUserState>;
 }
 
+/**
+ * UIRouter state `data` interface for states that require a specific {@link AuthUserState}.
+ *
+ * Attach this data to a UIRouter state definition to enforce auth-state-based access control.
+ * The {@link enableHasAuthStateHook} checks this property on entering states.
+ *
+ * @example
+ * ```ts
+ * // In a UIRouter state definition:
+ * {
+ *   name: 'app.dashboard',
+ *   url: '/dashboard',
+ *   data: {
+ *     authStates: ['user']
+ *   } as HasAuthStateData,
+ *   component: DashboardComponent
+ * }
+ * ```
+ *
+ * @see {@link enableHasAuthStateHook} for the hook that evaluates this data.
+ */
 export interface HasAuthStateData extends AuthTransitionStateData {
   /**
-   * Configuration for the hasAuthStateHook.
+   * Configuration specifying which {@link AuthUserState} values are required or forbidden for this state.
    */
   authStates: HasAuthStateConfig;
 }
 
 /**
- * This hook redirects to the configured default state when a user:
+ * Registers a UIRouter transition hook that redirects users whose {@link AuthUserState} does not
+ * satisfy the state's requirements.
  *
- * - does not have an allowed state
- * - has a disallowed state
+ * The hook fires on `onBefore` (priority 100) for any state whose `data` property has an
+ * `authStates` value. It supports both allow-lists and deny-lists of auth user states.
+ *
+ * @param transitionService - The UIRouter `TransitionService` to register the hook with.
+ * @param config - Configuration including redirect targets and timeout settings.
+ *
+ * @see {@link HasAuthStateData} for marking states with required auth states.
+ * @see {@link HasAuthStateObjectConfig} for detailed allowed/disallowed configuration.
+ * @see {@link makeAuthTransitionHook} for the underlying hook factory.
  */
 export function enableHasAuthStateHook(transitionService: TransitionService, config: HasAuthStateHookConfig): void {
   // Matches if the destination state's data property has a truthy 'isSecure' property

@@ -9,7 +9,24 @@ import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../
 import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 
 /**
- * UIRouter implementation of DbxRouterService and DbxRouterTransitionService.
+ * UIRouter implementation of {@link DbxRouterService} and {@link DbxRouterTransitionService}.
+ *
+ * Bridges UIRouter's `TransitionService` events to {@link DbxRouterTransitionEvent} values and provides
+ * navigation via UIRouter's `StateService.go()`. Supports state activity checks and route precision comparison.
+ *
+ * @example
+ * ```ts
+ * // Register via the provider function
+ * provideDbxUIRouterService()
+ *
+ * // Or inject and use
+ * const router = inject(DbxRouterService);
+ * await router.go({ ref: 'app.dashboard', refParams: { id: '123' } });
+ * ```
+ *
+ * @see {@link DbxRouterService}
+ * @see {@link provideDbxUIRouterService} for provider registration
+ * @see {@link DbxAngularRouterService} for the Angular Router alternative
  */
 @Injectable()
 export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService, OnDestroy {

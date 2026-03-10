@@ -5,9 +5,18 @@ import { fromDbxAppAuth } from './state';
 import { DbxAppAuthEffects } from './state/effect/auth.effect';
 
 /**
- * Creates EnvironmentProviders for providing the DbxAppAuth state and effects.
+ * Creates Angular `EnvironmentProviders` that register the NgRx auth feature state and effects.
  *
- * @returns EnvironmentProviders
+ * This provisions the `fromDbxAppAuth` feature reducer and the {@link DbxAppAuthEffects} effects class,
+ * which together manage the auth user state (identifier, roles, onboarding status) in the NgRx store.
+ *
+ * Typically called internally by {@link provideDbxAppAuth}, but can be used independently
+ * if only the state management (without router integration) is needed.
+ *
+ * @returns Angular `EnvironmentProviders` for the auth state feature.
+ *
+ * @see {@link DbxAppAuthEffects}
+ * @see {@link fromDbxAppAuth}
  */
 export function provideDbxAppAuthState(): EnvironmentProviders {
   return makeEnvironmentProviders([provideState(fromDbxAppAuth.featureKey, fromDbxAppAuth.reducers), provideEffects(DbxAppAuthEffects)]);

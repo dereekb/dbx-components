@@ -6,43 +6,128 @@ import { type LoadingStateType, idleLoadingState, errorResult, filterMaybe, type
 import { type DbxActionDisabledKey, type DbxActionRejectedPair, DbxActionState, type DbxActionSuccessPair, type DbxActionWorkOrWorkProgress, type DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 import { cleanLockSet } from '../rxjs';
 
+/**
+ * Checks whether the action context is enabled (not disabled by any key).
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if no disabled keys are active.
+ */
 export function isActionContextEnabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtility.isFalse(state.disabled);
 }
 
+/**
+ * Checks whether the action context is disabled by at least one disabled key.
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if any disabled keys are active.
+ */
 export function isActionContextDisabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtility.isTrue(state.disabled);
 }
 
+/**
+ * Checks whether the action context state represents an effectively disabled state.
+ *
+ * An action is considered disabled when it is both idle (not in-progress) and has
+ * at least one active disabled key.
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if the action is idle and disabled.
+ */
 export function isDisabledActionContextState(state: ActionContextState): boolean {
   return isIdleActionState(state.actionState) && isActionContextDisabled(state);
 }
 
+/**
+ * Checks whether the given action state represents an in-progress (non-idle) state.
+ *
+ * This is the inverse of {@link isIdleActionState}. Returns `true` for TRIGGERED, VALUE_READY, and WORKING states.
+ *
+ * @param actionState - The action state to check.
+ * @returns `true` if the action is in any non-idle state.
+ */
 export function isWorkingActionState(actionState: DbxActionState): boolean {
   return !isIdleActionState(actionState);
 }
 
+/**
+ * Determines whether the action state allows triggering.
+ *
+ * An action can be triggered when it is idle (but not DISABLED specifically) and
+ * not already in-progress.
+ *
+ * @param actionState - The action state to check.
+ * @returns `true` if the action can be triggered from this state.
+ */
 export function canTriggerActionState(actionState: DbxActionState): boolean {
   return actionState !== DbxActionState.DISABLED && isIdleActionState(actionState);
 }
 
+/**
+ * Determines whether the action can be triggered based on the full context state.
+ *
+ * Requires the action to be both enabled (no disabled keys) and in an idle action state.
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if the action can be triggered.
+ */
 export function canTriggerAction(state: ActionContextState): boolean {
   return isActionContextEnabled(state) && isIdleActionState(state.actionState);
 }
 
+/**
+ * Determines whether a value can be readied for the action.
+ *
+ * A value can only be readied when the action is in the TRIGGERED state,
+ * which means the trigger has been activated and the system is waiting for a value.
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if the action is in the TRIGGERED state.
+ */
 export function canReadyValue(state: ActionContextState): boolean {
   return state.actionState === DbxActionState.TRIGGERED;
 }
 
+/**
+ * Checks whether the action context is both modified and ready to be triggered.
+ *
+ * This is commonly used by auto-trigger directives to determine when to fire automatically.
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if the action is modified and can be triggered.
+ */
 export function actionContextIsModifiedAndCanTrigger(state: ActionContextState): boolean {
   // console.log('check: ', state, state.isModified, canTriggerAction(state));
   return state.isModified && canTriggerAction(state);
 }
 
+/**
+ * Checks whether the action context has no error, is modified, and can be triggered.
+ *
+ * A stricter variant of {@link actionContextIsModifiedAndCanTrigger} that also requires
+ * no error to be present in the current state.
+ *
+ * @param state - The current action context state to check.
+ * @returns `true` if no error exists and the action is modified and triggerable.
+ */
 export function actionContextHasNoErrorAndIsModifiedAndCanTrigger(state: ActionContextState): boolean {
   return !state.error && actionContextIsModifiedAndCanTrigger(state);
 }
 
+/**
+ * Converts an {@link ActionContextState} to a {@link LoadingState} for UI consumption.
+ *
+ * Maps the action lifecycle states to loading state equivalents:
+ * - RESOLVED -> success result with the output value
+ * - REJECTED -> error result with the error
+ * - IDLE/DISABLED -> idle loading state
+ * - All other states -> loading (with optional work progress)
+ *
+ * @typeParam O - The output result type.
+ * @param state - The action context state to convert.
+ * @returns A loading state representation of the action context state.
+ */
 export function loadingStateForActionContextState<O = unknown>(state: ActionContextState<unknown, O>): LoadingState<O> {
   let loadingState: LoadingState<O>;
 
@@ -65,10 +150,31 @@ export function loadingStateForActionContextState<O = unknown>(state: ActionCont
   return loadingState;
 }
 
+/**
+ * Extracts the {@link LoadingStateType} from the current action context state.
+ *
+ * A convenience wrapper around {@link loadingStateTypeForActionState} that accepts the full context state.
+ *
+ * @param state - The action context state to convert.
+ * @returns The corresponding loading state type.
+ */
 export function loadingStateTypeForActionContextState(state: ActionContextState): LoadingStateType {
   return loadingStateTypeForActionState(state.actionState);
 }
 
+/**
+ * Immutable snapshot of the entire action context state at a given point in time.
+ *
+ * This is the core state shape managed by {@link ActionContextStore}. It captures:
+ * - The current lifecycle phase ({@link DbxActionState})
+ * - Whether the source data has been modified
+ * - The input value (set after trigger), the output result (set on success), and any error (set on rejection)
+ * - The disabled state (a set of keys that each independently control disabling)
+ * - Optional work progress for long-running actions
+ *
+ * @typeParam T - The input value type provided to the action after triggering.
+ * @typeParam O - The output result type produced on successful resolution.
+ */
 export interface ActionContextState<T = unknown, O = unknown> {
   readonly actionState: DbxActionState;
   /**
@@ -108,8 +214,34 @@ const INITIAL_STATE: ActionContextState = {
   actionState: DbxActionState.IDLE
 };
 
+/**
+ * Delay in milliseconds before the lock set destroys the store after all locks are released.
+ * Provides a grace period for actions to finalize before the store is torn down.
+ */
 export const ACTION_CONTEXT_STORE_LOCKSET_DESTROY_DELAY_TIME = 2000;
 
+/**
+ * NgRx ComponentStore that manages the reactive state machine for a single action lifecycle.
+ *
+ * This is the central state container for the action system. It tracks the full lifecycle
+ * of an action from idle through trigger, value preparation, work execution, and resolution
+ * or rejection. Multiple selectors expose derived reactive streams for each phase.
+ *
+ * The store uses a {@link LockSet} for cleanup coordination: it delays its own destruction
+ * until all in-flight work completes (e.g., a working action finishes), preventing
+ * premature teardown of subscriptions.
+ *
+ * State transitions follow this flow:
+ * ```
+ * IDLE/DISABLED -> TRIGGERED -> VALUE_READY -> WORKING -> RESOLVED | REJECTED
+ * ```
+ *
+ * @typeParam T - The input value type provided after triggering.
+ * @typeParam O - The output result type produced on resolution.
+ *
+ * @see {@link ActionContextStoreSource} for providing store access to directives.
+ * @see {@link DbxActionContextStoreSourceInstance} for the convenience wrapper.
+ */
 @Injectable()
 export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
   readonly lockSet = cleanLockSet({

@@ -6,7 +6,18 @@ import { AbstractDbxFilterMapSourceDirective } from './filter.map.source.directi
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Acts as an "input" FilterSourceConnector for an FilterMap, as well as a source for the FilterSourceConnector.
+ * Directive that acts as both a {@link FilterSourceConnector} and {@link FilterSource} for a keyed entry in a parent {@link FilterMap}.
+ *
+ * Connects an external filter source to a specific filter map entry and re-emits that entry's filter.
+ *
+ * @example
+ * ```html
+ * <div dbxFilterMap>
+ *   <div [dbxFilterMapSourceConnector]="'myList'">
+ *     <my-list-component></my-list-component>
+ *   </div>
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxFilterMapSourceConnector]',

@@ -4,9 +4,36 @@ import { type Maybe, type ModelKey } from '@dereekb/util';
 import { map, first, switchMap, firstValueFrom, type Observable, of } from 'rxjs';
 import { type Injector } from '@angular/core';
 
+/**
+ * Default param value that indicates no specific identifier has been set, triggering a redirect to the default allowed identifier.
+ */
 export const DEFAULT_REDIRECT_FOR_IDENTIFIER_PARAM_VALUE = '0';
+
+/**
+ * Default route parameter key used to read the model identifier from the URL.
+ */
 export const DEFAULT_REDIRECT_FOR_IDENTIFIER_PARAM_KEY = 'id';
 
+/**
+ * Configuration for the {@link redirectForIdentifierParamHook} function.
+ *
+ * Specifies how to read, validate, and redirect based on an identifier route parameter.
+ * This is used with UIRouter's transition hooks to guard routes that require a valid model identifier.
+ *
+ * @example
+ * ```ts
+ * redirectForIdentifierParamHook({
+ *   criteria: 'app.profile',
+ *   transitionService,
+ *   idParam: 'id',
+ *   defaultAllowedValue: (authService) => authService.userIdentifier$,
+ *   canViewModelWithId: (targetId, authService) => of(true)
+ * });
+ * ```
+ *
+ * @see {@link redirectForIdentifierParamHook}
+ * @see {@link RedirectForUserIdentifierParamHookInput} for a user-specific variant
+ */
 export interface RedirectForIdentifierParamHookInput {
   /**
    * Factory that returns an observable that sends the default allowed identifier to use when accessing the resource.
@@ -42,7 +69,17 @@ export interface RedirectForIdentifierParamHookInput {
 }
 
 /**
- * This hook asserts the user is allowed to view a route with an identifier as a state parameter.
+ * Registers a UIRouter transition hook that asserts the user is allowed to view a route with an identifier as a state parameter.
+ *
+ * When a transition occurs to the target route:
+ * 1. If the identifier param is missing or equals the default placeholder value, it redirects to the default allowed identifier.
+ * 2. If the identifier differs from the default, it calls `canViewModelWithId` to verify access.
+ * 3. If access is denied, it redirects to the default allowed identifier.
+ *
+ * @param input - Configuration specifying the route criteria, param key, and access control logic.
+ *
+ * @see {@link RedirectForIdentifierParamHookInput}
+ * @see {@link redirectForUserIdentifierParamHook} for a user-specific convenience wrapper
  */
 export function redirectForIdentifierParamHook(input: RedirectForIdentifierParamHookInput): void {
   const { defaultAllowedValue, idParam = DEFAULT_REDIRECT_FOR_IDENTIFIER_PARAM_KEY, defaultParamValue = DEFAULT_REDIRECT_FOR_IDENTIFIER_PARAM_VALUE, priority = 100, transitionService, canViewModelWithId: canViewUser } = input;

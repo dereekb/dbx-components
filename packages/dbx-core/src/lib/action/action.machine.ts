@@ -9,7 +9,13 @@ import { Injectable } from '@angular/core';
 import { clean } from '../rxjs/clean';
 
 /**
- * DbxActionContextMachine configuration.
+ * Configuration for a {@link DbxActionContextMachine}.
+ *
+ * Controls how the machine handles the value-ready phase, whether it self-destructs
+ * after a single use, and optional callbacks for success events.
+ *
+ * @typeParam T - The input value type for the action.
+ * @typeParam O - The output result type for the action.
  */
 export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
   /**

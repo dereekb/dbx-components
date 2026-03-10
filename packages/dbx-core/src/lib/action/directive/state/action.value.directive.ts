@@ -7,13 +7,37 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { cleanSubscriptionWithLockSet } from '../../../rxjs';
 
 /**
- * Directive that provides a default value when triggered.
+ * Directive that provides a value (or value-producing function) to the action when triggered.
  *
- * No value is required, allowing the directive to automatically call readyValue.
+ * The value is always available and ready to be used. When the action is triggered,
+ * the current value is resolved (via `getValueFromGetter` if a function) and passed
+ * to `readyValue()` on the action source.
  *
- * The valueOrFunction will filter on null/undefined input and wait until the input value is non-null.
+ * The input filters out null/undefined values, waiting until a non-null value is provided.
+ * If you need to pass null/undefined as valid action values, use {@link DbxActionValueTriggerDirective} instead.
  *
- * Use a getter if null/undefined values should be passed to the action.
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container [dbxActionValue]="myValue"></ng-container>
+ *   <button (click)="action.trigger()">Submit</button>
+ * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- With a getter function -->
+ * <div dbxAction>
+ *   <ng-container [dbxActionValue]="getLatestValue"></ng-container>
+ *   <button (click)="action.trigger()">Submit</button>
+ * </div>
+ * ```
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
+ *
+ * @see {@link DbxActionValueTriggerDirective} for lazy value retrieval on trigger.
+ * @see {@link DbxActionValueStreamDirective} for reactive stream-based values.
  */
 @Directive({
   selector: 'dbxActionValue,[dbxActionValue]',

@@ -5,7 +5,19 @@ import { type Maybe } from '@dereekb/util';
 import { completeOnDestroy } from '../rxjs';
 
 /**
- * Abstract FilterSourceConnector directive.
+ * Abstract directive implementing both {@link FilterSourceConnector} and {@link FilterSource}.
+ *
+ * Receives a filter source via {@link connectWithSource} and re-emits its filter values.
+ * Subclass to create concrete connector directives.
+ *
+ * @typeParam F - The filter type.
+ *
+ * @example
+ * ```html
+ * <div dbxFilterSourceConnector>
+ *   <!-- Child components can inject FilterSource to read the connected filter -->
+ * </div>
+ * ```
  */
 @Directive()
 export abstract class AbstractFilterSourceConnectorDirective<F> implements FilterSourceConnector<F>, FilterSource<F> {

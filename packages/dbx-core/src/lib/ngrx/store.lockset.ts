@@ -4,10 +4,17 @@ import { Inject, Optional, Injectable, type OnDestroy } from '@angular/core';
 import { LockSet, type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Component or service that exposes a {@link LockSet} for coordinating lock-based state.
+ */
 export interface LockSetComponent {
   readonly lockSet: LockSet;
 }
 
+/**
+ * Configuration for initializing a {@link LockSetComponentStore}'s lock set,
+ * including an optional parent lock set and named lock observables.
+ */
 export interface LockSetComponentStoreConfig {
   readonly parent?: Maybe<Observable<LockSetComponent>>;
   readonly locks?: {
@@ -16,7 +23,26 @@ export interface LockSetComponentStoreConfig {
 }
 
 /**
- * Abstract ComponentStore extension that provides a LockSet and OnDestroy delaying/cleanup.
+ * Abstract NgRx `ComponentStore` extension that integrates a {@link LockSet} for coordinating
+ * async operations and delays destruction until all locks are released.
+ *
+ * Subclasses call {@link setupLockSet} to register parent lock sets and named locks.
+ * On destroy, the store waits for all locks to unlock before completing cleanup,
+ * preventing premature teardown of in-flight operations.
+ *
+ * @typeParam S - The shape of the component store's state object.
+ *
+ * @example
+ * ```typescript
+ * interface MyState { items: string[]; }
+ *
+ * @Injectable()
+ * export class MyStore extends LockSetComponentStore<MyState> {
+ *   constructor() {
+ *     super({ items: [] });
+ *   }
+ * }
+ * ```
  */
 @Injectable()
 export abstract class LockSetComponentStore<S extends object> extends ComponentStore<S> implements OnDestroy {
@@ -72,7 +98,8 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   }
 
   /**
-   * Completes the cleanup of the object.
+   * Immediately completes cleanup by destroying the lock set.
+   * Called after all locks are released during the deferred destruction process.
    */
   _destroyNow() {
     this.lockSet.destroy();

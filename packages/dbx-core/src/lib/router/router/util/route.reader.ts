@@ -4,7 +4,22 @@ import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, type 
 import { type DbxRouterService } from '../service/router.service';
 
 /**
- * Interface used for reading a single value from the DbxRouterService. Supports a default value.
+ * Interface for reading a single parameter value from the router state.
+ *
+ * Provides observables for the raw parameter value, a configurable default value, and a computed value
+ * that falls back to the default when the parameter is not set. Also supports programmatic updates.
+ *
+ * @typeParam T - The type of the parameter value.
+ *
+ * @example
+ * ```ts
+ * const reader = dbxRouteParamReaderInstance<string>(routerService, 'id');
+ * reader.value$.subscribe(id => console.log('Current ID:', id));
+ * reader.setDefaultValue('default-id');
+ * ```
+ *
+ * @see {@link dbxRouteParamReaderInstance} for creating instances
+ * @see {@link DbxRouterService} for the router service that provides route parameters
  */
 export interface DbxRouteParamReader<T> {
   /**
@@ -47,6 +62,15 @@ export interface DbxRouteParamReader<T> {
   setParamValue(value: MaybeObservableOrValueGetter<T>): void;
 }
 
+/**
+ * Full lifecycle instance of a {@link DbxRouteParamReader} that exposes the underlying router service,
+ * additional observable streams, and implements the {@link Destroyable} interface for cleanup.
+ *
+ * @typeParam T - The type of the parameter value.
+ *
+ * @see {@link DbxRouteParamReader}
+ * @see {@link dbxRouteParamReaderInstance} for creating instances
+ */
 export interface DbxRouteParamReaderInstance<T> extends DbxRouteParamReader<T>, Destroyable {
   readonly dbxRouterService: DbxRouterService;
   readonly paramKey$: Observable<string>;

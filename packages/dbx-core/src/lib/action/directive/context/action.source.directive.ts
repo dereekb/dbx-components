@@ -7,7 +7,25 @@ import { provideSecondaryActionStoreSource } from '../../action.store.source.pro
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
- * Directive that provides a DbxActionSourceDirective that is passed in.
+ * Directive that forwards an externally-provided {@link ActionContextStoreSource} as a
+ * {@link SecondaryActionContextStoreSource}, enabling child `dbxAction` directives to
+ * reuse an existing action context rather than creating their own.
+ *
+ * This is useful when an action context is created programmatically (e.g., via
+ * {@link DbxActionContextMachine}) and needs to be shared with template-based directives.
+ *
+ * @example
+ * ```html
+ * <!-- Forward a programmatic action source to template directives -->
+ * <div [dbxActionSource]="myActionSource">
+ *   <div dbxAction>
+ *     <button (click)="action.trigger()">Submit</button>
+ *   </div>
+ * </div>
+ * ```
+ *
+ * @see {@link DbxActionDirective} for the directive that consumes this source.
+ * @see {@link SecondaryActionContextStoreSource}
  */
 @Directive({
   selector: '[dbxActionSource]',

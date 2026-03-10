@@ -3,21 +3,31 @@ import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type DbxActionWorkProgress, type DbxActionWorkOrWorkProgress } from '../action/action';
 
+/**
+ * Progress value for a button's working state, expressed as a percentage (0-100).
+ */
 export type DbxButtonWorkingProgress = DbxActionWorkProgress;
 
 /**
- * Working state for a button.
- *
- * Can be a boolean or a number.
- *
- * True is treated as an indeterminate progress.
+ * Working state for a button. When `true`, indicates indeterminate progress.
+ * When a number, indicates determinate progress as a percentage (0-100).
+ * When `false` or `undefined`, the button is not in a working state.
  */
 export type DbxButtonWorking = DbxActionWorkOrWorkProgress;
 
 /**
- * Used for intercepting button click events.
+ * Intercepts button click events to conditionally allow or prevent the click from propagating.
  *
- * Can be used to delay/modify trigger/click behaviors.
+ * Useful for adding confirmation dialogs, permission checks, or other pre-click validation.
+ *
+ * @example
+ * ```typescript
+ * const confirmInterceptor: DbxButtonInterceptor = {
+ *   interceptButtonClick: () => {
+ *     return from(window.confirm('Are you sure?')).pipe(map(Boolean));
+ *   },
+ * };
+ * ```
  */
 export interface DbxButtonInterceptor {
   /**
@@ -27,7 +37,12 @@ export interface DbxButtonInterceptor {
 }
 
 /**
- * Text and icon display content for a button.
+ * Display configuration for a button, including optional icon and text.
+ *
+ * @example
+ * ```typescript
+ * const display: DbxButtonDisplay = { icon: 'save', text: 'Save Changes' };
+ * ```
  */
 export interface DbxButtonDisplay {
   /**
@@ -40,6 +55,15 @@ export interface DbxButtonDisplay {
   readonly text?: Maybe<string>;
 }
 
+/**
+ * Abstract base class defining the reactive interface for a button component.
+ *
+ * Provides observable streams for disabled state, working state, click events,
+ * and display content. Implementations are provided via DI using {@link provideDbxButton}.
+ *
+ * @see {@link AbstractDbxButtonDirective} for the default implementation.
+ * @see {@link DbxButtonDirective} for the concrete directive.
+ */
 export abstract class DbxButton {
   /**
    * Observable of the disabled state of the button.
@@ -91,6 +115,20 @@ export abstract class DbxButton {
   abstract clickButton(): void;
 }
 
+/**
+ * Creates Angular providers that register a {@link DbxButton} implementation for DI.
+ *
+ * @param sourceType - The concrete button directive or component class to provide.
+ *
+ * @example
+ * ```typescript
+ * @Directive({
+ *   selector: '[myCustomButton]',
+ *   providers: provideDbxButton(MyCustomButtonDirective),
+ * })
+ * export class MyCustomButtonDirective extends AbstractDbxButtonDirective {}
+ * ```
+ */
 export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
   return [
     {
@@ -110,7 +148,11 @@ export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Prov
 export type DbxButtonDisplayType = 'text_button' | 'icon_button';
 
 /**
- * Delegate class used for retrieving the DbxButtonDisplay given an input value.
+ * Delegate for computing a {@link DbxButtonDisplay} from a given value.
+ *
+ * Useful for dynamically updating button appearance based on data state.
+ *
+ * @typeParam T - The type of value used to derive the display configuration.
  */
 export interface DbxButtonDisplayDelegate<T> {
   /**
@@ -122,10 +164,16 @@ export interface DbxButtonDisplayDelegate<T> {
 }
 
 /**
- * Returns the DbxButtonDisplayType given the input content.
+ * Determines whether a button display is an icon-only button or a text button.
  *
- * @param content
- * @returns
+ * @param content - The button display configuration to evaluate.
+ * @returns `'icon_button'` if only an icon is set, otherwise `'text_button'`.
+ *
+ * @example
+ * ```typescript
+ * dbxButtonDisplayType({ icon: 'edit' }); // 'icon_button'
+ * dbxButtonDisplayType({ icon: 'save', text: 'Save' }); // 'text_button'
+ * ```
  */
 export function dbxButtonDisplayType(content: DbxButtonDisplay): DbxButtonDisplayType {
   return !content.text && content.icon ? 'icon_button' : 'text_button';

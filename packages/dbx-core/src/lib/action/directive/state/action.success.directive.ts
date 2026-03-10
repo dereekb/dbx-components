@@ -7,9 +7,28 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { transformEmptyStringInputToUndefined } from '../../../util/input';
 
 /**
- * Structural directive that displays the content when the store has a success value.
+ * Structural directive that conditionally renders its content when the action has resolved successfully.
  *
- * Can be configured to show for a temporary period.
+ * Optionally accepts a number (in milliseconds) to auto-hide the content after the specified
+ * duration, useful for showing temporary success messages that fade away.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <div *dbxActionHasSuccess>Saved successfully!</div>
+ * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- Show success message for 3 seconds -->
+ * <div dbxAction>
+ *   <div *dbxActionHasSuccess="3000">Saved!</div>
+ * </div>
+ * ```
+ *
+ * @see {@link DbxActionPreSuccessDirective} for showing content before success.
+ * @see {@link DbxActionSuccessHandlerDirective} for executing a function on success.
  */
 @Directive({
   selector: '[dbxActionHasSuccess]',

@@ -5,6 +5,12 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { type DbxActionValueGetterValueGetterFunction, DbxActionValueGetterInstance } from './action.value.trigger.instance';
 import { clean } from '../../../rxjs/clean';
 
+/**
+ * Configuration for connecting Angular signals to a {@link DbxActionValueGetterInstance}'s
+ * value getter, isModified, and isEqual functions.
+ *
+ * @typeParam T - The value type for the action.
+ */
 export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {
   readonly valueGetterSignal?: Signal<Maybe<DbxActionValueGetterValueGetterFunction<T>>>;
   readonly isModifiedSignal?: Signal<Maybe<IsModifiedFunction>>;
@@ -12,7 +18,14 @@ export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {
 }
 
 /**
- * Abstract class for directives that may perform an action when trigger is called, and returns a value.
+ * Abstract base class for directives that retrieve a value when the action is triggered.
+ *
+ * Creates and manages a {@link DbxActionValueGetterInstance} internally, providing
+ * methods for subclasses to configure the value getter, isModified, and isEqual functions.
+ *
+ * @typeParam T - The value type for the action.
+ *
+ * @see {@link DbxActionValueTriggerDirective} for the concrete implementation.
  */
 @Directive()
 export abstract class AbstractDbxActionValueGetterDirective<T> {
@@ -56,10 +69,27 @@ export abstract class AbstractDbxActionValueGetterDirective<T> {
 }
 
 /**
- * Action directive that uses a getter function instead and waits for the trigger to be called before calling the function.
+ * Directive that uses a getter function to retrieve the action value only when triggered.
  *
- * Similar to DbxActionValueDirective, but the getter is called when a trigger is activated.
- * The DbxActionValueDirective always pipes the latests value while waiting for a trigger, and does not allow using a getter.
+ * Unlike {@link DbxActionValueDirective} which continuously pipes the latest value,
+ * this directive calls the getter function lazily -- only when the action is triggered.
+ * This is useful when the value computation is expensive or depends on state that should
+ * only be captured at trigger time.
+ *
+ * Supports optional `isModified` and `isEqual` functions to control whether the retrieved
+ * value should proceed to `readyValue` or be rejected.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container [dbxActionValueGetter]="getFormValue"></ng-container>
+ *   <button (click)="action.trigger()">Submit</button>
+ * </div>
+ * ```
+ *
+ * @typeParam T - The value type for the action.
+ *
+ * @see {@link DbxActionValueDirective} for the always-available value approach.
  */
 @Directive({
   exportAs: 'dbxActionValueGetter',

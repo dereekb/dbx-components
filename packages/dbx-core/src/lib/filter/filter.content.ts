@@ -2,7 +2,18 @@ import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { forwardRef, type Provider, type Type } from '@angular/core';
 
 /**
- * Angular provider convenience function for a FilterSource.
+ * Creates Angular providers that register a {@link FilterSource} implementation for DI.
+ *
+ * @param sourceType - The concrete filter source class to provide.
+ *
+ * @example
+ * ```typescript
+ * @Directive({
+ *   selector: '[myFilterSource]',
+ *   providers: provideFilterSource(MyFilterSourceDirective),
+ * })
+ * export class MyFilterSourceDirective { ... }
+ * ```
  */
 export function provideFilterSource<S extends FilterSource>(sourceType: Type<S>): Provider[] {
   return [
@@ -14,7 +25,9 @@ export function provideFilterSource<S extends FilterSource>(sourceType: Type<S>)
 }
 
 /**
- * Angular provider convenience function for a FilterSourceConnector.
+ * Creates Angular providers that register both a {@link FilterSourceConnector} and {@link FilterSource} for DI.
+ *
+ * @param sourceType - The concrete connector class to provide.
  */
 export function provideFilterSourceConnector<S extends FilterSourceConnector>(sourceType: Type<S>): Provider[] {
   return [

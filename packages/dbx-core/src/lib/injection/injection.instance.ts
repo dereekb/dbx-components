@@ -6,7 +6,23 @@ import { type MaybeObservableOrValueGetter, SubscriptionObject, filterMaybe, may
 import { mergeStaticProviders } from './injection.util';
 
 /**
- * Instance used by components to inject content based on the configuration into the view.
+ * Core runtime engine for the dbx-injection system. Manages the lifecycle of dynamically injected
+ * components and templates within an Angular `ViewContainerRef`.
+ *
+ * This class reactively listens to configuration and template observables. When a new
+ * {@link DbxInjectionComponentConfig} or {@link DbxInjectionTemplateConfig} is emitted, it tears
+ * down the previous content and creates the new component or template in the target view container.
+ *
+ * Component configs take precedence over template configs when both are provided.
+ *
+ * Typically used internally by {@link AbstractDbxInjectionDirective} and {@link DbxInjectionComponent}
+ * rather than consumed directly.
+ *
+ * @typeParam T - The type of the dynamically created component.
+ *
+ * @see {@link DbxInjectionComponentConfig}
+ * @see {@link DbxInjectionTemplateConfig}
+ * @see {@link AbstractDbxInjectionDirective}
  */
 export class DbxInjectionInstance<T> implements Initialized, Destroyable {
   private readonly _subscriptionObject = new SubscriptionObject();

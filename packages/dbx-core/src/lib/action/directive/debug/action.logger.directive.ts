@@ -3,7 +3,18 @@ import { cleanSubscriptionWithLockSet } from '../../../rxjs/lockset';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
- * Prints out the current state to the console. Useful for debugging.
+ * Debug directive that logs every action context state change to the console.
+ *
+ * Subscribes to the parent action's full state stream and prints each state snapshot
+ * via `console.log`. Useful during development to inspect the action lifecycle transitions.
+ *
+ * @example
+ * ```html
+ * <div dbxAction>
+ *   <ng-container dbxActionLogger></ng-container>
+ *   <!-- other action directives -->
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxActionLogger],[dbxActionContextLogger]',

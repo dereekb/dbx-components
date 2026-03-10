@@ -8,14 +8,32 @@ import { type fromDbxAppAuth, onDbxAppAuth } from '../../../state';
 import { DbxAppAuthRouterService } from '../../auth.router.service';
 
 /**
- * Used by DbxAppAuthRouterEffects to configure the states that should be activve by default.
+ * Angular injection token used to configure which {@link DbxAppContextState} values
+ * the {@link DbxAppAuthRouterEffects} should be active for.
+ *
+ * When provided, the effects will only trigger navigation (e.g., redirect on logout)
+ * when the application is in one of the specified context states.
+ * Defaults to {@link DBX_KNOWN_APP_CONTEXT_STATES} if not explicitly provided.
+ *
+ * @see {@link provideDbxAppAuthRouterState} for how this token is provisioned.
  */
 export const DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN = new InjectionToken('DbxAppAuthRouterEffectsActiveStates');
 
 /**
- * Set of ngrx effects that handle navigation in the app when the auth changes in certain ways.
+ * NgRx effects class that performs automatic navigation when authentication state changes.
  *
- * Is configurable via the DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN to choose which states this effect is active or not. By default is equal to DBX_KNOWN_APP_CONTEXT_STATES.
+ * This effects class handles two key navigation scenarios:
+ * - **On logout**: Redirects the user to the login route via {@link DbxAppAuthRouterService.goToLogin}.
+ * - **On login**: Redirects the user to the main app route via {@link DbxAppAuthRouterService.goToApp}.
+ *
+ * Navigation only occurs when:
+ * 1. The app is in one of the configured active context states (see {@link DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN}).
+ * 2. The {@link DbxAppAuthRouterService.isAuthRouterEffectsEnabled} flag is `true`.
+ *
+ * Extends {@link AbstractOnDbxAppContextStateEffects} to scope effect activation to specific app states.
+ *
+ * @see {@link DbxAppAuthRouterService} for the navigation methods used.
+ * @see {@link provideDbxAppAuthRouterState} for registration and configuration.
  */
 @Injectable()
 export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects<fromDbxAppAuth.State> {
