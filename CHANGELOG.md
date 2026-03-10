@@ -1,3 +1,20 @@
+## [13.2.1](https://github.com/dereekb/dbx-components/compare/v13.2.0-dev...v13.2.1) (2026-03-09)
+
+
+### Code Refactoring
+
+- added latLngPointType and latLngStringType ([684c8365](https://github.com/dereekb/dbx-components/commit/684c8365cdccab28fc500db3b9fea118570f0909))
+- moved arktype types to date.model.ts ([d72d241f](https://github.com/dereekb/dbx-components/commit/d72d241fea628929bdc77202b6bc99c81b519aa2))
+- updated withApiDetails to single config object ([f85ed106](https://github.com/dereekb/dbx-components/commit/f85ed106c08c4010c8291a025818b4a6c056f528))
+
+
+### Documentation
+
+- improved jsdocs for auth.service.ts ([b6dd8e34](https://github.com/dereekb/dbx-components/commit/b6dd8e3459d644d1309ef605387bcbdd41af6bc2))
+
+
+
+
 # [13.2.0](https://github.com/dereekb/dbx-components/compare/v13.1.0-dev...v13.2.0) (2026-03-09)
 
 
