@@ -4,25 +4,31 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { addMilliseconds, type Configurable, type GetterOrValueWithInput, getValueFromGetter, isPast, type Maybe, type Milliseconds, MS_IN_SECOND, type Seconds } from '@dereekb/util';
 
 /**
- * True if copying to the clipboard was successful.
+ * Whether copying to the clipboard succeeded.
  */
 export type CopyToClipboardSuccess = boolean;
 
 /**
- * Can only copy strings to the clipboard.
+ * Content that can be copied to the clipboard (strings only).
  */
 export type CopyToClipboardContent = string;
 
 /**
- * Copies the input text to the clipboard.
+ * Function that copies text content to the clipboard with retry support.
  *
- * @param content The content to copy.
- * @returns A promise that resolves to true if the content was copied successfully, false otherwise.
+ * @example
+ * ```ts
+ * const copy = copyToClipboardFunction(clipboard);
+ * const success = await copy('Hello world');
+ * ```
  */
 export type CopyToClipboardFunction = ((content: CopyToClipboardContent) => Promise<CopyToClipboardSuccess>) & {
   readonly _clipboard: Clipboard;
 };
 
+/**
+ * Configuration for {@link copyToClipboardFunction} controlling timeout and retry behavior.
+ */
 export interface CopyToClipboardFunctionConfig {
   readonly copyTimeoutSeconds?: Maybe<Seconds>;
   readonly delayBetweenCopyAttempts?: Maybe<Milliseconds>;
@@ -30,11 +36,17 @@ export interface CopyToClipboardFunctionConfig {
 }
 
 /**
- * Creates a copy to clipboard function.
+ * Creates a {@link CopyToClipboardFunction} that retries the copy operation until success or timeout.
  *
- * @param clipboard The clipboard to use.
- * @param config Optional configuration.
- * @returns The copy to clipboard function.
+ * @param clipboard - the Angular CDK Clipboard instance
+ * @param config - optional timeout and retry settings
+ * @returns a function that copies text to the clipboard
+ *
+ * @example
+ * ```ts
+ * const copy = copyToClipboardFunction(clipboard, { copyTimeoutSeconds: 10 });
+ * const success = await copy('some text');
+ * ```
  */
 export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToClipboardFunctionConfig): CopyToClipboardFunction {
   const copyTimeoutSeconds = config?.copyTimeoutSeconds ?? 15;
@@ -74,12 +86,18 @@ export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToCli
 }
 
 /**
- * Injects a copy to clipboard function.
+ * Injects a {@link CopyToClipboardFunction} using Angular's dependency injection.
  *
- * Must be run in an Angular injection context.
+ * Must be called in an Angular injection context.
  *
- * @param config
- * @returns
+ * @param config - optional timeout and retry settings
+ * @returns the clipboard copy function
+ *
+ * @example
+ * ```ts
+ * const copy = injectCopyToClipboardFunction();
+ * await copy('copied text');
+ * ```
  */
 export function injectCopyToClipboardFunction(config?: CopyToClipboardFunctionConfig) {
   return copyToClipboardFunction(inject(Clipboard), config);
@@ -87,10 +105,7 @@ export function injectCopyToClipboardFunction(config?: CopyToClipboardFunctionCo
 
 // MARK: Snackbar Message On Copy
 /**
- * Copies the input text to the clipboard.
- *
- * @param content The content to copy.
- * @returns A promise that resolves to true if the content was copied successfully, false otherwise.
+ * Extended clipboard copy function that shows a Material snackbar notification on success or failure.
  */
 export type CopyToClipboardFunctionWithSnackbarMessage = CopyToClipboardFunction & {
   setSnackbarMessagesConfig(config: Maybe<CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig>): void;
@@ -114,15 +129,28 @@ export interface CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig {
   readonly failureMessage?: GetterOrValueWithInput<string, CopyToClipboardContent>;
 }
 
+/**
+ * Combined configuration for the clipboard copy function and its snackbar notification behavior.
+ */
 export interface CopyToClipboardFunctionWithSnackbarMessageConfig extends CopyToClipboardFunctionConfig, CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig {}
 
 /**
- * Injects a copy to clipboard function.
+ * Injects a {@link CopyToClipboardFunctionWithSnackbarMessage} that copies text to the clipboard
+ * and shows a Material snackbar with a success or failure message.
  *
- * Must be run in an Angular injection context.
+ * Must be called in an Angular injection context.
  *
- * @param config
- * @returns
+ * @param config - optional configuration for copy behavior and snackbar messages
+ * @returns clipboard copy function with snackbar notification support
+ *
+ * @example
+ * ```ts
+ * const copy = injectCopyToClipboardFunctionWithSnackbarMessage({
+ *   successMessage: 'Link copied!',
+ *   snackbarDuration: 2000
+ * });
+ * await copy('https://example.com');
+ * ```
  */
 export function injectCopyToClipboardFunctionWithSnackbarMessage(config?: CopyToClipboardFunctionWithSnackbarMessageConfig) {
   // TODO: Add service for configuring global defaults for snackbar messages

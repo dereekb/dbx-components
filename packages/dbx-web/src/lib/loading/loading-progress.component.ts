@@ -7,10 +7,25 @@ import { type DbxThemeColor } from '../layout/style/style';
 import { NgClass } from '@angular/common';
 import { DbxColorDirective } from '../layout/style/style.color.directive';
 
+/**
+ * Default diameter in pixels for the progress spinner.
+ */
 export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
 
 /**
- * Basic loading progress component.
+ * Renders a Material progress spinner or progress bar to indicate loading.
+ *
+ * Supports both linear (bar) and circular (spinner) modes with configurable
+ * diameter, color, and optional hint text below the indicator.
+ *
+ * @example
+ * ```html
+ * <!-- Indeterminate spinner -->
+ * <dbx-loading-progress></dbx-loading-progress>
+ *
+ * <!-- Determinate linear bar at 75% -->
+ * <dbx-loading-progress [linear]="true" mode="determinate" [value]="75" text="Uploading..."></dbx-loading-progress>
+ * ```
  */
 @Component({
   selector: 'dbx-loading-progress',

@@ -10,7 +10,7 @@ import { DbxBasicLoadingComponent } from './basic-loading.component';
 import { type DbxLoadingIsLoadingOrProgress } from './loading';
 
 /**
- * State of a DbxLoadingComponent.
+ * Resolved loading and error state consumed by {@link DbxLoadingComponent} internally.
  */
 export interface DbxLoadingComponentState {
   readonly loading: DbxLoadingIsLoadingOrProgress;
@@ -18,7 +18,28 @@ export interface DbxLoadingComponentState {
 }
 
 /**
- * Loading View component that provides content sections for loading, error, and an error action.
+ * Primary loading wrapper that shows a spinner/progress bar while data is being fetched,
+ * then reveals projected content on completion, or displays an error state.
+ *
+ * Accepts a {@link LoadingContext} observable via the `context` input to automatically
+ * track loading and error state from reactive streams. Also supports manual `loading`
+ * and `error` inputs for simpler use cases.
+ *
+ * @example
+ * ```html
+ * <!-- With a LoadingContext -->
+ * <dbx-loading [context]="myLoadingContext$">
+ *   <p>Data loaded successfully.</p>
+ * </dbx-loading>
+ *
+ * <!-- With manual loading/error inputs -->
+ * <dbx-loading [loading]="isLoading" [error]="loadError" linear [padding]="true">
+ *   <p>Content here.</p>
+ *   <ng-container error>
+ *     <p>Custom error message.</p>
+ *   </ng-container>
+ * </dbx-loading>
+ * ```
  */
 @Component({
   selector: 'dbx-loading',

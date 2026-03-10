@@ -2,7 +2,21 @@ import { HostListener, Directive, input, output, computed } from '@angular/core'
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Binds to the window:keydown event and emits events.
+ * Listens for `window:keydown` events and emits matching keyboard events.
+ *
+ * Optionally filters by specific key names and can be disabled at runtime.
+ *
+ * @example
+ * ```html
+ * <!-- Listen for all keydown events -->
+ * <div dbxWindowKeyDownListener (dbxWindowKeyDownListener)="onKey($event)"></div>
+ *
+ * <!-- Listen only for Escape and Enter keys -->
+ * <div dbxWindowKeyDownListener
+ *   [dbxWindowKeyDownFilter]="['Escape', 'Enter']"
+ *   (dbxWindowKeyDownListener)="onKey($event)">
+ * </div>
+ * ```
  */
 @Directive({
   selector: '[dbxWindowKeyDownListener]',

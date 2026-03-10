@@ -6,7 +6,9 @@ import { type ScreenMediaWidthType, type ScreenMediaHeightType, screenMediaWidth
 import { Inject, Injectable, inject } from '@angular/core';
 
 /**
- * ScreenMediaService configuration.
+ * Abstract configuration class for {@link DbxScreenMediaService} defining responsive breakpoints.
+ *
+ * Provide a concrete instance via {@link provideDbxScreenMediaService} or supply values directly.
  */
 export abstract class DbxScreenMediaServiceConfig {
   /**
@@ -31,6 +33,9 @@ export abstract class DbxScreenMediaServiceConfig {
   abstract tinyScreenHeightMax: number;
 }
 
+/**
+ * Default responsive breakpoint configuration with standard mobile/tablet/desktop thresholds.
+ */
 export const DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG: DbxScreenMediaServiceConfig = {
   microScreenWidthMax: 360,
   smallScreenWidthMax: 520,
@@ -40,7 +45,17 @@ export const DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG: DbxScreenMediaServiceConfig = 
 };
 
 /**
- * Service that emits the current view type based on the configuration.
+ * Reactive service that tracks the current screen width and height categories using CSS media queries.
+ *
+ * Emits {@link ScreenMediaWidthType} and {@link ScreenMediaHeightType} values that update
+ * as the viewport is resized. Use {@link isBreakpointActive} to reactively check whether
+ * the screen meets a minimum width breakpoint.
+ *
+ * @example
+ * ```ts
+ * readonly screenService = inject(DbxScreenMediaService);
+ * readonly isTabletOrLarger$ = this.screenService.isBreakpointActive('tablet');
+ * ```
  */
 @Injectable()
 export class DbxScreenMediaService implements Destroyable {
@@ -102,10 +117,10 @@ export class DbxScreenMediaService implements Destroyable {
   }
 
   /**
-   * Returns an observable that detects whether or no the current width is greater or equal to the given breakpoint.
+   * Returns an observable that emits `true` when the current screen width is at least as wide as the given breakpoint.
    *
-   * @param inputBreakpoint
-   * @returns
+   * @param inputBreakpoint - the minimum width type or an observable of it
+   * @returns observable of whether the breakpoint is currently active
    */
   isBreakpointActive(inputBreakpoint: ObservableOrValue<ScreenMediaWidthType>): Observable<boolean> {
     return combineLatest([this.widthType$, asObservable(inputBreakpoint)]).pipe(

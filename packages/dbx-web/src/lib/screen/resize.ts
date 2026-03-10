@@ -12,11 +12,22 @@ export interface ResizedEvent {
 }
 
 /**
- * Creates a new Signal that emits resize events.
+ * Creates a signal that emits {@link ResizedEvent} values whenever the observed element is resized.
  *
- * Must called in an Angular injection context.
+ * Must be called in an Angular injection context. Automatically disconnects the ResizeObserver on destroy.
  *
- * @param inputElement The element to observe for resize events. If not provided, the host element will be injected.
+ * @param inputElement - the element to observe; if omitted, the host element is injected via `ElementRef`
+ * @returns a read-only signal of resize events
+ *
+ * @example
+ * ```ts
+ * // In a component:
+ * readonly resize = resizeSignal();
+ *
+ * readonly widthEffect = effect(() => {
+ *   console.log('New width:', this.resize().newRect.width);
+ * });
+ * ```
  */
 export function resizeSignal(inputElement?: ElementRef<HTMLElement>): Signal<ResizedEvent> {
   const element = inputElement ?? inject(ElementRef<HTMLElement>);
