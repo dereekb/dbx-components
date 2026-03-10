@@ -1,25 +1,28 @@
-import { ModuleMetadata } from '@nestjs/common';
+import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwksServiceConfig } from './jwks/jwks.service';
+import { JwksService, JwksServiceConfig } from './service/jwks.service';
 import { OidcModuleConfig } from './oidc.config';
-import { JwksFirestoreCollections, JwksKeyConverterConfig, jwksKeyFirestoreCollection } from './model';
+import { OidcService } from './service/oidc.service';
+import { OidcWellKnownController, OidcInteractionController } from './oidc.controller';
+import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryFirestoreCollection } from './model';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule } from '@dereekb/firebase-server';
-import { FirestoreContext } from '@dereekb/firebase';
+import { type FirestoreContext } from '@dereekb/firebase';
 
 // MARK: Provider Factories
 export function oidcModuleConfigFactory(configService: ConfigService): OidcModuleConfig {
   const config: OidcModuleConfig = {
     jwksServiceConfig: {} as any, // TODO
     jwksKeyConverterConfig: {} as any // TODO, pull from environment variables.
-  };
+  } as any;
 
   OidcModuleConfig.assertValidConfig(config);
   return config;
 }
 
-export function jwksFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): JwksFirestoreCollections {
+export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcFirestoreCollections {
   return {
-    jwksKeyCollection: jwksKeyFirestoreCollection({ firestoreContext, ...oidcModuleConfig.jwksKeyConverterConfig })
+    jwksKeyCollection: jwksKeyFirestoreCollection({ firestoreContext, ...oidcModuleConfig.jwksKeyConverterConfig }),
+    oidcAdapterEntryCollection: oidcAdapterEntryFirestoreCollection({ firestoreContext })
   };
 }
 
@@ -35,12 +38,11 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
 /**
  * Convenience function used to generate ModuleMetadata for an app's OidcModule.
  *
- * The OidcModule requires the following dependencies in order to initialze properly:
+ * The OidcModule requires the following dependencies in order to initialize properly:
  * - FIREBASE_FIRESTORE_CONTEXT_TOKEN
  * - OIDC_ACCOUNT_SERVICE_TOKEN
  *
- * @param provide
- * @param useFactory
+ * @param config
  * @returns
  */
 export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): ModuleMetadata {
@@ -48,8 +50,9 @@ export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): 
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   return {
-    imports: [ConfigModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [...(exports ?? [])],
+    imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
+    controllers: [OidcWellKnownController, OidcInteractionController],
+    exports: [OidcService, ...(exports ?? [])],
     providers: [
       {
         provide: OidcModuleConfig,
@@ -62,11 +65,12 @@ export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): 
         inject: [OidcModuleConfig]
       },
       {
-        provide: JwksFirestoreCollections,
-        useFactory: jwksFirestoreCollectionsFactory,
-        inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN]
+        provide: OidcFirestoreCollections,
+        useFactory: oidcFirestoreCollectionsFactory,
+        inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN, OidcModuleConfig]
       },
-      // TODO: Controller, etc.
+      JwksService,
+      OidcService,
       ...(providers ?? [])
     ]
   };

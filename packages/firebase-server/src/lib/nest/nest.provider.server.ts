@@ -16,4 +16,8 @@ export abstract class AbstractServerFirebaseNestContext<C extends AbstractFireba
   get context(): C {
     return this._context;
   }
+
+  get nest() {
+    return this.context.nest;
+  }
 }

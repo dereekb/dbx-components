@@ -35,10 +35,11 @@ export type FirestoreModelType = ModelTypeString;
  * An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelType.
  *
  * This is the part of the path that identifies what the collection is. Collection names are used in
- * Firestore paths and should follow Firestore naming conventions (lowercase, no spaces).
+ * Firestore paths and should follow Firestore naming conventions (lowercase, no spaces, no special characters, since "_" is reserved/used for TwoWayFlatFirestoreModelKey).
  *
  * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections
  * with the same name to be returned regardless of their location in the document hierarchy.
+ *
  *
  * @example 'u', 'ps', 'or'
  */

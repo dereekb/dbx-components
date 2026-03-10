@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
-import { OIDC_PROVIDER_TOKEN } from './oauth.token';
-import { OAUTH_MODULE_CONFIG_TOKEN, type OAuthModuleConfig } from './oauth.config';
+import { OidcService } from './service/oidc.service';
+import { OidcModuleConfig } from './oidc.config';
 
 // MARK: DTOs
 export interface LoginInteractionBody {
@@ -18,6 +18,27 @@ export interface ConsentInteractionBody {
   readonly approved: boolean;
 }
 
+// MARK: Well-Known Controller
+/**
+ * Controller for OAuth/OIDC discovery and metadata endpoints.
+ */
+@Controller('.well-known')
+export class OidcWellKnownController {
+  constructor(@Inject(OidcModuleConfig) private readonly config: OidcModuleConfig) {}
+
+  /**
+   * OAuth Protected Resource discovery endpoint.
+   * Required by Claude custom connectors (RFC 8707).
+   */
+  @Get('oauth-protected-resource')
+  getProtectedResource() {
+    return {
+      authorization_servers: [this.config.issuer]
+    };
+  }
+}
+
+// MARK: Interaction Controller
 /**
  * Controller for OIDC interaction endpoints (login/consent).
  *
@@ -25,10 +46,10 @@ export interface ConsentInteractionBody {
  * are accessed during the OAuth flow by external clients.
  */
 @Controller('interaction')
-export class InteractionController {
+export class OidcInteractionController {
   constructor(
-    @Inject(OIDC_PROVIDER_TOKEN) private readonly provider: any,
-    @Inject(OAUTH_MODULE_CONFIG_TOKEN) private readonly config: OAuthModuleConfig
+    @Inject(OidcService) private readonly oidcService: OidcService,
+    @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig
   ) {}
 
   /**
@@ -39,8 +60,8 @@ export class InteractionController {
   @Get(':uid')
   async getInteraction(@Param('uid') uid: string, @Req() req: Request, @Res() res: Response) {
     try {
-      const interactionDetails = await this.provider.interactionDetails(req, res);
-      const { prompt } = interactionDetails;
+      const interaction = await this.oidcService.getInteractionDetails(req, res);
+      const { prompt } = interaction;
 
       if (prompt.name === 'login') {
         return res.redirect(`${this.config.loginUrl}?uid=${uid}`);
@@ -63,7 +84,7 @@ export class InteractionController {
       // The frontend sends a Firebase ID token as proof of authentication.
       // In a real implementation, we would verify this token and extract the UID.
       // For now, the UID is extracted from the token by the consuming app.
-      const result = await this.provider.interactionFinished(
+      await this.oidcService.finishInteraction(
         req,
         res,
         {
@@ -73,8 +94,6 @@ export class InteractionController {
         },
         { mergeWithLastSubmission: false }
       );
-
-      return result;
     } catch {
       throw new HttpException('Login interaction failed', HttpStatus.BAD_REQUEST);
     }
@@ -89,7 +108,7 @@ export class InteractionController {
   async postConsent(@Param('uid') _uid: string, @Body() body: ConsentInteractionBody, @Req() req: Request, @Res() res: Response) {
     try {
       if (!body.approved) {
-        const result = await this.provider.interactionFinished(
+        await this.oidcService.finishInteraction(
           req,
           res,
           {
@@ -98,12 +117,12 @@ export class InteractionController {
           },
           { mergeWithLastSubmission: true }
         );
-        return result;
+        return;
       }
 
-      const interactionDetails = await this.provider.interactionDetails(req, res);
-      const { prompt, params, session } = interactionDetails;
-      const grant = interactionDetails.grantId ? await this.provider.Grant.find(interactionDetails.grantId) : new this.provider.Grant({ accountId: session?.accountId, clientId: params.client_id });
+      const interaction = await this.oidcService.getInteractionDetails(req, res);
+      const { prompt, params, session } = interaction;
+      const grant = await this.oidcService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', params.client_id as string);
 
       if (prompt.details?.missingOIDCScope) {
         grant.addOIDCScope((prompt.details.missingOIDCScope as string[]).join(' '));
@@ -121,7 +140,7 @@ export class InteractionController {
 
       const grantId = await grant.save();
 
-      const result = await this.provider.interactionFinished(
+      await this.oidcService.finishInteraction(
         req,
         res,
         {
@@ -129,8 +148,6 @@ export class InteractionController {
         },
         { mergeWithLastSubmission: true }
       );
-
-      return result;
     } catch {
       throw new HttpException('Consent interaction failed', HttpStatus.BAD_REQUEST);
     }

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { randomBytes, generateKeyPairSync } from 'crypto';
 import { resolveEncryptionKey, encryptValue, decryptValue, type FirestoreEncryptedFieldSecretSource } from '@dereekb/firebase-server';
 import { iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
-import { type JwksKey, type JsonWebKeyWithKid, JwksFirestoreCollections, type JwksKeyDocument } from '../model';
+import { type JwksKey, type JsonWebKeyWithKid, OidcFirestoreCollections, type JwksKeyDocument } from '../model';
 import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
 
 // MARK: Config
@@ -30,7 +30,7 @@ export class JwksService {
 
   constructor(
     @Inject(JwksServiceConfig) private readonly config: JwksServiceConfig,
-    @Inject(JwksFirestoreCollections) private readonly collections: JwksFirestoreCollections
+    @Inject(OidcFirestoreCollections) private readonly collections: OidcFirestoreCollections
   ) {
     this.rotatedKeyMaxAge = config.rotatedKeyMaxAge ?? DEFAULT_ROTATED_KEY_MAX_AGE;
   }

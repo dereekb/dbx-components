@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DemoApiOidcModule } from './oidc/oidc.module';
 
 /**
  * Imports all server-only modules.
@@ -6,7 +7,6 @@ import { Module } from '@nestjs/common';
  * These modules may build on top of the shared firebase functions modules.
  */
 @Module({
-  imports: [],
-  exports: []
+  imports: [DemoApiOidcModule]
 })
 export class DemoApiServerModule {}

@@ -21,7 +21,8 @@ import { type BuildTestsWithContextFunction, type TestContextFixture } from '@de
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
-import { DemoApiNestContext } from '../app/function/function';
+import { DemoApiNestContext } from '../app/function/function.context';
+import { DemoApiServerNestContext } from '../app/server/server.context';
 import {
   type CleanupSentNotificationsParams,
   type FirestoreCollection,
@@ -175,6 +176,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
     return new DemoApiNestContext(this.nest);
   }
 
+  get apiServerNestContext(): DemoApiServerNestContext {
+    return new DemoApiServerNestContext(this.apiNestContext);
+  }
+
   get demoFirestoreCollections(): DemoFirestoreCollections {
     return this.get(DemoFirestoreCollections);
   }
@@ -310,6 +315,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get apiNestContext(): DemoApiNestContext {
     return new DemoApiNestContext(this.nest);
+  }
+
+  get apiServerNestContext(): DemoApiServerNestContext {
+    return this.get(DemoApiServerNestContext);
   }
 
   get demoFirestoreCollections(): DemoFirestoreCollections {

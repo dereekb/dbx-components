@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, type NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { type Request, type Response, type NextFunction } from 'express';
-import { OIDC_PROVIDER_TOKEN } from '../module/oauth.token';
+import { OidcService } from '../service/oidc.service';
 
 // MARK: Types
 /**
@@ -42,7 +42,7 @@ export interface OAuthAuthenticatedRequest extends Request {
 export class OAuthBearerTokenMiddleware implements NestMiddleware {
   private readonly logger = new Logger('OAuthBearerTokenMiddleware');
 
-  constructor(@Inject(OIDC_PROVIDER_TOKEN) private readonly provider: any) {}
+  constructor(@Inject(OidcService) private readonly oidcService: OidcService) {}
 
   async use(req: OAuthAuthenticatedRequest, _res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
@@ -55,7 +55,8 @@ export class OAuthBearerTokenMiddleware implements NestMiddleware {
 
     try {
       // Use the provider's AccessToken model to verify opaque tokens
-      const accessToken = await this.provider.AccessToken.find(token);
+      const provider = await this.oidcService.getProvider();
+      const accessToken = await provider.AccessToken.find(token);
 
       if (!accessToken) {
         throw new UnauthorizedException('Invalid or expired access token');

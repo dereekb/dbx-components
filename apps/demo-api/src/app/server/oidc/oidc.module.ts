@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountServiceDelegate, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
+import { OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountService, OidcAccountServiceDelegate, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule } from '../../common';
 import { FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 
-export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthService): OidcAccountServiceDelegate {
-  return {
+export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthService): OidcAccountService {
+  const delegate = {
     async buildClaimsForUser(userContext: FirebaseServerAuthUserContext, scopes: Set<string>): Promise<OidcAccountClaims> {
       const user = await userContext.loadRecord();
       const claims: OidcAccountClaims = { sub: user.uid };
@@ -30,15 +30,10 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
       return claims;
     }
   };
+
+  return new OidcAccountService(demoApiAuthService, delegate);
 }
 
-/**
- * Demo OAuth/OIDC module.
- *
- * Configures the OIDC provider for the demo application using the async factory pattern.
- * Firestore is automatically injected via `FIREBASE_FIRESTORE_TOKEN` by `OAuthModule`.
- * Firebase Auth is provided via `FirebaseServerAuthService` from `DemoApiAuthModule`.
- */
 @Module({
   imports: [DemoApiAuthModule],
   exports: [DemoApiFirestoreModule],
@@ -50,18 +45,11 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
     }
   ]
 })
-export class DemoApiOAuthDependencyModule {}
+export class DemoApiOidcDependencyModule {}
 
-/**
- * Demo OAuth/OIDC module.
- *
- * Configures the OIDC provider for the demo application using the async factory pattern.
- * Firestore is automatically injected via `FIREBASE_FIRESTORE_TOKEN` by `OAuthModule`.
- * Firebase Auth is provided via `FirebaseServerAuthService` from `DemoApiAuthModule`.
- */
 @Module(
   oidcModuleMetadata({
-    dependencyModule: DemoApiOAuthDependencyModule
+    dependencyModule: DemoApiOidcDependencyModule
   })
 )
-export class DemoApiOAuthModule {}
+export class DemoApiOidcModule {}

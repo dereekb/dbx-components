@@ -1,4 +1,4 @@
-import { type ClassType, type Getter, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
+import { type ClassType, type Getter, Maybe, WebsitePath, WebsiteUrl, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { type DynamicModule, type FactoryProvider, type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider, type Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -79,11 +79,11 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly applicationOptions?: NestApplicationOptions;
   /**
-   * Global routing prefix.
+   * Global routing prefix or options.
    *
    * Example: '/api'
    */
-  readonly globalApiRoutePrefix?: string;
+  readonly globalApiRoutePrefix?: WebsitePath | GlobalRoutePrefixConfig;
   /**
    * Optional configuration function
    */
@@ -95,7 +95,7 @@ export interface NestServerEnvironmentConfig {
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
-  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix, configureNestServerInstance } = config;
+  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix: inputGlobalApiRoutePrefix, configureNestServerInstance } = config;
   const serversCache = new Map<string, NestServer>();
 
   const initNestServer = (firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer => {
@@ -154,11 +154,12 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
         }
 
         // provide the global prefix config to the app
+        const globalApiRoutePrefixConfig: Maybe<GlobalRoutePrefixConfig> = typeof inputGlobalApiRoutePrefix === 'string' ? { globalApiRoutePrefix: inputGlobalApiRoutePrefix } : inputGlobalApiRoutePrefix;
+
+        // is always provided, even if no config was provided.
         providers.push({
           provide: GlobalRoutePrefixConfig,
-          useValue: {
-            globalApiRoutePrefix
-          }
+          useValue: globalApiRoutePrefixConfig ?? {}
         });
 
         const providersModule: DynamicModule = {
@@ -171,8 +172,8 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
 
         let nestApp = await NestFactory.create(providersModule, new ExpressAdapter(expressInstance), options);
 
-        if (globalApiRoutePrefix) {
-          nestApp = nestApp.setGlobalPrefix(globalApiRoutePrefix);
+        if (globalApiRoutePrefixConfig?.globalApiRoutePrefix != null) {
+          nestApp = nestApp.setGlobalPrefix(globalApiRoutePrefixConfig.globalApiRoutePrefix, globalApiRoutePrefixConfig);
         }
 
         if (configureNestServerInstance) {
