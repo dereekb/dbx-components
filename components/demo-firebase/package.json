@@ -1,6 +1,6 @@
 {
   "name": "demo-firebase",
-  "version": "13.2.1",
+  "version": "13.2.2",
   "dependencies": {
     "@dereekb/firebase": "*",
     "@dereekb/model": "*",

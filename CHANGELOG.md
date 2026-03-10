@@ -1,3 +1,25 @@
+## [13.2.2](https://github.com/dereekb/dbx-components/compare/v13.2.1-dev...v13.2.2) (2026-03-10)
+
+
+### ai
+
+- removed deprecated skills ([c4d231f7](https://github.com/dereekb/dbx-components/commit/c4d231f7f61c435beed6dd8332755db5c2e43d68))
+
+
+### Code Refactoring
+
+- added ARKTYPE_DATE_DTO_TYPE for Date | string.date.parse ([36350f75](https://github.com/dereekb/dbx-components/commit/36350f7517d8211140605fde24b0faa6bee803e9))
+
+
+### Documentation
+
+- added jsdoc annotations to dbx-core ([33f073cd](https://github.com/dereekb/dbx-components/commit/33f073cd0cca27a8aa58fad642012513cdbf0ec3))
+- added jsdoc annotations to dbx-web ([d0ba93f2](https://github.com/dereekb/dbx-components/commit/d0ba93f20c68a879be3006941a4345581bfc89ef))
+- added jsdoc to dbx-web loading, keypress, util, screen ([069caace](https://github.com/dereekb/dbx-components/commit/069caace0552073b115d41b2228b46f2bc294d1e))
+
+
+
+
 ## [13.2.1](https://github.com/dereekb/dbx-components/compare/v13.2.0-dev...v13.2.1) (2026-03-09)
 
 

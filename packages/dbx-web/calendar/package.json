@@ -1,13 +1,13 @@
 {
   "name": "@dereekb/dbx-web/calendar",
-  "version": "13.2.1",
+  "version": "13.2.2",
   "peerDependencies": {
     "@angular/common": "^21.0.0",
     "@angular/core": "^21.0.0",
     "@angular/material": "^21.0.0",
-    "@dereekb/date": "13.2.1",
-    "@dereekb/dbx-web": "13.2.1",
-    "@dereekb/util": "13.2.1",
+    "@dereekb/date": "13.2.2",
+    "@dereekb/dbx-web": "13.2.2",
+    "@dereekb/util": "13.2.2",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/component-store": "^21.0.0",
     "angular-calendar": "^0.32.0",
