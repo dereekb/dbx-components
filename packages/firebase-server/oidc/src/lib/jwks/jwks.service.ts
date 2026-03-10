@@ -1,53 +1,28 @@
 import { Injectable, Inject, Optional } from '@nestjs/common';
 import { type Firestore } from 'firebase-admin/firestore';
 import { type Storage } from '@google-cloud/storage';
-import { createCipheriv, createDecipheriv, randomBytes, generateKeyPairSync } from 'crypto';
-import { type JwksKeyDocument, type JwksServiceConfig, type JsonWebKeyWithKid, DEFAULT_JWKS_COLLECTION_NAME, DEFAULT_ROTATED_KEY_MAX_AGE } from './jwks';
+import { randomBytes, generateKeyPairSync } from 'crypto';
+import { FIREBASE_FIRESTORE_TOKEN } from '@dereekb/firebase-server';
+import { resolveEncryptionKey, encryptValue, decryptValue } from '@dereekb/firebase-server';
+import { type JwksKeyDocument, type JwksServiceConfig, type JsonWebKeyWithKid, DEFAULT_ROTATED_KEY_MAX_AGE, jwksKeyIdentity } from './jwks';
 
 // MARK: DI Tokens
 export const JWKS_SERVICE_CONFIG_TOKEN = 'JWKS_SERVICE_CONFIG_TOKEN';
 export const GCS_STORAGE_TOKEN = 'GCS_STORAGE_TOKEN';
 
-// MARK: Encryption helpers
-const ALGORITHM = 'aes-256-gcm';
-const IV_LENGTH = 12;
-const AUTH_TAG_LENGTH = 16;
-
-function encrypt(plaintext: string, hexKey: string): string {
-  const key = Buffer.from(hexKey, 'hex');
-  const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
-  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return Buffer.concat([iv, tag, encrypted]).toString('base64');
-}
-
-function decrypt(encoded: string, hexKey: string): string {
-  const key = Buffer.from(hexKey, 'hex');
-  const buf = Buffer.from(encoded, 'base64');
-  const iv = buf.subarray(0, IV_LENGTH);
-  const tag = buf.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH);
-  const encrypted = buf.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
-  const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
-  decipher.setAuthTag(tag);
-  return decipher.update(encrypted) + decipher.final('utf8');
-}
-
 // MARK: Service
 @Injectable()
 export class JwksService {
   private readonly collectionName: string;
-  private readonly encryptionSecret: string;
   private readonly rotatedKeyMaxAge: number;
-  private readonly firestore: Firestore;
-  private readonly storage?: Storage;
 
-  constructor(@Inject(JWKS_SERVICE_CONFIG_TOKEN) config: JwksServiceConfig, @Optional() @Inject(GCS_STORAGE_TOKEN) storage?: Storage) {
-    this.firestore = config.firestore;
-    this.collectionName = config.collectionName ?? DEFAULT_JWKS_COLLECTION_NAME;
-    this.encryptionSecret = config.encryptionSecret;
+  constructor(
+    @Inject(JWKS_SERVICE_CONFIG_TOKEN) private readonly config: JwksServiceConfig,
+    @Inject(FIREBASE_FIRESTORE_TOKEN) private readonly firestore: Firestore,
+    @Optional() @Inject(GCS_STORAGE_TOKEN) private readonly storage?: Storage
+  ) {
+    this.collectionName = config.collectionName ?? jwksKeyIdentity.collectionName;
     this.rotatedKeyMaxAge = config.rotatedKeyMaxAge ?? DEFAULT_ROTATED_KEY_MAX_AGE;
-    this.storage = storage;
   }
 
   private get collection() {
@@ -56,7 +31,7 @@ export class JwksService {
 
   /**
    * Generates a new RS256 key pair and stores it in Firestore.
-   * The private key is encrypted at rest.
+   * The private key is encrypted at rest using AES-256-GCM.
    */
   async generateKeyPair(): Promise<JwksKeyDocument> {
     const { publicKey, privateKey } = generateKeyPairSync('rsa' as any, {
@@ -75,7 +50,8 @@ export class JwksService {
       use: 'sig'
     };
 
-    const encryptedPrivateKey = encrypt(JSON.stringify({ ...(privateKey as JsonWebKey), kid, alg: 'RS256', use: 'sig' }), this.encryptionSecret);
+    const key = resolveEncryptionKey(this.config.encryptionSecret);
+    const encryptedPrivateKey = encryptValue({ ...(privateKey as JsonWebKey), kid, alg: 'RS256', use: 'sig' }, key);
 
     const doc: JwksKeyDocument = {
       keyId: kid,
@@ -100,8 +76,8 @@ export class JwksService {
     }
 
     const data = results.docs[0].data() as JwksKeyDocument;
-    const decrypted = decrypt(data.privateKey, this.encryptionSecret);
-    return JSON.parse(decrypted) as JsonWebKeyWithKid;
+    const key = resolveEncryptionKey(this.config.encryptionSecret);
+    return decryptValue<JsonWebKeyWithKid>(data.privateKey, key);
   }
 
   /**

@@ -1,21 +1,20 @@
 import { type DynamicModule, type InjectionToken, Logger, Module, type OnModuleInit } from '@nestjs/common';
+import { type Firestore } from 'firebase-admin/firestore';
 import { type OAuthModuleConfig, OAUTH_MODULE_CONFIG_TOKEN, DEFAULT_TOKEN_LIFETIMES } from './oauth.config';
 import { createFirestoreOidcAdapterFactory } from '../adapter/firestore.adapter';
 import { createFindAccount } from '../account/find-account';
 import { JwksService, JWKS_SERVICE_CONFIG_TOKEN } from '../jwks/jwks.service';
 import { OAuthController } from './oauth.controller';
 import { InteractionController } from './interaction.controller';
-
-// MARK: Tokens
-/**
- * Injection token for the oidc-provider instance.
- */
-export const OIDC_PROVIDER_TOKEN = 'OIDC_PROVIDER_TOKEN';
+import { OIDC_PROVIDER_TOKEN } from './oauth.token';
+import { FIREBASE_FIRESTORE_TOKEN, FirebaseServerFirestoreModule, resolveEncryptionKey } from '@dereekb/firebase-server';
 
 // MARK: Async Config
 export interface OAuthModuleAsyncConfig {
   /**
-   * Modules to import for injection.
+   * Additional modules to import for injection.
+   *
+   * Note: `FirebaseServerFirestoreModule` is automatically imported to provide `FIREBASE_FIRESTORE_TOKEN`.
    */
   readonly imports?: any[];
   /**
@@ -29,67 +28,73 @@ export interface OAuthModuleAsyncConfig {
 }
 
 // MARK: Module
-function buildOidcProviderFactory(config: OAuthModuleConfig) {
+/**
+ * Builds the oidc-provider instance from config, injected Firestore, and JWKS service.
+ */
+async function buildOidcProvider(config: OAuthModuleConfig, firestore: Firestore, jwksService: JwksService) {
   const lifetimes = { ...DEFAULT_TOKEN_LIFETIMES, ...config.tokenLifetimes };
   const adapterFactory = createFirestoreOidcAdapterFactory({
-    firestore: config.firestore,
+    firestore,
     collectionPrefix: config.collectionPrefix
   });
   const findAccount = createFindAccount(config.auth);
 
-  return async (jwksService: JwksService) => {
-    let signingKey = await jwksService.getActiveSigningKey();
+  let signingKey = await jwksService.getActiveSigningKey();
 
-    if (!signingKey) {
-      await jwksService.generateKeyPair();
-      signingKey = await jwksService.getActiveSigningKey();
-    }
+  if (!signingKey) {
+    await jwksService.generateKeyPair();
+    signingKey = await jwksService.getActiveSigningKey();
+  }
 
-    const jwks = await jwksService.getPublicJwks();
-    const { default: Provider } = await import('oidc-provider');
+  const jwks = await jwksService.getPublicJwks();
 
-    return new Provider(config.issuer, {
-      adapter: adapterFactory as any,
-      findAccount: findAccount as any,
-      jwks: { keys: jwks.keys as any[] },
-      features: {
-        devInteractions: { enabled: false },
-        registration: { enabled: true },
-        registrationManagement: { enabled: true }
-      },
-      pkce: {
-        methods: ['S256'],
-        required: () => true
-      },
-      responseTypes: ['code'],
-      grantTypes: ['authorization_code', 'refresh_token'],
-      ttl: {
-        AccessToken: lifetimes.accessToken,
-        AuthorizationCode: lifetimes.authorizationCode,
-        RefreshToken: lifetimes.refreshToken,
-        Session: 14 * 24 * 60 * 60,
-        Grant: 14 * 24 * 60 * 60,
-        Interaction: 60 * 60,
-        DeviceCode: 10 * 60
-      },
-      interactions: {
-        url: (_ctx: any, interaction: any) => {
-          if (interaction.prompt.name === 'login') {
-            return `${config.loginUrl}?uid=${interaction.uid}`;
-          }
-          return `${config.consentUrl}?uid=${interaction.uid}`;
+  // Derive cookie signing key from the resolved encryption secret.
+  const encryptionKeyBuffer = resolveEncryptionKey(config.jwksEncryptionSecret);
+  const cookieKey = encryptionKeyBuffer.toString('base64').slice(0, 32);
+
+  const { default: Provider } = await import('oidc-provider');
+
+  return new Provider(config.issuer, {
+    adapter: adapterFactory as any,
+    findAccount: findAccount as any,
+    jwks: { keys: jwks.keys as any[] },
+    features: {
+      devInteractions: { enabled: false },
+      registration: { enabled: true },
+      registrationManagement: { enabled: true }
+    },
+    pkce: {
+      methods: ['S256'],
+      required: () => true
+    },
+    responseTypes: ['code'],
+    grantTypes: ['authorization_code', 'refresh_token'],
+    ttl: {
+      AccessToken: lifetimes.accessToken,
+      AuthorizationCode: lifetimes.authorizationCode,
+      RefreshToken: lifetimes.refreshToken,
+      Session: 14 * 24 * 60 * 60,
+      Grant: 14 * 24 * 60 * 60,
+      Interaction: 60 * 60,
+      DeviceCode: 10 * 60
+    },
+    interactions: {
+      url: (_ctx: any, interaction: any) => {
+        if (interaction.prompt.name === 'login') {
+          return `${config.loginUrl}?uid=${interaction.uid}`;
         }
-      },
-      claims: {
-        openid: ['sub'],
-        profile: ['name', 'picture'],
-        email: ['email', 'email_verified']
-      },
-      cookies: {
-        keys: [config.jwksEncryptionSecret.slice(0, 32)]
+        return `${config.consentUrl}?uid=${interaction.uid}`;
       }
-    });
-  };
+    },
+    claims: {
+      openid: ['sub'],
+      profile: ['name', 'picture'],
+      email: ['email', 'email_verified']
+    },
+    cookies: {
+      keys: [cookieKey]
+    }
+  });
 }
 
 @Module({})
@@ -98,26 +103,29 @@ export class OAuthModule implements OnModuleInit {
 
   /**
    * Configure the OAuth module with a static config object.
+   *
+   * Requires `FirebaseServerFirestoreModule` to be available in the application
+   * (automatically imported) to provide `FIREBASE_FIRESTORE_TOKEN`.
    */
   static forRoot(config: OAuthModuleConfig): DynamicModule {
     return {
       module: OAuthModule,
+      imports: [FirebaseServerFirestoreModule],
       controllers: [OAuthController, InteractionController],
       providers: [
         { provide: OAUTH_MODULE_CONFIG_TOKEN, useValue: config },
         {
           provide: JWKS_SERVICE_CONFIG_TOKEN,
           useValue: {
-            firestore: config.firestore,
             encryptionSecret: config.jwksEncryptionSecret,
-            collectionName: `${config.collectionPrefix ?? 'oidc_'}jwks_keys`
+            collectionName: `${config.collectionPrefix ?? 'oidc_'}jwks`
           }
         },
         JwksService,
         {
           provide: OIDC_PROVIDER_TOKEN,
-          useFactory: buildOidcProviderFactory(config),
-          inject: [JwksService]
+          useFactory: (firestore: Firestore, jwksService: JwksService) => buildOidcProvider(config, firestore, jwksService),
+          inject: [FIREBASE_FIRESTORE_TOKEN, JwksService]
         }
       ],
       exports: [OIDC_PROVIDER_TOKEN, JwksService, OAUTH_MODULE_CONFIG_TOKEN]
@@ -126,12 +134,14 @@ export class OAuthModule implements OnModuleInit {
 
   /**
    * Configure the OAuth module with an async factory.
-   * Useful when config depends on injected services (e.g., Firestore, Auth from Firebase app).
+   *
+   * Useful when config depends on injected services (e.g., Auth from Firebase app).
+   * `FirebaseServerFirestoreModule` is automatically imported.
    */
   static forRootAsync(asyncConfig: OAuthModuleAsyncConfig): DynamicModule {
     return {
       module: OAuthModule,
-      imports: asyncConfig.imports ?? [],
+      imports: [FirebaseServerFirestoreModule, ...(asyncConfig.imports ?? [])],
       controllers: [OAuthController, InteractionController],
       providers: [
         {
@@ -142,20 +152,16 @@ export class OAuthModule implements OnModuleInit {
         {
           provide: JWKS_SERVICE_CONFIG_TOKEN,
           useFactory: (config: OAuthModuleConfig) => ({
-            firestore: config.firestore,
             encryptionSecret: config.jwksEncryptionSecret,
-            collectionName: `${config.collectionPrefix ?? 'oidc_'}jwks_keys`
+            collectionName: `${config.collectionPrefix ?? 'oidc_'}jwks`
           }),
           inject: [OAUTH_MODULE_CONFIG_TOKEN]
         },
         JwksService,
         {
           provide: OIDC_PROVIDER_TOKEN,
-          useFactory: async (config: OAuthModuleConfig, jwksService: JwksService) => {
-            const factory = buildOidcProviderFactory(config);
-            return factory(jwksService);
-          },
-          inject: [OAUTH_MODULE_CONFIG_TOKEN, JwksService]
+          useFactory: async (config: OAuthModuleConfig, firestore: Firestore, jwksService: JwksService) => buildOidcProvider(config, firestore, jwksService),
+          inject: [OAUTH_MODULE_CONFIG_TOKEN, FIREBASE_FIRESTORE_TOKEN, JwksService]
         }
       ],
       exports: [OIDC_PROVIDER_TOKEN, JwksService, OAUTH_MODULE_CONFIG_TOKEN]

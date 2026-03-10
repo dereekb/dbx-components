@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, type NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { type Request, type Response, type NextFunction } from 'express';
-import { OIDC_PROVIDER_TOKEN } from '../module/oauth.module';
+import { OIDC_PROVIDER_TOKEN } from '../module/oauth.token';
 
 // MARK: Types
 /**

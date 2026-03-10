@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
-import { OIDC_PROVIDER_TOKEN } from './oauth.module';
+import { OIDC_PROVIDER_TOKEN } from './oauth.token';
 import { OAUTH_MODULE_CONFIG_TOKEN, type OAuthModuleConfig } from './oauth.config';
 
 // MARK: DTOs

@@ -1,4 +1,19 @@
-import { type Firestore } from 'firebase-admin/firestore';
+import { type FirestoreEncryptedFieldSecretSource } from '@dereekb/firebase-server';
+
+// MARK: Identity
+/**
+ * Model identity for JWKS signing keys.
+ *
+ * Follows the `firestoreModelIdentity()` naming convention from `@dereekb/firebase`.
+ * Defined inline to avoid importing `@dereekb/firebase` which causes rollup issues
+ * with transitive source resolution.
+ */
+export const jwksKeyIdentity = {
+  type: 'root' as const,
+  modelType: 'jwksKey',
+  collectionName: 'oidc_jwks',
+  collectionType: 'oidc_jwks'
+};
 
 // MARK: Types
 export type JwksKeyStatus = 'active' | 'rotated' | 'retired';
@@ -51,19 +66,17 @@ export interface JsonWebKeyWithKid extends JsonWebKey {
 // MARK: Config
 export interface JwksServiceConfig {
   /**
-   * Firestore instance.
-   */
-  readonly firestore: Firestore;
-  /**
    * Collection name for JWKS key documents.
-   * Defaults to 'oidc_jwks_keys'.
+   * Defaults to `jwksKeyIdentity.collectionName` ('oidc_jwks').
    */
   readonly collectionName?: string;
   /**
    * Encryption secret for private key storage.
-   * 64-character hex string (32-byte AES-256 key).
+   *
+   * Supports all `FirestoreEncryptedFieldSecretSource` formats:
+   * direct hex string, getter function, or environment variable reference.
    */
-  readonly encryptionSecret: string;
+  readonly encryptionSecret: FirestoreEncryptedFieldSecretSource;
   /**
    * Maximum age of a rotated key (in seconds) before it is retired.
    * Defaults to 30 days (2592000).
@@ -71,5 +84,4 @@ export interface JwksServiceConfig {
   readonly rotatedKeyMaxAge?: number;
 }
 
-export const DEFAULT_JWKS_COLLECTION_NAME = 'oidc_jwks_keys';
 export const DEFAULT_ROTATED_KEY_MAX_AGE = 30 * 24 * 60 * 60; // 30 days

@@ -112,11 +112,10 @@ describe('JwksService', () => {
     mockFirestore = createMockFirestore();
 
     const config: JwksServiceConfig = {
-      firestore: mockFirestore as any,
       encryptionSecret
     };
 
-    service = new JwksService(config);
+    service = new JwksService(config, mockFirestore as any);
   });
 
   describe('generateKeyPair()', () => {
@@ -137,9 +136,9 @@ describe('JwksService', () => {
       expect(() => JSON.parse(doc.privateKey)).toThrow(); // encrypted, not plain JSON
     });
 
-    it('should store the key in Firestore collection', async () => {
+    it('should store the key in the default collection', async () => {
       const doc = await service.generateKeyPair();
-      const col = mockFirestore._store.get('oidc_jwks_keys');
+      const col = mockFirestore._store.get('oidc_jwks');
 
       expect(col).toBeDefined();
       expect(col!.has(doc.keyId)).toBe(true);
@@ -187,7 +186,7 @@ describe('JwksService', () => {
       expect(newKey.status).toBe('active');
 
       // Old key should be marked as rotated in Firestore
-      const col = mockFirestore._store.get('oidc_jwks_keys');
+      const col = mockFirestore._store.get('oidc_jwks');
       const oldKeyData = col?.get(originalKey.keyId)?.data;
       expect(oldKeyData?.status).toBe('rotated');
       expect(oldKeyData?.rotatedAt).toBeDefined();
@@ -229,11 +228,10 @@ describe('JwksService', () => {
       };
 
       const config: JwksServiceConfig = {
-        firestore: mockFirestore as any,
         encryptionSecret
       };
 
-      const serviceWithGcs = new JwksService(config, mockStorage as any);
+      const serviceWithGcs = new JwksService(config, mockFirestore as any, mockStorage as any);
       await serviceWithGcs.generateKeyPair();
       await serviceWithGcs.publishJwksToGcs('my-bucket', 'jwks.json');
 
@@ -250,7 +248,7 @@ describe('JwksService', () => {
       await service.rotateKeys();
 
       // Manually set the old key's expiresAt to the past
-      const col = mockFirestore._store.get('oidc_jwks_keys');
+      const col = mockFirestore._store.get('oidc_jwks');
       for (const [, entry] of col!.entries()) {
         if (entry.data.status === 'rotated') {
           entry.data.expiresAt = new Date(Date.now() - 1000);

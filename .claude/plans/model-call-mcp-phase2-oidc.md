@@ -221,8 +221,8 @@ Note: `nest-oidc-provider` was not used — we integrate `oidc-provider` directl
 - [x] `pnpm nx run firebase-server-oidc:build-base` — builds without errors
 - [x] `pnpm nx run firebase-server-oidc:test` — all 39 tests pass
 - [x] `pnpm nx run dbx-firebase-oidc:build-base` — builds without errors
-- [ ] `pnpm nx run firebase-server:build` — full parent build succeeds
-- [ ] `pnpm nx run dbx-firebase:build` — full parent build succeeds
+- [x] `pnpm nx run firebase-server:build` — full parent build succeeds
+- [x] `pnpm nx run dbx-firebase:build` — full parent build succeeds
 - [ ] OIDC discovery endpoint returns valid configuration
 - [ ] End-to-end: auth flow → token issuance → bearer token verification
 
