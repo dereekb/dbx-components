@@ -53,6 +53,11 @@ export abstract class AbstractNestContext {
   }
 }
 
+/**
+ * Abstract class used for the top-level NestJS context for Firebase services.
+ *
+ * Your API implementation of this class is usually <AppPrefix>ApiNestContext (e.g. `DemoApiNestContext`).
+ */
 export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerEnvServiceRef, FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {
   /**
    * FirebasePermissionErrorContextErrorFunction to use with makeModelContext().

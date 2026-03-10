@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DemoApiApiModule } from './api/api.module';
-import { DemoApiFirebaseModule, DemoApiModelModule, DemoApiOAuthModule } from './common';
+import { DemoApiFirebaseModule, DemoApiModelModule } from './common';
 import { GlobalNotificationModule } from '@dereekb/firebase-server/model';
 
 @Module({
@@ -10,7 +10,7 @@ import { GlobalNotificationModule } from '@dereekb/firebase-server/model';
 export class DemoApiAppGlobalModule {}
 
 @Module({
-  imports: [DemoApiFirebaseModule, DemoApiModelModule, DemoApiApiModule, DemoApiAppGlobalModule, DemoApiOAuthModule],
+  imports: [DemoApiFirebaseModule, DemoApiModelModule, DemoApiApiModule, DemoApiAppGlobalModule, DemoApiServerModule],
   exports: [DemoApiModelModule]
 })
 export class DemoApiAppModule {}

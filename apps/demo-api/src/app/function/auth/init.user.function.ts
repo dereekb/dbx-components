@@ -1,5 +1,5 @@
 import { type AuthBlockingEvent, beforeUserCreated } from 'firebase-functions/v2/identity';
-import { blockingEventWithDemoNestContext } from '../function';
+import { blockingEventWithDemoNestContext } from '../function.context';
 
 /**
  * Listens for users to be created and initializes them.

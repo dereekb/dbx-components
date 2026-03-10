@@ -3,7 +3,7 @@ import { createGuestbook } from '../guestbook/guestbook.create';
 import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateUsername, profileUpdateOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
-import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
+import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function.context';
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
 import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';

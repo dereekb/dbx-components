@@ -26,6 +26,11 @@ import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoF
 import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
 
+/**
+ * The top-level NestJS context for our callModel functions.
+ *
+ * Contains all the services and actions that are registered in the app.
+ */
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get actionContext(): DemoFirebaseServerActionsContext {
     return this.nest.get(DemoFirebaseServerActionsContext);

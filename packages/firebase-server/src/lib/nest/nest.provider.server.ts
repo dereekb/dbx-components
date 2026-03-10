@@ -1,0 +1,19 @@
+import { FirebaseModelsService, FirebaseAppModelContext } from '@dereekb/firebase';
+import { AbstractFirebaseNestContext } from './nest.provider';
+
+/**
+ * Abstract class used for the top-level server NestJS context for server-only services.
+ *
+ * Your API implementation of this class is usually <AppPrefix>ApiServerNestContext (e.g. `DemoApiServerNestContext`).
+ */
+export abstract class AbstractServerFirebaseNestContext<C extends AbstractFirebaseNestContext<any, any>> {
+  private readonly _context: C;
+
+  constructor(c: C) {
+    this._context = c;
+  }
+
+  get context(): C {
+    return this._context;
+  }
+}

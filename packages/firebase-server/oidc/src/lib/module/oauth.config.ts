@@ -1,4 +1,3 @@
-import type * as admin from 'firebase-admin';
 import { type FirestoreEncryptedFieldSecretSource } from '@dereekb/firebase-server';
 
 // MARK: Config
@@ -6,6 +5,7 @@ import { type FirestoreEncryptedFieldSecretSource } from '@dereekb/firebase-serv
  * Configuration for the OAuth/OIDC module.
  *
  * Firestore is injected via `FIREBASE_FIRESTORE_TOKEN` and does not need to be provided here.
+ * Firebase Auth is provided via `FirebaseServerAuthService` injection into `OidcAccountService`.
  */
 export interface OAuthModuleConfig {
   /**
@@ -13,10 +13,6 @@ export interface OAuthModuleConfig {
    * Must be the canonical URL where the OIDC provider is accessible.
    */
   readonly issuer: string;
-  /**
-   * Firebase Admin Auth instance for findAccount.
-   */
-  readonly auth: admin.auth.Auth;
   /**
    * Encryption secret for JWKS private key storage.
    *

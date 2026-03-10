@@ -1,6 +1,6 @@
 import { type UpdateNotificationBoxParams, type UpdateNotificationBoxRecipientParams, updateNotificationBoxParamsType, updateNotificationBoxRecipientParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
-import { type DemoUpdateModelFunction } from '../function';
+import { type DemoUpdateModelFunction } from '../function.context';
 
 export const updateNotificationBox: DemoUpdateModelFunction<UpdateNotificationBoxParams> = withApiDetails({
   inputType: updateNotificationBoxParamsType,

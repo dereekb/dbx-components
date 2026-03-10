@@ -2,12 +2,12 @@ import { type DynamicModule, type InjectionToken, Logger, Module, type OnModuleI
 import { type Firestore } from 'firebase-admin/firestore';
 import { type OAuthModuleConfig, OAUTH_MODULE_CONFIG_TOKEN, DEFAULT_TOKEN_LIFETIMES } from './oauth.config';
 import { createFirestoreOidcAdapterFactory } from '../adapter/firestore.adapter';
-import { createFindAccount } from '../account/find-account';
+import { OidcAccountService, OidcAccountServiceDelegate, OIDC_ACCOUNT_SERVICE_TOKEN } from '../account/account.service';
 import { JwksService, JWKS_SERVICE_CONFIG_TOKEN } from '../jwks/jwks.service';
 import { OAuthController } from './oauth.controller';
 import { InteractionController } from './interaction.controller';
 import { OIDC_PROVIDER_TOKEN } from './oauth.token';
-import { FIREBASE_FIRESTORE_TOKEN, FirebaseServerFirestoreModule, resolveEncryptionKey } from '@dereekb/firebase-server';
+import { FIREBASE_FIRESTORE_TOKEN, FirebaseServerAuthService, FirebaseServerFirestoreModule, resolveEncryptionKey } from '@dereekb/firebase-server';
 
 // MARK: Async Config
 export interface OAuthModuleAsyncConfig {
@@ -17,6 +17,12 @@ export interface OAuthModuleAsyncConfig {
    * Note: `FirebaseServerFirestoreModule` is automatically imported to provide `FIREBASE_FIRESTORE_TOKEN`.
    */
   readonly imports?: any[];
+  /**
+   * Additional providers to register in the module context.
+   *
+   * Use this to provide an {@link OidcAccountServiceDelegate} implementation.
+   */
+  readonly providers?: any[];
   /**
    * Factory function that returns the OAuthModuleConfig.
    */
@@ -31,13 +37,13 @@ export interface OAuthModuleAsyncConfig {
 /**
  * Builds the oidc-provider instance from config, injected Firestore, and JWKS service.
  */
-async function buildOidcProvider(config: OAuthModuleConfig, firestore: Firestore, jwksService: JwksService) {
+async function buildOidcProvider(config: OAuthModuleConfig, firestore: Firestore, jwksService: JwksService, accountService: OidcAccountService) {
   const lifetimes = { ...DEFAULT_TOKEN_LIFETIMES, ...config.tokenLifetimes };
   const adapterFactory = createFirestoreOidcAdapterFactory({
     firestore,
     collectionPrefix: config.collectionPrefix
   });
-  const findAccount = createFindAccount(config.auth);
+  const findAccount: (ctx: unknown, id: string) => Promise<any> = (_ctx, id) => accountService.userContext(id).findAccount();
 
   let signingKey = await jwksService.getActiveSigningKey();
 
@@ -123,12 +129,17 @@ export class OAuthModule implements OnModuleInit {
         },
         JwksService,
         {
+          provide: OIDC_ACCOUNT_SERVICE_TOKEN,
+          useFactory: (authService: FirebaseServerAuthService, delegate: OidcAccountServiceDelegate) => new OidcAccountService(authService, delegate),
+          inject: [FirebaseServerAuthService, OidcAccountServiceDelegate]
+        },
+        {
           provide: OIDC_PROVIDER_TOKEN,
-          useFactory: (firestore: Firestore, jwksService: JwksService) => buildOidcProvider(config, firestore, jwksService),
-          inject: [FIREBASE_FIRESTORE_TOKEN, JwksService]
+          useFactory: (firestore: Firestore, jwksService: JwksService, accountService: OidcAccountService) => buildOidcProvider(config, firestore, jwksService, accountService),
+          inject: [FIREBASE_FIRESTORE_TOKEN, JwksService, OIDC_ACCOUNT_SERVICE_TOKEN]
         }
       ],
-      exports: [OIDC_PROVIDER_TOKEN, JwksService, OAUTH_MODULE_CONFIG_TOKEN]
+      exports: [OIDC_PROVIDER_TOKEN, JwksService, OIDC_ACCOUNT_SERVICE_TOKEN, OAUTH_MODULE_CONFIG_TOKEN]
     };
   }
 
@@ -144,6 +155,7 @@ export class OAuthModule implements OnModuleInit {
       imports: [FirebaseServerFirestoreModule, ...(asyncConfig.imports ?? [])],
       controllers: [OAuthController, InteractionController],
       providers: [
+        ...(asyncConfig.providers ?? []),
         {
           provide: OAUTH_MODULE_CONFIG_TOKEN,
           useFactory: asyncConfig.useFactory,
@@ -159,12 +171,17 @@ export class OAuthModule implements OnModuleInit {
         },
         JwksService,
         {
+          provide: OIDC_ACCOUNT_SERVICE_TOKEN,
+          useFactory: (authService: FirebaseServerAuthService, delegate: OidcAccountServiceDelegate) => new OidcAccountService(authService, delegate),
+          inject: [FirebaseServerAuthService, OidcAccountServiceDelegate]
+        },
+        {
           provide: OIDC_PROVIDER_TOKEN,
-          useFactory: async (config: OAuthModuleConfig, firestore: Firestore, jwksService: JwksService) => buildOidcProvider(config, firestore, jwksService),
-          inject: [OAUTH_MODULE_CONFIG_TOKEN, FIREBASE_FIRESTORE_TOKEN, JwksService]
+          useFactory: async (config: OAuthModuleConfig, firestore: Firestore, jwksService: JwksService, accountService: OidcAccountService) => buildOidcProvider(config, firestore, jwksService, accountService),
+          inject: [OAUTH_MODULE_CONFIG_TOKEN, FIREBASE_FIRESTORE_TOKEN, JwksService, OIDC_ACCOUNT_SERVICE_TOKEN]
         }
       ],
-      exports: [OIDC_PROVIDER_TOKEN, JwksService, OAUTH_MODULE_CONFIG_TOKEN]
+      exports: [OIDC_PROVIDER_TOKEN, JwksService, OIDC_ACCOUNT_SERVICE_TOKEN, OAUTH_MODULE_CONFIG_TOKEN]
     };
   }
 

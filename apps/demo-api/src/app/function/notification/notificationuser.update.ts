@@ -1,6 +1,6 @@
 import { type ResyncNotificationUserParams, type ResyncNotificationUserResult, type UpdateNotificationUserParams, updateNotificationUserParamsType, resyncNotificationUserParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
-import { type DemoUpdateModelFunction } from '../function';
+import { type DemoUpdateModelFunction } from '../function.context';
 
 export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationUserParams> = withApiDetails({
   inputType: updateNotificationUserParamsType,
