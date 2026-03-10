@@ -5,6 +5,7 @@ import { isValidDateCellTiming } from './date.cell';
 import { isValidDateCellRange, isValidDateCellRangeSeries } from './date.cell.index';
 import { DateRangeType } from './date.range';
 import { CalendarDateType } from './date.calendar';
+import { ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 
 // MARK: Timezone
 /**
@@ -25,12 +26,12 @@ export const knownTimezoneType = type('string > 0').narrow((val, ctx) => (val !=
 /**
  * ArkType DTO schema for {@link DateDurationSpan}.
  *
- * Parses date strings from JSON/DTO input into Date objects using `string.date.parse`.
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`).
  * Use this schema when validating and converting serialized data (e.g., API responses, JSON payloads)
- * into the corresponding runtime types.
+ * or runtime Date objects into the corresponding runtime types.
  */
 export const dateDurationSpanType = type({
-  startsAt: 'string.date.parse',
+  startsAt: ARKTYPE_DATE_DTO_TYPE,
   duration: 'number >= 0'
 });
 
@@ -38,26 +39,26 @@ export const dateDurationSpanType = type({
 /**
  * ArkType DTO schema for {@link DateRange}.
  *
- * Parses date strings from JSON/DTO input into Date objects using `string.date.parse`.
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`).
  * Use this schema when validating and converting serialized data (e.g., API responses, JSON payloads)
- * into the corresponding runtime types.
+ * or runtime Date objects into the corresponding runtime types.
  */
 export const dateRangeType = type({
-  start: 'string.date.parse',
-  end: 'string.date.parse'
+  start: ARKTYPE_DATE_DTO_TYPE,
+  end: ARKTYPE_DATE_DTO_TYPE
 });
 
 // MARK: DateRangeParams
 /**
  * ArkType DTO schema for {@link DateRangeParams}.
  *
- * Parses date strings from JSON/DTO input into Date objects using `string.date.parse`.
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`).
  * Use this schema when validating and converting serialized data (e.g., API responses, JSON payloads)
- * into the corresponding runtime types.
+ * or runtime Date objects into the corresponding runtime types.
  */
 export const dateRangeParamsType = type({
   type: type.enumerated(...Object.values(DateRangeType)),
-  date: 'string.date.parse',
+  date: ARKTYPE_DATE_DTO_TYPE,
   'distance?': 'number'
 });
 
@@ -89,12 +90,12 @@ export const dateCellRangeType = dateCellType.merge({
 /**
  * ArkType DTO schema for {@link DateCellTiming}.
  *
- * Parses date strings from JSON/DTO input into Date objects using `string.date.parse`.
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`).
  * Use this schema when validating and converting serialized data (e.g., API responses, JSON payloads)
- * into the corresponding runtime types.
+ * or runtime Date objects into the corresponding runtime types.
  */
 export const dateCellTimingType = dateDurationSpanType.merge({
-  end: 'string.date.parse',
+  end: ARKTYPE_DATE_DTO_TYPE,
   timezone: knownTimezoneType
 });
 
@@ -102,9 +103,9 @@ export const dateCellTimingType = dateDurationSpanType.merge({
 /**
  * ArkType DTO schema for {@link CalendarDate}.
  *
- * Parses date strings from JSON/DTO input into Date objects using `string.date.parse`.
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`).
  * Use this schema when validating and converting serialized data (e.g., API responses, JSON payloads)
- * into the corresponding runtime types.
+ * or runtime Date objects into the corresponding runtime types.
  */
 export const calendarDateType = dateDurationSpanType.merge({
   type: type.enumerated(...Object.values(CalendarDateType))
@@ -128,15 +129,15 @@ export const dateCellScheduleType = type({
 /**
  * ArkType DTO schema for {@link ModelRecurrenceInfo}.
  *
- * Parses date strings from JSON/DTO input into Date objects using `string.date.parse`.
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`).
  * Use this schema when validating and converting serialized data (e.g., API responses, JSON payloads)
- * into the corresponding runtime types.
+ * or runtime Date objects into the corresponding runtime types.
  */
 export const modelRecurrenceInfoType = type({
   'timezone?': 'string',
   rrule: 'string',
-  start: 'string.date.parse',
-  end: 'string.date.parse',
+  start: ARKTYPE_DATE_DTO_TYPE,
+  end: ARKTYPE_DATE_DTO_TYPE,
   'forever?': 'boolean'
 });
 
@@ -144,7 +145,7 @@ export const modelRecurrenceInfoType = type({
 /**
  * ArkType DTO schema that validates a value is a valid {@link DateCellTiming}.
  *
- * Parses date strings from JSON/DTO input into Date objects, then validates the resulting timing
+ * Accepts both Date objects and date strings (parsed via `string.date.parse`), then validates the resulting timing
  * using {@link isValidDateCellTiming}.
  */
 export const validDateCellTimingType = dateCellTimingType.narrow((val, ctx) => (val != null && isValidDateCellTiming(val)) || ctx.mustBe('a valid DateCellTiming'));

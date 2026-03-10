@@ -1,5 +1,6 @@
 import { type } from 'arktype';
 import { clearable } from './type';
+import { ARKTYPE_DATE_DTO_TYPE } from './date';
 
 describe('clearable()', () => {
   describe('with a simple type (number)', () => {
@@ -235,8 +236,8 @@ describe('clearable()', () => {
 
   describe('multiple clearable fields in one schema', () => {
     const schema = type({
-      'startDate?': clearable('string.date.parse'),
-      'endDate?': clearable('string.date.parse'),
+      'startDate?': clearable(ARKTYPE_DATE_DTO_TYPE),
+      'endDate?': clearable(ARKTYPE_DATE_DTO_TYPE),
       'label?': clearable('string')
     });
 
@@ -244,6 +245,20 @@ describe('clearable()', () => {
       const result = schema({
         startDate: '2024-01-01T00:00:00.000Z',
         endDate: '2024-12-31T00:00:00.000Z',
+        label: 'Test'
+      });
+      expect(result instanceof type.errors).toBe(false);
+
+      const out = result as { startDate: Date | null; endDate: Date | null; label: string | null };
+      expect(out.startDate).toBeInstanceOf(Date);
+      expect(out.endDate).toBeInstanceOf(Date);
+      expect(out.label).toBe('Test');
+    });
+
+    it('should accept all fields with date values', () => {
+      const result = schema({
+        startDate: new Date('2024-01-01T00:00:00.000Z'),
+        endDate: new Date('2024-12-31T00:00:00.000Z'),
         label: 'Test'
       });
       expect(result instanceof type.errors).toBe(false);
