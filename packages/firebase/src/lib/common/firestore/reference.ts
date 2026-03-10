@@ -2,42 +2,47 @@ import { type FirestoreContext } from './context';
 import { type CollectionReference, type DocumentReference, type Firestore, type FirestoreDataConverter, type Query, type Transaction } from './types';
 
 /**
- * Contains a reference to a Query.
+ * Holds a reference to a Firestore {@link Query}, which may be either a collection query
+ * or a collection group query. Used as a base reference by collection groups and other
+ * query-oriented interfaces.
  */
 export interface QueryLikeReferenceRef<T> {
   readonly queryLike: Query<T>;
 }
 
 /**
- * Contains a reference to a CollectionReference.
+ * Holds a reference to a {@link CollectionReference}.
  */
 export interface CollectionReferenceRef<T> {
   readonly collection: CollectionReference<T>;
 }
 
 /**
- * Contains a reference to a DocumentReference.
+ * Holds a reference to a {@link DocumentReference}.
  */
 export interface DocumentReferenceRef<T> {
   readonly documentRef: DocumentReference<T>;
 }
 
 /**
- * Contains a reference to a FirestoreContext.
+ * Holds a reference to a {@link FirestoreContext} instance, providing access to
+ * collection factories, transactions, and batch operations.
  */
 export interface FirestoreContextReference<F extends Firestore = Firestore> {
   readonly firestoreContext: FirestoreContext<F>;
 }
 
 /**
- * Contains contextual information about the current Transaction, if available.
+ * Provides optional access to the current Firestore {@link Transaction}, if the
+ * operation is running within a transaction context.
  */
 export interface FirebaseTransactionContext {
   readonly transaction?: Transaction;
 }
 
 /**
- * Contains contextual information about the current Transaction, if available.
+ * Holds a reference to a {@link FirestoreDataConverter} for transforming data
+ * between application models and Firestore document representations.
  */
 export interface FirestoreDataConverterRef<U = unknown> {
   readonly converter: FirestoreDataConverter<U>;

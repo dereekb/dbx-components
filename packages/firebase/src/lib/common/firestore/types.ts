@@ -1,4 +1,13 @@
-// A set of copied types from @google-cloud/firestore and firebase/firestore to allow cross-compatability.
+/**
+ * Platform-agnostic Firestore type definitions.
+ *
+ * These types mirror the interfaces from both `@google-cloud/firestore` (Admin SDK) and
+ * `firebase/firestore` (Web SDK) so that the rest of the codebase can work with either
+ * platform without importing platform-specific packages directly. This is the foundation
+ * of the cross-platform driver abstraction.
+ *
+ * @module
+ */
 /* eslint-disable */
 
 import { StringKeyPropertyKeys } from '@dereekb/util';
@@ -6,12 +15,21 @@ import { UnionToIntersection } from 'ts-essentials';
 import { FirestoreModelKey, FirestoreModelId } from './collection';
 
 // MARK: Firestore
-// These types are provided to avoid us from using the "any".
+/**
+ * Minimal shape of the Firebase Web SDK Firestore instance.
+ */
 export type FirebaseFirestoreLikeFirestore = { type: string };
+
+/**
+ * Minimal shape of the Google Cloud Admin SDK Firestore instance.
+ */
 export type GoogleCloudLikeFirestore = { terminate(): Promise<void> };
 
 /**
- * Cast to the local type's firestore if direct access is needed. In most cases, direct access to this type is unncessary.
+ * Union type representing either a Web SDK or Admin SDK Firestore instance.
+ *
+ * Code that needs the concrete type should cast through the driver layer.
+ * Direct access to this type is rarely needed outside of driver implementations.
  */
 export type Firestore = FirebaseFirestoreLikeFirestore | GoogleCloudLikeFirestore;
 
@@ -35,13 +53,33 @@ export interface FieldPath {
   isEqual(other: FieldPath): boolean;
 }
 
+/**
+ * A field path expressed as either a dot-separated string or a {@link FieldPath} object.
+ */
 export type FieldPathOrStringPath = string | FieldPath;
+
+/**
+ * A type-safe field path that restricts string keys to those present on `T`.
+ */
 export type FieldPathOrStringPathOf<T = object> = StringKeyPropertyKeys<T> | FieldPath;
 
+/**
+ * Extracts the top-level field name from each path, discarding nested segments.
+ *
+ * @param input - Array of field paths (strings or FieldPath objects)
+ * @returns Array of top-level field name strings
+ */
 export function asTopLevelFieldPaths(input: (string | FieldPath)[]): string[] {
   return input.map(asTopLevelFieldPath);
 }
 
+/**
+ * Extracts the top-level field name from a path, discarding nested segments.
+ * For example, `'address.city'` returns `'address'`.
+ *
+ * @param input - A field path (string or FieldPath object)
+ * @returns The top-level field name
+ */
 export function asTopLevelFieldPath(input: string | FieldPath): string {
   let path: string;
 
