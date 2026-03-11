@@ -14,13 +14,24 @@ import { ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestj
 import { firebaseServerEnvTokenProviders, type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
 
+/**
+ * A running NestJS server instance backed by Express, paired with a lazy promise getter for the NestJS application context.
+ */
 export interface NestServer {
   readonly server: express.Express;
   readonly nest: NestAppPromiseGetter;
 }
 
+/**
+ * Lazy getter that returns a promise resolving to the initialized NestJS application context.
+ */
 export type NestAppPromiseGetter = Getter<Promise<INestApplicationContext>>;
 
+/**
+ * Manages the lifecycle of a NestJS server instance for Firebase Cloud Functions.
+ *
+ * Caches the server per Firebase app name so repeated invocations reuse the same instance.
+ */
 export interface NestServerInstance<T> {
   /**
    * Root module class of the app.
@@ -42,8 +53,25 @@ export interface NestServerInstance<T> {
 
 export class FirebaseNestServerRootModule {}
 
+/**
+ * Optional hook to customize the NestJS application after creation but before initialization.
+ */
 export type ConfigureNestServerInstanceFunction = (nestApp: INestApplication) => INestApplication | void;
 
+/**
+ * Configuration for creating a {@link NestServerInstance}, including the root module class,
+ * global providers, middleware toggles, storage defaults, and app-level options.
+ *
+ * @example
+ * ```typescript
+ * const instance = nestServerInstance({
+ *   moduleClass: AppModule,
+ *   appCheckEnabled: true,
+ *   globalApiRoutePrefix: '/api',
+ *   configureWebhooks: true
+ * });
+ * ```
+ */
 export interface NestServerInstanceConfig<T> {
   /**
    * Module to instantiate.
@@ -99,6 +127,19 @@ export interface NestFirebaseServerEnvironmentConfig {
 /** @deprecated Use NestFirebaseServerEnvironmentConfig instead. */
 export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
 
+/**
+ * Creates a {@link NestServerInstance} that manages NestJS server lifecycle within Firebase Cloud Functions.
+ *
+ * The returned instance caches servers by Firebase app name, so calling `initNestServer` multiple
+ * times with the same app reuses the existing server. The factory wires up Firebase Admin,
+ * environment config, storage, AppCheck middleware, and webhook routes based on the config.
+ *
+ * @example
+ * ```typescript
+ * const instance = nestServerInstance({ moduleClass: AppModule, appCheckEnabled: true });
+ * const { server } = instance.initNestServer(firebaseApp, { environment: envConfig });
+ * ```
+ */
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
   const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix: inputGlobalApiRoutePrefix, configureNestServerInstance } = config;
   const serversCache = new Map<string, NestServer>();

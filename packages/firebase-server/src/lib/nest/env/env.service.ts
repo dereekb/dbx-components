@@ -3,6 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { type FirebaseServerEnvService } from '../../env/env.service';
 import { cachedGetter, Maybe, type WebsiteUrlDetails, websiteUrlDetails } from '@dereekb/util';
 
+/**
+ * Default NestJS injectable implementation of {@link FirebaseServerEnvService}.
+ *
+ * Extends {@link ServerEnvironmentService} from `@dereekb/nestjs` and adds
+ * Firebase-specific environment properties like `appUrl` and `developmentSchedulerEnabled`.
+ */
 @Injectable()
 export class DefaultFirebaseServerEnvService extends ServerEnvironmentService implements FirebaseServerEnvService {
   private readonly _appUrlDetails = cachedGetter<Maybe<WebsiteUrlDetails>>(() => (this.appUrl ? websiteUrlDetails(this.appUrl) : undefined));

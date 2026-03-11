@@ -81,21 +81,21 @@ Cloud Functions types and storage driver implementations.
 Core NestJS application bootstrap and auth modules.
 
 #### 4A. App bootstrap
-- [ ] `app.ts` — Audit existing substantial JSDoc; add missing `@example` blocks for app factory functions
-- [ ] `nest.provider.ts` — Audit existing JSDoc on provider classes/tokens
-- [ ] `nest.provider.server.ts` — Verify existing JSDoc
+- [x] `app.ts` — Audit existing substantial JSDoc; add missing `@example` blocks for app factory functions
+- [x] `nest.provider.ts` — Audit existing JSDoc on provider classes/tokens
+- [x] `nest.provider.server.ts` — Verify existing JSDoc
 
 #### 4B. Auth module
-- [ ] `auth/auth.module.ts` — Audit existing JSDoc on NestJS auth module configuration
-- [ ] `auth/auth.util.ts` — Document 6 utility functions for auth token extraction/validation
+- [x] `auth/auth.module.ts` — Audit existing JSDoc on NestJS auth module configuration
+- [x] `auth/auth.util.ts` — Document 6 utility functions for auth token extraction/validation
 
 #### 4C. Env & Firebase modules
-- [ ] `env/env.service.ts` — Document NestJS environment service
-- [ ] `env/env.util.ts` — Document environment utility functions
-- [ ] `firebase/firebase.module.ts` — Document Firebase NestJS module registration
+- [x] `env/env.service.ts` — Document NestJS environment service
+- [x] `env/env.util.ts` — Document environment utility functions
+- [x] `firebase/firebase.module.ts` — Document Firebase NestJS module registration
 
 #### 4D. Verify
-- [ ] Run `pnpm nx run firebase-server:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server:build-base` to confirm no build errors
 
 ---
 
