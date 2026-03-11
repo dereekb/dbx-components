@@ -379,6 +379,11 @@ export const MINUTES_IN_DAY: Minutes = 1440;
 export const MINUTES_IN_HOUR: Minutes = 60;
 
 /**
+ * Number of seconds in an hour.
+ */
+export const SECONDS_IN_HOUR: Minutes = MINUTES_IN_HOUR * SECONDS_IN_MINUTE;
+
+/**
  * Number of milliseconds in a second.
  */
 export const MS_IN_SECOND: Milliseconds = 1000;

@@ -393,12 +393,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(userinfoRes.body.o).toBe(1); // default user is onboarded
         expect(userinfoRes.body.a).toBe(0); // default user is not admin
 
-        // 10. Verify verifyAccessToken returns a valid OAuthAuthContext
-        const oauthAuthContext = await oidcService.verifyAccessToken(tokenRes.body.access_token);
-        expect(oauthAuthContext).toBeDefined();
-        expect(oauthAuthContext!.uid).toBe(u.uid);
-        expect(oauthAuthContext!.token.sub).toBe(u.uid);
-        expect(oauthAuthContext!.token.scope).toContain('demo');
+        // 10. Verify verifyAccessToken returns valid OidcAuthData
+        const oidcAuthData = await oidcService.verifyAccessToken(tokenRes.body.access_token);
+        expect(oidcAuthData).toBeDefined();
+        expect(oidcAuthData!.uid).toBe(u.uid);
+        expect(oidcAuthData!.oidcValidatedToken.sub).toBe(u.uid);
+        expect(oidcAuthData!.oidcValidatedToken.scope).toContain('demo');
       });
     });
   });

@@ -9,6 +9,7 @@ import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryF
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService, FirestoreEncryptedFieldSecret, isValidFirestoreEncryptedFieldSecret } from '@dereekb/firebase-server';
 import { type FirestoreContext } from '@dereekb/firebase';
 import { hasHttpPrefix } from '@dereekb/util';
+import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
 
 // MARK: Environment Variable Keys
 /**
@@ -113,7 +114,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths'>>;
 }
 
 /**
@@ -134,7 +135,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   return {
-    imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
+    imports: [ConfigModule, FirebaseServerFirestoreContextModule, ConfigureOidcAuthMiddlewareModule, ...dependencyModuleImport, ...(imports ?? [])],
     controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
     exports: [OidcService, ...(exports ?? [])],
     providers: [
@@ -145,6 +146,11 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
           const moduleConfig = oidcModuleConfigFactory(configService, envService);
           return config ? { ...moduleConfig, ...config } : moduleConfig;
         }
+      },
+      {
+        provide: OidcAuthMiddlewareConfig,
+        useFactory: (x: OidcModuleConfig) => ({ protectedPaths: x.protectedPaths ?? [] }),
+        inject: [OidcModuleConfig]
       },
       {
         provide: JwksServiceConfig,

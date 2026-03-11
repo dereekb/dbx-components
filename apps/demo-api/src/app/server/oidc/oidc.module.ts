@@ -101,7 +101,8 @@ const demoOidcRenderError: OidcRenderErrorFunction = (ctx, out) => {
     dependencyModule: DemoApiOidcDependencyModule,
     config: {
       suppressBodyParserWarning: true,
-      renderError: demoOidcRenderError
+      renderError: demoOidcRenderError,
+      protectedPaths: ['/api/model', '/mcp']
     }
   })
 )

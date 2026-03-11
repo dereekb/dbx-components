@@ -8,8 +8,8 @@ import { type AuthData } from '../type';
  * Used by {@link FirebaseServerAuthService.authContextInfo} to build auth context
  * from callable function requests where the caller may or may not be authenticated.
  */
-export interface AuthDataRef {
-  readonly auth?: AuthData;
+export interface AuthDataRef<T extends AuthData = AuthData> {
+  readonly auth?: T;
 }
 
 /**

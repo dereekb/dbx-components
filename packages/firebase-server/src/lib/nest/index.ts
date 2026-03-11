@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './controller';
 export * from './development';
 export * from './env';
 export * from './firebase';

@@ -1,17 +1,15 @@
-import { OAuthBearerTokenMiddleware, type OAuthAuthenticatedRequest } from './oauth-auth.middleware';
+import { OidcAuthBearerTokenMiddleware } from './oauth-auth.middleware';
+import { type OidcAuthenticatedRequest, type OidcAuthData } from '../service/auth';
 import { UnauthorizedException } from '@nestjs/common';
+import { type OidcService } from '../service/oidc.service';
 
-function createMockProvider(tokens: Map<string, { accountId: string; scope: string; clientId: string }>) {
+function createMockOidcService(tokens: Map<string, OidcAuthData>): OidcService {
   return {
-    AccessToken: {
-      find(token: string) {
-        return Promise.resolve(tokens.get(token) ?? null);
-      }
-    }
-  };
+    verifyAccessToken: (token: string) => Promise.resolve(tokens.get(token) ?? undefined)
+  } as unknown as OidcService;
 }
 
-function createMockRequest(authHeader?: string): OAuthAuthenticatedRequest {
+function createMockRequest(authHeader?: string): OidcAuthenticatedRequest {
   return {
     headers: {
       authorization: authHeader
@@ -19,18 +17,25 @@ function createMockRequest(authHeader?: string): OAuthAuthenticatedRequest {
   } as any;
 }
 
-describe('OAuthBearerTokenMiddleware', () => {
+describe('OidcAuthBearerTokenMiddleware', () => {
   const validToken = 'valid-token-123';
-  const tokenData = { accountId: 'user-uid-1', scope: 'openid profile', clientId: 'client-1' };
+  const expectedAuthContext: OidcAuthData = {
+    uid: 'user-uid-1',
+    token: { uid: 'user-uid-1', sub: 'user-uid-1' } as any,
+    rawToken: validToken,
+    oidcValidatedToken: {
+      sub: 'user-uid-1',
+      scope: 'openid profile',
+      client_id: 'client-1'
+    }
+  };
 
-  let middleware: OAuthBearerTokenMiddleware;
-  let mockProvider: ReturnType<typeof createMockProvider>;
+  let middleware: OidcAuthBearerTokenMiddleware;
 
   beforeEach(() => {
-    const tokens = new Map();
-    tokens.set(validToken, tokenData);
-    mockProvider = createMockProvider(tokens);
-    middleware = new OAuthBearerTokenMiddleware(mockProvider);
+    const tokens = new Map<string, OidcAuthData>();
+    tokens.set(validToken, expectedAuthContext);
+    middleware = new OidcAuthBearerTokenMiddleware(createMockOidcService(tokens));
   });
 
   it('should attach auth context for valid bearer token', async () => {
@@ -39,11 +44,11 @@ describe('OAuthBearerTokenMiddleware', () => {
 
     await middleware.use(req, {} as any, next);
 
-    expect(req.oauthAuth).toBeDefined();
-    expect(req.oauthAuth!.uid).toBe('user-uid-1');
-    expect(req.oauthAuth!.token.sub).toBe('user-uid-1');
-    expect(req.oauthAuth!.token.scope).toBe('openid profile');
-    expect(req.oauthAuth!.token.client_id).toBe('client-1');
+    expect(req.auth).toBeDefined();
+    expect(req.auth!.uid).toBe('user-uid-1');
+    expect(req.auth!.oidcValidatedToken.sub).toBe('user-uid-1');
+    expect(req.auth!.oidcValidatedToken.scope).toBe('openid profile');
+    expect(req.auth!.oidcValidatedToken.client_id).toBe('client-1');
     expect(next).toHaveBeenCalled();
   });
 

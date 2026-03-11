@@ -1,4 +1,5 @@
 import type { Configuration } from 'oidc-provider';
+import { type SlashPath } from '@dereekb/util';
 import { JwksServiceConfig } from './service/jwks.service';
 import { JwksKeyConverterConfig } from './model';
 
@@ -149,6 +150,17 @@ export abstract class OidcModuleConfig {
    * Defaults to `false`.
    */
   readonly suppressBodyParserWarning?: boolean;
+  /**
+   * Path prefixes that require OAuth bearer token verification.
+   *
+   * Only requests matching one of these prefixes will be checked by the
+   * {@link OidcAuthBearerTokenMiddleware}. When non-empty, the middleware
+   * module is automatically registered by {@link oidcModuleMetadata}.
+   *
+   * Paths under the global API route prefix should not be included
+   * since those are typically protected by AppCheck.
+   */
+  readonly protectedPaths?: SlashPath[];
 
   /**
    * Validates that all required fields are present on the config.

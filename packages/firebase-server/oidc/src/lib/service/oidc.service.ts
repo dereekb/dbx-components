@@ -9,8 +9,9 @@ import { OidcFirestoreCollections } from '../model';
 import { createAdapterFactory } from './adapter.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/firebase-server';
-import { cachedGetter } from '@dereekb/util';
-import { type OAuthAuthContext } from '../middleware/oauth-auth.middleware';
+import { cachedGetter, firstValue, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
+import { type OidcAuthData } from './auth';
+import { DecodedIdToken } from 'firebase-admin/auth';
 
 // MARK: Suppress Body Parser Warning
 const OIDC_PROVIDER_BODY_PARSER_WARNING = 'oidc-provider WARNING: already parsed request body detected';
@@ -96,7 +97,7 @@ export class OidcService {
 
   // MARK: Token Verification
   /**
-   * Verifies an opaque access token and returns the {@link OAuthAuthContext}.
+   * Verifies an opaque access token and returns the {@link OidcAuthData}.
    *
    * Uses the provider's `AccessToken` model to look up the token and extract
    * the account ID, scope, and client ID.
@@ -104,17 +105,39 @@ export class OidcService {
    * @param token - The opaque access token string.
    * @returns The auth context, or `undefined` if the token is invalid or expired.
    */
-  async verifyAccessToken(token: string): Promise<OAuthAuthContext | undefined> {
+  async verifyAccessToken(rawToken: string): Promise<OidcAuthData | undefined> {
     const provider = await this.getProvider();
-    const accessToken = await provider.AccessToken.find(token);
+    const accessToken = await provider.AccessToken.find(rawToken);
 
     if (!accessToken) {
       return undefined;
     }
 
+    const token: DecodedIdToken = {
+      // Standard JWT claims — sourced from the access token
+      aud: firstValue(accessToken.aud) ?? accessToken.clientId,
+      iss: this.config.issuer,
+      sub: accessToken.accountId,
+      iat: accessToken.iat,
+      exp: accessToken.exp ?? unixDateTimeSecondsNumberForNow() + accessToken.expiration,
+      auth_time: accessToken.iat,
+      // Firebase UID (copied from sub)
+      uid: accessToken.accountId,
+      // OIDC-specific claims carried on the token
+      scope: accessToken.scope,
+      client_id: accessToken.clientId,
+      // Firebase sign-in info — marked as OIDC provider
+      firebase: {
+        identities: {},
+        sign_in_provider: 'dbx_oidc'
+      }
+    };
+
     return {
       uid: accessToken.accountId,
-      token: {
+      token,
+      rawToken,
+      oidcValidatedToken: {
         sub: accessToken.accountId,
         scope: accessToken.scope,
         client_id: accessToken.clientId

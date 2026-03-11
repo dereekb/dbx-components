@@ -1,10 +1,10 @@
 import { Inject, type MiddlewareConsumer, Module, Logger, Optional } from '@nestjs/common';
-import { OAuthBearerTokenMiddleware } from './oauth-auth.middleware';
+import { OidcAuthBearerTokenMiddleware } from './oauth-auth.middleware';
 import { type SlashPath } from '@dereekb/util';
 
 // MARK: Config
 /**
- * Configuration for `OAuthBearerTokenMiddleware` route protection.
+ * Configuration for `OidcAuthBearerTokenMiddleware` route protection.
  *
  * Works in reverse of `FirebaseAppCheckMiddlewareConfig`: instead of protecting
  * all routes and ignoring some, this only protects explicitly specified paths.
@@ -13,10 +13,10 @@ import { type SlashPath } from '@dereekb/util';
  * @example
  * ```ts
  * // Provide in your module:
- * { provide: OAuthAuthMiddlewareConfig, useValue: { protectedPaths: ['/mcp'] } }
+ * { provide: OidcAuthMiddlewareConfig, useValue: { protectedPaths: ['/mcp'] } }
  * ```
  */
-export abstract class OAuthAuthMiddlewareConfig {
+export abstract class OidcAuthMiddlewareConfig {
   /**
    * Path prefixes that require OAuth bearer token verification.
    *
@@ -30,7 +30,7 @@ export abstract class OAuthAuthMiddlewareConfig {
 // MARK: Module
 /**
  * Middleware module that applies OAuth bearer token verification
- * to paths specified in `OAuthAuthMiddlewareConfig`.
+ * to paths specified in `OidcAuthMiddlewareConfig`.
  *
  * Only protects explicitly listed paths — all other routes pass through.
  * This is the inverse of `ConfigureFirebaseAppCheckMiddlewareModule`, which
@@ -39,26 +39,26 @@ export abstract class OAuthAuthMiddlewareConfig {
  * @example
  * ```ts
  * @Module({
- *   imports: [ConfigureOAuthAuthMiddlewareModule],
+ *   imports: [ConfigureOidcAuthMiddlewareModule],
  *   providers: [
- *     { provide: OAuthAuthMiddlewareConfig, useValue: { protectedPaths: ['/mcp'] } }
+ *     { provide: OidcAuthMiddlewareConfig, useValue: { protectedPaths: ['/mcp'] } }
  *   ]
  * })
  * export class AppModule {}
  * ```
  */
 @Module({})
-export class ConfigureOAuthAuthMiddlewareModule {
-  private readonly logger = new Logger('ConfigureOAuthAuthMiddlewareModule');
+export class ConfigureOidcAuthMiddlewareModule {
+  private readonly logger = new Logger('ConfigureOidcAuthMiddlewareModule');
 
-  constructor(@Optional() @Inject(OAuthAuthMiddlewareConfig) private readonly config?: OAuthAuthMiddlewareConfig) {}
+  constructor(@Optional() @Inject(OidcAuthMiddlewareConfig) private readonly config?: OidcAuthMiddlewareConfig) {}
 
   configure(consumer: MiddlewareConsumer): void {
     const protectedPaths = this.config?.protectedPaths ?? [];
 
     if (protectedPaths.length > 0) {
       const routes = protectedPaths.map((path) => `${path}/*path`);
-      consumer.apply(OAuthBearerTokenMiddleware).forRoutes(...routes);
+      consumer.apply(OidcAuthBearerTokenMiddleware).forRoutes(...routes);
       this.logger.debug(`Configured OAuth bearer token middleware for routes: ${protectedPaths.join(', ')}`);
     }
   }

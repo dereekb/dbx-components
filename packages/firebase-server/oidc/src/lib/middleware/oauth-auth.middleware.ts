@@ -1,34 +1,8 @@
 import { Inject, Injectable, Logger, type NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { type Request, type Response, type NextFunction } from 'express';
+import { type Response, type NextFunction } from 'express';
 import { OidcService } from '../service/oidc.service';
-
-// MARK: Types
-/**
- * Auth context attached to the request after successful bearer token verification.
- * Compatible with the `CallableRequest.auth` shape.
- */
-export interface OAuthAuthContext {
-  /**
-   * Firebase UID extracted from the token's `sub` claim.
-   */
-  readonly uid: string;
-  /**
-   * Token claims.
-   */
-  readonly token: {
-    readonly sub: string;
-    readonly scope?: string;
-    readonly client_id?: string;
-    [key: string]: unknown;
-  };
-}
-
-/**
- * Extends Express Request with OAuth auth context.
- */
-export interface OAuthAuthenticatedRequest extends Request {
-  oauthAuth?: OAuthAuthContext;
-}
+import { Configurable } from '@dereekb/util';
+import { type OidcAuthData, type OidcAuthenticatedRequest } from '../service/auth';
 
 // MARK: Middleware
 /**
@@ -36,19 +10,19 @@ export interface OAuthAuthenticatedRequest extends Request {
  *
  * Extracts `Authorization: Bearer <token>` from the request header,
  * verifies it via the provider's AccessToken model, and attaches the
- * auth context to the request as {@link OAuthAuthContext}.
+ * auth context to the request as {@link OidcAuthData}.
  *
- * Applied to routes via {@link ConfigureOAuthAuthMiddlewareModule}.
+ * Applied to routes via {@link ConfigureOidcAuthMiddlewareModule}.
  *
  * @throws {UnauthorizedException} When the Authorization header is missing, malformed, or the token is invalid/expired.
  */
 @Injectable()
-export class OAuthBearerTokenMiddleware implements NestMiddleware {
-  private readonly logger = new Logger('OAuthBearerTokenMiddleware');
+export class OidcAuthBearerTokenMiddleware implements NestMiddleware {
+  private readonly logger = new Logger('OidcAuthBearerTokenMiddleware');
 
   constructor(@Inject(OidcService) private readonly oidcService: OidcService) {}
 
-  async use(req: OAuthAuthenticatedRequest, _res: Response, next: NextFunction) {
+  async use(req: OidcAuthenticatedRequest, _res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -64,7 +38,7 @@ export class OAuthBearerTokenMiddleware implements NestMiddleware {
         throw new UnauthorizedException('Invalid or expired access token');
       }
 
-      req.oauthAuth = oauthAuth;
+      (req as Configurable<OidcAuthenticatedRequest>).auth = oauthAuth;
 
       next();
     } catch (err) {
