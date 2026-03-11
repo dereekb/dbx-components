@@ -1,19 +1,59 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwksService, JwksServiceConfig } from './service/jwks.service';
-import { OidcModuleConfig } from './oidc.config';
+import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
-import { OidcWellKnownController, OidcInteractionController } from './oidc.controller';
+import { OidcWellKnownController, OidcInteractionController } from './controller';
 import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryFirestoreCollection } from './model';
-import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule } from '@dereekb/firebase-server';
+import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type FirestoreContext } from '@dereekb/firebase';
 
+// MARK: Environment Variable Keys
+/**
+ * Environment variable name for the JWKS encryption secret (hex-encoded AES-256 key).
+ *
+ * Used for encrypting private keys at rest in Firestore.
+ */
+export const OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY = 'OIDC_JWKS_ENCRYPTION_SECRET';
+
+/**
+ * Environment variable name for the OIDC issuer path prefix.
+ *
+ * Optional. If set, is appended to the appUrl to form the issuer URL.
+ * Defaults to '/oidc'.
+ */
+export const OIDC_ISSUER_PATH_ENV_KEY = 'OIDC_ISSUER_PATH';
+
+export const DEFAULT_OIDC_ISSUER_PATH = '/oidc';
+
 // MARK: Provider Factories
-export function oidcModuleConfigFactory(configService: ConfigService): OidcModuleConfig {
+export function oidcModuleConfigFactory(configService: ConfigService, envService: FirebaseServerEnvService): OidcModuleConfig {
+  const appUrl = envService.appUrl;
+
+  if (!appUrl) {
+    throw new Error('oidcModuleConfigFactory: appUrl is required on the server environment config.');
+  }
+
+  const issuerPath = configService.get<string>(OIDC_ISSUER_PATH_ENV_KEY) ?? DEFAULT_OIDC_ISSUER_PATH;
+  const issuer = `${appUrl}${issuerPath}`;
+
+  const loginUrl = `${appUrl}/oidc/interaction/login`;
+  const consentUrl = `${appUrl}/oidc/interaction/consent`;
+
+  const encryptionSecret: string = configService.getOrThrow<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY);
+
   const config: OidcModuleConfig = {
-    jwksServiceConfig: {} as any, // TODO
-    jwksKeyConverterConfig: {} as any // TODO, pull from environment variables.
-  } as any;
+    issuer,
+    loginUrl,
+    consentUrl,
+    tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
+    jwksServiceConfig: {
+      encryptionSecret
+    },
+    jwksKeyConverterConfig: {
+      encryptionSecret
+    }
+  } as OidcModuleConfig;
 
   OidcModuleConfig.assertValidConfig(config);
   return config;
@@ -42,6 +82,9 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
  * - FIREBASE_FIRESTORE_CONTEXT_TOKEN
  * - OIDC_ACCOUNT_SERVICE_TOKEN
  *
+ * Additionally, the following may be optionally provided:
+ * - JwksServiceStorageConfig
+ *
  * @param config
  * @returns
  */
@@ -56,7 +99,7 @@ export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): 
     providers: [
       {
         provide: OidcModuleConfig,
-        inject: [ConfigService],
+        inject: [ConfigService, FirebaseServerEnvService],
         useFactory: oidcModuleConfigFactory
       },
       {

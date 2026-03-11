@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
-import { OidcService } from './service/oidc.service';
-import { OidcModuleConfig } from './oidc.config';
+import { OidcService } from '../service/oidc.service';
+import { OidcModuleConfig } from '../oidc.config';
 
 // MARK: DTOs
 export interface LoginInteractionBody {
@@ -16,26 +16,6 @@ export interface ConsentInteractionBody {
    * Whether the user approved the consent.
    */
   readonly approved: boolean;
-}
-
-// MARK: Well-Known Controller
-/**
- * Controller for OAuth/OIDC discovery and metadata endpoints.
- */
-@Controller('.well-known')
-export class OidcWellKnownController {
-  constructor(@Inject(OidcModuleConfig) private readonly config: OidcModuleConfig) {}
-
-  /**
-   * OAuth Protected Resource discovery endpoint.
-   * Required by Claude custom connectors (RFC 8707).
-   */
-  @Get('oauth-protected-resource')
-  getProtectedResource() {
-    return {
-      authorization_servers: [this.config.issuer]
-    };
-  }
 }
 
 // MARK: Interaction Controller

@@ -1,3 +1,5 @@
+import { type WebsiteUrlDetails } from '@dereekb/util';
+
 /**
  * Reference to a FirebaseServerEnvService
  */
@@ -11,4 +13,6 @@ export abstract class FirebaseServerEnvService {
   abstract readonly isStaging: boolean;
   abstract readonly developerToolsEnabled: boolean;
   abstract readonly developmentSchedulerEnabled: boolean;
+  abstract readonly appUrl: string | undefined;
+  abstract readonly appUrlDetails: WebsiteUrlDetails | undefined;
 }

@@ -5,7 +5,8 @@ import type { Interaction, InteractionResults, Grant } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './jwks.service';
 import { OIDC_ACCOUNT_SERVICE_TOKEN, type OidcAccountService } from './account.service';
-import { OidcFirestoreCollections, createOidcProviderAdapterFactory } from '../model';
+import { OidcFirestoreCollections } from '../model';
+import { createAdapterFactory } from './adapter.service';
 import { resolveEncryptionKey } from '@dereekb/firebase-server';
 import { cachedGetter } from '@dereekb/util';
 
@@ -79,18 +80,18 @@ export class OidcService {
       signingKey = await this.jwksService.getActiveSigningKey();
     }
 
-    const jwks = await this.jwksService.getPublicJwks();
+    const jwks = await this.jwksService.getLatestPublicJwks();
 
     // Derive cookie signing key from the resolved encryption secret.
     const encryptionKeyBuffer = resolveEncryptionKey(config.jwksKeyConverterConfig.encryptionSecret);
     const cookieKey = encryptionKeyBuffer.toString('base64').slice(0, 32);
 
-    const adapterFactory = createOidcProviderAdapterFactory(this.collections);
+    const adapterFactory = createAdapterFactory(this.collections);
 
     const { default: ProviderClass } = await import('oidc-provider');
 
     return new ProviderClass(config.issuer, {
-      adapter: adapterFactory as any,
+      adapter: adapterFactory,
       findAccount: findAccount as any,
       jwks: { keys: jwks.keys as any[] },
       features: {
@@ -99,11 +100,10 @@ export class OidcService {
         registrationManagement: { enabled: true }
       },
       pkce: {
-        methods: ['S256'],
         required: () => true
       },
       responseTypes: ['code'],
-      grantTypes: ['authorization_code', 'refresh_token'],
+      // grantTypes: ['authorization_code', 'refresh_token'],
       ttl: {
         AccessToken: config.tokenLifetimes.accessToken,
         AuthorizationCode: config.tokenLifetimes.authorizationCode,

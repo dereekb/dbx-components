@@ -1,2 +1,3 @@
 export * from './adapter';
-export * from './adapter.service';
+export * from './adapter.id';
+export * from './adapter.query';

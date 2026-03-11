@@ -10,7 +10,8 @@ import { type StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
-import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
 
 export interface NestServer {
@@ -30,7 +31,7 @@ export interface NestServerInstance<T> {
    *
    * If already initialized the server will not be initialized again.
    */
-  initNestServer(firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer;
+  initNestServer(firebaseApp: admin.app.App, env?: NestFirebaseServerEnvironmentConfig): NestServer;
   /**
    * Terminates the nest server for the input app.
    *
@@ -90,15 +91,19 @@ export interface NestServerInstanceConfig<T> {
   readonly configureNestServerInstance?: ConfigureNestServerInstanceFunction;
 }
 
-export interface NestServerEnvironmentConfig {
-  readonly environment: ServerEnvironmentConfig;
+export interface NestFirebaseServerEnvironmentConfig {
+  readonly environment: FirebaseServerEnvironmentConfig;
 }
+
+// COMPAT: Deprecated alias for NestFirebaseServerEnvironmentConfig.
+/** @deprecated Use NestFirebaseServerEnvironmentConfig instead. */
+export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
   const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix: inputGlobalApiRoutePrefix, configureNestServerInstance } = config;
   const serversCache = new Map<string, NestServer>();
 
-  const initNestServer = (firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer => {
+  const initNestServer = (firebaseApp: admin.app.App, env?: NestFirebaseServerEnvironmentConfig): NestServer => {
     const appName = firebaseApp.name;
     const defaultStorageBucket = inputDefaultStorageBucket ?? firebaseApp.options.storageBucket;
 

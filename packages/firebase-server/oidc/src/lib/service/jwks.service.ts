@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { randomBytes, generateKeyPairSync } from 'crypto';
 import { resolveEncryptionKey, encryptValue, decryptValue, type FirestoreEncryptedFieldSecretSource } from '@dereekb/firebase-server';
-import { iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
+import { FirebaseStorageAccessorFile, iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { type JwksKey, type JsonWebKeyWithKid, OidcFirestoreCollections, type JwksKeyDocument } from '../model';
 import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
+import { Maybe } from '@dereekb/util';
 
 // MARK: Config
 export abstract class JwksServiceConfig {
@@ -19,6 +20,28 @@ export abstract class JwksServiceConfig {
    * Defaults to 30 days (2592000).
    */
   abstract readonly rotatedKeyMaxAge?: number;
+  /**
+   * If true, the JWKS will be written to storage when keys are rotated, if enabled.
+   *
+   * Defaults to true if `serveJwksFromStorage` is defined.
+   */
+  abstract readonly enableSaveJwksToStorage?: boolean;
+  /**
+   * If true, this flag signals to the rest of the system that the JWKS will be served from storage.
+   *
+   * Defaults to true if `enableSaveJwksToStorage` is true.
+   */
+  abstract readonly serveJwksFromStorage?: boolean;
+}
+
+/**
+ * If provided, the JwksService will write the JWKS to this file when keys are rotated.
+ */
+export abstract class JwksServiceStorageConfig {
+  /**
+   * If provided, the JWKS will be written to this file when keys are rotated.
+   */
+  abstract readonly jwksStorageAccessorFile?: Maybe<FirebaseStorageAccessorFile>;
 }
 
 export const DEFAULT_ROTATED_KEY_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
@@ -28,11 +51,26 @@ export const DEFAULT_ROTATED_KEY_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 export class JwksService {
   private readonly rotatedKeyMaxAge: number;
 
+  /**
+   * Whether the JWKS is served from a public storage URL rather than the built-in endpoint.
+   */
+  readonly serveJwksFromStorage: boolean;
+
+  /**
+   * Whether the JWKS should be saved to storage when keys are rotated.
+   */
+  readonly saveJwksToStorage: boolean;
+
   constructor(
     @Inject(JwksServiceConfig) private readonly config: JwksServiceConfig,
-    @Inject(OidcFirestoreCollections) private readonly collections: OidcFirestoreCollections
+    @Inject(OidcFirestoreCollections) private readonly collections: OidcFirestoreCollections,
+    @Optional() @Inject(JwksServiceStorageConfig) private readonly storageConfig?: Maybe<JwksServiceStorageConfig>
   ) {
     this.rotatedKeyMaxAge = config.rotatedKeyMaxAge ?? DEFAULT_ROTATED_KEY_MAX_AGE;
+
+    const hasStorageFile = storageConfig?.jwksStorageAccessorFile != null;
+    this.saveJwksToStorage = config.enableSaveJwksToStorage ?? hasStorageFile;
+    this.serveJwksFromStorage = config.serveJwksFromStorage ?? this.saveJwksToStorage;
   }
 
   private get jwksKeyCollection() {
@@ -92,9 +130,24 @@ export class JwksService {
   }
 
   /**
-   * Returns the public JWKS (all non-retired keys) for the discovery endpoint.
+   * Returns the public URL for the JWKS stored in Cloud Storage, if configured.
+   *
+   * Returns undefined if storage is not configured or `serveJwksFromStorage` is false.
    */
-  async getPublicJwks(): Promise<{ keys: JsonWebKeyWithKid[] }> {
+  async getJwksStoragePublicUrl(): Promise<Maybe<string>> {
+    let result: Maybe<string>;
+
+    if (this.serveJwksFromStorage && this.storageConfig?.jwksStorageAccessorFile) {
+      result = await this.storageConfig.jwksStorageAccessorFile.getDownloadUrl();
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns the public JWKS (all non-retired keys) by querying Firestore.
+   */
+  async getLatestPublicJwks(): Promise<{ keys: JsonWebKeyWithKid[] }> {
     const keys: JsonWebKeyWithKid[] = [];
 
     await iterateFirestoreDocumentSnapshotPairs({
@@ -125,7 +178,15 @@ export class JwksService {
       }
     });
 
-    return this.generateKeyPair();
+    const newKey = await this.generateKeyPair();
+
+    if (this.saveJwksToStorage && this.storageConfig?.jwksStorageAccessorFile) {
+      const jwks = await this.getLatestPublicJwks();
+      const data = Buffer.from(JSON.stringify(jwks));
+      await this.storageConfig.jwksStorageAccessorFile.upload(data, { contentType: 'application/json' });
+    }
+
+    return newKey;
   }
 
   /**

@@ -2,5 +2,6 @@ import { ServerEnvironmentConfig } from '@dereekb/nestjs';
 
 export const environment: ServerEnvironmentConfig = {
   production: false,
-  developerToolsEnabled: true
+  developerToolsEnabled: true,
+  appUrl: 'http://localhost:4200'
 };

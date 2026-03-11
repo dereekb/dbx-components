@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountService, OidcAccountServiceDelegate, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
+import { JwksServiceStorageConfig, OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountService, OidcAccountServiceDelegate, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
-import { DemoApiAuthService, DemoApiFirestoreModule } from '../../common';
-import { FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
+import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common';
+import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 
 export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthService): OidcAccountService {
   const delegate = {
@@ -34,14 +34,25 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
   return new OidcAccountService(demoApiAuthService, delegate);
 }
 
+export function demoJwksServiceStorageConfigFactory(firebaseServerStorageService: FirebaseServerStorageService): JwksServiceStorageConfig {
+  return {
+    jwksStorageAccessorFile: firebaseServerStorageService.file('jwks.json')
+  };
+}
+
 @Module({
-  imports: [DemoApiAuthModule],
+  imports: [DemoApiAuthModule, DemoApiStorageModule],
   exports: [DemoApiFirestoreModule],
   providers: [
     {
       provide: OIDC_ACCOUNT_SERVICE_TOKEN,
       useFactory: demoOidcAccountServiceFactory,
       inject: [DemoApiAuthService]
+    },
+    {
+      provide: JwksServiceStorageConfig,
+      useFactory: demoJwksServiceStorageConfigFactory,
+      inject: [FirebaseServerStorageService]
     }
   ]
 })
