@@ -18,7 +18,7 @@
         "generateExportsField": true,
         "external": "all",
         "assets": [],
-        "compiler": "tsc"
+        "compiler": "swc"
       },
       "configurations": {
         "production": {

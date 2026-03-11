@@ -30,7 +30,7 @@
         "tsConfig": "apps/demo-api/tsconfig.app.json",
         "assets": ["apps/demo-api/src/assets"],
         "generatePackageJson": true,
-        "compiler": "tsc",
+        "compiler": "swc",
         "target": "node"
       },
       "configurations": {

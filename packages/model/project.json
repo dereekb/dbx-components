@@ -23,7 +23,7 @@
         "outputPath": "dist/packages/model",
         "main": "packages/model/src/index.ts",
         "tsConfig": "packages/model/tsconfig.lib.json",
-        "compiler": "tsc",
+        "compiler": "swc",
         "project": "packages/model/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": true,
@@ -40,6 +40,13 @@
           }
         ],
         "rollupConfig": ["rollup.visualizer.config.ts"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
       }
     },
     "lint": {

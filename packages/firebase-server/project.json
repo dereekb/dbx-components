@@ -36,6 +36,7 @@
     "build-base": {
       "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "importPath": "@dereekb/firebase-server",
         "outputPath": "dist/packages/firebase-server",
@@ -57,7 +58,14 @@
             "output": "."
           }
         ],
-        "compiler": "tsc"
+        "compiler": "swc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
       }
     },
     "lint": {
