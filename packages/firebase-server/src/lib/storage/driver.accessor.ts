@@ -26,16 +26,28 @@ import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, 
 import { addHours, addMilliseconds } from 'date-fns';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
+/**
+ * Resolves a Google Cloud Storage {@link Bucket} from a {@link StoragePath}.
+ */
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
   return storage.bucket(path.bucketId);
 }
 
+/**
+ * Resolves a Google Cloud Storage {@link GoogleCloudFile} from a {@link StoragePath}.
+ */
 export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): GoogleCloudFile {
   return googleCloudStorageBucketForStorageFilePath(storage, path).file(path.pathString);
 }
 
+/**
+ * Server-side file accessor type that guarantees stream operations are available.
+ */
 export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile> & Required<Pick<FirebaseStorageAccessorFile<GoogleCloudFile>, 'uploadStream' | 'getStream'>>;
 
+/**
+ * Converts Google Cloud Storage {@link FileMetadata} into the normalized {@link StorageMetadata} format.
+ */
 export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, metadata: FileMetadata): StorageMetadata {
   const fullPath = file.name;
   const generation = String(metadata.generation ?? file.generation);
@@ -62,6 +74,12 @@ export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, 
   };
 }
 
+/**
+ * Creates a {@link GoogleCloudStorageAccessorFile} providing CRUD, streaming, signed URL,
+ * and ACL operations for a single file in Google Cloud Storage.
+ *
+ * Handles emulator-specific edge cases (e.g., signing errors, atomic move fallback).
+ */
 export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFile {
   const file = googleCloudStorageFileForStorageFilePath(storage, storagePath);
 
@@ -275,6 +293,9 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
   return accessorFile;
 }
 
+/**
+ * Server-side folder accessor type for Google Cloud Storage.
+ */
 export type GoogleCloudStorageAccessorFolder = FirebaseStorageAccessorFolder<GoogleCloudFile>;
 
 export interface GoogleCloudListResult {
@@ -326,6 +347,10 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
   }
 });
 
+/**
+ * Creates a {@link GoogleCloudStorageAccessorFolder} that supports checking folder existence
+ * and listing files/subfolders with pagination.
+ */
 export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFolder {
   const bucket = googleCloudStorageBucketForStorageFilePath(storage, storagePath);
   const file = bucket.file(storagePath.pathString);
@@ -372,6 +397,14 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
   return folder;
 }
 
+/**
+ * Creates a {@link FirebaseStorageAccessorDriver} for Google Cloud Storage (Admin SDK).
+ *
+ * @example
+ * ```typescript
+ * const driver = googleCloudStorageFirebaseStorageAccessorDriver();
+ * ```
+ */
 export function googleCloudStorageFirebaseStorageAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
     type: 'server',

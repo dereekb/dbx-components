@@ -6,7 +6,11 @@ import { firestoreServerArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 /**
- * FirestoreDocumentDataAccessor implementation for a batch.
+ * Google Cloud Firestore implementation of {@link FirestoreDocumentDataAccessor} that queues
+ * all write operations (create, set, update, delete) into a {@link WriteBatch}.
+ *
+ * Writes are not committed until the batch is explicitly committed. Read operations
+ * (get, exists) bypass the batch and read directly from Firestore.
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _batch: GoogleCloudWriteBatch;
@@ -73,10 +77,21 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 }
 
 /**
- * Creates a new FirestoreDocumentDataAccessorFactory for a Batch.
+ * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces batch-backed accessors.
  *
- * @param batch
- * @returns
+ * All accessors created from this factory share the same {@link WriteBatch}, so committing
+ * the batch applies all queued writes atomically.
+ *
+ * @param writeBatch - The Google Cloud WriteBatch to queue operations into.
+ *
+ * @example
+ * ```typescript
+ * const batch = firestore.batch();
+ * const factory = writeBatchAccessorFactory<User>(batch);
+ * const accessor = factory.accessorFor(userDocRef);
+ * await accessor.set({ name: 'Alice' });
+ * await batch.commit();
+ * ```
  */
 export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {
@@ -85,6 +100,11 @@ export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch):
 }
 
 // MARK: Context
+/**
+ * A {@link FirestoreDocumentContext} backed by a Google Cloud {@link WriteBatch}.
+ *
+ * All document accessors created from this context queue writes into the same batch.
+ */
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   private readonly _batch: GoogleCloudWriteBatch;
 
@@ -101,6 +121,9 @@ export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentC
   }
 }
 
+/**
+ * Creates a {@link WriteBatchFirestoreDocumentContext} wrapping the given batch.
+ */
 export function writeBatchDocumentContext<T>(batch: GoogleCloudWriteBatch): WriteBatchFirestoreDocumentContext<T> {
   return new WriteBatchFirestoreDocumentContext<T>(batch);
 }

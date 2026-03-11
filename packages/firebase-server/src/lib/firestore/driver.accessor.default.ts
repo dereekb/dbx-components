@@ -5,6 +5,12 @@ import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 import { firestoreServerArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
+/**
+ * Default Google Cloud Firestore implementation of {@link FirestoreDocumentDataAccessor}.
+ *
+ * Performs all operations directly against the Firestore document reference without
+ * batching or transactional context. Supports real-time streaming via `onSnapshot`.
+ */
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _documentRef: DocumentReference<T>;
 
@@ -57,6 +63,15 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 }
 
+/**
+ * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces default (non-batched, non-transactional) accessors.
+ *
+ * @example
+ * ```typescript
+ * const factory = defaultFirestoreAccessorFactory<User>();
+ * const accessor = factory.accessorFor(userDocRef);
+ * ```
+ */
 export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new DefaultFirestoreDocumentDataAccessor(ref)
@@ -64,6 +79,11 @@ export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAcces
 }
 
 // MARK: Context
+/**
+ * Creates a {@link FirestoreDocumentContext} with no special execution context (no batch, no transaction).
+ *
+ * Operations performed through this context execute immediately against Firestore.
+ */
 export function defaultFirestoreDocumentContext<T>(): FirestoreDocumentContext<T> {
   return {
     contextType: FirestoreDocumentContextType.NONE,

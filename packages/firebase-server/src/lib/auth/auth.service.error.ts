@@ -22,7 +22,8 @@ export class FirebaseServerAuthNewUserSendSetupDetailsThrottleError extends Base
 }
 
 /**
- * Thrown by sendSetupDetails() if the user was recently sent details.
+ * Thrown by sendSetupDetails() if the user has already been sent setup details
+ * and the `sendSetupDetailsOnce` option was enabled.
  */
 export class FirebaseServerAuthNewUserSendSetupDetailsSendOnceError extends BaseError {
   constructor() {

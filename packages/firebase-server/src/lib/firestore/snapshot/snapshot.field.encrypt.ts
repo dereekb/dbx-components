@@ -17,6 +17,15 @@ const ENCRYPTED_FIELD_KEY_LENGTH = 32;
  */
 export type FirestoreEncryptedFieldSecret = string;
 
+/**
+ * Validates that the given secret is a 64-character hexadecimal string (32 bytes for AES-256).
+ *
+ * @example
+ * ```typescript
+ * isValidFirestoreEncryptedFieldSecret('a'.repeat(64)); // true
+ * isValidFirestoreEncryptedFieldSecret('too-short');     // false
+ * ```
+ */
 export function isValidFirestoreEncryptedFieldSecret(secret: FirestoreEncryptedFieldSecret) {
   return secret.length === ENCRYPTED_FIELD_KEY_LENGTH * 2 && isHex(secret);
 }

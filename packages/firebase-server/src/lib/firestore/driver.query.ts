@@ -23,8 +23,16 @@ import {
   FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE
 } from '@dereekb/firebase';
 
+/**
+ * Server-side query builder type, aliasing the Google Cloud Firestore {@link Query}.
+ */
 export type FirestoreServerQueryBuilder<T = any> = GoogleCloudQuery<T>;
 
+/**
+ * Maps each abstract query constraint type to its Google Cloud Firestore implementation.
+ *
+ * Used by {@link firestoreClientQueryConstraintFunctionsDriver} to build the server-side query driver.
+ */
 export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQueryConstraintHandlersMapping<FirestoreServerQueryBuilder> = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.limit(data.limit),
   [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.limitToLast(data.limit),
@@ -41,6 +49,11 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
   [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.endBefore(data.snapshot as DocumentSnapshot)
 };
 
+/**
+ * Creates a {@link FirestoreQueryConstraintFunctionsDriver} for the Google Cloud Firestore server SDK.
+ *
+ * Translates abstract query constraints into Google Cloud Firestore query builder calls.
+ */
 export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryConstraintFunctionsDriver {
   return makeFirestoreQueryConstraintFunctionsDriver<FirestoreServerQueryBuilder>({
     mapping: FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING,
@@ -50,6 +63,18 @@ export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryC
   });
 }
 
+/**
+ * Creates a complete {@link FirestoreQueryDriver} for Google Cloud Firestore (Admin SDK).
+ *
+ * Supports query execution (getDocs), document counting (countDocs), and real-time
+ * streaming (streamDocs) via `onSnapshot`. Transaction-aware reads are supported
+ * through the optional transaction parameter in `getDocs`.
+ *
+ * @example
+ * ```typescript
+ * const queryDriver = googleCloudFirestoreQueryDriver();
+ * ```
+ */
 export function googleCloudFirestoreQueryDriver(): FirestoreQueryDriver {
   return {
     ...firestoreClientQueryConstraintFunctionsDriver(),

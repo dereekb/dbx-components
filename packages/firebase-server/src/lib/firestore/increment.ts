@@ -3,10 +3,20 @@ import { FieldValue } from '@google-cloud/firestore';
 import { type UpdateData, type FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
 
 /**
- * Creates UpdateData corresponding to the input increment update.
+ * Converts a {@link FirestoreAccessorIncrementUpdate} into Firestore {@link UpdateData} using
+ * Google Cloud Firestore's {@link FieldValue.increment}.
  *
- * @param input
- * @returns
+ * Each field in the input maps to an atomic increment operation. Null/undefined values default to 0.
+ *
+ * @param input - The increment specification mapping field names to numeric deltas.
+ *
+ * @example
+ * ```typescript
+ * const updateData = firestoreServerIncrementUpdateToUpdateData<Stats>({
+ *   viewCount: 1,
+ *   likeCount: -1
+ * });
+ * ```
  */
 export function firestoreServerIncrementUpdateToUpdateData<T extends object>(input: FirestoreAccessorIncrementUpdate<T>): UpdateData<T> {
   return mapObjectMap(input, (incrementValue) => {

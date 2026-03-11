@@ -9,7 +9,16 @@ export interface FirebaseServerStorageServiceRef<S extends FirebaseServerStorage
 }
 
 /**
- * Basic service that implements FirebaseStorageAccessor and provides a FirebaseStorageContext.
+ * Server-side storage service that wraps a {@link FirebaseStorageContext} and implements
+ * the {@link FirebaseStorageAccessor} interface for file and folder operations.
+ *
+ * Typically injected via NestJS and backed by the Google Cloud Storage driver.
+ *
+ * @example
+ * ```typescript
+ * const storageService = new FirebaseServerStorageService(storageContext);
+ * const file = storageService.file({ bucketId: 'my-bucket', pathString: 'path/to/file.txt' });
+ * ```
  */
 export class FirebaseServerStorageService implements FirebaseStorageAccessor {
   private readonly _storageContext: FirebaseStorageContext;

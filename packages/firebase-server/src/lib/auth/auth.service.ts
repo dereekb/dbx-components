@@ -22,6 +22,11 @@ import { type CallableContext } from '../type';
  */
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' });
 
+/**
+ * Identifies a Firebase Auth user by UID within a server-side auth context.
+ *
+ * Base interface for {@link FirebaseServerAuthUserContext} and {@link FirebaseServerAuthContext}.
+ */
 export interface FirebaseServerAuthUserIdentifierContext {
   /**
    * UID of the user for this context.

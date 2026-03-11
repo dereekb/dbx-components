@@ -4,7 +4,7 @@ import { type Storage as FirebaseAdminStorage } from 'firebase-admin/storage';
 import { type Storage as GoogleCloudStorage } from '@google-cloud/storage';
 
 /**
- * Creates a FirestoreContextFactory that uses the @google-cloud/storage package.
+ * Pre-configured {@link FirebaseStorageContextFactory} using the Google Cloud Storage (Admin SDK) drivers.
  */
 export const googleCloudFirebaseStorageContextFactory: FirebaseStorageContextFactory = firebaseStorageContextFactory(googleCloudFirebaseStorageDrivers());
 
@@ -13,10 +13,17 @@ interface FirebaseAdminStorageRefLike {
 }
 
 /**
- * Retrieves the GoogleCloudStorage object from the input FirebaseAdmin Storage type.
+ * Extracts the underlying {@link GoogleCloudStorage} client from a Firebase Admin {@link FirebaseAdminStorage} instance.
  *
- * @param storage
- * @returns
+ * This accesses an internal property (`storageClient`) to bridge between the Firebase Admin
+ * Storage wrapper and the raw Google Cloud Storage SDK.
+ *
+ * @param storage - The Firebase Admin Storage instance.
+ *
+ * @example
+ * ```typescript
+ * const gcs = googleCloudStorageFromFirebaseAdminStorage(admin.storage());
+ * ```
  */
 export function googleCloudStorageFromFirebaseAdminStorage(storage: FirebaseAdminStorage): GoogleCloudStorage {
   return (storage as unknown as FirebaseAdminStorageRefLike).storageClient;
