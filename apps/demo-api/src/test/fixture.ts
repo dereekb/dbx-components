@@ -20,6 +20,7 @@ import {
 import { type BuildTestsWithContextFunction, type TestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
+import { DEMO_API_NEST_SERVER_CONFIG } from '../app/app';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
 import { DemoApiNestContext } from '../app/function/function.context';
 import { DemoApiServerNestContext } from '../app/server/server.context';
@@ -231,6 +232,7 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
 const _demoApiContextFactory = firebaseAdminNestContextFactory({
   nestModules: TestDemoApiAppModule,
+  serverInstanceConfig: DEMO_API_NEST_SERVER_CONFIG,
   injectFirebaseServerAppTokenProvider: true,
   makeFixture: (parent) => new DemoApiContextFixture(parent),
   makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
@@ -372,6 +374,7 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
 const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
   nestModules: TestDemoApiAppModule,
+  serverInstanceConfig: DEMO_API_NEST_SERVER_CONFIG,
   injectFirebaseServerAppTokenProvider: true,
   makeFixture: (parent) => new DemoApiFunctionContextFixture(parent),
   makeInstance: (instance, nest) => new DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)

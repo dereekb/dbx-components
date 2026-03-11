@@ -65,6 +65,10 @@ export interface OidcTokenLifetimes {
    */
   readonly accessToken: number;
   /**
+   * ID token lifetime in seconds. Defaults to 3600 (1 hour).
+   */
+  readonly idToken: number;
+  /**
    * Refresh token lifetime in seconds (absolute). Defaults to 2592000 (30 days).
    */
   readonly refreshToken: number;
@@ -79,6 +83,7 @@ export interface OidcTokenLifetimes {
  */
 export const DEFAULT_OIDC_TOKEN_LIFETIMES: OidcTokenLifetimes = {
   accessToken: 900,
+  idToken: 3600,
   refreshToken: 30 * 24 * 60 * 60,
   authorizationCode: 60
 };

@@ -1,18 +1,13 @@
-import { type ClassType, type Getter, Maybe, WebsitePath, WebsiteUrl, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
-import { type DynamicModule, type FactoryProvider, type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider, type Type } from '@nestjs/common';
+import { type ClassType, type Getter, type WebsitePath, asGetter, makeGetter } from '@dereekb/util';
+import { type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
-import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import type * as admin from 'firebase-admin';
-import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
 import { type StorageBucketId } from '@dereekb/firebase';
-import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
-import { FirebaseServerEnvService } from '../env/env.service';
-import { DefaultFirebaseServerEnvService } from './env';
-import { ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
-import { firebaseServerEnvTokenProviders, type FirebaseServerEnvironmentConfig } from '../env/env.config';
+import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
+import { buildNestServerRootModule } from './app.module';
 
 /**
  * A running NestJS server instance backed by Express, paired with a lazy promise getter for the NestJS application context.
@@ -51,7 +46,8 @@ export interface NestServerInstance<T> {
   removeNestServer(firebaseApp: admin.app.App): Promise<boolean>;
 }
 
-export class FirebaseNestServerRootModule {}
+/** @deprecated Use `FirebaseNestServerRootModule` from `./app.module` instead. */
+export { FirebaseNestServerRootModule } from './app.module';
 
 /**
  * Optional hook to customize the NestJS application after creation but before initialization.
@@ -141,82 +137,34 @@ export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
  * ```
  */
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
-  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix: inputGlobalApiRoutePrefix, configureNestServerInstance } = config;
+  const { moduleClass, configureNestServerInstance } = config;
   const serversCache = new Map<string, NestServer>();
 
   const initNestServer = (firebaseApp: admin.app.App, env?: NestFirebaseServerEnvironmentConfig): NestServer => {
     const appName = firebaseApp.name;
-    const defaultStorageBucket = inputDefaultStorageBucket ?? firebaseApp.options.storageBucket;
 
     let nestServer = serversCache.get(appName);
 
     if (!nestServer) {
       const server = express();
       const createNestServer = async (expressInstance: express.Express) => {
-        const providers: (Provider | FactoryProvider)[] = [firebaseServerAppTokenProvider(asGetter(firebaseApp))];
-
-        // configure environment providers
-        if (env?.environment != null) {
-          providers.push(...firebaseServerEnvTokenProviders(env.environment));
-
-          if (config.configureEnvService !== false) {
-            providers.push(
-              {
-                provide: FirebaseServerEnvService,
-                useClass: DefaultFirebaseServerEnvService
-              },
-              {
-                provide: ServerEnvironmentService,
-                useExisting: FirebaseServerEnvService
-              }
-            );
-          }
-        }
-
-        if (additionalProviders) {
-          pushItemOrArrayItemsIntoArray(providers, additionalProviders);
-        }
-
-        const imports: (Type<unknown> | DynamicModule)[] = [moduleClass];
+        const { rootModule, globalApiRoutePrefixConfig } = buildNestServerRootModule({
+          modules: moduleClass,
+          firebaseAppGetter: asGetter(firebaseApp),
+          additionalProviders: config.providers as Provider[] | undefined,
+          envConfig: env?.environment,
+          configureEnvService: config.configureEnvService,
+          defaultStorageBucket: config.defaultStorageBucket ?? firebaseApp.options.storageBucket,
+          forceStorageBucket: config.forceStorageBucket,
+          globalApiRoutePrefix: config.globalApiRoutePrefix,
+          configureWebhooks: config.configureWebhooks,
+          appCheckEnabled: config.appCheckEnabled !== false // defaults to true in production
+        });
 
         // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
         const options: NestApplicationOptions = { bodyParser: false }; // firebase already parses the requests
 
-        if (config.configureWebhooks) {
-          imports.push(ConfigureFirebaseWebhookMiddlewareModule);
-        }
-
-        if (config.appCheckEnabled != false) {
-          imports.push(ConfigureFirebaseAppCheckMiddlewareModule);
-        }
-
-        if (defaultStorageBucket) {
-          providers.push(
-            firebaseServerStorageDefaultBucketIdTokenProvider({
-              defaultBucketId: defaultStorageBucket,
-              forceBucket: forceStorageBucket
-            })
-          );
-        }
-
-        // provide the global prefix config to the app
-        const globalApiRoutePrefixConfig: Maybe<GlobalRoutePrefixConfig> = typeof inputGlobalApiRoutePrefix === 'string' ? { globalApiRoutePrefix: inputGlobalApiRoutePrefix } : inputGlobalApiRoutePrefix;
-
-        // is always provided, even if no config was provided.
-        providers.push({
-          provide: GlobalRoutePrefixConfig,
-          useValue: globalApiRoutePrefixConfig ?? {}
-        });
-
-        const providersModule: DynamicModule = {
-          module: FirebaseNestServerRootModule,
-          imports,
-          providers,
-          exports: providers,
-          global: true
-        };
-
-        let nestApp = await NestFactory.create(providersModule, new ExpressAdapter(expressInstance), options);
+        let nestApp = await NestFactory.create(rootModule, new ExpressAdapter(expressInstance), options);
 
         if (globalApiRoutePrefixConfig?.globalApiRoutePrefix != null) {
           nestApp = nestApp.setGlobalPrefix(globalApiRoutePrefixConfig.globalApiRoutePrefix, globalApiRoutePrefixConfig);

@@ -6,14 +6,16 @@ import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
 import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
 
-export const { initNestServer } = nestServerInstance({
+export const DEMO_API_NEST_SERVER_CONFIG = {
   moduleClass: DemoApiAppModule,
   configureWebhooks: true,
   globalApiRoutePrefix: {
     globalApiRoutePrefix: '/api',
-    exclude: ['.well-known/(.*)', 'oidc/(.*)']
+    exclude: ['.well-known/(.*)', 'oidc/(.*)', 'interaction/(.*)']
   }
-});
+};
+
+export const { initNestServer } = nestServerInstance(DEMO_API_NEST_SERVER_CONFIG);
 
 /**
  * Builder for all functions in the app.

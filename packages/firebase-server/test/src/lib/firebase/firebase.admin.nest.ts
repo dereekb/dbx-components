@@ -1,16 +1,27 @@
 import { AbstractChildTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, type FirebaseAdminTestContextInstance } from './firebase.admin';
-import { type Abstract, type DynamicModule, type FactoryProvider, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
+import { INestApplication, type Abstract, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
 import { type StorageBucketId } from '@dereekb/firebase';
-import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvironmentConfig, FirebaseServerEnvService, firebaseServerEnvTokenProviders, firebaseServerStorageDefaultBucketIdTokenProvider, type NestAppPromiseGetter } from '@dereekb/firebase-server';
+import { type FirebaseServerEnvironmentConfig, GlobalRoutePrefixConfig, type NestAppPromiseGetter, type NestServerInstanceConfig, buildNestServerRootModule } from '@dereekb/firebase-server';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { type ArrayOrValue, asArray, asGetter, type ClassType, type Getter } from '@dereekb/util';
-import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { type ArrayOrValue, asGetter, cachedGetter, type ClassType, type Getter, Maybe } from '@dereekb/util';
+
+export const FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN = 'FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN';
 
 // MARK: FirebaseAdminNestTestBuilder
 export interface FirebaseAdminNestTestContext {
   readonly nest: TestingModule;
   readonly nestAppPromiseGetter: NestAppPromiseGetter;
+  /**
+   * Returns the configured nest application singleton for this context.
+   *
+   * If it does not exist, calls `createNewNestApplication` and returns the result.
+   */
+  loadInitializedNestApplication(): Promise<INestApplication>;
+  /**
+   * Creates a new blank nest application.
+   */
+  createNewNestApplication(): INestApplication;
   get<TInput = any, TResult = TInput>(typeOrToken: Type<TInput> | Abstract<TInput> | string | symbol, options?: { strict: boolean }): TResult;
 }
 
@@ -26,6 +37,14 @@ export class FirebaseAdminNestTestContextFixture<PI extends FirebaseAdminTestCon
     return this.instance.nestAppPromiseGetter;
   }
 
+  createNewNestApplication(): INestApplication {
+    return this.instance.createNewNestApplication();
+  }
+
+  loadInitializedNestApplication(): Promise<INestApplication> {
+    return this.instance.loadInitializedNestApplication();
+  }
+
   get<TInput = any, TResult = TInput>(
     typeOrToken: Type<TInput> | Abstract<TInput> | string | symbol,
     options?: {
@@ -39,11 +58,38 @@ export class FirebaseAdminNestTestContextFixture<PI extends FirebaseAdminTestCon
 export class FirebaseAdminNestTestContextInstance<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends AbstractFirebaseAdminTestContextInstanceChild<PI> implements FirebaseAdminNestTestContext {
   readonly nestAppPromiseGetter: Getter<Promise<INestApplicationContext>> = () => Promise.resolve(this.nest);
 
+  readonly _loadInitializedNestApplication = cachedGetter(async () => {
+    let app = this.createNewNestApplication();
+    await app.init();
+    return app;
+  });
+
   constructor(
     parent: PI,
     readonly nest: TestingModule
   ) {
     super(parent);
+  }
+
+  createNewNestApplication(): INestApplication {
+    let app = this.nest.createNestApplication();
+
+    const globalRoutePrefixConfig = this.get(GlobalRoutePrefixConfig);
+    const serverInstanceConfig = this.get(FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN);
+
+    if (globalRoutePrefixConfig?.globalApiRoutePrefix != null) {
+      app.setGlobalPrefix(globalRoutePrefixConfig.globalApiRoutePrefix, globalRoutePrefixConfig);
+    }
+
+    if (serverInstanceConfig?.configureNestServerInstance) {
+      app = serverInstanceConfig.configureNestServerInstance(app) || app;
+    }
+
+    return app;
+  }
+
+  loadInitializedNestApplication(): Promise<INestApplication> {
+    return this._loadInitializedNestApplication();
   }
 
   get<TInput = any, TResult = TInput>(
@@ -66,6 +112,16 @@ export interface FirebaseAdminNestTestConfig<PI extends FirebaseAdminTestContext
    * Root module to import.
    */
   readonly nestModules: ArrayOrValue<ClassType>;
+  /**
+   * Optional `NestServerInstanceConfig` from the production app setup.
+   *
+   * When provided, shared configuration (global prefix, webhooks, AppCheck, storage, etc.)
+   * is derived from this config via `buildNestServerRootModule`, ensuring tests match production.
+   *
+   * Fields like `moduleClass` and `applicationOptions` are ignored — the test uses `nestModules` instead.
+   * Test-specific overrides (e.g., `injectFirebaseServerAppTokenProvider`, `envConfig`) still take precedence.
+   */
+  readonly serverInstanceConfig?: Maybe<NestServerInstanceConfig<any>>;
   /**
    * Whether or not to inject the env service provider (and serverEnvTokenProvider()) by default.
    *
@@ -117,10 +173,15 @@ export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestCont
   };
 }
 
-export class FirebaseAdminNestRootModule {}
+/** @deprecated Use `FirebaseNestServerRootModule` from `@dereekb/firebase-server` instead. */
+export { FirebaseNestServerRootModule as FirebaseAdminNestRootModule } from '@dereekb/firebase-server';
 
 export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>>(config: FirebaseAdminNestTestConfig<PI, PF, I, C>, f: PF, buildTests: BuildTestsWithContextFunction<C>) {
-  const { nestModules, makeProviders = () => [], forceStorageBucket = false, defaultStorageBucket: inputDefaultStorageBucket, envConfig, injectFirebaseServerAppTokenProvider, injectServerEnvServiceProvider, makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
+  const { nestModules, serverInstanceConfig, makeProviders = () => [], makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
+
+  // Resolve env config: test-specific overrides take precedence, otherwise derive from serverInstanceConfig or defaults.
+  const shouldInjectEnv = config.injectServerEnvServiceProvider !== false || config.envConfig != null;
+  const envConfig: FirebaseServerEnvironmentConfig | undefined = shouldInjectEnv ? config.envConfig || { production: false, appUrl: 'http://localhost:4200' } : undefined;
 
   useTestContextFixture({
     fixture: makeFixture(f),
@@ -131,54 +192,32 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
      */
     buildTests,
     initInstance: async () => {
-      const imports = asArray(nestModules);
-      const providers: (Provider | FactoryProvider)[] = makeProviders(f.instance) ?? [];
-      const defaultStorageBucket = inputDefaultStorageBucket ?? f.instance.app.options.storageBucket;
+      const additionalProviders: Provider[] = makeProviders(f.instance) ?? [];
+      const defaultStorageBucket = config.defaultStorageBucket ?? f.instance.app.options.storageBucket;
 
-      // Inject the serverEnvTokenProvider and optionally the FirebaseServerEnvService
-      if (injectServerEnvServiceProvider !== false || envConfig != null) {
-        providers.push(...firebaseServerEnvTokenProviders(envConfig || { production: false, appUrl: 'http://localhost:4200' }));
-
-        if (injectServerEnvServiceProvider !== false) {
-          providers.push(
-            {
-              provide: FirebaseServerEnvService,
-              useClass: DefaultFirebaseServerEnvService
-            },
-            {
-              provide: ServerEnvironmentService,
-              useExisting: FirebaseServerEnvService
-            }
-          );
-        }
-      }
-
-      // Inject the firebaseServerAppTokenProvider
-      if (injectFirebaseServerAppTokenProvider) {
-        providers.push(firebaseServerAppTokenProvider(asGetter(f.instance.app)));
-      }
-
-      if (defaultStorageBucket) {
-        providers.push(
-          firebaseServerStorageDefaultBucketIdTokenProvider({
-            defaultBucketId: defaultStorageBucket,
-            forceBucket: forceStorageBucket
-          })
-        );
-      }
-
-      const rootModule: DynamicModule = {
-        module: FirebaseAdminNestRootModule,
-        providers,
-        exports: providers,
-        global: true
-      };
-
-      const builder = Test.createTestingModule({
-        imports: [rootModule, ...imports]
+      const { rootModule } = buildNestServerRootModule({
+        modules: nestModules,
+        firebaseAppGetter: config.injectFirebaseServerAppTokenProvider ? asGetter(f.instance.app) : undefined,
+        additionalProviders,
+        envConfig,
+        configureEnvService: config.injectServerEnvServiceProvider,
+        defaultStorageBucket,
+        forceStorageBucket: config.forceStorageBucket,
+        // Shared config from production — tests pick up the same global prefix, webhooks, etc.
+        globalApiRoutePrefix: serverInstanceConfig?.globalApiRoutePrefix,
+        configureWebhooks: serverInstanceConfig?.configureWebhooks,
+        appCheckEnabled: false // disabled in tests
       });
 
-      const nest = await builder.compile();
+      const nest = await Test.createTestingModule({
+        providers: [
+          {
+            provide: FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN,
+            useValue: serverInstanceConfig
+          }
+        ],
+        imports: [rootModule]
+      }).compile();
 
       try {
         const instance: I = makeInstance(f.instance, nest);

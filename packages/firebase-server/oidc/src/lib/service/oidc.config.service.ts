@@ -120,6 +120,7 @@ export class OidcProviderConfigService {
       },
       ttl: {
         AccessToken: config.tokenLifetimes.accessToken,
+        IdToken: config.tokenLifetimes.idToken,
         AuthorizationCode: config.tokenLifetimes.authorizationCode,
         RefreshToken: config.tokenLifetimes.refreshToken,
         Session: 14 * 24 * 60 * 60,

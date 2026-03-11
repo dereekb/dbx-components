@@ -28,19 +28,26 @@ export interface OidcAdapterEntry {
    */
   type: string;
   /**
-   * User identifier.
+   * Serialized JSON of the full oidc-provider AdapterPayload.
+   *
+   * The payload structure varies by model type (Client, Session, AccessToken, etc.),
+   * so we store it as a JSON string and parse it on read.
+   */
+  payload: string;
+  /**
+   * User identifier. Extracted from the payload for indexed queries.
    */
   uid?: Maybe<string>;
   /**
-   * Grant identifier for revocation support.
+   * Grant identifier for revocation support. Extracted from the payload for indexed queries.
    */
   grantId?: Maybe<string>;
   /**
-   * User code for device flow.
+   * User code for device flow. Extracted from the payload for indexed queries.
    */
   userCode?: Maybe<string>;
   /**
-   * Epoch timestamp when this entry was consumed.
+   * Epoch timestamp when this entry was consumed. Extracted from the payload for indexed queries.
    */
   consumed?: Maybe<number>;
   /**
@@ -65,6 +72,7 @@ export class OidcAdapterEntryDocument extends AbstractFirestoreDocument<OidcAdap
 export const oidcAdapterEntryConverter = snapshotConverterFunctions<OidcAdapterEntry>({
   fields: {
     type: firestoreString({ default: '' }),
+    payload: firestoreString({ default: '{}' }),
     uid: optionalFirestoreString(),
     grantId: optionalFirestoreString(),
     userCode: optionalFirestoreString(),

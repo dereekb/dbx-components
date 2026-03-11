@@ -29,8 +29,12 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
 
     async upsert(id: OidcAdapterEntryId, payload: AdapterPayload, expiresIn: UnixDateTimeSecondsNumber): Promise<void> {
       const data: OidcAdapterEntry = {
-        ...payload,
         type: this.name,
+        payload: JSON.stringify(payload),
+        uid: payload.uid as string | undefined,
+        grantId: payload.grantId as string | undefined,
+        userCode: payload.userCode as string | undefined,
+        consumed: payload.consumed as number | undefined,
         ...(expiresIn ? { expiresAt: unixDateTimeSecondsNumberToDate(unixDateTimeSecondsNumberForNow() + expiresIn) } : undefined)
       };
 
@@ -42,40 +46,46 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
       const snapshot = await doc.accessor.get();
       const data = snapshot.data();
-      let result: AdapterPayload | undefined;
 
       if (data && data.type === this.name) {
-        result = this._checkExpiration(data);
+        return this._toPayload(data);
       }
 
-      return result;
+      return undefined;
     }
 
     async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcAdapterEntriesByUserCodeQuery(this.name, userCode)).getDocs();
-      let result: AdapterPayload | undefined;
 
       if (!results.empty) {
-        result = this._checkExpiration(results.docs[0].data() as OidcAdapterEntry);
+        return this._toPayload(results.docs[0].data() as OidcAdapterEntry);
       }
 
-      return result;
+      return undefined;
     }
 
     async findByUid(uid: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcAdapterEntriesByUidQuery(this.name, uid)).getDocs();
-      let result: AdapterPayload | undefined;
 
       if (!results.empty) {
-        result = this._checkExpiration(results.docs[0].data() as OidcAdapterEntry);
+        return this._toPayload(results.docs[0].data() as OidcAdapterEntry);
       }
 
-      return result;
+      return undefined;
     }
 
     async consume(id: OidcAdapterEntryId): Promise<void> {
+      const now = unixDateTimeSecondsNumberForNow();
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
-      await doc.accessor.set({ consumed: unixDateTimeSecondsNumberForNow() } as Partial<OidcAdapterEntry> as any, { merge: true });
+      const snapshot = await doc.accessor.get();
+      const data = snapshot.data();
+
+      if (data) {
+        const payload = JSON.parse(data.payload);
+        payload.consumed = now;
+
+        await doc.accessor.set({ consumed: now, payload: JSON.stringify(payload) } as Partial<OidcAdapterEntry> as any, { merge: true });
+      }
     }
 
     async destroy(id: OidcAdapterEntryId): Promise<void> {
@@ -98,20 +108,16 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
       }
     }
 
-    private _checkExpiration(data: OidcAdapterEntry): AdapterPayload | undefined {
-      let result: AdapterPayload | undefined;
-
+    private _toPayload(data: OidcAdapterEntry): AdapterPayload | undefined {
       if (data.expiresAt) {
         const expiresDate = data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as any).toDate();
 
-        if (expiresDate >= new Date()) {
-          result = data as unknown as AdapterPayload;
+        if (expiresDate < new Date()) {
+          return undefined;
         }
-      } else {
-        result = data as unknown as AdapterPayload;
       }
 
-      return result;
+      return JSON.parse(data.payload) as AdapterPayload;
     }
   }
 
