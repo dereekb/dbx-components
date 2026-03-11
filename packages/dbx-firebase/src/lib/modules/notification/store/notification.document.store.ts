@@ -6,6 +6,7 @@ import { type Notification, type NotificationBox, type NotificationBoxDocument, 
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { isSameDate } from '@dereekb/date';
 
+/** Document store for a single Notification, providing derived observables for creation date, send state, and update functions. */
 @Injectable()
 export class NotificationDocumentStore extends AbstractDbxFirebaseDocumentWithParentStore<Notification, NotificationBox, NotificationDocument, NotificationBoxDocument> {
   readonly notificationFunctions = inject(NotificationFunctions);

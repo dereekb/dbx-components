@@ -17,6 +17,12 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
   readonly onlyShowRegisteredTypes?: Maybe<boolean>;
 }
 
+/**
+ * Renders a list of model entities as an expandable accordion.
+ *
+ * Groups entities by registration status (registered vs unregistered) and sorts
+ * by widget priority. Supports toggling visibility of unregistered entity types.
+ */
 @Component({
   selector: 'dbx-firebase-model-entities',
   template: `

@@ -3,6 +3,7 @@ import { type NotificationBox, type NotificationBoxDocument, type Notification, 
 import { NotificationCollectionStore } from './notification.collection.store';
 import { DbxFirebaseCollectionWithParentStoreDirective, provideDbxFirebaseCollectionWithParentStoreDirective } from '../../../model/modules/store/store.subcollection.directive';
 
+/** Directive providing a {@link NotificationCollectionStore} for querying notifications within a template. */
 @Directive({
   selector: '[dbxFirebaseNotificationCollection]',
   providers: provideDbxFirebaseCollectionWithParentStoreDirective(DbxFirebaseNotificationCollectionStoreDirective, NotificationCollectionStore),
