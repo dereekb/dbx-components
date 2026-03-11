@@ -11,6 +11,15 @@ import { type ScheduleOptions } from 'firebase-functions/v2/scheduler';
  */
 export type OnScheduleConfigWithGlobalOptions = OnScheduleConfig & Omit<ScheduleOptions, 'schedule'>;
 
+/**
+ * Creates an {@link OnScheduleWithNestApplicationRequest} by combining the NestJS application context
+ * with an optional scheduler event. Used internally by schedule handler factories to build the
+ * request object passed to schedule function handlers.
+ *
+ * @param nestApplication - The initialized NestJS application context.
+ * @param scheduleContext - The optional Firebase scheduler event, absent when invoked via `_runNow()`.
+ * @returns A request object ready for schedule function handlers.
+ */
 export function makeOnScheduleHandlerWithNestApplicationRequest(nestApplication: INestApplicationContext, scheduleContext?: scheduler.ScheduledEvent): OnScheduleWithNestApplicationRequest<scheduler.ScheduledEvent> {
   return {
     nestApplication,
@@ -19,18 +28,37 @@ export function makeOnScheduleHandlerWithNestApplicationRequest(nestApplication:
 }
 
 // MARK: Nest
+/**
+ * A {@link NestApplicationScheduleConfiguredFunctionFactory} specialized for Firebase v2 schedule functions.
+ */
 export type NestApplicationScheduleFunctionFactory = NestApplicationScheduleConfiguredFunctionFactory<scheduler.ScheduleFunction>;
 
 /**
- * Factory function for generating a NestApplicationFunctionFactory for a HttpsFunctions/Runnable firebase function.
+ * Factory function that creates a {@link NestApplicationScheduleFunctionFactory} from a schedule configuration
+ * and an {@link OnScheduleWithNestApplication} handler.
+ *
+ * Produced by {@link onScheduleHandlerWithNestApplicationFactory}.
  */
 export type OnScheduleHandlerWithNestApplicationFactory = (schedule: OnScheduleConfigWithGlobalOptions, fn: OnScheduleWithNestApplication<scheduler.ScheduledEvent>) => NestApplicationScheduleFunctionFactory;
 
 /**
- * Creates a factory for generating OnCallWithNestApplication functions.
+ * Creates an {@link OnScheduleHandlerWithNestApplicationFactory} for Firebase v2 scheduled functions.
  *
- * @param nestAppPromiseGetter
- * @returns
+ * The factory resolves `cron` values (including numeric minute intervals) into cron expressions,
+ * merges base and per-function schedule options, and attaches `_runNow` and `_schedule` metadata
+ * to the resulting function for testing and introspection.
+ *
+ * @example
+ * ```ts
+ * const scheduleFactory = onScheduleHandlerWithNestApplicationFactory({ timeoutSeconds: 60 });
+ * const dailyCleanup = scheduleFactory(
+ *   { cron: '0 2 * * *', timezone: 'America/New_York' },
+ *   (request) => request.nestApplication.get(CleanupService).run()
+ * );
+ * ```
+ *
+ * @param baseScheduleConfig - Optional default schedule options merged into every function created by this factory.
+ * @returns A factory for creating nest-application-aware scheduled functions.
  */
 export function onScheduleHandlerWithNestApplicationFactory(baseScheduleConfig?: OnScheduleConfigWithGlobalOptions): OnScheduleHandlerWithNestApplicationFactory {
   return <I, O>(inputSchedule: OnScheduleConfigWithGlobalOptions, fn: OnScheduleWithNestApplication<scheduler.ScheduledEvent>) => {
@@ -59,7 +87,10 @@ export function onScheduleHandlerWithNestApplicationFactory(baseScheduleConfig?:
 }
 
 /**
- * Factory function for generating HttpsFunctions/Runnable firebase function that returns the value from the input OnCallWithNestContext function.
+ * Factory function that creates a {@link NestApplicationScheduleFunctionFactory} from a schedule configuration
+ * and an {@link OnScheduleWithNestContext} handler that receives a typed nest context.
+ *
+ * Produced by {@link onScheduleHandlerWithNestContextFactory}.
  */
 export type OnScheduleHandlerWithNestContextFactory<N> = (schedule: OnScheduleConfigWithGlobalOptions, fn: OnScheduleWithNestContext<N, scheduler.ScheduledEvent>) => NestApplicationScheduleFunctionFactory;
 
