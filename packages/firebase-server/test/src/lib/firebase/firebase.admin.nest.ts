@@ -6,9 +6,21 @@ import { type FirebaseServerEnvironmentConfig, GlobalRoutePrefixConfig, type Nes
 import { Test, type TestingModule } from '@nestjs/testing';
 import { type ArrayOrValue, asGetter, cachedGetter, type ClassType, type Getter, Maybe } from '@dereekb/util';
 
+/**
+ * NestJS injection token used to provide the {@link NestServerInstanceConfig} to the test's
+ * {@link TestingModule}. The instance is injected during nest application creation so that
+ * production configuration (global prefix, webhooks, etc.) can be applied in tests.
+ */
 export const FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN = 'FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN';
 
 // MARK: FirebaseAdminNestTestBuilder
+/**
+ * Extends the Firebase Admin test context with NestJS {@link TestingModule} access.
+ *
+ * Provides the compiled NestJS module, a way to resolve providers via `get()`,
+ * and helpers for creating / initializing a full {@link INestApplication} for
+ * integration tests that need HTTP or middleware support.
+ */
 export interface FirebaseAdminNestTestContext {
   readonly nest: TestingModule;
   readonly nestAppPromiseGetter: NestAppPromiseGetter;
@@ -25,8 +37,23 @@ export interface FirebaseAdminNestTestContext {
   get<TInput = any, TResult = TInput>(typeOrToken: Type<TInput> | Abstract<TInput> | string | symbol, options?: { strict: boolean }): TResult;
 }
 
+/**
+ * Utility intersection type combining {@link FirebaseAdminNestTestContext} with a
+ * {@link TestContextFixture} parameterized by the parent instance type.
+ *
+ * Useful as a type constraint when a helper needs both NestJS context methods and
+ * fixture lifecycle access.
+ */
 export type FirebaseAdminNestTestContextFixtureType<PI extends FirebaseAdminTestContextInstance> = FirebaseAdminNestTestContext & TestContextFixture<PI>;
 
+/**
+ * Child fixture that wraps a {@link FirebaseAdminNestTestContextInstance} and forwards
+ * all {@link FirebaseAdminNestTestContext} members to the underlying instance.
+ *
+ * Created by {@link firebaseAdminNestContextWithFixture} during test setup. Tests receive
+ * this fixture and use it to access the NestJS {@link TestingModule}, resolve providers,
+ * and create application instances.
+ */
 export class FirebaseAdminNestTestContextFixture<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>> extends AbstractChildTestContextFixture<I, PF> implements FirebaseAdminNestTestContext {
   // MARK: Forwarded
   get nest() {
@@ -55,6 +82,14 @@ export class FirebaseAdminNestTestContextFixture<PI extends FirebaseAdminTestCon
   }
 }
 
+/**
+ * Concrete instance that holds the compiled NestJS {@link TestingModule} and provides
+ * methods for creating and initializing a full {@link INestApplication}.
+ *
+ * Applies production-like configuration (global route prefix, server instance hooks)
+ * from {@link FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN} when creating applications,
+ * ensuring test applications mirror production setup.
+ */
 export class FirebaseAdminNestTestContextInstance<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends AbstractFirebaseAdminTestContextInstanceChild<PI> implements FirebaseAdminNestTestContext {
   readonly nestAppPromiseGetter: Getter<Promise<INestApplicationContext>> = () => Promise.resolve(this.nest);
 
@@ -162,8 +197,23 @@ export interface FirebaseAdminNestTestConfig<PI extends FirebaseAdminTestContext
   readonly initInstance?: (instance: I) => Promise<void>;
 }
 
+/**
+ * Factory type that produces a {@link FirebaseAdminNestTestContextFixture} for each test suite.
+ * Pass a {@link BuildTestsWithContextFunction} to register tests that run against the fixture.
+ */
 export type FirebaseAdminNestTestContextFactory<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>> = TestContextFactory<C>;
 
+/**
+ * Composes a NestJS test context on top of an existing parent test context factory.
+ *
+ * Use this when the parent context is _not_ the default {@link firebaseAdminTestContextFactory} --
+ * for example, when layering NestJS onto a custom Firebase Admin function context.
+ * For the common case, prefer {@link firebaseAdminNestContextFactory}.
+ *
+ * @param config - NestJS module, provider, and fixture configuration.
+ * @param factory - The parent context factory that provides the Firebase Admin instance.
+ * @returns A new factory that nests the NestJS context inside the parent.
+ */
 export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>>(
   config: FirebaseAdminNestTestConfig<PI, PF, I, C>,
   factory: TestContextFactory<PF>
@@ -176,6 +226,20 @@ export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestCont
 /** @deprecated Use `FirebaseNestServerRootModule` from `@dereekb/firebase-server` instead. */
 export { FirebaseNestServerRootModule as FirebaseAdminNestRootModule } from '@dereekb/firebase-server';
 
+/**
+ * Wires up a NestJS {@link TestingModule} inside an already-created parent fixture.
+ *
+ * This is the core integration point: it builds the root module via {@link buildNestServerRootModule},
+ * compiles the testing module, creates the instance, and registers Jest lifecycle hooks
+ * (via {@link useTestContextFixture}) to tear down the module after tests complete.
+ *
+ * Typically called indirectly through {@link firebaseAdminNestContextFixture} or
+ * {@link firebaseAdminNestContextFactory}. Call directly only when composing custom fixture hierarchies.
+ *
+ * @param config - NestJS module, provider, and fixture configuration.
+ * @param f - The parent fixture that is already set up.
+ * @param buildTests - Callback that receives the child fixture and registers test cases.
+ */
 export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>>(config: FirebaseAdminNestTestConfig<PI, PF, I, C>, f: PF, buildTests: BuildTestsWithContextFunction<C>) {
   const { nestModules, serverInstanceConfig, makeProviders = () => [], makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
 
@@ -247,6 +311,25 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
   });
 }
 
+/**
+ * Convenience factory that layers a NestJS test context on top of the default
+ * {@link firebaseAdminTestContextFactory}. This is the simplest way to get a
+ * fully configured Firebase Admin + NestJS test context.
+ *
+ * @example
+ * ```ts
+ * const f = firebaseAdminNestContextFactory({
+ *   nestModules: [MyAppModule]
+ * });
+ *
+ * f((c) => {
+ *   it('should resolve service', () => {
+ *     const svc = c.get(MyService);
+ *     expect(svc).toBeDefined();
+ *   });
+ * });
+ * ```
+ */
 export function firebaseAdminNestContextFactory<I extends FirebaseAdminNestTestContextInstance<FirebaseAdminTestContextInstance> = FirebaseAdminNestTestContextInstance<FirebaseAdminTestContextInstance>>(config: FirebaseAdminNestTestConfig<FirebaseAdminTestContextInstance, TestContextFixture<FirebaseAdminTestContextInstance>, I>): FirebaseAdminNestTestContextFactory<FirebaseAdminTestContextInstance, TestContextFixture<FirebaseAdminTestContextInstance>, I> {
   return firebaseAdminNestContextFixture<FirebaseAdminTestContextInstance, TestContextFixture<FirebaseAdminTestContextInstance>, I>(config, firebaseAdminTestContextFactory);
 }

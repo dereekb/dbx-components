@@ -51,9 +51,15 @@ import { type MockItemCollectionFixture, MockItemDocument, type MockItem } from 
 import { isEvenNumber, unique } from '@dereekb/util';
 
 /**
- * Describes utility driver tests, using a MockItemCollectionFixture.
+ * Registers a shared test suite that validates Firestore document utility functions
+ * (snapshot helpers, document loaders, data extraction, reactive streams, and caching)
+ * against a live or emulated Firestore instance.
  *
- * @param f
+ * Covers functions from `document.utility.ts`, `document.rxjs.ts`, and `query.util.ts`
+ * such as {@link getDocumentSnapshots}, {@link loadDocumentsForKeys},
+ * {@link latestSnapshotsFromDocuments}, {@link streamDocumentSnapshotsData}, and more.
+ *
+ * @param f - Fixture providing the mock item collection and parent context for the tests.
  */
 export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixture) {
   describe('FirestoreDocumentUtilities', () => {

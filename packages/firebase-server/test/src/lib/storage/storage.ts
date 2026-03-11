@@ -4,25 +4,55 @@ import { testContextBuilder } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers } from '@dereekb/firebase-server';
 import { type FirebaseStorage, firebaseStorageContextFactory } from '@dereekb/firebase';
 
+/**
+ * Configuration for connecting to a Google Cloud Storage emulator in tests.
+ */
 export interface GoogleCloudTestFirebaseStorageConfig {
   host: string;
   port: number;
 }
 
+/**
+ * A {@link TestFirebaseStorageContext} backed by `@google-cloud/storage`.
+ *
+ * Alias provided for clarity when working within the Google Cloud test context builders.
+ */
 export type GoogleCloudTestFirebaseStorageContext = TestFirebaseStorageContext;
 
+/**
+ * Creates a {@link TestFirebaseStorageContext} wired to a `@google-cloud/storage` instance.
+ *
+ * The returned context has its `drivers` property set to the provided testing drivers,
+ * enabling test-specific behaviors backed by the Google Cloud Storage driver.
+ *
+ * @param drivers - Testing-aware storage driver set to attach to the context.
+ * @param firebaseStorage - The `@google-cloud/storage` Storage instance (typically pointed at an emulator).
+ * @param defaultBucketId - Optional default bucket name; when provided, storage operations that omit a bucket will use this.
+ */
 export function makeGoogleFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId?: string): TestFirebaseStorageContext {
   const context = firebaseStorageContextFactory(drivers)(firebaseStorage, { defaultBucketId }) as GoogleCloudTestFirebaseStorageContext;
   context.drivers = drivers;
   return context;
 }
 
+/**
+ * A {@link TestFirebaseStorageInstance} backed by `@google-cloud/storage`.
+ *
+ * Each instance is constructed with its own Storage instance, testing drivers, and optional
+ * default bucket ID, providing an isolated storage context for a single test run.
+ */
 export class GoogleCloudTestFirebaseStorageInstance extends TestFirebaseStorageInstance {
   constructor(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId?: string) {
     super(makeGoogleFirebaseStorageContext(drivers, firebaseStorage, defaultBucketId));
   }
 }
 
+/**
+ * Test context fixture for `@google-cloud/storage`-backed Firebase Storage tests.
+ *
+ * Manages the lifecycle of a {@link GoogleCloudTestFirebaseStorageInstance}, setting it up
+ * before each test and tearing it down afterward via the {@link testContextBuilder} infrastructure.
+ */
 export class GoogleCloudTestFirebaseStorageContextFixture extends TestFirebaseStorageContextFixture<GoogleCloudTestFirebaseStorageInstance> {}
 
 let COUNTER = 0;

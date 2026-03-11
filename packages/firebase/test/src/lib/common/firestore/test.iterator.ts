@@ -6,9 +6,14 @@ import { arrayContainsDuplicateValue } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
 
 /**
- * Describes accessor driver tests, using a MockItemCollectionFixture.
+ * Registers a shared test suite that validates Firestore pagination and iteration behavior
+ * (page-based queries, snapshot/item accumulators, and loading-state integration)
+ * against a live or emulated Firestore instance.
  *
- * @param f
+ * Tests cover {@link FirestoreItemPageIterationFactoryFunction}, {@link firebaseQuerySnapshotAccumulator},
+ * {@link firebaseQueryItemAccumulator}, and related RxJS accumulator utilities.
+ *
+ * @param f - Fixture providing the mock item collection and parent context for the tests.
  */
 export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
   describe('firestoreItemPageIteration', () => {
