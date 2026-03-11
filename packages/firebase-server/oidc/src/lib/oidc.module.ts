@@ -29,6 +29,15 @@ export const OIDC_ISSUER_PATH_ENV_KEY = 'OIDC_ISSUER_PATH';
 export const DEFAULT_OIDC_ISSUER_PATH = '/oidc';
 
 // MARK: Provider Factories
+/**
+ * Factory that builds {@link OidcModuleConfig} from environment variables and the app's {@link FirebaseServerEnvService}.
+ *
+ * Derives the issuer URL from `appUrl` + the optional `OIDC_ISSUER_PATH` env var (defaults to `/oidc`).
+ * Reads the JWKS encryption secret from `OIDC_JWKS_ENCRYPTION_SECRET`; in test environments,
+ * a deterministic fallback is used.
+ *
+ * @throws {Error} When `appUrl` is missing, lacks an HTTP prefix, or the encryption secret is invalid.
+ */
 export function oidcModuleConfigFactory(configService: ConfigService, envService: FirebaseServerEnvService): OidcModuleConfig {
   const appUrl = envService.appUrl;
 
@@ -73,6 +82,10 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
   return config;
 }
 
+/**
+ * Factory that creates {@link OidcFirestoreCollections} using the provided Firestore context
+ * and JWKS encryption config from {@link OidcModuleConfig}.
+ */
 export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcFirestoreCollections {
   return {
     jwksKeyCollection: jwksKeyFirestoreCollection({ firestoreContext, ...oidcModuleConfig.jwksKeyConverterConfig }),

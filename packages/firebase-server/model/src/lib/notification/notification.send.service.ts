@@ -10,7 +10,13 @@ export interface NotificationSendServiceRef {
 }
 
 /**
- * Service dedicated to providing access to NotificationMessageFunctionFactory values for specific NotificationTemplateTypes.
+ * Abstract service that orchestrates notification delivery across multiple channels (email, SMS, notification summaries).
+ *
+ * Implementations provide the channel-specific send services and optionally a function to derive
+ * {@link NotificationSummaryId} values from UIDs for in-app notification storage.
+ *
+ * Used by {@link NotificationServerActions} during the `sendNotification` flow to build
+ * and dispatch messages to all applicable channels.
  */
 export abstract class NotificationSendService {
   /**

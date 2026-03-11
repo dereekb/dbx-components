@@ -17,6 +17,9 @@ import {
 } from '@dereekb/firebase';
 import { internalServerError, preconditionConflictError } from '@dereekb/firebase-server';
 
+/**
+ * Creates an error indicating that a storage file model has already been initialized.
+ */
 export function storageFileModelAlreadyInitializedError() {
   return preconditionConflictError({
     message: `This model has already been initialized.`,
@@ -24,6 +27,9 @@ export function storageFileModelAlreadyInitializedError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFile is not flagged for group sync.
+ */
 export function storageFileNotFlaggedForGroupsSyncError() {
   return preconditionConflictError({
     message: `This StorageFile has not been flagged for sync with its groups.`,
@@ -31,6 +37,9 @@ export function storageFileNotFlaggedForGroupsSyncError() {
   });
 }
 
+/**
+ * Creates an error indicating that the target uploaded file does not exist in storage.
+ */
 export function uploadedFileDoesNotExistError() {
   return preconditionConflictError({
     message: `The target uploaded file does not exist.`,
@@ -38,6 +47,9 @@ export function uploadedFileDoesNotExistError() {
   });
 }
 
+/**
+ * Creates an error indicating that the file is not allowed to be initialized (rejected by the check function).
+ */
 export function uploadedFileIsNotAllowedToBeInitializedError() {
   return preconditionConflictError({
     message: `The target uploaded file is not allowed to be initialized.`,
@@ -45,6 +57,11 @@ export function uploadedFileIsNotAllowedToBeInitializedError() {
   });
 }
 
+/**
+ * Creates an error indicating that the file initialization failed with the given result type.
+ *
+ * @param data - error data containing the result type that caused the failure
+ */
 export function uploadedFileInitializationFailedError(data: UploadedFileInitializationFailedErrorData) {
   return internalServerError({
     message: `The target uploaded file initialization failed with result type "${data.resultType}".`,
@@ -55,6 +72,9 @@ export function uploadedFileInitializationFailedError(data: UploadedFileInitiali
   });
 }
 
+/**
+ * Creates an error indicating that the initialization result was discarded (e.g., the created file no longer exists).
+ */
 export function uploadedFileInitializationDiscardedError() {
   return internalServerError({
     message: `The target uploaded file initialization was discarded.`,
@@ -62,6 +82,9 @@ export function uploadedFileInitializationDiscardedError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFile is not in a valid state for processing.
+ */
 export function storageFileProcessingNotAllowedForInvalidStateError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument must be in an OK state to be processed and processing not flagged as SHOULD_NOT_PROCESS.`,
@@ -69,6 +92,9 @@ export function storageFileProcessingNotAllowedForInvalidStateError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFile is not queued for processing.
+ */
 export function storageFileProcessingNotQueuedForProcessingError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument is not queued for processing.`,
@@ -76,6 +102,9 @@ export function storageFileProcessingNotQueuedForProcessingError() {
   });
 }
 
+/**
+ * Creates an error indicating that no processor is configured for the StorageFile's type.
+ */
 export function storageFileProcessingNotAvailableForTypeError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument is not available for processing.`,
@@ -83,6 +112,9 @@ export function storageFileProcessingNotAvailableForTypeError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFile has already finished processing.
+ */
 export function storageFileAlreadyProcessedError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument has already finished processing.`,
@@ -90,6 +122,9 @@ export function storageFileAlreadyProcessedError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFile is not flagged for deletion.
+ */
 export function storageFileNotFlaggedForDeletionError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument is not flagged for deletion.`,
@@ -97,6 +132,9 @@ export function storageFileNotFlaggedForDeletionError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFile's scheduled deletion time has not yet passed.
+ */
 export function storageFileCannotBeDeletedYetError() {
   return preconditionConflictError({
     message: `The target StorageFileDocument cannot be deleted yet.`,
@@ -104,6 +142,9 @@ export function storageFileCannotBeDeletedYetError() {
   });
 }
 
+/**
+ * Creates an error indicating that the StorageFileGroup is still queued for initialization and cannot be operated on.
+ */
 export function storageFileGroupQueuedForInitializationError() {
   return preconditionConflictError({
     message: `The target StorageFileGroupDocument is queued for initialization.`,
@@ -111,6 +152,9 @@ export function storageFileGroupQueuedForInitializationError() {
   });
 }
 
+/**
+ * Creates an error indicating that the required model key or storageFileId is missing when creating a StorageFileGroup.
+ */
 export function createStorageFileGroupInputError() {
   return preconditionConflictError({
     message: `The model or storageFileId is required for creating a StorageFileGroup.`,

@@ -3,36 +3,48 @@ import { type NotificationTemplateType, type NotificationMessageFunctionFactory 
 
 // MARK: Tokens
 /**
- * Token to access/override the NotificationTemplateService's defaults records.
+ * NestJS injection token for overriding the default {@link NotificationMessageFunctionFactory} values
+ * used by {@link NotificationTemplateService} when no type-specific config is found.
+ *
+ * Provide a {@link NotificationTemplateServiceDefaultsRecord} at this token to set baseline
+ * message factories for each {@link NotificationTemplateType}.
  */
 export const NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN: InjectionToken = 'NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE';
 
 /**
- * Token to access the NotificationTemplateService's type configs array.
+ * NestJS injection token for the array of type-specific template configurations
+ * consumed by {@link NotificationTemplateService}.
+ *
+ * Provide a {@link NotificationTemplateServiceTypeConfigArray} at this token to register
+ * message factories for individual {@link NotificationTemplateType} values.
  */
 export const NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN: InjectionToken = 'NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY';
 
 // MARK: Config
 /**
- * Configuration object used by the NotificationTemplateService to describe how to respond to a NotificationTemplateType request for a NotificationMessageFunctionFactory.
+ * Maps a single {@link NotificationTemplateType} to its {@link NotificationMessageFunctionFactory},
+ * telling {@link NotificationTemplateService} how to build notification messages of that type.
  */
 export interface NotificationTemplateServiceTypeConfig {
   /**
-   * Type this config overrides.
+   * The notification template type this config handles.
    */
   readonly type: NotificationTemplateType;
   /**
-   * Factory for messages of this type.
+   * Factory that creates {@link NotificationMessageFunction} instances for this type.
    */
   readonly factory: NotificationMessageFunctionFactory<any>;
 }
 
 /**
- * Used by NotificationTemplateService for template configurations.
+ * Array of {@link NotificationTemplateServiceTypeConfig} entries registered
+ * via {@link NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN}.
  */
 export type NotificationTemplateServiceTypeConfigArray = NotificationTemplateServiceTypeConfig[];
 
 /**
- * A record of default NotificationMessageFunctionFactory valeus to use for specific NotificationTemplateType values.
+ * Record mapping each {@link NotificationTemplateType} to a default {@link NotificationMessageFunctionFactory}.
+ *
+ * Used as the fallback when no type-specific {@link NotificationTemplateServiceTypeConfig} is registered.
  */
 export type NotificationTemplateServiceDefaultsRecord = Record<NotificationTemplateType, NotificationMessageFunctionFactory>;

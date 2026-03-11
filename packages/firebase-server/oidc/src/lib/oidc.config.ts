@@ -56,6 +56,9 @@ export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
 }
 
 // MARK: Token Lifetimes
+/**
+ * Configures the lifetime (in seconds) for each token type issued by the OIDC provider.
+ */
 export interface OidcTokenLifetimes {
   /**
    * Access token lifetime in seconds. Defaults to 900 (15 min).
@@ -71,6 +74,9 @@ export interface OidcTokenLifetimes {
   readonly authorizationCode: number;
 }
 
+/**
+ * Default token lifetimes: 15 min access tokens, 30-day refresh tokens, 60 s auth codes.
+ */
 export const DEFAULT_OIDC_TOKEN_LIFETIMES: OidcTokenLifetimes = {
   accessToken: 900,
   refreshToken: 30 * 24 * 60 * 60,

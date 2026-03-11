@@ -175,35 +175,35 @@ Model function factories and development utilities.
 The largest and most complex module. Server-side notification action services, send pipelines, and task handlers.
 
 #### 8A. Core action services
-- [ ] `notification.action.service.ts` — (~1,942 lines) Document the main notification action service; explain each action method's purpose, inputs, and flow; cross-reference `@dereekb/firebase` notification types; add `@example` blocks for key actions
-- [ ] `notification.action.init.service.ts` — (~347 lines) Document initialization service; explain how it wires notification actions into the CRUD system
+- [x] `notification.action.service.ts` — (~1,942 lines) Document the main notification action service; explain each action method's purpose, inputs, and flow; cross-reference `@dereekb/firebase` notification types; add `@example` blocks for key actions
+- [x] `notification.action.init.service.ts` — (~347 lines) Document initialization service; explain how it wires notification actions into the CRUD system
 
 #### 8B. Configuration & errors
-- [ ] `notification.config.ts` — Document injection tokens and configuration interfaces
-- [ ] `notification.config.service.ts` — Audit existing JSDoc on config service
-- [ ] `notification.error.ts` — Document all 6 error classes with when they're thrown
-- [ ] `notification.module.ts` — Audit existing JSDoc on NestJS module
+- [x] `notification.config.ts` — Document injection tokens and configuration interfaces
+- [x] `notification.config.service.ts` — Audit existing JSDoc on config service
+- [x] `notification.error.ts` — Document all 6 error classes with when they're thrown
+- [x] `notification.module.ts` — Audit existing JSDoc on NestJS module
 
 #### 8C. Send pipeline
-- [ ] `notification.send.ts` — Document send type exports
-- [ ] `notification.send.service.ts` — Document send service orchestration; explain channel routing
-- [ ] `notification.send.service.notificationsummary.ts` — Document summary notification send logic
-- [ ] `notification.send.service.text.ts` — Document text/SMS send service
-- [ ] `notification.create.run.ts` — Document notification creation run logic
+- [x] `notification.send.ts` — Document send type exports
+- [x] `notification.send.service.ts` — Document send service orchestration; explain channel routing
+- [x] `notification.send.service.notificationsummary.ts` — Document summary notification send logic
+- [x] `notification.send.service.text.ts` — Document text/SMS send service
+- [x] `notification.create.run.ts` — Document notification creation run logic
 
 #### 8D. Task system
-- [ ] `notification.task.service.ts` — Document task service entry point
-- [ ] `notification.task.service.handler.ts` — Document task handler dispatch logic
-- [ ] `notification.task.service.util.ts` — Document task utility functions
-- [ ] `notification.task.subtask.handler.ts` — (~542 lines) Document subtask handler; explain checkpoint-based async workflow
+- [x] `notification.task.service.ts` — Document task service entry point
+- [x] `notification.task.service.handler.ts` — Document task handler dispatch logic
+- [x] `notification.task.service.util.ts` — Document task utility functions
+- [x] `notification.task.subtask.handler.ts` — (~542 lines) Document subtask handler; explain checkpoint-based async workflow
 
 #### 8E. Utilities & expedite
-- [ ] `notification.expedite.service.ts` — Document expedite service for priority notification processing
-- [ ] `notification.util.ts` — (~756 lines) Document all utility functions; explain recipient expansion, config resolution, template building
+- [x] `notification.expedite.service.ts` — Document expedite service for priority notification processing (already had good JSDoc)
+- [x] `notification.util.ts` — (~756 lines) Document all utility functions; explain recipient expansion, config resolution, template building
 
 #### 8F. Verify
 - [ ] Run `pnpm nx run firebase-server-model:test` to confirm no test breakage
-- [ ] Run `pnpm nx run firebase-server-model:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server-model:build-base` to confirm no build errors
 
 ---
 
@@ -212,94 +212,94 @@ The largest and most complex module. Server-side notification action services, s
 Server-side storage file action services, upload pipeline, and task handlers.
 
 #### 9A. Core action services
-- [ ] `storagefile.action.server.ts` — (~1,137 lines) Document server action service; explain each action method; cross-reference `@dereekb/firebase` storagefile types
-- [ ] `storagefile.action.init.service.ts` — (~245 lines) Document initialization service and CRUD wiring
+- [x] `storagefile.action.server.ts` — (~1,137 lines) Document server action service; explain each action method; cross-reference `@dereekb/firebase` storagefile types
+- [x] `storagefile.action.init.service.ts` — (~245 lines) Document initialization service and CRUD wiring
 
 #### 9B. Upload pipeline
-- [ ] `storagefile.upload.service.ts` — Document upload service entry point
-- [ ] `storagefile.upload.service.initializer.ts` — (~344 lines) Document upload initializer; explain file type routing and validation
+- [x] `storagefile.upload.service.ts` — Document upload service entry point
+- [x] `storagefile.upload.service.initializer.ts` — (~344 lines) Document upload initializer; explain file type routing and validation
 
 #### 9C. Tasks, errors, utilities
-- [ ] `storagefile.task.service.handler.ts` — (~536 lines) Document task handler for file processing workflows
-- [ ] `storagefile.error.ts` — Document all 5 error classes
-- [ ] `storagefile.module.ts` — Audit existing JSDoc
-- [ ] `storagefile.util.ts` — Document utility functions
+- [x] `storagefile.task.service.handler.ts` — (~536 lines) Document task handler for file processing workflows
+- [x] `storagefile.error.ts` — Document all 5 error classes
+- [x] `storagefile.module.ts` — Audit existing JSDoc
+- [x] `storagefile.util.ts` — Document utility functions
 
 #### 9D. Verify
 - [ ] Run `pnpm nx run firebase-server-model:test` to confirm no test breakage
-- [ ] Run `pnpm nx run firebase-server-model:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server-model:build-base` to confirm no build errors (pre-existing TS error unrelated to JSDoc changes)
 
 ---
 
 ### Phase 10: Model Sub-Package — Mailgun (`packages/firebase-server/model/src/lib/mailgun/`)
 
 #### 10A. Mailgun notification integration
-- [ ] `notification.send.service.mailgun.ts` — Audit existing JSDoc; add cross-references to notification send pipeline
+- [x] `notification.send.service.mailgun.ts` — Audit existing JSDoc; add cross-references to notification send pipeline
 
 #### 10B. Verify
-- [ ] Run `pnpm nx run firebase-server-model:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server-model:build-base` to confirm no build errors
 
 ---
 
 ### Phase 11: Mailgun Sub-Package (`packages/firebase-server/mailgun/src/lib/`)
 
 #### 11A. Auth integration
-- [ ] `auth.mailgun.ts` — Audit existing JSDoc; add `@example` for webhook verification setup
+- [x] `auth.mailgun.ts` — Audit existing JSDoc; add `@example` for webhook verification setup
 
 #### 11B. Verify
-- [ ] Run `pnpm nx run firebase-server-mailgun:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server-mailgun:build-base` to confirm no build errors
 
 ---
 
 ### Phase 12: Zoho Sub-Package (`packages/firebase-server/zoho/src/lib/`)
 
 #### 12A. Zoho integration
-- [ ] `zoho.accounts.firebase.system.ts` — Document Zoho accounts system integration
-- [ ] `zoho.accounts.firebase.ts` — Document Zoho accounts Firebase bridge
+- [x] `zoho.accounts.firebase.system.ts` — Document Zoho accounts system integration
+- [x] `zoho.accounts.firebase.ts` — Document Zoho accounts Firebase bridge
 
 #### 12B. Verify
-- [ ] Run `pnpm nx run firebase-server-zoho:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server-zoho:build-base` to confirm no build errors
 
 ---
 
 ### Phase 13: OIDC Sub-Package (`packages/firebase-server/oidc/src/lib/`)
 
-New OIDC provider module. Currently has zero JSDoc coverage.
+New OIDC provider module. Already had good JSDoc coverage on services/controllers/middleware; added missing JSDoc on model types, factories, and config constants.
 
 #### 13A. Configuration & module
-- [ ] `oidc.config.ts` — Document OIDC configuration interfaces and injection tokens
-- [ ] `oidc.module.ts` — Document NestJS OIDC module registration and configuration
+- [x] `oidc.config.ts` — Document OIDC configuration interfaces and injection tokens
+- [x] `oidc.module.ts` — Document NestJS OIDC module registration and configuration
 
 #### 13B. Model — Adapter
-- [ ] `model/model.ts` — Document OIDC model type definitions
-- [ ] `model/adapter/adapter.ts` — Document Firestore adapter for oidc-provider; explain how it implements the oidc-provider Adapter interface
-- [ ] `model/adapter/adapter.id.ts` — Document adapter ID generation
-- [ ] `model/adapter/adapter.query.ts` — Document adapter query helpers
+- [x] `model/model.ts` — Document OIDC model type definitions
+- [x] `model/adapter/adapter.ts` — Document Firestore adapter for oidc-provider; explain how it implements the oidc-provider Adapter interface
+- [x] `model/adapter/adapter.id.ts` — Document adapter ID generation
+- [x] `model/adapter/adapter.query.ts` — Document adapter query helpers
 
 #### 13C. Model — JWKS
-- [ ] `model/jwks/jwks.ts` — Document JWKS key model; explain key lifecycle (active → rotated → retired)
-- [ ] `model/jwks/jwks.id.ts` — Document JWKS key ID generation
-- [ ] `model/jwks/jwks.query.ts` — Document JWKS query helpers
+- [x] `model/jwks/jwks.ts` — Document JWKS key model; explain key lifecycle (active → rotated → retired)
+- [x] `model/jwks/jwks.id.ts` — Document JWKS key ID generation
+- [x] `model/jwks/jwks.query.ts` — Document JWKS query helpers
 
 #### 13D. Services
-- [ ] `service/oidc.service.ts` — Document main OIDC service
-- [ ] `service/oidc.config.service.ts` — Document OIDC configuration service; explain provider setup
-- [ ] `service/adapter.service.ts` — Document adapter service wrapping Firestore adapter
-- [ ] `service/jwks.service.ts` — Document JWKS key management service; explain rotation and GCS publishing
-- [ ] `service/account.service.ts` — Document findAccount bridge to Firebase Auth
-- [ ] `service/account.ts` — Document account interface types
+- [x] `service/oidc.service.ts` — Document main OIDC service
+- [x] `service/oidc.config.service.ts` — Document OIDC configuration service; explain provider setup
+- [x] `service/adapter.service.ts` — Document adapter service wrapping Firestore adapter
+- [x] `service/jwks.service.ts` — Document JWKS key management service; explain rotation and GCS publishing
+- [x] `service/account.service.ts` — Document findAccount bridge to Firebase Auth
+- [x] `service/account.ts` — Document account interface types
 
 #### 13E. Controllers
-- [ ] `controller/interaction.controller.ts` — Document OIDC interaction flow controller (login/consent)
-- [ ] `controller/provider.controller.ts` — Document provider route controller
-- [ ] `controller/wellknown.controller.ts` — Document well-known endpoint controller
+- [x] `controller/interaction.controller.ts` — Document OIDC interaction flow controller (login/consent)
+- [x] `controller/provider.controller.ts` — Document provider route controller
+- [x] `controller/wellknown.controller.ts` — Document well-known endpoint controller
 
 #### 13F. Middleware
-- [ ] `middleware/oauth-auth.middleware.ts` — Document OAuth bearer token middleware
-- [ ] `middleware/oauth-auth.module.ts` — Document OAuth auth NestJS module
+- [x] `middleware/oauth-auth.middleware.ts` — Document OAuth bearer token middleware
+- [x] `middleware/oauth-auth.module.ts` — Document OAuth auth NestJS module
 
 #### 13G. Verify
-- [ ] Run `pnpm nx run firebase-server-oidc:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server-oidc:build-base` to confirm no build errors
 
 ---
 

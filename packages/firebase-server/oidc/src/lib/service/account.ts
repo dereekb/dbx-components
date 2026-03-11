@@ -7,6 +7,12 @@ export interface OidcAccount {
   claims(use: string, scope: string, claims?: Record<string, unknown>, rejected?: string[]): Promise<OidcAccountClaims>;
 }
 
+/**
+ * Claims returned by the OIDC userinfo and ID token endpoints.
+ *
+ * Standard OIDC claims (`sub`, `email`, `name`, etc.) plus arbitrary custom claims
+ * via the index signature.
+ */
 export interface OidcAccountClaims {
   sub: string;
   email?: string;

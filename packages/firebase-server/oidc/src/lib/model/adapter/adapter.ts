@@ -10,6 +10,9 @@ export abstract class OidcAdapterFirestoreCollections {
 }
 
 // MARK: Identity
+/**
+ * Firestore model identity for {@link OidcAdapterEntry} documents.
+ */
 export const oidcAdapterEntryIdentity = firestoreModelIdentity('oidcAdapterEntry', 'oidc_oa');
 
 // MARK: Types
@@ -46,6 +49,9 @@ export interface OidcAdapterEntry {
   expiresAt?: Maybe<Date>;
 }
 
+/**
+ * Firestore document wrapper for {@link OidcAdapterEntry}.
+ */
 export class OidcAdapterEntryDocument extends AbstractFirestoreDocument<OidcAdapterEntry, OidcAdapterEntryDocument, typeof oidcAdapterEntryIdentity> {
   get modelIdentity() {
     return oidcAdapterEntryIdentity;
@@ -53,6 +59,9 @@ export class OidcAdapterEntryDocument extends AbstractFirestoreDocument<OidcAdap
 }
 
 // MARK: Converter
+/**
+ * Firestore snapshot converter for {@link OidcAdapterEntry} documents.
+ */
 export const oidcAdapterEntryConverter = snapshotConverterFunctions<OidcAdapterEntry>({
   fields: {
     type: firestoreString({ default: '' }),
@@ -65,6 +74,9 @@ export const oidcAdapterEntryConverter = snapshotConverterFunctions<OidcAdapterE
 });
 
 // MARK: Collection
+/**
+ * Typed Firestore collection for {@link OidcAdapterEntry} documents.
+ */
 export type OidcAdapterEntryFirestoreCollection = FirestoreCollection<OidcAdapterEntry, OidcAdapterEntryDocument>;
 
 /**
@@ -74,10 +86,16 @@ export interface OidcAdapterEntryFirestoreCollectionConfig {
   readonly firestoreContext: FirestoreContext;
 }
 
+/**
+ * Returns the Firestore {@link CollectionReference} for {@link OidcAdapterEntry} documents.
+ */
 export function oidcAdapterEntryCollectionReference(context: FirestoreContext): CollectionReference<OidcAdapterEntry> {
   return context.collection(oidcAdapterEntryIdentity.collectionName);
 }
 
+/**
+ * Creates an {@link OidcAdapterEntryFirestoreCollection} from the given configuration.
+ */
 export function oidcAdapterEntryFirestoreCollection(config: OidcAdapterEntryFirestoreCollectionConfig): OidcAdapterEntryFirestoreCollection {
   const { firestoreContext } = config;
 

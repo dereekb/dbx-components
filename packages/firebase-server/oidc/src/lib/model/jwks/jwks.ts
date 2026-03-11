@@ -14,9 +14,19 @@ export abstract class JwksFirestoreCollections {
 }
 
 // MARK: Identity
+/**
+ * Firestore model identity for {@link JwksKey} documents.
+ */
 export const jwksKeyIdentity = firestoreModelIdentity('jwksKey', 'jk');
 
 // MARK: Types
+/**
+ * Lifecycle status of a JWKS signing key.
+ *
+ * - `active` — currently used for signing new tokens
+ * - `rotated` — replaced by a newer key but still valid for verification until expiry
+ * - `retired` — fully expired and excluded from the public JWKS
+ */
 export type JwksKeyStatus = 'active' | 'rotated' | 'retired';
 
 /**
@@ -59,8 +69,14 @@ export interface JwksKey {
   expiresAt?: Maybe<Date>;
 }
 
+/**
+ * Role type for JWKS key documents. Read-only since keys are managed by the {@link JwksService}.
+ */
 export type JwksKeyRoles = GrantedReadRole;
 
+/**
+ * Firestore document wrapper for {@link JwksKey}.
+ */
 export class JwksKeyDocument extends AbstractFirestoreDocument<JwksKey, JwksKeyDocument, typeof jwksKeyIdentity> {
   get modelIdentity() {
     return jwksKeyIdentity;
@@ -97,10 +113,16 @@ export function jwksKeyConverter(config: JwksKeyConverterConfig) {
 }
 
 // MARK: Collection
+/**
+ * Returns the Firestore {@link CollectionReference} for {@link JwksKey} documents.
+ */
 export function jwksKeyCollectionReference(context: FirestoreContext): CollectionReference<JwksKey> {
   return context.collection(jwksKeyIdentity.collectionName);
 }
 
+/**
+ * Typed Firestore collection for {@link JwksKey} documents.
+ */
 export type JwksKeyFirestoreCollection = FirestoreCollection<JwksKey, JwksKeyDocument>;
 
 /**
@@ -110,6 +132,9 @@ export interface JwksKeyFirestoreCollectionConfig extends JwksKeyConverterConfig
   readonly firestoreContext: FirestoreContext;
 }
 
+/**
+ * Creates a {@link JwksKeyFirestoreCollection} with encrypted private key field support.
+ */
 export function jwksKeyFirestoreCollection(config: JwksKeyFirestoreCollectionConfig): JwksKeyFirestoreCollection {
   const { firestoreContext } = config;
   return firestoreContext.firestoreCollection({
