@@ -2,16 +2,18 @@ import request from 'supertest';
 import { createHash, randomBytes } from 'crypto';
 import { type INestApplication } from '@nestjs/common';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
-import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService } from '@dereekb/firebase-server/oidc';
+import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let app: INestApplication;
   let jwksService: JwksService;
+  let oidcService: OidcService;
   let oidcModuleConfig: OidcModuleConfig;
 
   beforeEach(async () => {
     const serverContext = f.instance.apiServerNestContext;
     jwksService = serverContext.jwksService;
+    oidcService = serverContext.oidcService;
     oidcModuleConfig = f.instance.nest.get(OidcModuleConfig);
 
     // Generate keys so JWKS endpoints work
@@ -278,6 +280,125 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const userinfoRes = await request(server).get('/oidc/me').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);
 
         expect(userinfoRes.body.sub).toBe(u.uid);
+      });
+
+      it('should return demo auth claims in userinfo when demo scope is requested', async () => {
+        const server = app.getHttpServer();
+
+        const cookieJar = new Map<string, string>();
+
+        function collectCookies(res: request.Response): void {
+          const setCookies = res.headers['set-cookie'];
+
+          if (setCookies) {
+            const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+            for (const cookie of items) {
+              const [nameValue] = cookie.split(';');
+              const [name] = nameValue.split('=');
+              cookieJar.set(name, nameValue);
+            }
+          }
+        }
+
+        function cookieHeader(): string {
+          return [...cookieJar.values()].join('; ');
+        }
+
+        // 1. Register a client
+        const regRes = await request(server)
+          .post('/oidc/reg')
+          .send({
+            redirect_uris: ['https://example.com/callback'],
+            response_types: ['code'],
+            grant_types: ['authorization_code', 'refresh_token'],
+            token_endpoint_auth_method: 'client_secret_post'
+          })
+          .expect(201);
+
+        const { client_id, client_secret } = regRes.body;
+
+        // 2. Generate PKCE
+        const codeVerifier = randomBytes(32).toString('base64url');
+        const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+        // 3. Start authorization with demo scope
+        const authRes = await request(server)
+          .get('/oidc/auth')
+          .query({
+            client_id,
+            redirect_uri: 'https://example.com/callback',
+            response_type: 'code',
+            scope: 'openid email demo',
+            code_challenge: codeChallenge,
+            code_challenge_method: 'S256',
+            state: 'test-state',
+            nonce: 'test-nonce'
+          })
+          .redirects(0);
+
+        expect(authRes.status).toBe(303);
+        collectCookies(authRes);
+        const loginUid = extractInteractionUid(authRes);
+
+        // 4. Login
+        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken: u.uid }).redirects(0);
+        expect(loginRes.status).toBe(303);
+        collectCookies(loginRes);
+
+        // 5. Resume after login
+        const resumeAfterLoginPath = extractRedirectPath(loginRes);
+        const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
+        expect(consentRedirectRes.status).toBe(303);
+        collectCookies(consentRedirectRes);
+        const consentUid = extractInteractionUid(consentRedirectRes);
+
+        // 6. Approve consent
+        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ approved: true }).redirects(0);
+        expect(consentRes.status).toBe(303);
+        collectCookies(consentRes);
+
+        // 7. Follow resume redirect to get authorization code
+        const resumeAfterConsentPath = extractRedirectPath(consentRes);
+        const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
+        expect(callbackRedirectRes.status).toBe(303);
+        collectCookies(callbackRedirectRes);
+
+        const callbackUrl = new URL(callbackRedirectRes.headers['location']);
+        const authorizationCode = callbackUrl.searchParams.get('code');
+
+        // 8. Exchange code for tokens
+        const tokenRes = await request(server)
+          .post('/oidc/token')
+          .set('Cookie', cookieHeader())
+          .type('form')
+          .send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id,
+            client_secret,
+            code_verifier: codeVerifier
+          })
+          .expect(200);
+
+        expect(tokenRes.body.scope).toContain('demo');
+
+        // 9. Fetch userinfo and verify demo auth claims
+        const userinfoRes = await request(server).get('/oidc/me').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);
+
+        expect(userinfoRes.body.sub).toBe(u.uid);
+
+        // Verify demo auth claims match DemoApiAuthClaims fields
+        expect(userinfoRes.body.o).toBe(1); // default user is onboarded
+        expect(userinfoRes.body.a).toBe(0); // default user is not admin
+
+        // 10. Verify verifyAccessToken returns a valid OAuthAuthContext
+        const oauthAuthContext = await oidcService.verifyAccessToken(tokenRes.body.access_token);
+        expect(oauthAuthContext).toBeDefined();
+        expect(oauthAuthContext!.uid).toBe(u.uid);
+        expect(oauthAuthContext!.token.sub).toBe(u.uid);
+        expect(oauthAuthContext!.token.scope).toContain('demo');
       });
     });
   });

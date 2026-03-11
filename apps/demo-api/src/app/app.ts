@@ -7,6 +7,7 @@ import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
 import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
 import { NestServerInstanceConfig } from '@dereekb/firebase-server';
+import { INestApplication } from '@nestjs/common';
 
 export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppModule> = {
   moduleClass: DemoApiAppModule,
@@ -14,6 +15,9 @@ export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppMod
   globalApiRoutePrefix: {
     globalApiRoutePrefix: '/api',
     exclude: [...FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE]
+  },
+  configureNestServerInstance: (_nestApp: INestApplication) => {
+    // Additional INestApplication-level configuration can go here
   }
 };
 

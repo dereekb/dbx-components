@@ -1,4 +1,4 @@
-import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { type OidcFirestoreCollections, type JwksService, type OidcAccountService } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../../common';
 import { type DemoOidcScope } from './oidc.module';
@@ -130,6 +130,32 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           expect(claims.sub).toBe(u.uid);
           expect(claims.email).toBeDefined();
+        });
+
+        it('should include demo auth claims for demo scope', async () => {
+          const userContext = oidcAccountService.userContext(u.uid);
+          const account = await userContext.findAccount();
+          const claims = await account!.claims('userinfo', 'openid demo');
+
+          expect(claims.sub).toBe(u.uid);
+          expect(claims.o).toBe(1); // default user is onboarded
+          expect(claims.a).toBe(0); // default user is not admin
+          expect(claims.fr).toBeUndefined(); // no file restriction by default
+        });
+      });
+
+      describe('demo scope claims with admin user', () => {
+        // Create a separate admin user context to test admin claims
+        demoAuthorizedUserAdminContext({ f }, (adminUser) => {
+          it('should include admin claim for admin user', async () => {
+            const userContext = oidcAccountService.userContext(adminUser.uid);
+            const account = await userContext.findAccount();
+            const claims = await account!.claims('userinfo', 'openid demo');
+
+            expect(claims.sub).toBe(adminUser.uid);
+            expect(claims.o).toBe(1);
+            expect(claims.a).toBe(1); // admin user
+          });
         });
       });
     });

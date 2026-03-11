@@ -10,6 +10,7 @@ import { createAdapterFactory } from './adapter.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/firebase-server';
 import { cachedGetter } from '@dereekb/util';
+import { type OAuthAuthContext } from '../middleware/oauth-auth.middleware';
 
 // MARK: Suppress Body Parser Warning
 const OIDC_PROVIDER_BODY_PARSER_WARNING = 'oidc-provider WARNING: already parsed request body detected';
@@ -91,6 +92,34 @@ export class OidcService {
     }
 
     return grant;
+  }
+
+  // MARK: Token Verification
+  /**
+   * Verifies an opaque access token and returns the {@link OAuthAuthContext}.
+   *
+   * Uses the provider's `AccessToken` model to look up the token and extract
+   * the account ID, scope, and client ID.
+   *
+   * @param token - The opaque access token string.
+   * @returns The auth context, or `undefined` if the token is invalid or expired.
+   */
+  async verifyAccessToken(token: string): Promise<OAuthAuthContext | undefined> {
+    const provider = await this.getProvider();
+    const accessToken = await provider.AccessToken.find(token);
+
+    if (!accessToken) {
+      return undefined;
+    }
+
+    return {
+      uid: accessToken.accountId,
+      token: {
+        sub: accessToken.accountId,
+        scope: accessToken.scope,
+        client_id: accessToken.clientId
+      }
+    };
   }
 
   // MARK: Internal

@@ -58,22 +58,13 @@ export class OAuthBearerTokenMiddleware implements NestMiddleware {
     const token = authHeader.slice(7);
 
     try {
-      // Use the provider's AccessToken model to verify opaque tokens
-      const provider = await this.oidcService.getProvider();
-      const accessToken = await provider.AccessToken.find(token);
+      const oauthAuth = await this.oidcService.verifyAccessToken(token);
 
-      if (!accessToken) {
+      if (!oauthAuth) {
         throw new UnauthorizedException('Invalid or expired access token');
       }
 
-      req.oauthAuth = {
-        uid: accessToken.accountId,
-        token: {
-          sub: accessToken.accountId,
-          scope: accessToken.scope,
-          client_id: accessToken.clientId
-        }
-      };
+      req.oauthAuth = oauthAuth;
 
       next();
     } catch (err) {

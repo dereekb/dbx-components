@@ -4,6 +4,7 @@ import type { OidcAccountServiceDelegate, OidcProviderConfig, OidcRenderErrorFun
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
+import type { DemoApiAuthClaims } from 'demo-firebase';
 
 // MARK: Scopes
 /**
@@ -17,7 +18,7 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     openid: ['sub'],
     profile: ['name', 'picture'],
     email: ['email', 'email_verified'],
-    demo: ['sub']
+    demo: ['sub', 'o', 'a', 'fr']
   },
   responseTypes: ['code'],
   grantTypes: ['authorization_code', 'refresh_token']
@@ -46,6 +47,13 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
           claims.email = user.email;
           claims.email_verified = user.emailVerified ?? false;
         }
+      }
+
+      if (scopes.has('demo')) {
+        const authClaims = await userContext.loadClaims<DemoApiAuthClaims>();
+        claims.o = authClaims.o;
+        claims.a = authClaims.a;
+        claims.fr = authClaims.fr;
       }
 
       return claims;
