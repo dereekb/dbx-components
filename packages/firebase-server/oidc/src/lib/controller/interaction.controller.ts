@@ -36,6 +36,8 @@ export class OidcInteractionController {
    * GET /interaction/:uid
    *
    * Detects the interaction type and redirects to the appropriate frontend page.
+   *
+   * @throws {HttpException} 404 when the interaction UID is not found or has expired.
    */
   @Get(':uid')
   async getInteraction(@Param('uid') uid: string, @Req() req: Request, @Res() res: Response) {
@@ -57,6 +59,8 @@ export class OidcInteractionController {
    * POST /interaction/:uid/login
    *
    * Receives auth proof from frontend (Firebase ID token) and completes the login interaction.
+   *
+   * @throws {HttpException} 400 when the login interaction cannot be completed.
    */
   @Post(':uid/login')
   async postLogin(@Param('uid') _uid: string, @Body() body: LoginInteractionBody, @Req() req: Request, @Res() res: Response) {
@@ -82,7 +86,10 @@ export class OidcInteractionController {
   /**
    * POST /interaction/:uid/consent
    *
-   * Receives consent decision from frontend.
+   * Receives consent decision from frontend. Grants missing OIDC scopes and claims
+   * when approved, or returns `access_denied` when rejected.
+   *
+   * @throws {HttpException} 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
   async postConsent(@Param('uid') _uid: string, @Body() body: ConsentInteractionBody, @Req() req: Request, @Res() res: Response) {

@@ -108,6 +108,10 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
       }
     }
 
+    /**
+     * Converts a Firestore document into an oidc-provider payload,
+     * returning `undefined` if the entry has expired.
+     */
     private _toPayload(data: OidcAdapterEntry): AdapterPayload | undefined {
       if (data.expiresAt) {
         const expiresDate = data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as any).toDate();

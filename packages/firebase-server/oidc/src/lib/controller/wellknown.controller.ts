@@ -38,8 +38,10 @@ export class OidcWellKnownController {
   }
 
   /**
-   * OAuth Protected Resource discovery endpoint.
-   * Required by Claude custom connectors (RFC 8707).
+   * OAuth Protected Resource discovery endpoint (RFC 8707).
+   *
+   * Returns the authorization server(s) that protect this resource,
+   * allowing clients to discover which authorization server to use.
    */
   @Get('oauth-protected-resource')
   getProtectedResource() {

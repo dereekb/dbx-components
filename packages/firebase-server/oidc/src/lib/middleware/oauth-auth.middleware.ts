@@ -36,7 +36,11 @@ export interface OAuthAuthenticatedRequest extends Request {
  *
  * Extracts `Authorization: Bearer <token>` from the request header,
  * verifies it via the provider's AccessToken model, and attaches the
- * auth context to the request.
+ * auth context to the request as {@link OAuthAuthContext}.
+ *
+ * Applied to routes via {@link ConfigureOAuthAuthMiddlewareModule}.
+ *
+ * @throws {UnauthorizedException} When the Authorization header is missing, malformed, or the token is invalid/expired.
  */
 @Injectable()
 export class OAuthBearerTokenMiddleware implements NestMiddleware {

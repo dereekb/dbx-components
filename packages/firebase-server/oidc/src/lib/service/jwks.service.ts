@@ -4,7 +4,7 @@ import { resolveEncryptionKey, encryptValue, decryptValue, type FirestoreEncrypt
 import { FirebaseStorageAccessorFile, iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { type JwksKey, type JsonWebKeyWithKid, OidcFirestoreCollections, type JwksKeyDocument } from '../model';
 import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 // MARK: Types
 /**

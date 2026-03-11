@@ -150,6 +150,13 @@ export abstract class OidcModuleConfig {
    */
   readonly suppressBodyParserWarning?: boolean;
 
+  /**
+   * Validates that all required fields are present on the config.
+   *
+   * Called by {@link oidcModuleConfigFactory} after building the config from environment variables.
+   *
+   * @throws {Error} When any required field (`issuer`, `loginUrl`, `consentUrl`, `jwksServiceConfig`, `jwksKeyConverterConfig`) is missing.
+   */
   static assertValidConfig(config: OidcModuleConfig) {
     if (!config.issuer) {
       throw new Error('OidcModuleConfig: issuer is required.');
