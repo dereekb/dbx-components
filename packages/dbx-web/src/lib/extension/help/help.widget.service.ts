@@ -67,6 +67,9 @@ export class DbxHelpWidgetService {
     }
   }
 
+  /**
+   * Returns the component class used for unrecognized help context keys.
+   */
   getDefaultWidgetComponentClass(): Maybe<Type<unknown>> {
     return this._defaultWidgetComponentClass;
   }
@@ -75,6 +78,9 @@ export class DbxHelpWidgetService {
     this._defaultWidgetComponentClass = componentClass;
   }
 
+  /**
+   * Returns the default icon used for help entries without a specific icon.
+   */
   getDefaultIcon(): Maybe<string> {
     return this._defaultIcon;
   }
@@ -83,6 +89,9 @@ export class DbxHelpWidgetService {
     this._defaultIcon = icon;
   }
 
+  /**
+   * Returns the component config displayed in the popover header, if set.
+   */
   getPopoverHeaderComponentConfig(): Maybe<DbxInjectionComponentConfig> {
     return this._popoverHeaderComponentConfig;
   }
@@ -91,6 +100,9 @@ export class DbxHelpWidgetService {
     this._popoverHeaderComponentConfig = componentConfig;
   }
 
+  /**
+   * Returns the component config displayed at the top of the help list view, if set.
+   */
   getHelpListHeaderComponentConfig(): Maybe<DbxInjectionComponentConfig> {
     return this._helpListHeaderComponentConfig;
   }
@@ -99,6 +111,9 @@ export class DbxHelpWidgetService {
     this._helpListHeaderComponentConfig = componentConfig;
   }
 
+  /**
+   * Returns the component config displayed at the bottom of the help list view, if set.
+   */
   getHelpListFooterComponentConfig(): Maybe<DbxInjectionComponentConfig> {
     return this._helpListFooterComponentConfig;
   }
@@ -128,22 +143,41 @@ export class DbxHelpWidgetService {
   }
 
   // MARK: Get
+  /**
+   * Returns all currently registered help context keys.
+   */
   getAllRegisteredHelpContextKeys(): DbxHelpContextKey[] {
     return Array.from(this._entries.keys());
   }
 
+  /**
+   * Retrieves the widget entry for a given help context key. Falls back to a default entry if a default widget component class is configured.
+   *
+   * @param helpContextKey - The help context key to look up
+   */
   getHelpWidgetEntry(helpContextKey: DbxHelpContextKey): Maybe<DbxHelpWidgetServiceEntry> {
     return this._entries.get(helpContextKey) ?? (this._defaultWidgetComponentClass ? { helpContextKey, title: '<Missing Help Topic>', widgetComponentClass: this._defaultWidgetComponentClass } : undefined);
   }
 
+  /**
+   * Retrieves widget entries for multiple help context keys, filtering out any unresolvable keys.
+   *
+   * @param helpContextKeys - Array of help context keys to look up
+   */
   getHelpWidgetEntriesForHelpContextKeys(helpContextKeys: DbxHelpContextKey[]): DbxHelpWidgetServiceEntry[] {
     return helpContextKeys.map((context) => this.getHelpWidgetEntry(context)).filter((entry) => !!entry) as DbxHelpWidgetServiceEntry[];
   }
 
+  /**
+   * Checks whether a widget entry is registered for the given help context key.
+   */
   hasHelpWidgetEntry(context: DbxHelpContextKey): boolean {
     return this._entries.has(context);
   }
 
+  /**
+   * Returns a cached map of help context keys to their sort priority values.
+   */
   getSortPriorityMap() {
     return this._sortPriorityMap();
   }

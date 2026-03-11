@@ -27,17 +27,30 @@ export class DbxHelpContextService {
     shareReplay(1)
   );
 
+  /**
+   * Observable array of all currently active help context key strings.
+   */
   readonly activeHelpContextKeysArray$ = this.activeHelpContextKeys$.pipe(
     map((x) => Array.from(x)),
     shareReplay(1)
   );
 
+  /**
+   * Registers a help context reference, adding its keys to the active set.
+   *
+   * @param reference - The help context reference to register
+   */
   register(reference: DbxHelpContextReference): void {
     const referenceSet = this._contextReferences.value;
     referenceSet.add(reference);
     this._contextReferences.next(referenceSet);
   }
 
+  /**
+   * Unregisters a help context reference, removing its keys from the active set.
+   *
+   * @param reference - The help context reference to unregister
+   */
   unregister(reference: DbxHelpContextReference): void {
     const referenceSet = this._contextReferences.value;
     referenceSet.delete(reference);
