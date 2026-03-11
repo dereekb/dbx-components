@@ -3,13 +3,26 @@ import { isBefore, isAfter, isSameSecond, isSameMinute, isSameHour, isSameDay, i
 
 // Vitest implemenation of matchers from the jest-date package.
 
+/**
+ * Utility type that extracts the `expected` parameter from a date matcher function, producing the consumer-facing matcher signature.
+ *
+ * Used by {@link AllDateMatchers} to map internal matcher implementations to their public `expect().toBe*()` signatures.
+ */
 export type DateMatcherTypeWithExpected<T extends (this: MatcherState, input: Date, expected: Date) => ExpectationResult> = T extends (this: MatcherState, input: any, expected: infer B) => ExpectationResult ? (expected: B) => ExpectationResult : never;
+
+/**
+ * Utility type that strips the `input` parameter from a date matcher function, producing a zero-argument consumer-facing matcher signature.
+ *
+ * Used by {@link AllDateMatchers} for day-of-week matchers like `toBeMonday()`.
+ */
 export type DateMatcherTypeWithoutExpected<T extends (this: MatcherState, input: Date) => ExpectationResult> = T extends (this: MatcherState, input: any) => ExpectationResult ? () => ExpectationResult : never;
 
 /**
- * This defines our matchers as they can be used in actual tests, see
- * https://vitest.dev/guide/extending-matchers.html#extending-matchers
- * for reference
+ * Augmented matcher interface providing date comparison and day-of-week assertion methods for Vitest.
+ *
+ * Register these matchers via `expect.extend(allDateMatchers)` to use them in tests.
+ *
+ * @see https://vitest.dev/guide/extending-matchers.html#extending-matchers
  */
 interface AllDateMatchers {
   toBeBefore: DateMatcherTypeWithExpected<typeof toBeBefore>;
@@ -32,7 +45,11 @@ interface AllDateMatchers {
 }
 
 /**
- * Check if a date is before another date.
+ * Asserts that the received date is chronologically before the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeBefore(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -47,7 +64,11 @@ function toBeBefore(this: MatcherState, received: Date, expected: Date): Expecta
 }
 
 /**
- * Check if a date is after another date.
+ * Asserts that the received date is chronologically after the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeAfter(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -62,7 +83,11 @@ function toBeAfter(this: MatcherState, received: Date, expected: Date): Expectat
 }
 
 /**
- * Check if a date is in the same second as another date.
+ * Asserts that the received date falls within the same calendar second as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -77,7 +102,11 @@ function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): E
 }
 
 /**
- * Check if a date is in the same minute as another date.
+ * Asserts that the received date falls within the same calendar minute as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -92,7 +121,11 @@ function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): E
 }
 
 /**
- * Check if a date is in the same hour as another date.
+ * Asserts that the received date falls within the same calendar hour as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -107,7 +140,11 @@ function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): Exp
 }
 
 /**
- * Check if a date is in the same day as another date.
+ * Asserts that the received date falls on the same calendar day as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -122,7 +159,11 @@ function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): Expe
 }
 
 /**
- * Check if a date is in the same week as another date.
+ * Asserts that the received date falls within the same calendar week as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -137,7 +178,11 @@ function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): Exp
 }
 
 /**
- * Check if a date is in the same month as another date.
+ * Asserts that the received date falls within the same calendar month as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -152,7 +197,11 @@ function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): Ex
 }
 
 /**
- * Check if a date is in the same quarter as another date.
+ * Asserts that the received date falls within the same fiscal quarter as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -167,7 +216,11 @@ function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): 
 }
 
 /**
- * Check if a date is in the same year as another date.
+ * Asserts that the received date falls within the same calendar year as the expected date.
+ *
+ * @param received - The date under test
+ * @param expected - The date to compare against
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
   const { isNot } = this;
@@ -182,7 +235,10 @@ function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): Exp
 }
 
 /**
- * Check if a date is on a Monday.
+ * Asserts that the received date falls on a Monday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeMonday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -196,7 +252,10 @@ function toBeMonday(this: MatcherState, received: Date): ExpectationResult {
 }
 
 /**
- * Check if a date is on a Tuesday.
+ * Asserts that the received date falls on a Tuesday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeTuesday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -210,7 +269,10 @@ function toBeTuesday(this: MatcherState, received: Date): ExpectationResult {
 }
 
 /**
- * Check if a date is on a Wednesday.
+ * Asserts that the received date falls on a Wednesday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeWednesday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -224,7 +286,10 @@ function toBeWednesday(this: MatcherState, received: Date): ExpectationResult {
 }
 
 /**
- * Check if a date is on a Thursday.
+ * Asserts that the received date falls on a Thursday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeThursday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -238,7 +303,10 @@ function toBeThursday(this: MatcherState, received: Date): ExpectationResult {
 }
 
 /**
- * Check if a date is on a Friday.
+ * Asserts that the received date falls on a Friday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeFriday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -252,7 +320,10 @@ function toBeFriday(this: MatcherState, received: Date): ExpectationResult {
 }
 
 /**
- * Check if a date is on a Saturday.
+ * Asserts that the received date falls on a Saturday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSaturday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -266,7 +337,10 @@ function toBeSaturday(this: MatcherState, received: Date): ExpectationResult {
 }
 
 /**
- * Check if a date is on a Sunday.
+ * Asserts that the received date falls on a Sunday.
+ *
+ * @param received - The date under test
+ * @returns Matcher result with a descriptive message on failure
  */
 function toBeSunday(this: MatcherState, received: Date): ExpectationResult {
   const { isNot } = this;
@@ -279,6 +353,18 @@ function toBeSunday(this: MatcherState, received: Date): ExpectationResult {
   };
 }
 
+/**
+ * Object containing all date matcher implementations, ready to be registered with `expect.extend()`.
+ *
+ * @example
+ * ```typescript
+ * import { allDateMatchers } from '@dereekb/vitest';
+ * expect.extend(allDateMatchers);
+ *
+ * expect(new Date('2024-01-15')).toBeBefore(new Date('2024-02-01'));
+ * expect(new Date('2024-01-15')).toBeMonday();
+ * ```
+ */
 export const allDateMatchers = {
   toBeBefore,
   toBeAfter,

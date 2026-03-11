@@ -1,7 +1,25 @@
 // https://dev.to/maciejtrzcinski/100vh-problem-with-ios-safari-3ge9
 
+/**
+ * Default CSS custom property name used to store the viewport height value.
+ */
 export const DEFAULT_VH100_VARIABLE_NAME = 'vh100';
 
+/**
+ * Creates a function that sets a CSS custom property on `document.documentElement` to the current `window.innerHeight` in pixels.
+ *
+ * This is a workaround for the iOS Safari 100vh bug where `100vh` includes the browser chrome,
+ * causing layout overflow. The returned function can be called to refresh the property value.
+ *
+ * @param cssVariableName - Name of the CSS custom property (without the `--` prefix)
+ * @returns A zero-argument function that updates the CSS property to the current inner height
+ *
+ * @example
+ * ```typescript
+ * const refresh = refreshVh100Function('vh100');
+ * refresh(); // sets --vh100 to e.g. "812px"
+ * ```
+ */
 export function refreshVh100Function(cssVariableName = DEFAULT_VH100_VARIABLE_NAME) {
   const cssProperty = `--${cssVariableName}`;
   return () => {
