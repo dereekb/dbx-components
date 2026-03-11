@@ -2,8 +2,24 @@ import { type DescriptionFieldConfig, type MaterialFormFieldConfig, type Labeled
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type TextFieldLengthConfig } from '../value/text/text.field';
 
+/**
+ * Configuration for a rich text editor field with optional length constraints.
+ */
 export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, MaterialFormFieldConfig {}
 
+/**
+ * Creates a Formly field configuration for a rich text editor.
+ *
+ * The field defaults to an empty string and updates the model on blur events.
+ *
+ * @param config - Text editor field configuration
+ * @returns A validated {@link FormlyFieldConfig} with type `'texteditor'`
+ *
+ * @example
+ * ```typescript
+ * const field = textEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
+ * ```
+ */
 export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfig {
   const { key, minLength, maxLength, materialFormField } = config;
   const fieldConfig: FormlyFieldConfig = formlyField({

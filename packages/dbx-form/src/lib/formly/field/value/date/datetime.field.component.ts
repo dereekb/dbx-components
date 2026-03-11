@@ -40,10 +40,19 @@ export enum DbxDateTimeFieldTimeMode {
   NONE = 'none'
 }
 
+/**
+ * Picker configuration for the date-time field, derived from {@link DateTimeMinuteConfig} without the `date` property.
+ */
 export type DbxDateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
+/**
+ * Direction of synchronization between date-time fields.
+ */
 export type DbxDateTimeFieldSyncType = 'before' | 'after';
 
+/**
+ * Configuration for synchronizing this date-time field with another field in the same form.
+ */
 export interface DbxDateTimeFieldSyncField {
   /**
    * Field key/path to sync with/against.
@@ -63,6 +72,9 @@ export interface DbxDateTimeFieldTimeDateConfig<I = unknown> {
   readonly mapValue?: MapFunction<I, Maybe<DateOrDayString>>;
 }
 
+/**
+ * Type guard that checks whether the input is a {@link DbxDateTimeFieldTimeDateConfig}.
+ */
 export function isDbxDateTimeFieldTimeDateConfig(input: unknown): input is DbxDateTimeFieldTimeDateConfig {
   return input != null && typeof input === 'object' && typeof (input as DbxDateTimeFieldTimeDateConfig).path === 'string';
 }
@@ -203,10 +215,21 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   readonly minuteStep?: Maybe<number>;
 }
 
+/**
+ * A parsed sync field configuration with a resolved form control reference.
+ */
 export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
   readonly control: AbstractControl<Maybe<Date | ISO8601DateString>>;
 }
 
+/**
+ * Creates an observable that emits the current Date value from a synced field control
+ * matching the specified sync type ('before' or 'after').
+ *
+ * @param parseConfigsObs - Observable of parsed sync field configurations
+ * @param type - The sync direction to filter for
+ * @returns Observable of the synced date value, or null if no matching sync config
+ */
 export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldSyncParsedField[]>, type: DbxDateTimeFieldSyncType): Observable<Date | null> {
   return parseConfigsObs.pipe(
     switchMap((x) => {
@@ -242,6 +265,15 @@ export const DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR = 'dateTimeFieldDate
  */
 export const DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR = 'dateTimeFieldTimeNotInRange';
 
+/**
+ * Formly custom field type for date and time selection.
+ *
+ * Supports date-only, time-only, and combined date-time modes. Handles timezone conversion,
+ * sync with other date fields, configurable presets, and keyboard navigation (arrow keys for
+ * incrementing date/time).
+ *
+ * Registered as Formly type `'datetime'`.
+ */
 @Component({
   templateUrl: 'datetime.field.component.html',
   imports: [FlexLayoutModule, NgTemplateOutlet, MatButtonModule, MatError, MatFormFieldModule, MatDatepickerModule, MatInputModule, FormsModule, ReactiveFormsModule, MatIconModule, MatMenuModule, MatFormFieldModule, GetValuePipe, DatePipe, DateDistancePipe, TimeDistancePipe, MatDividerModule],

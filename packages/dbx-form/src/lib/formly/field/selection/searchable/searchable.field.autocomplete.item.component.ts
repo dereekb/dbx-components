@@ -5,8 +5,15 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 
+/** Injection token providing the {@link ConfiguredSearchableValueFieldDisplayValue} to autocomplete item display components. */
 export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
 
+/**
+ * Renders a single autocomplete suggestion item using dynamic component injection.
+ *
+ * Wraps the display component in a {@link DbxAnchorComponent} and provides the display
+ * value data via {@link DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN}.
+ */
 @Component({
   selector: 'dbx-searchable-field-autocomplete-item',
   template: `
@@ -43,11 +50,22 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> {
 }
 
 // MARK: Default
+/**
+ * Abstract base directive for custom searchable field display components.
+ *
+ * Injects the {@link ConfiguredSearchableValueFieldDisplayValue} via the
+ * {@link DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN} for use in custom templates.
+ */
 @Directive()
 export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
   readonly displayValue = inject<ConfiguredSearchableValueFieldDisplayValue<T>>(DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN);
 }
 
+/**
+ * Default display component for searchable field autocomplete items.
+ *
+ * Renders an optional icon, a label, and an optional sublabel in a horizontal flex layout.
+ */
 @Component({
   selector: 'dbx-default-searchable-field-display',
   template: `

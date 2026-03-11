@@ -2,7 +2,9 @@ import { type Maybe, type PrimativeKey } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type SelectionDisplayValue, type SelectionValue, type SelectionValueHashFunction } from '../selection';
 
+/** A pickable field value wrapping a {@link SelectionValue}. */
 export type PickableValueFieldValue<T, M = unknown> = SelectionValue<T, M>;
+/** A pickable field display value wrapping a {@link SelectionDisplayValue}. */
 export type PickableValueFieldDisplayValue<T, M = unknown> = SelectionDisplayValue<T, M>;
 
 /**

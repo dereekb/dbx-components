@@ -7,8 +7,16 @@ import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { type IsModified, type IsValid, type MapFunction, type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 
+/**
+ * Disabled key used by {@link DbxActionFormDirective} to manage the form's disabled state during action processing.
+ */
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 
+/**
+ * Function that maps a form's value of type `T` to an action value result of type `O`.
+ *
+ * Used by {@link DbxActionFormDirective} to transform form output before passing it to the action source.
+ */
 export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrValue<DbxActionValueGetterResult<O>>>;
 
 /**
@@ -17,6 +25,11 @@ export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrVal
  * If the form has errors when the action is trigger, it will reject the action.
  *
  * If the source is not considered modified, the trigger will be ignored.
+ *
+ * @selector `[dbxActionForm]`
+ *
+ * @typeParam T - The form value type.
+ * @typeParam O - The output value type passed to the action source.
  */
 @Directive({
   selector: '[dbxActionForm]',
@@ -195,6 +208,13 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
       });
   }
 
+  /**
+   * Checks whether the given form value is both valid and modified, optionally applying override functions.
+   *
+   * @param value - The current form value to check.
+   * @param overrides - Optional override functions for the validity and modification checks.
+   * @returns An observable emitting a tuple of `[isValid, isModified]`.
+   */
   checkIsValidAndIsModified(value: T, overrides?: CheckValidAndModifiedOverrides<T>): Observable<[IsValid, IsModified]> {
     const { isModifiedFunction: overrideIsModifiedFunction, isValidFunction: overrideIsValidFunction } = overrides ?? {};
     const isValidFunctionObs = overrideIsValidFunction != null ? of(overrideIsValidFunction) : this.isValidFunction$;
@@ -207,10 +227,22 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
     );
   }
 
+  /**
+   * Pre-checks whether the form value is valid and modified before marking it as ready.
+   *
+   * @param value - The current form value.
+   * @returns An observable emitting a tuple of `[isValid, isModified]`.
+   */
   protected preCheckReadyValue(value: T): Observable<[IsValid, IsModified]> {
     return this.checkIsValidAndIsModified(value);
   }
 
+  /**
+   * Transforms the form value into an action value result, applying the optional map function if provided.
+   *
+   * @param value - The validated form value.
+   * @returns An observable emitting the action value getter result.
+   */
   protected readyValue(value: T): Observable<DbxActionValueGetterResult<O>> {
     return this.mapValueFunction$.pipe(
       switchMap((mapFunction) => {
@@ -224,7 +256,13 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
   }
 }
 
+/**
+ * Optional overrides for the validity and modification check functions
+ * used by {@link DbxActionFormDirective.checkIsValidAndIsModified}.
+ */
 interface CheckValidAndModifiedOverrides<T> {
+  /** Override function for the modification check. */
   isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
+  /** Override function for the validity check. */
   isValidFunction?: Maybe<IsValidFunction<T>>;
 }

@@ -10,6 +10,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxLoadingComponent } from '@dereekb/dbx-web';
 
+/**
+ * Formly field properties for the source-select field.
+ *
+ * Configures how values are loaded from external sources, how metadata is resolved,
+ * and how display values are rendered in the select dropdown.
+ */
 export interface SourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M = unknown> extends FormlyFieldProps {
   /**
    * Function to open the source and request values.
@@ -51,7 +57,11 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
 }
 
 /**
- * Component that displays a select view (multi or not)
+ * Formly field component that renders a Material select dropdown populated from
+ * multiple data sources (open source dialogs, loaded sources, and form control values).
+ *
+ * Merges values from all sources, deduplicates by value key, groups options by label,
+ * and caches display values and metadata for performance.
  */
 @Component({
   selector: 'dbx-form-sourceselectfield',

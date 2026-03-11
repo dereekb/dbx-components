@@ -6,7 +6,14 @@ import { type AbstractControl } from '@angular/forms';
 import { filterMaybe } from '@dereekb/rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+/**
+ * Base configuration for expandable form section wrappers.
+ *
+ * Controls the label displayed on the expand trigger and an optional custom
+ * function to determine whether the field's value is "populated" (which auto-expands the section).
+ */
 export interface AbstractFormExpandSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
+  /** Label shown on the expand trigger. Falls back to the field label or first child field label. */
   expandLabel?: string;
   /**
    * Optional function to use for checking value existence.
@@ -14,8 +21,18 @@ export interface AbstractFormExpandSectionConfig<T extends object = object> exte
   hasValueFn?: (value: T) => boolean;
 }
 
+/**
+ * Default value existence check that returns `true` if the object is non-empty.
+ */
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 
+/**
+ * Abstract base directive for expandable form section wrappers.
+ *
+ * Manages the show/hide state based on whether the field has a value or
+ * whether the user manually opened the section. Subclasses provide the
+ * specific UI (expand button, toggle, etc.).
+ */
 @Directive()
 export class AbstractFormExpandSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandSectionConfig<T> = AbstractFormExpandSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit, OnDestroy {
   protected readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);

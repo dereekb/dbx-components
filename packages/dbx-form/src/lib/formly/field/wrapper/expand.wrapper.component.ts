@@ -1,9 +1,15 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractFormExpandSectionWrapperDirective, type AbstractFormExpandSectionConfig } from './expand.wrapper.delegate';
 
+/** The visual style of the expand button: a styled button or plain text link. */
 export type DbxFormExpandWrapperButtonType = 'button' | 'text';
 
+/**
+ * Configuration for the expand wrapper, extending the base expand section config
+ * with an optional button type.
+ */
 export interface DbxFormExpandWrapperConfig<T extends object = object> extends AbstractFormExpandSectionConfig<T> {
+  /** Visual style of the expand trigger. Defaults to `'button'`. */
   readonly buttonType?: DbxFormExpandWrapperButtonType;
 }
 

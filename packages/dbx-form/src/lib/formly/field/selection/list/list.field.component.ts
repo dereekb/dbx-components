@@ -9,6 +9,10 @@ import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFact
 import { type FormlyFieldProps, FieldType, type FieldTypeConfig } from '@ngx-formly/core';
 import { map, type Observable, shareReplay, BehaviorSubject, startWith, switchMap } from 'rxjs';
 
+/**
+ * Formly field properties for an item list selection field that renders items
+ * via a custom {@link AbstractDbxSelectionListWrapperDirective} component.
+ */
 export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends Pick<FormlyFieldProps, 'label' | 'description'> {
   /**
    * List to render components from
@@ -29,7 +33,10 @@ export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelecti
 }
 
 /**
- * Used for picking items by identifier from a DbxList component.
+ * Formly field component that allows picking items by identifier from a dynamic DbxList component.
+ *
+ * The list component class is provided as an observable, enabling lazy loading. Selected items
+ * are tracked by key and synchronized with the form control value.
  */
 @Component({
   templateUrl: 'list.field.component.html',

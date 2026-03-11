@@ -6,13 +6,26 @@ import { type Maybe } from '@dereekb/util';
 import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, type Observable, shareReplay } from 'rxjs';
 
+/** A map of CSS style properties to their values, used with `[ngStyle]`. */
 export type DbxFormStyleObject = { [styleClass: string]: any };
 
+/**
+ * Configuration for the style wrapper that applies dynamic CSS classes and inline styles.
+ */
 export interface DbxFormStyleWrapperConfig {
+  /** Observable or static value providing inline styles via `[ngStyle]`. */
   styleGetter?: Maybe<ObservableOrValue<DbxFormStyleObject>>;
+  /** Observable or static value providing CSS class names via `[ngClass]`. */
   classGetter?: Maybe<ObservableOrValue<string>>;
 }
 
+/**
+ * Formly wrapper that applies dynamic CSS classes and inline styles to the wrapped field.
+ *
+ * Supports both static values and reactive observables for `[ngClass]` and `[ngStyle]`.
+ *
+ * Registered as Formly wrapper `'style'`.
+ */
 @Component({
   template: `
     <div class="dbx-form-style-wrapper" [ngClass]="classSignal()" [ngStyle]="styleSignal()">

@@ -4,12 +4,19 @@ import { type ChecklistItemDisplayContent } from './checklist.item';
 import { type Configurable, type KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
 import { checklistItemField, type ChecklistItemFieldBuilderInput } from './checklist.item.field';
 
+/** A field key from the data set type, constrained to string keys. */
 export type ChecklistItemFieldDataSetFieldKey<D> = keyof D & string;
+/** The value type for a specific key in the data set. */
 export type ChecklistItemFieldDataSetFieldValueForKey<D, K extends keyof D = keyof D> = D[K];
+/** Maps all keys of a data type to boolean values, representing a checklist. */
 export type ChecklistType<D> = KeyValueTransformMap<D, boolean>;
 
+/** Input for adding a checklist item to the data set builder, combining a key with field builder input. */
 export type ChecklistItemFieldDataSetBuilderInput<D, T> = { key: ChecklistItemFieldDataSetFieldKey<D> } & ChecklistItemFieldBuilderInput<T>;
 
+/**
+ * A configured item in a checklist data set, pairing a key with its field builder configuration.
+ */
 export interface ChecklistItemFieldDataSetItem<D, T extends ChecklistType<D>> {
   /**
    * Key for the field.

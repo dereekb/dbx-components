@@ -13,12 +13,18 @@ import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
- * Wraps the selected state with the items.
+ * A list item wrapping a {@link PickableValueFieldDisplayValue} with selection state.
  */
 export type PickableItemFieldItem<T, M = unknown> = DbxValueListItem<PickableValueFieldDisplayValue<T, M>>;
 
+/** Sort function for ordering pickable items before display. */
 export type PickableItemFieldItemSortFn<T, M = unknown> = (items: PickableItemFieldItem<T, M>[]) => PickableItemFieldItem<T, M>[];
 
+/**
+ * Formly field properties for configuring a pickable value selection field.
+ *
+ * Supports single/multi-select, text filtering, hash-based deduplication, and custom display rendering.
+ */
 export interface PickableValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldProps {
   /**
    * Loads all pickable values.
@@ -89,14 +95,17 @@ export interface PickableValueFieldsFieldProps<T, M = unknown, H extends Primati
 }
 
 /**
- * Displayed value with the computed hash.
+ * A display value augmented with its computed hash for deduplication and lookup.
  */
 export interface PickableValueFieldDisplayValueWithHash<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends PickableValueFieldDisplayValue<T, M> {
   _hash: H;
 }
 
 /**
- * Used for picking pre-set values using items as the presentation.
+ * Abstract base directive for pickable item fields that manages value loading,
+ * display caching, text filtering, and selection state.
+ *
+ * Subclasses provide the specific UI presentation (chips, lists, etc.).
  */
 @Directive()
 export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<PickableValueFieldsFieldProps<T, M, H>>> implements OnInit, OnDestroy {

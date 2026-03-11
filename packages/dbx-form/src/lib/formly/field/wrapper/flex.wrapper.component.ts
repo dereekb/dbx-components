@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxFlexGroupDirective, type ScreenMediaWidthType } from '@dereekb/dbx-web';
 import { FieldWrapper, type FormlyFieldConfig } from '@ngx-formly/core';
 
+/**
+ * Configuration for the flex layout wrapper that arranges child fields
+ * in a responsive horizontal layout using the dbx flex group system.
+ */
 export interface DbxFlexWrapperConfig {
   /**
    * Breakpoint based on the screen width.
@@ -17,6 +21,12 @@ export interface DbxFlexWrapperConfig {
   readonly breakToColumn?: boolean;
 }
 
+/**
+ * Formly wrapper that arranges child fields in a responsive flex layout
+ * using the `dbxFlexGroup` directive.
+ *
+ * Registered as Formly wrapper `'flex'`.
+ */
 @Component({
   template: `
     <div class="dbx-form-flex-section" dbxFlexGroup [content]="false" [relative]="relative" [breakpoint]="breakpoint" [breakToColumn]="breakToColumn">

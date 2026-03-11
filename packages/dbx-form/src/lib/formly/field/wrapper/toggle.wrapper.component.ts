@@ -5,7 +5,13 @@ import { type AbstractFormExpandSectionConfig, AbstractFormExpandSectionWrapperD
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+/**
+ * Configuration for the toggle wrapper that uses a Material slide toggle to
+ * show/hide content. Extends the base expand section config with an optional
+ * reactive label function.
+ */
 export interface DbxFormToggleWrapperConfig<T extends object = object> extends AbstractFormExpandSectionConfig<T> {
+  /** Optional function that returns an observable of the toggle label based on open state. */
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
 }
 

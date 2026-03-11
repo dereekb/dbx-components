@@ -13,6 +13,11 @@ import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.autocomplete.item.component';
 import { MatOptionModule } from '@angular/material/core';
 
+/**
+ * Formly field properties for the searchable chip selection field.
+ *
+ * Extends the base searchable props with optional multi-select support.
+ */
 export interface SearchableChipValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldProps<T, M, H> {
   /**
    * Whether or not to allow multiple items to be selected.
@@ -20,6 +25,13 @@ export interface SearchableChipValueFieldsFieldProps<T, M = unknown, H extends P
   readonly multiSelect?: boolean;
 }
 
+/**
+ * Formly field component that combines a search autocomplete with Material chips
+ * for selecting multiple values.
+ *
+ * Supports adding values by typing (if string values are allowed), selecting from
+ * autocomplete results, and removing chips. Handles tab and blur events to auto-add text input.
+ */
 @Component({
   templateUrl: 'searchable.chip.field.component.html',
   imports: [MatChipsModule, MatIconModule, FormsModule, ReactiveFormsModule, DbxLoadingModule, MatAutocompleteModule, MatOptionModule, DbxSearchableFieldAutocompleteItemComponent],

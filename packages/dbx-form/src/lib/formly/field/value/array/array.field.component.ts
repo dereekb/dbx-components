@@ -7,16 +7,30 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
+/**
+ * Represents an item in a repeat array with its index and optional value.
+ */
 export interface DbxFormRepeatArrayPair<T = unknown> extends IndexRef {
   readonly value?: T | undefined;
 }
 
+/**
+ * Extends {@link DbxFormRepeatArrayPair} with the Formly field configuration for the item.
+ */
 export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends Partial<DbxFormRepeatArrayPair<T>> {
   readonly fieldConfig: FormlyFieldConfig;
 }
 
+/**
+ * Factory function that creates a template value for a new repeat array item,
+ * given the current count of items.
+ */
 export type DbxFormRepeatArrayAddTemplateFunction<T> = FactoryWithRequiredInput<Partial<Maybe<T>>, number>;
 
+/**
+ * Configuration for the repeat array field component, controlling add/remove/duplicate
+ * behavior, drag-and-drop rearranging, and item labeling.
+ */
 export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldProps, 'maxLength' | 'label' | 'description'> {
   readonly labelForField?: string | FactoryWithRequiredInput<string, DbxFormRepeatArrayFieldConfigPair<T>>;
   /**
@@ -61,6 +75,14 @@ export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldP
   readonly addDuplicateToEnd?: boolean;
 }
 
+/**
+ * Formly custom field type for dynamically repeatable arrays of field groups.
+ *
+ * Renders a list of field groups that users can add to, remove from, duplicate,
+ * and rearrange via drag-and-drop. Enforces an optional maximum item count.
+ *
+ * Registered as Formly type `'repeatarray'`.
+ */
 @Component({
   template: `
     <div class="dbx-form-repeat-array">

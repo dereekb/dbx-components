@@ -15,10 +15,12 @@ export type TextPasswordFieldPasswordParameters = Partial<Pick<TextFieldConfig, 
 export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key' | 'materialFormField'>> {}
 
 /**
- * Configured simple text password field.
+ * Creates a simple text password field with the input type set to `'password'`.
  *
- * @param config
- * @returns
+ * Defaults to the key `'password'` and label `'Password'` unless overridden.
+ *
+ * @param config - Optional configuration for the password field.
+ * @returns A Formly field configuration for a password input.
  */
 export function textPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
   return textField({
@@ -31,10 +33,12 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
 }
 
 /**
- * Configured verify field for a password.
+ * Creates a verify/confirm password field, typically used alongside a primary password field.
  *
- * @param config
- * @returns
+ * Defaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.
+ *
+ * @param config - Optional configuration for the verify password field.
+ * @returns A Formly field configuration for a verify password input.
  */
 export function textVerifyPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
   return textPasswordField({
@@ -45,11 +49,27 @@ export function textVerifyPasswordField(config?: TextPasswordFieldConfig): Forml
   });
 }
 
+/**
+ * Configuration for a password field group that includes a verification (confirm) password field.
+ */
 export interface TextPasswordWithVerifyFieldConfig {
+  /**
+   * Optional configuration for the primary password field.
+   */
   readonly password?: TextPasswordFieldConfig;
+  /**
+   * Optional configuration for the verify/confirm password field.
+   */
   readonly verifyPassword?: TextPasswordFieldConfig;
 }
 
+/**
+ * Creates a Formly field group containing a password field and a verify password field
+ * with a cross-field validator that ensures both values match.
+ *
+ * @param config - Configuration for the password and verify password fields.
+ * @returns A Formly field group configuration with password matching validation.
+ */
 export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyFieldConfig): FormlyFieldConfig {
   const passwordFieldConfig = textPasswordField(config.password);
   const verifyPasswordFieldKey = config.verifyPassword?.key ?? `verify${capitalizeFirstLetter(String(passwordFieldConfig.key))}`;
@@ -77,19 +97,43 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
   return groupFieldConfig;
 }
 
+/**
+ * Configuration for the username field in a login form, supporting either email or text input.
+ */
 export interface UsernameLoginFieldUsernameConfig {
+  /**
+   * Configuration for an email-based username field.
+   */
   readonly email?: Omit<EmailFieldConfig, 'key'>;
+  /**
+   * Configuration for a plain text username field.
+   */
   readonly username?: Omit<TextFieldConfig, 'key'>;
 }
 
+/**
+ * Input type for the username field configuration.
+ *
+ * Can be the string `'email'` or `'username'` for quick defaults, or a full {@link UsernameLoginFieldUsernameConfig} object for custom configuration.
+ */
 export type UsernameLoginFieldUsernameConfigInput = 'email' | 'username' | UsernameLoginFieldUsernameConfig;
 
 /**
  * usernamePasswordLoginFields() configuration.
  */
 export interface UsernameLoginFieldsConfig {
+  /**
+   * Username field configuration. Use `'email'` or `'username'` for defaults, or provide a custom config.
+   */
   readonly username: UsernameLoginFieldUsernameConfigInput;
+  /**
+   * Optional configuration for the password field.
+   */
   readonly password?: TextPasswordFieldConfig;
+  /**
+   * Whether to include a verify password field, or a custom configuration for it.
+   * Set to `true` for defaults, `false`/`undefined` to omit, or pass a config object.
+   */
   readonly verifyPassword?: Maybe<boolean | TextPasswordFieldConfig>;
 }
 
@@ -121,6 +165,13 @@ export interface DefaultUsernameLoginFieldValue {
   readonly username: string;
 }
 
+/**
+ * Creates a single username field for a login form. Supports email or plain text input
+ * based on the provided configuration.
+ *
+ * @param username - Either `'email'`, `'username'`, or a full {@link UsernameLoginFieldUsernameConfig}.
+ * @returns A Formly field configuration for the username input.
+ */
 export function usernameLoginField(username: UsernameLoginFieldUsernameConfigInput): FormlyFieldConfig {
   let usernameField: FormlyFieldConfig;
   let usernameFieldConfig: UsernameLoginFieldUsernameConfig = username as UsernameLoginFieldUsernameConfig;

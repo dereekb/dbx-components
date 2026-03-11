@@ -3,6 +3,11 @@ import { DbxFormFormlySearchableFieldModule } from '../field/selection/searchabl
 
 const importsAndExports = [DbxFormFormlySearchableFieldModule];
 
+/**
+ * Angular module that provides the dependencies needed for the timezone string field template.
+ *
+ * Imports and re-exports the searchable field module required by {@link timezoneStringField}.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports
