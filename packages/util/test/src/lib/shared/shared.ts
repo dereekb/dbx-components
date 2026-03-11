@@ -311,7 +311,7 @@ export function useTestContextFixture<C extends TestContextFixture<I>, I>(config
       console.warn('Expected instance to be set on fixture for cleanup but was set to something else.');
     }
 
-    if (destroyInstance) {
+    if (destroyInstance && instance != null) {
       try {
         await destroyInstance(instance);
         instance = undefined as any;

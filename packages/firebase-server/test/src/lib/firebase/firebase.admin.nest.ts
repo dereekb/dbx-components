@@ -179,13 +179,20 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
       });
 
       const nest = await builder.compile();
-      const instance: I = makeInstance(f.instance, nest);
 
-      if (initInstance) {
-        await initInstance(instance);
+      try {
+        const instance: I = makeInstance(f.instance, nest);
+
+        if (initInstance) {
+          await initInstance(instance);
+        }
+
+        return instance;
+      } catch (e) {
+        // Nest was compiled but instance creation/init failed — close the compiled module to prevent resource leaks
+        await nest.close().catch(() => {});
+        throw e;
       }
-
-      return instance;
     },
     destroyInstance: async (instance) => {
       await instance.nest.close();
