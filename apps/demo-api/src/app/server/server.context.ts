@@ -1,7 +1,8 @@
 import { AbstractServerFirebaseNestContext } from '@dereekb/firebase-server';
 import { DemoApiNestContext } from '../function/function.context';
-import { OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountService, OidcService, JwksService, OidcFirestoreCollections } from '@dereekb/firebase-server/oidc';
+import { OidcAccountService, OidcService, JwksService, OidcFirestoreCollections } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../common';
+import { type DemoOidcScope } from './oidc/oidc.module';
 
 /**
  * The top-most NestJS context that is used for server-only services.
@@ -9,8 +10,8 @@ import { type DemoApiFirebaseServerAuthUserContext } from '../common';
  * This type is typically only available in testing.
  */
 export class DemoApiServerNestContext extends AbstractServerFirebaseNestContext<DemoApiNestContext> {
-  get oidcAccountService(): OidcAccountService<DemoApiFirebaseServerAuthUserContext> {
-    return this.context.nest.get(OIDC_ACCOUNT_SERVICE_TOKEN);
+  get oidcAccountService(): OidcAccountService<DemoOidcScope, DemoApiFirebaseServerAuthUserContext> {
+    return this.context.nest.get(OidcAccountService);
   }
 
   get oidcService(): OidcService {

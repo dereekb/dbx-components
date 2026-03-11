@@ -1,6 +1,7 @@
 import { Controller, Get, Inject } from '@nestjs/common';
 import { JwksService } from '../service/jwks.service';
 import { OidcModuleConfig } from '../oidc.config';
+import { OidcProviderConfigService, type OidcDiscoveryMetadata } from '../service/oidc.config.service';
 
 // MARK: Well-Known Controller
 /**
@@ -10,6 +11,7 @@ import { OidcModuleConfig } from '../oidc.config';
 export class OidcWellKnownController {
   constructor(
     @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig,
+    @Inject(OidcProviderConfigService) private readonly providerConfigService: OidcProviderConfigService,
     @Inject(JwksService) private readonly jwksService: JwksService
   ) {}
 
@@ -20,27 +22,9 @@ export class OidcWellKnownController {
    * supported scopes, signing algorithms, etc.
    */
   @Get('openid-configuration')
-  async getOpenIdConfiguration() {
-    const issuer = this.config.issuer;
-    const jwksUri = (await this.jwksService.getJwksStoragePublicUrl()) ?? `${issuer}/.well-known/jwks.json`;
-
-    return {
-      issuer,
-      authorization_endpoint: `${issuer}/auth`,
-      token_endpoint: `${issuer}/token`,
-      userinfo_endpoint: `${issuer}/userinfo`,
-      jwks_uri: jwksUri,
-      registration_endpoint: `${issuer}/reg`,
-      scopes_supported: ['openid', 'profile', 'email', 'offline_access'],
-      response_types_supported: ['code'],
-      response_modes_supported: ['query'],
-      grant_types_supported: ['authorization_code', 'refresh_token'],
-      subject_types_supported: ['public'],
-      id_token_signing_alg_values_supported: ['RS256'],
-      token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic'],
-      claims_supported: ['sub', 'name', 'picture', 'email', 'email_verified'],
-      code_challenge_methods_supported: ['S256']
-    };
+  async getOpenIdConfiguration(): Promise<OidcDiscoveryMetadata> {
+    const jwksUri = (await this.jwksService.getJwksStoragePublicUrl()) ?? undefined;
+    return this.providerConfigService.buildDiscoveryMetadata(jwksUri);
   }
 
   /**

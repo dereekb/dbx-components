@@ -137,7 +137,7 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
 
       // Inject the serverEnvTokenProvider and optionally the FirebaseServerEnvService
       if (injectServerEnvServiceProvider !== false || envConfig != null) {
-        providers.push(...firebaseServerEnvTokenProviders(envConfig || { production: false, appUrl: 'localhost:4200' }));
+        providers.push(...firebaseServerEnvTokenProviders(envConfig || { production: false, appUrl: 'http://localhost:4200' }));
 
         if (injectServerEnvServiceProvider !== false) {
           providers.push(

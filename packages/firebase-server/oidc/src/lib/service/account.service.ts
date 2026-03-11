@@ -1,51 +1,67 @@
 import { FirebaseServerAuthService, type FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 import type { OidcAccount, OidcAccountClaims } from './account';
-import { InjectionToken, Provider } from '@nestjs/common';
+import type { OidcScope, OidcProviderConfig } from '../oidc.config';
 
 // MARK: Delegate
 /**
  * Delegate interface that allows customizing how OIDC claims are built from a user context.
  *
- * Provide an implementation to add custom claims based on the requested scopes.
+ * Generic on `S` to type-check scope names at compile time, and on `U` to allow
+ * custom Firebase Auth user context types.
+ *
+ * The delegate also carries the {@link OidcProviderConfig} so that provider-level
+ * settings (claims mapping, response types, grant types) are defined alongside
+ * the claim-building logic they correspond to.
  *
  * @example
  * ```typescript
- * export class MyOidcAccountServiceDelegate extends OidcAccountServiceDelegate {
- *   async buildClaimsForUser(userContext: FirebaseServerAuthUserContext, scopes: Set<string>): Promise<OidcAccountClaims> {
+ * type MyScopes = 'openid' | 'profile' | 'email';
+ *
+ * const delegate: OidcAccountServiceDelegate<MyScopes> = {
+ *   providerConfig: {
+ *     claims: {
+ *       openid: ['sub'],
+ *       profile: ['name', 'picture'],
+ *       email: ['email', 'email_verified']
+ *     },
+ *     responseTypes: ['code'],
+ *     grantTypes: ['authorization_code', 'refresh_token']
+ *   },
+ *   async buildClaimsForUser(userContext, scopes) {
  *     const user = await userContext.loadRecord();
  *     const claims: OidcAccountClaims = { sub: user.uid };
  *
  *     if (scopes.has('profile')) {
- *       if (user.displayName) {
- *         claims.name = user.displayName;
- *       }
- *
- *       if (user.photoURL) {
- *         claims.picture = user.photoURL;
- *       }
+ *       claims.name = user.displayName;
  *     }
  *
  *     if (scopes.has('email')) {
- *       if (user.email) {
- *         claims.email = user.email;
- *         claims.email_verified = user.emailVerified ?? false;
- *       }
+ *       claims.email = user.email;
+ *       claims.email_verified = user.emailVerified ?? false;
  *     }
  *
  *     return claims;
  *   }
- * }
+ * };
  * ```
  */
-export abstract class OidcAccountServiceDelegate<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+export abstract class OidcAccountServiceDelegate<S extends OidcScope = OidcScope, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+  /**
+   * Provider-level OIDC configuration (scopes/claims mapping, response types, grant types).
+   *
+   * The keys of `claims` define the supported scopes and must align with the
+   * scope checks performed in {@link buildClaimsForUser}.
+   */
+  abstract readonly providerConfig: OidcProviderConfig<S>;
+
   /**
    * Builds claims for the given user context based on the requested scopes.
    *
    * @param userContext - The Firebase Auth user context.
-   * @param scopes - The set of requested OIDC scopes.
+   * @param scopes - The set of requested OIDC scopes, typed to the `S` union.
    * @returns The claims to return for this user.
    */
-  abstract buildClaimsForUser(userContext: U, scopes: Set<string>): Promise<OidcAccountClaims> | OidcAccountClaims;
+  abstract buildClaimsForUser(userContext: U, scopes: Set<S>): Promise<OidcAccountClaims> | OidcAccountClaims;
 }
 
 // MARK: User Context
@@ -54,11 +70,11 @@ export abstract class OidcAccountServiceDelegate<U extends FirebaseServerAuthUse
  *
  * Created by {@link OidcAccountService.userContext} for a specific user ID.
  */
-export class OidcAccountServiceUserContext<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+export class OidcAccountServiceUserContext<S extends OidcScope = OidcScope, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
   readonly authUserContext: U;
 
   constructor(
-    private readonly _service: OidcAccountService<U>,
+    private readonly _service: OidcAccountService<S, U>,
     private readonly _uid: string
   ) {
     this.authUserContext = this._service.authService.userContext(this._uid) as U;
@@ -68,7 +84,7 @@ export class OidcAccountServiceUserContext<U extends FirebaseServerAuthUserConte
     return this._uid;
   }
 
-  get service(): OidcAccountService<U> {
+  get service(): OidcAccountService<S, U> {
     return this._service;
   }
 
@@ -91,7 +107,7 @@ export class OidcAccountServiceUserContext<U extends FirebaseServerAuthUserConte
     return {
       accountId: this._uid,
       async claims(_use: string, scope: string): Promise<OidcAccountClaims> {
-        const scopes = new Set(scope.split(' '));
+        const scopes = new Set(scope.split(' ')) as Set<S>;
         return delegate.buildClaimsForUser(authUserContext, scopes);
       }
     };
@@ -100,28 +116,30 @@ export class OidcAccountServiceUserContext<U extends FirebaseServerAuthUserConte
 
 // MARK: Service
 /**
- * Injection token for the {@link OidcAccountService} instance.
- */
-export const OIDC_ACCOUNT_SERVICE_TOKEN: InjectionToken = 'OIDC_ACCOUNT_SERVICE_TOKEN';
-
-/**
  * Service that provides OIDC account lookup backed by Firebase Auth.
  *
- * Uses an {@link OidcAccountServiceDelegate} to customize claim building.
+ * Uses an {@link OidcAccountServiceDelegate} to customize claim building
+ * and to carry the provider-level OIDC configuration.
  *
- * Since this class uses generics, it cannot be decorated with `@Injectable()`.
- * Register it via the {@link OIDC_ACCOUNT_SERVICE_TOKEN} token with a factory provider.
+ * Register it as a provider using the `OidcAccountService` class as the injection token.
  */
-export class OidcAccountService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+export class OidcAccountService<S extends OidcScope = OidcScope, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
   constructor(
     readonly authService: FirebaseServerAuthService<U>,
-    readonly delegate: OidcAccountServiceDelegate<U>
+    readonly delegate: OidcAccountServiceDelegate<S, U>
   ) {}
+
+  /**
+   * The provider config from the delegate.
+   */
+  get providerConfig(): OidcProviderConfig<S> {
+    return this.delegate.providerConfig;
+  }
 
   /**
    * Creates a user context for the given user ID.
    */
-  userContext(uid: string): OidcAccountServiceUserContext<U> {
-    return new OidcAccountServiceUserContext<U>(this, uid);
+  userContext(uid: string): OidcAccountServiceUserContext<S, U> {
+    return new OidcAccountServiceUserContext<S, U>(this, uid);
   }
 }

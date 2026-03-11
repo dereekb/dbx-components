@@ -1,12 +1,14 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwksService, JwksServiceConfig } from './service/jwks.service';
+import { OidcProviderConfigService } from './service/oidc.config.service';
 import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
-import { OidcWellKnownController, OidcInteractionController } from './controller';
+import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
 import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryFirestoreCollection } from './model';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService, FirestoreEncryptedFieldSecret, isValidFirestoreEncryptedFieldSecret } from '@dereekb/firebase-server';
 import { type FirestoreContext } from '@dereekb/firebase';
+import { hasHttpPrefix } from '@dereekb/util';
 
 // MARK: Environment Variable Keys
 /**
@@ -36,6 +38,10 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
 
   const issuerPath = configService.get<string>(OIDC_ISSUER_PATH_ENV_KEY) ?? DEFAULT_OIDC_ISSUER_PATH;
   const issuer = `${appUrl}${issuerPath}`;
+
+  if (!hasHttpPrefix(issuer)) {
+    throw new Error(`oidcModuleConfigFactory: appUrl must have an http(s) prefix. Received: ${appUrl}`);
+  }
 
   const loginUrl = `${appUrl}/oidc/interaction/login`;
   const consentUrl = `${appUrl}/oidc/interaction/consent`;
@@ -88,7 +94,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
  *
  * The OidcModule requires the following dependencies in order to initialize properly:
  * - FIREBASE_FIRESTORE_CONTEXT_TOKEN
- * - OIDC_ACCOUNT_SERVICE_TOKEN
+ * - OidcAccountService (provided via factory)
  *
  * Additionally, the following may be optionally provided:
  * - JwksServiceStorageConfig
@@ -102,7 +108,7 @@ export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): 
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
-    controllers: [OidcWellKnownController, OidcInteractionController],
+    controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
     exports: [OidcService, ...(exports ?? [])],
     providers: [
       {
@@ -120,6 +126,7 @@ export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): 
         useFactory: oidcFirestoreCollectionsFactory,
         inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN, OidcModuleConfig]
       },
+      OidcProviderConfigService,
       JwksService,
       OidcService,
       ...(providers ?? [])

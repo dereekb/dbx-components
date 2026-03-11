@@ -6,6 +6,17 @@ import { type JwksKey, type JsonWebKeyWithKid, OidcFirestoreCollections, type Jw
 import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
 import { Maybe } from '@dereekb/util';
 
+// MARK: Types
+/**
+ * Result of {@link JwksService.generateKeyPair}.
+ */
+export interface GenerateKeyPairResult {
+  /** The stored Firestore document data (private key is encrypted). */
+  readonly jwksKey: JwksKey;
+  /** The unencrypted private JWK, ready for use as a signing key. */
+  readonly signingKey: JsonWebKeyWithKid;
+}
+
 // MARK: Config
 export abstract class JwksServiceConfig {
   /**
@@ -80,8 +91,11 @@ export class JwksService {
   /**
    * Generates a new RS256 key pair and stores it in Firestore.
    * The private key is encrypted at rest using AES-256-GCM.
+   *
+   * Returns both the stored {@link JwksKey} and the unencrypted private JWK
+   * so callers can use the signing key immediately without a decryption round-trip.
    */
-  async generateKeyPair(): Promise<JwksKey> {
+  async generateKeyPair(): Promise<GenerateKeyPairResult> {
     const { publicKey, privateKey } = generateKeyPairSync('rsa' as any, {
       modulusLength: 2048,
       publicKeyEncoding: { type: 'spki', format: 'jwk' } as any,
@@ -98,8 +112,16 @@ export class JwksService {
       use: 'sig'
     };
 
+    const privateJwk: JsonWebKeyWithKid = {
+      ...(privateKey as JsonWebKey),
+      kid,
+      kty: 'RSA',
+      alg: 'RS256',
+      use: 'sig'
+    };
+
     const getKey = resolveEncryptionKey(this.config.encryptionSecret);
-    const encryptedPrivateKey = encryptValue({ ...(privateKey as JsonWebKey), kid, alg: 'RS256', use: 'sig' }, getKey());
+    const encryptedPrivateKey = encryptValue(privateJwk, getKey());
 
     const data: JwksKey = {
       privateKey: encryptedPrivateKey,
@@ -110,7 +132,7 @@ export class JwksService {
 
     const doc = this.jwksKeyCollection.documentAccessor().loadDocumentForId(kid);
     await doc.accessor.set(data);
-    return data;
+    return { jwksKey: data, signingKey: privateJwk };
   }
 
   /**
@@ -178,12 +200,22 @@ export class JwksService {
       }
     });
 
-    const newKey = await this.generateKeyPair();
+    const { jwksKey: newKey } = await this.generateKeyPair();
 
     if (this.saveJwksToStorage && this.storageConfig?.jwksStorageAccessorFile) {
       const jwks = await this.getLatestPublicJwks();
       const data = Buffer.from(JSON.stringify(jwks));
-      await this.storageConfig.jwksStorageAccessorFile.upload(data, { contentType: 'application/json' });
+
+      try {
+        // Upload the file
+        await this.storageConfig.jwksStorageAccessorFile.upload(data, { contentType: 'application/json' });
+
+        // Make sure it is public
+        await this.storageConfig.jwksStorageAccessorFile.makePublic?.();
+      } catch (e) {
+        console.error(`JwksService: Failed to rotate oidc keys to Google Cloud Store!!!`);
+        throw e;
+      }
     }
 
     return newKey;

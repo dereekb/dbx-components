@@ -1,12 +1,29 @@
 import { Module } from '@nestjs/common';
-import { JwksServiceStorageConfig, OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountService, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
+import { JwksServiceStorageConfig, OidcAccountClaims, OidcAccountService, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
+import type { OidcAccountServiceDelegate, OidcProviderConfig } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 
+// MARK: Scopes
+export type DemoOidcScope = 'openid' | 'profile' | 'email';
+export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
+
+export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
+  claims: {
+    openid: ['sub'],
+    profile: ['name', 'picture'],
+    email: ['email', 'email_verified']
+  },
+  responseTypes: ['code'],
+  grantTypes: ['authorization_code', 'refresh_token']
+};
+
+// MARK: Factories
 export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthService): OidcAccountService {
-  const delegate = {
-    async buildClaimsForUser(userContext: FirebaseServerAuthUserContext, scopes: Set<string>): Promise<OidcAccountClaims> {
+  const delegate: DemoOidcAccountServiceDelegate = {
+    providerConfig: DEMO_OIDC_PROVIDER_CONFIG,
+    async buildClaimsForUser(userContext: FirebaseServerAuthUserContext, scopes: Set<DemoOidcScope>): Promise<OidcAccountClaims> {
       const user = await userContext.loadRecord();
       const claims: OidcAccountClaims = { sub: user.uid };
 
@@ -42,10 +59,10 @@ export function demoJwksServiceStorageConfigFactory(firebaseServerStorageService
 
 @Module({
   imports: [DemoApiAuthModule, DemoApiStorageModule, DemoApiFirestoreModule],
-  exports: [DemoApiFirestoreModule, OIDC_ACCOUNT_SERVICE_TOKEN, JwksServiceStorageConfig],
+  exports: [DemoApiFirestoreModule, OidcAccountService, JwksServiceStorageConfig],
   providers: [
     {
-      provide: OIDC_ACCOUNT_SERVICE_TOKEN,
+      provide: OidcAccountService,
       useFactory: demoOidcAccountServiceFactory,
       inject: [DemoApiAuthService]
     },

@@ -1,6 +1,60 @@
 import { JwksServiceConfig } from './service/jwks.service';
 import { JwksKeyConverterConfig } from './model';
 
+// MARK: Scope
+/**
+ * Base type for OIDC scope string unions.
+ *
+ * Applications define their own scope union extending this type to get
+ * compile-time validation of scope names throughout the delegate and config.
+ *
+ * @example
+ * ```typescript
+ * type MyScopes = 'openid' | 'profile' | 'email';
+ * ```
+ */
+export type OidcScope = string;
+
+// MARK: Provider Config
+/**
+ * OIDC provider-level configuration for scopes, grant types, response types,
+ * and claim mappings. These values drive both the oidc-provider instance and the
+ * discovery metadata endpoint.
+ *
+ * Generic on `S` so that claim keys are validated against the app's scope union.
+ *
+ * @example
+ * ```typescript
+ * type MyScopes = 'openid' | 'profile' | 'email';
+ *
+ * const providerConfig: OidcProviderConfig<MyScopes> = {
+ *   claims: {
+ *     openid: ['sub'],
+ *     profile: ['name', 'picture'],
+ *     email: ['email', 'email_verified']
+ *   },
+ *   responseTypes: ['code'],
+ *   grantTypes: ['authorization_code', 'refresh_token']
+ * };
+ * ```
+ */
+export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
+  /**
+   * Maps OIDC scope names to the claims they grant access to.
+   *
+   * The keys also determine `scopes_supported` in the discovery document.
+   */
+  readonly claims: Record<S, string[]>;
+  /**
+   * Supported OAuth 2.0 response types (e.g., `['code']`).
+   */
+  readonly responseTypes: string[];
+  /**
+   * Supported OAuth 2.0 grant types (e.g., `['authorization_code', 'refresh_token']`).
+   */
+  readonly grantTypes: string[];
+}
+
 // MARK: Token Lifetimes
 export interface OidcTokenLifetimes {
   /**

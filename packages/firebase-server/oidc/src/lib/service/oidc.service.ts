@@ -4,9 +4,10 @@ import type Provider from 'oidc-provider';
 import type { Interaction, InteractionResults, Grant } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './jwks.service';
-import { OIDC_ACCOUNT_SERVICE_TOKEN, type OidcAccountService } from './account.service';
+import { OidcAccountService } from './account.service';
 import { OidcFirestoreCollections } from '../model';
 import { createAdapterFactory } from './adapter.service';
+import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/firebase-server';
 import { cachedGetter } from '@dereekb/util';
 
@@ -22,8 +23,9 @@ export class OidcService {
 
   constructor(
     @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig,
+    @Inject(OidcProviderConfigService) private readonly providerConfigService: OidcProviderConfigService,
     @Inject(JwksService) private readonly jwksService: JwksService,
-    @Inject(OIDC_ACCOUNT_SERVICE_TOKEN) private readonly accountService: OidcAccountService,
+    @Inject(OidcAccountService) private readonly accountService: OidcAccountService,
     @Inject(OidcFirestoreCollections) private readonly collections: OidcFirestoreCollections
   ) {}
 
@@ -76,59 +78,25 @@ export class OidcService {
     let signingKey = await this.jwksService.getActiveSigningKey();
 
     if (!signingKey) {
-      await this.jwksService.generateKeyPair();
-      signingKey = await this.jwksService.getActiveSigningKey();
+      const result = await this.jwksService.generateKeyPair();
+      signingKey = result.signingKey;
     }
 
-    const jwks = await this.jwksService.getLatestPublicJwks();
-
+    // The provider needs the private JWK (with `d`) for signing tokens.
     // Derive cookie signing key from the resolved encryption secret.
     const getEncryptionKey = resolveEncryptionKey(config.jwksKeyConverterConfig.encryptionSecret);
     const cookieKey = getEncryptionKey().toString('base64').slice(0, 32);
 
     const adapterFactory = createAdapterFactory(this.collections);
+    const providerConfiguration = this.providerConfigService.buildProviderConfiguration([cookieKey]);
 
     const { default: ProviderClass } = await import('oidc-provider');
 
     return new ProviderClass(config.issuer, {
+      ...providerConfiguration,
       adapter: adapterFactory,
       findAccount: findAccount as any,
-      jwks: { keys: jwks.keys as any[] },
-      features: {
-        devInteractions: { enabled: false },
-        registration: { enabled: true },
-        registrationManagement: { enabled: true }
-      },
-      pkce: {
-        required: () => true
-      },
-      responseTypes: ['code'],
-      // grantTypes: ['authorization_code', 'refresh_token'],
-      ttl: {
-        AccessToken: config.tokenLifetimes.accessToken,
-        AuthorizationCode: config.tokenLifetimes.authorizationCode,
-        RefreshToken: config.tokenLifetimes.refreshToken,
-        Session: 14 * 24 * 60 * 60,
-        Grant: 14 * 24 * 60 * 60,
-        Interaction: 60 * 60,
-        DeviceCode: 10 * 60
-      },
-      interactions: {
-        url: (_ctx: any, interaction: any) => {
-          if (interaction.prompt.name === 'login') {
-            return `${config.loginUrl}?uid=${interaction.uid}`;
-          }
-          return `${config.consentUrl}?uid=${interaction.uid}`;
-        }
-      },
-      claims: {
-        openid: ['sub'],
-        profile: ['name', 'picture'],
-        email: ['email', 'email_verified']
-      },
-      cookies: {
-        keys: [cookieKey]
-      }
+      jwks: { keys: [signingKey] as any[] }
     });
   }
 }

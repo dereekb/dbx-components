@@ -1,16 +1,18 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { OidcWellKnownController, OidcInteractionController, OidcModuleConfig, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
+import { OidcWellKnownController, OidcInteractionController, OidcModuleConfig, OidcProviderConfigService, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let jwksService: JwksService;
   let oidcService: OidcService;
   let oidcModuleConfig: OidcModuleConfig;
+  let providerConfigService: OidcProviderConfigService;
 
   beforeEach(() => {
     const serverContext = f.instance.apiServerNestContext;
     jwksService = serverContext.jwksService;
     oidcService = serverContext.oidcService;
     oidcModuleConfig = f.instance.nest.get(OidcModuleConfig);
+    providerConfigService = f.instance.nest.get(OidcProviderConfigService);
   });
 
   describe('OidcWellKnownController', () => {
@@ -19,7 +21,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     beforeEach(async () => {
       // Generate and upload JWKS to storage so getJwksStoragePublicUrl() resolves.
       await jwksService.rotateKeys();
-      controller = new OidcWellKnownController(oidcModuleConfig, jwksService);
+      controller = new OidcWellKnownController(oidcModuleConfig, providerConfigService, jwksService);
     });
 
     describe('getOpenIdConfiguration()', () => {
@@ -29,7 +31,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(result.issuer).toBe(oidcModuleConfig.issuer);
         expect(result.authorization_endpoint).toBe(`${oidcModuleConfig.issuer}/auth`);
         expect(result.token_endpoint).toBe(`${oidcModuleConfig.issuer}/token`);
-        expect(result.userinfo_endpoint).toBe(`${oidcModuleConfig.issuer}/userinfo`);
+        expect(result.userinfo_endpoint).toBe(`${oidcModuleConfig.issuer}/me`);
       });
 
       it('should include a jwks_uri', async () => {
@@ -74,7 +76,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       it('should fall back to issuer-based jwks_uri', async () => {
         const result = await controller.getOpenIdConfiguration();
-        expect(result.jwks_uri).toBe(`${oidcModuleConfig.issuer}/.well-known/jwks.json`);
+        expect(result.jwks_uri).toBe(`${oidcModuleConfig.issuer}/jwks`);
       });
     });
   });

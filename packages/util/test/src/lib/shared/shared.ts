@@ -1,4 +1,4 @@
-import { type PromiseOrValue, type PromiseReference, promiseReference } from '@dereekb/util';
+import { Maybe, type PromiseOrValue, type PromiseReference, promiseReference } from '@dereekb/util';
 
 // MARK: Test Done Callback
 /**
@@ -279,7 +279,7 @@ export interface UseContextFixture<C extends TestContextFixture<I>, I> {
 export function useTestContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;
 
-  let clearInstance: TestContextFixtureClearInstanceFunction;
+  let clearInstance: Maybe<TestContextFixtureClearInstanceFunction> = null;
   let instance: I;
 
   // Create an instance

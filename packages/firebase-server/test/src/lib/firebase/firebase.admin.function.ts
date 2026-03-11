@@ -149,12 +149,44 @@ export const firebaseAdminFunctionTestBuilder = testContextBuilder<FirebaseAdmin
 
     const projectId = getGCloudTestProjectId();
     const storageBucket = 'b-' + projectId;
-    const app = admin.initializeApp({ projectId, storageBucket });
+    let app: admin.app.App;
+
+    app = admin.initializeApp({ projectId, storageBucket });
+
+    // Proposed Solution A
+    /*
+    try {
+      app = admin.initializeApp({ projectId, storageBucket });
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('A Firebase app named "[DEFAULT]" already exists')) {
+        app = admin.app();    // try to reuse it. Usually this means that the app failed to initialize.
+      } else {
+        throw e;
+      }
+    }
+    */
+
+    // Propose Solution B
+    /*
+    try {
+      app = admin.initializeApp({ projectId, storageBucket });
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('A Firebase app named "[DEFAULT]" already exists')) {
+        app = admin.app();
+        await app.delete(); // delete existing app
+
+        // re-initialize with the new details
+        app = admin.initializeApp({ projectId, storageBucket });
+      } else {
+        throw e;
+      }
+    }
+    */
 
     return new FirebaseAdminFunctionTestContextInstance(firebaseFunctionsTestInstance!, app);
   },
   teardownInstance: async (instance, config) => {
-    if (config.useFunctionSingletonContext === false) {
+    if (!config.useFunctionSingletonContext) {
       try {
         await instance.app.delete(); // will be called in cleanup
         firebaseFunctionsTestInstance!.cleanup();
