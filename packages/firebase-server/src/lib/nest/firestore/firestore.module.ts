@@ -48,19 +48,29 @@ export class FirebaseServerFirestoreModule {}
 export class FirebaseServerFirestoreContextModule {}
 
 // MARK: AppFirestoreCollections
+/**
+ * Factory function that creates an app's Firestore collections instance from a {@link FirestoreContext}.
+ */
 export type ProvideAppFirestoreCollectionsFactory<T> = (context: FirestoreContext) => T;
 
+/**
+ * Configuration for providing an app's Firestore collections class via NestJS DI.
+ */
 export interface ProvideAppFirestoreCollectionsConfig<T> {
   provide: ClassLikeType<T>;
   useFactory: ProvideAppFirestoreCollectionsFactory<T>;
 }
 
 /**
- * Used to configure a Nestjs provider for a FirestoreCollections-type object that is initialized with a FirestoreContext.
+ * Creates a NestJS provider that initializes a Firestore collections instance from the app's {@link FirestoreContext}.
  *
- * @param type
- * @param useFactory
- * @returns
+ * @example
+ * ```typescript
+ * const [provider] = provideAppFirestoreCollections({
+ *   provide: DemoFirestoreCollections,
+ *   useFactory: (context) => new DemoFirestoreCollections(context)
+ * });
+ * ```
  */
 export function provideAppFirestoreCollections<T>({ provide, useFactory }: ProvideAppFirestoreCollectionsConfig<T>): [Provider<T>] {
   return [
@@ -76,11 +86,17 @@ export function provideAppFirestoreCollections<T>({ provide, useFactory }: Provi
 export interface ProvideAppFirestoreModuleMetadataConfig<T> extends ProvideAppFirestoreCollectionsConfig<T>, Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {}
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's Firestore related modules and an appFirestoreCollection
+ * Generates NestJS {@link ModuleMetadata} for an app's Firestore module, including the
+ * {@link FirebaseServerFirestoreContextModule} import and the app's collections provider.
  *
- * @param provide
- * @param useFactory
- * @returns
+ * @example
+ * ```typescript
+ * @Module(appFirestoreModuleMetadata({
+ *   provide: DemoFirestoreCollections,
+ *   useFactory: (context) => new DemoFirestoreCollections(context)
+ * }))
+ * export class AppFirestoreModule {}
+ * ```
  */
 export function appFirestoreModuleMetadata<T>(config: ProvideAppFirestoreModuleMetadataConfig<T>): ModuleMetadata {
   return {

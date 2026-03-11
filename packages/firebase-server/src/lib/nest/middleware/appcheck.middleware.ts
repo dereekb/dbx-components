@@ -73,12 +73,10 @@ export class FirebaseAppCheckMiddleware implements NestMiddleware {
 }
 
 /**
- * Verifies the AppCheck parameter. If it fails, a value is returned.
+ * Verifies the `X-Firebase-AppCheck` header using Firebase Admin AppCheck.
  *
- * @param req
- * @param res
- * @param next
- * @returns
+ * @param req - The incoming request to verify.
+ * @returns A {@link ForbiddenException} if verification fails, or `undefined` if it passes.
  */
 export async function verifyAppCheckInRequest(req: Request): Promise<Maybe<Error>> {
   const appCheckToken = req.header('X-Firebase-AppCheck');

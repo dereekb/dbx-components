@@ -104,20 +104,20 @@ Core NestJS application bootstrap and auth modules.
 NestJS module wiring for Firestore, storage, and HTTP middleware.
 
 #### 5A. Firestore & Storage modules
-- [ ] `firestore/firestore.module.ts` — Audit existing JSDoc on module providers and tokens
-- [ ] `storage/storage.module.ts` — Audit existing JSDoc on storage module configuration
+- [x] `firestore/firestore.module.ts` — Audit existing JSDoc on module providers and tokens
+- [x] `storage/storage.module.ts` — Audit existing JSDoc on storage module configuration
 
 #### 5B. Middleware
-- [ ] `middleware/appcheck.decorator.ts` — Document AppCheck decorator usage with `@example`
-- [ ] `middleware/appcheck.middleware.ts` — Audit existing JSDoc; add cross-reference to middleware module
-- [ ] `middleware/appcheck.module.ts` — Audit existing JSDoc
-- [ ] `middleware/appcheck.ts` — Document AppCheck interface
-- [ ] `middleware/globalprefix.ts` — Verify existing JSDoc on abstract class
-- [ ] `middleware/rawbody.middleware.ts` — Document raw body middleware purpose (webhook signature verification)
-- [ ] `middleware/webhook.module.ts` — Verify existing JSDoc
+- [x] `middleware/appcheck.decorator.ts` — Document AppCheck decorator usage with `@example`
+- [x] `middleware/appcheck.middleware.ts` — Audit existing JSDoc; add cross-reference to middleware module
+- [x] `middleware/appcheck.module.ts` — Audit existing JSDoc
+- [x] `middleware/appcheck.ts` — Document AppCheck interface
+- [x] `middleware/globalprefix.ts` — Verify existing JSDoc on abstract class
+- [x] `middleware/rawbody.middleware.ts` — Document raw body middleware purpose (webhook signature verification)
+- [x] `middleware/webhook.module.ts` — Verify existing JSDoc
 
 #### 5C. Verify
-- [ ] Run `pnpm nx run firebase-server:build-base` to confirm no build errors
+- [x] Run `pnpm nx run firebase-server:build-base` to confirm no build errors
 
 ---
 
