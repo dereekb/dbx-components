@@ -35,6 +35,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(res.body.token_endpoint).toBeDefined();
         expect(res.body.jwks_uri).toBeDefined();
         expect(res.body.scopes_supported).toContain('openid');
+        expect(res.body.scopes_supported).toContain('demo');
         expect(res.body.response_types_supported).toContain('code');
       });
 
@@ -207,7 +208,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             client_id,
             redirect_uri: 'https://example.com/callback',
             response_type: 'code',
-            scope: 'openid email',
+            scope: 'openid email demo',
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
             state: 'test-state',
@@ -271,6 +272,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(tokenRes.body.access_token).toBeDefined();
         expect(tokenRes.body.id_token).toBeDefined();
         expect(tokenRes.body.token_type).toBe('Bearer');
+        expect(tokenRes.body.scope).toContain('demo');
 
         // 9. Use the access token to fetch userinfo
         const userinfoRes = await request(server).get('/oidc/me').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);

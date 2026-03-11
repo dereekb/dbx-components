@@ -1,5 +1,14 @@
+import type { Configuration } from 'oidc-provider';
 import { JwksServiceConfig } from './service/jwks.service';
 import { JwksKeyConverterConfig } from './model';
+
+// MARK: Render Error
+/**
+ * Custom error rendering function for the oidc-provider.
+ *
+ * Matches the `renderError` option from the oidc-provider `Configuration` type.
+ */
+export type OidcRenderErrorFunction = Configuration['renderError'];
 
 // MARK: Scope
 /**
@@ -121,6 +130,25 @@ export abstract class OidcModuleConfig {
    * JWKS key converter configuration (encryption secret for Firestore field encryption).
    */
   readonly jwksKeyConverterConfig!: JwksKeyConverterConfig;
+  /**
+   * Custom error rendering function for the oidc-provider.
+   *
+   * When not provided, defaults to a JSON error response with `error` and `error_description` fields.
+   * Set this to customize how OIDC errors are presented (e.g. redirect to an error page).
+   *
+   * The function signature matches oidc-provider's `renderError` configuration option.
+   */
+  readonly renderError?: OidcRenderErrorFunction;
+  /**
+   * Whether to suppress the oidc-provider "already parsed request body" warning.
+   *
+   * Enable this when running behind a platform (e.g. Firebase Cloud Functions) that
+   * parses request bodies before they reach the OIDC provider. The provider handles
+   * this correctly by falling back to `req.body`, but emits a one-time warning.
+   *
+   * Defaults to `false`.
+   */
+  readonly suppressBodyParserWarning?: boolean;
 
   static assertValidConfig(config: OidcModuleConfig) {
     if (!config.issuer) {

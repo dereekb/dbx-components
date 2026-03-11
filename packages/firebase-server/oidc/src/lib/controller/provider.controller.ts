@@ -1,7 +1,6 @@
 import { All, Controller, Inject, Req, Res } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcService } from '../service/oidc.service';
-import Provider from 'oidc-provider';
 
 // MARK: Provider Controller
 /**
@@ -16,16 +15,15 @@ import Provider from 'oidc-provider';
  */
 @Controller('oidc')
 export class OidcProviderController {
-  private _provider: Promise<Provider>;
+  private _callback: Promise<(req: Request, res: Response) => void>;
 
   constructor(@Inject(OidcService) private readonly oidcService: OidcService) {
-    this._provider = this.oidcService.getProvider();
+    this._callback = this.oidcService.getProvider().then((p) => p.callback());
   }
 
   @All('/*')
   async handleOidcRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const provider = await this._provider;
-    const callback = provider.callback();
+    const callback = await this._callback;
 
     // Strip the mount prefix so the provider sees relative paths.
     req.url = req.originalUrl.replace('/oidc', '');

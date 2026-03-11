@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 
 export type NestGlobalRoutePrefixConfig = MaybeSo<Parameters<INestApplication['setGlobalPrefix']>[1]>;
 
+export type NestGlobalRoutePrefixConfigExclude = NestGlobalRoutePrefixConfig['exclude'];
+
 /**
  * Can be injected to retrieve information about the global prefix configured for the app.
  *

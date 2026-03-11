@@ -138,7 +138,8 @@ export class OidcProviderConfigService {
       },
       cookies: {
         keys: cookieKeys
-      }
+      },
+      ...(config.renderError ? { renderError: config.renderError } : {})
     };
   }
 

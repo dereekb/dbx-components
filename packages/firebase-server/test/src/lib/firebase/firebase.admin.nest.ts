@@ -1,6 +1,6 @@
 import { AbstractChildTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, type FirebaseAdminTestContextInstance } from './firebase.admin';
-import { INestApplication, type Abstract, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
+import { INestApplication, NestApplicationOptions, type Abstract, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
 import { type StorageBucketId } from '@dereekb/firebase';
 import { type FirebaseServerEnvironmentConfig, GlobalRoutePrefixConfig, type NestAppPromiseGetter, type NestServerInstanceConfig, buildNestServerRootModule } from '@dereekb/firebase-server';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -209,15 +209,23 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
         appCheckEnabled: false // disabled in tests
       });
 
-      const nest = await Test.createTestingModule({
-        providers: [
-          {
-            provide: FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN,
-            useValue: serverInstanceConfig
-          }
-        ],
-        imports: [rootModule]
-      }).compile();
+      // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
+      // we emulate firebase already having applied body-parser, since our testing environment
+      // might not. In production, bodyParser is actually set false.
+      const options: NestApplicationOptions = { bodyParser: true };
+
+      const nest = await Test.createTestingModule(
+        {
+          providers: [
+            {
+              provide: FIREBASE_ADMIN_NEST_TEST_SERVER_INSTANCE_CONFIG_TOKEN,
+              useValue: serverInstanceConfig
+            }
+          ],
+          imports: [rootModule]
+        },
+        options
+      ).compile();
 
       try {
         const instance: I = makeInstance(f.instance, nest);

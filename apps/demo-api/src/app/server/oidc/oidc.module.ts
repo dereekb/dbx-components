@@ -1,19 +1,23 @@
 import { Module } from '@nestjs/common';
 import { JwksServiceStorageConfig, OidcAccountClaims, OidcAccountService, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
-import type { OidcAccountServiceDelegate, OidcProviderConfig } from '@dereekb/firebase-server/oidc';
+import type { OidcAccountServiceDelegate, OidcProviderConfig, OidcRenderErrorFunction } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 
 // MARK: Scopes
-export type DemoOidcScope = 'openid' | 'profile' | 'email';
+/**
+ * `demo` scope grants full access to the user's Demo resources via the API.
+ */
+export type DemoOidcScope = 'openid' | 'profile' | 'email' | 'demo';
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
 
 export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
   claims: {
     openid: ['sub'],
     profile: ['name', 'picture'],
-    email: ['email', 'email_verified']
+    email: ['email', 'email_verified'],
+    demo: ['sub']
   },
   responseTypes: ['code'],
   grantTypes: ['authorization_code', 'refresh_token']
@@ -75,9 +79,22 @@ export function demoJwksServiceStorageConfigFactory(firebaseServerStorageService
 })
 export class DemoApiOidcDependencyModule {}
 
+// MARK: Render Error
+const demoOidcRenderError: OidcRenderErrorFunction = (ctx, out) => {
+  ctx.type = 'application/json';
+  ctx.body = JSON.stringify({
+    error: out.error,
+    error_description: out.error_description
+  });
+};
+
 @Module(
   oidcModuleMetadata({
-    dependencyModule: DemoApiOidcDependencyModule
+    dependencyModule: DemoApiOidcDependencyModule,
+    config: {
+      suppressBodyParserWarning: true,
+      renderError: demoOidcRenderError
+    }
   })
 )
 export class DemoApiOidcModule {}

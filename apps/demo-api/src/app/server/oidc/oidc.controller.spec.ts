@@ -43,6 +43,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const result = await controller.getOpenIdConfiguration();
 
         expect(result.scopes_supported).toContain('openid');
+        expect(result.scopes_supported).toContain('demo');
         expect(result.response_types_supported).toContain('code');
         expect(result.grant_types_supported).toContain('authorization_code');
         expect(result.grant_types_supported).toContain('refresh_token');
@@ -77,6 +78,74 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       it('should fall back to issuer-based jwks_uri', async () => {
         const result = await controller.getOpenIdConfiguration();
         expect(result.jwks_uri).toBe(`${oidcModuleConfig.issuer}/jwks`);
+      });
+    });
+  });
+
+  describe('OidcProviderConfigService', () => {
+    describe('scopesSupported', () => {
+      it('should derive scopes from the claims config keys', () => {
+        expect(providerConfigService.scopesSupported).toContain('openid');
+        expect(providerConfigService.scopesSupported).toContain('profile');
+        expect(providerConfigService.scopesSupported).toContain('email');
+        expect(providerConfigService.scopesSupported).toContain('demo');
+      });
+    });
+
+    describe('claimsSupported', () => {
+      it('should contain all unique claim names from the claims config', () => {
+        expect(providerConfigService.claimsSupported).toContain('sub');
+        expect(providerConfigService.claimsSupported).toContain('name');
+        expect(providerConfigService.claimsSupported).toContain('email');
+        expect(providerConfigService.claimsSupported).toContain('email_verified');
+      });
+
+      it('should not contain duplicates', () => {
+        const unique = new Set(providerConfigService.claimsSupported);
+        expect(unique.size).toBe(providerConfigService.claimsSupported.length);
+      });
+    });
+
+    describe('buildProviderConfiguration()', () => {
+      it('should return a valid oidc-provider configuration', () => {
+        const config = providerConfigService.buildProviderConfiguration(['test-cookie-key']);
+
+        expect(config.routes).toBeDefined();
+        expect(config.claims).toBeDefined();
+        expect(config.responseTypes).toBeDefined();
+        expect(config.pkce).toBeDefined();
+        expect(config.features).toBeDefined();
+        expect(config.ttl).toBeDefined();
+        expect(config.interactions).toBeDefined();
+        expect(config.cookies).toBeDefined();
+      });
+
+      it('should disable devInteractions', () => {
+        const config = providerConfigService.buildProviderConfiguration(['key']);
+        expect(config.features!.devInteractions!.enabled).toBe(false);
+      });
+
+      it('should require PKCE', () => {
+        const config = providerConfigService.buildProviderConfiguration(['key']);
+        expect((config.pkce as any).required()).toBe(true);
+      });
+
+      it('should set the cookie keys from the input', () => {
+        const config = providerConfigService.buildProviderConfiguration(['cookie-key-1']);
+        expect(config.cookies!.keys).toEqual(['cookie-key-1']);
+      });
+    });
+
+    describe('buildDiscoveryMetadata()', () => {
+      it('should use the provided jwksUri override', () => {
+        const customUri = 'https://storage.example.com/jwks.json';
+        const metadata = providerConfigService.buildDiscoveryMetadata(customUri);
+        expect(metadata.jwks_uri).toBe(customUri);
+      });
+
+      it('should fall back to issuer-based jwks_uri when no override given', () => {
+        const metadata = providerConfigService.buildDiscoveryMetadata();
+        expect(metadata.jwks_uri).toBe(`${oidcModuleConfig.issuer}/jwks`);
       });
     });
   });

@@ -28,6 +28,16 @@ export const OIDC_ISSUER_PATH_ENV_KEY = 'OIDC_ISSUER_PATH';
 
 export const DEFAULT_OIDC_ISSUER_PATH = '/oidc';
 
+/**
+ * Route patterns for OIDC controllers that should be excluded from a global API route prefix.
+ *
+ * Typically fox dbx-components we set all the routes in the NestJS app to have a global prefix (e.g., '/api').
+ * For `firebase-server/oidc` we exclude the routes here so that the global prefix doesn't affect the OIDC routes.
+ *
+ * Use with `globalApiRoutePrefix.exclude` in {@link NestServerInstanceConfig}.
+ */
+export const FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = ['.well-known/(.*)', 'oidc/(.*)', 'interaction/(.*)'];
+
 // MARK: Provider Factories
 /**
  * Factory that builds {@link OidcModuleConfig} from environment variables and the app's {@link FirebaseServerEnvService}.
@@ -100,6 +110,10 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
    * When provided, this module is automatically included in the generated `imports` array.
    */
   readonly dependencyModule: Required<ModuleMetadata>['imports']['0'];
+  /**
+   * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
+   */
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError'>>;
 }
 
 /**
@@ -112,11 +126,11 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
  * Additionally, the following may be optionally provided:
  * - JwksServiceStorageConfig
  *
- * @param config
+ * @param metadataConfig
  * @returns
  */
-export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): ModuleMetadata {
-  const { dependencyModule, imports, exports, providers } = config;
+export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataConfig): ModuleMetadata {
+  const { dependencyModule, config, imports, exports, providers } = metadataConfig;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   return {
@@ -127,7 +141,10 @@ export function oidcModuleMetadata(config: ProvideAppOidcModuleMetadataConfig): 
       {
         provide: OidcModuleConfig,
         inject: [ConfigService, FirebaseServerEnvService],
-        useFactory: oidcModuleConfigFactory
+        useFactory: (configService: ConfigService, envService: FirebaseServerEnvService) => {
+          const moduleConfig = oidcModuleConfigFactory(configService, envService);
+          return config ? { ...moduleConfig, ...config } : moduleConfig;
+        }
       },
       {
         provide: JwksServiceConfig,

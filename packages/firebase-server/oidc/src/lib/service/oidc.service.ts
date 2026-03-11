@@ -11,6 +11,30 @@ import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/firebase-server';
 import { cachedGetter } from '@dereekb/util';
 
+// MARK: Suppress Body Parser Warning
+const OIDC_PROVIDER_BODY_PARSER_WARNING = 'oidc-provider WARNING: already parsed request body detected';
+
+/**
+ * Patches `console.warn` to suppress the oidc-provider "already parsed request body" warning.
+ *
+ * Firebase Cloud Functions (and other platforms) parse request bodies before they reach NestJS,
+ * so `req.readable` is always `false` when oidc-provider's selective_body middleware runs.
+ * The provider handles this correctly by falling back to `req.body`, but emits a one-time warning.
+ *
+ * This function intercepts that specific warning and silences it. All other warnings pass through.
+ */
+function suppressOidcProviderBodyParserWarning(): void {
+  const originalWarn = console.warn;
+
+  console.warn = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].includes(OIDC_PROVIDER_BODY_PARSER_WARNING)) {
+      return;
+    }
+
+    originalWarn.apply(console, args);
+  };
+}
+
 // MARK: Service
 /**
  * Core OIDC service that wraps the oidc-provider instance and exposes
@@ -92,11 +116,17 @@ export class OidcService {
 
     const { default: ProviderClass } = await import('oidc-provider');
 
-    return new ProviderClass(config.issuer, {
+    const provider = new ProviderClass(config.issuer, {
       ...providerConfiguration,
       adapter: adapterFactory,
       findAccount: findAccount as any,
       jwks: { keys: [signingKey] as any[] }
     });
+
+    if (config.suppressBodyParserWarning) {
+      suppressOidcProviderBodyParserWarning();
+    }
+
+    return provider;
   }
 }
