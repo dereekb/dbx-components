@@ -98,8 +98,8 @@ export class JwksService {
       use: 'sig'
     };
 
-    const key = resolveEncryptionKey(this.config.encryptionSecret);
-    const encryptedPrivateKey = encryptValue({ ...(privateKey as JsonWebKey), kid, alg: 'RS256', use: 'sig' }, key);
+    const getKey = resolveEncryptionKey(this.config.encryptionSecret);
+    const encryptedPrivateKey = encryptValue({ ...(privateKey as JsonWebKey), kid, alg: 'RS256', use: 'sig' }, getKey());
 
     const data: JwksKey = {
       privateKey: encryptedPrivateKey,
@@ -122,8 +122,8 @@ export class JwksService {
 
     if (!results.empty) {
       const data = results.docs[0].data();
-      const key = resolveEncryptionKey(this.config.encryptionSecret);
-      result = decryptValue<JsonWebKeyWithKid>(data.privateKey, key);
+      const getKey = resolveEncryptionKey(this.config.encryptionSecret);
+      result = decryptValue<JsonWebKeyWithKid>(data.privateKey, getKey());
     }
 
     return result;

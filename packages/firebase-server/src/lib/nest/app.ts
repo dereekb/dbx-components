@@ -11,7 +11,7 @@ import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/sto
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
 import { ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
-import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
+import { firebaseServerEnvTokenProviders, type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
 
 export interface NestServer {
@@ -116,7 +116,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
 
         // configure environment providers
         if (env?.environment != null) {
-          providers.push(serverEnvTokenProvider(env.environment));
+          providers.push(...firebaseServerEnvTokenProviders(env.environment));
 
           if (config.configureEnvService !== false) {
             providers.push(

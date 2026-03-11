@@ -1,4 +1,4 @@
-import { type WebsiteUrlDetails } from '@dereekb/util';
+import { Maybe, type WebsiteUrlDetails } from '@dereekb/util';
 
 /**
  * Reference to a FirebaseServerEnvService
@@ -13,6 +13,6 @@ export abstract class FirebaseServerEnvService {
   abstract readonly isStaging: boolean;
   abstract readonly developerToolsEnabled: boolean;
   abstract readonly developmentSchedulerEnabled: boolean;
-  abstract readonly appUrl: string | undefined;
-  abstract readonly appUrlDetails: WebsiteUrlDetails | undefined;
+  abstract readonly appUrl: Maybe<string>;
+  abstract readonly appUrlDetails: Maybe<WebsiteUrlDetails>;
 }

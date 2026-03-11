@@ -1,27 +1,48 @@
-import { type MiddlewareConsumer, Module, Logger } from '@nestjs/common';
+import { Inject, type MiddlewareConsumer, Module, Logger, Optional } from '@nestjs/common';
 import { OAuthBearerTokenMiddleware } from './oauth-auth.middleware';
+import { type SlashPath } from '@dereekb/util';
 
+// MARK: Config
 /**
- * Configuration for the OAuth auth middleware module.
+ * Configuration for `OAuthBearerTokenMiddleware` route protection.
+ *
+ * Works in reverse of `FirebaseAppCheckMiddlewareConfig`: instead of protecting
+ * all routes and ignoring some, this only protects explicitly specified paths.
+ * Routes under the global API prefix (protected by AppCheck) are excluded.
+ *
+ * @example
+ * ```ts
+ * // Provide in your module:
+ * { provide: OAuthAuthMiddlewareConfig, useValue: { protectedPaths: ['/mcp'] } }
+ * ```
  */
-export interface ConfigureOAuthAuthMiddlewareModuleConfig {
+export abstract class OAuthAuthMiddlewareConfig {
   /**
-   * Route patterns to apply the middleware to.
-   * Defaults to applying to all routes ('*').
+   * Path prefixes that require OAuth bearer token verification.
+   *
+   * Only requests matching one of these prefixes will be checked.
+   * Paths under the global API route prefix should not be included
+   * since those are protected by AppCheck.
    */
-  readonly routes?: string[];
+  readonly protectedPaths!: SlashPath[];
 }
 
+// MARK: Module
 /**
- * Configurable middleware module that applies OAuth bearer token verification
- * to specified routes.
+ * Middleware module that applies OAuth bearer token verification
+ * to paths specified in `OAuthAuthMiddlewareConfig`.
  *
- * Follows the same pattern as `ConfigureFirebaseAppCheckMiddlewareModule`.
+ * Only protects explicitly listed paths — all other routes pass through.
+ * This is the inverse of `ConfigureFirebaseAppCheckMiddlewareModule`, which
+ * protects everything and ignores specific paths.
  *
- * Usage:
+ * @example
  * ```ts
  * @Module({
- *   imports: [OAuthModule.forRoot(config), ConfigureOAuthAuthMiddlewareModule]
+ *   imports: [ConfigureOAuthAuthMiddlewareModule],
+ *   providers: [
+ *     { provide: OAuthAuthMiddlewareConfig, useValue: { protectedPaths: ['/mcp'] } }
+ *   ]
  * })
  * export class AppModule {}
  * ```
@@ -30,8 +51,15 @@ export interface ConfigureOAuthAuthMiddlewareModuleConfig {
 export class ConfigureOAuthAuthMiddlewareModule {
   private readonly logger = new Logger('ConfigureOAuthAuthMiddlewareModule');
 
+  constructor(@Optional() @Inject(OAuthAuthMiddlewareConfig) private readonly config?: OAuthAuthMiddlewareConfig) {}
+
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(OAuthBearerTokenMiddleware).forRoutes('mcp/*path');
-    this.logger.debug('Configured OAuth bearer token middleware for mcp routes.');
+    const protectedPaths = this.config?.protectedPaths ?? [];
+
+    if (protectedPaths.length > 0) {
+      const routes = protectedPaths.map((path) => `${path}/*path`);
+      consumer.apply(OAuthBearerTokenMiddleware).forRoutes(...routes);
+      this.logger.debug(`Configured OAuth bearer token middleware for routes: ${protectedPaths.join(', ')}`);
+    }
   }
 }

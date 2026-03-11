@@ -2,7 +2,7 @@ import { AbstractChildTestContextFixture, type BuildTestsWithContextFunction, ty
 import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, type FirebaseAdminTestContextInstance } from './firebase.admin';
 import { type Abstract, type DynamicModule, type FactoryProvider, type INestApplicationContext, type Provider, type Type } from '@nestjs/common';
 import { type StorageBucketId } from '@dereekb/firebase';
-import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvService, firebaseServerStorageDefaultBucketIdTokenProvider, type NestAppPromiseGetter } from '@dereekb/firebase-server';
+import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvironmentConfig, FirebaseServerEnvService, firebaseServerEnvTokenProviders, firebaseServerStorageDefaultBucketIdTokenProvider, type NestAppPromiseGetter } from '@dereekb/firebase-server';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { type ArrayOrValue, asArray, asGetter, type ClassType, type Getter } from '@dereekb/util';
 import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
@@ -61,49 +61,49 @@ export interface FirebaseAdminNestTestConfig<PI extends FirebaseAdminTestContext
   /**
    * Creates a new fixture.
    */
-  makeFixture?: (f: PF) => C;
+  readonly makeFixture?: (f: PF) => C;
   /**
    * Root module to import.
    */
-  nestModules: ArrayOrValue<ClassType>;
+  readonly nestModules: ArrayOrValue<ClassType>;
   /**
    * Whether or not to inject the env service provider (and serverEnvTokenProvider()) by default.
    *
    * If false will affect the default envConfig value.
    */
-  injectServerEnvServiceProvider?: boolean;
+  readonly injectServerEnvServiceProvider?: boolean;
   /**
-   * (Optional) ServerEnvironmentServiceConfig. Overrides the default which sets production=false.
+   * (Optional) FirebaseServerEnvironmentConfig. Overrides the default which sets production=false.
    *
    * If injectFirebaseServerEnvServiceProvider is false then this requires a value to be provided in order to be injected.
    */
-  envConfig?: ServerEnvironmentConfig;
+  readonly envConfig?: FirebaseServerEnvironmentConfig;
   /**
    * Whether or not to inject the firebase server provider (firebaseServerAppTokenProvider()).
    *
    * This makes FIREBASE_APP_TOKEN available globally and provides the app configured for this test.
    */
-  injectFirebaseServerAppTokenProvider?: boolean;
+  readonly injectFirebaseServerAppTokenProvider?: boolean;
   /**
    * Default storage bucket to use for tests.
    */
-  defaultStorageBucket?: StorageBucketId;
+  readonly defaultStorageBucket?: StorageBucketId;
   /**
    * Whether or not to force using the storage bucket.
    */
-  forceStorageBucket?: boolean;
+  readonly forceStorageBucket?: boolean;
   /**
    * Optional providers to pass to the TestingModule initialization.
    */
-  makeProviders?: (instance: PI) => Provider<any>[];
+  readonly makeProviders?: (instance: PI) => Provider<any>[];
   /**
    * Creates a new instance.
    */
-  makeInstance?: (instance: PI, nest: TestingModule) => I;
+  readonly makeInstance?: (instance: PI, nest: TestingModule) => I;
   /**
    * Optional function to initialize the instance.
    */
-  initInstance?: (instance: I) => Promise<void>;
+  readonly initInstance?: (instance: I) => Promise<void>;
 }
 
 export type FirebaseAdminNestTestContextFactory<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>> = TestContextFactory<C>;
@@ -137,7 +137,7 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
 
       // Inject the serverEnvTokenProvider and optionally the FirebaseServerEnvService
       if (injectServerEnvServiceProvider !== false || envConfig != null) {
-        providers.push(serverEnvTokenProvider(envConfig || { production: false }));
+        providers.push(...firebaseServerEnvTokenProviders(envConfig || { production: false, appUrl: 'localhost:4200' }));
 
         if (injectServerEnvServiceProvider !== false) {
           providers.push(

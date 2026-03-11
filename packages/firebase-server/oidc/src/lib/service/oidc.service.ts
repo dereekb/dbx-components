@@ -83,8 +83,8 @@ export class OidcService {
     const jwks = await this.jwksService.getLatestPublicJwks();
 
     // Derive cookie signing key from the resolved encryption secret.
-    const encryptionKeyBuffer = resolveEncryptionKey(config.jwksKeyConverterConfig.encryptionSecret);
-    const cookieKey = encryptionKeyBuffer.toString('base64').slice(0, 32);
+    const getEncryptionKey = resolveEncryptionKey(config.jwksKeyConverterConfig.encryptionSecret);
+    const cookieKey = getEncryptionKey().toString('base64').slice(0, 32);
 
     const adapterFactory = createAdapterFactory(this.collections);
 

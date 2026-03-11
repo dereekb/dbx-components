@@ -318,7 +318,7 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
   }
 
   get apiServerNestContext(): DemoApiServerNestContext {
-    return this.get(DemoApiServerNestContext);
+    return new DemoApiServerNestContext(this.apiNestContext);
   }
 
   get demoFirestoreCollections(): DemoFirestoreCollections {

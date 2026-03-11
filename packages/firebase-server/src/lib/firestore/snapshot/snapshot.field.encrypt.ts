@@ -1,4 +1,4 @@
-import { getValueFromGetter, type Getter, type GetterOrValue, type Maybe } from '@dereekb/util';
+import { getValueFromGetter, isHex, type Getter, type GetterOrValue, type Maybe } from '@dereekb/util';
 import { type FirestoreModelFieldMapFunctionsConfig, firestoreField, optionalFirestoreField } from '@dereekb/firebase';
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
@@ -13,12 +13,21 @@ const ENCRYPTED_FIELD_KEY_LENGTH = 32;
 
 // MARK: Types
 /**
+ * A secret key for AES-256-GCM. Should be 64 character long.
+ */
+export type FirestoreEncryptedFieldSecret = string;
+
+export function isValidFirestoreEncryptedFieldSecret(secret: FirestoreEncryptedFieldSecret) {
+  return secret.length === ENCRYPTED_FIELD_KEY_LENGTH * 2 && isHex(secret);
+}
+
+/**
  * The source for the encryption secret.
  *
  * - If a string, it is used directly as the hex-encoded key (64 hex chars = 32 bytes).
  * - If a Getter, it is called each time to retrieve the key (useful for rotation or lazy loading).
  */
-export type FirestoreEncryptedFieldSecretSource = string | Getter<string>;
+export type FirestoreEncryptedFieldSecretSource = FirestoreEncryptedFieldSecret | Getter<string>;
 
 /**
  * Configuration for a required encrypted Firestore field.
@@ -50,27 +59,33 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
 
 // MARK: Functions
 /**
- * Resolves the encryption key Buffer from a secret source.
+ * Factory that eagerly resolves and validates the encryption key from a secret source.
+ *
+ * The getter is called immediately and the key is validated on creation. The returned
+ * function provides the resolved Buffer without re-resolving or re-validating.
  *
  * @example
  * ```typescript
- * const key = resolveEncryptionKey('a'.repeat(64));
- * const key2 = resolveEncryptionKey({ env: 'MY_SECRET' });
- * const key3 = resolveEncryptionKey(() => getSecretFromVault());
+ * const getKey = resolveEncryptionKey('a'.repeat(64));
+ * const key: Buffer = getKey();
+ *
+ * const encrypted = encryptValue({ sensitive: 'data' }, getKey());
+ * const decrypted = decryptValue<{ sensitive: string }>(encrypted, getKey());
  * ```
  *
  * @param source - The secret source configuration.
- * @returns A 32-byte Buffer for AES-256 encryption.
+ * @returns A getter that returns the resolved 32-byte Buffer for AES-256 encryption.
  * @throws Error if the resolved key is not 64 hex characters.
  */
-export function resolveEncryptionKey(source: FirestoreEncryptedFieldSecretSource): Buffer {
-  let hex: string = getValueFromGetter(source);
+export function resolveEncryptionKey(source: FirestoreEncryptedFieldSecretSource): Getter<Buffer> {
+  const hex: FirestoreEncryptedFieldSecret = getValueFromGetter(source);
 
-  if (hex.length !== ENCRYPTED_FIELD_KEY_LENGTH * 2) {
-    throw new Error(`firestoreEncryptedField: expected a ${ENCRYPTED_FIELD_KEY_LENGTH * 2}-character hex key, got ${hex.length} characters.`);
+  if (!isValidFirestoreEncryptedFieldSecret(hex)) {
+    throw new Error(`firestoreEncryptedField: expected a ${ENCRYPTED_FIELD_KEY_LENGTH * 2}-character hexadecimal key, got ${hex.length} characters. Ensure the key contains only hex characters (0-9, a-f).`);
   }
 
-  return Buffer.from(hex, 'hex');
+  const key = Buffer.from(hex, 'hex');
+  return () => key;
 }
 
 /**
@@ -80,9 +95,9 @@ export function resolveEncryptionKey(source: FirestoreEncryptedFieldSecretSource
  *
  * @example
  * ```typescript
- * const key = resolveEncryptionKey(mySecret);
- * const encrypted = encryptValue({ sensitive: 'data' }, key);
- * const decrypted = decryptValue<{ sensitive: string }>(encrypted, key);
+ * const getKey = resolveEncryptionKey(mySecret);
+ * const encrypted = encryptValue({ sensitive: 'data' }, getKey());
+ * const decrypted = decryptValue<{ sensitive: string }>(encrypted, getKey());
  * ```
  *
  * @param value - The value to encrypt (must be JSON-serializable).
@@ -103,7 +118,7 @@ export function encryptValue<T>(value: T, key: Buffer): string {
  * Decrypts a base64-encoded string back to the original value.
  *
  * @param encoded - The base64-encoded encrypted string (IV + ciphertext + authTag).
- * @param key - The 32-byte encryption key from `resolveEncryptionKey()`.
+ * @param key - The 32-byte encryption key Buffer from calling the getter returned by `resolveEncryptionKey()`.
  * @returns The decrypted JSON-parsed value.
  */
 export function decryptValue<T>(encoded: string, key: Buffer): T {
@@ -139,16 +154,15 @@ export function decryptValue<T>(encoded: string, key: Buffer): T {
  */
 export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<T, string> {
   const { secret, default: defaultValue } = config;
+  const getKey = resolveEncryptionKey(secret);
 
   return firestoreField<T, string>({
     default: defaultValue as GetterOrValue<T>,
     fromData: (data: string) => {
-      const key = resolveEncryptionKey(secret);
-      return decryptValue<T>(data, key);
+      return decryptValue<T>(data, getKey());
     },
     toData: (value: T) => {
-      const key = resolveEncryptionKey(secret);
-      return encryptValue(value, key);
+      return encryptValue(value, getKey());
     }
   });
 }
@@ -172,15 +186,14 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
  */
 export function optionalFirestoreEncryptedField<T>(config: OptionalFirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<string>> {
   const { secret } = config;
+  const getKey = resolveEncryptionKey(secret);
 
   return optionalFirestoreField<T, string>({
     transformFromData: (data: string) => {
-      const key = resolveEncryptionKey(secret);
-      return decryptValue<T>(data, key);
+      return decryptValue<T>(data, getKey());
     },
     transformToData: (value: T) => {
-      const key = resolveEncryptionKey(secret);
-      return encryptValue(value, key);
+      return encryptValue(value, getKey());
     }
   });
 }

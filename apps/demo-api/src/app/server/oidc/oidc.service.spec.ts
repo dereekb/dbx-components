@@ -48,10 +48,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
     });
 
-    describe('getPublicJwks()', () => {
+    describe('getLatestPublicJwks()', () => {
       it('should return public keys for all non-retired keys', async () => {
         await jwksService.generateKeyPair();
-        const jwks = await jwksService.getPublicJwks();
+        const jwks = await jwksService.getLatestPublicJwks();
 
         expect(jwks.keys).toHaveLength(1);
         expect(jwks.keys[0].kty).toBe('RSA');
@@ -72,7 +72,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       it('should include both active and rotated keys in JWKS', async () => {
         await jwksService.generateKeyPair();
         await jwksService.rotateKeys();
-        const jwks = await jwksService.getPublicJwks();
+        const jwks = await jwksService.getLatestPublicJwks();
 
         expect(jwks.keys).toHaveLength(2);
       });
@@ -90,7 +90,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   });
 
   describe('OidcAccountService', () => {
-    demoAuthorizedUserContext({ f }, (u) => {
+    demoAuthorizedUserContext({ f, addContactInfo: true }, (u) => {
       describe('findAccount()', () => {
         it('should return an account for an existing user', async () => {
           const userContext = oidcAccountService.userContext(u.uid);

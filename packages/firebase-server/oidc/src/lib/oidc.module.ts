@@ -5,7 +5,7 @@ import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController } from './controller';
 import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryFirestoreCollection } from './model';
-import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService, FirestoreEncryptedFieldSecret, isValidFirestoreEncryptedFieldSecret } from '@dereekb/firebase-server';
 import { type FirestoreContext } from '@dereekb/firebase';
 
 // MARK: Environment Variable Keys
@@ -17,7 +17,7 @@ import { type FirestoreContext } from '@dereekb/firebase';
 export const OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY = 'OIDC_JWKS_ENCRYPTION_SECRET';
 
 /**
- * Environment variable name for the OIDC issuer path prefix.
+ * Environment variable name for the OIDC issuer path prefix. You typically don't have to update this.
  *
  * Optional. If set, is appended to the appUrl to form the issuer URL.
  * Defaults to '/oidc'.
@@ -40,7 +40,15 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
   const loginUrl = `${appUrl}/oidc/interaction/login`;
   const consentUrl = `${appUrl}/oidc/interaction/consent`;
 
-  const encryptionSecret: string = configService.getOrThrow<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY);
+  let encryptionSecret: FirestoreEncryptedFieldSecret = configService.get<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY) ?? '';
+
+  if (!isValidFirestoreEncryptedFieldSecret(encryptionSecret)) {
+    if (envService.isTestingEnv) {
+      encryptionSecret = `54686520717569636b2062726f776e20f09fa68a206a756d7073206f76657220`;
+    } else {
+      throw new Error(`oidcModuleConfigFactory: The secret provided by ${OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY} is not valid as a FirestoreEncryptedFieldSecret.`);
+    }
+  }
 
   const config: OidcModuleConfig = {
     issuer,

@@ -1,33 +1,66 @@
 import admin from 'firebase-admin';
-import { ForbiddenException, Inject, Injectable, Logger, Optional, type NestMiddleware } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, type NestMiddleware } from '@nestjs/common';
 import { type Request } from 'firebase-functions/v2/https';
 import { type Response } from 'express';
 import { type SlashPath, type Maybe } from '@dereekb/util';
 import { type AppCheckRequest } from './appcheck';
-import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
-import { GlobalRoutePrefixConfig } from './globalprefix';
 
+// MARK: Config
+/**
+ * Configuration for `FirebaseAppCheckMiddleware`.
+ *
+ * Controls which paths are excluded from AppCheck verification at the
+ * middleware consumer level via `.forRoutes()` and `.exclude()`.
+ */
+export abstract class FirebaseAppCheckMiddlewareConfig {
+  /**
+   * Whether to protect webhook paths under the global route prefix.
+   *
+   * When false (default), paths like `/api/webhook/*` are excluded from AppCheck.
+   *
+   * Defaults to false, otherwise webhook calls would be rejected.
+   */
+  readonly protectGlobalWebhooksPath?: boolean;
+  /**
+   * Whether to protect paths outside the global route prefix.
+   *
+   * When false (default), only paths under the global prefix (e.g., `/api/*`) are protected.
+   * Paths like `/.well-known/*` or `/oidc/*` are not checked.
+   *
+   * Defaults to false, otherwise non-global paths would be rejected.
+   */
+  readonly protectNonGlobalPaths?: boolean;
+  /**
+   * Additional path patterns to protect with AppCheck verification.
+   *
+   * Each entry is a path prefix (e.g., '/health') that will be added
+   * to the protected routes. The global route prefix itself (e.g., '/api')
+   * is not allowed as a value since it is always protected.
+   *
+   * Defaults to an empty array.
+   */
+  readonly protectedPaths?: SlashPath[];
+}
+
+// MARK: Middleware
 /**
  * Middleware that verifies the X-Firebase-AppCheck header using admin.
  *
- * It ignores all webhook paths by default.
+ * Route-level exclusions (webhooks, non-global paths, custom paths) are
+ * handled by `ConfigureFirebaseAppCheckMiddlewareModule` via `.forRoutes()`
+ * and `.exclude()`. This middleware only checks the per-request `skipAppCheck`
+ * flag (set by the `@SkipAppCheck()` decorator) at runtime.
  */
 @Injectable()
 export class FirebaseAppCheckMiddleware implements NestMiddleware {
   private readonly logger = new Logger('FirebaseAppCheckMiddleware');
 
-  private readonly _ignoredWebhookPath: SlashPath;
-
-  constructor(@Optional() @Inject(GlobalRoutePrefixConfig) private readonly globalRoutePrefixConfig?: Maybe<GlobalRoutePrefixConfig>) {
-    this._ignoredWebhookPath = this.globalRoutePrefixConfig?.globalApiRoutePrefix ? `${this.globalRoutePrefixConfig.globalApiRoutePrefix}${DEFAULT_BASE_WEBHOOK_PATH}` : DEFAULT_BASE_WEBHOOK_PATH;
-  }
-
-  async use(req: Request, res: Response, next: (error?: Error | unknown) => void) {
-    const isIgnoredRoute = this.isIgnoredRequest(req);
+  async use(req: Request, _res: Response, next: (error?: Error | unknown) => void) {
+    const skipAppCheck = (req as AppCheckRequest).skipAppCheck;
 
     let error: Maybe<Error>;
 
-    if (!isIgnoredRoute) {
+    if (!skipAppCheck) {
       error = await verifyAppCheckInRequest(req);
 
       if (error) {
@@ -36,15 +69,6 @@ export class FirebaseAppCheckMiddleware implements NestMiddleware {
     }
 
     next(error);
-  }
-
-  isIgnoredRequest(req: Request): boolean {
-    const isIgnoredRoute = (req as AppCheckRequest).skipAppCheck || this.isIgnoredPath(req.baseUrl);
-    return isIgnoredRoute;
-  }
-
-  isIgnoredPath(path: string): boolean {
-    return path.startsWith(this._ignoredWebhookPath);
   }
 }
 

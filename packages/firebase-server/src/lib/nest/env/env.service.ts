@@ -1,11 +1,11 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { Injectable } from '@nestjs/common';
 import { type FirebaseServerEnvService } from '../../env/env.service';
-import { type WebsiteUrlDetails, websiteUrlDetails } from '@dereekb/util';
+import { cachedGetter, Maybe, type WebsiteUrlDetails, websiteUrlDetails } from '@dereekb/util';
 
 @Injectable()
 export class DefaultFirebaseServerEnvService extends ServerEnvironmentService implements FirebaseServerEnvService {
-  private _appUrlDetails: WebsiteUrlDetails | undefined | null = null;
+  private readonly _appUrlDetails = cachedGetter<Maybe<WebsiteUrlDetails>>(() => (this.appUrl ? websiteUrlDetails(this.appUrl) : undefined));
 
   /**
    * Enabled when not in production and not in a testing environment.
@@ -14,11 +14,7 @@ export class DefaultFirebaseServerEnvService extends ServerEnvironmentService im
     return !this.isProduction && !this.isTestingEnv;
   }
 
-  get appUrlDetails(): WebsiteUrlDetails | undefined {
-    if (this._appUrlDetails === null) {
-      this._appUrlDetails = this.appUrl ? websiteUrlDetails(this.appUrl) : undefined;
-    }
-
-    return this._appUrlDetails;
+  get appUrlDetails() {
+    return this._appUrlDetails();
   }
 }

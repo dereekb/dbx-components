@@ -5,7 +5,7 @@ import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demo
 import { describeCallableRequestTest, describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 import { onCallDevelopmentParams } from '@dereekb/firebase';
 import { onCallDevelopmentFunction } from '@dereekb/firebase-server';
-import { onCallWithDemoNestContext } from '../function';
+import { onCallWithDemoNestContext } from '../function.context';
 import { isDate } from 'date-fns';
 import { type ScheduledEvent } from 'firebase-functions/scheduler';
 

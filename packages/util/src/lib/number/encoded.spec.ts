@@ -1,4 +1,4 @@
-import { encodeRadix36Number, decodeRadix36Number } from './encoded';
+import { encodeRadix36Number, decodeRadix36Number, isHex } from './encoded';
 
 describe('encodeRadix36Number', () => {
   it('should encode 0 as "0"', () => {
@@ -56,6 +56,34 @@ describe('decodeRadix36Number', () => {
 
   it('should return NaN for invalid input', () => {
     expect(decodeRadix36Number('')).toBeNaN();
+  });
+});
+
+describe('isHex', () => {
+  it('should return true for lowercase hex strings', () => {
+    expect(isHex('0123456789abcdef')).toBe(true);
+  });
+
+  it('should return true for uppercase hex strings', () => {
+    expect(isHex('0123456789ABCDEF')).toBe(true);
+  });
+
+  it('should return true for mixed case hex strings', () => {
+    expect(isHex('a1B2c3D4')).toBe(true);
+  });
+
+  it('should return false for empty strings', () => {
+    expect(isHex('')).toBe(false);
+  });
+
+  it('should return false for strings with non-hex characters', () => {
+    expect(isHex('xyz')).toBe(false);
+    expect(isHex('thequickbrownfox')).toBe(false);
+    expect(isHex('0x1a')).toBe(false);
+  });
+
+  it('should return false for strings with spaces', () => {
+    expect(isHex('ab cd')).toBe(false);
   });
 });
 

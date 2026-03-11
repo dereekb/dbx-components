@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { JwksServiceStorageConfig, OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountService, OidcAccountServiceDelegate, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
+import { JwksServiceStorageConfig, OIDC_ACCOUNT_SERVICE_TOKEN, OidcAccountClaims, OidcAccountService, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
-import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common';
+import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 
 export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthService): OidcAccountService {
@@ -41,8 +41,8 @@ export function demoJwksServiceStorageConfigFactory(firebaseServerStorageService
 }
 
 @Module({
-  imports: [DemoApiAuthModule, DemoApiStorageModule],
-  exports: [DemoApiFirestoreModule],
+  imports: [DemoApiAuthModule, DemoApiStorageModule, DemoApiFirestoreModule],
+  exports: [DemoApiFirestoreModule, OIDC_ACCOUNT_SERVICE_TOKEN, JwksServiceStorageConfig],
   providers: [
     {
       provide: OIDC_ACCOUNT_SERVICE_TOKEN,
