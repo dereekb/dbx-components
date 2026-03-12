@@ -1,25 +1,36 @@
 import { type, type Type } from 'arktype';
 import { type TargetModelParams, type OnCallCreateModelResult } from '../../common';
 import { InferredTargetModelParams, inferredTargetModelParamsType, targetModelParamsType } from '../../common/model/model/model.param';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction } from '../../client';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction } from '../../client';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type OidcEntryClientId } from './oidcmodel.id';
-import { type OidcModelTypes } from './oidcmodel';
+import { type OidcModelTypes, type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from './oidcmodel';
 
-export interface AbstractOidcClientParams {
+/**
+ * Fields that can be changed on an existing OIDC client.
+ *
+ * Does NOT include `token_endpoint_auth_method` — that is immutable after creation.
+ */
+export interface UpdateOidcClientFieldParams {
   readonly client_name: string;
-  readonly redirect_uris: string[];
-  readonly grant_types?: Maybe<string[]>;
-  readonly response_types?: Maybe<string[]>;
+  readonly redirect_uris: OidcRedirectUri[];
+  readonly logo_uri?: Maybe<string>;
+  readonly client_uri?: Maybe<string>;
 }
 
-export const abstractOidcClientParamsType = type({
+export const updateOidcClientFieldParamsType = type({
   client_name: 'string',
   redirect_uris: 'string[]',
-  'grant_types?': clearable('string[]'),
-  'response_types?': clearable('string[]')
-}) as Type<AbstractOidcClientParams>;
+  'logo_uri?': clearable('string'),
+  'client_uri?': clearable('string')
+}) as Type<UpdateOidcClientFieldParams>;
+
+export const createOidcClientFieldParamsType = updateOidcClientFieldParamsType.merge(
+  type({
+    token_endpoint_auth_method: "'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt'"
+  })
+);
 
 // MARK: Create
 /**
@@ -28,10 +39,14 @@ export const abstractOidcClientParamsType = type({
  * If no target model is provided, assumes the current user.
  *
  * The server generates `client_id` and `client_secret` and creates the adapter entry.
+ *
+ * Extends {@link UpdateOidcClientFieldParams} with `token_endpoint_auth_method` which is immutable after creation.
  */
-export interface CreateOidcClientParams extends AbstractOidcClientParams, InferredTargetModelParams {}
+export interface CreateOidcClientParams extends UpdateOidcClientFieldParams, InferredTargetModelParams {
+  readonly token_endpoint_auth_method: OidcTokenEndpointAuthMethod;
+}
 
-export const createOidcClientParamsType = inferredTargetModelParamsType.merge(abstractOidcClientParamsType) as Type<CreateOidcClientParams>;
+export const createOidcClientParamsType = inferredTargetModelParamsType.merge(createOidcClientFieldParamsType) as Type<CreateOidcClientParams>;
 
 /**
  * Result of creating a new OAuth client.
@@ -47,10 +62,18 @@ export interface CreateOidcClientResult extends OnCallCreateModelResult {
 // MARK: Update
 /**
  * Parameters for updating an existing OAuth client.
+ *
+ * Uses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.
  */
-export interface UpdateOidcClientParams extends AbstractOidcClientParams, TargetModelParams {}
+export interface UpdateOidcClientParams extends UpdateOidcClientFieldParams, TargetModelParams {}
 
-export const updateOidcClientParamsType = targetModelParamsType.merge(abstractOidcClientParamsType) as Type<UpdateOidcClientParams>;
+export const updateOidcClientParamsType = targetModelParamsType.merge(updateOidcClientFieldParamsType) as Type<UpdateOidcClientParams>;
+
+export interface RotateOidcClientSecretParams extends TargetModelParams {}
+
+export const rotateOidcClientSecretParamsType = targetModelParamsType as Type<RotateOidcClientSecretParams>;
+
+export interface RotateOidcClientSecretResult extends Pick<CreateOidcClientResult, 'client_id' | 'client_secret'> {}
 
 // MARK: Delete
 /**
@@ -80,6 +103,7 @@ export type OidcModelCrudFunctionsConfig = {
     };
     update: {
       client: UpdateOidcClientParams;
+      rotateClientSecret: [RotateOidcClientSecretParams, RotateOidcClientSecretResult];
     };
     delete: {
       client: DeleteOidcClientParams;
@@ -88,7 +112,7 @@ export type OidcModelCrudFunctionsConfig = {
 };
 
 export const oidcModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<OidcModelCrudFunctionsConfig, OidcModelTypes> = {
-  oidcEntry: ['create:client', 'update:client', 'delete:client']
+  oidcEntry: ['create:client', 'update:client,rotateClientSecret', 'delete:client']
 };
 
 /**
@@ -103,6 +127,7 @@ export abstract class OidcModelFunctions implements ModelFirebaseFunctionMap<Oid
     };
     updateOidcEntry: {
       client: ModelFirebaseCrudFunction<UpdateOidcClientParams>;
+      rotateClientSecret: ModelFirebaseUpdateFunction<RotateOidcClientSecretParams, RotateOidcClientSecretResult>;
     };
     deleteOidcEntry: {
       client: ModelFirebaseDeleteFunction<DeleteOidcClientParams>;

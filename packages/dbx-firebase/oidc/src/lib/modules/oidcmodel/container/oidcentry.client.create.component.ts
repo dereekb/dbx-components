@@ -3,7 +3,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
 import { DbxButtonComponent, DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
-import { DbxFirebaseOidcEntryClientFormComponent, type DbxFirebaseOidcModelClientFormValue } from '../component/oidcentry.client.form.component';
+import { DbxFirebaseOidcEntryClientFormComponent, type DbxFirebaseOidcEntryClientFormComponentConfig, type DbxFirebaseOidcModelClientFormValue } from '../component/oidcentry.client.form.component';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { type CreateOidcClientParams, type CreateOidcClientResult, type FirestoreModelKey } from '@dereekb/firebase';
 import { type Configurable, type Maybe } from '@dereekb/util';
@@ -19,7 +19,7 @@ import { tap } from 'rxjs';
   selector: 'dbx-oidc-entry-client-create',
   template: `
     <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleCreateClient" dbxActionSnackbarError>
-      <dbx-oidc-client-form dbxActionForm></dbx-oidc-client-form>
+      <dbx-oidc-client-form dbxActionForm [config]="formConfig"></dbx-oidc-client-form>
       <dbx-button [raised]="true" dbxActionButton text="Create"></dbx-button>
     </div>
   `,
@@ -29,6 +29,8 @@ import { tap } from 'rxjs';
 })
 export class DbxFirebaseOidcEntryClientCreateComponent {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);
+
+  readonly formConfig: DbxFirebaseOidcEntryClientFormComponentConfig = { mode: 'create' };
 
   readonly createClientOwnerTarget = input<Maybe<FirestoreModelKey>>();
   readonly clientCreated = output<CreateOidcClientResult>();

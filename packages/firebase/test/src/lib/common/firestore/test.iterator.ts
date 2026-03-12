@@ -60,6 +60,60 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
         );
       });
 
+      describe('inferEndOfResultsFromPageSize', () => {
+        describe('with inferEndOfResultsFromPageSize=true (default)', () => {
+          it(
+            'should mark the result as the end when fewer items are returned than the limit.',
+            callbackTest((done) => {
+              const limit = testDocumentCount + 5; // request more than exist
+
+              const iteration = firestoreIteration({ limit });
+
+              sub.subscription = iteration.latestState$.subscribe((x) => {
+                expect(x.value).toBeDefined();
+                expect(x.value!.length).toBe(testDocumentCount);
+                expect(x.hasNextPage).toBe(false);
+                done();
+              });
+            })
+          );
+
+          it(
+            'should not mark the result as the end when the page is full.',
+            callbackTest((done) => {
+              const limit = 4;
+
+              const iteration = firestoreIteration({ limit });
+
+              sub.subscription = iteration.latestState$.subscribe((x) => {
+                expect(x.value).toBeDefined();
+                expect(x.value!.length).toBe(limit);
+                expect(x.hasNextPage).toBe(true);
+                done();
+              });
+            })
+          );
+        });
+
+        describe('with inferEndOfResultsFromPageSize=false', () => {
+          it(
+            'should not mark the result as the end even when fewer items are returned than the limit.',
+            callbackTest((done) => {
+              const limit = testDocumentCount + 5; // request more than exist
+
+              const iteration = firestoreIteration({ limit, inferEndOfResultsFromPageSize: false });
+
+              sub.subscription = iteration.latestState$.subscribe((x) => {
+                expect(x.value).toBeDefined();
+                expect(x.value!.length).toBe(testDocumentCount);
+                expect(x.hasNextPage).toBe(true); // does not infer end
+                done();
+              });
+            })
+          );
+        });
+      });
+
       describe('constraint', () => {
         it(
           'should use the constraints',

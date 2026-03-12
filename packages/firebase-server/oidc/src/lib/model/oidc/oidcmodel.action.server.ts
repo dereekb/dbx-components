@@ -1,4 +1,4 @@
-import { type AsyncFirebaseFunctionCreateAction, type AsyncOidcEntryUpdateAction, type AsyncOidcEntryDeleteAction, type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, type OidcEntryDocument } from '@dereekb/firebase';
+import { type AsyncFirebaseFunctionCreateAction, type AsyncOidcEntryUpdateAction, type AsyncOidcEntryDeleteAction, type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, type RotateOidcClientSecretParams, rotateOidcClientSecretParamsType, type RotateOidcClientSecretResult, type OidcEntryDocument } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type OidcClientService } from '../../service/client.service';
 
@@ -22,6 +22,7 @@ export interface OidcModelServerActionsContext extends FirebaseServerActionsCont
 export abstract class OidcModelServerActions {
   abstract createOidcClient(params: CreateOidcClientParams): AsyncFirebaseFunctionCreateAction<CreateOidcClientParams, CreateOidcClientResult>;
   abstract updateOidcClient(params: UpdateOidcClientParams): AsyncOidcEntryUpdateAction<UpdateOidcClientParams>;
+  abstract rotateOidcClientSecret(params: RotateOidcClientSecretParams): AsyncFirebaseFunctionCreateAction<RotateOidcClientSecretParams, RotateOidcClientSecretResult, OidcEntryDocument>;
   abstract deleteOidcClient(params: DeleteOidcClientParams): AsyncOidcEntryDeleteAction<DeleteOidcClientParams>;
 }
 
@@ -41,6 +42,7 @@ export function oidcModelServerActions(context: OidcModelServerActionsContext): 
   return {
     createOidcClient: createOidcClientFactory(context),
     updateOidcClient: updateOidcClientFactory(context),
+    rotateOidcClientSecret: rotateOidcClientSecretFactory(context),
     deleteOidcClient: deleteOidcClientFactory(context)
   };
 }
@@ -74,6 +76,22 @@ export function updateOidcClientFactory(context: OidcModelServerActionsContext) 
     return async (document: OidcEntryDocument): Promise<OidcEntryDocument> => {
       await oidcClientService.updateClient(document.id, params);
       return document;
+    };
+  });
+}
+
+/**
+ * Factory for the `rotateOidcClientSecret` action.
+ *
+ * Delegates to {@link OidcClientService.rotateClientSecret} to generate a new secret
+ * and return it in plaintext (only returned once).
+ */
+export function rotateOidcClientSecretFactory(context: OidcModelServerActionsContext) {
+  const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(rotateOidcClientSecretParamsType, async (_params) => {
+    return async (document: OidcEntryDocument): Promise<RotateOidcClientSecretResult> => {
+      return oidcClientService.rotateClientSecret(document.id);
     };
   });
 }

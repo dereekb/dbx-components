@@ -4,13 +4,8 @@ import type { OidcAccountServiceDelegate, OidcProviderConfig, OidcRenderErrorFun
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
-import type { DemoApiAuthClaims } from 'demo-firebase';
+import type { DemoApiAuthClaims, DemoOidcScope } from 'demo-firebase';
 
-// MARK: Scopes
-/**
- * `demo` scope grants full access to the user's Demo resources via the API.
- */
-export type DemoOidcScope = 'openid' | 'profile' | 'email' | 'demo';
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
 
 export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {

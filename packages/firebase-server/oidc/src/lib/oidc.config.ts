@@ -1,5 +1,6 @@
 import type { Configuration } from 'oidc-provider';
 import { type SlashPath } from '@dereekb/util';
+import { type OidcScope } from '@dereekb/firebase';
 import { JwksServiceConfig } from './service/jwks.service';
 import { JwksKeyConverterConfig } from './model';
 
@@ -10,20 +11,6 @@ import { JwksKeyConverterConfig } from './model';
  * Matches the `renderError` option from the oidc-provider `Configuration` type.
  */
 export type OidcRenderErrorFunction = Configuration['renderError'];
-
-// MARK: Scope
-/**
- * Base type for OIDC scope string unions.
- *
- * Applications define their own scope union extending this type to get
- * compile-time validation of scope names throughout the delegate and config.
- *
- * @example
- * ```typescript
- * type MyScopes = 'openid' | 'profile' | 'email';
- * ```
- */
-export type OidcScope = string;
 
 // MARK: Provider Config
 /**

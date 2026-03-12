@@ -1,5 +1,5 @@
 import { demoCallModel } from './../model/crud.functions';
-import { type CreateOidcClientParams, type CreateOidcClientResult, oidcEntryIdentity, type UpdateOidcClientParams, type DeleteOidcClientParams, firestoreModelKey } from '@dereekb/firebase';
+import { type CreateOidcClientParams, type CreateOidcClientResult, type RotateOidcClientSecretResult, oidcEntryIdentity, type UpdateOidcClientParams, type DeleteOidcClientParams, firestoreModelKey } from '@dereekb/firebase';
 import { profileIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
@@ -10,7 +10,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     demoAuthorizedUserContext({ f }, (u) => {
       const testCreateParams: CreateOidcClientParams = {
         client_name: 'Test Client',
-        redirect_uris: ['https://example.com/callback']
+        redirect_uris: ['https://example.com/callback'],
+        token_endpoint_auth_method: 'client_secret_post'
       };
 
       async function createTestClient(): Promise<CreateOidcClientResult> {
@@ -76,6 +77,30 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const exists = await document.accessor.exists();
 
           expect(exists).toBe(false);
+        });
+      });
+
+      describe('rotateClientSecret', () => {
+        it('should rotate the client secret and return a new secret', async () => {
+          const createResult = await createTestClient();
+
+          const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(oidcEntryIdentity, { key: createResult.modelKeys }, 'rotateClientSecret'))) as RotateOidcClientSecretResult;
+
+          expect(result).toBeDefined();
+          expect(result.client_id).toBeDefined();
+          expect(result.client_secret).toBeDefined();
+          expect(result.client_id).toBe(createResult.client_id);
+        });
+
+        it('should produce a different secret each time', async () => {
+          const createResult = await createTestClient();
+
+          const result1 = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(oidcEntryIdentity, { key: createResult.modelKeys }, 'rotateClientSecret'))) as RotateOidcClientSecretResult;
+          const result2 = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(oidcEntryIdentity, { key: createResult.modelKeys }, 'rotateClientSecret'))) as RotateOidcClientSecretResult;
+
+          expect(result1.client_secret).toBeDefined();
+          expect(result2.client_secret).toBeDefined();
+          expect(result1.client_secret).not.toBe(result2.client_secret);
         });
       });
     });

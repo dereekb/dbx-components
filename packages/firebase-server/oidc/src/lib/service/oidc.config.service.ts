@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { OidcModuleConfig, OidcScope, type OidcProviderConfig } from '../oidc.config';
+import { OidcModuleConfig, type OidcProviderConfig } from '../oidc.config';
 import { OidcAccountService } from './account.service';
 import type { Configuration } from 'oidc-provider';
 import { WebsiteUrl } from '@dereekb/util';
+import { type OidcScope } from '@dereekb/firebase';
 
 // MARK: Routes
 /**

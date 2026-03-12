@@ -344,6 +344,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       filterValues: (a, b) => filterPickableItemFieldValuesByLabel(a, b).pipe(delay(300)),
       loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
       displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemChipField({
+      key: 'stringItemChipsWithSelectAll',
+      label: 'Chips With Select All Button',
+      description: 'This chip field has a "Select All" toggle button to select or deselect all items at once.',
+      showSelectAllButton: true,
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
     })
   ];
 

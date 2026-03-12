@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { createHash, randomBytes } from 'crypto';
 import { type INestApplication } from '@nestjs/common';
+import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 
@@ -192,8 +193,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const { client_id, client_secret } = await oidcClientService.createClient({
           client_name: 'test',
           redirect_uris: ['https://example.com/callback'],
-          grant_types: ['authorization_code', 'refresh_token'],
-          response_types: ['code']
+          token_endpoint_auth_method: 'client_secret_post'
         });
 
         // 2. Generate PKCE code_verifier and code_challenge
@@ -306,8 +306,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const { client_id, client_secret } = await oidcClientService.createClient({
           client_name: 'test',
           redirect_uris: ['https://example.com/callback'],
-          grant_types: ['authorization_code', 'refresh_token'],
-          response_types: ['code']
+          token_endpoint_auth_method: 'client_secret_post'
         });
 
         // 2. Generate PKCE
@@ -391,6 +390,184 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(oidcAuthData!.uid).toBe(u.uid);
         expect(oidcAuthData!.oidcValidatedToken.sub).toBe(u.uid);
         expect(oidcAuthData!.oidcValidatedToken.scope).toContain('demo');
+      });
+
+      /**
+       * Performs the full authorization code flow (auth → login → consent → code)
+       * and returns the authorization code along with cookie state.
+       */
+      async function performAuthCodeFlow(server: ReturnType<INestApplication['getHttpServer']>, clientId: string): Promise<{ authorizationCode: string; cookieHeader: string }> {
+        const cookieJar = new Map<string, string>();
+
+        function collectCookies(res: request.Response): void {
+          const setCookies = res.headers['set-cookie'];
+
+          if (setCookies) {
+            const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+            for (const cookie of items) {
+              const [nameValue] = cookie.split(';');
+              const [name] = nameValue.split('=');
+              cookieJar.set(name, nameValue);
+            }
+          }
+        }
+
+        function getCookieHeader(): string {
+          return [...cookieJar.values()].join('; ');
+        }
+
+        const codeVerifier = randomBytes(32).toString('base64url');
+        const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+        // Start authorization
+        const authRes = await request(server)
+          .get('/oidc/auth')
+          .query({
+            client_id: clientId,
+            redirect_uri: 'https://example.com/callback',
+            response_type: 'code',
+            scope: 'openid email demo',
+            code_challenge: codeChallenge,
+            code_challenge_method: 'S256',
+            state: 'test-state',
+            nonce: 'test-nonce'
+          })
+          .redirects(0);
+
+        expect(authRes.status).toBe(303);
+        collectCookies(authRes);
+        const loginUid = extractInteractionUid(authRes);
+
+        // Login
+        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken: u.uid }).redirects(0);
+        expect(loginRes.status).toBe(303);
+        collectCookies(loginRes);
+
+        // Resume after login → consent redirect
+        const resumeAfterLoginPath = extractRedirectPath(loginRes);
+        const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', getCookieHeader()).redirects(0);
+        expect(consentRedirectRes.status).toBe(303);
+        collectCookies(consentRedirectRes);
+        const consentUid = extractInteractionUid(consentRedirectRes);
+
+        // Approve consent
+        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', getCookieHeader()).send({ approved: true }).redirects(0);
+        expect(consentRes.status).toBe(303);
+        collectCookies(consentRes);
+
+        // Follow resume redirect → callback with code
+        const resumeAfterConsentPath = extractRedirectPath(consentRes);
+        const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', getCookieHeader()).redirects(0);
+        expect(callbackRedirectRes.status).toBe(303);
+        collectCookies(callbackRedirectRes);
+
+        const callbackUrl = new URL(callbackRedirectRes.headers['location']);
+        const authorizationCode = callbackUrl.searchParams.get('code')!;
+        expect(authorizationCode).toBeDefined();
+
+        return { authorizationCode, cookieHeader: getCookieHeader() };
+      }
+
+      it('should complete authorization code flow with client_secret_jwt authentication', async () => {
+        const server = app.getHttpServer();
+
+        // 1. Create a client with client_secret_jwt auth method
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'test-secret-jwt',
+          redirect_uris: ['https://example.com/callback'],
+          token_endpoint_auth_method: 'client_secret_jwt'
+        });
+
+        expect(client_secret).toBeDefined();
+
+        // 2. Perform the auth code flow to get an authorization code
+        const { authorizationCode, cookieHeader } = await performAuthCodeFlow(server, client_id);
+
+        // 3. Build a client_assertion JWT signed with the client_secret (HS256)
+        const secretKey = new TextEncoder().encode(client_secret);
+        const clientAssertion = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setIssuer(client_id).setSubject(client_id).setAudience(oidcModuleConfig.issuer).setJti(randomBytes(16).toString('hex')).setIssuedAt().setExpirationTime('1m').sign(secretKey);
+
+        // 4. Exchange code for tokens using client_assertion
+        const tokenRes = await request(server)
+          .post('/oidc/token')
+          .set('Cookie', cookieHeader)
+          .type('form')
+          .send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id,
+            client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+            client_assertion: clientAssertion
+          })
+          .expect(200);
+
+        expect(tokenRes.body.access_token).toBeDefined();
+        expect(tokenRes.body.id_token).toBeDefined();
+        expect(tokenRes.body.token_type).toBe('Bearer');
+
+        // 5. Verify userinfo
+        const userinfoRes = await request(server).get('/oidc/me').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);
+        expect(userinfoRes.body.sub).toBe(u.uid);
+      });
+
+      it('should complete authorization code flow with private_key_jwt authentication', async () => {
+        const server = app.getHttpServer();
+
+        // 1. Generate an RSA key pair for the client
+        const { publicKey, privateKey } = await generateKeyPair('RS256');
+        const publicJwk = await exportJWK(publicKey);
+        const kid = randomBytes(8).toString('hex');
+        publicJwk.kid = kid;
+        publicJwk.use = 'sig';
+
+        // 2. Register a client with private_key_jwt via dynamic registration, passing jwks
+        const regRes = await request(server)
+          .post('/oidc/reg')
+          .send({
+            client_name: 'test-private-key-jwt',
+            redirect_uris: ['https://example.com/callback'],
+            response_types: ['code'],
+            grant_types: ['authorization_code', 'refresh_token'],
+            token_endpoint_auth_method: 'private_key_jwt',
+            jwks: { keys: [publicJwk] }
+          })
+          .expect(201);
+
+        const clientId = regRes.body.client_id;
+        expect(clientId).toBeDefined();
+        // private_key_jwt clients should not receive a client_secret
+        expect(regRes.body.client_secret).toBeUndefined();
+
+        // 3. Perform the auth code flow to get an authorization code
+        const { authorizationCode, cookieHeader } = await performAuthCodeFlow(server, clientId);
+
+        // 4. Build a client_assertion JWT signed with the private key (RS256)
+        const clientAssertion = await new SignJWT({}).setProtectedHeader({ alg: 'RS256', kid }).setIssuer(clientId).setSubject(clientId).setAudience(oidcModuleConfig.issuer).setJti(randomBytes(16).toString('hex')).setIssuedAt().setExpirationTime('1m').sign(privateKey);
+
+        // 5. Exchange code for tokens using client_assertion
+        const tokenRes = await request(server)
+          .post('/oidc/token')
+          .set('Cookie', cookieHeader)
+          .type('form')
+          .send({
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: 'https://example.com/callback',
+            client_id: clientId,
+            client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+            client_assertion: clientAssertion
+          })
+          .expect(200);
+
+        expect(tokenRes.body.access_token).toBeDefined();
+        expect(tokenRes.body.id_token).toBeDefined();
+        expect(tokenRes.body.token_type).toBe('Bearer');
+
+        // 6. Verify userinfo
+        const userinfoRes = await request(server).get('/oidc/me').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);
+        expect(userinfoRes.body.sub).toBe(u.uid);
       });
     });
   });

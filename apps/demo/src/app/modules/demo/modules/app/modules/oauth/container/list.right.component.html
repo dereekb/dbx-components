@@ -1,7 +1,15 @@
 <dbx-two-column-right header="OAuth Client">
   <dbx-content-container>
     <dbx-loading [context]="context">
-      <dbx-oidc-entry-client-update></dbx-oidc-entry-client-update>
+      <div class="dbx-pt3">
+        <dbx-oidc-entry-client-view></dbx-oidc-entry-client-view>
+      </div>
+      <dbx-section class="dbx-mb3" [elevate]="true" header="Update Client">
+        <dbx-oidc-entry-client-update></dbx-oidc-entry-client-update>
+      </dbx-section>
+      <dbx-section class="dbx-mb3" [elevate]="true" header="Test Client">
+        <dbx-oidc-entry-client-test></dbx-oidc-entry-client-test>
+      </dbx-section>
     </dbx-loading>
   </dbx-content-container>
 </dbx-two-column-right>

@@ -1,4 +1,4 @@
-import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey } from '@dereekb/firebase';
+import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type RotateOidcClientSecretResult, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey } from '@dereekb/firebase';
 import type { ClientMetadata } from 'oidc-provider';
 import { nanoid } from 'nanoid';
 import { randomBytes } from 'crypto';
@@ -33,16 +33,20 @@ export class OidcClientService {
     const properties: ClientMetadata = {
       client_name: params.client_name,
       redirect_uris: params.redirect_uris,
-      grant_types: params.grant_types ?? ['authorization_code', 'refresh_token'],
-      response_types: (params.response_types ?? ['code']) as ClientMetadata['response_types'],
-      /**
-       * TODO: Support all client_secret_jwt, potentially. oidc-provider supports all three. Add the requested type as part of the setup/create.
-       *
-       * Differences: https://docs.secureauth.com/iam/oauth-client-secret-authentication#client_secret_post
-       */
-      token_endpoint_auth_method: 'client_secret_post',
+      grant_types: ['authorization_code', 'refresh_token'],
+      response_types: ['code'] as ClientMetadata['response_types'],
+      token_endpoint_auth_method: params.token_endpoint_auth_method,
       client_id: clientId
     };
+
+    // Pass optional metadata fields
+    if (params.logo_uri) {
+      properties.logo_uri = params.logo_uri;
+    }
+
+    if (params.client_uri) {
+      properties.client_uri = params.client_uri;
+    }
 
     // Mirrors oidc-provider's registration.js: only generate a secret when the auth method requires one.
     // Uses Client.needsSecret() from lib/models/client.js and the default secretFactory from lib/helpers/defaults.js.
@@ -79,6 +83,8 @@ export class OidcClientService {
    * Loads the existing client payload via the adapter, merges the updated fields,
    * re-validates through `provider.Client`, and persists.
    *
+   * `token_endpoint_auth_method` is immutable and cannot be changed.
+   *
    * @param clientId - The client's document/adapter entry ID.
    * @param params - The fields to update.
    * @throws When the client is not found.
@@ -102,18 +108,50 @@ export class OidcClientService {
       updatedMetadata.redirect_uris = params.redirect_uris;
     }
 
-    if (params.grant_types !== undefined && params.grant_types !== null) {
-      updatedMetadata.grant_types = params.grant_types;
+    if (params.logo_uri !== undefined) {
+      updatedMetadata.logo_uri = params.logo_uri || undefined;
     }
 
-    if (params.response_types !== undefined && params.response_types !== null) {
-      updatedMetadata.response_types = params.response_types as ClientMetadata['response_types'];
+    if (params.client_uri !== undefined) {
+      updatedMetadata.client_uri = params.client_uri || undefined;
     }
 
     // Mirrors oidc-provider's lib/helpers/add_client.js: re-validates and persists.
     await ProviderClient.validate(updatedMetadata);
     const client = new ProviderClient(updatedMetadata);
     await ProviderClient.adapter.upsert(client.clientId, client.metadata());
+  }
+
+  /**
+   * Rotates the client secret for an existing OIDC client.
+   *
+   * Generates a new `client_secret`, re-validates via `Client.validate()`, and persists.
+   * The new secret is returned in plaintext — this is the only time it is available.
+   *
+   * @param clientId - The client's document/adapter entry ID.
+   * @returns The client ID and new secret (plaintext, returned only once).
+   * @throws When the client is not found.
+   */
+  async rotateClientSecret(clientId: OidcEntryClientId): Promise<RotateOidcClientSecretResult> {
+    const provider = await this.oidcService.getProvider();
+    const ProviderClient = provider.Client as any;
+    const existing = await ProviderClient.adapter.find(clientId);
+
+    if (!existing) {
+      throw new Error('Client not found.');
+    }
+
+    const newSecret = randomBytes(64).toString('base64url');
+    const updatedMetadata = { ...existing, client_secret: newSecret, client_secret_expires_at: 0 };
+
+    await ProviderClient.validate(updatedMetadata);
+    const client = new ProviderClient(updatedMetadata);
+    await ProviderClient.adapter.upsert(client.clientId, client.metadata());
+
+    return {
+      client_id: clientId,
+      client_secret: newSecret
+    };
   }
 
   /**

@@ -169,8 +169,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const result = await oidcClientService.createClient({
           client_name: 'Test Client',
           redirect_uris: ['https://example.com/callback'],
-          grant_types: ['authorization_code', 'refresh_token'],
-          response_types: ['code']
+          token_endpoint_auth_method: 'client_secret_post'
         });
 
         expect(result.client_id).toBeDefined();
@@ -201,12 +200,30 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         await expect(oidcClientService.deleteClient(client_id)).resolves.toBeUndefined();
       });
 
+      it('should rotate a client secret', async () => {
+        const { client_id } = await oidcClientService.createClient({
+          client_name: 'Rotate Test',
+          redirect_uris: ['https://example.com/callback'],
+          token_endpoint_auth_method: 'client_secret_post'
+        });
+
+        const result = await oidcClientService.rotateClientSecret(client_id);
+
+        expect(result).toBeDefined();
+        expect(result.client_id).toBe(client_id);
+        expect(result.client_secret).toBeDefined();
+      });
+
       it('should throw when updating a non-existent client', async () => {
         await expect(oidcClientService.updateClient('nonexistent-client-id', { client_name: 'X', redirect_uris: ['https://example.com/callback'] })).rejects.toThrow();
       });
 
       it('should throw when deleting a non-existent client', async () => {
         await expect(oidcClientService.deleteClient('nonexistent-client-id')).rejects.toThrow();
+      });
+
+      it('should throw when rotating secret for a non-existent client', async () => {
+        await expect(oidcClientService.rotateClientSecret('nonexistent-client-id')).rejects.toThrow();
       });
     });
   });

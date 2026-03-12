@@ -1,7 +1,7 @@
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
 import { type PrimativeKey, convertMaybeToArray, makeValuesGroupMap, type Maybe, type ArrayOrValue, separateValues, filterUniqueValues, type Configurable } from '@dereekb/util';
-import { Directive, type OnDestroy, type OnInit, viewChild } from '@angular/core';
+import { computed, Directive, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { FormControl, type AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
@@ -84,6 +84,12 @@ export interface PickableValueFieldsFieldProps<T, M = unknown, H extends Primati
    * Footer Display
    */
   readonly footerConfig?: DbxInjectionComponentConfig;
+  /**
+   * Whether to show an "All" toggle button that selects or deselects all visible items.
+   *
+   * Only applies when `multiSelect` is true (the default).
+   */
+  readonly showSelectAllButton?: boolean;
   /**
    * Changes the selection mode of the list to "view" mode on disabled, hiding the selection boxes.
    */
@@ -252,6 +258,14 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   readonly itemsSignal = toSignal(this.items$);
   readonly noItemsAvailableSignal = toSignal(this.noItemsAvailable$);
 
+  /**
+   * Signal that is true when all visible items are currently selected.
+   */
+  readonly allSelectedSignal = computed(() => {
+    const items = this.itemsSignal();
+    return items != null && items.length > 0 && items.every((x) => x.selected);
+  });
+
   get readonly(): Maybe<boolean> {
     return this.props.readonly;
   }
@@ -294,6 +308,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
 
   get changeSelectionModeToViewOnDisabled(): boolean {
     return this.pickableField.changeSelectionModeToViewOnDisabled ?? false;
+  }
+
+  get showSelectAllButton(): boolean {
+    return this.pickableField.showSelectAllButton ?? false;
   }
 
   get sortItems(): Maybe<PickableItemFieldItemSortFn<T, M>> {
@@ -467,6 +485,33 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     const hashToFilter = this.hashForValue(value);
     const values = this.values.filter((x) => this.hashForValue(x) !== hashToFilter);
     this.setValues(values);
+  }
+
+  /**
+   * Selects all currently visible items.
+   */
+  selectAll(): void {
+    const items = this.itemsSignal() ?? [];
+    const allValues = items.filter((x) => !x.disabled).map((x) => x.itemValue.value);
+    this.setValues(allValues);
+  }
+
+  /**
+   * Deselects all currently visible items.
+   */
+  deselectAll(): void {
+    this.setValues([]);
+  }
+
+  /**
+   * Toggles between selecting all and deselecting all visible items.
+   */
+  toggleAll(): void {
+    if (this.allSelectedSignal()) {
+      this.deselectAll();
+    } else {
+      this.selectAll();
+    }
   }
 
   setValues(values: T[]): void {

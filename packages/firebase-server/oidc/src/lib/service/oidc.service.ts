@@ -149,7 +149,6 @@ export class OidcService {
 
   // MARK: Internal
   private async _buildProvider(): Promise<Provider> {
-    this.logger.log('Initializing OIDC provider...');
     const config = this.config;
     const findAccount = (_ctx: unknown, id: string) => this.accountService.userContext(id).findAccount();
 

@@ -1,4 +1,4 @@
-import { JsonSerializableObject, type Maybe } from '@dereekb/util';
+import { JsonSerializableObject, type LabeledValue, type Maybe } from '@dereekb/util';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField } from '../../common';
 import { GrantedDeleteRole, GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
 
@@ -39,6 +39,41 @@ export type OidcEntryType = 'Session' | 'AccessToken' | 'AuthorizationCode' | 'R
  * Type value for Client adapter entries.
  */
 export const OIDC_ENTRY_CLIENT_TYPE: OidcEntryType = 'Client';
+
+/**
+ * Base type for OIDC scope string unions.
+ *
+ * Applications define their own scope union extending this type to get
+ * compile-time validation of scope names throughout the delegate and config.
+ *
+ * @example
+ * ```typescript
+ * type MyScopes = 'openid' | 'profile' | 'email';
+ * ```
+ */
+export type OidcScope = string;
+
+/**
+ * A redirect URI registered to an OIDC client.
+ *
+ * Must be a valid absolute URL (e.g. `https://myapp.example.com/callback`).
+ */
+export type OidcRedirectUri = string;
+
+/**
+ * Supported values for `token_endpoint_auth_method` when creating an OIDC client.
+ */
+export type OidcTokenEndpointAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt';
+
+/**
+ * All available token endpoint auth method options with display labels.
+ */
+export const ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS: LabeledValue<OidcTokenEndpointAuthMethod>[] = [
+  { label: 'Client Secret Basic', value: 'client_secret_basic' },
+  { label: 'Client Secret Post', value: 'client_secret_post' },
+  { label: 'Client Secret JWT', value: 'client_secret_jwt' },
+  { label: 'Private Key JWT', value: 'private_key_jwt' }
+];
 
 // MARK: Types
 /**
