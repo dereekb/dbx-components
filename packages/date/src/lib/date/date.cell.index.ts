@@ -1,4 +1,4 @@
-import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
+import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
 import { type DateCell, isValidDateCellIndex, type DateOrDateCellIndex, type DateCellIndex } from './date.cell';
 import { type DateRange } from './date.range';
 
@@ -12,7 +12,7 @@ export interface DateCellRange extends DateCell {
    *
    * If not provided, assumes this has no range and starts/ends at the same index, i.
    */
-  to?: DateCellIndex;
+  to?: Maybe<DateCellIndex>;
 }
 
 /**
@@ -188,7 +188,7 @@ export type DateOrDateRangeOrDateCellIndexOrDateCellRange = DateRange | DateOrDa
  * @param i - starting cell index
  * @param to - ending cell index (inclusive); defaults to `i`
  */
-export function dateCellRange(i: number, to?: number): DateCellRangeWithRange {
+export function dateCellRange(i: number, to?: Maybe<number>): DateCellRangeWithRange {
   return { i, to: to ?? i };
 }
 
@@ -284,7 +284,7 @@ export function sortDateCellRanges<T extends DateCellRange>(input: T[]): T[] {
 /**
  * DateCellRange that is known to have a to value.
  */
-export type DateCellRangeWithRange = RequiredOnKeys<DateCellRange, 'to'>;
+export type DateCellRangeWithRange = Omit<DateCellRange, 'to'> & { to: DateCellIndex };
 
 /**
  * Merges an array of {@link DateCell} or {@link DateCellRange} values into the smallest set of
