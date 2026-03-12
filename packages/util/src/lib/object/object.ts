@@ -9,6 +9,11 @@ import { type KeyAsString } from '../type';
 export type POJOKey = PrimativeKey | symbol;
 
 /**
+ * This is an object that can be serialized to JSON and back and be equivalent.
+ */
+export type JsonSerializableObject = Record<PrimativeKey, any>;
+
+/**
  * String key of an object.
  */
 export type ObjectKey = string;

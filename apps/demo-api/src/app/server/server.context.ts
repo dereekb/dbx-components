@@ -1,8 +1,8 @@
 import { AbstractServerFirebaseNestContext } from '@dereekb/firebase-server';
 import { DemoApiNestContext } from '../function/function.context';
-import { OidcAccountService, OidcService, JwksService, OidcFirestoreCollections } from '@dereekb/firebase-server/oidc';
+import { OidcAccountService, OidcClientService, OidcService, JwksService, OidcServerFirestoreCollections } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../common';
-import { type DemoOidcScope } from './oidc/oidc.module';
+import { type DemoOidcScope } from '../api/oidc/oidc.module';
 
 /**
  * The top-most NestJS context that is used for server-only services.
@@ -14,6 +14,10 @@ export class DemoApiServerNestContext extends AbstractServerFirebaseNestContext<
     return this.context.nest.get(OidcAccountService);
   }
 
+  get oidcClientService(): OidcClientService {
+    return this.context.nest.get(OidcClientService);
+  }
+
   get oidcService(): OidcService {
     return this.context.nest.get(OidcService);
   }
@@ -22,7 +26,7 @@ export class DemoApiServerNestContext extends AbstractServerFirebaseNestContext<
     return this.context.nest.get(JwksService);
   }
 
-  get oidcFirestoreCollections(): OidcFirestoreCollections {
-    return this.context.nest.get(OidcFirestoreCollections);
+  get oidcServerFirestoreCollections(): OidcServerFirestoreCollections {
+    return this.context.nest.get(OidcServerFirestoreCollections);
   }
 }

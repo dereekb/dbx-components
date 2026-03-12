@@ -1,6 +1,8 @@
 import type { Adapter, AdapterConstructor, AdapterPayload } from 'oidc-provider';
-import { OidcAdapterFirestoreCollections, type OidcAdapterEntry, type OidcAdapterEntryId, type OidcAdapterEntryFirestoreCollection, oidcAdapterEntriesByUserCodeQuery, oidcAdapterEntriesByUidQuery, oidcAdapterEntriesByGrantIdQuery } from '../model/adapter';
+import { OidcServerFirestoreCollections } from '../model';
+import { OIDC_ADAPTER_ENTRY_CLIENT_TYPE, type OidcAdapterEntry, type OidcAdapterEntryId, type OidcAdapterEntryFirestoreCollection, oidcAdapterEntriesByUserCodeQuery, oidcAdapterEntriesByUidQuery, oidcAdapterEntriesByGrantIdQuery } from '@dereekb/firebase';
 import { type UnixDateTimeSecondsNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
+import { OidcEncryptionService } from './encryption.service';
 
 // MARK: Adapter
 /**
@@ -9,17 +11,22 @@ import { type UnixDateTimeSecondsNumber, unixDateTimeSecondsNumberForNow, unixDa
 const GRANTABLE_MODELS = new Set(['AccessToken', 'AuthorizationCode', 'RefreshToken', 'DeviceCode', 'BackchannelAuthenticationRequest']);
 
 /**
- * Creates an oidc-provider adapter constructor backed by Firestore via {@link OidcAdapterFirestoreCollections}.
+ * Creates an oidc-provider adapter constructor backed by Firestore via {@link OidcServerFirestoreCollections}.
  *
  * All model types are stored in a single collection, discriminated by the `type` field.
+ * Sensitive payload fields (`client_secret`, `registration_access_token`) are selectively
+ * encrypted via the {@link OidcEncryptionService}.
  *
  * @example
  * ```ts
- * const adapter = createAdapterFactory(collections);
+ * const adapter = createAdapterFactory(collections, encryptionService);
  * new Provider('issuer', { adapter });
  * ```
+ *
+ * @param collections - Firestore collection access for adapter entries.
+ * @param encryptionService - Encryption service for sensitive payload fields.
  */
-export function createAdapterFactory(collections: OidcAdapterFirestoreCollections): AdapterConstructor {
+export function createAdapterFactory(collections: OidcServerFirestoreCollections, encryptionService: OidcEncryptionService): AdapterConstructor {
   class FirestoreAdapter implements Adapter {
     private readonly collection: OidcAdapterEntryFirestoreCollection;
 
@@ -30,7 +37,9 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
     async upsert(id: OidcAdapterEntryId, payload: AdapterPayload, expiresIn: UnixDateTimeSecondsNumber): Promise<void> {
       const data: OidcAdapterEntry = {
         type: this.name,
-        payload: JSON.stringify(payload),
+        payload: encryptionService.encryptAdapterPayload(payload),
+        // Set ownership key for Client entries so firestore rules can restrict reads by owner.
+        o: this.name === OIDC_ADAPTER_ENTRY_CLIENT_TYPE ? (payload.uid as string | undefined) : undefined,
         uid: payload.uid as string | undefined,
         grantId: payload.grantId as string | undefined,
         userCode: payload.userCode as string | undefined,
@@ -81,10 +90,10 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
       const data = snapshot.data();
 
       if (data) {
-        const payload = JSON.parse(data.payload);
+        const payload = encryptionService.decryptAdapterPayload(data.payload);
         payload.consumed = now;
 
-        await doc.accessor.set({ consumed: now, payload: JSON.stringify(payload) } as Partial<OidcAdapterEntry> as any, { merge: true });
+        await doc.accessor.set({ consumed: now, payload: encryptionService.encryptAdapterPayload(payload) } as Partial<OidcAdapterEntry> as any, { merge: true });
       }
     }
 
@@ -121,7 +130,7 @@ export function createAdapterFactory(collections: OidcAdapterFirestoreCollection
         }
       }
 
-      return JSON.parse(data.payload) as AdapterPayload;
+      return encryptionService.decryptAdapterPayload(data.payload);
     }
   }
 

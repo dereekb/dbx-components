@@ -2,18 +2,20 @@ import request from 'supertest';
 import { createHash, randomBytes } from 'crypto';
 import { type INestApplication } from '@nestjs/common';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
-import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
+import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let app: INestApplication;
   let jwksService: JwksService;
   let oidcService: OidcService;
+  let oidcClientService: OidcClientService;
   let oidcModuleConfig: OidcModuleConfig;
 
   beforeEach(async () => {
     const serverContext = f.instance.apiServerNestContext;
     jwksService = serverContext.jwksService;
     oidcService = serverContext.oidcService;
+    oidcClientService = serverContext.oidcClientService;
     oidcModuleConfig = f.instance.nest.get(OidcModuleConfig);
 
     // Generate keys so JWKS endpoints work
@@ -186,18 +188,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           return [...cookieJar.values()].join('; ');
         }
 
-        // 1. Register a client
-        const regRes = await request(server)
-          .post('/oidc/reg')
-          .send({
-            redirect_uris: ['https://example.com/callback'],
-            response_types: ['code'],
-            grant_types: ['authorization_code', 'refresh_token'],
-            token_endpoint_auth_method: 'client_secret_post'
-          })
-          .expect(201);
-
-        const { client_id, client_secret } = regRes.body;
+        // 1. Create a client via the service (dynamic registration is disabled)
+        const { clientId: client_id, clientSecret: client_secret } = await oidcClientService.createClient(u.uid, {
+          redirect_uris: ['https://example.com/callback'],
+          grant_types: ['authorization_code', 'refresh_token'],
+          response_types: ['code']
+        });
 
         // 2. Generate PKCE code_verifier and code_challenge
         const codeVerifier = randomBytes(32).toString('base64url');
@@ -305,18 +301,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           return [...cookieJar.values()].join('; ');
         }
 
-        // 1. Register a client
-        const regRes = await request(server)
-          .post('/oidc/reg')
-          .send({
-            redirect_uris: ['https://example.com/callback'],
-            response_types: ['code'],
-            grant_types: ['authorization_code', 'refresh_token'],
-            token_endpoint_auth_method: 'client_secret_post'
-          })
-          .expect(201);
-
-        const { client_id, client_secret } = regRes.body;
+        // 1. Create a client via the service (dynamic registration is disabled)
+        const { clientId: client_id, clientSecret: client_secret } = await oidcClientService.createClient(u.uid, {
+          redirect_uris: ['https://example.com/callback'],
+          grant_types: ['authorization_code', 'refresh_token'],
+          response_types: ['code']
+        });
 
         // 2. Generate PKCE
         const codeVerifier = randomBytes(32).toString('base64url');

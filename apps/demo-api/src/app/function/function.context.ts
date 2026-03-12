@@ -24,6 +24,7 @@ import {
 import { type OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';
 import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
 
 /**
@@ -68,6 +69,10 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
     return this.nest.get(StorageFileInitServerActions);
   }
 
+  get oidcModelServerActions(): OidcModelServerActions {
+    return this.nest.get(OidcModelServerActions);
+  }
+
   get firebaseModelsService() {
     return demoFirebaseModelServices;
   }
@@ -92,17 +97,22 @@ export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestC
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 
 // MARK: CRUD Functions
+/**
+ * All model types available in callModel CRUD maps.
+ */
+export type DemoCallModelTypes = DemoFirebaseModelTypes;
+
 export type DemoCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<DemoApiNestContext, I, O>;
-export type DemoOnCallCreateModelMap = OnCallCreateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+export type DemoOnCallCreateModelMap = OnCallCreateModelMap<DemoApiNestContext, DemoCallModelTypes>;
 
 export type DemoReadModelFunction<I, O> = OnCallReadModelFunction<DemoApiNestContext, I, O>;
-export type DemoOnCallReadModelMap = OnCallReadModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+export type DemoOnCallReadModelMap = OnCallReadModelMap<DemoApiNestContext, DemoCallModelTypes>;
 
 export type DemoUpdateModelFunction<I, O = void> = OnCallUpdateModelFunction<DemoApiNestContext, I, O>;
-export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, DemoCallModelTypes>;
 
 export type DemoDeleteModelFunction<I, O = void> = OnCallDeleteModelFunction<DemoApiNestContext, I, O>;
-export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, DemoCallModelTypes>;
 
 // MARK: Schedule Functions
 export type DemoScheduleFunction = OnScheduleWithNestContext<DemoApiNestContext>;

@@ -5,8 +5,9 @@ import type { Interaction, InteractionResults, Grant } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './jwks.service';
 import { OidcAccountService } from './account.service';
-import { OidcFirestoreCollections } from '../model';
+import { OidcServerFirestoreCollections } from '../model';
 import { createAdapterFactory } from './adapter.service';
+import { OidcEncryptionService } from './encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { cachedGetter, firstValue, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
@@ -52,7 +53,8 @@ export class OidcService {
     @Inject(OidcProviderConfigService) private readonly providerConfigService: OidcProviderConfigService,
     @Inject(JwksService) private readonly jwksService: JwksService,
     @Inject(OidcAccountService) private readonly accountService: OidcAccountService,
-    @Inject(OidcFirestoreCollections) private readonly collections: OidcFirestoreCollections
+    @Inject(OidcServerFirestoreCollections) private readonly collections: OidcServerFirestoreCollections,
+    @Inject(OidcEncryptionService) private readonly encryptionService: OidcEncryptionService
   ) {}
 
   /**
@@ -163,7 +165,7 @@ export class OidcService {
     const getEncryptionKey = resolveEncryptionKey(config.jwksKeyConverterConfig.encryptionSecret);
     const cookieKey = getEncryptionKey().toString('base64').slice(0, 32);
 
-    const adapterFactory = createAdapterFactory(this.collections);
+    const adapterFactory = createAdapterFactory(this.collections, this.encryptionService);
     const providerConfiguration = this.providerConfigService.buildProviderConfiguration([cookieKey]);
 
     const { default: ProviderClass } = await import('oidc-provider');
@@ -176,7 +178,8 @@ export class OidcService {
     });
 
     if (config.suppressBodyParserWarning) {
-      suppressOidcProviderBodyParserWarning();
+      // TODO: Will re-apply to logging in testing. Need to resolve.
+      // suppressOidcProviderBodyParserWarning();
     }
 
     return provider;

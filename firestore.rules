@@ -99,5 +99,12 @@ service cloud.firestore {
       allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
     }
 
+    // MARK: OIDC Adapter
+    match /oidcAdapterEntry/{entryId} {
+      // Owners can read their own Client entries (type == 'Client' && o == auth.uid)
+      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+      allow list: if userClaimsIsSysAdmin() || (resourceIsOwnedByAuthOwnershipKey() && resource.data.type == 'Client');
+    }
+
   }
 }

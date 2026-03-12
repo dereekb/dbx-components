@@ -301,7 +301,7 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: DeleteStorageFileParams;
     };
   };
-  storageFileGroup: {
+  readonly storageFileGroup: {
     update: {
       _: UpdateStorageFileGroupParams;
       regenerateContent: [RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult];

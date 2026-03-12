@@ -61,7 +61,14 @@ import {
   type StorageFileGroupFirestoreCollection,
   type StorageFileGroup,
   type StorageFileGroupDocument,
-  type StorageFileGroupRoles
+  type StorageFileGroupRoles,
+  type OidcAdapterEntryFirestoreCollection,
+  oidcAdapterEntryFirestoreCollection,
+  type OidcModelTypes,
+  type OidcAdapterEntry,
+  OidcAdapterEntryDocument,
+  type OidcAdapterEntryRoles,
+  type OidcModelFirestoreCollections
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
@@ -69,7 +76,7 @@ import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections {
+export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -87,6 +94,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
+  abstract readonly oidcAdapterEntryCollection: OidcAdapterEntryFirestoreCollection;
 }
 
 export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext): DemoFirestoreCollections {
@@ -107,7 +115,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationWeekCollectionFactory: notificationWeekFirestoreCollectionFactory(firestoreContext),
     notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
-    storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext)
+    storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
+    oidcAdapterEntryCollection: oidcAdapterEntryFirestoreCollection({ firestoreContext })
   };
 }
 
@@ -229,8 +238,16 @@ export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.storageFileGroupCollection
 });
 
+export const oidcAdapterEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OidcAdapterEntry, OidcAdapterEntryDocument, OidcAdapterEntryRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<OidcAdapterEntry, OidcAdapterEntryDocument>, context: DemoFirebaseContext, model: OidcAdapterEntryDocument): PromiseOrValue<GrantedRoleMap<OidcAdapterEntryRoles>> {
+    // TODO: add roles for the user if they are marked as the owner.
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.oidcAdapterEntryCollection
+});
+
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | OidcModelTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -248,7 +265,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notification: notificationFirebaseModelServiceFactory,
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
-  storageFileGroup: storageFileGroupFirebaseModelServiceFactory
+  storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
+  oidcAdapterEntry: oidcAdapterEntryFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

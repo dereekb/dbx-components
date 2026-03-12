@@ -1,39 +1,74 @@
-import { type Maybe } from '@dereekb/util';
-import { AbstractFirestoreDocument, type FirestoreCollection, type FirestoreContext, type CollectionReference, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString } from '@dereekb/firebase';
+import { JsonSerializableObject, POJOKey, type Maybe } from '@dereekb/util';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField } from '../../common';
+import { GrantedDeleteRole, GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
 
-// MARK: Collections
 /**
- * Abstract class providing access to the OIDC adapter Firestore collection.
+ * Union of model identity types used in the OIDC function map.
  */
-export abstract class OidcAdapterFirestoreCollections {
+export type OidcModelTypes = typeof oidcAdapterEntryIdentity;
+
+/**
+ * Abstract base providing access to OIDC adapter Firestore collections.
+ *
+ * The server-side {@link OidcFirestoreCollections} extends this with additional
+ * server-only collections (e.g., JWKS keys).
+ */
+export abstract class OidcModelFirestoreCollections {
   abstract readonly oidcAdapterEntryCollection: OidcAdapterEntryFirestoreCollection;
 }
 
 // MARK: Identity
 /**
  * Firestore model identity for {@link OidcAdapterEntry} documents.
+ *
+ * Collection name: `oidcAdapterEntry`, short code: `oidc_oa`.
  */
 export const oidcAdapterEntryIdentity = firestoreModelIdentity('oidcAdapterEntry', 'oidc_oa');
+
+// MARK: Adapter Entry Type
+/**
+ * Known oidc-provider model types stored in the adapter collection.
+ *
+ * Used as the discriminator in the {@link OidcAdapterEntry.type} field.
+ */
+export type OidcAdapterEntryType = 'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest' | (string & {});
+
+/**
+ * Type value for Client adapter entries.
+ */
+export const OIDC_ADAPTER_ENTRY_CLIENT_TYPE: OidcAdapterEntryType = 'Client';
 
 // MARK: Types
 /**
  * oidc-provider adapter entry stored in Firestore.
  *
- * All oidc-provider model types (Session, AccessToken, etc.) are stored in a single collection,
- * discriminated by the {@link type} field.
+ * All oidc-provider model types (Session, AccessToken, Client, etc.) are stored in a single collection,
+ * discriminated by the {@link type} field. The full oidc-provider payload is serialized as JSON in
+ * the {@link payload} field. Sensitive fields within the payload (e.g. `client_secret`) may be
+ * selectively encrypted at rest.
+ *
+ * The {@link o} ownership field enables Firestore security rules to restrict reads to the owning user
+ * (used primarily for Client entries so users can query their own registered OAuth clients).
  */
 export interface OidcAdapterEntry {
   /**
-   * The oidc-provider model type (e.g., 'Session', 'AccessToken', 'AuthorizationCode').
+   * The oidc-provider model type (e.g., 'Session', 'AccessToken', 'Client').
    */
   type: string;
   /**
    * Serialized JSON of the full oidc-provider AdapterPayload.
    *
-   * The payload structure varies by model type (Client, Session, AccessToken, etc.),
-   * so we store it as a JSON string and parse it on read.
+   * The payload structure varies by model type. Sensitive fields may be
+   * selectively encrypted (prefixed with `$`) when encryption is configured.
    */
-  payload: string;
+  payload: JsonSerializableObject;
+  /**
+   * Ownership key for Firestore security rules.
+   *
+   * Set to the Firebase Auth UID of the user who created this entry.
+   * Used primarily on Client entries to allow users to query their own OAuth clients.
+   */
+  o?: Maybe<FirebaseAuthOwnershipKey>;
   /**
    * User identifier. Extracted from the payload for indexed queries.
    */
@@ -56,6 +91,8 @@ export interface OidcAdapterEntry {
   expiresAt?: Maybe<Date>;
 }
 
+export type OidcAdapterEntryRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole;
+
 /**
  * Firestore document wrapper for {@link OidcAdapterEntry}.
  */
@@ -71,8 +108,9 @@ export class OidcAdapterEntryDocument extends AbstractFirestoreDocument<OidcAdap
  */
 export const oidcAdapterEntryConverter = snapshotConverterFunctions<OidcAdapterEntry>({
   fields: {
-    type: firestoreString({ default: '' }),
-    payload: firestoreString({ default: '{}' }),
+    type: firestoreString({ default: 'unknown' }),
+    payload: firestorePassThroughField(),
+    o: optionalFirestoreString(),
     uid: optionalFirestoreString(),
     grantId: optionalFirestoreString(),
     userCode: optionalFirestoreString(),

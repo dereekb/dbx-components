@@ -15,6 +15,9 @@ import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitiali
 import { storageFileDownload } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { profileDownloadArchive } from '../profile/profile.read';
+import { createOidcClient } from '../oidc/oidcclient.create';
+import { updateOidcClient } from '../oidc/oidcclient.update';
+import { deleteOidcClient } from '../oidc/oidcclient.delete';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -30,7 +33,8 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
     _: storageFileCreate,
     fromUpload: storageFileInitializeFromUpload,
     allFromUpload: storageFileInitializeAllFromUploads
-  })
+  }),
+  oidcAdapterEntry: createOidcClient
 };
 
 // MARK: Read
@@ -77,11 +81,14 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   storageFileGroup: onCallSpecifierHandler({
     _: storageFileGroupUpdate,
     regenerateContent: storageFileGroupRegenerateContent
-  })
+  }),
+  oidcAdapterEntry: updateOidcClient
 };
 
 // MARK: Delete
-export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {};
+export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
+  oidcAdapterEntry: deleteOidcClient
+};
 
 // MARK: Call
 export const demoCallModelMap: OnCallModelMap = {

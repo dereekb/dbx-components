@@ -1,14 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-// MARK: Types
-export interface OAuthClient {
-  readonly client_id: string;
-  readonly client_name?: string;
-  readonly redirect_uris: string[];
-  readonly grant_types: string[];
-  readonly created_at?: string;
-}
+import { type OidcAdapterEntryOAuthClientPayloadData } from '@dereekb/firebase';
 
 /**
  * Component that displays a list of registered OAuth clients.
@@ -36,6 +28,6 @@ export interface OAuthClient {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxOAuthClientListComponent {
-  readonly clients = input<OAuthClient[]>([]);
-  readonly selectClient = output<OAuthClient>();
+  readonly clients = input<OidcAdapterEntryOAuthClientPayloadData[]>([]);
+  readonly selectClient = output<OidcAdapterEntryOAuthClientPayloadData>();
 }

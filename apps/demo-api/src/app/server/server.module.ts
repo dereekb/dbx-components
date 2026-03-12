@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DemoApiOidcModule } from './oidc/oidc.module';
+import { DemoApiOidcModule } from '../api/oidc/oidc.module';
 
 /**
  * Imports all server-only modules.

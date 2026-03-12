@@ -5,12 +5,15 @@ import { OidcProviderConfigService } from './service/oidc.config.service';
 import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
-import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryFirestoreCollection } from './model';
+import { OidcServerFirestoreCollections, jwksKeyFirestoreCollection } from './model';
+import { oidcAdapterEntryFirestoreCollection } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type FirestoreContext } from '@dereekb/firebase';
 import { hasHttpPrefix } from '@dereekb/util';
 import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
+import { OidcEncryptionService } from './service/encryption.service';
+import { OidcClientService } from './service/client.service';
 
 // MARK: Environment Variable Keys
 /**
@@ -95,10 +98,10 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
 }
 
 /**
- * Factory that creates {@link OidcFirestoreCollections} using the provided Firestore context
+ * Factory that creates {@link OidcServerFirestoreCollections} using the provided Firestore context
  * and JWKS encryption config from {@link OidcModuleConfig}.
  */
-export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcFirestoreCollections {
+export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcServerFirestoreCollections {
   return {
     jwksKeyCollection: jwksKeyFirestoreCollection({ firestoreContext, ...oidcModuleConfig.jwksKeyConverterConfig }),
     oidcAdapterEntryCollection: oidcAdapterEntryFirestoreCollection({ firestoreContext })
@@ -138,7 +141,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ConfigureOidcAuthMiddlewareModule, ...dependencyModuleImport, ...(imports ?? [])],
     controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
-    exports: [OidcService, ...(exports ?? [])],
+    exports: [OidcClientService, OidcModuleConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
     providers: [
       {
         provide: OidcModuleConfig,
@@ -159,13 +162,19 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         inject: [OidcModuleConfig]
       },
       {
-        provide: OidcFirestoreCollections,
+        provide: OidcServerFirestoreCollections,
         useFactory: oidcFirestoreCollectionsFactory,
         inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN, OidcModuleConfig]
       },
       OidcProviderConfigService,
-      JwksService,
+      OidcEncryptionService,
       OidcService,
+      JwksService,
+      {
+        provide: OidcClientService,
+        useFactory: (oidcService: OidcService) => new OidcClientService(oidcService),
+        inject: [OidcService]
+      },
       ...(providers ?? [])
     ]
   };
