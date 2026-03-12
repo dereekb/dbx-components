@@ -36,7 +36,7 @@ export function isValidFirestoreEncryptedFieldSecret(secret: FirestoreEncryptedF
  * - If a string, it is used directly as the hex-encoded key (64 hex chars = 32 bytes).
  * - If a Getter, it is called each time to retrieve the key (useful for rotation or lazy loading).
  */
-export type FirestoreEncryptedFieldSecretSource = FirestoreEncryptedFieldSecret | Getter<string>;
+export type FirestoreEncryptedFieldSecretSource = GetterOrValue<FirestoreEncryptedFieldSecret>;
 
 /**
  * Configuration for a required encrypted Firestore field.

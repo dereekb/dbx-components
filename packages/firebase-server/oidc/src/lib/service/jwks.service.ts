@@ -4,7 +4,7 @@ import { resolveEncryptionKey, encryptValue, decryptValue, type FirestoreEncrypt
 import { FirebaseStorageAccessorFile, iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { type JwksKey, type JsonWebKeyWithKid, OidcFirestoreCollections, type JwksKeyDocument } from '../model';
 import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
-import { type Maybe } from '@dereekb/util';
+import { cachedGetter, WebsiteUrl, WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
 
 // MARK: Types
 /**
@@ -60,6 +60,24 @@ export const DEFAULT_ROTATED_KEY_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 // MARK: Service
 @Injectable()
 export class JwksService {
+  private readonly _jwksStoragePublicUrl = cachedGetter(async () => {
+    let result: Maybe<WebsiteUrlWithPrefix>;
+
+    if (this.serveJwksFromStorage && this.storageConfig?.jwksStorageAccessorFile) {
+      const _file = this.storageConfig.jwksStorageAccessorFile;
+
+      result = await _file.getDownloadUrl().catch(async () => {
+        await this._initializeKeysAndCloud(); // initialize
+        return _file.getDownloadUrl().catch((e) => {
+          console.error(`JwksService: Moving to api serving files - Failed while trying to init/retrieve the google storage public url: `, e);
+          return null;
+        }); // try to download it again
+      });
+    }
+
+    return result;
+  });
+
   private readonly rotatedKeyMaxAge: number;
 
   /**
@@ -154,16 +172,14 @@ export class JwksService {
   /**
    * Returns the public URL for the JWKS stored in Cloud Storage, if configured.
    *
+   * This call will also initialize/rotate the keys in the datastore and sync them
+   * to the cloud if they are currently not available.
+   *
    * Returns undefined if storage is not configured or `serveJwksFromStorage` is false.
+   * Returns null if an error occured while trying to setup.
    */
-  async getJwksStoragePublicUrl(): Promise<Maybe<string>> {
-    let result: Maybe<string>;
-
-    if (this.serveJwksFromStorage && this.storageConfig?.jwksStorageAccessorFile) {
-      result = await this.storageConfig.jwksStorageAccessorFile.getDownloadUrl();
-    }
-
-    return result;
+  async getJwksStoragePublicUrl(): Promise<Maybe<WebsiteUrlWithPrefix>> {
+    return this._jwksStoragePublicUrl();
   }
 
   /**
@@ -201,24 +217,42 @@ export class JwksService {
     });
 
     const { jwksKey: newKey } = await this.generateKeyPair();
+    await this._syncKeysToCloud();
+    return newKey;
+  }
 
+  private async _initializeKeysAndCloud() {
+    const jwks = await this.getLatestPublicJwks();
+
+    if (!jwks.keys.length) {
+      await this.rotateKeys();
+    } else {
+      await this._syncKeysToCloud(); // sync the keys to the cloud if they exist
+    }
+  }
+
+  private async _syncKeysToCloud() {
     if (this.saveJwksToStorage && this.storageConfig?.jwksStorageAccessorFile) {
       const jwks = await this.getLatestPublicJwks();
       const data = Buffer.from(JSON.stringify(jwks));
 
       try {
         // Upload the file
-        await this.storageConfig.jwksStorageAccessorFile.upload(data, { contentType: 'application/json' });
+        await this.storageConfig.jwksStorageAccessorFile.upload(data, {
+          contentType: 'application/json',
+          metadata: {
+            contentDisposition: 'inline',
+            cacheControl: 'public, max-age=300, stale-while-revalidate=60' // short cache of 5 minutes
+          }
+        });
 
-        // Make sure it is public
+        // Make sure the file is made public.
         await this.storageConfig.jwksStorageAccessorFile.makePublic?.();
       } catch (e) {
         console.error(`JwksService: Failed to rotate oidc keys to Google Cloud Store!!!`);
         throw e;
       }
     }
-
-    return newKey;
   }
 
   /**

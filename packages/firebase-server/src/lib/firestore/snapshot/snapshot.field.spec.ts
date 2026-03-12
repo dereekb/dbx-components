@@ -1,6 +1,6 @@
 import { modelFieldMapFunctions } from '@dereekb/util';
-import { firestoreEncryptedField, optionalFirestoreEncryptedField } from './snapshot.field';
 import { randomBytes } from 'crypto';
+import { firestoreEncryptedField, optionalFirestoreEncryptedField } from './snapshot.field.encrypt';
 
 // generate a random 32-byte hex key for tests
 function testEncryptionKey(): string {
@@ -107,25 +107,6 @@ describe('firestoreEncryptedField()', () => {
       const field = firestoreEncryptedField<string>({ secret: () => secret, default: '' });
       const fns = modelFieldMapFunctions(field);
       expect(fns.from(fns.to('test'))).toBe('test');
-    });
-
-    it('should accept an env source', () => {
-      const envKey = 'TEST_ENCRYPTED_FIELD_KEY';
-      process.env[envKey] = secret;
-
-      try {
-        const field = firestoreEncryptedField<string>({ secret: { env: envKey }, default: '' });
-        const fns = modelFieldMapFunctions(field);
-        expect(fns.from(fns.to('test'))).toBe('test');
-      } finally {
-        delete process.env[envKey];
-      }
-    });
-
-    it('should throw if env variable is not set', () => {
-      const field = firestoreEncryptedField<string>({ secret: { env: 'NONEXISTENT_KEY' }, default: '' });
-      const fns = modelFieldMapFunctions(field);
-      expect(() => fns.to('test')).toThrow('environment variable');
     });
 
     it('should throw if key is wrong length', () => {
