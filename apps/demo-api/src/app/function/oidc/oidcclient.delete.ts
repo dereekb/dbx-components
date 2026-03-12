@@ -5,11 +5,12 @@ export const deleteOidcClient: DemoDeleteModelFunction<DeleteOidcClientParams> =
   const { nest, data } = request;
 
   const deleteFn = await nest.oidcModelServerActions.deleteOidcClient(data);
-  await nest.useModel('oidcEntry', {
+  const document = await nest.useModel('oidcEntry', {
     request,
     key: data.key,
-    roles: 'delete'
+    roles: 'delete',
+    use: (x) => x.document
   });
 
-  await deleteFn();
+  await deleteFn(document);
 };

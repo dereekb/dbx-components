@@ -189,7 +189,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         }
 
         // 1. Create a client via the service (dynamic registration is disabled)
-        const { clientId: client_id, clientSecret: client_secret } = await oidcClientService.createClient(u.uid, {
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'test',
           redirect_uris: ['https://example.com/callback'],
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code']
@@ -302,7 +303,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         }
 
         // 1. Create a client via the service (dynamic registration is disabled)
-        const { clientId: client_id, clientSecret: client_secret } = await oidcClientService.createClient(u.uid, {
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'test',
           redirect_uris: ['https://example.com/callback'],
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code']

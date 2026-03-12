@@ -8,15 +8,15 @@ import { type OidcEntryClientId } from './oidcmodel.id';
 import { type OidcModelTypes } from './oidcmodel';
 
 export interface AbstractOidcClientParams {
-  readonly client_name?: Maybe<string>;
-  readonly redirect_uris?: Maybe<string[]>;
+  readonly client_name: string;
+  readonly redirect_uris: string[];
   readonly grant_types?: Maybe<string[]>;
   readonly response_types?: Maybe<string[]>;
 }
 
 export const abstractOidcClientParamsType = type({
-  'client_name?': clearable('string'),
-  'redirect_uris?': clearable('string[]'),
+  client_name: 'string',
+  redirect_uris: 'string[]',
   'grant_types?': clearable('string[]'),
   'response_types?': clearable('string[]')
 }) as Type<AbstractOidcClientParams>;
@@ -31,9 +31,7 @@ export const abstractOidcClientParamsType = type({
  */
 export interface CreateOidcClientParams extends AbstractOidcClientParams, InferredTargetModelParams {}
 
-export const createOidcClientParamsType = inferredTargetModelParamsType.merge(abstractOidcClientParamsType).merge({
-  client_name: 'string'
-}) as Type<CreateOidcClientParams>;
+export const createOidcClientParamsType = inferredTargetModelParamsType.merge(abstractOidcClientParamsType) as Type<CreateOidcClientParams>;
 
 /**
  * Result of creating a new OAuth client.

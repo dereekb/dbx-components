@@ -5,11 +5,12 @@ export const updateOidcClient: DemoUpdateModelFunction<UpdateOidcClientParams> =
   const { nest, data } = request;
 
   const updateFn = await nest.oidcModelServerActions.updateOidcClient(data);
-  await nest.useModel('oidcEntry', {
+  const document = await nest.useModel('oidcEntry', {
     request,
     key: data.key,
-    roles: 'update'
+    roles: 'update',
+    use: (x) => x.document
   });
 
-  await updateFn();
+  await updateFn(document);
 };

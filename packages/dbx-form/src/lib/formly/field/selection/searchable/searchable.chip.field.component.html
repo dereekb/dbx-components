@@ -20,6 +20,9 @@
   <div class="searchable-field-form-loading">
     <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
   </div>
+  @if (inputCtrl.touched && inputErrorMessage) {
+    <span class="dbx-chip-input-error">{{ inputErrorMessage }}</span>
+  }
 </div>
 
 <!-- Autocomplete -->

@@ -207,6 +207,10 @@ export interface WebsiteUrlDetails {
   readonly hasHttpPrefix: boolean;
   /** Whether the input contains a website domain. */
   readonly hasWebsiteDomain: boolean;
+  /** Whether the input contains a port number. */
+  readonly hasPortNumber: boolean;
+  /** The port number, or `undefined` if none is present. */
+  readonly portNumber: PortNumber | undefined;
   /** The domain and path split pair. */
   readonly splitPair: WebsiteDomainAndPathPair;
   /** The extracted domain. */
@@ -231,6 +235,8 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
   const { domain, path: websitePath } = splitPair;
 
   const pathHasWebsiteDomain = hasWebsiteDomain(domain);
+  const inputHasPortNumber = hasPortNumber(input);
+  const portNumber = inputHasPortNumber ? (readPortNumber(input) ?? undefined) : undefined;
 
   const [path, query] = splitStringAtFirstCharacterOccurence(splitPair.path, '?'); // everything after the query is ignored
   const isWebsiteUrl = pathHasWebsiteDomain && isSlashPathFolder(path + '/');
@@ -241,6 +247,8 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
     isWebsiteUrl,
     hasWebsiteDomain: pathHasWebsiteDomain,
     hasHttpPrefix: inputHasHttpPrefix,
+    hasPortNumber: inputHasPortNumber,
+    portNumber,
     splitPair,
     domain,
     websitePath,

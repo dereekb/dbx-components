@@ -12,6 +12,13 @@
     width: 100%;
   }
 
+  .dbx-chip-input-error {
+    display: block;
+    font-size: 12px;
+    padding: 4px 0 0;
+    color: var(--mdc-theme-error, #f44336);
+  }
+
   .dbx-default-searchable-field-display {
     padding: 0 16px;
   }

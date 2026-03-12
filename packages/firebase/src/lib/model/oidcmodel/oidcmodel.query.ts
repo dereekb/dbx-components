@@ -1,4 +1,4 @@
-import { type FirestoreQueryConstraint, where } from '../../common';
+import { FirebaseAuthOwnershipKey, type FirestoreQueryConstraint, where } from '../../common';
 import { type OidcEntry } from './oidcmodel';
 
 /**
@@ -32,6 +32,6 @@ export function oidcEntriesByGrantIdQuery(type: string, grantId: string): Firest
 /**
  * Query for OidcEntry Client documents owned by a specific user.
  */
-export function oidcClientEntriesByOwnerQuery(ownershipKey: string): FirestoreQueryConstraint[] {
+export function oidcClientEntriesByOwnerQuery(ownershipKey: FirebaseAuthOwnershipKey): FirestoreQueryConstraint[] {
   return [where<OidcEntry>('type', '==', 'Client'), where<OidcEntry>('o', '==', ownershipKey)];
 }

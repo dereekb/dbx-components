@@ -1,7 +1,8 @@
 import type { Adapter, AdapterConstructor, AdapterPayload } from 'oidc-provider';
 import { OidcServerFirestoreCollections } from '../model';
 import { OIDC_ENTRY_CLIENT_TYPE, type OidcEntry, type OidcEntryId, type OidcEntryFirestoreCollection, oidcEntriesByUserCodeQuery, oidcEntriesByUidQuery, oidcEntriesByGrantIdQuery } from '@dereekb/firebase';
-import { type UnixDateTimeSecondsNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
+import { type Maybe, type UnixDateTimeSecondsNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
+import { type FirebaseAuthOwnershipKey } from '@dereekb/firebase';
 import { OidcEncryptionService } from './encryption.service';
 
 // MARK: Adapter
@@ -35,11 +36,14 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
     }
 
     async upsert(id: OidcEntryId, payload: AdapterPayload, expiresIn: UnixDateTimeSecondsNumber): Promise<void> {
+      // Set ownership key for Client entries so firestore rules can restrict reads by owner.
+      // The firestoreOwnerKey is passed through the payload metadata by OidcClientService.
+      const o: Maybe<FirebaseAuthOwnershipKey> = this.name === OIDC_ENTRY_CLIENT_TYPE ? (payload.firestoreOwnerKey as string | undefined) : undefined;
+
       const data: OidcEntry = {
         type: this.name,
         payload: encryptionService.encryptAdapterPayload(payload),
-        // Set ownership key for Client entries so firestore rules can restrict reads by owner.
-        o: this.name === OIDC_ENTRY_CLIENT_TYPE ? (payload.uid as string | undefined) : undefined,
+        o,
         uid: payload.uid as string | undefined,
         grantId: payload.grantId as string | undefined,
         userCode: payload.userCode as string | undefined,
@@ -55,32 +59,17 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
       const snapshot = await doc.accessor.get();
       const data = snapshot.data();
-
-      if (data && data.type === this.name) {
-        return this._toPayload(data);
-      }
-
-      return undefined;
+      return data && data.type === this.name ? this._toPayload(data) : undefined;
     }
 
     async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcEntriesByUserCodeQuery(this.name, userCode)).getDocs();
-
-      if (!results.empty) {
-        return this._toPayload(results.docs[0].data() as OidcEntry);
-      }
-
-      return undefined;
+      return !results.empty ? this._toPayload(results.docs[0].data() as OidcEntry) : undefined;
     }
 
     async findByUid(uid: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcEntriesByUidQuery(this.name, uid)).getDocs();
-
-      if (!results.empty) {
-        return this._toPayload(results.docs[0].data() as OidcEntry);
-      }
-
-      return undefined;
+      return !results.empty ? this._toPayload(results.docs[0].data() as OidcEntry) : undefined;
     }
 
     async consume(id: OidcEntryId): Promise<void> {
@@ -122,15 +111,9 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
      * returning `undefined` if the entry has expired.
      */
     private _toPayload(data: OidcEntry): AdapterPayload | undefined {
-      if (data.expiresAt) {
-        const expiresDate = data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as any).toDate();
-
-        if (expiresDate < new Date()) {
-          return undefined;
-        }
-      }
-
-      return encryptionService.decryptAdapterPayload(data.payload);
+      const expiresDate = data.expiresAt ? (data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as any).toDate()) : undefined;
+      const isExpired = expiresDate != null && expiresDate < new Date();
+      return isExpired ? undefined : encryptionService.decryptAdapterPayload(data.payload);
     }
   }
 

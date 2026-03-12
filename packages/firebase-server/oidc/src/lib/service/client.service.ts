@@ -1,14 +1,15 @@
-import { type AbstractOidcClientParams, type CreateOidcClientResult, type OidcEntryClientId } from '@dereekb/firebase';
-import type { Adapter, ClientMetadata } from 'oidc-provider';
+import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey } from '@dereekb/firebase';
+import type { ClientMetadata } from 'oidc-provider';
+import { nanoid } from 'nanoid';
+import { randomBytes } from 'crypto';
 import { OidcService } from './oidc.service';
-import { randomBytes, randomUUID } from 'crypto';
 
 // MARK: Service
 /**
  * Service for managing OIDC client registrations through the oidc-provider.
  *
- * Uses `provider.Client` to validate client metadata and `provider.Client.adapter`
- * to persist entries, ensuring all oidc-provider validation and lifecycle hooks run.
+ * Mirrors the oidc-provider `registration.js` flow to ensure all provider
+ * validation and lifecycle hooks run.
  */
 export class OidcClientService {
   constructor(private readonly oidcService: OidcService) {}
@@ -16,22 +17,22 @@ export class OidcClientService {
   /**
    * Creates a new OIDC client through the oidc-provider.
    *
-   * Generates a `client_id` and `client_secret`, validates the metadata via `provider.Client`,
-   * and persists through the adapter.
+   * Generates `client_id` and `client_secret` using the same defaults as oidc-provider's
+   * registration flow, validates via `Client.validate`, and persists through the adapter.
    *
    * @param params - Client registration parameters.
    * @returns The generated client ID and secret (plaintext, returned only once).
    */
-  async createClient(params: AbstractOidcClientParams): Promise<CreateOidcClientResult> {
+  async createClient(params: CreateOidcClientParams): Promise<CreateOidcClientResult> {
     const provider = await this.oidcService.getProvider();
-    const clientId = randomUUID();
-    const clientSecret = randomBytes(32).toString('hex');
+    const ProviderClient = provider.Client as any;
 
-    const metadata: ClientMetadata = {
-      client_id: clientId,
-      client_secret: clientSecret,
-      client_name: params.client_name ?? undefined,
-      redirect_uris: params.redirect_uris ?? undefined,
+    // Mirrors oidc-provider's default idFactory from lib/helpers/defaults.js
+    const clientId = nanoid();
+    const firestoreOwnerKey = params.key;
+    const properties: ClientMetadata = {
+      client_name: params.client_name,
+      redirect_uris: params.redirect_uris,
       grant_types: params.grant_types ?? ['authorization_code', 'refresh_token'],
       response_types: (params.response_types ?? ['code']) as ClientMetadata['response_types'],
       /**
@@ -39,26 +40,36 @@ export class OidcClientService {
        *
        * Differences: https://docs.secureauth.com/iam/oauth-client-secret-authentication#client_secret_post
        */
-      token_endpoint_auth_method: 'client_secret_post' // refresh token / access token system
+      token_endpoint_auth_method: 'client_secret_post',
+      client_id: clientId
     };
 
-    // Use oidc-provider's Client to validate metadata and persist via the adapter.
-    // The constructor and static adapter are not fully typed in @types/oidc-provider.
-    const ProviderClient = provider.Client as any;
-    const client = new ProviderClient(metadata);
+    // Mirrors oidc-provider's registration.js: only generate a secret when the auth method requires one.
+    // Uses Client.needsSecret() from lib/models/client.js and the default secretFactory from lib/helpers/defaults.js.
+    let clientSecret: string | undefined;
 
-    if (client.sectorIdentifierUri !== undefined) {
-      await ProviderClient.validate(metadata);
+    if (ProviderClient.needsSecret(properties)) {
+      clientSecret = randomBytes(64).toString('base64url');
+      properties.client_secret = clientSecret;
+      properties.client_secret_expires_at = 0;
     }
 
+    // Mirrors oidc-provider's lib/helpers/add_client.js: validates metadata (including sectorIdentifierUri)
+    // via Client.validate(), constructs the Client, and persists via adapter.upsert().
+    await ProviderClient.validate(properties);
+    const client = new ProviderClient(properties);
+
+    // firestoreOwnerKey is not part of the oidc-provider metadata schema, so we attach it
+    // to the payload after metadata() strips unrecognized fields. The adapter reads this
+    // to set OidcEntry.o for firestore security rules.
     const payload = client.metadata();
-    const adapter: Adapter = ProviderClient.adapter;
-    await adapter.upsert(client.clientId, payload, 0);
+    payload.firestoreOwnerKey = firestoreOwnerKey;
+    await ProviderClient.adapter.upsert(client.clientId, payload);
 
     return {
-      modelKeys: client.clientId,
+      modelKeys: firestoreModelKey(oidcEntryIdentity, clientId),
       client_id: clientId,
-      client_secret: clientSecret
+      client_secret: clientSecret!
     };
   }
 
@@ -72,11 +83,10 @@ export class OidcClientService {
    * @param params - The fields to update.
    * @throws When the client is not found.
    */
-  async updateClient(clientId: OidcEntryClientId, params: AbstractOidcClientParams): Promise<void> {
+  async updateClient(clientId: OidcEntryClientId, params: UpdateOidcClientParams): Promise<void> {
     const provider = await this.oidcService.getProvider();
     const ProviderClient = provider.Client as any;
-    const adapter: Adapter = ProviderClient.adapter;
-    const existing = await adapter.find(clientId);
+    const existing = await ProviderClient.adapter.find(clientId);
 
     if (!existing) {
       throw new Error('Client not found.');
@@ -100,10 +110,10 @@ export class OidcClientService {
       updatedMetadata.response_types = params.response_types as ClientMetadata['response_types'];
     }
 
-    // Re-validate through the provider
+    // Mirrors oidc-provider's lib/helpers/add_client.js: re-validates and persists.
+    await ProviderClient.validate(updatedMetadata);
     const client = new ProviderClient(updatedMetadata);
-    const payload = client.metadata();
-    await adapter.upsert(client.clientId, payload, 0);
+    await ProviderClient.adapter.upsert(client.clientId, client.metadata());
   }
 
   /**
@@ -115,13 +125,12 @@ export class OidcClientService {
   async deleteClient(clientId: OidcEntryClientId): Promise<void> {
     const provider = await this.oidcService.getProvider();
     const ProviderClient = provider.Client as any;
-    const adapter: Adapter = ProviderClient.adapter;
-    const existing = await adapter.find(clientId);
+    const existing = await ProviderClient.adapter.find(clientId);
 
     if (!existing) {
       throw new Error('Client not found.');
     }
 
-    await adapter.destroy(clientId);
+    await ProviderClient.adapter.destroy(clientId);
   }
 }

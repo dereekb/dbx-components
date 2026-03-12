@@ -1,4 +1,4 @@
-import { textField, searchableStringChipField } from '@dereekb/dbx-form';
+import { textField, searchableStringChipField, isWebsiteUrlValidator } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { of } from 'rxjs';
 
@@ -10,26 +10,27 @@ import { of } from 'rxjs';
  * client_name is required.
  */
 export function oidcEntryClientFormFields(): FormlyFieldConfig[] {
-  return [oidcClientNameField({ required: true }), oidcClientRedirectUrisField(), oidcClientGrantTypesField(), oidcClientResponseTypesField()];
+  return [oidcClientNameField(), oidcClientRedirectUrisField(), oidcClientGrantTypesField(), oidcClientResponseTypesField()];
 }
 
-export function oidcClientNameField(config?: { required?: boolean }): FormlyFieldConfig {
+export function oidcClientNameField(): FormlyFieldConfig {
   return textField({
     key: 'client_name',
     label: 'Client Name',
     description: 'A human-readable name for this OAuth client.',
-    required: config?.required ?? false,
+    required: true,
     maxLength: 200
   });
 }
 
-export function oidcClientRedirectUrisField(config?: { required?: boolean }): FormlyFieldConfig {
+export function oidcClientRedirectUrisField(): FormlyFieldConfig {
   return searchableStringChipField({
     key: 'redirect_uris',
     label: 'Redirect URIs',
-    description: 'Type a redirect URI and press enter to add it.',
-    required: config?.required ?? false,
+    description: 'Type a redirect URI (e.g. https://example.com/callback) and press enter to add it.',
+    required: true,
     searchOnEmptyText: false,
+    textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
     search: () => of([]),
     displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
   });

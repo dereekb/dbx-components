@@ -1,5 +1,5 @@
 import { type AnchorForValueFunction, DbxAnchorComponent, DbxButtonComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { type OidcEntry, oidcClientEntriesByOwnerQuery } from '@dereekb/firebase';
+import { type OidcEntry, firestoreModelKey, oidcClientEntriesByOwnerQuery } from '@dereekb/firebase';
 import { Component, inject, viewChild, type OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DbxOidcEntryClientListComponent, DbxOidcEntryCollectionStoreDirective, DbxOidcEntryDocumentStoreDirective } from '@dereekb/dbx-firebase/oidc';
@@ -8,6 +8,7 @@ import { DbxRouteModelIdDirective } from '@dereekb/dbx-core';
 import { UIView } from '@uirouter/angular';
 import { type DocumentDataWithIdAndKey, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
+import { profileIdentity } from 'demo-firebase';
 
 @Component({
   templateUrl: './list.component.html',
@@ -33,7 +34,8 @@ export class DemoAppOAuthClientListPageComponent implements OnInit {
 
     this.dbxFirebaseAuthService.currentAuthUser$.subscribe((user) => {
       if (user?.uid) {
-        this.clientConstraints = oidcClientEntriesByOwnerQuery(user.uid);
+        const ownershipKey = firestoreModelKey(profileIdentity, user.uid);
+        this.clientConstraints = oidcClientEntriesByOwnerQuery(ownershipKey);
       }
     });
   }

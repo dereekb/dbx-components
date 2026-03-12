@@ -24,7 +24,8 @@ import {
   valueSelectionField,
   type ValueSelectionOptionWithValue,
   DbxFormlyFieldsContextDirective,
-  DbxFormSourceDirective
+  DbxFormSourceDirective,
+  isWebsiteUrlValidator
 } from '@dereekb/dbx-form';
 import { type ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
 import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, type IndexRef, type ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
@@ -437,6 +438,15 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       searchOnEmptyText: true,
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
       displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
+    }),
+    searchableStringChipField({
+      key: 'validatedUrls',
+      label: 'URL Chips With Validation',
+      description: 'Type a URL (e.g. https://example.com) and press enter. Invalid URLs are rejected with an inline error. Port numbers like http://localhost:8080 are allowed.',
+      searchOnEmptyText: false,
+      textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+      search: () => of([]),
+      displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
     })
   ];
 

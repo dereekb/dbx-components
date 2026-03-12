@@ -1,12 +1,13 @@
 import { type OnDestroy, Component, inject } from '@angular/core';
 import { DbxTwoColumnRightComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
+import { DbxFirebaseOidcEntryClientUpdateComponent } from '@dereekb/dbx-firebase/oidc';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { OidcEntryDocumentStore } from '@dereekb/dbx-firebase/oidc';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './list.right.component.html',
-  imports: [DbxTwoColumnRightComponent, DbxLoadingComponent, DbxContentContainerDirective],
+  imports: [DbxTwoColumnRightComponent, DbxLoadingComponent, DbxContentContainerDirective, DbxFirebaseOidcEntryClientUpdateComponent],
   standalone: true
 })
 export class DemoAppOAuthClientListPageRightComponent implements OnDestroy {

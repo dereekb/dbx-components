@@ -3,6 +3,8 @@ import { type FirestoreModelId, type FirestoreModelKey } from '../../common';
 /**
  * Document ID for an OidcEntry.
  *
+ * NOTE: This id may include dashes or underscores, so this type is not compatable with TwoWayFlatFirestoreModelKey usage.
+ *
  * The ID is assigned by the oidc-provider library and varies by model type
  * (e.g., opaque token string for AccessToken, random string for Session).
  */

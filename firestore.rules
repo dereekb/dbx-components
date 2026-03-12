@@ -22,7 +22,7 @@ service cloud.firestore {
 
     function resourceIsOwnedByAuthOwnershipKey() {
       // compares the "o" value against the auth's uid
-      return resource != null && resource.data != null && resource.data.o != null && request.auth != null && resource.data.o == request.auth.uid;
+      return resource != null && resource.data != null && resource.data.o != null && request.auth != null && (resource.data.o == 'pr/' + request.auth.uid);
     }
 
     // MARK: Rules
@@ -101,7 +101,7 @@ service cloud.firestore {
 
     // MARK: OIDC Adapter
     match /oidc_e/{entryId} {
-      // Owners can read their own Client entries (type == 'Client' && o == auth.uid)
+      // Owners can read their own Client entries (type == 'Client' && o = 'pr/<uid>')
       allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
       allow list: if userClaimsIsSysAdmin() || (resourceIsOwnedByAuthOwnershipKey() && resource.data.type == 'Client');
     }

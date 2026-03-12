@@ -1,6 +1,5 @@
-import { type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, readFirestoreModelKey } from '@dereekb/firebase';
+import { type AsyncFirebaseFunctionCreateAction, type AsyncOidcEntryUpdateAction, type AsyncOidcEntryDeleteAction, type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, type OidcEntryDocument } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type OidcClientService } from '../../service/client.service';
 
 // MARK: Context
@@ -21,9 +20,9 @@ export interface OidcModelServerActionsContext extends FirebaseServerActionsCont
  * @see {@link oidcModelServerActions} for the concrete implementation factory.
  */
 export abstract class OidcModelServerActions {
-  abstract createOidcClient(params: CreateOidcClientParams): Promise<TransformAndValidateFunctionResult<CreateOidcClientParams, () => Promise<CreateOidcClientResult>>>;
-  abstract updateOidcClient(params: UpdateOidcClientParams): Promise<TransformAndValidateFunctionResult<UpdateOidcClientParams, () => Promise<void>>>;
-  abstract deleteOidcClient(params: DeleteOidcClientParams): Promise<TransformAndValidateFunctionResult<DeleteOidcClientParams, () => Promise<void>>>;
+  abstract createOidcClient(params: CreateOidcClientParams): AsyncFirebaseFunctionCreateAction<CreateOidcClientParams, CreateOidcClientResult>;
+  abstract updateOidcClient(params: UpdateOidcClientParams): AsyncOidcEntryUpdateAction<UpdateOidcClientParams>;
+  abstract deleteOidcClient(params: DeleteOidcClientParams): AsyncOidcEntryDeleteAction<DeleteOidcClientParams>;
 }
 
 /**
@@ -72,10 +71,9 @@ export function updateOidcClientFactory(context: OidcModelServerActionsContext) 
   const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(updateOidcClientParamsType, async (params) => {
-    const key = readFirestoreModelKey(params, true);
-
-    return async (): Promise<void> => {
-      await oidcClientService.updateClient(key, params);
+    return async (document: OidcEntryDocument): Promise<OidcEntryDocument> => {
+      await oidcClientService.updateClient(document.id, params);
+      return document;
     };
   });
 }
@@ -89,10 +87,8 @@ export function deleteOidcClientFactory(context: OidcModelServerActionsContext) 
   const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(deleteOidcClientParamsType, async (params) => {
-    const key = readFirestoreModelKey(params, true);
-
-    return async (): Promise<void> => {
-      await oidcClientService.deleteClient(key);
+    return async (document: OidcEntryDocument): Promise<void> => {
+      await oidcClientService.deleteClient(document.id);
     };
   });
 }

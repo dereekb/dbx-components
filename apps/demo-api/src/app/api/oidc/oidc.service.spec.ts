@@ -165,69 +165,48 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
   describe('OidcClientService', () => {
     demoAuthorizedUserContext({ f }, (u) => {
-      it('should create a client and return clientId and clientSecret', async () => {
-        const result = await oidcClientService.createClient(u.uid, {
+      it('should create a client and return client_id and client_secret', async () => {
+        const result = await oidcClientService.createClient({
           client_name: 'Test Client',
           redirect_uris: ['https://example.com/callback'],
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code']
         });
 
-        expect(result.clientId).toBeDefined();
-        expect(result.clientSecret).toBeDefined();
+        expect(result.client_id).toBeDefined();
+        expect(result.client_secret).toBeDefined();
+        expect(result.modelKeys).toBeDefined();
       });
 
-      it('should update a client owned by the user', async () => {
-        const { clientId } = await oidcClientService.createClient(u.uid, {
+      it('should update a client', async () => {
+        const { client_id } = await oidcClientService.createClient({
           client_name: 'Original Name',
           redirect_uris: ['https://example.com/callback']
         });
 
         await expect(
-          oidcClientService.updateClient(u.uid, clientId, {
+          oidcClientService.updateClient(client_id, {
             client_name: 'Updated Name',
             redirect_uris: ['https://example.com/new-callback']
           })
         ).resolves.toBeUndefined();
       });
 
-      it('should delete a client owned by the user', async () => {
-        const { clientId } = await oidcClientService.createClient(u.uid, {
+      it('should delete a client', async () => {
+        const { client_id } = await oidcClientService.createClient({
           client_name: 'To Delete',
           redirect_uris: ['https://example.com/callback']
         });
 
-        await expect(oidcClientService.deleteClient(u.uid, clientId)).resolves.toBeUndefined();
-      });
-
-      describe('ownership checks', () => {
-        demoAuthorizedUserContext({ f }, (otherUser) => {
-          it('should reject update from a different user', async () => {
-            const { clientId } = await oidcClientService.createClient(u.uid, {
-              client_name: 'Owned by u',
-              redirect_uris: ['https://example.com/callback']
-            });
-
-            await expect(oidcClientService.updateClient(otherUser.uid, clientId, { client_name: 'Hijacked' })).rejects.toThrow();
-          });
-
-          it('should reject delete from a different user', async () => {
-            const { clientId } = await oidcClientService.createClient(u.uid, {
-              client_name: 'Owned by u',
-              redirect_uris: ['https://example.com/callback']
-            });
-
-            await expect(oidcClientService.deleteClient(otherUser.uid, clientId)).rejects.toThrow();
-          });
-        });
+        await expect(oidcClientService.deleteClient(client_id)).resolves.toBeUndefined();
       });
 
       it('should throw when updating a non-existent client', async () => {
-        await expect(oidcClientService.updateClient(u.uid, 'nonexistent-client-id', { client_name: 'X' })).rejects.toThrow();
+        await expect(oidcClientService.updateClient('nonexistent-client-id', { client_name: 'X', redirect_uris: ['https://example.com/callback'] })).rejects.toThrow();
       });
 
       it('should throw when deleting a non-existent client', async () => {
-        await expect(oidcClientService.deleteClient(u.uid, 'nonexistent-client-id')).rejects.toThrow();
+        await expect(oidcClientService.deleteClient('nonexistent-client-id')).rejects.toThrow();
       });
     });
   });

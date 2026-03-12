@@ -68,12 +68,13 @@ import {
   type OidcEntry,
   OidcEntryDocument,
   type OidcEntryRoles,
-  type OidcModelFirestoreCollections
+  type OidcModelFirestoreCollections,
+  firestoreModelKey
 } from '@dereekb/firebase';
-import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
+import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
 import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
-import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
+import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
 export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections {
@@ -240,8 +241,12 @@ export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceF
 
 export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OidcEntry, OidcEntryDocument, OidcEntryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<OidcEntry, OidcEntryDocument>, context: DemoFirebaseContext, model: OidcEntryDocument): PromiseOrValue<GrantedRoleMap<OidcEntryRoles>> {
-    // TODO: add roles for the user if they are marked as the owner.
-    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap(), async () => {
+      const data = output.data;
+      const ownerKey = context.auth ? firestoreModelKey(profileIdentity, context.auth.uid) : undefined;
+      const isOwner = ownerKey != null && data?.o === ownerKey;
+      return isOwner ? fullAccessRoleMap() : noAccessRoleMap();
+    });
   },
   getFirestoreCollection: (c) => c.app.oidcEntryCollection
 });

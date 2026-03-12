@@ -1,4 +1,5 @@
 import { modelFieldMapFunctions } from '@dereekb/util';
+import { shouldFail, expectFail } from '@dereekb/util/test';
 import { randomBytes } from 'crypto';
 import { firestoreEncryptedField, optionalFirestoreEncryptedField } from './snapshot.field.encrypt';
 
@@ -109,11 +110,14 @@ describe('firestoreEncryptedField()', () => {
       expect(fns.from(fns.to('test'))).toBe('test');
     });
 
-    it('should throw if key is wrong length', () => {
-      const field = firestoreEncryptedField<string>({ secret: 'tooshort', default: '' });
-      const fns = modelFieldMapFunctions(field);
-      expect(() => fns.to('test')).toThrow('64-character hex key');
-    });
+    it(
+      'should throw if key is wrong length',
+      shouldFail(() => {
+        const field = firestoreEncryptedField<string>({ secret: 'tooshort', default: '' });
+        const fns = modelFieldMapFunctions(field);
+        expectFail(() => fns.to('test'));
+      })
+    );
   });
 
   describe('wrong key', () => {

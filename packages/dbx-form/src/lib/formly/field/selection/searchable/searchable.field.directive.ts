@@ -383,6 +383,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     }
 
     if (!this.inputCtrl.valid) {
+      this.inputCtrl.markAsTouched();
       return;
     }
 
@@ -390,6 +391,25 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
       const value = this.convertStringValue ? this.convertStringValue(text) : (text as unknown as T);
       this.addValue(value);
     }
+  }
+
+  /**
+   * Returns the first validation error message from the input control, if any.
+   */
+  get inputErrorMessage(): string | undefined {
+    const errors = this.inputCtrl.errors;
+
+    if (errors) {
+      for (const key of Object.keys(errors)) {
+        const error = errors[key];
+
+        if (error?.message) {
+          return error.message;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   addWithDisplayValue(displayValue: SearchableValueFieldDisplayValue<T>): void {
