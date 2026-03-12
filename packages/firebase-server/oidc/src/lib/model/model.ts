@@ -1,5 +1,5 @@
 import { type JwksFirestoreCollections, type JwksKeyFirestoreCollection } from './jwks';
-import { type OidcModelFirestoreCollections, type OidcAdapterEntryFirestoreCollection } from '@dereekb/firebase';
+import { type OidcModelFirestoreCollections, type OidcEntryFirestoreCollection } from '@dereekb/firebase';
 
 // MARK: Collections
 /**
@@ -10,5 +10,5 @@ import { type OidcModelFirestoreCollections, type OidcAdapterEntryFirestoreColle
  */
 export abstract class OidcServerFirestoreCollections implements JwksFirestoreCollections, OidcModelFirestoreCollections {
   abstract readonly jwksKeyCollection: JwksKeyFirestoreCollection;
-  abstract readonly oidcAdapterEntryCollection: OidcAdapterEntryFirestoreCollection;
+  abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
 }

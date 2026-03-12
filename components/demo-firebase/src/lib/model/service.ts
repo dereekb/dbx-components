@@ -62,12 +62,12 @@ import {
   type StorageFileGroup,
   type StorageFileGroupDocument,
   type StorageFileGroupRoles,
-  type OidcAdapterEntryFirestoreCollection,
-  oidcAdapterEntryFirestoreCollection,
+  type OidcEntryFirestoreCollection,
+  oidcEntryFirestoreCollection,
   type OidcModelTypes,
-  type OidcAdapterEntry,
-  OidcAdapterEntryDocument,
-  type OidcAdapterEntryRoles,
+  type OidcEntry,
+  OidcEntryDocument,
+  type OidcEntryRoles,
   type OidcModelFirestoreCollections
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
@@ -94,7 +94,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
-  abstract readonly oidcAdapterEntryCollection: OidcAdapterEntryFirestoreCollection;
+  abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
 }
 
 export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext): DemoFirestoreCollections {
@@ -116,7 +116,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
-    oidcAdapterEntryCollection: oidcAdapterEntryFirestoreCollection({ firestoreContext })
+    oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext })
   };
 }
 
@@ -238,12 +238,12 @@ export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.storageFileGroupCollection
 });
 
-export const oidcAdapterEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OidcAdapterEntry, OidcAdapterEntryDocument, OidcAdapterEntryRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<OidcAdapterEntry, OidcAdapterEntryDocument>, context: DemoFirebaseContext, model: OidcAdapterEntryDocument): PromiseOrValue<GrantedRoleMap<OidcAdapterEntryRoles>> {
+export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OidcEntry, OidcEntryDocument, OidcEntryRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<OidcEntry, OidcEntryDocument>, context: DemoFirebaseContext, model: OidcEntryDocument): PromiseOrValue<GrantedRoleMap<OidcEntryRoles>> {
     // TODO: add roles for the user if they are marked as the owner.
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
-  getFirestoreCollection: (c) => c.app.oidcAdapterEntryCollection
+  getFirestoreCollection: (c) => c.app.oidcEntryCollection
 });
 
 // MARK: Services
@@ -266,7 +266,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
-  oidcAdapterEntry: oidcAdapterEntryFirebaseModelServiceFactory
+  oidcAdapterEntry: oidcEntryFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

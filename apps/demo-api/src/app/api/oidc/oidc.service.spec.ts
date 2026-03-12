@@ -237,8 +237,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       expect(oidcFirestoreCollections.jwksKeyCollection).toBeDefined();
     });
 
-    it('should provide oidcAdapterEntryCollection', () => {
-      expect(oidcFirestoreCollections.oidcAdapterEntryCollection).toBeDefined();
+    it('should provide oidcEntryCollection', () => {
+      expect(oidcFirestoreCollections.oidcEntryCollection).toBeDefined();
     });
   });
 });

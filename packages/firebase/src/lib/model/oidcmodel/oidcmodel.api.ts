@@ -3,8 +3,8 @@ import { type TargetModelParams, type OnCallCreateModelResult } from '../../comm
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction } from '../../client';
 import { type Maybe } from '@dereekb/util';
-import { type OidcAdapterEntryId } from './adapter.id';
-import { type OidcModelTypes } from './adapter';
+import { type OidcEntryId } from './oidcmodel.id';
+import { type OidcModelTypes } from './oidcmodel';
 
 // MARK: Create
 /**
@@ -33,7 +33,7 @@ export const createOidcClientParamsType = type({
  * it is returned to the caller.
  */
 export interface CreateOidcClientResult extends OnCallCreateModelResult {
-  readonly client_id: OidcAdapterEntryId;
+  readonly client_id: OidcEntryId;
   readonly client_secret: string;
 }
 

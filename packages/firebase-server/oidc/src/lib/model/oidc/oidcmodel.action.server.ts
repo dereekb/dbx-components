@@ -1,4 +1,4 @@
-import { type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, readFirestoreModelKey, oidcAdapterEntryIdentity } from '@dereekb/firebase';
+import { type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, readFirestoreModelKey, oidcEntryIdentity, firestoreModelKey } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type OidcClientService } from '../../service/client.service';
@@ -59,9 +59,10 @@ export function createOidcClientFactory(context: OidcModelServerActionsContext) 
   return firebaseServerActionTransformFunctionFactory(createOidcClientParamsType, async (params) => {
     return async (uid: string): Promise<CreateOidcClientResult> => {
       const result = await oidcClientService.createClient(uid, params);
+      const modelKey = firestoreModelKey(oidcEntryIdentity, result.clientId);
 
       return {
-        modelKeys: [`${oidcAdapterEntryIdentity.collectionName}/${result.clientId}`],
+        modelKeys: [modelKey],
         client_id: result.clientId,
         client_secret: result.clientSecret
       };

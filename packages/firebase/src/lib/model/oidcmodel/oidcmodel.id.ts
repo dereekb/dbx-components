@@ -1,14 +1,14 @@
 import { type FirestoreModelId, type FirestoreModelKey } from '../../common';
 
 /**
- * Document ID for an OidcAdapterEntry.
+ * Document ID for an OidcEntry.
  *
  * The ID is assigned by the oidc-provider library and varies by model type
  * (e.g., opaque token string for AccessToken, random string for Session).
  */
-export type OidcAdapterEntryId = FirestoreModelId;
+export type OidcEntryId = FirestoreModelId;
 
 /**
- * Full Firestore model key path for an OidcAdapterEntry document.
+ * Full Firestore model key path for an OidcEntry document.
  */
-export type OidcAdapterEntryKey = FirestoreModelKey;
+export type OidcEntryKey = FirestoreModelKey;

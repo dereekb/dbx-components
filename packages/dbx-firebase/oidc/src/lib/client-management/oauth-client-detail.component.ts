@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { type OidcAdapterEntryOAuthClientPayloadData } from '@dereekb/firebase';
+import { type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
 
 /**
  * Component that displays details of a single OAuth client.
@@ -40,6 +40,6 @@ import { type OidcAdapterEntryOAuthClientPayloadData } from '@dereekb/firebase';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxOAuthClientDetailComponent {
-  readonly client = input<OidcAdapterEntryOAuthClientPayloadData | null>(null);
-  readonly revoke = output<OidcAdapterEntryOAuthClientPayloadData>();
+  readonly client = input<OidcEntryOAuthClientPayloadData | null>(null);
+  readonly revoke = output<OidcEntryOAuthClientPayloadData>();
 }

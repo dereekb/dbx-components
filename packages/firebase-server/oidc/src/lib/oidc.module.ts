@@ -6,7 +6,7 @@ import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
 import { OidcServerFirestoreCollections, jwksKeyFirestoreCollection } from './model';
-import { oidcAdapterEntryFirestoreCollection } from '@dereekb/firebase';
+import { oidcEntryFirestoreCollection } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type FirestoreContext } from '@dereekb/firebase';
@@ -104,7 +104,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
 export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcServerFirestoreCollections {
   return {
     jwksKeyCollection: jwksKeyFirestoreCollection({ firestoreContext, ...oidcModuleConfig.jwksKeyConverterConfig }),
-    oidcAdapterEntryCollection: oidcAdapterEntryFirestoreCollection({ firestoreContext })
+    oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext })
   };
 }
 

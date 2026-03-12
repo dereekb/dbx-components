@@ -17,8 +17,10 @@ export abstract class JwksFirestoreCollections {
 // MARK: Identity
 /**
  * Firestore model identity for {@link JwksKey} documents.
+ *
+ * This is a server-side only model. It has no provisions for client-side access.
  */
-export const jwksKeyIdentity = firestoreModelIdentity('jwksKey', 'jk');
+export const jwksKeyIdentity = firestoreModelIdentity('oidcJwksKey', 'oidc_jwks');
 
 // MARK: Types
 /**

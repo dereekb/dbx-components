@@ -1,42 +1,44 @@
-import { JsonSerializableObject, POJOKey, type Maybe } from '@dereekb/util';
+import { JsonSerializableObject, type Maybe } from '@dereekb/util';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField } from '../../common';
 import { GrantedDeleteRole, GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
 
 /**
  * Union of model identity types used in the OIDC function map.
  */
-export type OidcModelTypes = typeof oidcAdapterEntryIdentity;
+export type OidcModelTypes = typeof oidcEntryIdentity;
 
 /**
- * Abstract base providing access to OIDC adapter Firestore collections.
+ * Abstract class providing access to all oidc-related Firestore collections.
  *
- * The server-side {@link OidcFirestoreCollections} extends this with additional
- * server-only collections (e.g., JWKS keys).
+ * Implementations provide concrete collection instances wired to a specific {@link FirestoreContext}.
+ * Used by both client and server code to access oidc model documents.
+ *
+ * @see `OidcModelServerActions` in `@dereekb/firebase-server/oidc` for server-side action processing
  */
 export abstract class OidcModelFirestoreCollections {
-  abstract readonly oidcAdapterEntryCollection: OidcAdapterEntryFirestoreCollection;
+  abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
 }
 
 // MARK: Identity
 /**
- * Firestore model identity for {@link OidcAdapterEntry} documents.
+ * Firestore model identity for {@link OidcEntry} documents.
  *
- * Collection name: `oidcAdapterEntry`, short code: `oidc_oa`.
+ * Collection name: `oidcEntry`, short code: `oidc_e`.
  */
-export const oidcAdapterEntryIdentity = firestoreModelIdentity('oidcAdapterEntry', 'oidc_oa');
+export const oidcEntryIdentity = firestoreModelIdentity('oidcEntry', 'oidc_e');
 
 // MARK: Adapter Entry Type
 /**
  * Known oidc-provider model types stored in the adapter collection.
  *
- * Used as the discriminator in the {@link OidcAdapterEntry.type} field.
+ * Used as the discriminator in the {@link OidcEntry.type} field.
  */
-export type OidcAdapterEntryType = 'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest' | (string & {});
+export type OidcEntryType = 'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest' | (string & {});
 
 /**
  * Type value for Client adapter entries.
  */
-export const OIDC_ADAPTER_ENTRY_CLIENT_TYPE: OidcAdapterEntryType = 'Client';
+export const OIDC_ENTRY_CLIENT_TYPE: OidcEntryType = 'Client';
 
 // MARK: Types
 /**
@@ -50,7 +52,7 @@ export const OIDC_ADAPTER_ENTRY_CLIENT_TYPE: OidcAdapterEntryType = 'Client';
  * The {@link o} ownership field enables Firestore security rules to restrict reads to the owning user
  * (used primarily for Client entries so users can query their own registered OAuth clients).
  */
-export interface OidcAdapterEntry {
+export interface OidcEntry {
   /**
    * The oidc-provider model type (e.g., 'Session', 'AccessToken', 'Client').
    */
@@ -91,22 +93,22 @@ export interface OidcAdapterEntry {
   expiresAt?: Maybe<Date>;
 }
 
-export type OidcAdapterEntryRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole;
+export type OidcEntryRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole;
 
 /**
- * Firestore document wrapper for {@link OidcAdapterEntry}.
+ * Firestore document wrapper for {@link OidcEntry}.
  */
-export class OidcAdapterEntryDocument extends AbstractFirestoreDocument<OidcAdapterEntry, OidcAdapterEntryDocument, typeof oidcAdapterEntryIdentity> {
+export class OidcEntryDocument extends AbstractFirestoreDocument<OidcEntry, OidcEntryDocument, typeof oidcEntryIdentity> {
   get modelIdentity() {
-    return oidcAdapterEntryIdentity;
+    return oidcEntryIdentity;
   }
 }
 
 // MARK: Converter
 /**
- * Firestore snapshot converter for {@link OidcAdapterEntry} documents.
+ * Firestore snapshot converter for {@link OidcEntry} documents.
  */
-export const oidcAdapterEntryConverter = snapshotConverterFunctions<OidcAdapterEntry>({
+export const oidcEntryConverter = snapshotConverterFunctions<OidcEntry>({
   fields: {
     type: firestoreString({ default: 'unknown' }),
     payload: firestorePassThroughField(),
@@ -121,35 +123,35 @@ export const oidcAdapterEntryConverter = snapshotConverterFunctions<OidcAdapterE
 
 // MARK: Collection
 /**
- * Typed Firestore collection for {@link OidcAdapterEntry} documents.
+ * Typed Firestore collection for {@link OidcEntry} documents.
  */
-export type OidcAdapterEntryFirestoreCollection = FirestoreCollection<OidcAdapterEntry, OidcAdapterEntryDocument>;
+export type OidcEntryFirestoreCollection = FirestoreCollection<OidcEntry, OidcEntryDocument>;
 
 /**
- * Configuration for creating an {@link OidcAdapterEntryFirestoreCollection}.
+ * Configuration for creating an {@link OidcEntryFirestoreCollection}.
  */
-export interface OidcAdapterEntryFirestoreCollectionConfig {
+export interface OidcEntryFirestoreCollectionConfig {
   readonly firestoreContext: FirestoreContext;
 }
 
 /**
- * Returns the Firestore {@link CollectionReference} for {@link OidcAdapterEntry} documents.
+ * Returns the Firestore {@link CollectionReference} for {@link OidcEntry} documents.
  */
-export function oidcAdapterEntryCollectionReference(context: FirestoreContext): CollectionReference<OidcAdapterEntry> {
-  return context.collection(oidcAdapterEntryIdentity.collectionName);
+export function oidcEntryCollectionReference(context: FirestoreContext): CollectionReference<OidcEntry> {
+  return context.collection(oidcEntryIdentity.collectionName);
 }
 
 /**
- * Creates an {@link OidcAdapterEntryFirestoreCollection} from the given configuration.
+ * Creates an {@link OidcEntryFirestoreCollection} from the given configuration.
  */
-export function oidcAdapterEntryFirestoreCollection(config: OidcAdapterEntryFirestoreCollectionConfig): OidcAdapterEntryFirestoreCollection {
+export function oidcEntryFirestoreCollection(config: OidcEntryFirestoreCollectionConfig): OidcEntryFirestoreCollection {
   const { firestoreContext } = config;
 
   return firestoreContext.firestoreCollection({
-    modelIdentity: oidcAdapterEntryIdentity,
-    converter: oidcAdapterEntryConverter,
-    collection: oidcAdapterEntryCollectionReference(firestoreContext),
-    makeDocument: (accessor, documentAccessor) => new OidcAdapterEntryDocument(accessor, documentAccessor),
+    modelIdentity: oidcEntryIdentity,
+    converter: oidcEntryConverter,
+    collection: oidcEntryCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new OidcEntryDocument(accessor, documentAccessor),
     firestoreContext
   });
 }
