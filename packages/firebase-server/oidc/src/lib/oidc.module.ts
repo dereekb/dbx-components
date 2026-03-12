@@ -6,7 +6,8 @@ import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
 import { OidcFirestoreCollections, jwksKeyFirestoreCollection, oidcAdapterEntryFirestoreCollection } from './model';
-import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService, FirestoreEncryptedFieldSecret, isValidFirestoreEncryptedFieldSecret } from '@dereekb/firebase-server';
+import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type FirestoreContext } from '@dereekb/firebase';
 import { hasHttpPrefix } from '@dereekb/util';
 import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
@@ -66,13 +67,13 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
   const loginUrl = `${appUrl}/oidc/interaction/login`;
   const consentUrl = `${appUrl}/oidc/interaction/consent`;
 
-  let encryptionSecret: FirestoreEncryptedFieldSecret = configService.get<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY) ?? '';
+  let encryptionSecret: AES256GCMEncryptionSecret = configService.get<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY) ?? '';
 
-  if (!isValidFirestoreEncryptedFieldSecret(encryptionSecret)) {
+  if (!isValidAES256GCMEncryptionSecret(encryptionSecret)) {
     if (envService.isTestingEnv) {
       encryptionSecret = `54686520717569636b2062726f776e20f09fa68a206a756d7073206f76657220`;
     } else {
-      throw new Error(`oidcModuleConfigFactory: The secret provided by ${OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY} is not valid as a FirestoreEncryptedFieldSecret.`);
+      throw new Error(`oidcModuleConfigFactory: The secret provided by ${OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY} is not valid. Expected a 64-character hexadecimal string.`);
     }
   }
 

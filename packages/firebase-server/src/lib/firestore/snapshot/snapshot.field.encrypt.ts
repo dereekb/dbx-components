@@ -1,43 +1,8 @@
-import { getValueFromGetter, isHex, type Getter, type GetterOrValue, type Maybe } from '@dereekb/util';
+import { type GetterOrValue, type Maybe } from '@dereekb/util';
 import { type FirestoreModelFieldMapFunctionsConfig, firestoreField, optionalFirestoreField } from '@dereekb/firebase';
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
-
-// MARK: Constants
-/**
- * AES-256-GCM encryption constants.
- */
-const ENCRYPTED_FIELD_ALGORITHM = 'aes-256-gcm';
-const ENCRYPTED_FIELD_IV_LENGTH = 12;
-const ENCRYPTED_FIELD_AUTH_TAG_LENGTH = 16;
-const ENCRYPTED_FIELD_KEY_LENGTH = 32;
+import { resolveEncryptionKey, encryptValue, decryptValue } from '@dereekb/nestjs';
 
 // MARK: Types
-/**
- * A secret key for AES-256-GCM. Should be 64 character long.
- */
-export type FirestoreEncryptedFieldSecret = string;
-
-/**
- * Validates that the given secret is a 64-character hexadecimal string (32 bytes for AES-256).
- *
- * @example
- * ```typescript
- * isValidFirestoreEncryptedFieldSecret('a'.repeat(64)); // true
- * isValidFirestoreEncryptedFieldSecret('too-short');     // false
- * ```
- */
-export function isValidFirestoreEncryptedFieldSecret(secret: FirestoreEncryptedFieldSecret) {
-  return secret.length === ENCRYPTED_FIELD_KEY_LENGTH * 2 && isHex(secret);
-}
-
-/**
- * The source for the encryption secret.
- *
- * - If a string, it is used directly as the hex-encoded key (64 hex chars = 32 bytes).
- * - If a Getter, it is called each time to retrieve the key (useful for rotation or lazy loading).
- */
-export type FirestoreEncryptedFieldSecretSource = GetterOrValue<FirestoreEncryptedFieldSecret>;
-
 /**
  * Configuration for a required encrypted Firestore field.
  *
@@ -47,7 +12,7 @@ export interface FirestoreEncryptedFieldConfig<T> {
   /**
    * Secret source for the encryption key.
    */
-  readonly secret: FirestoreEncryptedFieldSecretSource;
+  readonly secret: GetterOrValue<string>;
   /**
    * Default value when the field is missing from Firestore.
    */
@@ -63,82 +28,7 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
   /**
    * Secret source for the encryption key.
    */
-  readonly secret: FirestoreEncryptedFieldSecretSource;
-}
-
-// MARK: Functions
-/**
- * Factory that eagerly resolves and validates the encryption key from a secret source.
- *
- * The getter is called immediately and the key is validated on creation. The returned
- * function provides the resolved Buffer without re-resolving or re-validating.
- *
- * @example
- * ```typescript
- * const getKey = resolveEncryptionKey('a'.repeat(64));
- * const key: Buffer = getKey();
- *
- * const encrypted = encryptValue({ sensitive: 'data' }, getKey());
- * const decrypted = decryptValue<{ sensitive: string }>(encrypted, getKey());
- * ```
- *
- * @param source - The secret source configuration.
- * @returns A getter that returns the resolved 32-byte Buffer for AES-256 encryption.
- * @throws Error if the resolved key is not 64 hex characters.
- */
-export function resolveEncryptionKey(source: FirestoreEncryptedFieldSecretSource): Getter<Buffer> {
-  const hex: FirestoreEncryptedFieldSecret = getValueFromGetter(source);
-
-  if (!isValidFirestoreEncryptedFieldSecret(hex)) {
-    throw new Error(`firestoreEncryptedField: expected a ${ENCRYPTED_FIELD_KEY_LENGTH * 2}-character hexadecimal key, got ${hex.length} characters. Ensure the key contains only hex characters (0-9, a-f).`);
-  }
-
-  const key = Buffer.from(hex, 'hex');
-  return () => key;
-}
-
-/**
- * Encrypts a JSON-serializable value to a base64-encoded string using AES-256-GCM.
- *
- * Format: base64(IV (12 bytes) + ciphertext + authTag (16 bytes))
- *
- * @example
- * ```typescript
- * const getKey = resolveEncryptionKey(mySecret);
- * const encrypted = encryptValue({ sensitive: 'data' }, getKey());
- * const decrypted = decryptValue<{ sensitive: string }>(encrypted, getKey());
- * ```
- *
- * @param value - The value to encrypt (must be JSON-serializable).
- * @param key - The 32-byte encryption key from `resolveEncryptionKey()`.
- * @returns The encrypted value as a base64 string.
- */
-export function encryptValue<T>(value: T, key: Buffer): string {
-  const iv = randomBytes(ENCRYPTED_FIELD_IV_LENGTH);
-  const cipher = createCipheriv(ENCRYPTED_FIELD_ALGORITHM, key, iv);
-  const plaintext = JSON.stringify(value);
-  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
-  const authTag = cipher.getAuthTag();
-  const combined = Buffer.concat([iv, encrypted, authTag]);
-  return combined.toString('base64');
-}
-
-/**
- * Decrypts a base64-encoded string back to the original value.
- *
- * @param encoded - The base64-encoded encrypted string (IV + ciphertext + authTag).
- * @param key - The 32-byte encryption key Buffer from calling the getter returned by `resolveEncryptionKey()`.
- * @returns The decrypted JSON-parsed value.
- */
-export function decryptValue<T>(encoded: string, key: Buffer): T {
-  const combined = Buffer.from(encoded, 'base64');
-  const iv = combined.subarray(0, ENCRYPTED_FIELD_IV_LENGTH);
-  const authTag = combined.subarray(combined.length - ENCRYPTED_FIELD_AUTH_TAG_LENGTH);
-  const ciphertext = combined.subarray(ENCRYPTED_FIELD_IV_LENGTH, combined.length - ENCRYPTED_FIELD_AUTH_TAG_LENGTH);
-  const decipher = createDecipheriv(ENCRYPTED_FIELD_ALGORITHM, key, iv);
-  decipher.setAuthTag(authTag);
-  const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-  return JSON.parse(decrypted.toString('utf8'));
+  readonly secret: GetterOrValue<string>;
 }
 
 // MARK: Field Converters
@@ -152,7 +42,7 @@ export function decryptValue<T>(encoded: string, key: Buffer): T {
  * @example
  * ```typescript
  * const jwksField = firestoreEncryptedField<JWKSet>({
- *   secret: { env: 'FIRESTORE_ENCRYPTION_KEY' },
+ *   secret: process.env['FIRESTORE_ENCRYPTION_KEY']!,
  *   default: () => ({ keys: [] })
  * });
  * ```
@@ -185,7 +75,7 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
  * @example
  * ```typescript
  * const optionalSecretField = optionalFirestoreEncryptedField<OAuthClientSecret>({
- *   secret: { env: 'FIRESTORE_ENCRYPTION_KEY' }
+ *   secret: process.env['FIRESTORE_ENCRYPTION_KEY']!
  * });
  * ```
  *

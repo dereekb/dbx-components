@@ -8,7 +8,7 @@ import { OidcAccountService } from './account.service';
 import { OidcFirestoreCollections } from '../model';
 import { createAdapterFactory } from './adapter.service';
 import { OidcProviderConfigService } from './oidc.config.service';
-import { resolveEncryptionKey } from '@dereekb/firebase-server';
+import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { cachedGetter, firstValue, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { type OidcAuthData } from './auth';
 import { DecodedIdToken } from 'firebase-admin/auth';

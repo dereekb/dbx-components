@@ -1,7 +1,8 @@
 import { type Maybe } from '@dereekb/util';
 import { type GrantedReadRole } from '@dereekb/model';
 import { AbstractFirestoreDocument, type FirestoreCollection, type FirestoreContext, type CollectionReference, firestoreModelIdentity, firestoreDate, firestoreEnum, snapshotConverterFunctions, optionalFirestoreDate, firestorePassThroughField } from '@dereekb/firebase';
-import { type FirestoreEncryptedFieldSecretSource, firestoreEncryptedField } from '@dereekb/firebase-server';
+import { type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
+import { firestoreEncryptedField } from '@dereekb/firebase-server';
 
 // MARK: Collections
 /**
@@ -91,7 +92,7 @@ export interface JwksKeyConverterConfig {
   /**
    * Encryption secret source for the private key field.
    */
-  readonly encryptionSecret: FirestoreEncryptedFieldSecretSource;
+  readonly encryptionSecret: AES256GCMEncryptionSecretSource;
 }
 
 /**

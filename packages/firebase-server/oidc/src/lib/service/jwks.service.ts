@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { randomBytes, generateKeyPairSync } from 'crypto';
-import { resolveEncryptionKey, encryptValue, decryptValue, type FirestoreEncryptedFieldSecretSource } from '@dereekb/firebase-server';
+import { resolveEncryptionKey, encryptValue, decryptValue, type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
 import { FirebaseStorageAccessorFile, iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { type JwksKey, type JsonWebKeyWithKid, OidcFirestoreCollections, type JwksKeyDocument } from '../model';
 import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
@@ -22,10 +22,10 @@ export abstract class JwksServiceConfig {
   /**
    * Encryption secret for private key storage.
    *
-   * Supports all `FirestoreEncryptedFieldSecretSource` formats:
+   * Supports all `AES256GCMEncryptionSecretSource` formats:
    * direct hex string, getter function, or environment variable reference.
    */
-  abstract readonly encryptionSecret: FirestoreEncryptedFieldSecretSource;
+  abstract readonly encryptionSecret: AES256GCMEncryptionSecretSource;
   /**
    * Maximum age of a rotated key (in seconds) before it is retired.
    * Defaults to 30 days (2592000).
