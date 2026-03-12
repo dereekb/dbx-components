@@ -10,6 +10,7 @@ import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateT
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
 import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
+import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
@@ -249,6 +250,9 @@ export const appConfig: ApplicationConfig = {
       },
       provideAnalyticsUserEventsListener: true,
       provideStorageFileService: true
+    }),
+    provideDbxFirebaseOidc({
+      appCollectionClass: DemoFirestoreCollections
     }),
     provideDbxFirebaseLogin({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,

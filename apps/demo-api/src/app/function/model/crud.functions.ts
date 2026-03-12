@@ -34,7 +34,7 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
     fromUpload: storageFileInitializeFromUpload,
     allFromUpload: storageFileInitializeAllFromUploads
   }),
-  oidcAdapterEntry: createOidcClient
+  oidcEntry: createOidcClient
 };
 
 // MARK: Read
@@ -82,12 +82,12 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
     _: storageFileGroupUpdate,
     regenerateContent: storageFileGroupRegenerateContent
   }),
-  oidcAdapterEntry: updateOidcClient
+  oidcEntry: updateOidcClient
 };
 
 // MARK: Delete
 export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
-  oidcAdapterEntry: deleteOidcClient
+  oidcEntry: deleteOidcClient
 };
 
 // MARK: Call

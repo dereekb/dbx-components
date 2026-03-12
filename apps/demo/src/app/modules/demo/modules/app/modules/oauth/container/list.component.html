@@ -1,0 +1,13 @@
+<dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="oauthClientListRef" dbxTwoColumnSrefShowRight>
+  <dbx-two-block left dbxOidcEntryCollection [constraints]="clientConstraints">
+    <dbx-two-column-head top></dbx-two-column-head>
+    <dbx-oauth-client-list dbxFirebaseCollectionList dbxListItemModifier [dbxListItemAnchorModifier]="makeClientAnchor">
+      <div class="text-center dbx-pb3" end>
+        <dbx-anchor [anchor]="oauthClientCreateRef">
+          <dbx-button text="Create Client" icon="add" [raised]="true"></dbx-button>
+        </dbx-anchor>
+      </div>
+    </dbx-oauth-client-list>
+  </dbx-two-block>
+  <ui-view dbxOidcEntryDocument storeName="oidcEntry" dbxRouteModelId right></ui-view>
+</dbx-two-column>

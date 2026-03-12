@@ -1,3 +1,4 @@
+import { type OidcEntryClientId } from '@dereekb/firebase';
 import { type FirebaseServerAuthData, type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
 
 // MARK: Types
@@ -14,7 +15,7 @@ export interface OidcAuthData extends FirebaseServerAuthData {
   readonly oidcValidatedToken: {
     readonly sub: string;
     readonly scope?: string;
-    readonly client_id?: string;
+    readonly client_id?: OidcEntryClientId;
     [key: string]: unknown;
   };
 }

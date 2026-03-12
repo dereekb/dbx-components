@@ -266,7 +266,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
-  oidcAdapterEntry: oidcEntryFirebaseModelServiceFactory
+  oidcEntry: oidcEntryFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

@@ -12,3 +12,8 @@ export type OidcEntryId = FirestoreModelId;
  * Full Firestore model key path for an OidcEntry document.
  */
 export type OidcEntryKey = FirestoreModelKey;
+
+/**
+ * Unique client identifier for an OIDC client registration.
+ */
+export type OidcEntryClientId = string;

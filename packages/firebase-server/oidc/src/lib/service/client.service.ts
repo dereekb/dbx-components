@@ -1,26 +1,7 @@
-import { type Maybe } from '@dereekb/util';
+import { type AbstractOidcClientParams, type CreateOidcClientResult, type OidcEntryClientId } from '@dereekb/firebase';
 import type { Adapter, ClientMetadata } from 'oidc-provider';
 import { OidcService } from './oidc.service';
 import { randomBytes, randomUUID } from 'crypto';
-
-// MARK: Types
-/**
- * Result of creating a new OIDC client via the {@link OidcClientService}.
- */
-export interface OidcClientServiceCreateResult {
-  readonly clientId: string;
-  readonly clientSecret: string;
-}
-
-/**
- * Fields that can be provided when creating or updating an OIDC client.
- */
-export interface OidcClientServiceUpdateParams {
-  readonly client_name?: Maybe<string>;
-  readonly redirect_uris?: Maybe<string[]>;
-  readonly grant_types?: Maybe<string[]>;
-  readonly response_types?: Maybe<string[]>;
-}
 
 // MARK: Service
 /**
@@ -38,11 +19,10 @@ export class OidcClientService {
    * Generates a `client_id` and `client_secret`, validates the metadata via `provider.Client`,
    * and persists through the adapter.
    *
-   * @param uid - The owning user's Firebase Auth UID.
    * @param params - Client registration parameters.
    * @returns The generated client ID and secret (plaintext, returned only once).
    */
-  async createClient(uid: string, params: OidcClientServiceUpdateParams): Promise<OidcClientServiceCreateResult> {
+  async createClient(params: AbstractOidcClientParams): Promise<CreateOidcClientResult> {
     const provider = await this.oidcService.getProvider();
     const clientId = randomUUID();
     const clientSecret = randomBytes(32).toString('hex');
@@ -54,8 +34,12 @@ export class OidcClientService {
       redirect_uris: params.redirect_uris ?? undefined,
       grant_types: params.grant_types ?? ['authorization_code', 'refresh_token'],
       response_types: (params.response_types ?? ['code']) as ClientMetadata['response_types'],
-      token_endpoint_auth_method: 'client_secret_post', // TODO: Need to verify this is the correct auth endpoint...
-      uid
+      /**
+       * TODO: Support all client_secret_jwt, potentially. oidc-provider supports all three. Add the requested type as part of the setup/create.
+       *
+       * Differences: https://docs.secureauth.com/iam/oauth-client-secret-authentication#client_secret_post
+       */
+      token_endpoint_auth_method: 'client_secret_post' // refresh token / access token system
     };
 
     // Use oidc-provider's Client to validate metadata and persist via the adapter.
@@ -68,14 +52,13 @@ export class OidcClientService {
     }
 
     const payload = client.metadata();
-    payload.uid = uid;
-
     const adapter: Adapter = ProviderClient.adapter;
     await adapter.upsert(client.clientId, payload, 0);
 
     return {
-      clientId,
-      clientSecret
+      modelKeys: client.clientId,
+      client_id: clientId,
+      client_secret: clientSecret
     };
   }
 
@@ -85,12 +68,11 @@ export class OidcClientService {
    * Loads the existing client payload via the adapter, merges the updated fields,
    * re-validates through `provider.Client`, and persists.
    *
-   * @param uid - The requesting user's Firebase Auth UID (must be the owner).
    * @param clientId - The client's document/adapter entry ID.
    * @param params - The fields to update.
-   * @throws When the client is not found or the user is not the owner.
+   * @throws When the client is not found.
    */
-  async updateClient(uid: string, clientId: string, params: OidcClientServiceUpdateParams): Promise<void> {
+  async updateClient(clientId: OidcEntryClientId, params: AbstractOidcClientParams): Promise<void> {
     const provider = await this.oidcService.getProvider();
     const ProviderClient = provider.Client as any;
     const adapter: Adapter = ProviderClient.adapter;
@@ -98,10 +80,6 @@ export class OidcClientService {
 
     if (!existing) {
       throw new Error('Client not found.');
-    }
-
-    if (existing.uid !== uid) {
-      throw new Error('Not authorized to update this client.');
     }
 
     const updatedMetadata = { ...existing };
@@ -125,18 +103,16 @@ export class OidcClientService {
     // Re-validate through the provider
     const client = new ProviderClient(updatedMetadata);
     const payload = client.metadata();
-    payload.uid = uid;
     await adapter.upsert(client.clientId, payload, 0);
   }
 
   /**
    * Deletes an OIDC client through the oidc-provider adapter.
    *
-   * @param uid - The requesting user's Firebase Auth UID (must be the owner).
    * @param clientId - The client's document/adapter entry ID.
-   * @throws When the client is not found or the user is not the owner.
+   * @throws When the client is not found.
    */
-  async deleteClient(uid: string, clientId: string): Promise<void> {
+  async deleteClient(clientId: OidcEntryClientId): Promise<void> {
     const provider = await this.oidcService.getProvider();
     const ProviderClient = provider.Client as any;
     const adapter: Adapter = ProviderClient.adapter;
@@ -144,10 +120,6 @@ export class OidcClientService {
 
     if (!existing) {
       throw new Error('Client not found.');
-    }
-
-    if (existing.uid !== uid) {
-      throw new Error('Not authorized to delete this client.');
     }
 
     await adapter.destroy(clientId);

@@ -100,7 +100,7 @@ service cloud.firestore {
     }
 
     // MARK: OIDC Adapter
-    match /oidcAdapterEntry/{entryId} {
+    match /oidc_e/{entryId} {
       // Owners can read their own Client entries (type == 'Client' && o == auth.uid)
       allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
       allow list: if userClaimsIsSysAdmin() || (resourceIsOwnedByAuthOwnershipKey() && resource.data.type == 'Client');

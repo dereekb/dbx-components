@@ -1,29 +1,38 @@
 import { type, type Type } from 'arktype';
 import { type TargetModelParams, type OnCallCreateModelResult } from '../../common';
-import { targetModelParamsType } from '../../common/model/model/model.param';
+import { InferredTargetModelParams, inferredTargetModelParamsType, targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction } from '../../client';
 import { type Maybe } from '@dereekb/util';
-import { type OidcEntryId } from './oidcmodel.id';
+import { clearable } from '@dereekb/model';
+import { type OidcEntryClientId } from './oidcmodel.id';
 import { type OidcModelTypes } from './oidcmodel';
 
-// MARK: Create
-/**
- * Parameters for registering a new OAuth client.
- *
- * The server generates `client_id` and `client_secret` and creates the adapter entry.
- */
-export interface CreateOidcClientParams {
-  readonly client_name: string;
-  readonly redirect_uris: string[];
+export interface AbstractOidcClientParams {
+  readonly client_name?: Maybe<string>;
+  readonly redirect_uris?: Maybe<string[]>;
   readonly grant_types?: Maybe<string[]>;
   readonly response_types?: Maybe<string[]>;
 }
 
-export const createOidcClientParamsType = type({
-  client_name: 'string',
-  redirect_uris: 'string[]',
-  'grant_types?': 'string[]',
-  'response_types?': 'string[]'
+export const abstractOidcClientParamsType = type({
+  'client_name?': clearable('string'),
+  'redirect_uris?': clearable('string[]'),
+  'grant_types?': clearable('string[]'),
+  'response_types?': clearable('string[]')
+}) as Type<AbstractOidcClientParams>;
+
+// MARK: Create
+/**
+ * Parameters for registering a new OAuth client for the target entity.
+ *
+ * If no target model is provided, assumes the current user.
+ *
+ * The server generates `client_id` and `client_secret` and creates the adapter entry.
+ */
+export interface CreateOidcClientParams extends AbstractOidcClientParams, InferredTargetModelParams {}
+
+export const createOidcClientParamsType = inferredTargetModelParamsType.merge(abstractOidcClientParamsType).merge({
+  client_name: 'string'
 }) as Type<CreateOidcClientParams>;
 
 /**
@@ -33,7 +42,7 @@ export const createOidcClientParamsType = type({
  * it is returned to the caller.
  */
 export interface CreateOidcClientResult extends OnCallCreateModelResult {
-  readonly client_id: OidcEntryId;
+  readonly client_id: OidcEntryClientId;
   readonly client_secret: string;
 }
 
@@ -41,19 +50,9 @@ export interface CreateOidcClientResult extends OnCallCreateModelResult {
 /**
  * Parameters for updating an existing OAuth client.
  */
-export interface UpdateOidcClientParams extends TargetModelParams {
-  readonly client_name?: Maybe<string>;
-  readonly redirect_uris?: Maybe<string[]>;
-  readonly grant_types?: Maybe<string[]>;
-  readonly response_types?: Maybe<string[]>;
-}
+export interface UpdateOidcClientParams extends AbstractOidcClientParams, TargetModelParams {}
 
-export const updateOidcClientParamsType = targetModelParamsType.merge({
-  'client_name?': 'string',
-  'redirect_uris?': 'string[]',
-  'grant_types?': 'string[]',
-  'response_types?': 'string[]'
-}) as Type<UpdateOidcClientParams>;
+export const updateOidcClientParamsType = targetModelParamsType.merge(abstractOidcClientParamsType) as Type<UpdateOidcClientParams>;
 
 // MARK: Delete
 /**
@@ -67,17 +66,17 @@ export const deleteOidcClientParamsType = targetModelParamsType as Type<DeleteOi
 /**
  * Custom (non-CRUD) function type map for OIDC.
  */
-export type OidcFunctionTypeMap = {};
+export type OidcModelFunctionTypeMap = {};
 
-export const oidcFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<OidcFunctionTypeMap> = {};
+export const oidcFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<OidcModelFunctionTypeMap> = {};
 
 /**
  * CRUD function configuration map for the OIDC client model.
  *
- * Uses `oidcAdapterEntry` as the key, matching the adapter collection identity.
+ * Uses `oidcEntry` as the key, matching the adapter collection identity.
  */
 export type OidcModelCrudFunctionsConfig = {
-  readonly oidcAdapterEntry: {
+  readonly oidcEntry: {
     create: {
       client: [CreateOidcClientParams, CreateOidcClientResult];
     };
@@ -91,7 +90,7 @@ export type OidcModelCrudFunctionsConfig = {
 };
 
 export const oidcModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<OidcModelCrudFunctionsConfig, OidcModelTypes> = {
-  oidcAdapterEntry: ['create:client', 'update:client', 'delete:client']
+  oidcEntry: ['create:client', 'update:client', 'delete:client']
 };
 
 /**
@@ -99,15 +98,15 @@ export const oidcModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<Oi
  *
  * Implement this in your app module to wire up the function endpoints.
  */
-export abstract class OidcFunctions implements ModelFirebaseFunctionMap<OidcFunctionTypeMap, OidcModelCrudFunctionsConfig> {
-  abstract oidcAdapterEntry: {
-    createOidcAdapterEntry: {
+export abstract class OidcModelFunctions implements ModelFirebaseFunctionMap<OidcModelFunctionTypeMap, OidcModelCrudFunctionsConfig> {
+  abstract oidcEntry: {
+    createOidcEntry: {
       client: ModelFirebaseCreateFunction<CreateOidcClientParams, CreateOidcClientResult>;
     };
-    updateOidcAdapterEntry: {
+    updateOidcEntry: {
       client: ModelFirebaseCrudFunction<UpdateOidcClientParams>;
     };
-    deleteOidcAdapterEntry: {
+    deleteOidcEntry: {
       client: ModelFirebaseDeleteFunction<DeleteOidcClientParams>;
     };
   };
@@ -119,10 +118,10 @@ export abstract class OidcFunctions implements ModelFirebaseFunctionMap<OidcFunc
  * @example
  * ```ts
  * const functions = oidcFunctionMap(callableFactory);
- * const result = await functions.oidcAdapterEntry.createOidcAdapterEntry.create({
+ * const result = await functions.oidcEntry.createOidcEntry.create({
  *   client_name: 'My App',
  *   redirect_uris: ['https://myapp.com/callback']
  * });
  * ```
  */
-export const oidcFunctionMap = callModelFirebaseFunctionMapFactory(oidcFunctionTypeConfigMap, oidcModelCrudFunctionsConfig);
+export const oidcModelFunctionMap = callModelFirebaseFunctionMapFactory(oidcFunctionTypeConfigMap, oidcModelCrudFunctionsConfig);

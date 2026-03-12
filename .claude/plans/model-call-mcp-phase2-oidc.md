@@ -197,8 +197,8 @@ Note: `nest-oidc-provider` was not used — we integrate `oidc-provider` directl
 
 #### G3. DCR management
 - [x] Create `packages/dbx-firebase/oidc/src/lib/client-management/` directory
-- [x] Create `oauth-client-list.component.ts` — `DbxOAuthClientListComponent` with `OAuthClient` interface
-- [x] Create `oauth-client-detail.component.ts` — `DbxOAuthClientDetailComponent` with revoke action
+- [x] Create `oauth-client-list.component.ts` — `DbxOidcEntryClientListComponent` with `OAuthClient` interface
+- [x] Create `oauth-client-detail.component.ts` — `DbxOidcEntryClientDetailComponent` with revoke action
 
 #### G4. Service
 - [x] Create `packages/dbx-firebase/oidc/src/lib/service/` directory

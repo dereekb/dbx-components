@@ -1,3 +1,4 @@
+import { type OidcEntryClientId } from '@dereekb/firebase';
 import { Inject, Injectable } from '@nestjs/common';
 import { OidcModuleConfig } from '../oidc.config';
 import { createAesStringEncryptionProvider } from '@dereekb/nestjs';
@@ -23,7 +24,7 @@ export type OidcEncryptedPayloadField = (typeof OIDC_ENCRYPTED_PAYLOAD_FIELDS)[n
  * Loosely-typed adapter payload with known sensitive fields.
  */
 export interface OidcClientPayload {
-  client_id: string;
+  client_id: OidcEntryClientId;
   client_secret?: string;
   registration_access_token?: string;
   [key: string]: unknown;

@@ -30,4 +30,23 @@ export class DemoAppRouterService {
       refParams: { id }
     };
   }
+
+  oauthClientCreateRef(): SegueRef {
+    return {
+      ref: 'demo.app.oauth.clients.create'
+    };
+  }
+
+  oauthClientListRef(): SegueRef {
+    return {
+      ref: 'demo.app.oauth.clients'
+    };
+  }
+
+  oauthClientRef(id: string): SegueRef {
+    return {
+      ref: 'demo.app.oauth.clients.client',
+      refParams: { id }
+    };
+  }
 }
