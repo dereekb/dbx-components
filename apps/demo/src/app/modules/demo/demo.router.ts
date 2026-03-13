@@ -56,12 +56,12 @@ export const demoAppFutureState: Ng2StateDeclaration = {
   data: demoAppStateData
 };
 
-export const demoOAuthFutureState: Ng2StateDeclaration = {
-  name: 'demo.oauth.**',
-  url: '/oauth',
-  loadChildren: () => import('./modules/oauth/demo.oauth.module').then((m) => m.DemoOAuthModule)
+export const demoOidcFutureState: Ng2StateDeclaration = {
+  name: 'demo.oidc.**',
+  url: '/oidc',
+  loadChildren: () => import('./modules/app/modules/oidc/oidc.module').then((m) => m.DemoAppOidcModule)
 };
 
 // TODO: Add public state that also allows anonymous viewers. Anonymous users still must sign the ToS. Their signature updates their Token.
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, loginState, demoOnboardFutureState, demoAuthFutureState, demoAppFutureState, demoOAuthFutureState];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, loginState, demoOnboardFutureState, demoAuthFutureState, demoAppFutureState, demoOidcFutureState];

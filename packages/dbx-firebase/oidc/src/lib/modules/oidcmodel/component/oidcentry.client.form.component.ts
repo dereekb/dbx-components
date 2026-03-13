@@ -17,7 +17,7 @@ export type DbxFirebaseOidcEntryClientFormComponentConfig = OidcEntryClientFormF
  * Pass `{ mode: 'update' }` to exclude `token_endpoint_auth_method` (immutable after creation).
  */
 @Component({
-  selector: 'dbx-oidc-client-form',
+  selector: 'dbx-firebase-oidc-client-form',
   template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,
   providers: dbxFormlyFormComponentProviders(),
   imports: [DbxFormlyFormComponentImportsModule],

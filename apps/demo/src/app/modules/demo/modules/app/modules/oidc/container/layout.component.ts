@@ -7,4 +7,4 @@ import { UIView } from '@uirouter/angular';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DemoAppOAuthLayoutComponent {}
+export class DemoAppOidcLayoutComponent {}

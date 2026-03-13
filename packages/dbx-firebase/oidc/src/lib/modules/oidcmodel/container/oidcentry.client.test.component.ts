@@ -19,10 +19,10 @@ import { DbxFirebaseOidcConfigurationService } from '../../../service/oidc.confi
  * then builds an authorization URL with PKCE parameters that can be opened in a new tab.
  */
 @Component({
-  selector: 'dbx-oidc-entry-client-test',
+  selector: 'dbx-firebase-oidc-entry-client-test',
   template: `
     @if (formConfig()) {
-      <dbx-oidc-client-test-form [dbxFormSource]="formTemplate$" [config]="formConfig()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-oidc-client-test-form>
+      <dbx-firebase-oidc-client-test-form [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfig()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-firebase-oidc-client-test-form>
       <dbx-content-pit class="dbx-block dbx-mb3" [rounded]="true">
         <dbx-detail-block class="dbx-pb4" icon="link" header="Authorization URL">
           @if (authorizationUrlSignal()) {
@@ -38,7 +38,7 @@ import { DbxFirebaseOidcConfigurationService } from '../../../service/oidc.confi
         </dbx-detail-block>
       </dbx-content-pit>
       <div class="dbx-mb3">
-        <dbx-button [raised]="true" color="primary" text="Start Authorization Flow" icon="open_in_new" [disabled]="!authorizationUrlSignal()" (buttonClick)="openAuthorizationUrl()"></dbx-button>
+        <dbx-button class="dbx-button-spacer" [raised]="true" color="primary" text="Start Authorization Flow" icon="open_in_new" [disabled]="!authorizationUrlSignal()" (buttonClick)="openAuthorizationUrl()"></dbx-button>
         <dbx-button class="dbx-ml2" text="Regenerate PKCE" icon="refresh" (buttonClick)="regeneratePkce()"></dbx-button>
       </div>
     }

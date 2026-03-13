@@ -16,10 +16,10 @@ import { tap } from 'rxjs';
  * Emits {@link clientCreated} with the result after successful creation.
  */
 @Component({
-  selector: 'dbx-oidc-entry-client-create',
+  selector: 'dbx-firebase-oidc-entry-client-create',
   template: `
     <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleCreateClient" dbxActionSnackbarError>
-      <dbx-oidc-client-form dbxActionForm [config]="formConfig"></dbx-oidc-client-form>
+      <dbx-firebase-oidc-client-form dbxActionForm [config]="formConfig"></dbx-firebase-oidc-client-form>
       <dbx-button [raised]="true" dbxActionButton text="Create"></dbx-button>
     </div>
   `,

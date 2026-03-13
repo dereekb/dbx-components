@@ -140,7 +140,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     demoAuthorizedUserContext({ f }, (u) => {
       /**
        * Helper to extract the path from an absolute redirect Location header.
-       * oidc-provider uses the configured issuer host (http://localhost:4200) for redirects,
+       * oidc-provider uses the configured issuer host (http://localhost:9010) for redirects,
        * but our test server runs on a different port, so we strip the host.
        */
       function extractRedirectPath(res: request.Response): string {

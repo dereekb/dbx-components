@@ -6,6 +6,8 @@ import { type LabeledValue } from '@dereekb/util';
  */
 export type DemoOidcScope = 'openid' | 'profile' | 'email' | 'demo';
 
+export const DEMO_APP_OIDC_INTERACTION_PATH = '/demo/oidc/interaction';
+
 /** All available OIDC scopes for the demo app, suitable for use in scope picker fields. */
 export const DEMO_OIDC_AVAILABLE_SCOPES: LabeledValue<DemoOidcScope>[] = [
   { label: 'OpenID', value: 'openid' },

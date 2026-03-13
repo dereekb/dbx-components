@@ -4,7 +4,7 @@ import type { OidcAccountServiceDelegate, OidcProviderConfig, OidcRenderErrorFun
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
-import type { DemoApiAuthClaims, DemoOidcScope } from 'demo-firebase';
+import { DEMO_APP_OIDC_INTERACTION_PATH, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
 
@@ -97,7 +97,8 @@ const demoOidcRenderError: OidcRenderErrorFunction = (ctx, out) => {
     config: {
       suppressBodyParserWarning: true,
       renderError: demoOidcRenderError,
-      protectedPaths: ['/api/model', '/mcp']
+      protectedPaths: ['/api/model', '/mcp'],
+      interactionPath: DEMO_APP_OIDC_INTERACTION_PATH
     }
   })
 )

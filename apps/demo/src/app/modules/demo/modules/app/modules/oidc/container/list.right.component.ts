@@ -10,7 +10,7 @@ import { DbxContentContainerDirective } from '@dereekb/dbx-web';
   imports: [DbxTwoColumnRightComponent, DbxSectionLayoutModule, DbxLoadingComponent, DbxContentContainerDirective, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientTestComponent],
   standalone: true
 })
-export class DemoAppOAuthClientListPageRightComponent implements OnDestroy {
+export class DemoAppOidcClientListPageRightComponent implements OnDestroy {
   readonly oidcEntryStore = inject(OidcEntryDocumentStore);
 
   readonly context = loadingStateContext({ obs: this.oidcEntryStore.dataLoadingState$ });

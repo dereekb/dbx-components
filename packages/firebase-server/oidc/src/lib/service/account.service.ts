@@ -1,6 +1,7 @@
 import { FirebaseServerAuthService, type FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 import type { OidcAccount, OidcAccountClaims } from './account';
-import type { OidcScope, OidcProviderConfig } from '../oidc.config';
+import type { OidcProviderConfig } from '../oidc.config';
+import { OidcScope } from '@dereekb/firebase';
 
 // MARK: Delegate
 /**

@@ -21,7 +21,7 @@ import { filter, first, switchMap, Subscription } from 'rxjs';
   standalone: true,
   imports: [DbxContentBoxDirective, DbxFirebaseLoginComponent, DbxFirebaseRegisterComponent, DbxFirebaseLoginTermsComponent, DbxLinkComponent]
 })
-export class DemoOAuthLoginComponent implements OnInit, OnDestroy {
+export class DemoOidcLoginComponent implements OnInit, OnDestroy {
   private readonly transition = inject(Transition);
   private readonly authService = inject(DbxFirebaseAuthService);
   private readonly interactionService = inject(OAuthInteractionService);

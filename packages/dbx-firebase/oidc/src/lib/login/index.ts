@@ -1,1 +1,1 @@
-export * from './oauth-login.component';
+export * from './oidc-login.component';

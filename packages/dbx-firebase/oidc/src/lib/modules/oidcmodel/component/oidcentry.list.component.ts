@@ -6,38 +6,38 @@ import { of } from 'rxjs';
 export type OidcEntryWithSelection = DbxValueAsListItem<OidcEntry>;
 
 @Component({
-  selector: 'dbx-oauth-client-list',
+  selector: 'dbx-firebase-oidc-client-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  providers: provideDbxListViewWrapper(DbxOidcEntryClientListComponent),
+  providers: provideDbxListViewWrapper(DbxFirebaseOidcEntryClientListComponent),
   standalone: true,
   imports: [DbxListWrapperComponentImportsModule]
 })
-export class DbxOidcEntryClientListComponent extends AbstractDbxSelectionListWrapperDirective<OidcEntry> {
+export class DbxFirebaseOidcEntryClientListComponent extends AbstractDbxSelectionListWrapperDirective<OidcEntry> {
   constructor() {
     super({
-      componentClass: DbxOidcEntryClientListViewComponent,
+      componentClass: DbxFirebaseOidcEntryClientListViewComponent,
       defaultSelectionMode: 'view'
     });
   }
 }
 
 @Component({
-  selector: 'dbx-oauth-client-list-view',
+  selector: 'dbx-firebase-oidc-client-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
-  providers: provideDbxListView(DbxOidcEntryClientListViewComponent),
+  providers: provideDbxListView(DbxFirebaseOidcEntryClientListViewComponent),
   standalone: true,
   imports: [DbxSelectionValueListViewComponentImportsModule]
 })
-export class DbxOidcEntryClientListViewComponent extends AbstractDbxSelectionListViewDirective<OidcEntry> {
+export class DbxFirebaseOidcEntryClientListViewComponent extends AbstractDbxSelectionListViewDirective<OidcEntry> {
   readonly config: DbxSelectionValueListViewConfig<OidcEntryWithSelection> = {
-    componentClass: DbxOidcEntryClientListViewItemComponent,
+    componentClass: DbxFirebaseOidcEntryClientListViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, itemValue: y })))
   };
 }
 
 // MARK: Item List
 @Component({
-  selector: 'dbx-oauth-client-list-view-item-client',
+  selector: 'dbx-firebase-oidc-client-list-view-item-client',
   template: `
     <div>
       <p>{{ name }}</p>
@@ -46,7 +46,7 @@ export class DbxOidcEntryClientListViewComponent extends AbstractDbxSelectionLis
   `,
   standalone: true
 })
-export class DbxOidcEntryClientListViewItemClientComponent {
+export class DbxFirebaseOidcEntryClientListViewItemClientComponent {
   readonly entry = input.required<OidcEntry>();
 
   get name(): string {
@@ -61,7 +61,7 @@ export class DbxOidcEntryClientListViewItemClientComponent {
 }
 
 @Component({
-  selector: 'dbx-oauth-client-list-view-item-default',
+  selector: 'dbx-firebase-oidc-client-list-view-item-default',
   template: `
     <div>
       <p>{{ entry().type }}</p>
@@ -69,7 +69,7 @@ export class DbxOidcEntryClientListViewItemClientComponent {
   `,
   standalone: true
 })
-export class DbxOidcEntryClientListViewItemDefaultComponent {
+export class DbxFirebaseOidcEntryClientListViewItemDefaultComponent {
   readonly entry = input.required<OidcEntry>();
 }
 
@@ -77,16 +77,16 @@ export class DbxOidcEntryClientListViewItemDefaultComponent {
   template: `
     @switch (itemValue.type) {
       @case (clientType) {
-        <dbx-oauth-client-list-view-item-client [entry]="itemValue"></dbx-oauth-client-list-view-item-client>
+        <dbx-firebase-oidc-client-list-view-item-client [entry]="itemValue"></dbx-firebase-oidc-client-list-view-item-client>
       }
       @default {
-        <dbx-oauth-client-list-view-item-default [entry]="itemValue"></dbx-oauth-client-list-view-item-default>
+        <dbx-firebase-oidc-client-list-view-item-default [entry]="itemValue"></dbx-firebase-oidc-client-list-view-item-default>
       }
     }
   `,
   standalone: true,
-  imports: [DbxOidcEntryClientListViewItemClientComponent, DbxOidcEntryClientListViewItemDefaultComponent]
+  imports: [DbxFirebaseOidcEntryClientListViewItemClientComponent, DbxFirebaseOidcEntryClientListViewItemDefaultComponent]
 })
-export class DbxOidcEntryClientListViewItemComponent extends AbstractDbxValueListViewItemComponent<OidcEntry> {
+export class DbxFirebaseOidcEntryClientListViewItemComponent extends AbstractDbxValueListViewItemComponent<OidcEntry> {
   readonly clientType = OIDC_ENTRY_CLIENT_TYPE;
 }

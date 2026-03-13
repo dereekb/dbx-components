@@ -1,7 +1,7 @@
-import { ServerEnvironmentConfig } from '@dereekb/nestjs';
+import { type FirebaseServerEnvironmentConfig } from '@dereekb/firebase-server';
 
-export const environment: ServerEnvironmentConfig = {
+export const environment: FirebaseServerEnvironmentConfig = {
   production: false,
   developerToolsEnabled: true,
-  appUrl: 'http://localhost:4200'
+  appUrl: 'http://localhost:FIREBASE_EMULATOR_HOSTING_PORT'
 };

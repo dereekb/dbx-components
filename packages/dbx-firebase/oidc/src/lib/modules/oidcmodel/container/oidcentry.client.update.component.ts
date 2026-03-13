@@ -15,10 +15,10 @@ import { map } from 'rxjs';
  * Wraps the client update form in an action context with a save button.
  */
 @Component({
-  selector: 'dbx-oidc-entry-client-update',
+  selector: 'dbx-firebase-oidc-entry-client-update',
   template: `
     <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateClient" dbxActionSnackbarError>
-      <dbx-oidc-client-form dbxActionForm [dbxFormSource]="formTemplate$" [config]="formConfig"></dbx-oidc-client-form>
+      <dbx-firebase-oidc-client-form dbxActionForm [dbxFormSource]="formTemplate$" [config]="formConfig"></dbx-firebase-oidc-client-form>
       <dbx-button [raised]="true" dbxActionButton text="Save"></dbx-button>
     </div>
   `,

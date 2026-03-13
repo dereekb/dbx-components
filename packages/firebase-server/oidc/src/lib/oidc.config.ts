@@ -107,6 +107,13 @@ export abstract class OidcModuleConfig {
    */
   readonly consentUrl!: string;
   /**
+   * The path prefix used for OIDC interaction endpoints (login/consent).
+   *
+   * Appended to the appUrl to form the `loginUrl` and `consentUrl`.
+   * Defaults to '/oidc/interaction'.
+   */
+  readonly interactionPath!: string;
+  /**
    * Token lifetime configuration.
    */
   readonly tokenLifetimes!: OidcTokenLifetimes;

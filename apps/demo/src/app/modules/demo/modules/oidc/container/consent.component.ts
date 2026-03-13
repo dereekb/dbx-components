@@ -13,13 +13,13 @@ import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 @Component({
   template: `
     <dbx-content-box>
-      <dbx-oauth-consent [interactionUid]="uid" [clientName]="clientName" [scopes]="scopes"></dbx-oauth-consent>
+      <dbx-firebase-oidc-consent [interactionUid]="uid" [clientName]="clientName" [scopes]="scopes"></dbx-firebase-oidc-consent>
     </dbx-content-box>
   `,
   standalone: true,
   imports: [DbxContentBoxDirective, DbxOAuthConsentComponent]
 })
-export class DemoOAuthConsentComponent {
+export class DemoOidcConsentComponent {
   private readonly transition = inject(Transition);
 
   get uid(): string {

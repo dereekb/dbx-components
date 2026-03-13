@@ -1,13 +1,13 @@
 <dbx-content-box>
   @if (error) {
-    <div class="dbx-oauth-login-error">
+    <div class="dbx-firebase-oidc-login-error">
       <p>{{ error }}</p>
     </div>
   }
   @if (submitting) {
     <p>Completing login...</p>
   } @else {
-    <div class="demo-oauth-login-view">
+    <div class="demo-oidc-login-view">
       @switch (mode) {
         @case ('login') {
           <h3>Sign In to Continue</h3>

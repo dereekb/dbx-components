@@ -34,6 +34,16 @@ export const OIDC_ISSUER_PATH_ENV_KEY = 'OIDC_ISSUER_PATH';
 export const DEFAULT_OIDC_ISSUER_PATH = '/oidc';
 
 /**
+ * Environment variable name for the OIDC interaction path prefix.
+ *
+ * Optional. If set, is appended to the appUrl to form the login/consent URLs.
+ * Defaults to '/oidc/interaction'.
+ */
+export const OIDC_INTERACTION_PATH_ENV_KEY = 'OIDC_INTERACTION_PATH';
+
+export const DEFAULT_OIDC_INTERACTION_PATH = '/oidc';
+
+/**
  * Route patterns for OIDC controllers that should be excluded from a global API route prefix.
  *
  * Typically fox dbx-components we set all the routes in the NestJS app to have a global prefix (e.g., '/api').
@@ -67,8 +77,9 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     throw new Error(`oidcModuleConfigFactory: appUrl must have an http(s) prefix. Received: ${appUrl}`);
   }
 
-  const loginUrl = `${appUrl}/oidc/interaction/login`;
-  const consentUrl = `${appUrl}/oidc/interaction/consent`;
+  const interactionPath = configService.get<string>(OIDC_INTERACTION_PATH_ENV_KEY) ?? DEFAULT_OIDC_INTERACTION_PATH;
+  const loginUrl = `${appUrl}${interactionPath}/login`;
+  const consentUrl = `${appUrl}${interactionPath}/consent`;
 
   let encryptionSecret: AES256GCMEncryptionSecret = configService.get<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY) ?? '';
 
@@ -84,6 +95,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     issuer,
     loginUrl,
     consentUrl,
+    interactionPath,
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
     jwksServiceConfig: {
       encryptionSecret
@@ -118,7 +130,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'interactionPath'>>;
 }
 
 /**
@@ -148,7 +160,21 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         inject: [ConfigService, FirebaseServerEnvService],
         useFactory: (configService: ConfigService, envService: FirebaseServerEnvService) => {
           const moduleConfig = oidcModuleConfigFactory(configService, envService);
-          return config ? { ...moduleConfig, ...config } : moduleConfig;
+
+          if (config) {
+            const merged = { ...moduleConfig, ...config };
+
+            // recompute loginUrl/consentUrl when interactionPath is overridden
+            if (config.interactionPath) {
+              const appUrl = envService.appUrl!;
+              merged.loginUrl = `${appUrl}${config.interactionPath}/login`;
+              merged.consentUrl = `${appUrl}${config.interactionPath}/consent`;
+            }
+
+            return merged;
+          }
+
+          return moduleConfig;
         }
       },
       {

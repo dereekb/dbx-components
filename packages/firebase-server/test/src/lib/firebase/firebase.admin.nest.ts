@@ -245,7 +245,7 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
 
   // Resolve env config: test-specific overrides take precedence, otherwise derive from serverInstanceConfig or defaults.
   const shouldInjectEnv = config.injectServerEnvServiceProvider !== false || config.envConfig != null;
-  const envConfig: FirebaseServerEnvironmentConfig | undefined = shouldInjectEnv ? config.envConfig || { production: false, appUrl: 'http://localhost:4200' } : undefined;
+  const envConfig: FirebaseServerEnvironmentConfig | undefined = shouldInjectEnv ? config.envConfig || { production: false, appUrl: 'http://localhost:404' } : undefined;
 
   useTestContextFixture({
     fixture: makeFixture(f),

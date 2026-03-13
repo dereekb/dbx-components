@@ -10,12 +10,12 @@ import { DbxRouterService } from '@dereekb/dbx-core';
   imports: [DbxTwoColumnRightComponent, DbxFirebaseOidcEntryClientCreateComponent, DbxContentContainerDirective],
   standalone: true
 })
-export class DemoAppOAuthClientCreatePageComponent {
+export class DemoAppOidcClientCreatePageComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);
   readonly dbxRouterService = inject(DbxRouterService);
 
   onClientCreated(result: CreateOidcClientResult): void {
-    const ref = this.demoAppRouterService.oauthClientRef(result.client_id);
+    const ref = this.demoAppRouterService.oidcClientRef(result.client_id);
     this.dbxRouterService.go(ref);
   }
 }

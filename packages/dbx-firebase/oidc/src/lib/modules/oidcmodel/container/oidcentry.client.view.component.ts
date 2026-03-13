@@ -15,7 +15,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
  * When no secret is available, a "Rotate Secret" button is shown.
  */
 @Component({
-  selector: 'dbx-oidc-entry-client-view',
+  selector: 'dbx-firebase-oidc-entry-client-view',
   template: `
     <dbx-content-pit [rounded]="true">
       <dbx-detail-block class="dbx-pb4" icon="key" header="Client ID">

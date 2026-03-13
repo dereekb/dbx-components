@@ -49,10 +49,10 @@ export const demoProfileFutureState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/profile/profile.module').then((m) => m.DemoProfileModule)
 };
 
-export const demoOAuthFutureState: Ng2StateDeclaration = {
-  name: 'demo.app.oauth.**',
-  url: '/oauth',
-  loadChildren: () => import('./modules/oauth/oauth.module').then((m) => m.DemoAppOAuthModule)
+export const demoOidcFutureState: Ng2StateDeclaration = {
+  name: 'demo.app.oidc.**',
+  url: '/oidc',
+  loadChildren: () => import('./modules/oidc/oidc.module').then((m) => m.DemoAppOidcModule)
 };
 
 export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
@@ -64,5 +64,5 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   notificationState,
   demoGuestbookFutureState,
   demoProfileFutureState,
-  demoOAuthFutureState
+  demoOidcFutureState
 ];

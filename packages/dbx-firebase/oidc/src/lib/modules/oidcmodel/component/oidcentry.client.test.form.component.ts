@@ -18,7 +18,7 @@ export type DbxFirebaseOidcEntryClientTestFormComponentConfig = OidcEntryClientT
  * Displays read-only client_id/secret, a redirect URI selector, and scope picker.
  */
 @Component({
-  selector: 'dbx-oidc-client-test-form',
+  selector: 'dbx-firebase-oidc-client-test-form',
   template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,
   providers: dbxFormlyFormComponentProviders(),
   imports: [DbxFormlyFormComponentImportsModule],

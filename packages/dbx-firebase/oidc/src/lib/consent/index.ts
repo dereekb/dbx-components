@@ -1,1 +1,1 @@
-export * from './oauth-consent.component';
+export * from './oidc-consent.component';

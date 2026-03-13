@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { OAuthInteractionService } from '../service/oauth-interaction.service';
+import { OAuthInteractionService } from '../service/oidc-interaction.service';
 
 // MARK: Types
 export interface OAuthConsentScope {
@@ -16,11 +16,11 @@ export interface OAuthConsentScope {
  * Provides approve/deny buttons that POST to the NestJS interaction endpoint.
  */
 @Component({
-  selector: 'dbx-oauth-consent',
+  selector: 'dbx-firebase-oidc-consent',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="dbx-oauth-consent">
+    <div class="dbx-firebase-oidc-consent">
       @if (clientName()) {
         <h2>Authorize {{ clientName() }}</h2>
       }
@@ -38,14 +38,14 @@ export interface OAuthConsentScope {
         </ul>
       }
       @if (error()) {
-        <div class="dbx-oauth-consent-error">
+        <div class="dbx-firebase-oidc-consent-error">
           <p>{{ error() }}</p>
         </div>
       }
       @if (loading()) {
         <p>Processing...</p>
       } @else {
-        <div class="dbx-oauth-consent-actions">
+        <div class="dbx-firebase-oidc-consent-actions">
           <button (click)="approve()" [disabled]="loading()">Approve</button>
           <button (click)="deny()" [disabled]="loading()">Deny</button>
         </div>
@@ -53,7 +53,7 @@ export interface OAuthConsentScope {
     </div>
   `,
   host: {
-    class: 'd-block dbx-oauth-consent'
+    class: 'd-block dbx-firebase-oidc-consent'
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -2,7 +2,7 @@ import { AbstractServerFirebaseNestContext } from '@dereekb/firebase-server';
 import { DemoApiNestContext } from '../function/function.context';
 import { OidcAccountService, OidcClientService, OidcService, JwksService, OidcServerFirestoreCollections } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../common';
-import { type DemoOidcScope } from '../api/oidc/oidc.module';
+import { DemoOidcScope } from 'demo-firebase';
 
 /**
  * The top-most NestJS context that is used for server-only services.

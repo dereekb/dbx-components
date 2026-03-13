@@ -31,21 +31,21 @@ export class DemoAppRouterService {
     };
   }
 
-  oauthClientCreateRef(): SegueRef {
+  oidcClientCreateRef(): SegueRef {
     return {
-      ref: 'demo.app.oauth.clients.create'
+      ref: 'demo.app.oidc.clients.create'
     };
   }
 
-  oauthClientListRef(): SegueRef {
+  oidcClientListRef(): SegueRef {
     return {
-      ref: 'demo.app.oauth.clients'
+      ref: 'demo.app.oidc.clients'
     };
   }
 
-  oauthClientRef(id: string): SegueRef {
+  oidcClientRef(id: string): SegueRef {
     return {
-      ref: 'demo.app.oauth.clients.client',
+      ref: 'demo.app.oidc.clients.client',
       refParams: { id }
     };
   }

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { OAuthInteractionService } from '../service/oauth-interaction.service';
+import { OAuthInteractionService } from '../service/oidc-interaction.service';
 
 /**
  * OAuth login component for OIDC interaction flow.
@@ -14,13 +14,13 @@ import { OAuthInteractionService } from '../service/oauth-interaction.service';
  * After the user signs in via Firebase Auth, call `completeLogin(idToken)`.
  */
 @Component({
-  selector: 'dbx-oauth-login',
+  selector: 'dbx-firebase-oidc-login',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="dbx-oauth-login">
+    <div class="dbx-firebase-oidc-login">
       @if (error()) {
-        <div class="dbx-oauth-login-error">
+        <div class="dbx-firebase-oidc-login-error">
           <p>{{ error() }}</p>
         </div>
       }
@@ -30,7 +30,7 @@ import { OAuthInteractionService } from '../service/oauth-interaction.service';
     </div>
   `,
   host: {
-    class: 'd-block dbx-oauth-login'
+    class: 'd-block dbx-firebase-oidc-login'
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
