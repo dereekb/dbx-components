@@ -3,7 +3,7 @@ import { OidcServerFirestoreCollections } from '../model';
 import { OIDC_ENTRY_CLIENT_TYPE, type OidcEntry, type OidcEntryId, type OidcEntryFirestoreCollection, oidcEntriesByUserCodeQuery, oidcEntriesByUidQuery, oidcEntriesByGrantIdQuery } from '@dereekb/firebase';
 import { type Maybe, type UnixDateTimeSecondsNumber, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
 import { type FirebaseAuthOwnershipKey } from '@dereekb/firebase';
-import { OidcEncryptionService } from './encryption.service';
+import { OidcEncryptionService } from './oidc.encryption.service';
 
 // MARK: Adapter
 /**

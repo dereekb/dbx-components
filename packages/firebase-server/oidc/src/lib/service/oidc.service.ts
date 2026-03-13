@@ -3,15 +3,15 @@ import type { Request, Response } from 'express';
 import type Provider from 'oidc-provider';
 import type { Interaction, InteractionResults, Grant } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
-import { JwksService } from './jwks.service';
-import { OidcAccountService } from './account.service';
+import { JwksService } from './oidc.jwks.service';
+import { OidcAccountService } from './oidc.account.service';
 import { OidcServerFirestoreCollections } from '../model';
-import { createAdapterFactory } from './adapter.service';
-import { OidcEncryptionService } from './encryption.service';
+import { createAdapterFactory } from './oidc.adapter.service';
+import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { cachedGetter, firstValue, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
-import { type OidcAuthData } from './auth';
+import { type OidcAuthData } from './oidc.auth';
 import { DecodedIdToken } from 'firebase-admin/auth';
 
 // MARK: Suppress Body Parser Warning

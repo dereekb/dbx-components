@@ -1,6 +1,6 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { type OidcModelServerActionsContext, oidcModelServerActions, OidcModelServerActions } from './oidcmodel.action.server';
-import { OidcClientService } from '../../service/client.service';
+import { OidcClientService } from '../../service/oidc.client.service';
 import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 
 // MARK: Provider Factories

@@ -1,6 +1,6 @@
 import { type AsyncFirebaseFunctionCreateAction, type AsyncOidcEntryUpdateAction, type AsyncOidcEntryDeleteAction, type CreateOidcClientParams, createOidcClientParamsType, type CreateOidcClientResult, type UpdateOidcClientParams, updateOidcClientParamsType, type DeleteOidcClientParams, deleteOidcClientParamsType, type RotateOidcClientSecretParams, rotateOidcClientSecretParamsType, type RotateOidcClientSecretResult, type OidcEntryDocument } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type OidcClientService } from '../../service/client.service';
+import { type OidcClientService } from '../../service/oidc.client.service';
 
 // MARK: Context
 /**

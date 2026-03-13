@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger, type NestMiddleware, UnauthorizedException 
 import { type Response, type NextFunction } from 'express';
 import { OidcService } from '../service/oidc.service';
 import { Configurable } from '@dereekb/util';
-import { type OidcAuthData, type OidcAuthenticatedRequest } from '../service/auth';
+import { type OidcAuthData, type OidcAuthenticatedRequest } from '../service/oidc.auth';
 
 // MARK: Middleware
 /**

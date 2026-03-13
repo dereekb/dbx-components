@@ -1,3 +1,3 @@
-export * from './interaction.controller';
-export * from './provider.controller';
-export * from './wellknown.controller';
+export * from './oidc.interaction.controller';
+export * from './oidc.provider.controller';
+export * from './oidc.wellknown.controller';

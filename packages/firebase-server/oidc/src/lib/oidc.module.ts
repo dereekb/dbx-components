@@ -1,6 +1,6 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwksService, JwksServiceConfig } from './service/jwks.service';
+import { JwksService, JwksServiceConfig } from './service/oidc.jwks.service';
 import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
@@ -11,8 +11,8 @@ import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from
 import { type FirestoreContext } from '@dereekb/firebase';
 import { hasHttpPrefix, SlashPath, SlashPathFolder, WebsitePath } from '@dereekb/util';
 import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
-import { OidcEncryptionService } from './service/encryption.service';
-import { OidcClientService } from './service/client.service';
+import { OidcEncryptionService } from './service/oidc.encryption.service';
+import { OidcClientService } from './service/oidc.client.service';
 import { OidcProviderConfigService } from './service';
 
 // MARK: Environment Variable Keys

@@ -1,5 +1,5 @@
 import { OidcAuthBearerTokenMiddleware } from './oauth-auth.middleware';
-import { type OidcAuthenticatedRequest, type OidcAuthData } from '../service/auth';
+import { type OidcAuthenticatedRequest, type OidcAuthData } from '../service/oidc.auth';
 import { UnauthorizedException } from '@nestjs/common';
 import { type OidcService } from '../service/oidc.service';
 

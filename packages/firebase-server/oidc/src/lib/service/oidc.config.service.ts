@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OidcModuleConfig, type OidcProviderConfig } from '../oidc.config';
-import { OidcAccountService } from './account.service';
+import { OidcAccountService } from './oidc.account.service';
 import type { Configuration } from 'oidc-provider';
 import { mergeSlashPaths, WebsitePath, WebsiteUrl, websiteUrlFromPaths } from '@dereekb/util';
 import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';

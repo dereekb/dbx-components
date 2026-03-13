@@ -1,7 +1,7 @@
 import type { Configuration } from 'oidc-provider';
 import { SlashPathFolder, SlashPathPart, WebsitePath, type SlashPath } from '@dereekb/util';
 import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
-import { JwksServiceConfig } from './service/jwks.service';
+import { JwksServiceConfig } from './service/oidc.jwks.service';
 import { JwksKeyConverterConfig } from './model';
 
 // MARK: Render Error

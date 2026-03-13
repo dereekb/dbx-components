@@ -1,5 +1,5 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
-import { type OidcAuthData, type OidcAuthenticatedRequest } from '../service/auth';
+import { type OidcAuthData, type OidcAuthenticatedRequest } from '../service/oidc.auth';
 
 /**
  * NestJS parameter decorator that extracts the {@link OidcAuthData} from the request.

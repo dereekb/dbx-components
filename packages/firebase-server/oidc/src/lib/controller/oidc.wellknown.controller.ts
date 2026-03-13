@@ -1,5 +1,5 @@
 import { Controller, Get, Inject } from '@nestjs/common';
-import { JwksService } from '../service/jwks.service';
+import { JwksService } from '../service/oidc.jwks.service';
 import { OidcModuleConfig } from '../oidc.config';
 import { OidcProviderConfigService, type OidcDiscoveryMetadata } from '../service/oidc.config.service';
 
