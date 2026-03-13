@@ -5,7 +5,8 @@ import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, ty
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type OidcEntryClientId } from './oidcmodel.id';
-import { type OidcModelTypes, type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from './oidcmodel';
+import { type OidcModelTypes } from './oidcmodel';
+import { type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from './oidcmodel.interaction';
 
 /**
  * Fields that can be changed on an existing OIDC client.

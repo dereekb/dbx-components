@@ -10,7 +10,7 @@ import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { DbxFirebaseOidcEntryClientTestFormComponent, type DbxFirebaseOidcModelClientTestFormValue } from '../component/oidcentry.client.test.form.component';
 import { type OidcEntryClientTestFormFieldsConfig } from '../component/oidcentry.form';
 import { generatePkceCodeVerifier, generatePkceCodeChallenge } from '../util/pkce';
-import { DbxFirebaseOidcConfigurationService } from '../../../service/oidc.configuration.service';
+import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuration.service';
 
 /**
  * Container component for testing an OAuth authorization flow against a registered client.
@@ -49,16 +49,16 @@ import { DbxFirebaseOidcConfigurationService } from '../../../service/oidc.confi
 })
 export class DbxFirebaseOidcEntryClientTestComponent {
   private readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);
-  private readonly oidcConfigService = inject(DbxFirebaseOidcConfigurationService);
+  private readonly oidcConfigService = inject(DbxFirebaseOidcConfigService);
 
   /** Scopes the user can pick from. Overrides the service default when provided. */
   readonly availableScopes = input<Maybe<LabeledValue<string>[]>>(undefined);
 
   /** Path to the authorization endpoint. Overrides the service default when provided. */
-  readonly authorizationEndpointPath = input<Maybe<string>>(undefined);
+  readonly oidcAuthorizationEndpointApiPath = input<Maybe<string>>(undefined);
 
   readonly resolvedAvailableScopes = computed<LabeledValue<string>[]>(() => this.availableScopes() ?? this.oidcConfigService.availableScopes);
-  readonly resolvedAuthorizationEndpointPath = computed<string>(() => this.authorizationEndpointPath() ?? this.oidcConfigService.authorizationEndpointPath);
+  readonly resolvedAuthorizationEndpointPath = computed<string>(() => this.oidcAuthorizationEndpointApiPath() ?? this.oidcConfigService.oidcAuthorizationEndpointApiPath);
 
   // MARK: Derived Store Data
   readonly redirectUrisSignal = toSignal(this.oidcEntryDocumentStore.data$.pipe(map((data) => (data.payload as OidcEntryOAuthClientPayloadData)?.redirect_uris ?? [])));

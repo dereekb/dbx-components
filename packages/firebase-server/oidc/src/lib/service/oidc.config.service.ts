@@ -2,8 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { OidcModuleConfig, type OidcProviderConfig } from '../oidc.config';
 import { OidcAccountService } from './account.service';
 import type { Configuration } from 'oidc-provider';
-import { WebsiteUrl } from '@dereekb/util';
+import { mergeSlashPaths, WebsitePath, WebsiteUrl, websiteUrlFromPaths } from '@dereekb/util';
 import { type OidcScope } from '@dereekb/firebase';
+import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 
 // MARK: Routes
 /**
@@ -72,6 +73,10 @@ export interface OidcDiscoveryMetadata {
 export class OidcProviderConfigService {
   readonly routes: OidcRoutes = DEFAULT_OIDC_ROUTES;
 
+  readonly appLoginUrl: WebsiteUrl;
+
+  readonly appConsentUrl: WebsiteUrl;
+
   /**
    * The app-provided provider config from the delegate.
    */
@@ -89,11 +94,19 @@ export class OidcProviderConfigService {
 
   constructor(
     @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig,
-    @Inject(OidcAccountService) accountService: OidcAccountService
+    @Inject(OidcAccountService) accountService: OidcAccountService,
+    @Inject(FirebaseServerEnvService) envService: FirebaseServerEnvService
   ) {
     this.providerConfig = accountService.providerConfig;
     this.scopesSupported = Object.keys(this.providerConfig.claims);
     this.claimsSupported = [...new Set(Object.values(this.providerConfig.claims).flat())];
+
+    const appUrl = envService.appUrl as string;
+
+    this.appLoginUrl = websiteUrlFromPaths(appUrl, [this.config.appOAuthInteractionPath, this.config.appOAuthLoginUrlPart]);
+    this.appConsentUrl = websiteUrlFromPaths(appUrl, [this.config.appOAuthInteractionPath, this.config.appOAuthConsentUrlPart]);
+
+    console.log({ loginUrl: this.appLoginUrl, consentUrl: this.appConsentUrl, appUrl, config: this.config, interactionPath: this.config.appOAuthInteractionPath, loginUrlPart: this.config.appOAuthLoginUrlPart, consentUrlPart: this.config.appOAuthConsentUrlPart });
   }
 
   /**
@@ -132,9 +145,9 @@ export class OidcProviderConfigService {
       interactions: {
         url: (_ctx: unknown, interaction: { prompt: { name: string }; uid: string }) => {
           if (interaction.prompt.name === 'login') {
-            return `${config.loginUrl}?uid=${interaction.uid}`;
+            return `${this.appLoginUrl}?uid=${interaction.uid}`;
           }
-          return `${config.consentUrl}?uid=${interaction.uid}`;
+          return `${this.appConsentUrl}?uid=${interaction.uid}`;
         }
       },
       cookies: {

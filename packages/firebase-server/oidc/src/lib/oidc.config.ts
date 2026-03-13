@@ -1,5 +1,5 @@
 import type { Configuration } from 'oidc-provider';
-import { type SlashPath } from '@dereekb/util';
+import { SlashPathFolder, SlashPathPart, WebsitePath, type SlashPath } from '@dereekb/util';
 import { type OidcScope } from '@dereekb/firebase';
 import { JwksServiceConfig } from './service/jwks.service';
 import { JwksKeyConverterConfig } from './model';
@@ -98,21 +98,26 @@ export abstract class OidcModuleConfig {
    */
   readonly issuer!: string;
   /**
-   * Frontend URL for the login interaction page.
-   * The interaction uid will be appended as a query parameter.
-   */
-  readonly loginUrl!: string;
-  /**
-   * Frontend URL for the consent interaction page.
-   */
-  readonly consentUrl!: string;
-  /**
    * The path prefix used for OIDC interaction endpoints (login/consent).
    *
-   * Appended to the appUrl to form the `loginUrl` and `consentUrl`.
-   * Defaults to '/oidc/interaction'.
+   * Appended to the base appUrl this is the base frontend interaction path.
+   *
+   * Defaults to '/oauth'.
    */
-  readonly interactionPath!: string;
+  readonly appOAuthInteractionPath!: WebsitePath;
+  /**
+   * Frontend URL for the login interaction page.
+   * The interaction uid will be appended as a query parameter.
+   *
+   * Defaults to `<appOAuthInteractionPath>/login`.
+   */
+  readonly appOAuthLoginUrlPart!: WebsitePath;
+  /**
+   * Frontend URL for the consent interaction page.
+   *
+   * Defaults to `<appOAuthInteractionPath>/consent`.
+   */
+  readonly appOAuthConsentUrlPart!: WebsitePath;
   /**
    * Token lifetime configuration.
    */
@@ -161,19 +166,23 @@ export abstract class OidcModuleConfig {
    *
    * Called by {@link oidcModuleConfigFactory} after building the config from environment variables.
    *
-   * @throws {Error} When any required field (`issuer`, `loginUrl`, `consentUrl`, `jwksServiceConfig`, `jwksKeyConverterConfig`) is missing.
+   * @throws {Error} When any required field (`issuer`, `appInteractionPath`, `appLoginUrlPart`, `appConsentUrlPart`, `jwksServiceConfig`, `jwksKeyConverterConfig`) is missing.
    */
   static assertValidConfig(config: OidcModuleConfig) {
     if (!config.issuer) {
       throw new Error('OidcModuleConfig: issuer is required.');
     }
 
-    if (!config.loginUrl) {
-      throw new Error('OidcModuleConfig: loginUrl is required.');
+    if (!config.appOAuthInteractionPath) {
+      throw new Error('OidcModuleConfig: appInteractionPath is required.');
     }
 
-    if (!config.consentUrl) {
-      throw new Error('OidcModuleConfig: consentUrl is required.');
+    if (!config.appOAuthLoginUrlPart) {
+      throw new Error('OidcModuleConfig: appLoginUrlPart is required.');
+    }
+
+    if (!config.appOAuthConsentUrlPart) {
+      throw new Error('OidcModuleConfig: appConsentUrlPart is required.');
     }
 
     if (!config.jwksServiceConfig) {

@@ -336,6 +336,24 @@ describe('websiteUrlFromPaths()', () => {
     const result = websiteUrlFromPaths(baseUrl + '/', path);
     expect(result).toBe(expected);
   });
+
+  it('should create a path from an empty base and an array of path segments', () => {
+    const result = websiteUrlFromPaths('', ['/demo/oauth', '/login']);
+    expect(result).toBe('/demo/oauth/login');
+  });
+
+  it('should create a full url from a base url and an array of path segments', () => {
+    const baseUrl = 'http://localhost:9010';
+    const result = websiteUrlFromPaths(baseUrl, ['/demo/oauth', '/login']);
+    expect(result).toBe(`${baseUrl}/demo/oauth/login`);
+  });
+
+  it('should create a full url from a base url with port and a single path', () => {
+    const baseUrl = 'http://localhost:9010';
+    const path = '/demo/oauth/login';
+    const result = websiteUrlFromPaths(baseUrl, path);
+    expect(result).toBe(`${baseUrl}${path}`);
+  });
 });
 
 describe('isolateWebsitePathFunction()', () => {

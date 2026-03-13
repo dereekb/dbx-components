@@ -1,5 +1,5 @@
 <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="oidcClientListRef" dbxTwoColumnSrefShowRight>
-  <dbx-two-block left dbxOidcEntryCollection [constraints]="clientConstraints">
+  <dbx-two-block left dbxOidcEntryCollection [constraints]="clientConstraintsSignal()">
     <dbx-two-column-head top></dbx-two-column-head>
     <dbx-firebase-oidc-client-list dbxFirebaseCollectionList dbxListItemModifier [dbxListItemAnchorModifier]="makeClientAnchor">
       <div class="text-center dbx-pb3" end>

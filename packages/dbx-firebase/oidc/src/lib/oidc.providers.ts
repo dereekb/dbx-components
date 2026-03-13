@@ -1,6 +1,6 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { OidcModelFirestoreCollections } from '@dereekb/firebase';
-import { DbxFirebaseOidcConfig, DbxFirebaseOidcConfigurationService } from './service/oidc.configuration.service';
+import { DbxFirebaseOidcConfig, DbxFirebaseOidcConfigService } from './service/oidc.configuration.service';
 
 /**
  * Provider factory for the {@link OidcModelFirestoreCollections}.
@@ -32,7 +32,7 @@ export interface ProvideDbxFirebaseOidcConfig {
   /**
    * App-level OIDC configuration (scopes, endpoint paths).
    *
-   * Provided as {@link DbxFirebaseOidcConfig} and consumed by {@link DbxFirebaseOidcConfigurationService}.
+   * Provided as {@link DbxFirebaseOidcConfig} and consumed by {@link DbxFirebaseOidcConfigService}.
    */
   readonly oidcConfig: DbxFirebaseOidcConfig;
 }
@@ -41,7 +41,7 @@ export interface ProvideDbxFirebaseOidcConfig {
  * Provides the OIDC-related Angular services and collections for `@dereekb/dbx-firebase/oidc`.
  */
 export function provideDbxFirebaseOidc(config: ProvideDbxFirebaseOidcConfig): EnvironmentProviders {
-  const providers: Provider[] = [{ provide: DbxFirebaseOidcConfig, useValue: config.oidcConfig }, DbxFirebaseOidcConfigurationService];
+  const providers: Provider[] = [{ provide: DbxFirebaseOidcConfig, useValue: config.oidcConfig }, DbxFirebaseOidcConfigService];
 
   if (config.provideOidcModelFirestoreCollections !== false) {
     providers.push({

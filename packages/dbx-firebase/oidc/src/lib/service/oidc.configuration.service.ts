@@ -2,6 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
 
 export const DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH = '/oidc/auth';
+export const DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH = '/interaction';
+export const DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY = 'uid';
+export const DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY = 'client_name';
+export const DEFAULT_OIDC_SCOPES_PARAM_KEY = 'scopes';
 
 /**
  * Abstract configuration class used as a DI token for app-level OIDC settings.
@@ -12,24 +16,48 @@ export abstract class DbxFirebaseOidcConfig {
   /** Available scopes for the OIDC provider. Used in scope picker fields. */
   abstract readonly availableScopes: LabeledValue<string>[];
   /** Path to the authorization endpoint. Defaults to '/oidc/auth'. */
-  readonly authorizationEndpointPath?: Maybe<string>;
+  readonly oidcAuthorizationEndpointApiPath?: Maybe<string>;
+  /** Base path for interaction endpoints. Defaults to '/interaction'. */
+  readonly oidcInteractionEndpointApiPath?: Maybe<string>;
+  /** Route param key for the interaction UID. Defaults to 'uid'. */
+  readonly oidcInteractionUidParamKey?: Maybe<string>;
+  /** Route param key for the client name (consent only). Defaults to 'client_name'. */
+  readonly clientNameParamKey?: Maybe<string>;
+  /** Route param key for the scopes (consent only). Defaults to 'scopes'. */
+  readonly scopesParamKey?: Maybe<string>;
 }
 
 /**
  * Service that exposes the app-level OIDC configuration.
  *
  * Inject this service in components to access centralized OIDC settings
- * (scopes, endpoint paths, etc.) without requiring explicit inputs.
+ * (scopes, endpoint paths, param keys, etc.) without requiring explicit inputs.
  */
 @Injectable()
-export class DbxFirebaseOidcConfigurationService {
+export class DbxFirebaseOidcConfigService {
   private readonly config = inject(DbxFirebaseOidcConfig);
 
   get availableScopes(): LabeledValue<string>[] {
     return this.config.availableScopes;
   }
 
-  get authorizationEndpointPath(): string {
-    return this.config.authorizationEndpointPath ?? DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH;
+  get oidcAuthorizationEndpointApiPath(): string {
+    return this.config.oidcAuthorizationEndpointApiPath ?? DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH;
+  }
+
+  get oidcInteractionEndpointApiPath(): string {
+    return this.config.oidcInteractionEndpointApiPath ?? DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH;
+  }
+
+  get oidcInteractionUidParamKey(): string {
+    return this.config.oidcInteractionUidParamKey ?? DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY;
+  }
+
+  get clientNameParamKey(): string {
+    return this.config.clientNameParamKey ?? DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY;
+  }
+
+  get scopesParamKey(): string {
+    return this.config.scopesParamKey ?? DEFAULT_OIDC_SCOPES_PARAM_KEY;
   }
 }

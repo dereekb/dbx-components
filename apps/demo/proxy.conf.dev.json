@@ -1,20 +1,20 @@
 {
-  "/api/*": {
+  "/api/**": {
     "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
     "secure": false,
     "logLevel": "debug"
   },
-  "/.well-known/*": {
+  "/.well-known/**": {
     "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
     "secure": false,
     "logLevel": "debug"
   },
-  "/oidc/*": {
+  "/oidc/**": {
     "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
     "secure": false,
     "logLevel": "debug"
   },
-  "/interaction/*": {
+  "/interaction/**": {
     "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
     "secure": false,
     "logLevel": "debug"

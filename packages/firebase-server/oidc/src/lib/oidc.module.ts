@@ -1,7 +1,6 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwksService, JwksServiceConfig } from './service/jwks.service';
-import { OidcProviderConfigService } from './service/oidc.config.service';
 import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
@@ -10,10 +9,11 @@ import { oidcEntryFirestoreCollection } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type FirestoreContext } from '@dereekb/firebase';
-import { hasHttpPrefix } from '@dereekb/util';
+import { hasHttpPrefix, SlashPath, SlashPathFolder, WebsitePath } from '@dereekb/util';
 import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
 import { OidcEncryptionService } from './service/encryption.service';
 import { OidcClientService } from './service/client.service';
+import { OidcProviderConfigService } from './service';
 
 // MARK: Environment Variable Keys
 /**
@@ -24,24 +24,47 @@ import { OidcClientService } from './service/client.service';
 export const OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY = 'OIDC_JWKS_ENCRYPTION_SECRET';
 
 /**
- * Environment variable name for the OIDC issuer path prefix. You typically don't have to update this.
+ * Default path appended to `appUrl` to form the OIDC issuer URL.
  *
- * Optional. If set, is appended to the appUrl to form the issuer URL.
- * Defaults to '/oidc'.
+ * The issuer is the canonical identity of the OIDC provider (e.g., `https://example.com/oidc`).
+ * It appears in the `.well-known/openid-configuration` discovery document and is passed
+ * to `new Provider(issuer, ...)`. All provider endpoints (auth, token, userinfo, etc.)
+ * are served under this path via the {@link OidcProviderController}.
+ *
+ * This path is also used as the proxy target on the frontend (e.g., `/oidc/**` → backend),
+ * so frontend interaction routes must NOT live under this prefix.
  */
-export const OIDC_ISSUER_PATH_ENV_KEY = 'OIDC_ISSUER_PATH';
-
 export const DEFAULT_OIDC_ISSUER_PATH = '/oidc';
 
 /**
- * Environment variable name for the OIDC interaction path prefix.
+ * Default frontend base path for OAuth interaction pages (login, consent).
  *
- * Optional. If set, is appended to the appUrl to form the login/consent URLs.
- * Defaults to '/oidc/interaction'.
+ * This is the path prefix on the **frontend app** where the OAuth interaction UI lives.
+ * The backend `OidcInteractionController` GET handler redirects the browser here after
+ * reading the oidc-provider interaction session.
+ *
+ * Uses `/oauth/interaction` instead of `/oidc/...` to avoid colliding with the
+ * `/oidc/**` proxy rule that forwards requests to the backend OIDC provider.
+ *
+ * Apps typically override this (e.g., `/demo/oauth`) via {@link ProvideAppOidcModuleMetadataConfig.config}.
  */
-export const OIDC_INTERACTION_PATH_ENV_KEY = 'OIDC_INTERACTION_PATH';
+export const DEFAULT_APP_OAUTH_INTERACTION_PATH = '/oauth/interaction';
 
-export const DEFAULT_OIDC_INTERACTION_PATH = '/oidc';
+/**
+ * Default path part appended to `appOAuthInteractionPath` for the frontend login page.
+ *
+ * Combined with `appOAuthInteractionPath` to form the full login redirect URL
+ * (e.g., `/oauth/interaction/login?uid=...`).
+ */
+export const DEFAULT_APP_OAUTH_LOGIN_PATH_PART = '/login';
+
+/**
+ * Default path part appended to `appOAuthInteractionPath` for the frontend consent page.
+ *
+ * Combined with `appOAuthInteractionPath` to form the full consent redirect URL
+ * (e.g., `/oauth/interaction/consent?uid=...`).
+ */
+export const DEFAULT_APP_OAUTH_CONSENT_PATH_PART = '/consent';
 
 /**
  * Route patterns for OIDC controllers that should be excluded from a global API route prefix.
@@ -70,16 +93,12 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     throw new Error('oidcModuleConfigFactory: appUrl is required on the server environment config.');
   }
 
-  const issuerPath = configService.get<string>(OIDC_ISSUER_PATH_ENV_KEY) ?? DEFAULT_OIDC_ISSUER_PATH;
+  const issuerPath = DEFAULT_OIDC_ISSUER_PATH;
   const issuer = `${appUrl}${issuerPath}`;
 
   if (!hasHttpPrefix(issuer)) {
     throw new Error(`oidcModuleConfigFactory: appUrl must have an http(s) prefix. Received: ${appUrl}`);
   }
-
-  const interactionPath = configService.get<string>(OIDC_INTERACTION_PATH_ENV_KEY) ?? DEFAULT_OIDC_INTERACTION_PATH;
-  const loginUrl = `${appUrl}${interactionPath}/login`;
-  const consentUrl = `${appUrl}${interactionPath}/consent`;
 
   let encryptionSecret: AES256GCMEncryptionSecret = configService.get<string>(OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY) ?? '';
 
@@ -93,9 +112,9 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
 
   const config: OidcModuleConfig = {
     issuer,
-    loginUrl,
-    consentUrl,
-    interactionPath,
+    appOAuthLoginUrlPart: DEFAULT_APP_OAUTH_LOGIN_PATH_PART,
+    appOAuthConsentUrlPart: DEFAULT_APP_OAUTH_CONSENT_PATH_PART,
+    appOAuthInteractionPath: DEFAULT_APP_OAUTH_INTERACTION_PATH,
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
     jwksServiceConfig: {
       encryptionSecret
@@ -130,7 +149,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'interactionPath'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart'>>;
 }
 
 /**
@@ -160,21 +179,13 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         inject: [ConfigService, FirebaseServerEnvService],
         useFactory: (configService: ConfigService, envService: FirebaseServerEnvService) => {
           const moduleConfig = oidcModuleConfigFactory(configService, envService);
+          let result: OidcModuleConfig = moduleConfig;
 
           if (config) {
-            const merged = { ...moduleConfig, ...config };
-
-            // recompute loginUrl/consentUrl when interactionPath is overridden
-            if (config.interactionPath) {
-              const appUrl = envService.appUrl!;
-              merged.loginUrl = `${appUrl}${config.interactionPath}/login`;
-              merged.consentUrl = `${appUrl}${config.interactionPath}/consent`;
-            }
-
-            return merged;
+            result = { ...moduleConfig, ...config };
           }
 
-          return moduleConfig;
+          return result;
         }
       },
       {

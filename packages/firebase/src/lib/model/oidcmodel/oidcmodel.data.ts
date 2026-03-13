@@ -2,7 +2,7 @@
 
 import { Maybe } from '@dereekb/util';
 import { type OidcEntryClientId } from './oidcmodel.id';
-import { type OidcRedirectUri } from './oidcmodel';
+import { type OidcRedirectUri } from './oidcmodel.interaction';
 
 /**
  * Corresponds with readable content from a OidcEntry's payload.

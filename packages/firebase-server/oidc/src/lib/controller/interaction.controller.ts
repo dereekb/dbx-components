@@ -1,22 +1,8 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcService } from '../service/oidc.service';
-import { OidcModuleConfig } from '../oidc.config';
-
-// MARK: DTOs
-export interface LoginInteractionBody {
-  /**
-   * Firebase ID token as proof of authentication.
-   */
-  readonly idToken: string;
-}
-
-export interface ConsentInteractionBody {
-  /**
-   * Whether the user approved the consent.
-   */
-  readonly approved: boolean;
-}
+import { OidcProviderConfigService } from '../service';
+import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest } from '@dereekb/firebase';
 
 // MARK: Interaction Controller
 /**
@@ -29,7 +15,7 @@ export interface ConsentInteractionBody {
 export class OidcInteractionController {
   constructor(
     @Inject(OidcService) private readonly oidcService: OidcService,
-    @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig
+    @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService
   ) {}
 
   /**
@@ -46,10 +32,10 @@ export class OidcInteractionController {
       const { prompt } = interaction;
 
       if (prompt.name === 'login') {
-        return res.redirect(`${this.config.loginUrl}?uid=${uid}`);
+        return res.redirect(`${this.oidcProviderConfigService.appLoginUrl}?uid=${uid}`);
       }
 
-      return res.redirect(`${this.config.consentUrl}?uid=${uid}`);
+      return res.redirect(`${this.oidcProviderConfigService.appConsentUrl}?uid=${uid}`);
     } catch {
       throw new HttpException('Interaction not found', HttpStatus.NOT_FOUND);
     }
@@ -63,7 +49,7 @@ export class OidcInteractionController {
    * @throws {HttpException} 400 when the login interaction cannot be completed.
    */
   @Post(':uid/login')
-  async postLogin(@Param('uid') _uid: string, @Body() body: LoginInteractionBody, @Req() req: Request, @Res() res: Response) {
+  async postLogin(@Param('uid') _uid: string, @Body() body: OAuthInteractionLoginRequest, @Req() req: Request, @Res() res: Response) {
     try {
       // The frontend sends a Firebase ID token as proof of authentication.
       // In a real implementation, we would verify this token and extract the UID.
@@ -92,7 +78,7 @@ export class OidcInteractionController {
    * @throws {HttpException} 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
-  async postConsent(@Param('uid') _uid: string, @Body() body: ConsentInteractionBody, @Req() req: Request, @Res() res: Response) {
+  async postConsent(@Param('uid') _uid: string, @Body() body: OAuthInteractionConsentRequest, @Req() req: Request, @Res() res: Response) {
     try {
       if (!body.approved) {
         await this.oidcService.finishInteraction(

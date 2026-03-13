@@ -28,6 +28,10 @@
         "function": "api"
       },
       {
+        "source": "/interaction/**",
+        "function": "api"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

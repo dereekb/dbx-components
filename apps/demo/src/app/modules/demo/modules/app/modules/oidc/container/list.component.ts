@@ -9,6 +9,8 @@ import { UIView } from '@uirouter/angular';
 import { type DocumentDataWithIdAndKey, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { profileIdentity } from 'demo-firebase';
+import { Observable, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './list.component.html',
@@ -20,22 +22,24 @@ export class DemoAppOidcClientListPageComponent implements OnInit {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly demoOidcEntryCollectionStoreDirective = viewChild(OidcEntryCollectionStoreDirective);
 
-  clientConstraints: FirestoreQueryConstraint[] = [];
-
   readonly oidcClientListRef = this.demoAppRouterService.oidcClientListRef();
   readonly oidcClientCreateRef = this.demoAppRouterService.oidcClientCreateRef();
   readonly makeClientAnchor: AnchorForValueFunction<DocumentDataWithIdAndKey<OidcEntry>> = (doc) => this.demoAppRouterService.oidcClientRef(doc.id);
 
-  constructor() {
-    cleanSubscription(
-      this.dbxFirebaseAuthService.currentAuthUser$.subscribe((user) => {
+  readonly clientConstraintsSignal = toSignal(
+    this.dbxFirebaseAuthService.currentAuthUser$.pipe(
+      map((user) => {
+        let constraints: FirestoreQueryConstraint[] = [];
+
         if (user?.uid) {
           const ownershipKey = firestoreModelKey(profileIdentity, user.uid);
-          this.clientConstraints = oidcClientEntriesByOwnerQuery(ownershipKey);
+          constraints = oidcClientEntriesByOwnerQuery(ownershipKey);
         }
+
+        return constraints;
       })
-    );
-  }
+    )
+  );
 
   ngOnInit(): void {
     const x = this.demoOidcEntryCollectionStoreDirective();

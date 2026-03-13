@@ -7,4 +7,4 @@ import { UIView } from '@uirouter/angular';
   standalone: true,
   imports: [DbxContentPageDirective, DbxContentContainerDirective, UIView]
 })
-export class DemoOidcLayoutComponent {}
+export class DemoAppOAuthLayoutComponent {}
