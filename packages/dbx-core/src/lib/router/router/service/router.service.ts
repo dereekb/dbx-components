@@ -52,16 +52,22 @@ export abstract class DbxRouterService extends DbxRouterTransitionService {
   abstract updateParams(params: ObservableOrValue<SegueRefRawSegueParams>): Promise<boolean>;
 
   /**
-   * Returns true if the input segue ref is considered active.
+   * Returns `true` if the input segue ref is considered active (hierarchical match).
    *
-   * @param segueRef
+   * Accepts both state names (e.g., `'app.dashboard'`) and slash paths (e.g., `'/app/dashboard'`).
+   * For non-exact checks, a parent route matches all of its children — e.g., `'/app/oauth'`
+   * is active when the current path is `'/app/oauth/login'`.
+   *
+   * @param segueRef - A state name, URL path, or {@link SegueRef} to check against the current route.
    */
   abstract isActive(segueRef: SegueRefOrSegueRefRouterLink): boolean;
 
   /**
-   * Returns true if the input segue ref is considered active exactly.
+   * Returns `true` if the input segue ref matches the current route exactly.
    *
-   * @param segueRef
+   * Unlike {@link isActive}, this does not match parent routes against child routes.
+   *
+   * @param segueRef - A state name, URL path, or {@link SegueRef} to check against the current route.
    */
   abstract isActiveExactly(segueRef: SegueRefOrSegueRefRouterLink): boolean;
 

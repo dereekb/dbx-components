@@ -1,4 +1,5 @@
-import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
+import { type EnvironmentProviders, makeEnvironmentProviders, provideAppInitializer, type Provider, inject } from '@angular/core';
+import { DbxAppAuthRouterService } from '@dereekb/dbx-core';
 import { OidcModelFirestoreCollections } from '@dereekb/firebase';
 import { DbxFirebaseOidcConfig, DbxFirebaseOidcConfigService } from './service/oidc.configuration.service';
 
@@ -39,9 +40,13 @@ export interface ProvideDbxFirebaseOidcConfig {
 
 /**
  * Provides the OIDC-related Angular services and collections for `@dereekb/dbx-firebase/oidc`.
+ *
+ * When `oauthInteractionRoute` is configured in {@link DbxFirebaseOidcConfig}, an app initializer
+ * is registered that adds that route to the {@link DbxAppAuthRouterService} ignored routes set,
+ * preventing auth effects from redirecting away during the OIDC interaction flow.
  */
 export function provideDbxFirebaseOidc(config: ProvideDbxFirebaseOidcConfig): EnvironmentProviders {
-  const providers: Provider[] = [{ provide: DbxFirebaseOidcConfig, useValue: config.oidcConfig }, DbxFirebaseOidcConfigService];
+  const providers: (Provider | EnvironmentProviders)[] = [{ provide: DbxFirebaseOidcConfig, useValue: config.oidcConfig }, DbxFirebaseOidcConfigService];
 
   if (config.provideOidcModelFirestoreCollections !== false) {
     providers.push({
@@ -49,6 +54,17 @@ export function provideDbxFirebaseOidc(config: ProvideDbxFirebaseOidcConfig): En
       useFactory: provideOidcModelFirestoreCollections,
       deps: [config.appCollectionClass]
     });
+  }
+
+  // Register the OAuth interaction route as ignored by auth effects
+  if (config.oidcConfig.oauthInteractionRoute) {
+    const routeRef = config.oidcConfig.oauthInteractionRoute;
+    providers.push(
+      provideAppInitializer(() => {
+        const authRouterService = inject(DbxAppAuthRouterService);
+        authRouterService.addIgnoredRoute(routeRef);
+      })
+    );
   }
 
   return makeEnvironmentProviders(providers);

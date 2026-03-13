@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
 import { type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 
@@ -34,6 +35,16 @@ export abstract class DbxFirebaseOidcConfig {
    * Used by forms and UI components that need to know which auth methods are available.
    */
   readonly tokenEndpointAuthMethods?: Maybe<OidcTokenEndpointAuthMethod[]>;
+  /**
+   * Frontend route ref for the OAuth interaction pages (login/consent).
+   *
+   * When provided, this route is registered with {@link DbxAppAuthRouterService} as an
+   * ignored route, preventing auth effects from redirecting away during the OIDC flow.
+   *
+   * Uses hierarchical matching — a parent route ref (e.g., `'app.oauth'`) will cover
+   * all child routes (e.g., `'app.oauth.login'`, `'app.oauth.consent'`).
+   */
+  readonly oauthInteractionRoute?: Maybe<SegueRefOrSegueRefRouterLink>;
 }
 
 /**
@@ -72,5 +83,9 @@ export class DbxFirebaseOidcConfigService {
 
   get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {
     return this.config.tokenEndpointAuthMethods ?? DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS;
+  }
+
+  get oauthInteractionRoute(): Maybe<SegueRefOrSegueRefRouterLink> {
+    return this.config.oauthInteractionRoute;
   }
 }

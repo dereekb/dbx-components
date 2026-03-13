@@ -1,7 +1,8 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, map, type Observable, startWith } from 'rxjs';
 import { Injectable, type OnDestroy, inject } from '@angular/core';
 import { goWithRouter } from '../../router/router/service/router.go';
 import { DbxRouterService } from '../../router/router/service/router.service';
+import { type SegueRefOrSegueRefRouterLink } from '../../router/segue';
 import { DbxAppAuthRoutes } from './auth.router';
 
 /**
@@ -11,6 +12,9 @@ import { DbxAppAuthRoutes } from './auth.router';
  * convenient methods for navigating to login, logout, onboarding, and main app routes.
  * It also manages an `isAuthRouterEffectsEnabled` flag that controls whether
  * {@link DbxAppAuthRouterEffects} should perform automatic navigation on auth events.
+ *
+ * Routes can be added to the ignored set via {@link addIgnoredRoute} to prevent
+ * auth effects from redirecting away from those routes (e.g., OAuth interaction pages).
  *
  * @example
  * ```ts
@@ -34,13 +38,39 @@ export class DbxAppAuthRouterService implements OnDestroy {
   readonly dbxRouterService = inject(DbxRouterService);
   readonly dbxAppAuthRoutes = inject(DbxAppAuthRoutes);
 
-  private _isAuthRouterEffectsEnabled = new BehaviorSubject<boolean>(true);
+  private readonly _isAuthRouterEffectsEnabled = new BehaviorSubject<boolean>(true);
+  private readonly _ignoredRoutes = new BehaviorSubject<Set<SegueRefOrSegueRefRouterLink>>(new Set());
 
   /** Observable of whether auth router effects are currently enabled. */
   readonly isAuthRouterEffectsEnabled$ = this._isAuthRouterEffectsEnabled.asObservable();
 
+  /** Observable of the set of route refs that are excluded from auth redirect effects. */
+  readonly ignoredRoutes$ = this._ignoredRoutes.asObservable();
+
+  /**
+   * Observable that emits `true` when the current route is in the ignored set.
+   *
+   * Combines the ignored route refs with router transition events to re-evaluate
+   * whenever the route or the ignored set changes.
+   */
+  readonly isCurrentRouteIgnoredByAuthEffects$: Observable<boolean> = combineLatest([this._ignoredRoutes, this.dbxRouterService.transitions$.pipe(startWith(undefined))]).pipe(
+    map(([ignoredRefs]) => this._checkCurrentRouteIgnored(ignoredRefs)),
+    distinctUntilChanged()
+  );
+
+  /**
+   * Observable that emits `true` when auth router effects should be active for the current route.
+   *
+   * Combines the enabled flag and the ignored route check.
+   */
+  readonly shouldAuthEffectsRedirect$: Observable<boolean> = combineLatest([this.isAuthRouterEffectsEnabled$, this.isCurrentRouteIgnoredByAuthEffects$]).pipe(
+    map(([enabled, ignored]) => enabled && !ignored),
+    distinctUntilChanged()
+  );
+
   ngOnDestroy(): void {
     this._isAuthRouterEffectsEnabled.complete();
+    this._ignoredRoutes.complete();
   }
 
   get hasOnboardingState(): boolean {
@@ -57,6 +87,48 @@ export class DbxAppAuthRouterService implements OnDestroy {
 
   set isAuthRouterEffectsEnabled(enabled: boolean) {
     this._isAuthRouterEffectsEnabled.next(enabled);
+  }
+
+  // MARK: Ignored Routes
+  /**
+   * Adds a route to the ignored set. Auth effects will not redirect
+   * when the user is on a route that matches any ignored route.
+   *
+   * Uses hierarchical matching — adding a parent route (e.g., `'/app/oauth'`)
+   * will also ignore all child routes (e.g., `'/app/oauth/login'`).
+   */
+  addIgnoredRoute(ref: SegueRefOrSegueRefRouterLink): void {
+    const current = this._ignoredRoutes.value;
+    const next = new Set(current);
+    next.add(ref);
+    this._ignoredRoutes.next(next);
+  }
+
+  /**
+   * Removes a route from the ignored set.
+   */
+  removeIgnoredRoute(ref: SegueRefOrSegueRefRouterLink): void {
+    const current = this._ignoredRoutes.value;
+    const next = new Set(current);
+    next.delete(ref);
+    this._ignoredRoutes.next(next);
+  }
+
+  /**
+   * Returns `true` if the current route matches any of the ignored routes.
+   */
+  get isCurrentRouteIgnoredByAuthEffects(): boolean {
+    return this._checkCurrentRouteIgnored(this._ignoredRoutes.value);
+  }
+
+  private _checkCurrentRouteIgnored(ignoredRefs: Set<SegueRefOrSegueRefRouterLink>): boolean {
+    for (const ref of ignoredRefs) {
+      if (this.dbxRouterService.isActive(ref)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // MARK: Navigate

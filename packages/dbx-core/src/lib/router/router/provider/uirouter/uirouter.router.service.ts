@@ -3,7 +3,7 @@ import { Subject, BehaviorSubject, type Observable, firstValueFrom, map } from '
 import { type DbxRouterService } from '../../service/router.service';
 import { type DbxRouterTransitionService } from '../../service/router.transition.service';
 import { asSegueRef, asSegueRefString, type SegueRef, type SegueRefOrSegueRefRouterLink, type SegueRefRawSegueParams } from '../../../segue';
-import { StateService, UIRouterGlobals, type TransitionOptions, TransitionService } from '@uirouter/core';
+import { StateService, UIRouter, UIRouterGlobals, type TransitionOptions, TransitionService } from '@uirouter/core';
 import { Injectable, type OnDestroy, inject } from '@angular/core';
 import { type DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
@@ -30,6 +30,7 @@ import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
  */
 @Injectable()
 export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService, OnDestroy {
+  readonly uiRouter = inject(UIRouter);
   readonly state = inject(StateService);
   readonly transitionService = inject(TransitionService);
   readonly uiRouterGlobals = inject(UIRouterGlobals);
@@ -123,6 +124,17 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     const segueRef = asSegueRef(input);
     const ref = segueRef.ref as string;
     const refParams = segueRef.refParams;
+
+    // Slash paths (e.g., '/demo/oauth') are compared against the current URL path
+    if (ref.startsWith('/')) {
+      const currentPath = this.uiRouter.urlService.path();
+
+      if (exactly) {
+        return currentPath === ref;
+      } else {
+        return currentPath === ref || currentPath.startsWith(ref + '/');
+      }
+    }
 
     const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
     const active = exactly ? this.state.is(targetRef, refParams) : this.state.includes(targetRef, refParams);
