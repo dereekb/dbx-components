@@ -30,15 +30,17 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
 @Component({
   selector: 'dbx-loading-progress',
   template: `
-    <div [dbxColor]="color()" class="loading-progress-view">
-      @switch (linear()) {
-        @case (true) {
-          <mat-progress-bar [mode]="bmode()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
+    <div class="loading-progress-view">
+      <span class="loading-progress-view-indicator" [dbxColor]="color()">
+        @switch (linear()) {
+          @case (true) {
+            <mat-progress-bar [mode]="bmode()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
+          }
+          @default {
+            <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smode()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
+          }
         }
-        @default {
-          <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smode()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
-        }
-      }
+      </span>
       @if (text()) {
         <div class="dbx-loading-progress-hint dbx-hint dbx-small" [ngClass]="{ 'text-center': !linear() }">{{ text() }}</div>
       }

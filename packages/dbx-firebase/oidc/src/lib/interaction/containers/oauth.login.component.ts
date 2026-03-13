@@ -1,57 +1,34 @@
 import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy, Signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseAuthService, DbxFirebaseLoginComponent } from '@dereekb/dbx-firebase';
-import { DbxFirebaseOidcInteractionService } from '../service/oidc.interaction.service';
-import { DbxFirebaseOidcConfigService } from '../service/oidc.configuration.service';
+import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
+import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
+import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
 import { OidcInteractionUid } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
+import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../components/oauth.login.view.component';
 
 /**
- * State cases for the OIDC login interaction flow.
- */
-export type OidcLoginStateCase = 'no_user' | 'user' | 'submitting' | 'error';
-
-/**
- * OAuth login component for OIDC interaction flow.
+ * Container component for the OIDC OAuth login interaction flow.
  *
- * Integrates with existing Firebase Auth sign-in and redirects
- * back to the NestJS interaction endpoint with a Firebase ID token
- * as proof of authentication.
+ * Manages all state: route param reading, Firebase Auth observation, ID token
+ * submission, and error handling. Delegates visual rendering to
+ * `DbxFirebaseOAuthLoginViewComponent`.
+ *
+ * Supports ng-content projection — any content provided is passed through to
+ * the view component, replacing the default `<dbx-firebase-login>` for the
+ * `'no_user'` state.
  *
  * Usage: Route to this component with `?uid=<interaction-uid>` query param.
- *
- * State flow:
- * - `no_user`: Not logged in — shows `<dbx-firebase-login>` for sign-in.
- * - `user`: Logged in — auto-submits Firebase ID token to complete the interaction.
- * - `submitting`: Token submission in progress — shows loading state.
- * - `error`: Submission failed — shows error with retry option.
  */
 @Component({
   selector: 'dbx-firebase-oauth-login',
   standalone: true,
-  imports: [CommonModule, DbxFirebaseLoginComponent],
+  imports: [DbxFirebaseOAuthLoginViewComponent],
   template: `
-    <div class="dbx-firebase-oauth-login">
-      @switch (loginStateCase()) {
-        @case ('no_user') {
-          <dbx-firebase-login />
-        }
-        @case ('user') {
-          <p>Signing in...</p>
-        }
-        @case ('submitting') {
-          <p>Submitting authentication...</p>
-        }
-        @case ('error') {
-          <div class="dbx-firebase-oauth-login-error">
-            <p>{{ errorMessage() }}</p>
-            <button (click)="retry()">Retry</button>
-          </div>
-        }
-      }
-    </div>
+    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCase()" [error]="errorMessage()" (retryClick)="retry()">
+      <ng-content />
+    </dbx-firebase-oauth-login-view>
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-login'

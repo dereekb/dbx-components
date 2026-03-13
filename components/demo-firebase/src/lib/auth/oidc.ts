@@ -1,5 +1,4 @@
-import { OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
-import { type LabeledValue } from '@dereekb/util';
+import { OidcScopeDetails, OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 
 // MARK: Scopes
 /**
@@ -18,11 +17,11 @@ export type DemoOidcScope = 'openid' | 'profile' | 'email' | 'demo';
 export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
 
 /** All available OIDC scopes for the demo app, suitable for use in scope picker fields. */
-export const DEMO_OIDC_AVAILABLE_SCOPES: LabeledValue<DemoOidcScope>[] = [
-  { label: 'OpenID', value: 'openid' },
-  { label: 'Profile', value: 'profile' },
-  { label: 'Email', value: 'email' },
-  { label: 'Demo', value: 'demo' }
+export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [
+  { label: 'OpenID', value: 'openid', description: 'Authenticate your identity using OpenID Connect' },
+  { label: 'Profile', value: 'profile', description: 'Access your basic profile information' },
+  { label: 'Email', value: 'email', description: 'Access your email address' },
+  { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }
 ];
 
 /** All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields. */

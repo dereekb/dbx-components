@@ -1,7 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, type Type } from '@angular/core';
 import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
-import { type LabeledValue, type Maybe } from '@dereekb/util';
-import { type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import { type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../interaction/components/oauth.consent.scope.view.component';
 
 export const DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH = '/oidc/auth';
 export const DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH = '/interaction';
@@ -17,7 +18,7 @@ export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMeth
  */
 export abstract class DbxFirebaseOidcConfig {
   /** Available scopes for the OIDC provider. Used in scope picker fields. */
-  abstract readonly availableScopes: LabeledValue<string>[];
+  abstract readonly availableScopes: OidcScopeDetails[];
   /** Path to the authorization endpoint. Defaults to '/oidc/auth'. */
   readonly oidcAuthorizationEndpointApiPath?: Maybe<string>;
   /** Base path for interaction endpoints. Defaults to '/interaction'. */
@@ -45,6 +46,13 @@ export abstract class DbxFirebaseOidcConfig {
    * all child routes (e.g., `'app.oauth.login'`, `'app.oauth.consent'`).
    */
   readonly oauthInteractionRoute?: Maybe<SegueRefOrSegueRefRouterLink>;
+  /**
+   * Component class for rendering the consent scope list.
+   *
+   * When not provided, uses `DbxFirebaseOAuthConsentScopeDefaultViewComponent` which
+   * maps scope names to descriptions from `availableScopes`.
+   */
+  readonly consentScopeListViewClass?: Maybe<Type<AbstractDbxFirebaseOAuthConsentScopeViewComponent>>;
 }
 
 /**
@@ -57,7 +65,7 @@ export abstract class DbxFirebaseOidcConfig {
 export class DbxFirebaseOidcConfigService {
   private readonly config = inject(DbxFirebaseOidcConfig);
 
-  get availableScopes(): LabeledValue<string>[] {
+  get availableScopes(): OidcScopeDetails[] {
     return this.config.availableScopes;
   }
 
@@ -87,5 +95,9 @@ export class DbxFirebaseOidcConfigService {
 
   get oauthInteractionRoute(): Maybe<SegueRefOrSegueRefRouterLink> {
     return this.config.oauthInteractionRoute;
+  }
+
+  get consentScopeListViewClass(): Maybe<Type<AbstractDbxFirebaseOAuthConsentScopeViewComponent>> {
+    return this.config.consentScopeListViewClass;
   }
 }

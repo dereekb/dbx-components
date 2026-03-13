@@ -37,6 +37,7 @@ import { DocExtensionHelpExampleWidgetComponent, HELP_WIDGET_EXAMPLE_CONTEXT_STR
 import { HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO, DocExtensionHelpExampleWidgetTwoComponent } from './component/help.widget.example.two.component';
 import { DocExtensionHelpExampleWidgetExampleHeaderComponent } from './component/help.widget.example.header.component';
 import { DocExtensionHelpListBottomExampleComponent } from './component/help.list.bottom.component';
+import { DocExtensionOidcComponent } from './container/oidc.component';
 
 @NgModule({
   imports: [
@@ -83,7 +84,8 @@ import { DocExtensionHelpListBottomExampleComponent } from './component/help.lis
     DocExtensionStructureComponent,
     DocExtensionDownloadComponent,
     DocExtensionStorageFileComponent,
-    DocExtensionHelpComponent
+    DocExtensionHelpComponent,
+    DocExtensionOidcComponent
   ]
 })
 export class DocExtensionModule {

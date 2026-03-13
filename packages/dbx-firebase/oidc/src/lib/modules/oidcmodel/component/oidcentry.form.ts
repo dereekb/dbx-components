@@ -1,6 +1,5 @@
 import { textField, valueSelectionField, isWebsiteUrlValidator, searchableStringChipField, pickableItemChipField, pickableValueFieldValuesConfigForStaticLabeledValues } from '@dereekb/dbx-form';
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
-import { type LabeledValue, type Maybe } from '@dereekb/util';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcRedirectUri, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { of } from 'rxjs';
 
@@ -115,28 +114,20 @@ export function oidcClientHomepageUriField(): FormlyFieldConfig {
 
 export interface OidcEntryClientTestFormFieldsConfig {
   readonly redirectUris: OidcRedirectUri[];
-  readonly availableScopes: LabeledValue<string>[];
+  readonly availableScopes: OidcScopeDetails[];
 }
 
 /**
  * Assembles the form fields for the OAuth test client form.
  */
 export function oidcEntryClientTestFormFields(config: OidcEntryClientTestFormFieldsConfig): FormlyFieldConfig[] {
-  return [oidcClientTestClientIdField(), oidcClientTestClientSecretField(), oidcClientTestRedirectUriField(config.redirectUris), oidcClientTestScopesField(config.availableScopes)];
+  return [oidcClientTestClientIdField(), oidcClientTestRedirectUriField(config.redirectUris), oidcClientTestScopesField(config.availableScopes)];
 }
 
 export function oidcClientTestClientIdField(): FormlyFieldConfig {
   return textField({
     key: 'client_id',
     label: 'Client ID',
-    readonly: true
-  });
-}
-
-export function oidcClientTestClientSecretField(): FormlyFieldConfig {
-  return textField({
-    key: 'client_secret',
-    label: 'Client Secret',
     readonly: true
   });
 }
@@ -153,7 +144,7 @@ export function oidcClientTestRedirectUriField(redirectUris: OidcRedirectUri[]):
   });
 }
 
-export function oidcClientTestScopesField(availableScopes: LabeledValue<string>[]): FormlyFieldConfig {
+export function oidcClientTestScopesField(availableScopes: OidcScopeDetails[]): FormlyFieldConfig {
   return pickableItemChipField({
     key: 'scopes',
     label: 'Scopes',

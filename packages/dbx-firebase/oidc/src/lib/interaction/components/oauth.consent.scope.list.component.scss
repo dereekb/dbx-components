@@ -1,0 +1,16 @@
+.dbx-firebase-oauth-consent-scope-list-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border-left: 3px solid #1976d2;
+  background: rgba(25, 118, 210, 0.04);
+
+  .dbx-firebase-oauth-consent-scope-name {
+    font-weight: 500;
+  }
+
+  .dbx-firebase-oauth-consent-scope-description {
+    font-size: 0.85em;
+    opacity: 0.7;
+  }
+}

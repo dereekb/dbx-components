@@ -1,4 +1,4 @@
-import { LabeledValue } from '@dereekb/util';
+import { LabeledValue, LabeledValueWithDescription } from '@dereekb/util';
 
 /**
  * Unique identifier for an oidc-provider interaction session, not to be confused with a Firebase UID/Auth User Identifier.
@@ -21,6 +21,11 @@ export type OidcInteractionUid = string;
  * ```
  */
 export type OidcScope = string;
+
+/**
+ * Scope details with a human-readable label and description.
+ */
+export type OidcScopeDetails<T extends OidcScope = OidcScope> = LabeledValueWithDescription<T>;
 
 /**
  * A redirect URI registered to an OIDC client.

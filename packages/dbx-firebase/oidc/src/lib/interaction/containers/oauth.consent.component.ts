@@ -1,92 +1,42 @@
-import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy, type Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseOidcInteractionService } from '../service/oidc.interaction.service';
-import { DbxFirebaseOidcConfigService } from '../service/oidc.configuration.service';
-
-// MARK: Types
-export interface OAuthConsentScope {
-  readonly name: string;
-  readonly description: string;
-}
+import { dbxRouteParamReaderInstance, DbxRouterService, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
+import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
+import { type OidcScope } from '@dereekb/firebase';
+import { type Maybe, splitCommaSeparatedString } from '@dereekb/util';
+import { DbxFirebaseOAuthConsentViewComponent } from '../components/oauth.consent.view.component';
+import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../components/oauth.consent.scope.view.component';
+import { DbxFirebaseOAuthConsentScopeDefaultViewComponent } from '../components/oauth.consent.scope.default.view.component';
 
 /**
- * Parses a scopes string (comma-separated or JSON array) into OAuthConsentScope[].
- *
- * Supported formats:
- * - Comma-separated: "openid,profile,email"
- * - JSON array: '[{"name":"openid","description":"OpenID"}]'
+ * Configuration for `DbxOAuthConsentComponent`.
  */
-export function parseOAuthConsentScopes(scopesString: string | undefined | null): OAuthConsentScope[] {
-  if (!scopesString) {
-    return [];
-  }
-
-  const trimmed = scopesString.trim();
-
-  // Try JSON parse first
-  if (trimmed.startsWith('[')) {
-    try {
-      return JSON.parse(trimmed) as OAuthConsentScope[];
-    } catch {
-      // Fall through to comma-separated parsing
-    }
-  }
-
-  // Comma-separated scope names
-  return trimmed
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-    .map((name) => ({ name, description: '' }));
+export interface DbxOAuthConsentComponentConfig {
+  /**
+   * Component class for rendering the consent scope list.
+   *
+   * When not provided, falls back to the class configured in `DbxFirebaseOidcConfig`,
+   * which itself defaults to `DbxFirebaseOAuthConsentScopeDefaultViewComponent`.
+   */
+  readonly consentScopeListViewClass?: Type<AbstractDbxFirebaseOAuthConsentScopeViewComponent>;
 }
 
 /**
- * OAuth consent screen component for OIDC interaction flow.
+ * Container component for the OIDC OAuth consent screen.
+ *
+ * Manages all state: route param reading, consent submission, and error handling.
+ * Delegates visual rendering to `DbxFirebaseOAuthConsentViewComponent`.
  *
  * Reads interaction UID, client name, and scopes from route params (populated by
  * the server redirect). Inputs can optionally override route param values.
- *
- * Shows the client name, requested scopes, and provides approve/deny buttons
- * that POST to the NestJS interaction endpoint.
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
-    <div class="dbx-firebase-oauth-consent">
-      @if (resolvedClientName()) {
-        <h2>Authorize {{ resolvedClientName() }}</h2>
-      }
-      @if (resolvedScopes().length) {
-        <p>This application is requesting access to:</p>
-        <ul>
-          @for (scope of resolvedScopes(); track scope.name) {
-            <li>
-              <strong>{{ scope.name }}</strong>
-              @if (scope.description) {
-                — {{ scope.description }}
-              }
-            </li>
-          }
-        </ul>
-      }
-      @if (error()) {
-        <div class="dbx-firebase-oauth-consent-error">
-          <p>{{ error() }}</p>
-        </div>
-      }
-      @if (loading()) {
-        <p>Processing...</p>
-      } @else {
-        <div class="dbx-firebase-oauth-consent-actions">
-          <button (click)="approve()" [disabled]="loading()">Approve</button>
-          <button (click)="deny()" [disabled]="loading()">Deny</button>
-        </div>
-      }
-    </div>
+    <dbx-firebase-oauth-consent-view [clientName]="resolvedClientName()" [scopes]="resolvedScopes()" [loading]="loading()" [error]="error()" [scopeInjectionConfig]="scopeInjectionConfig()" (approveClick)="approve()" (denyClick)="deny()"></dbx-firebase-oauth-consent-view>
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-consent'
@@ -98,10 +48,13 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   private readonly interactionService = inject(DbxFirebaseOidcInteractionService);
   private readonly oidcConfigService = inject(DbxFirebaseOidcConfigService);
 
+  // Config input
+  readonly config = input<Maybe<DbxOAuthConsentComponentConfig>>();
+
   // Optional input overrides
   readonly interactionUid = input<string>();
   readonly clientName = input<string>();
-  readonly scopes = input<OAuthConsentScope[]>();
+  readonly scopes = input<OidcScope[]>();
 
   // Param key inputs for customization
   readonly uidParamKey = input<string>();
@@ -121,7 +74,12 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   // Resolved values: input overrides route param
   readonly resolvedUid = computed(() => this.interactionUid() ?? this.routeUid());
   readonly resolvedClientName = computed(() => this.clientName() ?? this.routeClientName() ?? '');
-  readonly resolvedScopes = computed<OAuthConsentScope[]>(() => this.scopes() ?? parseOAuthConsentScopes(this.routeScopes()));
+  readonly resolvedScopes = computed<OidcScope[]>(() => this.scopes() ?? splitCommaSeparatedString(this.routeScopes() ?? ''));
+
+  // Scope injection config: built from the configured scope list view class, falling back to config service, then the default
+  readonly scopeInjectionConfig = computed<DbxInjectionComponentConfig>(() => ({
+    componentClass: this.config()?.consentScopeListViewClass ?? this.oidcConfigService.consentScopeListViewClass ?? DbxFirebaseOAuthConsentScopeDefaultViewComponent
+  }));
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);

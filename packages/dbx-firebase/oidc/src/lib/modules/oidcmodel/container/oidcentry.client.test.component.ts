@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, combineLatest } from 'rxjs';
-import { type LabeledValue, type Maybe } from '@dereekb/util';
+import { map } from 'rxjs';
+import { type Maybe } from '@dereekb/util';
 import { DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
-import { type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
+import { type OidcEntryOAuthClientPayloadData, type OidcScopeDetails } from '@dereekb/firebase';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { DbxFirebaseOidcEntryClientTestFormComponent, type DbxFirebaseOidcModelClientTestFormValue } from '../component/oidcentry.client.test.form.component';
 import { type OidcEntryClientTestFormFieldsConfig } from '../component/oidcentry.form';
@@ -15,7 +15,7 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
 /**
  * Container component for testing an OAuth authorization flow against a registered client.
  *
- * Displays a form with the client's ID, secret, redirect URIs, and scopes,
+ * Displays a form with the client's ID, redirect URIs, and scopes,
  * then builds an authorization URL with PKCE parameters that can be opened in a new tab.
  */
 @Component({
@@ -52,12 +52,12 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   private readonly oidcConfigService = inject(DbxFirebaseOidcConfigService);
 
   /** Scopes the user can pick from. Overrides the service default when provided. */
-  readonly availableScopes = input<Maybe<LabeledValue<string>[]>>(undefined);
+  readonly availableScopes = input<Maybe<OidcScopeDetails[]>>(undefined);
 
   /** Path to the authorization endpoint. Overrides the service default when provided. */
   readonly oidcAuthorizationEndpointApiPath = input<Maybe<string>>(undefined);
 
-  readonly resolvedAvailableScopes = computed<LabeledValue<string>[]>(() => this.availableScopes() ?? this.oidcConfigService.availableScopes);
+  readonly resolvedAvailableScopes = computed<OidcScopeDetails[]>(() => this.availableScopes() ?? this.oidcConfigService.availableScopes);
   readonly resolvedAuthorizationEndpointPath = computed<string>(() => this.oidcAuthorizationEndpointApiPath() ?? this.oidcConfigService.oidcAuthorizationEndpointApiPath);
 
   // MARK: Derived Store Data
@@ -77,12 +77,11 @@ export class DbxFirebaseOidcEntryClientTestComponent {
     return undefined;
   });
 
-  readonly formTemplate$ = combineLatest([this.oidcEntryDocumentStore.data$, this.oidcEntryDocumentStore.latestClientSecret$]).pipe(
-    map(([data, latestClientSecret]) => {
+  readonly formTemplate$ = this.oidcEntryDocumentStore.data$.pipe(
+    map((data) => {
       const payload = data.payload as OidcEntryOAuthClientPayloadData;
       const formValue: DbxFirebaseOidcModelClientTestFormValue = {
         client_id: payload?.client_id ?? '',
-        client_secret: latestClientSecret ?? '',
         redirect_uri: payload?.redirect_uris?.[0] ?? '',
         scopes: ['openid']
       };
