@@ -1,5 +1,5 @@
 import { textField, valueSelectionField, isWebsiteUrlValidator, searchableStringChipField, pickableItemChipField, pickableValueFieldValuesConfigForStaticLabeledValues } from '@dereekb/dbx-form';
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { of } from 'rxjs';
@@ -12,11 +12,11 @@ export interface OidcEntryClientFormFieldsConfig {
    */
   readonly mode: 'create' | 'update';
   /**
-   * Limits which token endpoint auth methods are available for selection.
+   * Token endpoint auth methods available for selection.
    *
-   * If not provided, all methods are shown.
+   * Provided by the {@link DbxFirebaseOidcConfigService}.
    */
-  readonly allowedAuthMethods?: Maybe<OidcTokenEndpointAuthMethod[]>;
+  readonly tokenEndpointAuthMethods: OidcTokenEndpointAuthMethod[];
 }
 
 /**
@@ -37,8 +37,8 @@ export function oidcEntryClientFormFields(config?: OidcEntryClientFormFieldsConf
 }
 
 export function oidcClientTokenEndpointAuthMethodField(config?: OidcEntryClientFormFieldsConfig): FormlyFieldConfig {
-  const allowedAuthMethods = config?.allowedAuthMethods;
-  const options = allowedAuthMethods ? ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS.filter((o) => allowedAuthMethods.includes(o.value)) : ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS;
+  const allowedAuthMethods = config?.tokenEndpointAuthMethods;
+  const options = allowedAuthMethods?.length ? ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS.filter((o) => allowedAuthMethods.includes(o.value)) : ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS;
 
   return valueSelectionField({
     key: 'token_endpoint_auth_method',
@@ -55,7 +55,7 @@ export function oidcClientTokenEndpointAuthMethodField(config?: OidcEntryClientF
  * Excludes `token_endpoint_auth_method` (immutable after creation).
  */
 export function oidcEntryClientUpdateFormFields(): FormlyFieldConfig[] {
-  return [oidcClientNameField(), oidcClientRedirectUrisField(), oidcClientLogoUriField(), oidcClientHomepageUriField()];
+  return [oidcClientNameField(), oidcClientRedirectUrisField(), oidcClientJwksUriField(), oidcClientLogoUriField(), oidcClientHomepageUriField()];
 }
 
 export function oidcClientNameField(): FormlyFieldConfig {
@@ -78,6 +78,18 @@ export function oidcClientRedirectUrisField(): FormlyFieldConfig {
     textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
     search: () => of([]),
     displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
+  });
+}
+
+export function oidcClientJwksUriField(): FormlyFieldConfig {
+  return textField({
+    key: 'jwks_uri',
+    label: 'JWKS URI',
+    description: "URL where the client's public JSON Web Key Set can be fetched. Required for private_key_jwt authentication.",
+    required: true,
+    expressions: {
+      hide: (field) => field.model?.token_endpoint_auth_method !== PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD
+    }
   });
 }
 

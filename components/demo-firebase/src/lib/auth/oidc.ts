@@ -1,3 +1,4 @@
+import { OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type LabeledValue } from '@dereekb/util';
 
 // MARK: Scopes
@@ -23,3 +24,6 @@ export const DEMO_OIDC_AVAILABLE_SCOPES: LabeledValue<DemoOidcScope>[] = [
   { label: 'Email', value: 'email' },
   { label: 'Demo', value: 'demo' }
 ];
+
+/** All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields. */
+export const DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic', 'client_secret_jwt', 'private_key_jwt'];

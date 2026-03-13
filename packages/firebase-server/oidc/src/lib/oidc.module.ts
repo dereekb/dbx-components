@@ -149,7 +149,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
   /**
    * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart'>>;
+  readonly config?: Partial<Pick<OidcModuleConfig, 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled'>>;
 }
 
 /**

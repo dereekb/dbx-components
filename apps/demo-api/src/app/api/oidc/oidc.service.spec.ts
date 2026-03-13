@@ -1,7 +1,7 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { type OidcServerFirestoreCollections, type JwksService, type OidcAccountService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../../common';
-import { type DemoOidcScope } from './oidc.module';
+import { DemoOidcScope } from 'demo-firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let jwksService: JwksService;
@@ -177,27 +177,31 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(result.modelKeys).toBeDefined();
       });
 
-      it('should update a client', async () => {
-        const { client_id } = await oidcClientService.createClient({
-          client_name: 'Original Name',
-          redirect_uris: ['https://example.com/callback']
+      describe('client exists', () => {
+        let client_id: string;
+
+        beforeEach(async () => {
+          const result = await oidcClientService.createClient({
+            client_name: 'Test Client',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          client_id = result.client_id;
         });
 
-        await expect(
-          oidcClientService.updateClient(client_id, {
-            client_name: 'Updated Name',
-            redirect_uris: ['https://example.com/new-callback']
-          })
-        ).resolves.toBeUndefined();
-      });
-
-      it('should delete a client', async () => {
-        const { client_id } = await oidcClientService.createClient({
-          client_name: 'To Delete',
-          redirect_uris: ['https://example.com/callback']
+        it('should update a client', async () => {
+          await expect(
+            oidcClientService.updateClient(client_id, {
+              client_name: 'Updated Name',
+              redirect_uris: ['https://example.com/new-callback']
+            })
+          ).resolves.toBeUndefined();
         });
 
-        await expect(oidcClientService.deleteClient(client_id)).resolves.toBeUndefined();
+        it('should delete a client', async () => {
+          await expect(oidcClientService.deleteClient(client_id)).resolves.toBeUndefined();
+        });
       });
 
       it('should rotate a client secret', async () => {

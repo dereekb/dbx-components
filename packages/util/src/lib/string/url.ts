@@ -270,7 +270,7 @@ export type WebsiteUrlWithPrefix = string;
  * @param input - The string to check.
  * @returns Whether the input is a website URL with an HTTP prefix.
  */
-export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrl {
+export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrlWithPrefix {
   const details = websiteUrlDetails(input);
   return details.hasHttpPrefix && details.isWebsiteUrl;
 }

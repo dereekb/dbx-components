@@ -2,7 +2,7 @@ import { type, type Type } from 'arktype';
 import { type TargetModelParams, type OnCallCreateModelResult } from '../../common';
 import { InferredTargetModelParams, inferredTargetModelParamsType, targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction } from '../../client';
-import { type Maybe } from '@dereekb/util';
+import { WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type OidcEntryClientId } from './oidcmodel.id';
 import { type OidcModelTypes } from './oidcmodel';
@@ -16,8 +16,8 @@ import { type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from './oidcmo
 export interface UpdateOidcClientFieldParams {
   readonly client_name: string;
   readonly redirect_uris: OidcRedirectUri[];
-  readonly logo_uri?: Maybe<string>;
-  readonly client_uri?: Maybe<string>;
+  readonly logo_uri?: Maybe<WebsiteUrlWithPrefix>;
+  readonly client_uri?: Maybe<WebsiteUrlWithPrefix>;
 }
 
 export const updateOidcClientFieldParamsType = type({
@@ -45,6 +45,14 @@ export const createOidcClientFieldParamsType = updateOidcClientFieldParamsType.m
  */
 export interface CreateOidcClientParams extends UpdateOidcClientFieldParams, InferredTargetModelParams {
   readonly token_endpoint_auth_method: OidcTokenEndpointAuthMethod;
+  /**
+   * URL where the client's public JSON Web Key Set can be fetched.
+   *
+   * Used with `private_key_jwt` authentication so the provider can retrieve
+   * the client's public keys to verify `client_assertion` JWTs.
+   * The client manages key rotation at this URL independently.
+   */
+  readonly jwks_uri?: WebsiteUrlWithPrefix;
 }
 
 export const createOidcClientParamsType = inferredTargetModelParamsType.merge(createOidcClientFieldParamsType) as Type<CreateOidcClientParams>;

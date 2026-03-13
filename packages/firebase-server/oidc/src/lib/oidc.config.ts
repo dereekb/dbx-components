@@ -1,6 +1,6 @@
 import type { Configuration } from 'oidc-provider';
 import { SlashPathFolder, SlashPathPart, WebsitePath, type SlashPath } from '@dereekb/util';
-import { type OidcScope } from '@dereekb/firebase';
+import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { JwksServiceConfig } from './service/jwks.service';
 import { JwksKeyConverterConfig } from './model';
 
@@ -160,6 +160,26 @@ export abstract class OidcModuleConfig {
    * since those are typically protected by AppCheck.
    */
   readonly protectedPaths?: SlashPath[];
+
+  /**
+   * Supported token endpoint authentication methods.
+   *
+   * Overrides the default methods (`client_secret_post`, `client_secret_basic`)
+   * in the discovery metadata document.
+   *
+   * @see DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS
+   */
+  readonly tokenEndpointAuthMethods?: OidcTokenEndpointAuthMethod[];
+
+  /**
+   * Whether to enable the OIDC dynamic client registration endpoint (`/reg`).
+   *
+   * When enabled, clients can self-register via the registration endpoint
+   * and manage their registrations via the registration management feature.
+   *
+   * Defaults to `false`.
+   */
+  readonly registrationEnabled?: boolean;
 
   /**
    * Validates that all required fields are present on the config.

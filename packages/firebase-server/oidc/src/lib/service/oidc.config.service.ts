@@ -3,7 +3,7 @@ import { OidcModuleConfig, type OidcProviderConfig } from '../oidc.config';
 import { OidcAccountService } from './account.service';
 import type { Configuration } from 'oidc-provider';
 import { mergeSlashPaths, WebsitePath, WebsiteUrl, websiteUrlFromPaths } from '@dereekb/util';
-import { type OidcScope } from '@dereekb/firebase';
+import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 
 // MARK: Routes
@@ -33,7 +33,7 @@ export type OidcRoutes = typeof DEFAULT_OIDC_ROUTES;
 
 // MARK: Discovery Defaults
 export const DEFAULT_OIDC_SUBJECT_TYPES: readonly string[] = ['public'];
-export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: readonly string[] = ['client_secret_post', 'client_secret_basic'];
+export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: readonly OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic'];
 export const DEFAULT_OIDC_ID_TOKEN_SIGNING_ALG_VALUES: readonly string[] = ['RS256'];
 export const DEFAULT_OIDC_CODE_CHALLENGE_METHODS: readonly string[] = ['S256'];
 
@@ -47,14 +47,14 @@ export interface OidcDiscoveryMetadata {
   readonly token_endpoint: WebsiteUrl;
   readonly userinfo_endpoint: WebsiteUrl;
   readonly jwks_uri: WebsiteUrl;
-  readonly registration_endpoint: WebsiteUrl;
+  readonly registration_endpoint?: WebsiteUrl;
   readonly scopes_supported: OidcScope[];
   readonly response_types_supported: string[];
   readonly response_modes_supported: string[];
   readonly grant_types_supported: string[];
   readonly subject_types_supported: string[];
   readonly id_token_signing_alg_values_supported: string[];
-  readonly token_endpoint_auth_methods_supported: string[];
+  readonly token_endpoint_auth_methods_supported: OidcTokenEndpointAuthMethod[];
   readonly claims_supported: string[];
   readonly code_challenge_methods_supported: string[];
 }
@@ -73,8 +73,19 @@ export interface OidcDiscoveryMetadata {
 export class OidcProviderConfigService {
   readonly routes: OidcRoutes = DEFAULT_OIDC_ROUTES;
 
+  /**
+   * If the OIDC registration route is enabled.
+   */
+  readonly oidcRegistrationRouteEnabled: boolean;
+
+  /**
+   * The url to the front-end login page.
+   */
   readonly appLoginUrl: WebsiteUrl;
 
+  /**
+   * The url to the front-end consent page.
+   */
   readonly appConsentUrl: WebsiteUrl;
 
   /**
@@ -92,6 +103,11 @@ export class OidcProviderConfigService {
    */
   readonly claimsSupported: string[];
 
+  /**
+   * Token endpoint authentication methods from config or defaults.
+   */
+  readonly tokenEndpointAuthMethodsSupported: OidcTokenEndpointAuthMethod[];
+
   constructor(
     @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig,
     @Inject(OidcAccountService) accountService: OidcAccountService,
@@ -100,13 +116,13 @@ export class OidcProviderConfigService {
     this.providerConfig = accountService.providerConfig;
     this.scopesSupported = Object.keys(this.providerConfig.claims);
     this.claimsSupported = [...new Set(Object.values(this.providerConfig.claims).flat())];
+    this.tokenEndpointAuthMethodsSupported = this.config.tokenEndpointAuthMethods ?? [...DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS];
 
     const appUrl = envService.appUrl as string;
 
     this.appLoginUrl = websiteUrlFromPaths(appUrl, [this.config.appOAuthInteractionPath, this.config.appOAuthLoginUrlPart]);
     this.appConsentUrl = websiteUrlFromPaths(appUrl, [this.config.appOAuthInteractionPath, this.config.appOAuthConsentUrlPart]);
-
-    console.log({ loginUrl: this.appLoginUrl, consentUrl: this.appConsentUrl, appUrl, config: this.config, interactionPath: this.config.appOAuthInteractionPath, loginUrlPart: this.config.appOAuthLoginUrlPart, consentUrlPart: this.config.appOAuthConsentUrlPart });
+    this.oidcRegistrationRouteEnabled = config.registrationEnabled === true;
   }
 
   /**
@@ -129,8 +145,8 @@ export class OidcProviderConfigService {
       },
       features: {
         devInteractions: { enabled: false },
-        registration: { enabled: true },
-        registrationManagement: { enabled: true }
+        registration: { enabled: this.oidcRegistrationRouteEnabled },
+        registrationManagement: { enabled: this.oidcRegistrationRouteEnabled }
       },
       ttl: {
         AccessToken: config.tokenLifetimes.accessToken,
@@ -174,14 +190,14 @@ export class OidcProviderConfigService {
       token_endpoint: `${issuer}${routes.token}`,
       userinfo_endpoint: `${issuer}${routes.userinfo}`,
       jwks_uri: jwksUri ?? `${issuer}${routes.jwks}`,
-      registration_endpoint: `${issuer}${routes.registration}`,
+      registration_endpoint: this.oidcRegistrationRouteEnabled ? `${issuer}${routes.registration}` : undefined,
       scopes_supported: this.scopesSupported,
       response_types_supported: [...providerConfig.responseTypes],
       response_modes_supported: ['query'],
       grant_types_supported: [...providerConfig.grantTypes],
       subject_types_supported: [...DEFAULT_OIDC_SUBJECT_TYPES],
       id_token_signing_alg_values_supported: [...DEFAULT_OIDC_ID_TOKEN_SIGNING_ALG_VALUES],
-      token_endpoint_auth_methods_supported: [...DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS],
+      token_endpoint_auth_methods_supported: [...this.tokenEndpointAuthMethodsSupported],
       claims_supported: this.claimsSupported,
       code_challenge_methods_supported: [...DEFAULT_OIDC_CODE_CHALLENGE_METHODS]
     };

@@ -154,7 +154,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     let controller: OidcInteractionController;
 
     beforeEach(() => {
-      controller = new OidcInteractionController(oidcService, oidcModuleConfig);
+      controller = new OidcInteractionController(oidcService, providerConfigService);
     });
 
     describe('getInteraction()', () => {

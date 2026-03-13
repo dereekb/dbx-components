@@ -34,6 +34,8 @@ export type OidcRedirectUri = string;
  */
 export type OidcTokenEndpointAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt';
 
+export const PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD: OidcTokenEndpointAuthMethod = 'private_key_jwt';
+
 /**
  * All available token endpoint auth method options with display labels.
  */
@@ -41,5 +43,5 @@ export const ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS: LabeledValue<OidcToken
   { label: 'Client Secret Basic', value: 'client_secret_basic' },
   { label: 'Client Secret Post', value: 'client_secret_post' },
   { label: 'Client Secret JWT', value: 'client_secret_jwt' },
-  { label: 'Private Key JWT', value: 'private_key_jwt' }
+  { label: 'Private Key JWT', value: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD }
 ];

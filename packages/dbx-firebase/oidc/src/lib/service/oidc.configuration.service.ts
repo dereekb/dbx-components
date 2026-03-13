@@ -1,11 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
+import { type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 
 export const DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH = '/oidc/auth';
 export const DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH = '/interaction';
 export const DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY = 'uid';
 export const DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY = 'client_name';
 export const DEFAULT_OIDC_SCOPES_PARAM_KEY = 'scopes';
+export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic'];
 
 /**
  * Abstract configuration class used as a DI token for app-level OIDC settings.
@@ -25,6 +27,13 @@ export abstract class DbxFirebaseOidcConfig {
   readonly clientNameParamKey?: Maybe<string>;
   /** Route param key for the scopes (consent only). Defaults to 'scopes'. */
   readonly scopesParamKey?: Maybe<string>;
+  /**
+   * Supported token endpoint authentication methods.
+   *
+   * Overrides the default methods (`client_secret_post`, `client_secret_basic`).
+   * Used by forms and UI components that need to know which auth methods are available.
+   */
+  readonly tokenEndpointAuthMethods?: Maybe<OidcTokenEndpointAuthMethod[]>;
 }
 
 /**
@@ -59,5 +68,9 @@ export class DbxFirebaseOidcConfigService {
 
   get scopesParamKey(): string {
     return this.config.scopesParamKey ?? DEFAULT_OIDC_SCOPES_PARAM_KEY;
+  }
+
+  get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {
+    return this.config.tokenEndpointAuthMethods ?? DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS;
   }
 }

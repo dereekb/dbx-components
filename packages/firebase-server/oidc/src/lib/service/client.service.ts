@@ -21,9 +21,12 @@ export class OidcClientService {
    * registration flow, validates via `Client.validate`, and persists through the adapter.
    *
    * @param params - Client registration parameters.
+   * @param validatedMetadata - Optional pre-validated metadata to merge into the client properties.
+   *   Use this for server-side fields (e.g., inline `jwks`) that have already been validated
+   *   and should not be exposed through the API params.
    * @returns The generated client ID and secret (plaintext, returned only once).
    */
-  async createClient(params: CreateOidcClientParams): Promise<CreateOidcClientResult> {
+  async createClient(params: CreateOidcClientParams, validatedMetadata?: Partial<Pick<ClientMetadata, 'jwks'>>): Promise<CreateOidcClientResult> {
     const provider = await this.oidcService.getProvider();
     const ProviderClient = provider.Client as any;
 
@@ -46,6 +49,15 @@ export class OidcClientService {
 
     if (params.client_uri) {
       properties.client_uri = params.client_uri;
+    }
+
+    if (params.jwks_uri) {
+      properties.jwks_uri = params.jwks_uri;
+    }
+
+    // Merge any pre-validated metadata (e.g., inline jwks for private_key_jwt in tests)
+    if (validatedMetadata?.jwks) {
+      properties.jwks = validatedMetadata.jwks;
     }
 
     // Mirrors oidc-provider's registration.js: only generate a secret when the auth method requires one.
@@ -89,7 +101,7 @@ export class OidcClientService {
    * @param params - The fields to update.
    * @throws When the client is not found.
    */
-  async updateClient(clientId: OidcEntryClientId, params: UpdateOidcClientParams): Promise<void> {
+  async updateClient(clientId: OidcEntryClientId, params: Omit<UpdateOidcClientParams, 'key'>): Promise<void> {
     const provider = await this.oidcService.getProvider();
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
