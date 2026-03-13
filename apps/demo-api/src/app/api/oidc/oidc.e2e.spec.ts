@@ -4,6 +4,37 @@ import { type INestApplication } from '@nestjs/common';
 import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
+import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
+
+/**
+ * Creates a Firebase ID token for the given UID that the Auth emulator will accept.
+ *
+ * The Auth emulator accepts unsigned JWTs (alg: "none") as long as the audience
+ * matches the project ID the Admin SDK was initialized with. We craft the token
+ * directly to ensure the audience matches the dynamic test project ID.
+ */
+async function createTestIdToken(nestApp: INestApplication, uid: string): Promise<string> {
+  const { OidcAccountService } = await import('@dereekb/firebase-server/oidc');
+  const accountService = nestApp.get(OidcAccountService);
+  const projectId = accountService.authService.auth.app.options.projectId!;
+
+  const now = unixDateTimeSecondsNumberForNow();
+  const payload = {
+    iss: `https://securetoken.google.com/${projectId}`,
+    aud: projectId,
+    auth_time: now,
+    user_id: uid,
+    sub: uid,
+    iat: now,
+    exp: now + 3600,
+    firebase: { identities: {}, sign_in_provider: 'custom' }
+  };
+
+  // The emulator accepts unsigned JWTs (alg: "none")
+  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.`;
+}
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let app: INestApplication;
@@ -83,14 +114,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe('POST /interaction/:uid/login', () => {
-      it('should return 400 for a nonexistent interaction uid', async () => {
-        await request(app.getHttpServer()).post('/interaction/nonexistent-uid/login').send({ idToken: 'fake-token' }).expect(400);
+      it('should return 401 for an invalid Firebase ID token', async () => {
+        await request(app.getHttpServer()).post('/interaction/nonexistent-uid/login').send({ idToken: 'fake-token' }).expect(401);
       });
     });
 
     describe('POST /interaction/:uid/consent', () => {
-      it('should return 400 for a nonexistent interaction uid', async () => {
-        await request(app.getHttpServer()).post('/interaction/nonexistent-uid/consent').send({ approved: false }).expect(400);
+      it('should return 401 for an invalid Firebase ID token', async () => {
+        await request(app.getHttpServer()).post('/interaction/nonexistent-uid/consent').send({ idToken: 'fake-token', approved: false }).expect(401);
       });
     });
   });
@@ -136,22 +167,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
   describe('OAuth authorization code flow', () => {
     demoAuthorizedUserContext({ f }, (u) => {
-      /**
-       * Helper to extract the path from an absolute redirect Location header.
-       * oidc-provider uses the configured issuer host (http://localhost:9010) for redirects,
-       * but our test server runs on a different port, so we strip the host.
-       */
-      function extractRedirectPath(res: request.Response): string {
-        const location = res.headers['location'] as string;
-
-        // If it's a relative path, return as-is
-        if (location.startsWith('/')) {
-          return location;
-        }
-
-        return new URL(location).pathname + new URL(location).search;
-      }
-
       /**
        * Extract the interaction UID from a redirect to the login/consent frontend URL.
        */
@@ -218,13 +233,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const loginUid = extractInteractionUid(authRes);
         expect(loginUid).toBeDefined();
 
-        // 4. Complete login - pass the real user UID as the idToken
-        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken: u.uid }).redirects(0);
-        expect(loginRes.status).toBe(303);
-        collectCookies(loginRes);
+        // 4. Complete login - send a real Firebase ID token
+        const idToken = await createTestIdToken(app, u.uid);
+        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
+        expect(loginRes.status).toBe(200);
+        expect(loginRes.body.redirectTo).toBeDefined();
 
         // 5. Follow the resume redirect back to the provider
-        const resumeAfterLoginPath = extractRedirectPath(loginRes);
+        const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
         const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
 
         expect(consentRedirectRes.status).toBe(303);
@@ -233,12 +249,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(consentUid).toBeDefined();
 
         // 6. Approve consent
-        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ approved: true }).redirects(0);
-        expect(consentRes.status).toBe(303);
-        collectCookies(consentRes);
+        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ idToken, approved: true });
+        expect(consentRes.status).toBe(200);
+        expect(consentRes.body.redirectTo).toBeDefined();
 
         // 7. Follow the resume redirect - provider should redirect to callback with code
-        const resumeAfterConsentPath = extractRedirectPath(consentRes);
+        const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
         const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
 
         expect(callbackRedirectRes.status).toBe(303);
@@ -331,24 +347,25 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const loginUid = extractInteractionUid(authRes);
 
         // 4. Login
-        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken: u.uid }).redirects(0);
-        expect(loginRes.status).toBe(303);
-        collectCookies(loginRes);
+        const idToken = await createTestIdToken(app, u.uid);
+        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
+        expect(loginRes.status).toBe(200);
+        expect(loginRes.body.redirectTo).toBeDefined();
 
         // 5. Resume after login
-        const resumeAfterLoginPath = extractRedirectPath(loginRes);
+        const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
         const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
         expect(consentRedirectRes.status).toBe(303);
         collectCookies(consentRedirectRes);
         const consentUid = extractInteractionUid(consentRedirectRes);
 
         // 6. Approve consent
-        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ approved: true }).redirects(0);
-        expect(consentRes.status).toBe(303);
-        collectCookies(consentRes);
+        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ idToken, approved: true });
+        expect(consentRes.status).toBe(200);
+        expect(consentRes.body.redirectTo).toBeDefined();
 
         // 7. Follow resume redirect to get authorization code
-        const resumeAfterConsentPath = extractRedirectPath(consentRes);
+        const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
         const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
         expect(callbackRedirectRes.status).toBe(303);
         collectCookies(callbackRedirectRes);
@@ -438,24 +455,25 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const loginUid = extractInteractionUid(authRes);
 
         // Login
-        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken: u.uid }).redirects(0);
-        expect(loginRes.status).toBe(303);
-        collectCookies(loginRes);
+        const idToken = await createTestIdToken(app, u.uid);
+        const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken });
+        expect(loginRes.status).toBe(200);
+        expect(loginRes.body.redirectTo).toBeDefined();
 
         // Resume after login → consent redirect
-        const resumeAfterLoginPath = extractRedirectPath(loginRes);
+        const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
         const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', getCookieHeader()).redirects(0);
         expect(consentRedirectRes.status).toBe(303);
         collectCookies(consentRedirectRes);
         const consentUid = extractInteractionUid(consentRedirectRes);
 
         // Approve consent
-        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', getCookieHeader()).send({ approved: true }).redirects(0);
-        expect(consentRes.status).toBe(303);
-        collectCookies(consentRes);
+        const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', getCookieHeader()).send({ idToken, approved: true });
+        expect(consentRes.status).toBe(200);
+        expect(consentRes.body.redirectTo).toBeDefined();
 
         // Follow resume redirect → callback with code
-        const resumeAfterConsentPath = extractRedirectPath(consentRes);
+        const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
         const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', getCookieHeader()).redirects(0);
         expect(callbackRedirectRes.status).toBe(303);
         collectCookies(callbackRedirectRes);

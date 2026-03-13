@@ -30,9 +30,9 @@ export class ConfigureFirebaseAppCheckMiddlewareModule {
 
     // global prefix routes are always protected
     if (protectNonGlobalPaths || !globalPrefix) {
-      forRoutes.push('*');
+      forRoutes.push('{*path}');
     } else {
-      forRoutes.push(`${globalPrefix}/*`);
+      forRoutes.push(`${globalPrefix}/{*path}`);
     }
 
     // add additional protected paths
@@ -43,7 +43,7 @@ export class ConfigureFirebaseAppCheckMiddlewareModule {
     }
 
     for (const path of protectedPaths) {
-      forRoutes.push(`${path}/*`);
+      forRoutes.push(`${path}/{*path}`);
     }
 
     // build exclusion patterns
@@ -51,7 +51,7 @@ export class ConfigureFirebaseAppCheckMiddlewareModule {
 
     if (!protectGlobalWebhooksPath) {
       const webhookPath = globalPrefix ? `${globalPrefix}${DEFAULT_BASE_WEBHOOK_PATH}` : DEFAULT_BASE_WEBHOOK_PATH;
-      excludePatterns.push(`${webhookPath}/*`);
+      excludePatterns.push(`${webhookPath}/{*path}`);
     }
 
     // apply middleware

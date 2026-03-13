@@ -1,21 +1,27 @@
-import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcService } from '../service/oidc.service';
 import { OidcProviderConfigService } from '../service';
-import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest } from '@dereekb/firebase';
+import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid } from '@dereekb/firebase';
+import { OidcAccountService } from '../service/oidc.account.service';
 
 // MARK: Interaction Controller
 /**
  * Controller for OIDC interaction endpoints (login/consent).
  *
- * These routes must be excluded from AppCheck middleware since they
- * are accessed during the OAuth flow by external clients.
+ * The GET endpoint is accessed via browser redirect from the oidc-provider
+ * and must be excluded from AppCheck middleware.
+ *
+ * The POST endpoints are called by the frontend app. They verify the user's
+ * Firebase Auth ID token and bypass the oidc-provider interaction cookie
+ * (which is scoped to the frontend path set by `interactions.url`).
  */
 @Controller('interaction')
 export class OidcInteractionController {
   constructor(
     @Inject(OidcService) private readonly oidcService: OidcService,
-    @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService
+    @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService,
+    @Inject(OidcAccountService) private readonly accountService: OidcAccountService
   ) {}
 
   /**
@@ -26,7 +32,7 @@ export class OidcInteractionController {
    * @throws {HttpException} 404 when the interaction UID is not found or has expired.
    */
   @Get(':uid')
-  async getInteraction(@Param('uid') uid: string, @Req() req: Request, @Res() res: Response) {
+  async getInteraction(@Param('uid') uid: OidcInteractionUid, @Req() req: Request, @Res() res: Response) {
     try {
       const interaction = await this.oidcService.getInteractionDetails(req, res);
       const { prompt } = interaction;
@@ -44,26 +50,27 @@ export class OidcInteractionController {
   /**
    * POST /interaction/:uid/login
    *
-   * Receives auth proof from frontend (Firebase ID token) and completes the login interaction.
+   * Verifies the Firebase Auth ID token sent by the frontend, extracts the
+   * user's UID, and completes the oidc-provider login interaction.
    *
+   * @throws {HttpException} 401 when the Firebase ID token is invalid.
    * @throws {HttpException} 400 when the login interaction cannot be completed.
    */
   @Post(':uid/login')
-  async postLogin(@Param('uid') _uid: string, @Body() body: OAuthInteractionLoginRequest, @Req() req: Request, @Res() res: Response) {
+  @HttpCode(HttpStatus.OK)
+  async postLogin(@Param('uid') uid: OidcInteractionUid, @Body() body: OAuthInteractionLoginRequest, @Res() res: Response) {
+    const accountId = await this._verifyIdToken(body.idToken);
+
     try {
-      // The frontend sends a Firebase ID token as proof of authentication.
-      // In a real implementation, we would verify this token and extract the UID.
-      // For now, the UID is extracted from the token by the consuming app.
-      await this.oidcService.finishInteraction(
-        req,
-        res,
+      const redirectTo = await this.oidcService.finishInteractionByUid(
+        uid,
         {
-          login: {
-            accountId: body.idToken // Will be replaced with actual UID from verified token
-          }
+          login: { accountId }
         },
         { mergeWithLastSubmission: false }
       );
+
+      res.json({ redirectTo });
     } catch {
       throw new HttpException('Login interaction failed', HttpStatus.BAD_REQUEST);
     }
@@ -78,22 +85,26 @@ export class OidcInteractionController {
    * @throws {HttpException} 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
-  async postConsent(@Param('uid') _uid: string, @Body() body: OAuthInteractionConsentRequest, @Req() req: Request, @Res() res: Response) {
+  @HttpCode(HttpStatus.OK)
+  async postConsent(@Param('uid') uid: OidcInteractionUid, @Body() body: OAuthInteractionConsentRequest, @Res() res: Response) {
+    await this._verifyIdToken(body.idToken);
+
     try {
       if (!body.approved) {
-        await this.oidcService.finishInteraction(
-          req,
-          res,
+        const redirectTo = await this.oidcService.finishInteractionByUid(
+          uid,
           {
             error: 'access_denied',
             error_description: 'User denied consent'
           },
           { mergeWithLastSubmission: true }
         );
+
+        res.json({ redirectTo });
         return;
       }
 
-      const interaction = await this.oidcService.getInteractionDetails(req, res);
+      const interaction = await this.oidcService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
       const grant = await this.oidcService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', params.client_id as string);
 
@@ -113,16 +124,32 @@ export class OidcInteractionController {
 
       const grantId = await grant.save();
 
-      await this.oidcService.finishInteraction(
-        req,
-        res,
+      const redirectTo = await this.oidcService.finishInteractionByUid(
+        uid,
         {
           consent: { grantId }
         },
         { mergeWithLastSubmission: true }
       );
+
+      res.json({ redirectTo });
     } catch {
       throw new HttpException('Consent interaction failed', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // MARK: Internal
+  /**
+   * Verifies a Firebase Auth ID token and returns the user's UID.
+   *
+   * @throws {HttpException} 401 when the token is invalid or expired.
+   */
+  private async _verifyIdToken(idToken: string): Promise<string> {
+    try {
+      const decodedToken = await this.accountService.authService.auth.verifyIdToken(idToken);
+      return decodedToken.uid;
+    } catch {
+      throw new HttpException('Invalid Firebase ID token', HttpStatus.UNAUTHORIZED);
     }
   }
 }

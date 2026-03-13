@@ -1,11 +1,12 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { OidcWellKnownController, OidcInteractionController, OidcModuleConfig, OidcProviderConfigService, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
+import { OidcWellKnownController, OidcInteractionController, OidcModuleConfig, OidcProviderConfigService, OidcAccountService, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let jwksService: JwksService;
   let oidcService: OidcService;
   let oidcModuleConfig: OidcModuleConfig;
   let providerConfigService: OidcProviderConfigService;
+  let accountService: OidcAccountService;
 
   beforeEach(() => {
     const serverContext = f.instance.apiServerNestContext;
@@ -13,6 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     oidcService = serverContext.oidcService;
     oidcModuleConfig = f.instance.nest.get(OidcModuleConfig);
     providerConfigService = f.instance.nest.get(OidcProviderConfigService);
+    accountService = f.instance.nest.get(OidcAccountService);
   });
 
   describe('OidcWellKnownController', () => {
@@ -154,7 +156,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     let controller: OidcInteractionController;
 
     beforeEach(() => {
-      controller = new OidcInteractionController(oidcService, providerConfigService);
+      controller = new OidcInteractionController(oidcService, providerConfigService, accountService);
     });
 
     describe('getInteraction()', () => {
@@ -168,26 +170,23 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     describe('postLogin()', () => {
       it('should throw when interaction uid does not exist', async () => {
-        const mockReq = {} as any;
         const mockRes = {} as any;
 
-        await expect(controller.postLogin('nonexistent-uid', { idToken: 'token' }, mockReq, mockRes)).rejects.toThrow();
+        await expect(controller.postLogin('nonexistent-uid', { idToken: 'token' }, mockRes)).rejects.toThrow();
       });
     });
 
     describe('postConsent()', () => {
       it('should throw when denying consent with nonexistent interaction', async () => {
-        const mockReq = {} as any;
         const mockRes = {} as any;
 
-        await expect(controller.postConsent('nonexistent-uid', { approved: false }, mockReq, mockRes)).rejects.toThrow();
+        await expect(controller.postConsent('nonexistent-uid', { idToken: 'token', approved: false }, mockRes)).rejects.toThrow();
       });
 
       it('should throw when approving consent with nonexistent interaction', async () => {
-        const mockReq = {} as any;
         const mockRes = {} as any;
 
-        await expect(controller.postConsent('nonexistent-uid', { approved: true }, mockReq, mockRes)).rejects.toThrow();
+        await expect(controller.postConsent('nonexistent-uid', { idToken: 'token', approved: true }, mockRes)).rejects.toThrow();
       });
     });
   });

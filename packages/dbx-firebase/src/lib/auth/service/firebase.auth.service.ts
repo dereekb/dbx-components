@@ -7,7 +7,7 @@ import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, typ
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
-import { type FirebaseAuthContextInfo } from '@dereekb/firebase';
+import { FirebaseAuthIdToken, type FirebaseAuthContextInfo } from '@dereekb/firebase';
 
 /**
  * Returns an observable that returns the state of the
@@ -84,8 +84,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    */
   readonly userIdentifier$: Observable<AuthUserIdentifier | NoAuthUserIdentifier> = this.uid$;
 
-  readonly currentIdTokenString$: Observable<Maybe<string>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
-  readonly idTokenString$: Observable<string> = this.currentUid$.pipe(switchMap((x) => (x ? this.currentIdTokenString$.pipe(filterMaybe()) : EMPTY)));
+  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly idTokenString$: Observable<FirebaseAuthIdToken> = this.currentUid$.pipe(switchMap((x) => (x ? this.currentIdTokenString$.pipe(filterMaybe()) : EMPTY)));
 
   readonly currentIdTokenResult$: Observable<Maybe<IdTokenResult>> = this.currentAuthUser$.pipe(
     switchMap((x) => (x ? this.currentIdTokenString$.pipe(switchMap((y) => (y ? x.getIdTokenResult() : of(null)))) : of(null))),

@@ -74,7 +74,7 @@ export const DEFAULT_APP_OAUTH_CONSENT_PATH_PART = '/consent';
  *
  * Use with `globalApiRoutePrefix.exclude` in {@link NestServerInstanceConfig}.
  */
-export const FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = ['.well-known/(.*)', 'oidc/(.*)', 'interaction/(.*)'];
+export const FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = ['.well-known/{*path}', 'oidc/{*path}', 'interaction/{*path}'];
 
 // MARK: Provider Factories
 /**

@@ -21,7 +21,7 @@ export class OidcProviderController {
     this._callback = this.oidcService.getProvider().then((p) => p.callback());
   }
 
-  @All('/*')
+  @All('{*path}')
   async handleOidcRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
     const callback = await this._callback;
 

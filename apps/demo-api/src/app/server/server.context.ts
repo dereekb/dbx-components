@@ -1,6 +1,6 @@
 import { AbstractServerFirebaseNestContext } from '@dereekb/firebase-server';
 import { DemoApiNestContext } from '../function/function.context';
-import { OidcAccountService, OidcClientService, OidcService, JwksService, OidcServerFirestoreCollections } from '@dereekb/firebase-server/oidc';
+import { OidcAccountService, OidcClientService, OidcService, JwksService, OidcServerFirestoreCollections, OidcModuleConfig, OidcProviderConfigService } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../common';
 import { DemoOidcScope } from 'demo-firebase';
 
@@ -28,5 +28,13 @@ export class DemoApiServerNestContext extends AbstractServerFirebaseNestContext<
 
   get oidcServerFirestoreCollections(): OidcServerFirestoreCollections {
     return this.context.nest.get(OidcServerFirestoreCollections);
+  }
+
+  get oidcModuleConfig(): OidcModuleConfig {
+    return this.context.nest.get(OidcModuleConfig);
+  }
+
+  get oidcProviderConfigService(): OidcProviderConfigService {
+    return this.context.nest.get(OidcProviderConfigService);
   }
 }

@@ -10,6 +10,7 @@ import { createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
+import { type OidcInteractionUid } from '@dereekb/firebase';
 import { cachedGetter, firstValue, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
 import { DecodedIdToken } from 'firebase-admin/auth';
@@ -67,6 +68,8 @@ export class OidcService {
   // MARK: Interaction
   /**
    * Loads the interaction details for a given request/response pair.
+   *
+   * Requires the oidc-provider interaction cookie to be present on the request.
    */
   async getInteractionDetails(req: Request, res: Response): Promise<Interaction> {
     const provider = await this.getProvider();
@@ -74,11 +77,45 @@ export class OidcService {
   }
 
   /**
-   * Completes an interaction with the given result.
+   * Finds an interaction by its UID directly from the adapter store.
+   *
+   * Bypasses the cookie-based lookup used by `provider.interactionDetails()`.
+   * This is necessary when the interaction cookie is scoped to a different path
+   * (e.g., the frontend) and is not sent with backend API requests.
+   *
+   * @throws {Error} When the interaction is not found or has expired.
    */
-  async finishInteraction(req: Request, res: Response, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<void> {
+  async findInteractionByUid(uid: OidcInteractionUid): Promise<Interaction> {
     const provider = await this.getProvider();
-    return provider.interactionFinished(req, res, result, options);
+    const interaction = await provider.Interaction.find(uid);
+
+    if (!interaction) {
+      throw new Error('Interaction not found');
+    }
+
+    return interaction;
+  }
+
+  /**
+   * Completes an interaction by UID without requiring the interaction cookie.
+   *
+   * Looks up the interaction directly by UID, applies the result, saves it,
+   * and returns the `returnTo` URL for the client to redirect to.
+   *
+   * @returns The `returnTo` URL that the client should redirect to.
+   */
+  async finishInteractionByUid(uid: OidcInteractionUid, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<string> {
+    const interaction = await this.findInteractionByUid(uid);
+    const mergeWithLastSubmission = options?.mergeWithLastSubmission ?? true;
+
+    if (mergeWithLastSubmission && !('error' in result)) {
+      interaction.result = { ...interaction.lastSubmission, ...result };
+    } else {
+      interaction.result = result;
+    }
+
+    await interaction.save(interaction.exp - unixDateTimeSecondsNumberForNow());
+    return interaction.returnTo;
   }
 
   /**

@@ -1,20 +1,19 @@
-import { OidcInteractionUid } from './oidcmodel.interaction';
+import { type FirebaseAuthIdToken } from '../../common/auth/auth';
 
 /**
  * Request body sent by the frontend to complete a login interaction.
  *
  * Posted to `POST /interaction/:uid/login` by the frontend after
- * the user authenticates via Firebase. The backend verifies the
- * ID token and extracts the account ID to pass to `provider.interactionFinished()`.
+ * the user authenticates via Firebase.
  */
 export interface OAuthInteractionLoginRequest {
   /**
-   * Firebase ID token as proof of authentication.
+   * Firebase Auth ID token.
    *
-   * The backend verifies this token and extracts the user's UID
-   * to set as the `accountId` on the oidc-provider login result.
+   * The backend verifies this token via `admin.auth().verifyIdToken()` and
+   * uses the decoded UID as the `accountId` for the oidc-provider login result.
    */
-  readonly idToken: OidcInteractionUid;
+  readonly idToken: FirebaseAuthIdToken;
 }
 
 /**
@@ -24,6 +23,13 @@ export interface OAuthInteractionLoginRequest {
  * the user approves or denies the requested scopes/claims.
  */
 export interface OAuthInteractionConsentRequest {
+  /**
+   * Firebase Auth ID token.
+   *
+   * The backend verifies this token to confirm the caller is the
+   * same user who completed the login interaction.
+   */
+  readonly idToken: FirebaseAuthIdToken;
   /**
    * Whether the user approved the consent.
    *

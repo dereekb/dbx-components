@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { first } from 'rxjs';
 import { dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService, DbxFirebaseLoginComponent } from '@dereekb/dbx-firebase';
 import { DbxFirebaseOidcInteractionService } from '../service/oidc.interaction.service';
 import { DbxFirebaseOidcConfigService } from '../service/oidc.configuration.service';
+import { OidcInteractionUid } from '@dereekb/firebase';
+import { Maybe } from '@dereekb/util';
 
 /**
  * State cases for the OIDC login interaction flow.
@@ -70,7 +71,7 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
 
   readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, this.oidcConfigService.oidcInteractionUidParamKey);
 
-  readonly interactionUid = toSignal(this.uidParamReader.value$);
+  readonly interactionUid: Signal<Maybe<OidcInteractionUid>> = toSignal(this.uidParamReader.value$);
   readonly isLoggedIn = toSignal(this.dbxFirebaseAuthService.isLoggedIn$, { initialValue: false });
 
   readonly submitting = signal(false);
@@ -130,25 +131,17 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
     this.submitting.set(true);
     this.errorMessage.set(null);
 
-    this.dbxFirebaseAuthService.idTokenString$.pipe(first()).subscribe({
-      next: (idToken) => {
-        this.interactionService.submitLogin(uid, idToken).subscribe({
-          next: (response) => {
-            this.submitting.set(false);
+    this.interactionService.submitLogin(uid).subscribe({
+      next: (response) => {
+        this.submitting.set(false);
 
-            if (response.redirectTo) {
-              window.location.href = response.redirectTo;
-            }
-          },
-          error: () => {
-            this.submitting.set(false);
-            this.errorMessage.set('Failed to complete login. Please try again.');
-          }
-        });
+        if (response.redirectTo) {
+          window.location.href = response.redirectTo;
+        }
       },
       error: () => {
         this.submitting.set(false);
-        this.errorMessage.set('Failed to retrieve authentication token.');
+        this.errorMessage.set('Failed to complete login. Please try again.');
       }
     });
   }

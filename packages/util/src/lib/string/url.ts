@@ -334,6 +334,11 @@ export type WebsitePath = `/${string}`;
  */
 export function websiteUrlFromPaths(basePath: BaseWebsiteUrlInput, paths: ArrayOrValue<Maybe<WebsitePath>>, defaultProtocol?: WebsiteProtocol): WebsiteUrl {
   const protocol = readWebsiteProtocol(basePath) ?? defaultProtocol;
+
+  if (!basePath) {
+    return mergeSlashPaths(asArray(paths));
+  }
+
   const baseWebUrl = removeWebProtocolPrefix(baseWebsiteUrl(basePath)); // remove prefix to prevent issues with slash paths
   const webUrl = mergeSlashPaths([baseWebUrl, ...asArray(paths)]);
   return setWebProtocolPrefix(webUrl, protocol);
