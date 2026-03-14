@@ -1,5 +1,4 @@
-import { FirebaseModelsService, FirebaseAppModelContext } from '@dereekb/firebase';
-import { AbstractFirebaseNestContext } from './nest.provider';
+import { type AbstractFirebaseNestContext } from './nest.provider';
 
 /**
  * Abstract class used for the top-level server NestJS context for server-only services.

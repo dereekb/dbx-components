@@ -66,7 +66,7 @@ import {
   oidcEntryFirestoreCollection,
   type OidcModelTypes,
   type OidcEntry,
-  OidcEntryDocument,
+  type OidcEntryDocument,
   type OidcEntryRoles,
   type OidcModelFirestoreCollections,
   firestoreModelKey

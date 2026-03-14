@@ -26,4 +26,4 @@ export interface OidcAuthData extends FirebaseServerAuthData {
  * The `auth` field is populated by {@link OidcAuthBearerTokenMiddleware} after
  * successful bearer token verification.
  */
-export interface OidcAuthenticatedRequest extends FirebaseServerAuthenticatedRequest<OidcAuthData> {}
+export type OidcAuthenticatedRequest = FirebaseServerAuthenticatedRequest<OidcAuthData>;

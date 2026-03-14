@@ -2,7 +2,7 @@ import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOi
 import type { ClientMetadata } from 'oidc-provider';
 import { nanoid } from 'nanoid';
 import { randomBytes } from 'crypto';
-import { OidcService } from './oidc.service';
+import { type OidcService } from './oidc.service';
 
 // MARK: Service
 /**

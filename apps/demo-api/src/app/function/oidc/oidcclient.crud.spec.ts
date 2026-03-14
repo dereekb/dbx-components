@@ -1,9 +1,8 @@
 import { demoCallModel } from './../model/crud.functions';
-import { type CreateOidcClientParams, type CreateOidcClientResult, type RotateOidcClientSecretResult, oidcEntryIdentity, type UpdateOidcClientParams, type DeleteOidcClientParams, firestoreModelKey } from '@dereekb/firebase';
+import { type CreateOidcClientParams, type CreateOidcClientResult, type RotateOidcClientSecretResult, oidcEntryIdentity, type UpdateOidcClientParams, type DeleteOidcClientParams, firestoreModelKey, onCallCreateModelParams, onCallUpdateModelParams, onCallDeleteModelParams } from '@dereekb/firebase';
 import { profileIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { onCallCreateModelParams, onCallUpdateModelParams, onCallDeleteModelParams } from '@dereekb/firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCallableRequestTest('oidcClient', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {

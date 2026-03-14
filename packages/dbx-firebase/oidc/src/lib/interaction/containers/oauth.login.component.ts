@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, OnDestroy, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, type OnDestroy, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
 import { DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY } from '../../service/oidc.configuration.service';
-import { OidcInteractionUid } from '@dereekb/firebase';
+import { type OidcInteractionUid } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../components/oauth.login.view.component';
 

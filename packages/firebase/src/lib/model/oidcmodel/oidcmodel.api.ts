@@ -1,8 +1,8 @@
 import { type, type Type } from 'arktype';
 import { type TargetModelParams, type OnCallCreateModelResult } from '../../common';
-import { InferredTargetModelParams, inferredTargetModelParamsType, targetModelParamsType } from '../../common/model/model/model.param';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction } from '../../client';
-import { WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
+import { type InferredTargetModelParams, inferredTargetModelParamsType, targetModelParamsType } from '../../common/model/model/model.param';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, type ModelFirebaseUpdateFunction } from '../../client';
+import { type WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type OidcEntryClientId } from './oidcmodel.id';
 import { type OidcModelTypes } from './oidcmodel';
@@ -78,17 +78,17 @@ export interface UpdateOidcClientParams extends UpdateOidcClientFieldParams, Tar
 
 export const updateOidcClientParamsType = targetModelParamsType.merge(updateOidcClientFieldParamsType) as Type<UpdateOidcClientParams>;
 
-export interface RotateOidcClientSecretParams extends TargetModelParams {}
+export type RotateOidcClientSecretParams = TargetModelParams;
 
 export const rotateOidcClientSecretParamsType = targetModelParamsType as Type<RotateOidcClientSecretParams>;
 
-export interface RotateOidcClientSecretResult extends Pick<CreateOidcClientResult, 'client_id' | 'client_secret'> {}
+export type RotateOidcClientSecretResult = Pick<CreateOidcClientResult, 'client_id' | 'client_secret'>;
 
 // MARK: Delete
 /**
  * Parameters for revoking/deleting an OAuth client.
  */
-export interface DeleteOidcClientParams extends TargetModelParams {}
+export type DeleteOidcClientParams = TargetModelParams;
 
 export const deleteOidcClientParamsType = targetModelParamsType as Type<DeleteOidcClientParams>;
 

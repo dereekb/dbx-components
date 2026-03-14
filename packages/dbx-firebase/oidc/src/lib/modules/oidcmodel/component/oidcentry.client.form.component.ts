@@ -5,9 +5,9 @@ import { type CreateOidcClientParams, type UpdateOidcClientFieldParams } from '@
 import { map } from 'rxjs';
 import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuration.service';
 
-export interface DbxFirebaseOidcModelClientFormValue extends CreateOidcClientParams {}
+export type DbxFirebaseOidcModelClientFormValue = CreateOidcClientParams;
 
-export interface DbxFirebaseOidcModelClientUpdateFormValue extends UpdateOidcClientFieldParams {}
+export type DbxFirebaseOidcModelClientUpdateFormValue = UpdateOidcClientFieldParams;
 
 /**
  * Config input for {@link DbxFirebaseOidcEntryClientFormComponent}.

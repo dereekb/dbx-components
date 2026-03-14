@@ -1,9 +1,7 @@
 import { type OnDestroy, Component, inject } from '@angular/core';
-import { DbxTwoColumnRightComponent, DbxLoadingComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
-import { DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientTestComponent } from '@dereekb/dbx-firebase/oidc';
+import { DbxTwoColumnRightComponent, DbxLoadingComponent, DbxSectionLayoutModule, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientTestComponent, OidcEntryDocumentStore } from '@dereekb/dbx-firebase/oidc';
 import { loadingStateContext } from '@dereekb/rxjs';
-import { OidcEntryDocumentStore } from '@dereekb/dbx-firebase/oidc';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './list.right.component.html',

@@ -1,4 +1,4 @@
-import { LabeledValue, LabeledValueWithDescription } from '@dereekb/util';
+import { type LabeledValue, type LabeledValueWithDescription } from '@dereekb/util';
 
 /**
  * Unique identifier for an oidc-provider interaction session, not to be confused with a Firebase UID/Auth User Identifier.

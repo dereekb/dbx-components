@@ -1,6 +1,6 @@
-import { JsonSerializableObject, type LabeledValue, type Maybe } from '@dereekb/util';
+import { type JsonSerializableObject, type Maybe } from '@dereekb/util';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField } from '../../common';
-import { GrantedDeleteRole, GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
+import { type GrantedDeleteRole, type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 
 /**
  * Union of model identity types used in the OIDC function map.

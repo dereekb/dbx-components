@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { JwksServiceStorageConfig, OidcAccountClaims, OidcAccountService, oidcModuleMetadata } from '@dereekb/firebase-server/oidc';
-import type { OidcAccountServiceDelegate, OidcProviderConfig, OidcRenderErrorFunction } from '@dereekb/firebase-server/oidc';
+import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, oidcModuleMetadata, type OidcAccountServiceDelegate, type OidcProviderConfig, type OidcRenderErrorFunction } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
-import { FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
+import { type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;

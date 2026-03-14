@@ -6,7 +6,7 @@ import express from 'express';
 import type * as admin from 'firebase-admin';
 import { type StorageBucketId } from '@dereekb/firebase';
 import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
-import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
+import { type GlobalRoutePrefixConfig } from './middleware/globalprefix';
 import { buildNestServerRootModule } from './app.module';
 
 /**

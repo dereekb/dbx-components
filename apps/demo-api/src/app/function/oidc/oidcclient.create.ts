@@ -1,7 +1,6 @@
-import { firestoreModelKey, type CreateOidcClientParams, type CreateOidcClientResult } from '@dereekb/firebase';
+import { firestoreModelKey, type CreateOidcClientParams, type CreateOidcClientResult, type FirebaseAuthOwnershipKey } from '@dereekb/firebase';
 import { type DemoCreateModelFunction } from '../function.context';
 import { isAdminInRequest } from '@dereekb/firebase-server';
-import { FirebaseAuthOwnershipKey } from '@dereekb/firebase';
 import { profileIdentity } from 'demo-firebase';
 
 export const createOidcClient: DemoCreateModelFunction<CreateOidcClientParams, CreateOidcClientResult> = async (request) => {

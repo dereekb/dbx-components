@@ -1,4 +1,4 @@
-import { Maybe, type WebsiteUrlDetails } from '@dereekb/util';
+import { type Maybe, type WebsiteUrlDetails } from '@dereekb/util';
 
 /**
  * Reference to a FirebaseServerEnvService

@@ -16,8 +16,7 @@ import { storageFileDownload } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { profileDownloadArchive } from '../profile/profile.read';
 import { createOidcClient } from '../oidc/oidcclient.create';
-import { updateOidcClient } from '../oidc/oidcclient.update';
-import { rotateOidcClientSecret } from '../oidc/oidcclient.update';
+import { updateOidcClient, rotateOidcClientSecret } from '../oidc/oidcclient.update';
 import { deleteOidcClient } from '../oidc/oidcclient.delete';
 
 // MARK: Create

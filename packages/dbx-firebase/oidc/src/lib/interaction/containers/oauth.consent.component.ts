@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, computed, signal, OnDestroy, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, computed, signal, type OnDestroy, type Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';

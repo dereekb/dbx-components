@@ -1,8 +1,8 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
-import { StorageAccessor } from '@dereekb/dbx-core';
-import { OAuthInteractionLoginDetails } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
-import { catchError, Observable, of } from 'rxjs';
+import { type StorageAccessor } from '@dereekb/dbx-core';
+import { type OAuthInteractionLoginDetails } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import { catchError, type Observable, of } from 'rxjs';
 
 /**
  * Injection token for a {@link StorageAccessor} used by {@link DbxFirebaseOauthClientStorageService} to persist oauth client details.

@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAvatarComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
-import { type ErrorInput, type Maybe, readableError } from '@dereekb/util';
+import { type ErrorInput, type Maybe, readableError, SPACE_STRING_SPLIT_JOIN } from '@dereekb/util';
 import { type OAuthInteractionLoginDetails, type OidcScope } from '@dereekb/firebase';
-import { SPACE_STRING_SPLIT_JOIN } from '@dereekb/util';
 import { type DbxFirebaseOAuthConsentScopesViewData } from './oauth.consent.scope.view.component';
 
 /**

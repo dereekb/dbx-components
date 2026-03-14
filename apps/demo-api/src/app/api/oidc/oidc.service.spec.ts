@@ -1,7 +1,7 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { type OidcServerFirestoreCollections, type JwksService, type OidcAccountService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { type DemoApiFirebaseServerAuthUserContext } from '../../common';
-import { DemoOidcScope } from 'demo-firebase';
+import { type DemoOidcScope } from 'demo-firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let jwksService: JwksService;

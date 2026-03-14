@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent, DbxActionConfirmDirective, type DbxActionConfirmConfig } from '@dereekb/dbx-web';
-import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
+import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
 import { map } from 'rxjs';

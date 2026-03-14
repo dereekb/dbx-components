@@ -1,7 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { Inject, Injectable } from '@nestjs/common';
 import type Provider from 'oidc-provider';
-import type { Interaction, InteractionResults, Grant, Configuration } from 'oidc-provider';
+import { type Interaction, type Configuration } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
@@ -10,10 +9,10 @@ import { createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
-import { OAuthInteractionLoginDetails, OAuthInteractionScopes, OidcEntryClientId, OidcEntryOAuthClientPayloadData, type OidcInteractionUid } from '@dereekb/firebase';
-import { cachedGetter, firstValue, Maybe, unixDateTimeSecondsNumberForNow, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
+import { cachedGetter, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
-import { DecodedIdToken } from 'firebase-admin/auth';
+import { type DecodedIdToken } from 'firebase-admin/auth';
 import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
 
 // MARK: Service

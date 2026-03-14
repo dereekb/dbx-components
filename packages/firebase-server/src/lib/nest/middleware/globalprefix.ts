@@ -1,5 +1,5 @@
-import { MaybeSo, WebsitePath, type Maybe } from '@dereekb/util';
-import { INestApplication } from '@nestjs/common';
+import { type MaybeSo, type Maybe } from '@dereekb/util';
+import { type INestApplication } from '@nestjs/common';
 
 /**
  * Configuration options accepted by NestJS `setGlobalPrefix()`, with all properties made required (non-optional).

@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body } from '@nestjs/common';
 import { type Request, type Response } from 'express';
-import { OidcService } from '../service/oidc.service';
 import { OidcProviderConfigService } from '../service';
 import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';

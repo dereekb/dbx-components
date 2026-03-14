@@ -1,4 +1,4 @@
-import { FirebaseAuthOwnershipKey, type FirestoreQueryConstraint, where } from '../../common';
+import { type FirebaseAuthOwnershipKey, type FirestoreQueryConstraint, where } from '../../common';
 import { type OidcEntry } from './oidcmodel';
 
 /**

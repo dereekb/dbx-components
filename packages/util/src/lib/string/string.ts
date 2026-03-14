@@ -1,5 +1,5 @@
 import { type ArrayOrValue, asArray } from '../array/array';
-import { Configurable } from '../type';
+import { type Configurable } from '../type';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
 
@@ -28,7 +28,7 @@ export type SeparatedString<T = unknown> = string;
  *
  * I.E. 0,1,2
  */
-// eslint-disable-next-line
+
 export type CommaSeparatedString<T = unknown> = SeparatedString<T>;
 
 /**
@@ -38,7 +38,7 @@ export type CommaSeparatedString<T = unknown> = SeparatedString<T>;
  *
  * I.E. 0 1 2
  */
-// eslint-disable-next-line
+
 export type SpaceSeparatedString<T = unknown> = SeparatedString<T>;
 
 /**

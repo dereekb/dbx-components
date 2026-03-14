@@ -1,4 +1,4 @@
-import { OidcScopeDetails, OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 
 // MARK: Scopes
 /**
