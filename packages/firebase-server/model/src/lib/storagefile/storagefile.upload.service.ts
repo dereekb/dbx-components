@@ -8,6 +8,9 @@ export interface StorageFileInitializeFromUploadServiceRef {
   readonly storageFileInitializeFromUploadService: StorageFileInitializeFromUploadService;
 }
 
+/**
+ * Input for storage file upload initialization, containing the file to process.
+ */
 export interface StorageFileInitializeFromUploadInput {
   /**
    * The target file.
@@ -17,6 +20,10 @@ export interface StorageFileInitializeFromUploadInput {
   readonly file: FirebaseStorageAccessorFile;
 }
 
+/**
+ * Result of a storage file upload initialization, indicating success/failure,
+ * the created file path, and the initialized document.
+ */
 export interface StorageFileInitializeFromUploadResult {
   /**
    * Whether or not the initialization was successful.
@@ -43,7 +50,12 @@ export interface StorageFileInitializeFromUploadResult {
 }
 
 /**
- * Service dedicated to initializing a StorageFileDocument value from an uploaded file.
+ * Abstract service responsible for the upload-to-StorageFile initialization pipeline.
+ *
+ * Implementations determine the uploaded file's type, validate it's allowed,
+ * and create the corresponding {@link StorageFile} document in Firestore.
+ *
+ * @see {@link storageFileInitializeFromUploadService} for the default implementation.
  */
 export abstract class StorageFileInitializeFromUploadService {
   /**

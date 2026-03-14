@@ -1,5 +1,5 @@
 import { type SyncStorageFileWithGroupsParams, type SyncStorageFileWithGroupsResult, type ProcessStorageFileParams, type UpdateStorageFileParams } from '@dereekb/firebase';
-import { type DemoUpdateModelFunction } from '../function';
+import { type DemoUpdateModelFunction } from '../function.context';
 
 export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams> = async (request) => {
   const { nest, data } = request;

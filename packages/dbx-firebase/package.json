@@ -26,6 +26,7 @@
   "exports": {
     ".": {
       "sass": "./_index.scss"
-    }
+    },
+    "./oidc": {}
   }
 }

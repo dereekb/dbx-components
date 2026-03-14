@@ -22,4 +22,10 @@ export abstract class ServerEnvironmentConfig {
    * This is always false when production is true.
    */
   abstract developerToolsEnabled?: boolean;
+  /**
+   * The primary URL of the application (e.g., 'https://app.example.com').
+   *
+   * Should not end with a trailing slash.
+   */
+  abstract appUrl?: string;
 }

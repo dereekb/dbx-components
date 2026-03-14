@@ -1,0 +1,150 @@
+import { type Maybe } from '@dereekb/util';
+import { type GrantedReadRole } from '@dereekb/model';
+import { AbstractFirestoreDocument, type FirestoreCollection, type FirestoreContext, type CollectionReference, firestoreModelIdentity, firestoreDate, firestoreEnum, snapshotConverterFunctions, optionalFirestoreDate, firestorePassThroughField } from '@dereekb/firebase';
+import { type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
+import { firestoreEncryptedField } from '@dereekb/firebase-server';
+
+// MARK: Collections
+/**
+ * Abstract class providing access to all JWKS-related Firestore collections.
+ *
+ * Implementations provide concrete collection instances wired to a specific {@link FirestoreContext}.
+ */
+export abstract class JwksFirestoreCollections {
+  abstract readonly jwksKeyCollection: JwksKeyFirestoreCollection;
+}
+
+// MARK: Identity
+/**
+ * Firestore model identity for {@link JwksKey} documents.
+ *
+ * This is a server-side only model. It has no provisions for client-side access.
+ */
+export const jwksKeyIdentity = firestoreModelIdentity('oidcJwksKey', 'oidc_jwks');
+
+// MARK: Types
+/**
+ * Lifecycle status of a JWKS signing key.
+ *
+ * - `active` — currently used for signing new tokens
+ * - `rotated` — replaced by a newer key but still valid for verification until expiry
+ * - `retired` — fully expired and excluded from the public JWKS
+ */
+export type JwksKeyStatus = 'active' | 'rotated' | 'retired';
+
+/**
+ * JWK with a required kid field.
+ */
+export interface JsonWebKeyWithKid extends JsonWebKey {
+  readonly kid: string;
+  readonly kty: string;
+  readonly alg?: string;
+  readonly use?: string;
+}
+
+/**
+ * Firestore document representing a JWKS signing key.
+ */
+export interface JwksKey {
+  /**
+   * Private key in JWK format, encrypted at rest.
+   */
+  privateKey: string;
+  /**
+   * Public key in JWK format (plain text for JWKS endpoint).
+   */
+  publicKey: JsonWebKeyWithKid;
+  /**
+   * Current lifecycle status.
+   */
+  status: JwksKeyStatus;
+  /**
+   * When this key was created.
+   */
+  createdAt: Date;
+  /**
+   * When this key was rotated (status changed from active to rotated).
+   */
+  rotatedAt?: Maybe<Date>;
+  /**
+   * When tokens signed with this key will all have expired.
+   */
+  expiresAt?: Maybe<Date>;
+}
+
+/**
+ * Role type for JWKS key documents. Read-only since keys are managed by the {@link JwksService}.
+ */
+export type JwksKeyRoles = GrantedReadRole;
+
+/**
+ * Firestore document wrapper for {@link JwksKey}.
+ */
+export class JwksKeyDocument extends AbstractFirestoreDocument<JwksKey, JwksKeyDocument, typeof jwksKeyIdentity> {
+  get modelIdentity() {
+    return jwksKeyIdentity;
+  }
+}
+
+// MARK: Converter
+/**
+ * Configuration for creating a {@link JwksKey} snapshot converter.
+ */
+export interface JwksKeyConverterConfig {
+  /**
+   * Encryption secret source for the private key field.
+   */
+  readonly encryptionSecret: AES256GCMEncryptionSecretSource;
+}
+
+/**
+ * Creates a snapshot converter for {@link JwksKey} documents.
+ *
+ * Requires runtime encryption config since the private key field is encrypted at rest.
+ */
+export function jwksKeyConverter(config: JwksKeyConverterConfig) {
+  return snapshotConverterFunctions<JwksKey>({
+    fields: {
+      privateKey: firestoreEncryptedField({ secret: config.encryptionSecret, default: '' }),
+      publicKey: firestorePassThroughField<JsonWebKeyWithKid>(),
+      status: firestoreEnum<JwksKeyStatus>({ default: 'active' }),
+      createdAt: firestoreDate({ saveDefaultAsNow: true }),
+      rotatedAt: optionalFirestoreDate(),
+      expiresAt: optionalFirestoreDate()
+    }
+  });
+}
+
+// MARK: Collection
+/**
+ * Returns the Firestore {@link CollectionReference} for {@link JwksKey} documents.
+ */
+export function jwksKeyCollectionReference(context: FirestoreContext): CollectionReference<JwksKey> {
+  return context.collection(jwksKeyIdentity.collectionName);
+}
+
+/**
+ * Typed Firestore collection for {@link JwksKey} documents.
+ */
+export type JwksKeyFirestoreCollection = FirestoreCollection<JwksKey, JwksKeyDocument>;
+
+/**
+ * Configuration for creating a {@link JwksKeyFirestoreCollection}.
+ */
+export interface JwksKeyFirestoreCollectionConfig extends JwksKeyConverterConfig {
+  readonly firestoreContext: FirestoreContext;
+}
+
+/**
+ * Creates a {@link JwksKeyFirestoreCollection} with encrypted private key field support.
+ */
+export function jwksKeyFirestoreCollection(config: JwksKeyFirestoreCollectionConfig): JwksKeyFirestoreCollection {
+  const { firestoreContext } = config;
+  return firestoreContext.firestoreCollection({
+    modelIdentity: jwksKeyIdentity,
+    converter: jwksKeyConverter(config),
+    collection: jwksKeyCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new JwksKeyDocument(accessor, documentAccessor),
+    firestoreContext
+  });
+}

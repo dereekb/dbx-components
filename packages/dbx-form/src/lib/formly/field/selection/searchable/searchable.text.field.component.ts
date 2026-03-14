@@ -14,12 +14,19 @@ import { MatInput } from '@angular/material/input';
 import { MatOptionModule } from '@angular/material/core';
 import { type SearchableValueFieldDisplayValue } from './searchable';
 
+/**
+ * Formly field properties for the searchable text field, extending the base searchable props
+ * with an option to show the currently selected value.
+ */
 export interface SearchableTextValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldProps<T, M, H> {
   readonly showSelectedValue?: boolean;
 }
 
 /**
- * Display component for selecting a single item/value.
+ * Formly field component for selecting a single value via text search with autocomplete.
+ *
+ * Syncs the selected value's label back to the text input. Supports optional display
+ * of the currently selected value and clear functionality.
  */
 @Component({
   templateUrl: 'searchable.text.field.component.html',

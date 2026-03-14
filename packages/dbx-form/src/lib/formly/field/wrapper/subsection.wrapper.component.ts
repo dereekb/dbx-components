@@ -3,8 +3,19 @@ import { type DbxSectionHeaderConfig, DbxSubSectionComponent } from '@dereekb/db
 import { type Maybe } from '@dereekb/util';
 import { type FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 
+/**
+ * Configuration for the subsection wrapper, using the standard section header config.
+ */
 export type DbxFormSubsectionConfig = DbxSectionHeaderConfig;
 
+/**
+ * Formly wrapper that renders the wrapped field inside a `dbx-subsection` layout
+ * with an optional header and hint text.
+ *
+ * Registered as Formly wrapper `'subsection'`.
+ *
+ * @selector dbx-form-subsection-wrapper
+ */
 @Component({
   selector: 'dbx-form-subsection-wrapper',
   template: `

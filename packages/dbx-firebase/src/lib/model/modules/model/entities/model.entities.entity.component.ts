@@ -12,6 +12,10 @@ import { type Maybe } from '@dereekb/util';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { dbxFirebaseModelEntityWidgetInjectionConfigFactory } from './model.entities.widget';
 
+/**
+ * Renders a single model entity as an expansion panel with display info, widget injection,
+ * and loading state from the entity's document store.
+ */
 @Component({
   selector: 'dbx-firebase-model-entities-entity',
   templateUrl: './model.entities.entity.component.html',

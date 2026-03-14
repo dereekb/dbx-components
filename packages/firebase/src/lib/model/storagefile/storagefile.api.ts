@@ -8,8 +8,7 @@ import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '.
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type StorageFileId } from './storagefile.id';
 import { type SendNotificationResult } from '../notification/notification.api';
-import { clearable } from '@dereekb/model';
-import { ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
+import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 
 /**
  * Parameters for directly creating a new StorageFile document (no upload initialization).
@@ -301,7 +300,7 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: DeleteStorageFileParams;
     };
   };
-  storageFileGroup: {
+  readonly storageFileGroup: {
     update: {
       _: UpdateStorageFileGroupParams;
       regenerateContent: [RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult];

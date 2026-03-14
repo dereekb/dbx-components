@@ -6,9 +6,14 @@ import { type MockItemCollectionFixture, type MockItemDocument, type MockItem, t
 import { type Getter } from '@dereekb/util';
 
 /**
- * Describes accessor driver tests, using a MockItemCollectionFixture.
+ * Registers a shared test suite that validates {@link FirestoreAccessorDriver} behavior
+ * (CRUD operations, transactions, write batches, subcollections, and collection groups)
+ * against a live or emulated Firestore instance.
  *
- * @param f
+ * Call this once per driver implementation (e.g., client SDK, Admin SDK) to verify
+ * that the driver conforms to the expected Firestore accessor contract.
+ *
+ * @param f - Fixture providing the mock item collections and parent context for the tests.
  */
 export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixture) {
   describe('FirestoreAccessorDriver', () => {
@@ -517,17 +522,49 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
   });
 }
 
+/**
+ * Configuration object for {@link describeFirestoreDocumentAccessorTests}.
+ *
+ * Supplies the test suite with the context, document factories, test data, and
+ * assertion helpers needed to validate document-level accessor operations
+ * (get, set, update, create, delete, stream, transactions, write batches).
+ */
 export interface DescribeAccessorTests<T> {
+  /** The Firestore context used for running transactions and creating batches. */
   context: FirestoreContext;
+  /** Returns the document under test. Called fresh in each `beforeEach`. */
   firestoreDocument: Getter<FirestoreDocument<T>>;
+  /**
+   * Returns partial data for the first of two sequential updates within a transaction.
+   * Used to verify that non-overlapping fields survive a second update.
+   */
   dataForFirstOfTwoUpdates: () => Partial<T>;
+  /** Returns partial data used for standard update/set assertions. */
   dataForUpdate: () => Partial<T>;
+  /**
+   * Optional predicate that checks whether fields from the first update
+   * are still present after the second update was applied. When provided,
+   * the multi-update transaction test will assert this returns `true`.
+   */
   hasRemainingDataFromFirstOfTwoUpdate?: (data: T) => boolean;
+  /** Predicate that returns `true` when the document's data reflects a successful update. */
   hasDataFromUpdate: (data: T) => boolean;
+  /** Loads the document within a transaction context for transaction-based tests. */
   loadDocumentForTransaction: (transaction: Transaction, ref?: DocumentReference<T>) => AbstractFirestoreDocument<T, any>;
+  /** Loads the document within a write batch context for batch-based tests. */
   loadDocumentForWriteBatch: (writeBatch: WriteBatch, ref?: DocumentReference<T>) => FirestoreDocument<T, any>;
 }
 
+/**
+ * Registers a shared test suite that validates document-level accessor operations
+ * (get, set, update, create, delete, stream, transactions, and write batches)
+ * for a single Firestore document type.
+ *
+ * This is called internally by {@link describeFirestoreAccessorDriverTests} for each
+ * mock document type, but can also be invoked directly when testing custom document types.
+ *
+ * @param init - Factory that returns a fresh {@link DescribeAccessorTests} config for each test.
+ */
 export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
   let c: DescribeAccessorTests<T>;
   let sub: SubscriptionObject;

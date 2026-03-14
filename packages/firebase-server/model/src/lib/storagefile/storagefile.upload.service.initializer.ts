@@ -24,6 +24,10 @@ import { type StorageFileInitializeFromUploadInput, type StorageFileInitializeFr
 import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from './storagefile.util';
 import { type FirebaseServerStorageService } from '@dereekb/firebase-server';
 
+/**
+ * Input for a storage file upload initializer, providing the type determination result
+ * and the file reader for accessing the uploaded file's content.
+ */
 export interface StorageFileInitializeFromUploadServiceInitializerInput {
   /**
    * The result of the determiner.
@@ -35,6 +39,12 @@ export interface StorageFileInitializeFromUploadServiceInitializerInput {
   readonly fileDetailsAccessor: StoredFileReader;
 }
 
+/**
+ * Union result type from a storage file upload initializer. Can be:
+ * - An error result (initialization failed)
+ * - A create result (new StorageFile document was created via pair factory)
+ * - A document result (StorageFile document was created/found directly)
+ */
 export type StorageFileInitializeFromUploadServiceInitializerResult = StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult | StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult | StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult;
 
 export interface StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult {
@@ -82,6 +92,13 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
   readonly flagPreviousForDelete?: Maybe<StorageFilePurposeAndUserQueryInput>;
 }
 
+/**
+ * Convenience factory for creating a permanent failure result, indicating the file
+ * should be discarded and any created intermediate files cleaned up.
+ *
+ * @param error - the error that caused the permanent failure
+ * @param createdFile - optional path to a file that was created before the error and should be deleted
+ */
 export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown, createdFile?: Maybe<StoragePathRef>): StorageFileInitializeFromUploadServiceInitializerResult {
   return {
     error,
@@ -154,7 +171,32 @@ export interface StorageFileInitializeFromUploadServiceConfig {
 }
 
 /**
- * A basic StorageFileInitializeFromUploadService implementation.
+ * Creates a {@link StorageFileInitializeFromUploadService} from the provided configuration.
+ *
+ * Combines file type determiners with type-specific initializers to form a complete
+ * upload processing pipeline. When a file is uploaded:
+ *
+ * 1. The combined determiner identifies the file type
+ * 2. The corresponding initializer processes the file (copies, creates Firestore document, etc.)
+ * 3. The created file is linked back to the StorageFile document via custom metadata
+ * 4. Optionally, previous files for the same purpose/user are flagged for deletion
+ *
+ * @param config - service configuration including determiners, initializers, and storage references
+ *
+ * @example
+ * ```ts
+ * const service = storageFileInitializeFromUploadService({
+ *   storageService,
+ *   storageFileCollection,
+ *   initializer: [
+ *     {
+ *       type: 'image',
+ *       determiner: imageDeterminer,
+ *       initialize: processImage
+ *     }
+ *   ]
+ * });
+ * ```
  */
 export function storageFileInitializeFromUploadService(config: StorageFileInitializeFromUploadServiceConfig): StorageFileInitializeFromUploadService {
   const { storageService, storageFileCollection, initializer: inputInitializers, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized, requireStorageFileRelatedFileMetadataBeSet } = config;

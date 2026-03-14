@@ -27,6 +27,13 @@ export interface FirebaseAuthUserIdRef {
 }
 
 /**
+ * Raw encoded JWT for Firebase Auth.
+ *
+ * Corresponds with IdToken type in Firebase Auth.
+ */
+export type FirebaseAuthIdToken = string;
+
+/**
  * Decoded Firebase Auth token information, containing user identity details from the authentication provider.
  *
  * These fields come from the Firebase Auth token and represent the user's current identity state.

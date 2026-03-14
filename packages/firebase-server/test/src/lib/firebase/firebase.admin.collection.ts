@@ -4,7 +4,15 @@ import { type TestContextFixture, useTestContextFixture, AbstractChildTestContex
 import { type FirebaseAdminTestContext } from './firebase.admin';
 
 /**
- * Testing context for a single model.
+ * Test context interface representing a single Firestore document/model instance.
+ *
+ * Provides convenient access to the document's identifiers (ID, key, flat key),
+ * its {@link DocumentReference}, and the typed {@link FirestoreDocument} wrapper.
+ * Used within Jest test suites to interact with a specific document that was
+ * created during test setup.
+ *
+ * @see {@link ModelTestContextInstance} for the concrete implementation
+ * @see {@link modelTestContextFactory} to create model test contexts via a factory
  */
 export interface ModelTestContext<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   get documentId(): FirestoreModelId;
@@ -15,6 +23,13 @@ export interface ModelTestContext<T, D extends FirestoreDocument<T> = FirestoreD
   get document(): D;
 }
 
+/**
+ * Fixture wrapper for {@link ModelTestContextInstance} that delegates all
+ * {@link ModelTestContext} operations to the underlying instance.
+ *
+ * Manages the lifecycle of the model test context within the Jest test fixture hierarchy.
+ * Use this as the primary handle in test suites; it is created automatically by {@link modelTestContextFactory}.
+ */
 export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>> extends AbstractChildTestContextFixture<I, PF> implements ModelTestContext<T, D> {
   // MARK: ModelTestContext (Forwarded)
   get documentId(): FirestoreModelId {
@@ -42,6 +57,16 @@ export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = Firesto
   }
 }
 
+/**
+ * Concrete implementation of {@link ModelTestContext} that holds a Firestore collection reference,
+ * a document reference, and the parent {@link FirebaseAdminTestContext}.
+ *
+ * Provides computed properties for the document's various key formats (path, flat, two-way flat)
+ * and lazily loads the typed {@link FirestoreDocument} wrapper on access.
+ *
+ * Created by {@link modelTestContextFactory} during test setup; typically accessed
+ * through the {@link ModelTestContextFixture} wrapper.
+ */
 export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements ModelTestContext<T, D> {
   constructor(
     readonly collection: FirestoreCollectionLike<T, D>,
@@ -75,7 +100,12 @@ export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = Firest
 }
 
 /**
- * authorizedUserContext/authorizedUserContextFactory parameters.
+ * Configuration for {@link modelTestContextFactory} that controls how model test contexts
+ * are created, initialized, and torn down.
+ *
+ * At minimum, `getCollection` must be provided to resolve the Firestore collection from the
+ * parent test context. Other hooks allow customizing fixture creation, document reference creation,
+ * instance construction, initialization, and cleanup.
  */
 export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>> {
   /**
@@ -118,6 +148,14 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   destroyInstance?(instance: I): PromiseOrValue<void>;
 }
 
+/**
+ * Alternative params for {@link modelTestContextFactory} that supplies a pre-existing document
+ * instead of creating a new one. When used, the factory skips document creation and
+ * `initDocument`, and instead wraps the provided document.
+ *
+ * Requires `collectionForDocument` to be set in {@link ModelTestContextFactoryParams} so the
+ * factory can resolve the collection for the given document.
+ */
 export interface ModelTestContextDocumentRefParams<D extends FirestoreDocument<any> = FirestoreDocument<any>> {
   /**
    * Custom document to use that is already initialized.
@@ -125,10 +163,24 @@ export interface ModelTestContextDocumentRefParams<D extends FirestoreDocument<a
   readonly doc: AsyncGetterOrValue<D>;
 }
 
+/**
+ * Runtime parameters passed when invoking a model test context factory.
+ *
+ * Always includes the parent fixture (`f`). The remaining fields come from either the
+ * custom config type `C` (for new document creation) or {@link ModelTestContextDocumentRefParams}
+ * (for wrapping an existing document).
+ */
 export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>> = { f: PF } & (C | ModelTestContextDocumentRefParams);
 
 /**
- * Creates a new Test Context that has a random user for authorization for use in firebase server tests.
+ * Creates a reusable factory function that sets up a {@link ModelTestContextFixture} for a specific
+ * Firestore model type within Jest test suites.
+ *
+ * The returned factory, when called with params and a `buildTests` callback, registers `beforeEach`/`afterEach`
+ * hooks that create a new document (or wrap an existing one via {@link ModelTestContextDocumentRefParams}),
+ * build the test context instance, optionally initialize the document, and clean up after each test.
+ *
+ * @see {@link ModelTestContextFactoryParams} for configuration options
  */
 export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(
   config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>

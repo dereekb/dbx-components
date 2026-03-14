@@ -3,6 +3,9 @@ import { type DbxInjectionComponentConfig, type ClickableAnchor } from '@dereekb
 import { type Observable } from 'rxjs';
 import { type SelectionDisplayValue, type SelectionValue, type SelectionValueHashFunction } from '../selection';
 
+/**
+ * A searchable field value extending {@link SelectionValue} with an optional anchor for navigation.
+ */
 export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValue<T, M> {
   /**
    * Optional anchor metadata on the field.
@@ -20,6 +23,9 @@ export interface SearchableValueFieldDisplayValue<T, M = unknown> extends Select
   readonly display?: Partial<DbxInjectionComponentConfig>;
 }
 
+/**
+ * A searchable display value with a required (non-optional) display configuration.
+ */
 export interface ConfiguredSearchableValueFieldDisplayValue<T, M = unknown> extends Omit<SearchableValueFieldDisplayValue<T, M>, 'display'> {
   readonly display: DbxInjectionComponentConfig;
 }
@@ -43,4 +49,5 @@ export type SearchableValueFieldDisplayFn<T, M = unknown> = MapFunction<Searchab
  */
 export type SearchableValueFieldAnchorFn<T, M = unknown> = MapFunction<SearchableValueFieldValue<T, M>, ClickableAnchor>;
 
+/** Hash function for searchable field values, used to identify and deduplicate selections. */
 export type SearchableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFunction<T, H>;

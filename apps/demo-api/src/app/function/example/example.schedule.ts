@@ -1,5 +1,5 @@
 import { loadExampleSystemState } from 'demo-firebase';
-import { type DemoScheduleFunction } from '../function';
+import { type DemoScheduleFunction } from '../function.context';
 
 export const exampleUsageOfSchedule: DemoScheduleFunction = async (request) => {
   const exampleSystemStateDocument = loadExampleSystemState(request.nest.demoFirestoreCollections.systemStateCollection.documentAccessor());

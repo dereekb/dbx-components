@@ -1,0 +1,15 @@
+<dbx-two-column-right header="OIDC Client">
+  <dbx-content-container>
+    <dbx-loading [context]="context">
+      <div class="dbx-pt3 dbx-mb3">
+        <dbx-firebase-oidc-entry-client-view></dbx-firebase-oidc-entry-client-view>
+      </div>
+      <dbx-section class="dbx-mb3" [elevate]="true" header="Update Client">
+        <dbx-firebase-oidc-entry-client-update></dbx-firebase-oidc-entry-client-update>
+      </dbx-section>
+      <dbx-section class="dbx-mb3" [elevate]="true" header="Test Client">
+        <dbx-firebase-oidc-entry-client-test></dbx-firebase-oidc-entry-client-test>
+      </dbx-section>
+    </dbx-loading>
+  </dbx-content-container>
+</dbx-two-column-right>

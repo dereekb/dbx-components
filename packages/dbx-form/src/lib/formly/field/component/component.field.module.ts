@@ -4,6 +4,7 @@ import { DbxFormComponentFieldComponent } from './component.field.component';
 
 const importsAndExports = [DbxFormComponentFieldComponent];
 
+/** Registers the `component` Formly field type for custom Angular component injection. */
 @NgModule({
   imports: [
     ...importsAndExports,

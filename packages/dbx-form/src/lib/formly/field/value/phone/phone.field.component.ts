@@ -14,8 +14,13 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
 import { NgxMatInputTelComponent } from 'ngx-mat-input-tel';
 
+/**
+ * Formly field props for the international phone number component.
+ */
 export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
+  /** ISO country codes for countries shown first in the dropdown. */
   readonly preferredCountries?: Maybe<string[]>;
+  /** ISO country codes to restrict the dropdown to. */
   readonly onlyCountries?: Maybe<string[]>;
   /**
    * Whether or not to enable the search feature. True by default.
@@ -27,8 +32,17 @@ export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
   readonly allowExtension?: boolean;
 }
 
+/** Default preferred countries shown at the top of the phone country dropdown. */
 export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
+/**
+ * Formly custom field type for international phone number input with optional extension support.
+ *
+ * Uses ngx-mat-input-tel for the country-aware phone input and manages E.164 phone number
+ * formatting. Supports splitting phone + extension pairs for storage and display.
+ *
+ * Registered as Formly type `'intphone'`.
+ */
 @Component({
   templateUrl: 'phone.field.component.html',
   imports: [MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatInputTelComponent],

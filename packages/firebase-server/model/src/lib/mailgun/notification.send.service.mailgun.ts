@@ -23,7 +23,7 @@ export interface MailgunNotificationEmailSendServiceTemplateBuilderInput {
 }
 
 /**
- * Config for a mailgunNotificationEmailSendService()
+ * Configuration for creating a {@link MailgunNotificationEmailSendService} via {@link mailgunNotificationEmailSendService}.
  */
 export interface MailgunNotificationEmailSendServiceConfig {
   /**
@@ -53,8 +53,34 @@ export const MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_
  */
 export type MailgunNotificationEmailSendServiceTemplateBuilder = (input: MailgunNotificationEmailSendServiceTemplateBuilderInput) => PromiseOrValue<ArrayOrValue<MailgunTemplateEmailRequest>>;
 
+/**
+ * Mailgun-backed implementation of {@link NotificationEmailSendService}.
+ */
 export type MailgunNotificationEmailSendService = NotificationEmailSendService;
 
+/**
+ * Creates a {@link NotificationEmailSendService} that sends notification emails via Mailgun.
+ *
+ * Groups messages by their send template name, batches them (up to `maxBatchSizePerRequest`),
+ * converts each batch to a {@link MailgunTemplateEmailRequest} using the configured template builders,
+ * and dispatches them through the Mailgun API.
+ *
+ * @param config - service configuration including the Mailgun service, template builders, and batch size
+ *
+ * @example
+ * ```ts
+ * const emailService = mailgunNotificationEmailSendService({
+ *   mailgunService,
+ *   defaultSendTemplateName: 'notification',
+ *   messageBuilders: {
+ *     notification: buildNotificationTemplate
+ *   }
+ * });
+ *
+ * const sendInstance = await emailService.buildSendInstanceForEmailNotificationMessages(messages);
+ * const result = await sendInstance();
+ * ```
+ */
 export function mailgunNotificationEmailSendService(config: MailgunNotificationEmailSendServiceConfig): MailgunNotificationEmailSendService {
   const { mailgunService, defaultSendTemplateName, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders } = config;
   const lowercaseKeysMessageBuilders = mapObjectKeysToLowercase(inputMessageBuilders);

@@ -5,6 +5,12 @@ import { type MockItemFirestoreCollection, type MockItem } from './mock.item';
 import { type MockItemCollections, makeMockItemCollections } from './mock.item.service';
 
 // MARK: Test Item Testing Fixture
+/**
+ * Provides direct access to all mock item Firestore collections for a single test run.
+ *
+ * Created by {@link MockItemCollectionFixture} and exposes convenience getters for each
+ * mock collection/collection-group. Delegates collection creation to {@link makeMockItemCollections}.
+ */
 export class MockItemCollectionFixtureInstance {
   readonly collections: MockItemCollections;
 
@@ -61,12 +67,34 @@ export class MockItemCollectionFixtureInstance {
 }
 
 /**
- * Used to expose a CollectionReference to MockItem for simple tests.
+ * Test fixture that wraps a {@link TestFirestoreContextFixture} and provides access to
+ * all mock item collections via {@link MockItemCollectionFixtureInstance}.
+ *
+ * Use {@link testWithMockItemCollectionFixture} to create a factory builder for this fixture.
  */
 export class MockItemCollectionFixture extends AbstractWrappedFixtureWithInstance<MockItemCollectionFixtureInstance, TestFirestoreContextFixture> {}
 
+/**
+ * Configuration options for {@link testWithMockItemCollectionFixture}.
+ *
+ * Currently empty; reserved for future setup/teardown customization.
+ */
 export interface MockItemCollectionFirebaseContextConfig {}
 
+/**
+ * Creates a {@link TestWrappedContextFactoryBuilder} that sets up a {@link MockItemCollectionFixture}
+ * around a parent {@link TestFirestoreContextFixture}.
+ *
+ * Compose with a Firebase test context factory to get a fully wired test environment:
+ *
+ * @example
+ * ```ts
+ * const f = testWithMockItemCollectionFixture()(authorizedFirebaseFactory);
+ * describe('my test', () => f.with((instance) => {
+ *   it('should work', () => { ... });
+ * }));
+ * ```
+ */
 export function testWithMockItemCollectionFixture(config?: MockItemCollectionFirebaseContextConfig): TestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
   return instanceWrapTestContextFactory({
     wrapFixture: (fixture) => new MockItemCollectionFixture(fixture),

@@ -6,6 +6,7 @@ import { DbxFormFormlyArrayFieldModule } from '../array/array.field.module';
 
 const importsAndExports = [DbxFormFormlyArrayFieldModule, FormlyMaterialModule, FormlyMatInputModule, DbxFormFormlyWrapperModule];
 
+/** Aggregates Formly Material input, array field, and wrapper modules for text field support. */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

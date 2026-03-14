@@ -6,9 +6,14 @@ import { arrayContainsDuplicateValue } from '@dereekb/util';
 import { callbackTest } from '@dereekb/util/test';
 
 /**
- * Describes accessor driver tests, using a MockItemCollectionFixture.
+ * Registers a shared test suite that validates Firestore pagination and iteration behavior
+ * (page-based queries, snapshot/item accumulators, and loading-state integration)
+ * against a live or emulated Firestore instance.
  *
- * @param f
+ * Tests cover {@link FirestoreItemPageIterationFactoryFunction}, {@link firebaseQuerySnapshotAccumulator},
+ * {@link firebaseQueryItemAccumulator}, and related RxJS accumulator utilities.
+ *
+ * @param f - Fixture providing the mock item collection and parent context for the tests.
  */
 export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
   describe('firestoreItemPageIteration', () => {
@@ -53,6 +58,60 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
             });
           })
         );
+      });
+
+      describe('inferEndOfResultsFromPageSize', () => {
+        describe('with inferEndOfResultsFromPageSize=true (default)', () => {
+          it(
+            'should mark the result as the end when fewer items are returned than the limit.',
+            callbackTest((done) => {
+              const limit = testDocumentCount + 5; // request more than exist
+
+              const iteration = firestoreIteration({ limit });
+
+              sub.subscription = iteration.latestState$.subscribe((x) => {
+                expect(x.value).toBeDefined();
+                expect(x.value!.length).toBe(testDocumentCount);
+                expect(x.hasNextPage).toBe(false);
+                done();
+              });
+            })
+          );
+
+          it(
+            'should not mark the result as the end when the page is full.',
+            callbackTest((done) => {
+              const limit = 4;
+
+              const iteration = firestoreIteration({ limit });
+
+              sub.subscription = iteration.latestState$.subscribe((x) => {
+                expect(x.value).toBeDefined();
+                expect(x.value!.length).toBe(limit);
+                expect(x.hasNextPage).toBe(true);
+                done();
+              });
+            })
+          );
+        });
+
+        describe('with inferEndOfResultsFromPageSize=false', () => {
+          it(
+            'should not mark the result as the end even when fewer items are returned than the limit.',
+            callbackTest((done) => {
+              const limit = testDocumentCount + 5; // request more than exist
+
+              const iteration = firestoreIteration({ limit, inferEndOfResultsFromPageSize: false });
+
+              sub.subscription = iteration.latestState$.subscribe((x) => {
+                expect(x.value).toBeDefined();
+                expect(x.value!.length).toBe(testDocumentCount);
+                expect(x.hasNextPage).toBe(true); // does not infer end
+                done();
+              });
+            })
+          );
+        });
       });
 
       describe('constraint', () => {

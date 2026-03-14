@@ -31,6 +31,12 @@ export class DbxModelViewTrackerStorage {
     return DbxModelViewTrackerStorage.DEFAULT_MAX_EVENTS;
   }
 
+  /**
+   * Persists a view tracker event to storage. Deduplicates by model key, sorts by date, and trims to the max event limit.
+   *
+   * @param event - The event to record
+   * @returns Observable that completes when the event has been persisted
+   */
   addTrackerEvent(event: DbxModelViewTrackerEvent): Observable<void> {
     const storageKey = this.getStorageKeyForFolder(event.folder);
     return this._getEventSetForStorageKey(storageKey).pipe(
@@ -55,10 +61,20 @@ export class DbxModelViewTrackerStorage {
     );
   }
 
+  /**
+   * Returns all stored view events for the given folder.
+   *
+   * @param folder - Optional folder name; defaults to `'default'`
+   */
   getAllEvents(folder?: Maybe<string>): Observable<DbxModelViewTrackerEvent[]> {
     return this.getEventSet(folder).pipe(map((x) => x.e));
   }
 
+  /**
+   * Returns the complete event set for the given folder.
+   *
+   * @param folder - Optional folder name; defaults to `'default'`
+   */
   getEventSet(folder?: Maybe<string>): Observable<DbxModelViewTrackerEventSet> {
     const storageKey = this.getStorageKeyForFolder(folder);
     return this._getEventSetForStorageKey(storageKey);
@@ -73,6 +89,11 @@ export class DbxModelViewTrackerStorage {
     );
   }
 
+  /**
+   * Computes the storage key for a given folder name.
+   *
+   * @param folder - Optional folder name; defaults to `'default'`
+   */
   getStorageKeyForFolder(folder?: Maybe<string>): string {
     const storageKey = `${this.storageKey}_${folder ?? 'default'}`;
     return storageKey;

@@ -5,19 +5,43 @@ import { isDivisibleBy } from '../../../../validator';
 import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, validatorsForFieldConfig, type FieldConfigParsersRef, type FormlyValueParser, type MaterialFormFieldConfig } from '../../field';
 
 // MARK: Number Field
+/**
+ * Numeric constraint configuration for number fields.
+ */
 export interface NumberFieldNumberConfig {
   readonly min?: number;
   readonly max?: number;
+  /** Step increment for the input. */
   readonly step?: number;
+  /** When true, adds a validator that enforces the value is divisible by `step`. */
   readonly enforceStep?: boolean;
 }
 
+/** HTML input type for number fields. */
 export type NumberFieldInputType = 'number';
 
+/**
+ * Full configuration for a numeric input field.
+ *
+ * Combines labeling, numeric constraints (min/max/step), number transformation,
+ * and Material form field styling.
+ */
 export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, NumberFieldNumberConfig, AttributesFieldConfig, Partial<TransformNumberFunctionConfigRef>, MaterialFormFieldConfig {
   readonly inputType?: NumberFieldInputType;
 }
 
+/**
+ * Builds an array of value parsers for a number field, incorporating any configured
+ * number transformation (e.g., precision, rounding) as a parser prepended to existing parsers.
+ *
+ * @param config - Parser and transform configuration
+ * @returns Array of value parsers, or undefined if none configured
+ *
+ * @example
+ * ```typescript
+ * const parsers = numberFieldTransformParser({ transform: { precision: 2 } });
+ * ```
+ */
 export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformNumberFunctionConfigRef>) {
   const { parsers: inputParsers, transform } = config;
   let parsers: FormlyValueParser[] | undefined;
@@ -34,6 +58,19 @@ export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef
   return parsers;
 }
 
+/**
+ * Creates a Formly field configuration for a numeric input.
+ *
+ * Adds a divisibility validator when both `step` and `enforceStep` are set.
+ *
+ * @param config - Number field configuration
+ * @returns A validated {@link FormlyFieldConfig} with type `'input'` and input type `'number'`
+ *
+ * @example
+ * ```typescript
+ * const field = numberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
+ * ```
+ */
 export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
   const { key, min, max, step, enforceStep, inputType: type = 'number', materialFormField } = config;
   const parsers = numberFieldTransformParser(config);
@@ -93,6 +130,17 @@ export interface NumberSliderFieldConfig extends NumberFieldConfig {
   readonly displayWith?: (value: number) => string;
 }
 
+/**
+ * Creates a Formly field configuration for a Material slider input.
+ *
+ * @param config - Slider field configuration including max (required), thumb label, and tick interval
+ * @returns A validated {@link FormlyFieldConfig} with type `'slider'`
+ *
+ * @example
+ * ```typescript
+ * const field = numberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
+ * ```
+ */
 export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldConfig {
   const { key, min, max, step, enforceStep, inputType: type = 'number', materialFormField, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval, invertSelectionColoring: invertedSelectionColoring = false, displayWith } = config;
   const parsers = numberFieldTransformParser(config);
@@ -132,8 +180,20 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
 }
 
 // MARK: Dollar Amount Field
+/** Configuration for a dollar amount field, which enforces cent-level precision. */
 export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
 
+/**
+ * Creates a number field pre-configured for dollar amount input with cent-level precision.
+ *
+ * @param config - Number field configuration (precision is overridden to dollar amount precision)
+ * @returns A {@link FormlyFieldConfig} for dollar amount input
+ *
+ * @example
+ * ```typescript
+ * const field = dollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
+ * ```
+ */
 export function dollarAmountField(config: DollarAmountFieldConfig) {
   return numberField({ ...config, transform: { ...config.transform, precision: config.transform?.precision ?? DOLLAR_AMOUNT_PRECISION } }); // TODO: Add wrapper addon, addonLeft: { text: '$' }
 }

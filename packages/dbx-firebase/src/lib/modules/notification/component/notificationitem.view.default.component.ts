@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AbstractDbxFirebaseNotificationItemWidgetComponent } from './notificationitem.view.directive';
 import { DbxFirebaseNotificationItemContentComponent } from './notificationitem.content.component';
 
+/** Default notification item view component that renders subject, message, and creation date. */
 @Component({
   selector: 'dbx-firebase-notificationitem-view-default',
   template: '<dbx-firebase-notificationitem-content [subject]="subject" [message]="message" [date]="date"></dbx-firebase-notificationitem-content>',

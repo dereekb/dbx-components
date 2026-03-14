@@ -96,23 +96,44 @@ export class DbxWebFilePreviewService {
   private _defaultPreviewDialogWithComponentFunction: DbxWebFilePreviewServicePreviewDialogWithComponentFunction = DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_DIALOG_WITH_COMPONENT_FUNCTION;
 
   // Configuration
+  /**
+   * Registers one or more file preview entries, mapping MIME types to their preview components.
+   *
+   * @param entries - Single or array of preview entries to register
+   */
   registerPreviewEntries(entries: ArrayOrValue<DbxWebFilePreviewServiceEntry>) {
     asArray(entries).forEach((entry) => this.registerPreviewEntry(entry));
   }
 
+  /**
+   * Registers a single file preview entry for its MIME type(s).
+   *
+   * @param entry - The preview entry to register
+   */
   registerPreviewEntry(entry: DbxWebFilePreviewServiceEntry) {
     asArray(entry.mimeType).forEach((mimeType) => this._entries.set(mimeType, entry));
   }
 
+  /**
+   * Overrides the default preview component function used when no MIME-specific entry is registered.
+   */
   setDefaultPreviewComponentFunction(previewFunction: DbxWebFilePreviewServicePreviewComponentFunction) {
     this._defaultPreviewComponentFunction = previewFunction;
   }
 
+  /**
+   * Overrides the default dialog-with-component function used when no MIME-specific dialog handler is registered.
+   */
   setDefaultPreviewDialogWithComponentFunction(previewDialogWithComponentFunction: DbxWebFilePreviewServicePreviewDialogWithComponentFunction) {
     this._defaultPreviewDialogWithComponentFunction = previewDialogWithComponentFunction;
   }
 
   // Service
+  /**
+   * Creates an injection component config for previewing a file. Uses a MIME-specific preview function if registered, otherwise falls back to the default.
+   *
+   * @param input - The preview input containing blob, URL, and MIME type information
+   */
   createPreviewConfig(input: DbxWebFilePreviewServicePreviewComponentFunctionInput) {
     const { embedMimeType } = input;
 
@@ -120,6 +141,12 @@ export class DbxWebFilePreviewService {
     return previewFunction(input);
   }
 
+  /**
+   * Opens a Material dialog to preview a file. Uses a MIME-specific dialog function if registered, otherwise creates a preview component and wraps it in the default dialog.
+   *
+   * @param input - The dialog input containing file data and MIME type
+   * @returns Reference to the opened dialog
+   */
   openPreviewDialog(input: DbxWebFilePreviewServicePreviewDialogFunctionInput): MatDialogRef<any, any> {
     const { embedMimeType } = input;
     const previewDialogFunction: DbxWebFilePreviewServicePreviewDialogFunction | undefined = embedMimeType ? this._entries.get(embedMimeType)?.previewDialogFunction : undefined;

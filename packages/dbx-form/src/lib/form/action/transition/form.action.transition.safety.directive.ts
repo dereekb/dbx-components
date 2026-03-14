@@ -4,9 +4,16 @@ import { type DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective 
 import { DbxActionFormDirective } from '../form.action.directive';
 
 /**
- * Extension of DbxActionTransitionSafetyDirective that forces the form to update first.
+ * Extension of {@link DbxActionTransitionSafetyDirective} that forces the form to update before
+ * evaluating transition safety. This ensures the latest form state is considered when deciding
+ * whether to block or allow a route transition.
  *
- * NOTE: Only works with UIRouter
+ * NOTE: Only works with UIRouter.
+ *
+ * @selector `[dbxActionFormSafety]`
+ *
+ * @typeParam T - The form value type.
+ * @typeParam O - The output value type passed to the action source.
  */
 @Directive({
   selector: '[dbxActionFormSafety]',
@@ -14,6 +21,12 @@ import { DbxActionFormDirective } from '../form.action.directive';
 })
 export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
   readonly dbxActionForm = inject(DbxActionFormDirective<T>, { host: true });
+
+  /**
+   * The safety type that controls when transitions are blocked.
+   *
+   * Defaults to `'auto'`, which blocks transitions when the form has unsaved changes.
+   */
   readonly dbxActionFormSafety = input<DbxActionTransitionSafetyType>('auto');
 
   protected readonly _dbxActionFormSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionFormSafety()));

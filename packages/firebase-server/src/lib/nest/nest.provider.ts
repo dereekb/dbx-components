@@ -27,14 +27,15 @@ import { nestFirebaseDoesNotExistError, nestFirebaseForbiddenPermissionError } f
 export type NestApplicationPromiseGetter = Getter<Promise<INestApplicationContext>>;
 
 /**
- * Generates a function from the passed NestApplicationPromiseGetter/context.
+ * Factory type that creates a function from a {@link NestApplicationPromiseGetter}.
  *
- * This pattern is available to allow generating similar content for differenting contexts, such as production and testing.
+ * This pattern enables generating the same function shape for different contexts
+ * (e.g., production vs testing) by parameterizing on the Nest application source.
  */
 export type NestApplicationFunctionFactory<F> = (nestAppPromiseGetter: NestApplicationPromiseGetter) => F;
 
 /**
- * Getter for an INestApplicationContext promise. Nest should be initialized when the promise resolves.
+ * Factory function that creates a typed context from an initialized {@link INestApplicationContext}.
  */
 export type MakeNestContext<C> = (nest: INestApplicationContext) => C;
 
@@ -53,6 +54,11 @@ export abstract class AbstractNestContext {
   }
 }
 
+/**
+ * Abstract class used for the top-level NestJS context for Firebase services.
+ *
+ * Your API implementation of this class is usually <AppPrefix>ApiNestContext (e.g. `DemoApiNestContext`).
+ */
 export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerEnvServiceRef, FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {
   /**
    * FirebasePermissionErrorContextErrorFunction to use with makeModelContext().
@@ -85,11 +91,12 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
   }
 
   /**
-   * Creates a FirebaseAppModelContext instance.
+   * Creates a {@link FirebaseAppModelContext} from request auth data.
    *
-   * @param auth
-   * @param buildFn
-   * @returns
+   * The context includes auth info, app reference, and error factories for permissions/existence checks.
+   *
+   * @param auth - The request's auth data reference.
+   * @param buildFn - Optional builder to customize the context.
    */
   makeModelContext(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<A>>): FirebaseAppModelContext<A> {
     const base: FirebaseAppModelContext<A> = {
@@ -108,11 +115,11 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
   }
 
   /**
-   * Creates a InContextFirebaseModelsService given the input context and parameters.
+   * Creates an {@link InContextFirebaseModelsService} bound to the given auth context,
+   * enabling scoped model selection and permission checking.
    *
-   * @param context
-   * @param buildFn
-   * @returns
+   * @param context - The request's auth data reference.
+   * @param buildFn - Optional builder to customize the model context.
    */
   model(context: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<A>>): InContextFirebaseModelsService<Y> {
     const firebaseModelContext = this.makeModelContext(context, buildFn);
@@ -135,11 +142,17 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
   }
 }
 
+/**
+ * Input for {@link AbstractFirebaseNestContext.useModel} when only a roles reader is needed (no custom use function).
+ */
 export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>> = Omit<UseFirebaseModelsServiceSelection<Y, T>, 'type' | 'context'> & {
   readonly request: AuthDataRef;
   readonly buildFn?: BuildFunction<C>;
 };
 
+/**
+ * Input for {@link AbstractFirebaseNestContext.useModel} with a custom use function that transforms the selection result.
+ */
 export type UseModelInput<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>, O> = UseModelInputForRolesReader<C, Y, T> & {
   readonly use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O>;
 };

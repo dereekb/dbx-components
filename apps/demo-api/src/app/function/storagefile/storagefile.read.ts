@@ -1,4 +1,4 @@
-import { type DemoReadModelFunction } from '../function';
+import { type DemoReadModelFunction } from '../function.context';
 import { type DownloadStorageFileParams, type DownloadStorageFileResult } from '@dereekb/firebase';
 
 export const storageFileDownload: DemoReadModelFunction<DownloadStorageFileParams, DownloadStorageFileResult> = async (request) => {

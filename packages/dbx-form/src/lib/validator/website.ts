@@ -19,6 +19,12 @@ export interface IsWebsiteUrlValidatorConfig {
    */
   readonly requirePrefix?: Maybe<boolean>;
   /**
+   * Whether or not to allow URLs with a port number but no TLD (e.g. http://localhost:9010/path).
+   *
+   * Defaults to false.
+   */
+  readonly allowPorts?: Maybe<boolean>;
+  /**
    * Valid domains to accept.
    *
    * Defaults to undefined.
@@ -33,32 +39,51 @@ export interface IsWebsiteUrlValidatorConfig {
  * @returns
  */
 export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): ValidatorFn {
-  const { requirePrefix, validDomains: inputValidDomains } = config ?? {};
+  const { requirePrefix, allowPorts, validDomains: inputValidDomains } = config ?? {};
   const isPrefixRequired = requirePrefix ?? true;
+  const isAllowPorts = allowPorts ?? false;
   const validDomains = asArray(inputValidDomains);
   const validDomainsSet = new Set(validDomains);
   const validateDomains = validDomainsSet.size > 0;
 
+  function isValidUrl(details: WebsiteUrlDetails): boolean {
+    if (isPrefixRequired) {
+      if (isWebsiteUrlWithPrefix(details.input)) {
+        return true;
+      }
+    } else if (details.isWebsiteUrl) {
+      return true;
+    }
+
+    if (isAllowPorts && details.hasPortNumber) {
+      return isPrefixRequired ? details.hasHttpPrefix : true;
+    }
+
+    return false;
+  }
+
+  const portNumbersMessagePart = isAllowPorts ? '' : ' Urls with port numbers (e.g. localhost:8080) are not allowed.';
+
   const validateWebsiteValue: (details: WebsiteUrlDetails) => ValidationErrors | null = isPrefixRequired
     ? (details: WebsiteUrlDetails) => {
-        return isWebsiteUrlWithPrefix(details.input)
+        return isValidUrl(details)
           ? null
           : {
               [IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY]: {
                 value: details.input,
                 isPrefixRequired,
-                message: `Value is not a website url with an http/https prefix.`
+                message: `Value is not a website url with an http/https prefix.${portNumbersMessagePart}`
               }
             };
       }
     : (details: WebsiteUrlDetails) => {
-        return details.isWebsiteUrl
+        return isValidUrl(details)
           ? null
           : {
               [IS_NOT_WEBSITE_URL_VALIDATION_KEY]: {
                 value: details.input,
                 isPrefixRequired,
-                message: `Value is not a valid website url.`
+                message: `Value is not a valid website url.${portNumbersMessagePart}`
               }
             };
       };

@@ -1,5 +1,5 @@
 import { type DemoDevelopmentExampleResult, type DemoDevelopmentExampleParams } from 'demo-firebase';
-import { type DemoDevelopmentFunction } from '../function';
+import { type DemoDevelopmentFunction } from '../function.context';
 
 export const exampleDevelopmentFunction: DemoDevelopmentFunction<DemoDevelopmentExampleParams, DemoDevelopmentExampleResult> = (request) => {
   const { data } = request;

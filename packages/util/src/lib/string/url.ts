@@ -207,6 +207,10 @@ export interface WebsiteUrlDetails {
   readonly hasHttpPrefix: boolean;
   /** Whether the input contains a website domain. */
   readonly hasWebsiteDomain: boolean;
+  /** Whether the input contains a port number. */
+  readonly hasPortNumber: boolean;
+  /** The port number, or `undefined` if none is present. */
+  readonly portNumber: PortNumber | undefined;
   /** The domain and path split pair. */
   readonly splitPair: WebsiteDomainAndPathPair;
   /** The extracted domain. */
@@ -231,6 +235,8 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
   const { domain, path: websitePath } = splitPair;
 
   const pathHasWebsiteDomain = hasWebsiteDomain(domain);
+  const inputHasPortNumber = hasPortNumber(input);
+  const portNumber = inputHasPortNumber ? (readPortNumber(input) ?? undefined) : undefined;
 
   const [path, query] = splitStringAtFirstCharacterOccurence(splitPair.path, '?'); // everything after the query is ignored
   const isWebsiteUrl = pathHasWebsiteDomain && isSlashPathFolder(path + '/');
@@ -241,6 +247,8 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
     isWebsiteUrl,
     hasWebsiteDomain: pathHasWebsiteDomain,
     hasHttpPrefix: inputHasHttpPrefix,
+    hasPortNumber: inputHasPortNumber,
+    portNumber,
     splitPair,
     domain,
     websitePath,
@@ -262,7 +270,7 @@ export type WebsiteUrlWithPrefix = string;
  * @param input - The string to check.
  * @returns Whether the input is a website URL with an HTTP prefix.
  */
-export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrl {
+export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrlWithPrefix {
   const details = websiteUrlDetails(input);
   return details.hasHttpPrefix && details.isWebsiteUrl;
 }
@@ -326,6 +334,11 @@ export type WebsitePath = `/${string}`;
  */
 export function websiteUrlFromPaths(basePath: BaseWebsiteUrlInput, paths: ArrayOrValue<Maybe<WebsitePath>>, defaultProtocol?: WebsiteProtocol): WebsiteUrl {
   const protocol = readWebsiteProtocol(basePath) ?? defaultProtocol;
+
+  if (!basePath) {
+    return mergeSlashPaths(asArray(paths));
+  }
+
   const baseWebUrl = removeWebProtocolPrefix(baseWebsiteUrl(basePath)); // remove prefix to prevent issues with slash paths
   const webUrl = mergeSlashPaths([baseWebUrl, ...asArray(paths)]);
   return setWebProtocolPrefix(webUrl, protocol);

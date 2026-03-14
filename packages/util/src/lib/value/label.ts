@@ -34,3 +34,11 @@ export interface LabeledValue<T> extends LabelRef {
 export function labeledValueMap<V extends LabeledValue<T>, T extends PrimativeKey>(values: V[]): Map<T, V> {
   return new Map(values.map((x) => [x.value, x]));
 }
+
+// MARK: With Description
+/**
+ * Pairs a value with a human-readable label and an optional description.
+ */
+export interface LabeledValueWithDescription<T> extends LabeledValue<T> {
+  description?: string;
+}

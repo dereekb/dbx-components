@@ -4,7 +4,7 @@ import admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
 import { demoDevelopmentFunctionMap } from './app/function/model/development.functions';
 import { firebaseServerDevFunctions } from '@dereekb/firebase-server';
-import { onCallWithDemoNestContext } from './app/function/function';
+import { onCallWithDemoNestContext } from './app/function/function.context';
 
 const app = admin.initializeApp();
 

@@ -26,12 +26,33 @@ export const FIREBASE_AUTH_TOKEN: InjectionToken = 'FIREBASE_AUTH_TOKEN';
 export class FirebaseServerAuthModule {}
 
 // MARK: AppAuth
+/**
+ * Simplified provider config that receives only the Firebase Admin Auth instance.
+ */
 export type ProvideFirebaseServerAuthServiceSimple<T extends FirebaseServerAuthService> = Pick<FactoryProvider<T>, 'provide'> & {
   useFactory: (auth: admin.auth.Auth) => T;
 };
 
+/**
+ * Provider config for a custom {@link FirebaseServerAuthService} implementation — either a full factory
+ * provider or a simplified one that only needs the Auth instance.
+ */
 export type ProvideFirebaseServerAuthService<T extends FirebaseServerAuthService> = FactoryProvider<T> | ProvideFirebaseServerAuthServiceSimple<T>;
 
+/**
+ * Creates NestJS provider entries for a custom {@link FirebaseServerAuthService} implementation.
+ *
+ * Returns two providers: the concrete service and an alias that maps
+ * `FirebaseServerAuthService` to the concrete token, enabling injection by the abstract type.
+ *
+ * @example
+ * ```typescript
+ * const providers = provideFirebaseServerAuthService({
+ *   provide: MyAuthService,
+ *   useFactory: (auth) => new MyAuthService(auth)
+ * });
+ * ```
+ */
 export function provideFirebaseServerAuthService<T extends FirebaseServerAuthService>(provider: ProvideFirebaseServerAuthService<T>): [ProvideFirebaseServerAuthService<T>, Provider<T>] {
   return [
     {
@@ -51,11 +72,16 @@ export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServer
 }
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's Auth related modules and FirebaseServerAuthService provider.
+ * Generates NestJS {@link ModuleMetadata} for an app's auth module, including the {@link FirebaseServerAuthModule}
+ * import and the custom {@link FirebaseServerAuthService} provider.
  *
- * @param provide
- * @param useFactory
- * @returns
+ * @example
+ * ```typescript
+ * @Module(firebaseServerAuthModuleMetadata({
+ *   serviceProvider: { provide: MyAuthService, useFactory: (auth) => new MyAuthService(auth) }
+ * }))
+ * export class AppAuthModule {}
+ * ```
  */
 export function firebaseServerAuthModuleMetadata<T extends FirebaseServerAuthService>(config: FirebaseServerAuthModuleMetadataConfig<T>): ModuleMetadata {
   return mergeModuleMetadata(

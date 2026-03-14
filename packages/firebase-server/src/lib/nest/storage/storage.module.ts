@@ -53,6 +53,17 @@ export class FirebaseServerStorageModule {}
 export class FirebaseServerStorageContextModule {}
 
 // MARK: Token Configuration
+/**
+ * Creates a NestJS provider that configures the default storage bucket ID.
+ *
+ * @param input - A bucket ID string or full factory config object.
+ * @throws Error if `defaultBucketId` is empty.
+ *
+ * @example
+ * ```typescript
+ * const provider = firebaseServerStorageDefaultBucketIdTokenProvider('my-bucket-name');
+ * ```
+ */
 export function firebaseServerStorageDefaultBucketIdTokenProvider(input: StorageBucketId | FirebaseStorageContextFactoryConfig): Provider {
   const config = typeof input === 'string' ? { defaultBucketId: input } : input;
 
@@ -66,11 +77,17 @@ export function firebaseServerStorageDefaultBucketIdTokenProvider(input: Storage
   };
 }
 
-// MARK: AppAuth
+// MARK: Storage Service Providers
+/**
+ * Simplified provider config that receives only the {@link FirebaseStorageContext}.
+ */
 export type ProvideFirebaseServerStorageServiceSimple<T extends FirebaseServerStorageService> = Pick<FactoryProvider<T>, 'provide'> & {
   useFactory: (context: FirebaseStorageContext) => T;
 };
 
+/**
+ * Returns the default provider config that creates a standard {@link FirebaseServerStorageService}.
+ */
 export function defaultProvideFirebaseServerStorageServiceSimple(): ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> {
   return {
     provide: FirebaseServerStorageService,
@@ -80,6 +97,12 @@ export function defaultProvideFirebaseServerStorageServiceSimple(): ProvideFireb
 
 export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageService> = FactoryProvider<T> | ProvideFirebaseServerStorageServiceSimple<T>;
 
+/**
+ * Creates NestJS provider entries for a {@link FirebaseServerStorageService} implementation.
+ *
+ * If the provider token differs from `FirebaseServerStorageService`, an alias provider is added
+ * so the service can also be injected by the abstract type.
+ */
 export function provideFirebaseServerStorageService<T extends FirebaseServerStorageService = FirebaseServerStorageService>(provider: ProvideFirebaseServerStorageService<T>): Provider<T>[] {
   const providers: Provider<T>[] = [
     {
@@ -104,11 +127,14 @@ export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseSer
 }
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's Auth related modules and FirebaseServerStorageService provider.
+ * Generates NestJS {@link ModuleMetadata} for an app's storage module, including the
+ * {@link FirebaseServerStorageContextModule} import and the storage service provider.
  *
- * @param provide
- * @param useFactory
- * @returns
+ * @example
+ * ```typescript
+ * @Module(firebaseServerStorageModuleMetadata())
+ * export class AppStorageModule {}
+ * ```
  */
 export function firebaseServerStorageModuleMetadata<T extends FirebaseServerStorageService = FirebaseServerStorageService>(config?: FirebaseServerStorageModuleMetadataConfig<T>): ModuleMetadata {
   const serviceProvider = config && config.serviceProvider ? config.serviceProvider : defaultProvideFirebaseServerStorageServiceSimple();

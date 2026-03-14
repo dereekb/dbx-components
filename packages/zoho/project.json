@@ -30,7 +30,7 @@
         "outputPath": "dist/packages/zoho",
         "main": "packages/zoho/src/index.ts",
         "tsConfig": "packages/zoho/tsconfig.lib.json",
-        "compiler": "tsc",
+        "compiler": "swc",
         "project": "packages/zoho/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": true,

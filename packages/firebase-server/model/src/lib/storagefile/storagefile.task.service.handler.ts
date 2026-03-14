@@ -40,7 +40,10 @@ import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskS
 import archiver from 'archiver';
 
 /**
- * Input for a StorageFileProcessingPurposeSubtask.
+ * Input for a purpose-specific storage file processing subtask.
+ *
+ * Extends the generic subtask input with storage-file-specific context: the document reference,
+ * a lazy loader for the current file data, and a file reader for accessing the stored file's content.
  */
 export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> extends NotificationTaskSubtaskInput<StorageFileProcessingNotificationTaskData<M, S>, M, S> {
   /**

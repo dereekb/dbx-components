@@ -10,6 +10,10 @@ import { dateFromDateOrTimeMillisecondsNumber, type Maybe, type Milliseconds, ty
  */
 export type StorageFileQueueForDeleteTime = true | Milliseconds | Date;
 
+/**
+ * Input for {@link queryAndFlagStorageFilesForDelete}, specifying the query constraints,
+ * collection, deletion timing, and optional keys to skip.
+ */
 export interface QueryAndFlagStorageFilesForDeleteInput {
   readonly storageFileCollection: StorageFileFirestoreCollection;
   readonly constraints: FirestoreQueryConstraint[];
@@ -20,6 +24,10 @@ export interface QueryAndFlagStorageFilesForDeleteInput {
   readonly skipDeleteForKeys?: ArrayOrValue<StorageFileKey>;
 }
 
+/**
+ * Result of {@link queryAndFlagStorageFilesForDelete}, reporting how many files were visited
+ * and how many were actually flagged for deletion.
+ */
 export interface QueryAndFlagStorageFilesForDeleteResult {
   readonly visitedCount: number;
   readonly queuedForDeleteCount: number;

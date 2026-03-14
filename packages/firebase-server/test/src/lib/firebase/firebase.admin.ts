@@ -11,8 +11,20 @@ import { type Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { GoogleCloudTestFirebaseStorageInstance } from '../storage/storage';
 import { type Auth } from 'firebase-admin/auth';
 
+/**
+ * Configuration for creating a {@link FirebaseAdminTestContextInstance}.
+ *
+ * Currently empty but exists as an extension point for future per-test configuration.
+ */
 export interface FirebaseAdminTestConfig {}
 
+/**
+ * Provides access to all Firebase Admin services needed during testing.
+ *
+ * Implementations expose the Admin app, authentication, Firestore, and Cloud Storage
+ * along with their corresponding test driver instances and contexts. Also extends
+ * {@link FirebaseAdminCloudFunctionWrapperSource} for wrapping Cloud Functions in tests.
+ */
 export interface FirebaseAdminTestContext extends FirebaseAdminCloudFunctionWrapperSource {
   readonly app: admin.app.App;
   readonly auth: Auth;
@@ -24,6 +36,13 @@ export interface FirebaseAdminTestContext extends FirebaseAdminCloudFunctionWrap
   readonly storageContext: TestFirebaseStorageContext;
 }
 
+/**
+ * Test fixture that implements {@link FirebaseAdminTestContext} by forwarding all property access
+ * to the underlying {@link FirebaseAdminTestContextInstance}.
+ *
+ * Used with {@link firebaseAdminTestBuilder} to provide a stable reference that persists across
+ * the setup/teardown lifecycle while the inner instance is created and destroyed per test suite.
+ */
 export class FirebaseAdminTestContextFixture extends AbstractTestContextFixture<FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
@@ -64,6 +83,17 @@ export class FirebaseAdminTestContextFixture extends AbstractTestContextFixture<
 }
 
 // MARK: FirebaseAdminTestBuilder
+/**
+ * Wraps a `firebase-admin` {@link admin.app.App} and lazily creates test driver instances
+ * for Firestore and Cloud Storage.
+ *
+ * Each instance initializes its own Admin app with a unique project ID, ensuring test isolation
+ * when running against Firebase emulators. The Firestore and Storage test instances are created
+ * on first access via {@link cachedGetter} so they are only allocated when actually needed.
+ *
+ * @throws Error if {@link fnWrapper} is accessed, since Cloud Function wrapping requires a
+ * subclass (such as one provided by `firebase-functions-test`).
+ */
 export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContext {
   readonly getTestFirestoreInstance = cachedGetter(() => {
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
@@ -112,6 +142,15 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
   }
 }
 
+/**
+ * Base class for child test context instances that extend a {@link FirebaseAdminTestContextInstance}.
+ *
+ * Forwards all {@link FirebaseAdminTestContext} properties to the `parent` instance, allowing
+ * subclasses to layer additional behavior (e.g., Cloud Function wrapping, custom auth setup)
+ * while reusing the parent's Admin app and emulator connections.
+ *
+ * @typeParam F - The parent instance type, defaults to {@link FirebaseAdminTestContextInstance}.
+ */
 export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
   constructor(readonly parent: F) {}
 
@@ -184,6 +223,21 @@ export const firebaseAdminTestBuilder = testContextBuilder<FirebaseAdminTestCont
 });
 
 export type FirebaseAdminTestContextFactory = TestContextFactory<FirebaseAdminTestContextFixture>;
+
+/**
+ * Default {@link FirebaseAdminTestContextFactory} created with an empty config.
+ *
+ * Use this to quickly set up a Firebase Admin test context in your test suites:
+ *
+ * @example
+ * ```ts
+ * firebaseAdminTestContextFactory((f) => {
+ *   it('should access firestore', () => {
+ *     expect(f.firestore).toBeDefined();
+ *   });
+ * });
+ * ```
+ */
 export const firebaseAdminTestContextFactory: FirebaseAdminTestContextFactory = firebaseAdminTestBuilder({});
 
 // MARK: Firestore Context
@@ -201,6 +255,17 @@ export function firebaseAdminFirestoreContextFixture(factory: TestContextFactory
   };
 }
 
+/**
+ * Sets up a {@link TestFirestoreContextFixture} as a child context within an existing
+ * {@link FirebaseAdminTestContextInstance} fixture.
+ *
+ * Unlike {@link firebaseAdminFirestoreContextFixture}, this function operates directly on a fixture
+ * reference rather than a factory, making it suitable for composing Firestore tests inside a
+ * `describe` block that already has a Firebase Admin context available.
+ *
+ * @param f - The parent fixture providing the Admin test context instance.
+ * @param buildTests - Callback that receives the Firestore fixture and registers test cases.
+ */
 export function firebaseAdminFirestoreContextWithFixture(f: TestContextFixture<FirebaseAdminTestContextInstance>, buildTests: BuildTestsWithContextFunction<TestFirestoreContextFixture>) {
   useTestContextFixture({
     fixture: new TestFirestoreContextFixture(),

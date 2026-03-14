@@ -10,8 +10,15 @@ import { type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 
+/** Formly field properties for the text editor component. */
 export type TextEditorComponentFieldProps = FormlyFieldProps;
 
+/**
+ * Formly field component providing a rich text editor powered by ngx-editor.
+ *
+ * Outputs HTML format and marks the form control dirty on editor value changes
+ * while focused. Supports compact mode via {@link CompactContextStore}.
+ */
 @Component({
   template: `
     <div class="dbx-texteditor-field" [ngClass]="compactClassSignal()" [formGroup]="formGroup">

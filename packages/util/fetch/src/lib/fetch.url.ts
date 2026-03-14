@@ -14,6 +14,23 @@ export interface MakeUrlSearchParamsOptions {
    * Defaults to true.
    */
   readonly filterEmptyValues?: boolean;
+  /**
+   * Whether to encode spaces as `%20` instead of `+` in the output string.
+   *
+   * `URLSearchParams.toString()` uses `application/x-www-form-urlencoded` encoding,
+   * which represents spaces as `+`. However, `URL.search` and `decodeURIComponent()`
+   * encode spaces as `%20`. This mismatch means that consumers like Angular's router
+   * that use `decodeURIComponent()` will not decode `+` back to a space, corrupting
+   * values (e.g., `"openid profile"` becomes `"openid+profile"`).
+   *
+   * Set to `true` when building redirect URLs or any URL that will be decoded with
+   * `decodeURIComponent()` rather than form-data parsing.
+   *
+   * Defaults to false.
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams#interaction_with_url.searchparams | MDN: Interaction with URL.searchParams}
+   */
+  readonly useUrlSearchSpaceHandling?: boolean;
 }
 
 /**
@@ -34,6 +51,24 @@ export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Rec
   }
 
   return searchParams;
+}
+
+/**
+ * Creates a URL query string from the input objects.
+ *
+ * Equivalent to `makeUrlSearchParams(...).toString()`, but respects the
+ * {@link MakeUrlSearchParamsOptions.usePercentEncoding} option to produce
+ * RFC 3986 percent-encoded output (`%20` for spaces) instead of the
+ * `application/x-www-form-urlencoded` default (`+` for spaces).
+ *
+ * @param input - objects to encode as query parameters
+ * @param options - encoding options
+ * @returns the encoded query string (without a leading `?`)
+ */
+export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
+  const params = makeUrlSearchParams(input, options);
+  const str = params.toString();
+  return options?.useUrlSearchSpaceHandling ? str.replace(/\+/g, '%20') : str;
 }
 
 /**

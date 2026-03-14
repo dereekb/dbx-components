@@ -10,7 +10,9 @@ import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
 /**
- * Used for picking pre-set values using chips as the presentation.
+ * Formly field component that renders pickable values as Material chips.
+ *
+ * Clicking a chip toggles its selection state unless the field is readonly or disabled.
  */
 @Component({
   templateUrl: 'pickable.chip.field.component.html',

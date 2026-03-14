@@ -51,3 +51,32 @@ export function encodeRadix36Number(number: number): Radix36EncodedNumber {
 export function decodeRadix36Number(encoded: Radix36EncodedNumber): number {
   return parseInt(encoded, 36);
 }
+
+// MARK: Hex
+/**
+ * A string containing only hexadecimal characters (0-9, a-f or A-F).
+ */
+export type HexString = string;
+
+/**
+ * Pattern that matches strings containing only hexadecimal characters (0-9, a-f, A-F).
+ */
+export const HEX_PATTERN = /^[0-9a-fA-F]+$/;
+
+/**
+ * Checks whether the input string contains only valid hexadecimal characters.
+ *
+ * @example
+ * ```ts
+ * isHex('a1b2c3'); // true
+ * isHex('FF00AA'); // true
+ * isHex('hello');  // false
+ * isHex('');       // false
+ * ```
+ *
+ * @param value - The string to check.
+ * @returns True if the string is non-empty and contains only hex characters.
+ */
+export function isHex(value: string): value is HexString {
+  return HEX_PATTERN.test(value);
+}

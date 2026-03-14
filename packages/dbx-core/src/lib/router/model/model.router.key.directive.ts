@@ -57,6 +57,9 @@ export class DbxRouteModelKeyDirective {
     this._redirectInstance.setParamKey(idParam);
   }
 
+  /**
+   * Default model key value to use when the route parameter matches the placeholder or is absent.
+   */
   @Input()
   set dbxRouteModelKeyDefault(defaultValue: MaybeObservableOrValueGetter<ModelKey>) {
     this._redirectInstance.setDefaultValue(defaultValue);
@@ -70,6 +73,9 @@ export class DbxRouteModelKeyDirective {
     this._redirectInstance.setRedirectEnabled(redirect !== false); // true by default
   }
 
+  /**
+   * Custom decision function or placeholder string value that determines when to use the default value instead of the route parameter.
+   */
   @Input()
   set dbxRouteModelKeyDefaultDecision(decider: string | SwitchMapToDefaultFilterFunction<ModelKey>) {
     this._redirectInstance.setDecider(decider);

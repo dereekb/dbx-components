@@ -13,8 +13,14 @@ export class DbxModelTrackerService {
 
   private _defaultFolder: Maybe<string>;
 
+  /**
+   * Emits whenever a new view tracker event is recorded.
+   */
   readonly newEvent$ = this._viewTrackerStorage.newEvent$;
 
+  /**
+   * The default storage folder used when no folder is specified in tracking calls.
+   */
   get defaultFolder(): Maybe<string> {
     return this._defaultFolder;
   }
@@ -24,6 +30,13 @@ export class DbxModelTrackerService {
   }
 
   // MARK: View
+  /**
+   * Records a view event for the given model, optionally in a specific context and folder.
+   *
+   * @param modelKeyTypeNamePair - The model identity to track
+   * @param context - Optional view context metadata
+   * @param folder - Storage folder; defaults to {@link defaultFolder}
+   */
   trackViewedObject(modelKeyTypeNamePair: ModelKeyTypeNamePair, context?: Maybe<ModelViewContext>, folder: Maybe<string> = this._defaultFolder): void {
     this._viewTrackerStorage
       .addTrackerEvent({
@@ -35,10 +48,20 @@ export class DbxModelTrackerService {
       .subscribe();
   }
 
+  /**
+   * Returns all recorded view events for the given folder, sorted by most recent first.
+   *
+   * @param folder - Storage folder; defaults to {@link defaultFolder}
+   */
   getAllViewEvents(folder: Maybe<string> = this._defaultFolder): Observable<DbxModelViewTrackerEvent[]> {
     return this._viewTrackerStorage.getAllEvents(folder);
   }
 
+  /**
+   * Returns the complete event set (events and last-update timestamp) for the given folder.
+   *
+   * @param folder - Storage folder; defaults to {@link defaultFolder}
+   */
   getViewEventSet(folder: Maybe<string> = this._defaultFolder): Observable<DbxModelViewTrackerEventSet> {
     return this._viewTrackerStorage.getEventSet(folder);
   }

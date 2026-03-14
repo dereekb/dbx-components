@@ -15,6 +15,22 @@ interface DocRefSource {
   readonly doc: (path: string) => CollectionReference & CollectionRefForPathInput;
 }
 
+/**
+ * Resolves a Firestore {@link CollectionReference} from a starting point and optional additional path segments.
+ *
+ * Supports nested subcollection paths by processing segments in pairs (doc ID, collection name).
+ *
+ * @param start - A Firestore object that can resolve collection paths (e.g., Firestore instance, DocumentReference).
+ * @param path - The initial collection path.
+ * @param pathSegments - Optional pairs of [docId, collectionName] for subcollection traversal.
+ * @throws Error if pathSegments length is odd (segments must come in pairs).
+ *
+ * @example
+ * ```typescript
+ * const ref = collectionRefForPath<User>(firestore, 'users');
+ * const subRef = collectionRefForPath<Comment>(firestore, 'users', ['user123', 'comments']);
+ * ```
+ */
 export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: string, pathSegments?: string[]): CollectionReference<T> {
   let ref = start.collection(path);
 
@@ -34,6 +50,22 @@ export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: 
   return ref as CollectionReference<T>;
 }
 
+/**
+ * Resolves a Firestore {@link DocumentReference} from a starting point, optional document path, and additional path segments.
+ *
+ * If no path is provided, auto-generates a document ID. Supports nested subcollection
+ * traversal via path segment pairs.
+ *
+ * @param start - A Firestore object that can resolve document paths (e.g., CollectionReference).
+ * @param path - Optional document ID or path within the collection.
+ * @param pathSegments - Optional pairs of [collectionName, docId] for subcollection traversal.
+ *
+ * @example
+ * ```typescript
+ * const ref = docRefForPath<User>(usersCollection, 'user123');
+ * const autoRef = docRefForPath<User>(usersCollection); // auto-generated ID
+ * ```
+ */
 export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathSegments?: string[]): DocumentReference<T> {
   let doc = (path ? start.doc(path) : (start as GoogleCloudCollectionReference).doc()) as GoogleCloudDocumentReference;
 
@@ -50,6 +82,17 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
   return doc as DocumentReference<T>;
 }
 
+/**
+ * Creates a {@link FirestoreAccessorDriver} for Google Cloud Firestore (Admin SDK).
+ *
+ * Implements document/collection resolution, transaction/batch factories, and context factories
+ * using the `@google-cloud/firestore` library.
+ *
+ * @example
+ * ```typescript
+ * const accessorDriver = googleCloudFirestoreAccessorDriver();
+ * ```
+ */
 export function googleCloudFirestoreAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: <T>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => docRefForPath(collection as GoogleCloudCollectionReference, path, pathSegments) as DocumentReference<T>,

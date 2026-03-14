@@ -4,6 +4,9 @@ import { type Factory, type FactoryWithRequiredInput, type MapFunction, type May
 import { type Observable } from 'rxjs';
 import { type ElementRef } from '@angular/core';
 
+/**
+ * A source-select value with its associated metadata.
+ */
 export interface SourceSelectValue<T extends PrimativeKey = PrimativeKey, M = unknown> {
   value: T;
   meta: M;
@@ -122,6 +125,9 @@ export interface SourceSelectLoadSource<M = unknown> {
   readonly meta: Observable<LoadingState<M[]>>;
 }
 
+/**
+ * Loading state for a source-select data source, including the source's label.
+ */
 export interface SourceSelectLoadSourceLoadingState<M = unknown> extends LoadingState<M[]> {
   /**
    * Label for this source.

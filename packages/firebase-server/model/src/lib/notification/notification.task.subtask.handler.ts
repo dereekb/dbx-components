@@ -250,7 +250,37 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<I extends 
 }
 
 /**
- * Creates a NotificationTaskSubtaskNotificationTaskHandlerFactory.
+ * Creates a reusable factory for building {@link NotificationTaskServiceTaskHandlerConfig} entries
+ * that implement the subtask processing pattern.
+ *
+ * The returned factory accepts a {@link NotificationTaskSubtaskNotificationTaskHandlerConfig}
+ * (per-app processors and their flows) and produces a handler config with two built-in checkpoints:
+ *
+ * 1. **Processing** — dispatches to the target-specific processor's subtask flow, advancing through
+ *    subtask checkpoints until all are complete.
+ * 2. **Cleanup** — runs the cleanup function, with retry logic if cleanup fails (up to `maxCleanupRetryAttempts`).
+ *
+ * This is the primary entry point for building complex, multi-step notification task handlers
+ * such as storage file processing or other async workflows.
+ *
+ * @param factoryConfig - shared configuration including the input function, cleanup logic, and task type
+ *
+ * @example
+ * ```ts
+ * const createHandler = notificationTaskSubtaskNotificationTaskHandlerFactory({
+ *   taskType: 'process_upload',
+ *   subtaskHandlerFunctionName: 'processUploadHandler',
+ *   inputFunction: buildInputFromTask,
+ *   defaultCleanup: defaultCleanupFn,
+ *   cleanupFunction: cleanupFn
+ * });
+ *
+ * const handlerConfig = createHandler({
+ *   processors: [
+ *     { target: 'image', flow: [{ subtask: 'resize', fn: resizeImage }] }
+ *   ]
+ * });
+ * ```
  */
 export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString>(
   factoryConfig: NotificationTaskSubtaskNotificationTaskHandlerFactoryConfig<I, CUI, D, M, S>

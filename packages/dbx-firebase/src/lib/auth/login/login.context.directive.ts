@@ -3,7 +3,9 @@ import { AbstractForwardDbxInjectionContextDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseLoginContext } from './login.context';
 
 /**
- * DbxFirebaseLoginContext implementation.
+ * Directive providing a {@link DbxFirebaseLoginContext} for login component injection.
+ *
+ * Apply to a host element to establish a login context scope for child login components.
  */
 @Directive({
   selector: '[dbxFirebaseLoginContext]',

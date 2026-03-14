@@ -1,5 +1,5 @@
 {
-  "/api/*": {
+  "/api/**": {
     "target": "https://components.dereekb.com/api",
     "secure": true,
     "logLevel": "debug"

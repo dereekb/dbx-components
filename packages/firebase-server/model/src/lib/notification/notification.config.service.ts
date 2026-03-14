@@ -3,12 +3,25 @@ import { Inject, Optional } from '@nestjs/common';
 import { noContentNotificationMessageFunctionFactory, type NotificationMessageFunction, type NotificationMessageFunctionFactory, type NotificationMessageFunctionFactoryConfig, type NotificationTemplateType } from '@dereekb/firebase';
 import { type NotificationTemplateServiceTypeConfig, NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, type NotificationTemplateServiceTypeConfigArray, type NotificationTemplateServiceDefaultsRecord } from './notification.config';
 
+/**
+ * Provides a reference to a {@link NotificationTemplateService} instance.
+ */
 export interface NotificationTemplateServiceRef {
   readonly notificationTemplateService: NotificationTemplateService;
 }
 
 /**
- * Service dedicated to providing access to NotificationMessageFunctionFactory values for specific NotificationTemplateTypes.
+ * Resolves {@link NotificationMessageFunctionFactory} instances for a given {@link NotificationTemplateType}.
+ *
+ * Combines an optional defaults record (injected via {@link NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN})
+ * with per-type configs (injected via {@link NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN}) to determine
+ * which factory to use. If a type has no registered config or default, a no-content fallback factory is used.
+ *
+ * @example
+ * ```ts
+ * const instance = notificationTemplateService.templateInstanceForType('welcome');
+ * const messageFn = await instance.loadMessageFunction({ notification, notificationBox });
+ * ```
  */
 export class NotificationTemplateService {
   private readonly _defaults: NotificationTemplateServiceDefaultsRecord;
@@ -29,17 +42,32 @@ export class NotificationTemplateService {
     }
   }
 
+  /**
+   * Returns the default factory and optional type-specific config for the given template type.
+   *
+   * @param type - the notification template type to look up
+   * @returns a tuple of [defaultFactory, typeConfig] where either may be undefined
+   */
   configPairForType(type: NotificationTemplateType): [NotificationMessageFunctionFactory, Maybe<NotificationTemplateServiceTypeConfig>] {
     return [this._defaults[type], this._config.get(type)];
   }
 
+  /**
+   * Creates a {@link NotificationTemplateServiceInstance} scoped to a single template type,
+   * pre-wired with the resolved factory for that type.
+   *
+   * @param type - the notification template type
+   */
   templateInstanceForType(type: NotificationTemplateType): NotificationTemplateServiceInstance {
     return notificationTemplateServiceInstance(this, type);
   }
 }
 
 /**
- * Loads/creates a NotificationMessageFunction based on the input configuration.
+ * Loads or creates a {@link NotificationMessageFunction} for a specific notification,
+ * using the factory resolved by {@link NotificationTemplateService}.
+ *
+ * @param config - contextual data (notification, box, recipients) needed to build the message function
  */
 export type LoadNotificationMessageFunction = (config: NotificationMessageFunctionFactoryConfig) => Promise<NotificationMessageFunction>;
 
@@ -66,11 +94,21 @@ export interface NotificationTemplateServiceInstance {
 }
 
 /**
- * Creates a NotificationTemplateServiceInstance.
+ * Creates a {@link NotificationTemplateServiceInstance} bound to a specific template type.
  *
- * @param service
- * @param type
- * @returns
+ * Resolves the factory from the service's type-specific config first, falling back to
+ * a no-content default factory when no config is registered for the type.
+ *
+ * @param service - the parent template service
+ * @param type - the template type to bind
+ *
+ * @example
+ * ```ts
+ * const instance = notificationTemplateServiceInstance(service, 'order_update');
+ * if (instance.isConfiguredType) {
+ *   const messageFn = await instance.loadMessageFunction(config);
+ * }
+ * ```
  */
 export function notificationTemplateServiceInstance(service: NotificationTemplateService, type: NotificationTemplateType): NotificationTemplateServiceInstance {
   const pair = service.configPairForType(type);

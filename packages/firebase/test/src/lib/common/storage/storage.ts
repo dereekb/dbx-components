@@ -3,10 +3,30 @@ import { type FirebaseStorageAccessorDriver, type FirebaseStorageContext, type F
 
 let bucketTestNameKey = 0;
 
+/**
+ * Configuration for {@link makeTestingFirebaseStorageAccesorDriver}.
+ */
 export interface MakeTestingFirebaseStorageAccessorDriverConfig {
+  /**
+   * Whether to generate a unique test bucket name as the default bucket.
+   *
+   * When `true`, a randomized bucket name is always generated. When `false`, the
+   * original driver's default bucket is preserved. When omitted, a test bucket is
+   * generated only if the base driver does not already define a default bucket.
+   */
   useTestDefaultBucket?: boolean;
 }
 
+/**
+ * Creates a {@link TestingFirebaseStorageAccessorDriver} that wraps the given driver,
+ * optionally replacing its default bucket with a unique test bucket name.
+ *
+ * The generated bucket name incorporates a timestamp and random component so that
+ * parallel test runs do not collide on the same bucket.
+ *
+ * @param driver - The base storage accessor driver to wrap.
+ * @param config - Optional configuration controlling test bucket behavior.
+ */
 export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageAccessorDriver, config?: MakeTestingFirebaseStorageAccessorDriverConfig): TestingFirebaseStorageAccessorDriver {
   const { useTestDefaultBucket } = config ?? {};
 
@@ -56,8 +76,18 @@ export function makeTestingFirebaseStorageDrivers(drivers: FirebaseStorageDriver
 }
 
 // MARK: Test FirebaseStorage Context
+/**
+ * Extension applied to a {@link FirebaseStorageContext} to expose the testing-specific drivers.
+ *
+ * Mixed into the base context type via {@link TestFirebaseStorageContext} so that
+ * test code can access the isolated storage driver.
+ */
 export interface TestingFirebaseStorageContextExtension {
   drivers: TestingFirebaseStorageDrivers;
 }
 
+/**
+ * A {@link FirebaseStorageContext} augmented with {@link TestingFirebaseStorageContextExtension},
+ * giving tests access to isolated storage drivers with unique bucket names.
+ */
 export type TestFirebaseStorageContext<C = FirebaseStorageContext> = C & TestingFirebaseStorageContextExtension;

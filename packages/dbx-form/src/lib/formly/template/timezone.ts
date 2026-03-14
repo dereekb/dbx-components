@@ -5,8 +5,18 @@ import { type Observable, of } from 'rxjs';
 import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue } from '../field/selection/searchable';
 import { searchableTextField, type SearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
 
+/**
+ * A function that takes a search string and returns matching string results.
+ */
 export type TestStringSearchFunction = (text: string) => string[];
 
+/**
+ * Creates a search function for timezone strings that searches across all known timezone infos.
+ *
+ * When the search string is empty, the system timezone is returned first, followed by all timezones.
+ *
+ * @returns A {@link SearchableValueFieldStringSearchFn} for searching timezone values.
+ */
 export function timezoneStringSearchFunction(): SearchableValueFieldStringSearchFn<string, TimezoneInfo> {
   const timezoneInfos = allTimezoneInfos();
 
@@ -23,6 +33,12 @@ export function timezoneStringSearchFunction(): SearchableValueFieldStringSearch
   };
 }
 
+/**
+ * Display function for timezone string values in a searchable field.
+ *
+ * Maps each timezone value to a display object with the timezone name as the label
+ * and its abbreviation as the sublabel.
+ */
 export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<string, TimezoneInfo> = (values: SearchableValueFieldValue<string, TimezoneInfo>[]) => {
   const timezoneInfos = allTimezoneInfos();
 
@@ -36,15 +52,20 @@ export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<st
 };
 
 /**
- * textPasswordField() configuration.
+ * Configuration for a timezone string searchable field.
+ *
+ * Omits search-related properties that are internally configured by {@link timezoneStringField}.
  */
 export interface TimezoneStringFieldConfig extends Omit<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'inputType' | 'searchOnEmptyText' | 'search' | 'displayForValue' | 'key'>, Partial<Pick<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key' | 'materialFormField'>> {}
 
 /**
- * Template for a searchable text field for a timezone.
+ * Creates a searchable text field for selecting a timezone.
  *
- * @param param0
- * @returns
+ * Defaults to the key `'timezone'` and label `'Timezone'`. Searches all known timezones
+ * and displays the timezone name with its abbreviation.
+ *
+ * @param config - Optional configuration overrides for the timezone field.
+ * @returns A Formly field configuration for timezone selection.
  */
 export function timezoneStringField(config: TimezoneStringFieldConfig = {}): FormlyFieldConfig {
   return searchableTextField({

@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { type SystemState, type SystemStateDocument, SystemStateFirestoreCollections } from '@dereekb/firebase';
 import { AbstractDbxFirebaseCollectionStore } from '../modules/store/store.collection';
 
+/** Collection store for querying SystemState documents. */
 @Injectable()
 export class SystemStateCollectionStore extends AbstractDbxFirebaseCollectionStore<SystemState, SystemStateDocument> {
   constructor() {

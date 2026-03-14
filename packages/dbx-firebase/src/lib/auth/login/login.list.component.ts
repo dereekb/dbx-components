@@ -4,10 +4,13 @@ import { Component, type Type, computed, inject, input } from '@angular/core';
 import { containsStringAnyCase, type Maybe, type ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
+/** Injection config for a single login list item, enriched with the login method type for tracking. */
 export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionComponentConfig & Pick<DbxFirebaseAuthLoginProvider, 'loginMethodType'>;
 
 /**
- * Pre-configured login component that displays all configured login types.
+ * Renders a list of login provider buttons, filtered by enabled types and categories.
+ *
+ * Switches between login and registration component classes based on the current login mode.
  */
 @Component({
   selector: 'dbx-firebase-login-list',

@@ -6,14 +6,7 @@ import { DemoApiOpenAIModule } from './openai';
 import { DemoApiTypeformModule } from './typeform';
 
 @Module({
-  imports: [
-    // Stripe Module
-    DemoApiStripeModule,
-    DemoApiZoomModule,
-    DemoApiVapiAiModule,
-    DemoApiOpenAIModule,
-    DemoApiTypeformModule
-  ],
+  imports: [DemoApiStripeModule, DemoApiZoomModule, DemoApiVapiAiModule, DemoApiOpenAIModule, DemoApiTypeformModule],
   exports: []
 })
 export class DemoApiApiModule {}

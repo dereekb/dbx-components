@@ -6,9 +6,14 @@ import { Readable } from 'stream';
 import { createReadStream } from 'fs';
 
 /**
- * Describes accessor driver tests, using a MockItemCollectionFixture.
+ * Registers a shared test suite that validates {@link FirebaseStorageAccessorDriver} behavior
+ * (file upload, download, copy, move, delete, metadata, folders, and listing/pagination)
+ * against a live or emulated Firebase Storage instance.
  *
- * @param f
+ * Call this once per driver implementation (e.g., client SDK, Admin SDK) to verify
+ * that the driver conforms to the expected storage accessor contract.
+ *
+ * @param f - Fixture providing the storage context and test bucket configuration.
  */
 export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFixture) {
   describe('FirebaseStorageAccessor', () => {

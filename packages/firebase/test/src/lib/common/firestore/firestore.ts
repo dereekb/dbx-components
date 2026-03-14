@@ -19,6 +19,22 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
   initWithCollectionNames(collectionNames: string[]): Map<string, string>;
 }
 
+/**
+ * Creates a {@link TestingFirestoreAccessorDriver} that wraps the given driver with collection name fuzzing.
+ *
+ * Each collection/subcollection/collectionGroup path is replaced with a unique fuzzed name
+ * (incorporating a timestamp and random component) so that parallel tests never read or write
+ * each other's documents. The mapping from original to fuzzed names is retrievable via
+ * {@link TestingFirestoreAccessorDriver.getFuzzedCollectionsNameMap}.
+ *
+ * @example
+ * ```ts
+ * const testDriver = makeTestingFirestoreAccesorDriver(productionDriver);
+ * // "mockItems" -> "1678901234_42_mockItems_1"
+ * ```
+ *
+ * @param driver - The base driver to wrap with fuzzing behavior.
+ */
 export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDriver): TestingFirestoreAccessorDriver {
   let fuzzerKey = 0;
   const time = new Date().getTime();
@@ -94,15 +110,39 @@ export function makeTestingFirestoreDrivers(drivers: FirestoreDrivers): TestingF
 }
 
 // MARK: Test Firestore Context
+/**
+ * Extension applied to a {@link FirestoreContext} to expose the testing-specific drivers.
+ *
+ * This is mixed into the base context type via {@link TestFirestoreContext} so that
+ * test code can access the fuzzed driver and its collection name map.
+ */
 export interface TestingFirestoreContextExtension {
   drivers: TestingFirestoreDrivers;
 }
 
+/**
+ * A {@link FirestoreContext} augmented with {@link TestingFirestoreContextExtension},
+ * giving tests access to fuzzed collection drivers for isolation.
+ */
 export type TestFirestoreContext<C = FirestoreContext> = C & TestingFirestoreContextExtension;
 
 // MARK: Cleanup
+/**
+ * Function that clears a single Firestore collection used during testing.
+ *
+ * @param collectionName - The original (un-fuzzed) collection name.
+ * @param realCollectionName - The fuzzed collection name that actually exists in Firestore.
+ */
 export type ClearTestFirestoreCollectionFunction = (collectionName: string, realCollectionName: string) => Promise<void>;
 
+/**
+ * Iterates over every fuzzed collection in the given test context and invokes the
+ * provided cleanup function for each one. Use this in `afterAll`/`afterEach` hooks
+ * to remove test data and avoid cross-test contamination.
+ *
+ * @param context - The test context whose fuzzed collections should be cleared.
+ * @param clearCollection - Callback that performs the actual deletion for a single collection.
+ */
 export async function clearTestFirestoreContextCollections(context: TestFirestoreContext, clearCollection: ClearTestFirestoreCollectionFunction): Promise<void> {
   const names = context.drivers.firestoreAccessorDriver.getFuzzedCollectionsNameMap();
   const tuples = Array.from(names.entries());

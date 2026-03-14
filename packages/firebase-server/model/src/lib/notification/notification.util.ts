@@ -37,6 +37,20 @@ import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, 
 import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUserLockedConfigFromBeingUpdatedError } from './notification.error';
 
 // MARK: Create NotificationSummary
+/**
+ * Creates a blank {@link NotificationSummary} template for a newly initialized model.
+ *
+ * Sets the creation timestamp to now, associates the summary with the given model key,
+ * and initializes with an empty notifications array.
+ *
+ * @param model - the model key to associate the summary with
+ *
+ * @example
+ * ```ts
+ * const template = makeNewNotificationSummaryTemplate('projects/abc');
+ * // template.m === 'projects/abc', template.n === []
+ * ```
+ */
 export function makeNewNotificationSummaryTemplate(model: ModelKey): NotificationSummary {
   return {
     cat: new Date(),
@@ -48,6 +62,10 @@ export function makeNewNotificationSummaryTemplate(model: ModelKey): Notificatio
 }
 
 // MARK: ExpandNotificationRecipients
+/**
+ * Input for {@link expandNotificationRecipients}, providing the notification, its associated box,
+ * auth service for user lookup, and configuration for recipient filtering.
+ */
 export interface ExpandNotificationRecipientsInput {
   readonly notification: Notification;
   readonly notificationBox?: Maybe<DocumentDataWithIdAndKey<NotificationBox>>;
@@ -84,11 +102,18 @@ export interface ExpandNotificationRecipientsInput {
   readonly onlyTextExplicitlyEnabledRecipients?: Maybe<boolean>;
 }
 
+/**
+ * A resolved recipient paired with their effective template configuration for a specific notification type.
+ */
 export interface ExpandedNotificationRecipientConfig {
   readonly recipient: Omit<NotificationBoxRecipient, 'i'>;
   readonly effectiveTemplateConfig?: Maybe<NotificationBoxRecipientTemplateConfig>;
 }
 
+/**
+ * Base shape for an expanded recipient, containing all resolved contact details
+ * and their source (box recipient, other user, or explicit/global recipient).
+ */
 export interface ExpandedNotificationRecipientBase {
   readonly name?: Maybe<string>;
   readonly emailAddress?: Maybe<EmailAddress>;
@@ -107,20 +132,36 @@ export interface ExpandedNotificationRecipientBase {
   readonly otherRecipient?: NotificationRecipientWithConfig;
 }
 
+/**
+ * An expanded recipient that has a resolved email address for email channel delivery.
+ */
 export interface ExpandedNotificationRecipientEmail extends ExpandedNotificationRecipientBase {
   readonly emailAddress: EmailAddress;
 }
 
+/**
+ * An expanded recipient that has a resolved E.164 phone number for SMS/text channel delivery.
+ */
 export interface ExpandedNotificationRecipientPhone extends ExpandedNotificationRecipientBase {
   readonly phoneNumber: E164PhoneNumber;
 }
 
+/**
+ * Alias for text/SMS recipients, identical to phone recipients.
+ */
 export type ExpandedNotificationRecipientText = ExpandedNotificationRecipientPhone;
 
+/**
+ * An expanded recipient that has a resolved {@link NotificationSummaryId} for in-app notification summary delivery.
+ */
 export interface ExpandedNotificationNotificationSummaryRecipient extends Pick<ExpandedNotificationRecipientBase, 'name' | 'boxRecipient' | 'otherRecipient'> {
   readonly notificationSummaryId: NotificationSummaryId;
 }
 
+/**
+ * Internal state built during recipient expansion, exposed for debugging and downstream processing.
+ * Contains the user detail map, recipient groupings, opt-out sets, and exclusion tracking.
+ */
 export interface ExpandNotificationRecipientsInternal {
   readonly userDetailsMap: Map<string, FirebaseAuthDetails | undefined>;
   readonly explicitRecipients: NotificationRecipientWithConfig[];
@@ -138,6 +179,10 @@ export interface ExpandNotificationRecipientsInternal {
   readonly notificationUserRecipientConfigs: Map<NotificationUserId, NotificationUserDefaultNotificationBoxRecipientConfig>;
 }
 
+/**
+ * Result of {@link expandNotificationRecipients}, containing channel-specific recipient lists
+ * (email, text, notification summary) ready for delivery.
+ */
 export interface ExpandNotificationRecipientsResult {
   readonly _internal: ExpandNotificationRecipientsInternal;
   readonly emails: ExpandedNotificationRecipientEmail[];
@@ -618,6 +663,12 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 }
 
 // MARK: NotificationBox
+/**
+ * Input for {@link updateNotificationUserNotificationBoxRecipientConfig}.
+ *
+ * Describes the current state of a recipient's relationship between a {@link NotificationUser}
+ * and a specific {@link NotificationBox}, plus the intended change (insert, remove, or update).
+ */
 export interface UpdateNotificationUserNotificationBoxRecipientConfigInput {
   readonly notificationBoxId: NotificationBoxId;
   readonly notificationBoxAssociatedModelKey: ModelKey;
@@ -640,6 +691,9 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigInput {
   readonly notificationBoxRecipient: Maybe<NotificationBoxRecipient>;
 }
 
+/**
+ * Result of {@link updateNotificationUserNotificationBoxRecipientConfig}.
+ */
 export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
   /**
    * New configs array, if changes occured.
@@ -651,6 +705,22 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
   readonly updatedNotificationBoxRecipient: Maybe<NotificationBoxRecipient>;
 }
 
+/**
+ * Updates a {@link NotificationUser}'s box-specific recipient configuration (`bc` array)
+ * based on the current state of their relationship with a {@link NotificationBox}.
+ *
+ * Handles three scenarios:
+ * - **Remove**: marks the user's box config entry with `rm=true` and clears the index.
+ * - **Insert**: merges the incoming recipient data with any existing user preferences, respecting
+ *   the user's `bk` (blocked-from-add) and `lk` (locked) flags.
+ * - **Update**: merges changes from the box recipient, respecting `lk` (locked) and `ns` (needs-sync) flags.
+ *
+ * Also re-applies send exclusions to the updated config array.
+ *
+ * @param input - the current state and intended change
+ * @throws notificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user
+ * @throws notificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config
+ */
 export function updateNotificationUserNotificationBoxRecipientConfig(input: UpdateNotificationUserNotificationBoxRecipientConfigInput): UpdateNotificationUserNotificationBoxRecipientConfigResult {
   const { notificationBoxId, notificationUserId, notificationUser, insertingRecipientIntoNotificationBox, removeRecipientFromNotificationBox, notificationBoxRecipient } = input;
 

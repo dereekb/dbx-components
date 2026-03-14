@@ -14,12 +14,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
+/** Configuration for the email login content component, specifying mode and password rules. */
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
 }
 
+/** UI state of the email login content: login form, password recovery form, or recovery sent confirmation. */
 export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversent';
 
+/**
+ * Full email login/registration flow component with login form, password recovery, and recovery confirmation states.
+ *
+ * Opened via the {@link DbxFirebaseLoginContext} injection context from the email login button.
+ */
 @Component({
   templateUrl: './login.email.content.component.html',
   imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent, DbxFormSourceDirective],

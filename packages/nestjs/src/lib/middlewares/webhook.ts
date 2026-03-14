@@ -6,7 +6,7 @@ import { RawBodyMiddleware } from './rawbody.middleware';
 export const DEFAULT_BASE_WEBHOOK_PATH = '/webhook';
 
 export const DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO: RouteInfo = {
-  path: `${DEFAULT_BASE_WEBHOOK_PATH}/*`,
+  path: `${DEFAULT_BASE_WEBHOOK_PATH}/{*path}`,
   method: RequestMethod.POST
 };
 
@@ -33,7 +33,7 @@ export class ConfigureWebhookMiddlewareModule extends AppModuleWithWebhooksEnabl
 }
 
 /**
- * Configures a MiddlewareConsumer to use RawBodyMiddleware for all POST requests to /webhook/*. All other routes are consumed with the JsonBodyMiddleware.
+ * Configures a MiddlewareConsumer to use RawBodyMiddleware for all POST requests to /webhook/{*path}. All other routes are consumed with the JsonBodyMiddleware.
  *
  * This is required for various webhooks that require the full body to properly parse content.
  *
@@ -44,5 +44,5 @@ export class ConfigureWebhookMiddlewareModule extends AppModuleWithWebhooksEnabl
 export function consumeWebhooksWithRawBodyMiddleware(consumer: MiddlewareConsumer) {
   // Configure the app to not parse the body for our webhook routes.
   // https://stackoverflow.com/questions/54346465/access-raw-body-of-stripe-webhook-in-nest-js
-  consumer.apply(RawBodyMiddleware).forRoutes(DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO).apply(JsonBodyMiddleware).forRoutes('*');
+  consumer.apply(RawBodyMiddleware).forRoutes(DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO).apply(JsonBodyMiddleware).forRoutes('{*path}');
 }

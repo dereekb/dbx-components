@@ -1,10 +1,22 @@
 import { type MockItem } from './mock.item';
 import { where, type FirestoreQueryConstraint, type DocumentReference, allChildDocumentsUnderParent } from '@dereekb/firebase';
 
+/**
+ * Creates a Firestore query constraint that filters {@link MockItem} documents by their `value` field.
+ *
+ * @example
+ * ```ts
+ * const constraint = mockItemWithValue('hello');
+ * const results = await collection.query(constraint);
+ * ```
+ */
 export function mockItemWithValue(value: string): FirestoreQueryConstraint {
   return where<MockItem>('value', '==', value);
 }
 
+/**
+ * Creates a Firestore query constraint that filters {@link MockItem} documents by their `test` boolean field.
+ */
 export function mockItemWithTestValue(test: boolean): FirestoreQueryConstraint {
   return where('test', '==', test);
 }

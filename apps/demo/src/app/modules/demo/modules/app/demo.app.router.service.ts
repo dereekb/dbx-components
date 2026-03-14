@@ -30,4 +30,23 @@ export class DemoAppRouterService {
       refParams: { id }
     };
   }
+
+  oidcClientCreateRef(): SegueRef {
+    return {
+      ref: 'demo.app.oidc.clients.create'
+    };
+  }
+
+  oidcClientListRef(): SegueRef {
+    return {
+      ref: 'demo.app.oidc.clients'
+    };
+  }
+
+  oidcClientRef(id: string): SegueRef {
+    return {
+      ref: 'demo.app.oidc.clients.client',
+      refParams: { id }
+    };
+  }
 }

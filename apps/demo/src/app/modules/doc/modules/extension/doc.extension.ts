@@ -58,6 +58,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Help',
     detail: 'dbx-help',
     ref: 'doc.extension.help'
+  },
+  {
+    icon: 'vpn_key',
+    title: 'OIDC',
+    detail: 'oidc oauth components',
+    ref: 'doc.extension.oidc'
   }
 ];
 

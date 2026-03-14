@@ -25,6 +25,11 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
     }
   }
 
+  /**
+   * Subscribes to the Segment API service and analytics event stream, forwarding events to the Segment SDK.
+   *
+   * Events are only sent when the Segment configuration is marked as active.
+   */
   protected _initializeServiceSubscription() {
     return combineLatest([this._segmentApi.service$, this.analyticsEvents$]).subscribe(([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, DbxAnalyticsStreamEvent]) => {
       if (this._segmentApi.config.logging) {
@@ -37,6 +42,12 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
     });
   }
 
+  /**
+   * Routes an analytics stream event to the appropriate Segment API method based on event type.
+   *
+   * @param api - The Segment analytics SDK instance
+   * @param streamEvent - The analytics event to process
+   */
   protected handleStreamEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
     switch (streamEvent.type) {
       case DbxAnalyticsStreamEventType.NewUserEvent:
@@ -61,10 +72,23 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
     }
   }
 
+  /**
+   * Handles a new user registration event by identifying the user in Segment.
+   *
+   * @param api - The Segment analytics SDK instance
+   * @param streamEvent - The event containing the new user data
+   */
   protected updateWithNewUserEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
     this.changeUser(api, streamEvent.user);
   }
 
+  /**
+   * Sends a track event to Segment with the event name, value, and additional data properties.
+   *
+   * @param api - The Segment analytics SDK instance
+   * @param streamEvent - The analytics event containing name, value, and data
+   * @param name - Optional override for the event name
+   */
   protected updateWithEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent, name?: string): void {
     const event = streamEvent.event;
     const eventName = name || event?.name;

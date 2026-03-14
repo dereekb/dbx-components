@@ -48,6 +48,11 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
   private readonly _configs = new BehaviorSubject<DbxModelTypeConfigurationMap>({});
 
   // MARK: Configuration
+  /**
+   * Registers one or more model type configurations. Merges with any previously registered configs.
+   *
+   * @param configs - Single or array of model type configurations to register
+   */
   addTypeConfigs(configs: ArrayOrValue<DbxModelTypeConfiguration>) {
     const types = {
       ...this._configs.value
@@ -60,6 +65,11 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
     this._configs.next(types);
   }
 
+  /**
+   * Registers model type configurations from a map, merging with existing configs.
+   *
+   * @param configs - Map of model type strings to their configurations
+   */
   addTypeConfigsMap(configs: DbxModelTypeConfigurationMap) {
     const newConfig: DbxModelTypeConfigurationMap = {
       ...this._configs.value,
@@ -70,6 +80,9 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
   }
 
   // MARK: Accessors
+  /**
+   * Observable map of all registered model types to their resolved {@link DbxModelTypeInfo} entries.
+   */
   readonly typesMap$ = this._configs.pipe(
     map((types) => {
       const typesMap: Building<DbxModelTypesMap<I>> = {};
@@ -96,6 +109,9 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
     shareReplay(1)
   );
 
+  /**
+   * Observable map of model type strings to their Material icon names.
+   */
   readonly iconMap$: Observable<DbxModelIconsMap> = this.typesMap$.pipe(
     map((types) => {
       const iconsMap: Building<DbxModelIconsMap> = {};
@@ -109,6 +125,11 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
     shareReplay(1)
   );
 
+  /**
+   * Returns an observable of the Material icon name for the given model type.
+   *
+   * @param type - The model type string to look up
+   */
   iconForType(type: ModelTypeString): Observable<string> {
     return this.iconMap$.pipe(map((x) => x[type]));
   }

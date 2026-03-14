@@ -29,9 +29,11 @@ export interface DbxPromptConfirmConfig {
   template: `
     <dbx-prompt [header]="config()?.title" [prompt]="config()?.prompt">
       <ng-content></ng-content>
-      <button mat-stroked-button (click)="onConfirm()">{{ confirmTextSignal() }}</button>
-      <dbx-button-spacer></dbx-button-spacer>
-      <button mat-stroked-button color="warn" (click)="onCancel()">{{ cancelTextSignal() }}</button>
+      <div class="dbx-pt3">
+        <button mat-stroked-button (click)="onConfirm()">{{ confirmTextSignal() }}</button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <button mat-stroked-button color="warn" (click)="onCancel()">{{ cancelTextSignal() }}</button>
+      </div>
     </dbx-prompt>
   `,
   standalone: true,

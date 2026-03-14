@@ -7,12 +7,20 @@ import { dbxFormSourceObservableFromStream, type DbxFormSourceDirectiveMode } fr
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 
+/**
+ * Default mode for the {@link DbxFormLoadingSourceDirective}, which only passes values on form reset.
+ */
 const DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE: DbxFormSourceDirectiveMode = 'reset';
 
 /**
- * Used with a FormComponent to set the value from a LoadingState when the value is available.
+ * Directive that sets a form's value from a {@link LoadingState} source once loading is complete.
  *
- * Only passes non-null values from the source.
+ * Only passes non-null values from the source. Extracts the value from the finished loading state
+ * and forwards it to the form using the configured mode.
+ *
+ * @selector `[dbxFormLoadingSource]`
+ *
+ * @typeParam T - The form value type (must extend object).
  */
 @Directive({
   selector: '[dbxFormLoadingSource]',
@@ -21,7 +29,16 @@ const DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE: DbxFormSourceDirectiveMode
 export class DbxFormLoadingSourceDirective<T extends object = object> {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
+  /**
+   * The mode controlling when the loading source value is forwarded to the form.
+   *
+   * Defaults to `'reset'`.
+   */
   readonly dbxFormLoadingSourceMode = input<DbxFormSourceDirectiveMode, Maybe<DbxFormSourceDirectiveMode>>(DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE, { transform: (x) => x ?? DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE });
+
+  /**
+   * The loading state source to observe. The form value is set once loading finishes with a non-null value.
+   */
   readonly dbxFormLoadingSource = input<MaybeObservableOrValue<LoadingState<T>>>();
 
   readonly mode$ = toObservable(this.dbxFormLoadingSourceMode);

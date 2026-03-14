@@ -3,6 +3,11 @@ import { type ChecklistItemDisplayContent, type ChecklistItemFieldDisplayCompone
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Default
+/**
+ * Default display component for checklist items.
+ *
+ * Renders label, sublabel, and description text from the injected {@link ChecklistItemDisplayContent}.
+ */
 @Component({
   template: `
     @if (displayContentSignal()) {

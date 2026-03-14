@@ -30,7 +30,7 @@
         "outputPath": "dist/packages/firebase",
         "main": "packages/firebase/src/index.ts",
         "tsConfig": "packages/firebase/tsconfig.lib.json",
-        "compiler": "tsc",
+        "compiler": "swc",
         "project": "packages/firebase/package.json",
         "format": ["esm", "cjs"],
         "rollupConfig": ["rollup.visualizer.config.ts"],
@@ -47,6 +47,13 @@
             "output": "."
           }
         ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
       }
     },
     "lint": {

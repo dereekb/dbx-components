@@ -2,22 +2,51 @@ import { concatArrays, mapMaybeFunction, transformStringFunction, type Transform
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type FormlyValueParser, type FieldConfigParsersRef, type MaterialFormFieldConfig } from '../../field';
 
+/**
+ * Configuration for minimum and maximum text length constraints.
+ */
 export interface TextFieldLengthConfig {
   minLength?: number;
   maxLength?: number;
 }
 
+/**
+ * Configuration for regex pattern validation on a text field.
+ */
 export interface TextFieldPatternConfig {
   pattern?: string | RegExp;
 }
 
+/**
+ * HTML input type for a text field.
+ */
 export type TextFieldInputType = 'text' | 'password' | 'email';
 
+/**
+ * Full configuration for a single-line text input field.
+ *
+ * Combines labeling, validation (pattern, length), string transformation,
+ * and Material form field styling into one config object.
+ */
 export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig, Partial<TransformStringFunctionConfigRef>, MaterialFormFieldConfig {
+  /** HTML input type. Defaults to `'text'`. */
   inputType?: TextFieldInputType;
+  /** String transformation applied as a value parser (e.g., trim, uppercase). */
   transform?: TransformStringFunctionConfig;
 }
 
+/**
+ * Builds an array of value parsers for a text field, incorporating any configured
+ * string transformation (e.g., trim, lowercase) as a parser prepended to existing parsers.
+ *
+ * @param config - Parser and transform configuration
+ * @returns Array of value parsers, or undefined if none configured
+ *
+ * @example
+ * ```typescript
+ * const parsers = textFieldTransformParser({ transform: { trim: true, toLowercase: true } });
+ * ```
+ */
 export function textFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformStringFunctionConfigRef>) {
   const { parsers: inputParsers, transform } = config;
   let parsers: FormlyValueParser[] | undefined;
@@ -34,6 +63,17 @@ export function textFieldTransformParser(config: Partial<FieldConfigParsersRef> 
   return parsers;
 }
 
+/**
+ * Creates a Formly field configuration for a single-line text input.
+ *
+ * @param config - Text field configuration including key, label, validation, and transform options
+ * @returns A validated {@link FormlyFieldConfig} with type `'input'`
+ *
+ * @example
+ * ```typescript
+ * const field = textField({ key: 'username', label: 'Username', maxLength: 50, required: true });
+ * ```
+ */
 export function textField(config: TextFieldConfig): FormlyFieldConfig {
   const { transform, key, pattern, minLength, maxLength, inputType: type = 'text', materialFormField } = config;
   const parsers = textFieldTransformParser(config);
@@ -52,10 +92,25 @@ export function textField(config: TextFieldConfig): FormlyFieldConfig {
   });
 }
 
+/**
+ * Configuration for a multi-line textarea input field.
+ */
 export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig, Partial<TransformStringFunctionConfigRef>, MaterialFormFieldConfig {
+  /** Number of visible text rows. Defaults to 3. */
   rows?: number;
 }
 
+/**
+ * Creates a Formly field configuration for a multi-line textarea input.
+ *
+ * @param config - Textarea field configuration including key, label, rows, and validation options
+ * @returns A validated {@link FormlyFieldConfig} with type `'textarea'`
+ *
+ * @example
+ * ```typescript
+ * const field = textAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
+ * ```
+ */
 export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
   const { key, rows = 3, pattern, minLength, maxLength, materialFormField } = config;
   const parsers = textFieldTransformParser(config);

@@ -3,10 +3,18 @@ import { FieldValue } from '@google-cloud/firestore';
 import { type UpdateData, type FirestoreAccessorArrayUpdate } from '@dereekb/firebase';
 
 /**
- * Creates UpdateData corresponding to the input array update.
+ * Converts a {@link FirestoreAccessorArrayUpdate} into Firestore {@link UpdateData} using
+ * Google Cloud Firestore's {@link FieldValue.arrayUnion} and {@link FieldValue.arrayRemove}.
  *
- * @param input
- * @returns
+ * @param input - The array update specification with `union` and/or `remove` field maps.
+ *
+ * @example
+ * ```typescript
+ * const updateData = firestoreServerArrayUpdateToUpdateData<User>({
+ *   union: { tags: ['new-tag'] },
+ *   remove: { tags: ['old-tag'] }
+ * });
+ * ```
  */
 export function firestoreServerArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {
   const union = input?.union;

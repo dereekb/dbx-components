@@ -30,19 +30,43 @@ export interface NotificationTaskServiceTaskHandlerConfig<D extends Notification
   readonly allowRunMultipleParts?: boolean;
 }
 
+/**
+ * Configuration for creating a {@link NotificationTaskService} via {@link notificationTaskService}.
+ */
 export interface NotificationTaskServiceConfig {
   /**
-   * List of NotificationTaskTypes for the app. Used for verifying that all NotificationTaskTypes are handled.
+   * List of expected {@link NotificationTaskType} values, used to verify all types have registered handlers.
    */
   readonly validate?: NotificationTaskType[];
   /**
-   * List of handlers for NotificationTaskTypes.
+   * Handler configurations that define the checkpoint-based flow for each task type.
    */
   readonly handlers: NotificationTaskServiceTaskHandlerConfig<any, any>[];
 }
 
 /**
- * A basic NotificationTaskService implementation.
+ * Creates a {@link NotificationTaskService} from the provided handler configurations.
+ *
+ * Each handler defines a checkpoint-based flow: when a task is dispatched, the service
+ * finds the next uncompleted checkpoint in the flow and executes its handler function.
+ * If all checkpoints are complete, the task is marked as done.
+ *
+ * @param config - handler configurations and optional validation list
+ *
+ * @example
+ * ```ts
+ * const taskService = notificationTaskService({
+ *   handlers: [
+ *     {
+ *       type: 'process_file',
+ *       flow: [
+ *         { checkpoint: 'validate', fn: validateTask },
+ *         { checkpoint: 'execute', fn: executeTask }
+ *       ]
+ *     }
+ *   ]
+ * });
+ * ```
  */
 export function notificationTaskService(config: NotificationTaskServiceConfig): NotificationTaskService {
   const { handlers: inputHandlers } = config;
