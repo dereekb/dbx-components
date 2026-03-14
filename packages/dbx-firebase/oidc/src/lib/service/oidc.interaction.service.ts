@@ -4,17 +4,7 @@ import { type Observable, switchMap, first } from 'rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { DbxFirebaseOidcConfigService } from './oidc.configuration.service';
 import { type OAuthInteractionLoginRequest, type OAuthInteractionConsentRequest, type OidcInteractionUid } from '@dereekb/firebase';
-
-// MARK: Types
-/**
- * Response from the server after a successful interaction submission.
- *
- * The server returns a redirect URL that the client should navigate to
- * in order to complete the OIDC flow.
- */
-export interface OidcInteractionResponse {
-  readonly redirectTo: string;
-}
+import { OAuthInteractionLoginResponse, OAuthInteractionConsentResponse } from '@dereekb/firebase';
 
 // MARK: Service
 /**
@@ -46,10 +36,10 @@ export class DbxFirebaseOidcInteractionService {
    *
    * @returns Observable that emits the redirect URL from the server response.
    */
-  submitLogin(uid: OidcInteractionUid): Observable<OidcInteractionResponse> {
+  submitLogin(uid: OidcInteractionUid): Observable<OAuthInteractionLoginResponse> {
     return this._authService.idTokenString$.pipe(
       first(),
-      switchMap((idToken) => this.http.post<OidcInteractionResponse>(`${this.baseUrl}/${uid}/login`, { idToken } as OAuthInteractionLoginRequest))
+      switchMap((idToken) => this.http.post<OAuthInteractionLoginResponse>(`${this.baseUrl}/${uid}/login`, { idToken } as OAuthInteractionLoginRequest))
     );
   }
 
@@ -60,10 +50,10 @@ export class DbxFirebaseOidcInteractionService {
    *
    * @returns Observable that emits the redirect URL from the server response.
    */
-  submitConsent(uid: OidcInteractionUid, approved: boolean): Observable<OidcInteractionResponse> {
+  submitConsent(uid: OidcInteractionUid, approved: boolean): Observable<OAuthInteractionConsentResponse> {
     return this._authService.idTokenString$.pipe(
       first(),
-      switchMap((idToken) => this.http.post<OidcInteractionResponse>(`${this.baseUrl}/${uid}/consent`, { idToken, approved } as OAuthInteractionConsentRequest))
+      switchMap((idToken) => this.http.post<OAuthInteractionConsentResponse>(`${this.baseUrl}/${uid}/consent`, { idToken, approved } as OAuthInteractionConsentRequest))
     );
   }
 }

@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OidcModuleConfig, type OidcProviderConfig } from '../oidc.config';
 import { OidcAccountService } from './oidc.account.service';
-import type { Configuration } from 'oidc-provider';
-import { mergeSlashPaths, WebsitePath, WebsiteUrl, websiteUrlFromPaths } from '@dereekb/util';
-import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import type { Configuration, Interaction } from 'oidc-provider';
+import { Maybe, mergeSlashPaths, WebsitePath, WebsiteUrl, websiteUrlFromPaths, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { OidcEntryClientId, OidcEntryOAuthClientPayloadData, type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 
 // MARK: Routes
@@ -123,54 +123,6 @@ export class OidcProviderConfigService {
     this.appLoginUrl = websiteUrlFromPaths(appUrl, [this.config.appOAuthInteractionPath, this.config.appOAuthLoginUrlPart]);
     this.appConsentUrl = websiteUrlFromPaths(appUrl, [this.config.appOAuthInteractionPath, this.config.appOAuthConsentUrlPart]);
     this.oidcRegistrationRouteEnabled = config.registrationEnabled === true;
-  }
-
-  /**
-   * Builds the oidc-provider {@link Configuration} options that are spread into
-   * `new Provider(issuer, { ...options })`.
-   *
-   * Does NOT include `adapter`, `findAccount`, or `jwks` — those require async
-   * setup and are handled by {@link OidcService}.
-   */
-  buildProviderConfiguration(cookieKeys: string[]): Configuration {
-    const config = this.config;
-    const providerConfig = this.providerConfig;
-
-    return {
-      routes: { ...this.routes },
-      claims: { ...providerConfig.claims },
-      responseTypes: [...providerConfig.responseTypes] as Configuration['responseTypes'],
-      pkce: {
-        required: () => true
-      },
-      features: {
-        devInteractions: { enabled: false },
-        registration: { enabled: this.oidcRegistrationRouteEnabled },
-        registrationManagement: { enabled: this.oidcRegistrationRouteEnabled }
-      },
-      ttl: {
-        AccessToken: config.tokenLifetimes.accessToken,
-        IdToken: config.tokenLifetimes.idToken,
-        AuthorizationCode: config.tokenLifetimes.authorizationCode,
-        RefreshToken: config.tokenLifetimes.refreshToken,
-        Session: 14 * 24 * 60 * 60,
-        Grant: 14 * 24 * 60 * 60,
-        Interaction: 60 * 60,
-        DeviceCode: 10 * 60
-      },
-      interactions: {
-        url: (_ctx: unknown, interaction: { prompt: { name: string }; uid: string }) => {
-          if (interaction.prompt.name === 'login') {
-            return `${this.appLoginUrl}?uid=${interaction.uid}`;
-          }
-          return `${this.appConsentUrl}?uid=${interaction.uid}`;
-        }
-      },
-      cookies: {
-        keys: cookieKeys
-      },
-      ...(config.renderError ? { renderError: config.renderError } : {})
-    };
   }
 
   /**

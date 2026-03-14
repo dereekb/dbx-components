@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreDeleteFunction, firebaseDocumentStoreUpdateFunction } from '@dereekb/dbx-firebase';
 import { OidcModelFirestoreCollections, OidcModelFunctions, type CreateOidcClientResult, type RotateOidcClientSecretResult, type OidcEntry, type OidcEntryDocument } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
@@ -9,7 +10,7 @@ import { BehaviorSubject } from 'rxjs';
 export class OidcEntryDocumentStore extends AbstractDbxFirebaseDocumentStore<OidcEntry, OidcEntryDocument> {
   readonly oidcModelFunctions = inject(OidcModelFunctions);
 
-  private readonly _latestClientSecret$ = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _latestClientSecret$ = completeOnDestroy(new BehaviorSubject<Maybe<string>>(undefined));
 
   /**
    * The client secret from the most recent create operation.

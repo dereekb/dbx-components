@@ -1,4 +1,7 @@
+import { CommaSeparatedString, Maybe, SpaceSeparatedString, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type FirebaseAuthIdToken } from '../../common/auth/auth';
+import { OidcEntryClientId } from './oidcmodel.id';
+import { OidcScope } from './oidcmodel.interaction';
 
 /**
  * Request body sent by the frontend to complete a login interaction.
@@ -14,6 +17,32 @@ export interface OAuthInteractionLoginRequest {
    * uses the decoded UID as the `accountId` for the oidc-provider login result.
    */
   readonly idToken: FirebaseAuthIdToken;
+}
+
+/**
+ * Space-separated string of scopes requested by the client.
+ */
+export type OAuthInteractionScopes<T extends OidcScope = OidcScope> = SpaceSeparatedString<T>;
+
+/**
+ * Details about oauth client and interaction.
+ */
+export interface OAuthInteractionLoginDetails<T extends OidcScope = OidcScope> {
+  readonly client_id: OidcEntryClientId;
+  readonly client_name?: Maybe<string>;
+  readonly logo_uri?: Maybe<string>;
+  readonly client_uri?: Maybe<string>;
+  readonly scopes: OAuthInteractionScopes<T>;
+}
+
+/**
+ * Response from the server after a successful interaction submission.
+ *
+ * The server returns a redirect URL that the client should navigate to
+ * in order to complete the OIDC flow.
+ */
+export interface OAuthInteractionLoginResponse {
+  readonly redirectTo: WebsiteUrlWithPrefix;
 }
 
 /**
@@ -37,4 +66,14 @@ export interface OAuthInteractionConsentRequest {
    * When `false`, the backend returns `access_denied` to the OAuth client.
    */
   readonly approved: boolean;
+}
+
+/**
+ * Response from the server after a successful interaction submission.
+ *
+ * The server returns a redirect URL that the client should navigate to
+ * in order to complete the OIDC flow.
+ */
+export interface OAuthInteractionConsentResponse {
+  readonly redirectTo: WebsiteUrlWithPrefix;
 }

@@ -84,14 +84,16 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
     regenerateContent: storageFileGroupRegenerateContent
   }),
   oidcEntry: onCallSpecifierHandler({
-    _: updateOidcClient,
+    client: updateOidcClient,
     rotateClientSecret: rotateOidcClientSecret
   })
 };
 
 // MARK: Delete
 export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
-  oidcEntry: deleteOidcClient
+  oidcEntry: onCallSpecifierHandler({
+    client: deleteOidcClient
+  })
 };
 
 // MARK: Call

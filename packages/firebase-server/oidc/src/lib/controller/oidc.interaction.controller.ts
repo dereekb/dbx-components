@@ -4,6 +4,7 @@ import { OidcService } from '../service/oidc.service';
 import { OidcProviderConfigService } from '../service';
 import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
+import { OidcInteractionService } from '../service/oidc.interaction.service';
 
 // MARK: Interaction Controller
 /**
@@ -19,7 +20,7 @@ import { OidcAccountService } from '../service/oidc.account.service';
 @Controller('interaction')
 export class OidcInteractionController {
   constructor(
-    @Inject(OidcService) private readonly oidcService: OidcService,
+    @Inject(OidcInteractionService) private readonly oidcInteractionService: OidcInteractionService,
     @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService,
     @Inject(OidcAccountService) private readonly accountService: OidcAccountService
   ) {}
@@ -34,7 +35,7 @@ export class OidcInteractionController {
   @Get(':uid')
   async getInteraction(@Param('uid') uid: OidcInteractionUid, @Req() req: Request, @Res() res: Response) {
     try {
-      const interaction = await this.oidcService.getInteractionDetails(req, res);
+      const interaction = await this.oidcInteractionService.getInteractionDetails(req, res);
       const { prompt } = interaction;
 
       if (prompt.name === 'login') {
@@ -62,7 +63,7 @@ export class OidcInteractionController {
     const accountId = await this._verifyIdToken(body.idToken);
 
     try {
-      const redirectTo = await this.oidcService.finishInteractionByUid(
+      const redirectTo = await this.oidcInteractionService.finishInteractionByUid(
         uid,
         {
           login: { accountId }
@@ -91,7 +92,7 @@ export class OidcInteractionController {
 
     try {
       if (!body.approved) {
-        const redirectTo = await this.oidcService.finishInteractionByUid(
+        const redirectTo = await this.oidcInteractionService.finishInteractionByUid(
           uid,
           {
             error: 'access_denied',
@@ -104,9 +105,9 @@ export class OidcInteractionController {
         return;
       }
 
-      const interaction = await this.oidcService.findInteractionByUid(uid);
+      const interaction = await this.oidcInteractionService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
-      const grant = await this.oidcService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', params.client_id as string);
+      const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', params.client_id as string);
 
       if (prompt.details?.missingOIDCScope) {
         grant.addOIDCScope((prompt.details.missingOIDCScope as string[]).join(' '));
@@ -124,7 +125,7 @@ export class OidcInteractionController {
 
       const grantId = await grant.save();
 
-      const redirectTo = await this.oidcService.finishInteractionByUid(
+      const redirectTo = await this.oidcInteractionService.finishInteractionByUid(
         uid,
         {
           consent: { grantId }

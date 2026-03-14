@@ -1,4 +1,5 @@
 import { type ArrayOrValue, asArray } from '../array/array';
+import { Configurable } from '../type';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
 
@@ -13,6 +14,14 @@ export type MapStringFunction<T> = MapFunction<string, T>;
 export type ReadStringFunction<T, S extends string = string> = MapFunction<T, S>;
 
 /**
+ * Represents a string that is made up of values separated by a delimiter.
+ *
+ * Optional generic typing exists for communicating what values are separated within the string.
+ */
+// eslint-disable-next-line
+export type SeparatedString<T = unknown> = string;
+
+/**
  * Represents a string that is made up of comma-separated values.
  *
  * Optional generic typing exists for communicating what values are separated within the string.
@@ -20,7 +29,7 @@ export type ReadStringFunction<T, S extends string = string> = MapFunction<T, S>
  * I.E. 0,1,2
  */
 // eslint-disable-next-line
-export type CommaSeparatedString<T = unknown> = string;
+export type CommaSeparatedString<T = unknown> = SeparatedString<T>;
 
 /**
  * Represents a string that is made up of space-separated values.
@@ -30,7 +39,7 @@ export type CommaSeparatedString<T = unknown> = string;
  * I.E. 0 1 2
  */
 // eslint-disable-next-line
-export type SpaceSeparatedString<T = unknown> = string;
+export type SpaceSeparatedString<T = unknown> = SeparatedString<T>;
 
 /**
  * Default comma joiner character used by comma-related string functions.
@@ -38,17 +47,9 @@ export type SpaceSeparatedString<T = unknown> = string;
 export const COMMA_JOINER = ',';
 
 /**
- * Converts a string to its lowercase equivalent for case-insensitive comparison.
- *
- * @param input - string to convert to lowercase
- * @returns the lowercased string, or undefined if the input is undefined
+ * Default space joiner character used by space-related string functions.
  */
-export function caseInsensitiveString(input: string): string;
-export function caseInsensitiveString(input: undefined): undefined;
-export function caseInsensitiveString(input: Maybe<string>): Maybe<string>;
-export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
-  return input?.toLocaleLowerCase();
-}
+export const SPACE_JOINER = ' ';
 
 /**
  * Joins an array of strings into a single string. Trims and omits empty values.
@@ -75,40 +76,202 @@ export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: s
 }
 
 /**
- * Joins an array of strings into a single string using commas. Does not trim empty values by default.
+ * Splits a string like {@link String.prototype.split}, but joins overflow segments back together
+ * instead of discarding them. Useful when you only want to split on the first N-1 occurrences.
  *
- * @param input string or array of strings
- * @param trim whether or not to trim the strings before joining. Defaults to false.
- * @returns joined string, or null/undefined if the input is null/undefined
+ * @param input - string to split
+ * @param separator - delimiter to split on
+ * @param limit - maximum number of resulting segments; overflow segments are rejoined with the separator
+ * @returns array of string segments, with length at most equal to limit
  */
-export function joinStringsWithCommas(input: MaybeNot): MaybeNot;
-export function joinStringsWithCommas(input: ArrayOrValue<Maybe<string>>): string;
-export function joinStringsWithCommas(input: Maybe<ArrayOrValue<Maybe<string>>>, trim: boolean = false): Maybe<string> {
-  return joinStrings(input, COMMA_JOINER, trim);
+export function splitJoinRemainder(input: string, separator: string, limit: number): string[] {
+  const split = input.split(separator);
+  const components: string[] = [];
+
+  if (split.length > 1) {
+    const hasItemsToMerge = split.length > limit;
+    const stopIndex = hasItemsToMerge ? limit - 1 : split.length;
+
+    for (let i = 0; i < stopIndex; i += 1) {
+      components.push(split[i]);
+    }
+
+    if (hasItemsToMerge) {
+      components.push(split.slice(stopIndex).join(separator));
+    }
+  } else {
+    components.push(split[0]);
+  }
+
+  return components;
+}
+
+// MARK: JoinStringsInstance
+/**
+ * A callable instance that joins arrays of strings using a configured delimiter.
+ *
+ * Can be called directly as a function or accessed for its configuration properties.
+ *
+ * @example
+ * ```ts
+ * const join = joinStringsInstance({ joiner: ',' });
+ * join(['a', 'b', 'c']); // 'a,b,c'
+ * join.joiner; // ','
+ * ```
+ */
+export interface JoinStringsInstance<T extends string = string> {
+  readonly joiner: string;
+  readonly trimByDefault: boolean;
+  (input: MaybeNot): MaybeNot;
+  (input: ArrayOrValue<Maybe<string>>): T;
+  (input: Maybe<ArrayOrValue<Maybe<string>>>, trim?: boolean): Maybe<T>;
 }
 
 /**
- * Splits a comma-separated string into an array of strings.
- *
- * @param input string to split
- * @param mapFn function to map each split string to a value
- * @returns array of strings
+ * Configuration for creating a {@link JoinStringsInstance}.
  */
-export function splitCommaSeparatedString(input: CommaSeparatedString<string>): string[];
-export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T>): T[];
-export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T> = (x) => x as unknown as T): T[] {
-  const splits = input.split(COMMA_JOINER);
-  return splits.map((x) => mapFn(x.trim()));
+export interface JoinStringsInstanceConfig {
+  /**
+   * The delimiter character to use for splitting and joining.
+   */
+  readonly joiner: string;
+  /**
+   * Whether or not to trim values before joining.
+   *
+   * Defaults to false.
+   */
+  readonly trimByDefault?: boolean;
 }
 
 /**
- * Splits a comma-separated string into a Set of unique trimmed string values.
+ * Creates a {@link JoinStringsInstance} that joins arrays of strings using the configured delimiter.
  *
- * @param input - comma-separated string to split, or null/undefined
- * @returns a Set of unique string values; empty Set if input is null/undefined
+ * @example
+ * ```ts
+ * const joinWithPipe = joinStringsInstance({ joiner: '|' });
+ * joinWithPipe(['a', 'b']); // 'a|b'
+ * joinWithPipe(null); // null
+ * ```
+ *
+ * @param config - configuration for the delimiter and default trim behavior
+ * @returns a new callable {@link JoinStringsInstance}
  */
-export function splitCommaSeparatedStringToSet(input: Maybe<CommaSeparatedString>): Set<string> {
-  return new Set(input != null ? splitCommaSeparatedString(input) : []);
+export function joinStringsInstance<T extends string = string>(config: JoinStringsInstanceConfig): JoinStringsInstance<T> {
+  const { joiner, trimByDefault = false } = config;
+
+  const fn = function (input: Maybe<ArrayOrValue<Maybe<string>>>, trim: boolean = trimByDefault): Maybe<T> {
+    return joinStrings(input, joiner, trim) as T;
+  } as JoinStringsInstance<T>;
+
+  (fn as Configurable<JoinStringsInstance<T>>).joiner = joiner;
+  (fn as Configurable<JoinStringsInstance<T>>).trimByDefault = trimByDefault;
+
+  return fn;
+}
+
+// MARK: StringSplitJoinInstance
+/**
+ * An instance that provides split and join operations for strings using a configured delimiter.
+ *
+ * @example
+ * ```ts
+ * const instance = stringSplitJoinInstance({ joiner: ',' });
+ * instance.joinStrings(['a', 'b', 'c']); // 'a,b,c'
+ * instance.splitStrings('a,b,c'); // ['a', 'b', 'c']
+ * instance.splitStringsToSet('a,b,a'); // Set {'a', 'b'}
+ * ```
+ */
+export interface StringSplitJoinInstance<T extends string = string> extends Pick<JoinStringsInstance<T>, 'joiner' | 'trimByDefault'> {
+  /**
+   * Joins an array of strings into a single delimited string. Filters out null/undefined values.
+   */
+  joinStrings(input: MaybeNot): MaybeNot;
+  joinStrings(input: ArrayOrValue<Maybe<string>>): T;
+  joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, trim?: boolean): Maybe<T>;
+  /**
+   * Splits a delimited string into an array of trimmed strings, optionally mapping each value.
+   */
+  splitStrings(input: T): string[];
+  splitStrings<O>(input: T, mapFn: MapStringFunction<O>): O[];
+  /**
+   * Splits a delimited string into a Set of unique trimmed string values.
+   *
+   * Returns an empty set if the input is null/undefined.
+   */
+  splitStringsToSet(input: Maybe<T>): Set<string>;
+  /**
+   * Splits the input string by the configured delimiter, joining overflow segments back together
+   * instead of discarding them. Useful when you only want to split on the first N-1 occurrences.
+   *
+   * @param input - string to split
+   * @param limit - maximum number of resulting segments; overflow segments are rejoined with the delimiter
+   * @returns array of string segments, with length at most equal to limit
+   */
+  splitJoinRemainder(input: string, limit: number): string[];
+}
+
+/**
+ * Configuration for creating a {@link StringSplitJoinInstance}.
+ */
+export type StringSplitJoinInstanceConfig = JoinStringsInstanceConfig;
+
+/**
+ * Creates a {@link StringSplitJoinInstance} that splits and joins strings using the configured delimiter.
+ *
+ * @example
+ * ```ts
+ * const pipeSplitJoin = stringSplitJoinInstance({ joiner: '|' });
+ * pipeSplitJoin.joinStrings(['a', 'b']); // 'a|b'
+ * pipeSplitJoin.splitStrings('a|b'); // ['a', 'b']
+ * ```
+ *
+ * @param config - configuration for the delimiter and default trim behavior
+ * @returns a new {@link StringSplitJoinInstance}
+ */
+export function stringSplitJoinInstance<T extends string = string>(config: StringSplitJoinInstanceConfig): StringSplitJoinInstance<T> {
+  const { joiner } = config;
+  const joinStrings = joinStringsInstance<T>(config);
+
+  const splitStrings = <O = unknown>(input: T, mapFn: MapStringFunction<O> = (x) => x as unknown as O): O[] => {
+    const splits = input.split(joiner);
+    return splits.map((x) => mapFn(x.trim()));
+  };
+
+  return {
+    joiner,
+    trimByDefault: joinStrings.trimByDefault,
+    joinStrings,
+    splitStrings,
+    splitStringsToSet(input: Maybe<T>): Set<string> {
+      return new Set(input != null ? splitStrings(input) : []);
+    },
+    splitJoinRemainder(input: string, limit: number): string[] {
+      return splitJoinRemainder(input, joiner, limit);
+    }
+  };
+}
+
+/**
+ * Global {@link StringSplitJoinInstance} that uses commas as the delimiter.
+ */
+export const COMMA_STRING_SPLIT_JOIN: StringSplitJoinInstance<CommaSeparatedString> = stringSplitJoinInstance({ joiner: COMMA_JOINER });
+
+/**
+ * Global {@link StringSplitJoinInstance} that uses spaces as the delimiter, with trimming enabled by default.
+ */
+export const SPACE_STRING_SPLIT_JOIN: StringSplitJoinInstance<SpaceSeparatedString> = stringSplitJoinInstance({ joiner: SPACE_JOINER, trimByDefault: true });
+
+/**
+ * Converts a string to its lowercase equivalent for case-insensitive comparison.
+ *
+ * @param input - string to convert to lowercase
+ * @returns the lowercased string, or undefined if the input is undefined
+ */
+export function caseInsensitiveString(input: string): string;
+export function caseInsensitiveString(input: undefined): undefined;
+export function caseInsensitiveString(input: Maybe<string>): Maybe<string>;
+export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
+  return input?.toLocaleLowerCase();
 }
 
 /**
@@ -149,45 +312,9 @@ export function lowercaseFirstLetter(value: string): string {
 }
 
 /**
- * Splits a string like {@link String.prototype.split}, but joins overflow segments back together
- * instead of discarding them. Useful when you only want to split on the first N-1 occurrences.
- *
- * @param input - string to split
- * @param separator - delimiter to split on
- * @param limit - maximum number of resulting segments; overflow segments are rejoined with the separator
- * @returns array of string segments, with length at most equal to limit
- */
-export function splitJoinRemainder(input: string, separator: string, limit: number): string[] {
-  const split = input.split(separator);
-  const components: string[] = [];
-
-  if (split.length > 1) {
-    const hasItemsToMerge = split.length > limit;
-    const stopIndex = hasItemsToMerge ? limit - 1 : split.length;
-
-    for (let i = 0; i < stopIndex; i += 1) {
-      components.push(split[i]);
-    }
-
-    if (hasItemsToMerge) {
-      components.push(split.slice(stopIndex).join(separator));
-    }
-  } else {
-    components.push(split[0]);
-  }
-
-  return components;
-}
-
-/**
  * A tuple of [firstName, lastName] where lastName may be undefined if the input has no space.
  */
 export type FirstNameLastNameTuple = [string, string | undefined];
-
-/**
- * Default space joiner character used by space-related string functions.
- */
-export const SPACE_JOINER = ' ';
 
 /**
  * Splits the input string into a first name and last name tuple using a space as the delimiter.
@@ -197,19 +324,7 @@ export const SPACE_JOINER = ' ';
  * @returns a tuple of [firstName, lastName], where lastName includes all text after the first space
  */
 export function splitJoinNameString(input: string): FirstNameLastNameTuple {
-  return splitJoinRemainder(input, SPACE_JOINER, 2) as FirstNameLastNameTuple;
-}
-
-/**
- * Joins one or more strings together with spaces. Extra spaces are trimmed from the values.
- *
- * @param input string or array of strings
- * @returns joined string, or null/undefined if the input is null/undefined
- */
-export function joinStringsWithSpaces(input: MaybeNot): MaybeNot;
-export function joinStringsWithSpaces(input: ArrayOrValue<Maybe<string>>): string;
-export function joinStringsWithSpaces(input: Maybe<ArrayOrValue<Maybe<string>>>): Maybe<string> {
-  return joinStrings(input, SPACE_JOINER, true);
+  return SPACE_STRING_SPLIT_JOIN.splitJoinRemainder(input, 2) as FirstNameLastNameTuple;
 }
 
 /**
@@ -322,3 +437,46 @@ export function flattenWhitespace(input: string): string {
 export function simplifyWhitespace(input: string): string {
   return input.split(/\r?\n/).filter(Boolean).map(flattenWhitespace).join('\n');
 }
+
+// MARK: Compat
+/**
+ * Joins an array of strings into a single string using commas. Does not trim empty values by default.
+ *
+ * Delegates to {@link COMMA_STRING_SPLIT_JOIN}.
+ *
+ * @param input string or array of strings
+ * @param trim whether or not to trim the strings before joining. Defaults to false.
+ * @returns joined string, or null/undefined if the input is null/undefined
+ */
+export const joinStringsWithCommas = COMMA_STRING_SPLIT_JOIN.joinStrings;
+
+/**
+ * Splits a comma-separated string into an array of strings.
+ *
+ * Delegates to {@link COMMA_STRING_SPLIT_JOIN}.
+ *
+ * @param input string to split
+ * @param mapFn function to map each split string to a value
+ * @returns array of strings
+ */
+export const splitCommaSeparatedString = COMMA_STRING_SPLIT_JOIN.splitStrings;
+
+/**
+ * Splits a comma-separated string into a Set of unique trimmed string values.
+ *
+ * Delegates to {@link COMMA_STRING_SPLIT_JOIN}.
+ *
+ * @param input - comma-separated string to split, or null/undefined
+ * @returns a Set of unique string values; empty Set if input is null/undefined
+ */
+export const splitCommaSeparatedStringToSet = COMMA_STRING_SPLIT_JOIN.splitStringsToSet;
+
+/**
+ * Joins one or more strings together with spaces. Extra spaces are trimmed from the values.
+ *
+ * Delegates to {@link SPACE_STRING_SPLIT_JOIN}.
+ *
+ * @param input string or array of strings
+ * @returns joined string, or null/undefined if the input is null/undefined
+ */
+export const joinStringsWithSpaces = SPACE_STRING_SPLIT_JOIN.joinStrings;

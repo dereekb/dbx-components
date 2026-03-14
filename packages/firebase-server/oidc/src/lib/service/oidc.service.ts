@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import type Provider from 'oidc-provider';
-import type { Interaction, InteractionResults, Grant } from 'oidc-provider';
+import type { Interaction, InteractionResults, Grant, Configuration } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
@@ -10,34 +10,11 @@ import { createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
-import { type OidcInteractionUid } from '@dereekb/firebase';
-import { cachedGetter, firstValue, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
+import { OAuthInteractionLoginDetails, OAuthInteractionScopes, OidcEntryClientId, OidcEntryOAuthClientPayloadData, type OidcInteractionUid } from '@dereekb/firebase';
+import { cachedGetter, firstValue, Maybe, unixDateTimeSecondsNumberForNow, WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
 import { DecodedIdToken } from 'firebase-admin/auth';
-
-// MARK: Suppress Body Parser Warning
-const OIDC_PROVIDER_BODY_PARSER_WARNING = 'oidc-provider WARNING: already parsed request body detected';
-
-/**
- * Patches `console.warn` to suppress the oidc-provider "already parsed request body" warning.
- *
- * Firebase Cloud Functions (and other platforms) parse request bodies before they reach NestJS,
- * so `req.readable` is always `false` when oidc-provider's selective_body middleware runs.
- * The provider handles this correctly by falling back to `req.body`, but emits a one-time warning.
- *
- * This function intercepts that specific warning and silences it. All other warnings pass through.
- */
-function suppressOidcProviderBodyParserWarning(): void {
-  const originalWarn = console.warn;
-
-  console.warn = (...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].includes(OIDC_PROVIDER_BODY_PARSER_WARNING)) {
-      return;
-    }
-
-    originalWarn.apply(console, args);
-  };
-}
+import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
 
 // MARK: Service
 /**
@@ -46,7 +23,6 @@ function suppressOidcProviderBodyParserWarning(): void {
  */
 @Injectable()
 export class OidcService {
-  private readonly logger = new Logger('OidcService');
   private readonly _getProvider = cachedGetter(() => this._buildProvider());
 
   constructor(
@@ -63,75 +39,6 @@ export class OidcService {
    */
   getProvider(): Promise<Provider> {
     return this._getProvider();
-  }
-
-  // MARK: Interaction
-  /**
-   * Loads the interaction details for a given request/response pair.
-   *
-   * Requires the oidc-provider interaction cookie to be present on the request.
-   */
-  async getInteractionDetails(req: Request, res: Response): Promise<Interaction> {
-    const provider = await this.getProvider();
-    return provider.interactionDetails(req, res);
-  }
-
-  /**
-   * Finds an interaction by its UID directly from the adapter store.
-   *
-   * Bypasses the cookie-based lookup used by `provider.interactionDetails()`.
-   * This is necessary when the interaction cookie is scoped to a different path
-   * (e.g., the frontend) and is not sent with backend API requests.
-   *
-   * @throws {Error} When the interaction is not found or has expired.
-   */
-  async findInteractionByUid(uid: OidcInteractionUid): Promise<Interaction> {
-    const provider = await this.getProvider();
-    const interaction = await provider.Interaction.find(uid);
-
-    if (!interaction) {
-      throw new Error('Interaction not found');
-    }
-
-    return interaction;
-  }
-
-  /**
-   * Completes an interaction by UID without requiring the interaction cookie.
-   *
-   * Looks up the interaction directly by UID, applies the result, saves it,
-   * and returns the `returnTo` URL for the client to redirect to.
-   *
-   * @returns The `returnTo` URL that the client should redirect to.
-   */
-  async finishInteractionByUid(uid: OidcInteractionUid, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<string> {
-    const interaction = await this.findInteractionByUid(uid);
-    const mergeWithLastSubmission = options?.mergeWithLastSubmission ?? true;
-
-    if (mergeWithLastSubmission && !('error' in result)) {
-      interaction.result = { ...interaction.lastSubmission, ...result };
-    } else {
-      interaction.result = result;
-    }
-
-    await interaction.save(interaction.exp - unixDateTimeSecondsNumberForNow());
-    return interaction.returnTo;
-  }
-
-  /**
-   * Finds an existing grant by ID, or creates a new one.
-   */
-  async findOrCreateGrant(grantId: string | undefined, accountId: string, clientId: string): Promise<Grant> {
-    const provider = await this.getProvider();
-    let grant: Grant;
-
-    if (grantId) {
-      grant = (await provider.Grant.find(grantId))!;
-    } else {
-      grant = new provider.Grant({ accountId, clientId });
-    }
-
-    return grant;
   }
 
   // MARK: Token Verification
@@ -184,6 +91,117 @@ export class OidcService {
     };
   }
 
+  /**
+   * Finds a client payload by ID directly from the adapter store.
+   *
+   * @param clientId - The client's document/adapter entry ID.
+   * @returns The client payload data, or `undefined` if not found.
+   */
+  async findClientPayload(clientId: OidcEntryClientId): Promise<Maybe<OidcEntryOAuthClientPayloadData>> {
+    const provider = await this.getProvider();
+    const ProviderClient = provider.Client as any;
+    const existing = await ProviderClient.adapter.find(clientId);
+
+    let result: Maybe<OidcEntryOAuthClientPayloadData>;
+
+    if (existing) {
+      result = {
+        client_id: existing.client_id,
+        client_name: existing.client_name,
+        redirect_uris: existing.redirect_uris,
+        grant_types: existing.grant_types,
+        response_types: existing.response_types,
+        token_endpoint_auth_method: existing.token_endpoint_auth_method,
+        logo_uri: existing.logo_uri,
+        client_uri: existing.client_uri,
+        created_at: existing.created_at
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Builds the oidc-provider {@link Configuration} options that are spread into
+   * `new Provider(issuer, { ...options })`.
+   *
+   * Does NOT include `adapter`, `findAccount`, or `jwks` — those require async
+   * setup and are handled by {@link OidcService}.
+   */
+  buildProviderConfiguration(cookieKeys: string[]): Configuration {
+    const config = this.config;
+    const providerConfig = this.providerConfigService.providerConfig;
+
+    return {
+      routes: { ...this.providerConfigService.routes },
+      claims: { ...providerConfig.claims },
+      responseTypes: [...providerConfig.responseTypes] as Configuration['responseTypes'],
+      pkce: {
+        required: () => true
+      },
+      features: {
+        devInteractions: { enabled: false },
+        registration: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled },
+        registrationManagement: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled }
+      },
+      ttl: {
+        AccessToken: config.tokenLifetimes.accessToken,
+        IdToken: config.tokenLifetimes.idToken,
+        AuthorizationCode: config.tokenLifetimes.authorizationCode,
+        RefreshToken: config.tokenLifetimes.refreshToken,
+        Session: 14 * 24 * 60 * 60,
+        Grant: 14 * 24 * 60 * 60,
+        Interaction: 60 * 60,
+        DeviceCode: 10 * 60
+      },
+      interactions: {
+        url: async (_ctx: unknown, interaction: Interaction) => {
+          let baseUrl: WebsiteUrlWithPrefix;
+
+          const client_id = interaction.params.client_id as string;
+
+          let paramsToEncode = {
+            uid: interaction.uid,
+            client_id
+          };
+
+          if (interaction.prompt.name === 'login') {
+            baseUrl = this.providerConfigService.appLoginUrl;
+          } else {
+            baseUrl = this.providerConfigService.appConsentUrl;
+
+            // look up client details and add to the url
+            const client = await this.findClientPayload(client_id);
+
+            if (client) {
+              const scopes = interaction.params.scope as OAuthInteractionScopes;
+              const interactionLoginDetails: OAuthInteractionLoginDetails = {
+                client_id,
+                client_name: client.client_name,
+                client_uri: client.client_uri,
+                logo_uri: client.logo_uri,
+                scopes
+              };
+
+              paramsToEncode = {
+                ...paramsToEncode,
+                ...interactionLoginDetails
+              };
+            }
+          }
+
+          const paramsString = makeUrlSearchParamsString(paramsToEncode, { useUrlSearchSpaceHandling: true });
+          const redirectUrl = `${baseUrl}?${paramsString}`;
+          return redirectUrl;
+        }
+      },
+      cookies: {
+        keys: cookieKeys
+      },
+      ...(config.renderError ? { renderError: config.renderError } : {})
+    };
+  }
+
   // MARK: Internal
   private async _buildProvider(): Promise<Provider> {
     const config = this.config;
@@ -202,7 +220,7 @@ export class OidcService {
     const cookieKey = getEncryptionKey().toString('base64').slice(0, 32);
 
     const adapterFactory = createAdapterFactory(this.collections, this.encryptionService);
-    const providerConfiguration = this.providerConfigService.buildProviderConfiguration([cookieKey]);
+    const providerConfiguration = this.buildProviderConfiguration([cookieKey]);
 
     const { default: ProviderClass } = await import('oidc-provider');
 

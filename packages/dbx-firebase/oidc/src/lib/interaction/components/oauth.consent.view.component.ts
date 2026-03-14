@@ -37,10 +37,10 @@ import { type DbxFirebaseOAuthConsentScopesViewData } from './oauth.consent.scop
           <h2>Authorize {{ clientName() }}</h2>
         }
         <dbx-injection [config]="resolvedScopeInjectionConfig()"></dbx-injection>
-        <div class="dbx-firebase-oauth-consent-actions">
+        <div class="dbx-pt3 dbx-pb3 dbx-firebase-oauth-consent-actions">
           <dbx-button text="Approve" [raised]="true" color="primary" (buttonClick)="approveClick.emit()"></dbx-button>
           <dbx-button-spacer></dbx-button-spacer>
-          <dbx-button text="Deny" [stroked]="true" color="warn" (buttonClick)="denyClick.emit()"></dbx-button>
+          <dbx-button text="Deny" [flat]="true" color="warn" (buttonClick)="denyClick.emit()"></dbx-button>
         </div>
         @if (resolvedError()) {
           <dbx-error [error]="resolvedError()"></dbx-error>

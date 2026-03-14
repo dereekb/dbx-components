@@ -1,10 +1,11 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { OidcWellKnownController, OidcInteractionController, OidcModuleConfig, OidcProviderConfigService, OidcAccountService, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
+import { OidcInteractionService, OidcWellKnownController, OidcInteractionController, OidcModuleConfig, OidcProviderConfigService, OidcAccountService, type JwksService, type OidcService } from '@dereekb/firebase-server/oidc';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let jwksService: JwksService;
   let oidcService: OidcService;
   let oidcModuleConfig: OidcModuleConfig;
+  let oidcInteractionService: OidcInteractionService;
   let providerConfigService: OidcProviderConfigService;
   let accountService: OidcAccountService;
 
@@ -13,6 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     jwksService = serverContext.jwksService;
     oidcService = serverContext.oidcService;
     oidcModuleConfig = f.instance.nest.get(OidcModuleConfig);
+    oidcInteractionService = f.instance.nest.get(OidcInteractionService);
     providerConfigService = f.instance.nest.get(OidcProviderConfigService);
     accountService = f.instance.nest.get(OidcAccountService);
   });
@@ -110,7 +112,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     describe('buildProviderConfiguration()', () => {
       it('should return a valid oidc-provider configuration', () => {
-        const config = providerConfigService.buildProviderConfiguration(['test-cookie-key']);
+        const config = oidcService.buildProviderConfiguration(['test-cookie-key']);
 
         expect(config.routes).toBeDefined();
         expect(config.claims).toBeDefined();
@@ -123,17 +125,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
 
       it('should disable devInteractions', () => {
-        const config = providerConfigService.buildProviderConfiguration(['key']);
+        const config = oidcService.buildProviderConfiguration(['key']);
         expect(config.features!.devInteractions!.enabled).toBe(false);
       });
 
       it('should require PKCE', () => {
-        const config = providerConfigService.buildProviderConfiguration(['key']);
+        const config = oidcService.buildProviderConfiguration(['key']);
         expect((config.pkce as any).required()).toBe(true);
       });
 
       it('should set the cookie keys from the input', () => {
-        const config = providerConfigService.buildProviderConfiguration(['cookie-key-1']);
+        const config = oidcService.buildProviderConfiguration(['cookie-key-1']);
         expect(config.cookies!.keys).toEqual(['cookie-key-1']);
       });
     });
@@ -156,7 +158,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     let controller: OidcInteractionController;
 
     beforeEach(() => {
-      controller = new OidcInteractionController(oidcService, providerConfigService, accountService);
+      controller = new OidcInteractionController(oidcInteractionService, providerConfigService, accountService);
     });
 
     describe('getInteraction()', () => {

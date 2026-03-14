@@ -7,3 +7,4 @@ export * from './oidc.encryption.service';
 export * from './oidc.jwks.service';
 export * from './oidc.config.service';
 export * from './oidc.client.service';
+export * from './oidc.interaction.service';

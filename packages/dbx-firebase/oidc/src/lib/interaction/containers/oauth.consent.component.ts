@@ -4,10 +4,11 @@ import { dbxRouteParamReaderInstance, DbxRouterService, type DbxInjectionCompone
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
 import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
 import { type OidcScope } from '@dereekb/firebase';
-import { type Maybe, splitCommaSeparatedString } from '@dereekb/util';
+import { type Maybe, SPACE_STRING_SPLIT_JOIN } from '@dereekb/util';
 import { DbxFirebaseOAuthConsentViewComponent } from '../components/oauth.consent.view.component';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../components/oauth.consent.scope.view.component';
 import { DbxFirebaseOAuthConsentScopeDefaultViewComponent } from '../components/oauth.consent.scope.default.view.component';
+import { tapLog } from '@dereekb/rxjs';
 
 /**
  * Configuration for `DbxOAuthConsentComponent`.
@@ -29,7 +30,7 @@ export interface DbxOAuthConsentComponentConfig {
  * Delegates visual rendering to `DbxFirebaseOAuthConsentViewComponent`.
  *
  * Reads interaction UID, client name, and scopes from route params (populated by
- * the server redirect). Inputs can optionally override route param values.
+ * the server redirect).
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent',
@@ -51,11 +52,6 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   // Config input
   readonly config = input<Maybe<DbxOAuthConsentComponentConfig>>();
 
-  // Optional input overrides
-  readonly interactionUid = input<string>();
-  readonly clientName = input<string>();
-  readonly scopes = input<OidcScope[]>();
-
   // Param key inputs for customization
   readonly uidParamKey = input<string>();
   readonly clientNameParamKey = input<string>();
@@ -69,12 +65,12 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   // Signals from route params
   private readonly routeUid = toSignal(this.uidParamReader.value$);
   private readonly routeClientName = toSignal(this.clientNameParamReader.value$);
-  private readonly routeScopes = toSignal(this.scopesParamReader.value$);
+  private readonly routeScopes = toSignal(this.scopesParamReader.value$.pipe(tapLog('xxx')));
 
-  // Resolved values: input overrides route param
-  readonly resolvedUid = computed(() => this.interactionUid() ?? this.routeUid());
-  readonly resolvedClientName = computed(() => this.clientName() ?? this.routeClientName() ?? '');
-  readonly resolvedScopes = computed<OidcScope[]>(() => this.scopes() ?? splitCommaSeparatedString(this.routeScopes() ?? ''));
+  // Resolved values from route params
+  readonly resolvedUid = computed(() => this.routeUid());
+  readonly resolvedClientName = computed(() => this.routeClientName() ?? '');
+  readonly resolvedScopes = computed<OidcScope[]>(() => SPACE_STRING_SPLIT_JOIN.splitStrings(this.routeScopes() ?? ''));
 
   // Scope injection config: built from the configured scope list view class, falling back to config service, then the default
   readonly scopeInjectionConfig = computed<DbxInjectionComponentConfig>(() => ({

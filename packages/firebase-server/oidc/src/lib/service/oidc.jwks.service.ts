@@ -2,9 +2,10 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import { randomBytes, generateKeyPairSync } from 'crypto';
 import { resolveEncryptionKey, encryptValue, decryptValue, type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
 import { FirebaseStorageAccessorFile, iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
-import { type JwksKey, type JsonWebKeyWithKid, OidcServerFirestoreCollections, type JwksKeyDocument } from '../model';
-import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model';
+import { type JwksKey, type JsonWebKeyWithKid, type JwksKeyDocument } from '../model/jwks/jwks';
+import { activeJwksKeysQuery, nonRetiredJwksKeysQuery, rotatedJwksKeysQuery } from '../model/jwks/jwks.query';
 import { cachedGetter, WebsiteUrl, WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
+import { OidcServerFirestoreCollections } from '../model/model';
 
 // MARK: Types
 /**

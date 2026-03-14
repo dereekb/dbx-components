@@ -4,16 +4,18 @@ import { JwksService, JwksServiceConfig } from './service/oidc.jwks.service';
 import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
-import { OidcServerFirestoreCollections, jwksKeyFirestoreCollection } from './model';
 import { oidcEntryFirestoreCollection } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type FirestoreContext } from '@dereekb/firebase';
-import { hasHttpPrefix, SlashPath, SlashPathFolder, WebsitePath } from '@dereekb/util';
+import { hasHttpPrefix } from '@dereekb/util';
 import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
 import { OidcEncryptionService } from './service/oidc.encryption.service';
 import { OidcClientService } from './service/oidc.client.service';
-import { OidcProviderConfigService } from './service';
+import { OidcProviderConfigService } from './service/oidc.config.service';
+import { jwksKeyFirestoreCollection } from './model/jwks/jwks';
+import { OidcServerFirestoreCollections } from './model/model';
+import { OidcInteractionService } from './service/oidc.interaction.service';
 
 // MARK: Environment Variable Keys
 /**
@@ -203,6 +205,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         useFactory: oidcFirestoreCollectionsFactory,
         inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN, OidcModuleConfig]
       },
+      OidcInteractionService,
       OidcProviderConfigService,
       OidcEncryptionService,
       OidcService,

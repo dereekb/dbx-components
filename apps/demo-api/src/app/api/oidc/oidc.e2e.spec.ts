@@ -245,8 +245,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         expect(consentRedirectRes.status).toBe(303);
         collectCookies(consentRedirectRes);
-        const consentUid = extractInteractionUid(consentRedirectRes);
+
+        // Verify the consent redirect URL contains the expected query params
+        const consentRedirectUrl = new URL(consentRedirectRes.headers['location'], 'http://localhost');
+        const consentUid = consentRedirectUrl.searchParams.get('uid');
         expect(consentUid).toBeDefined();
+        expect(consentRedirectUrl.searchParams.get('client_id')).toBe(client_id);
+        expect(consentRedirectUrl.searchParams.get('client_name')).toBe('test');
+        expect(consentRedirectUrl.searchParams.get('scopes')).toBe('openid email demo');
 
         // 6. Approve consent
         const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ idToken, approved: true });
