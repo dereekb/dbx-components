@@ -34,7 +34,9 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
     fromUpload: storageFileInitializeFromUpload,
     allFromUpload: storageFileInitializeAllFromUploads
   }),
-  oidcEntry: createOidcClient
+  oidcEntry: onCallSpecifierHandler({
+    client: createOidcClient
+  })
 };
 
 // MARK: Read

@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       };
 
       async function createTestClient(): Promise<CreateOidcClientResult> {
-        return (await u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(oidcEntryIdentity, testCreateParams))) as CreateOidcClientResult;
+        return (await u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(oidcEntryIdentity, testCreateParams, 'client'))) as CreateOidcClientResult;
       }
 
       describe('create', () => {
@@ -50,7 +50,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             redirect_uris: ['https://example.com/updated-callback']
           };
 
-          await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(oidcEntryIdentity, updateParams));
+          await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(oidcEntryIdentity, updateParams, 'client'));
 
           const accessor = f.instance.demoFirestoreCollections.oidcEntryCollection.documentAccessor();
           const document = accessor.loadDocumentForId(createResult.client_id);
@@ -69,7 +69,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             key: createResult.modelKeys as string
           };
 
-          await u.callWrappedFunction(demoCallModelWrappedFn, onCallDeleteModelParams(oidcEntryIdentity, deleteParams));
+          await u.callWrappedFunction(demoCallModelWrappedFn, onCallDeleteModelParams(oidcEntryIdentity, deleteParams, 'client'));
 
           const accessor = f.instance.demoFirestoreCollections.oidcEntryCollection.documentAccessor();
           const document = accessor.loadDocumentForId(createResult.client_id);

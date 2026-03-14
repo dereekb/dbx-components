@@ -113,9 +113,7 @@ describe('firestoreEncryptedField()', () => {
     it(
       'should throw if key is wrong length',
       shouldFail(() => {
-        const field = firestoreEncryptedField<string>({ secret: 'tooshort', default: '' });
-        const fns = modelFieldMapFunctions(field);
-        expectFail(() => fns.to('test'));
+        expectFail(() => firestoreEncryptedField<string>({ secret: 'tooshort', default: '' }));
       })
     );
   });
