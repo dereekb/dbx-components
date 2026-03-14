@@ -20,13 +20,13 @@
     <!-- Consent View -->
     <doc-feature-example header="dbx-firebase-oauth-consent-view" hint="Presentational consent component with scope display.">
       <h3>Consent View</h3>
-      <dbx-firebase-oauth-consent-view [clientName]="exampleClientName" [scopes]="exampleScopes" [loading]="false" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
+      <dbx-firebase-oauth-consent-view [details]="exampleDetails" [loading]="false" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
 
       <h3>Loading</h3>
-      <dbx-firebase-oauth-consent-view [clientName]="exampleClientName" [scopes]="exampleScopes" [loading]="true" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
+      <dbx-firebase-oauth-consent-view [details]="exampleDetails" [loading]="true" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
 
       <h3>Error</h3>
-      <dbx-firebase-oauth-consent-view [clientName]="exampleClientName" [scopes]="exampleScopes" [loading]="false" [error]="exampleError" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
+      <dbx-firebase-oauth-consent-view [details]="exampleDetails" [loading]="false" [error]="exampleError" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

@@ -7,7 +7,10 @@ import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../inter
 export const DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH = '/oidc/auth';
 export const DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH = '/interaction';
 export const DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY = 'uid';
+export const DEFAULT_OIDC_CLIENT_ID_PARAM_KEY = 'client_id';
 export const DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY = 'client_name';
+export const DEFAULT_OIDC_CLIENT_URI_PARAM_KEY = 'client_uri';
+export const DEFAULT_OIDC_LOGO_URI_PARAM_KEY = 'logo_uri';
 export const DEFAULT_OIDC_SCOPES_PARAM_KEY = 'scopes';
 export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic'];
 
@@ -23,12 +26,6 @@ export abstract class DbxFirebaseOidcConfig {
   readonly oidcAuthorizationEndpointApiPath?: Maybe<string>;
   /** Base path for interaction endpoints. Defaults to '/interaction'. */
   readonly oidcInteractionEndpointApiPath?: Maybe<string>;
-  /** Route param key for the interaction UID. Defaults to 'uid'. */
-  readonly oidcInteractionUidParamKey?: Maybe<string>;
-  /** Route param key for the client name (consent only). Defaults to 'client_name'. */
-  readonly clientNameParamKey?: Maybe<string>;
-  /** Route param key for the scopes (consent only). Defaults to 'scopes'. */
-  readonly scopesParamKey?: Maybe<string>;
   /**
    * Supported token endpoint authentication methods.
    *
@@ -75,18 +72,6 @@ export class DbxFirebaseOidcConfigService {
 
   get oidcInteractionEndpointApiPath(): string {
     return this.config.oidcInteractionEndpointApiPath ?? DEFAULT_OIDC_INTERACTION_ENDPOINT_PATH;
-  }
-
-  get oidcInteractionUidParamKey(): string {
-    return this.config.oidcInteractionUidParamKey ?? DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY;
-  }
-
-  get clientNameParamKey(): string {
-    return this.config.clientNameParamKey ?? DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY;
-  }
-
-  get scopesParamKey(): string {
-    return this.config.scopesParamKey ?? DEFAULT_OIDC_SCOPES_PARAM_KEY;
   }
 
   get tokenEndpointAuthMethods(): OidcTokenEndpointAuthMethod[] {

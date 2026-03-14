@@ -4,7 +4,7 @@ import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent, DbxFirebaseOAuthConsentScopeDefaultViewComponent } from '@dereekb/dbx-firebase/oidc';
-import { type OidcScope } from '@dereekb/firebase';
+import { type OAuthInteractionLoginDetails } from '@dereekb/firebase';
 import { DemoAuthLoginViewComponent } from '../../../../demo/modules/auth/container/login.view.component';
 
 /**
@@ -16,9 +16,13 @@ import { DemoAuthLoginViewComponent } from '../../../../demo/modules/auth/contai
   imports: [DbxContentContainerDirective, DemoAuthLoginViewComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent]
 })
 export class DocExtensionOidcComponent {
-  readonly exampleClientName = 'Example OAuth Client';
-
-  readonly exampleScopes: OidcScope[] = ['openid', 'profile', 'email'];
+  readonly exampleDetails: OAuthInteractionLoginDetails = {
+    client_id: 'example-client-id',
+    client_name: 'Example OAuth Client',
+    client_uri: 'https://example.com',
+    logo_uri: 'https://example.com/logo.png',
+    scopes: 'openid profile email'
+  };
 
   readonly exampleError = 'Something went wrong. Please try again.';
 

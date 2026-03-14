@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, OnDestroy, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
-import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
+import { DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY } from '../../service/oidc.configuration.service';
 import { OidcInteractionUid } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../components/oauth.login.view.component';
@@ -39,14 +39,7 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   private readonly dbxRouterService = inject(DbxRouterService);
   private readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   private readonly interactionService = inject(DbxFirebaseOidcInteractionService);
-  private readonly oidcConfigService = inject(DbxFirebaseOidcConfigService);
-
-  /**
-   * Optional override for the route param key that holds the interaction UID.
-   */
-  readonly paramKey = input<string>();
-
-  readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, this.oidcConfigService.oidcInteractionUidParamKey);
+  readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY);
 
   readonly interactionUid: Signal<Maybe<OidcInteractionUid>> = toSignal(this.uidParamReader.value$);
   readonly isLoggedIn = toSignal(this.dbxFirebaseAuthService.isLoggedIn$, { initialValue: false });
@@ -71,15 +64,6 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   });
 
   constructor() {
-    // Update param key when input changes
-    effect(() => {
-      const key = this.paramKey();
-
-      if (key) {
-        this.uidParamReader.setParamKey(key);
-      }
-    });
-
     // Auto-submit when user is logged in
     effect(() => {
       if (this.loginStateCase() === 'user') {

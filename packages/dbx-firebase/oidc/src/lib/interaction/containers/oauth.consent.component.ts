@@ -1,14 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, input, computed, signal, effect, OnDestroy, type Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, computed, signal, OnDestroy, type Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
-import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
-import { type OidcScope } from '@dereekb/firebase';
-import { type Maybe, SPACE_STRING_SPLIT_JOIN } from '@dereekb/util';
+import { DbxFirebaseOidcConfigService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY, DEFAULT_OIDC_LOGO_URI_PARAM_KEY, DEFAULT_OIDC_SCOPES_PARAM_KEY } from '../../service/oidc.configuration.service';
+import { type OAuthInteractionLoginDetails } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseOAuthConsentViewComponent } from '../components/oauth.consent.view.component';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../components/oauth.consent.scope.view.component';
 import { DbxFirebaseOAuthConsentScopeDefaultViewComponent } from '../components/oauth.consent.scope.default.view.component';
-import { tapLog } from '@dereekb/rxjs';
 
 /**
  * Configuration for `DbxOAuthConsentComponent`.
@@ -29,15 +28,15 @@ export interface DbxOAuthConsentComponentConfig {
  * Manages all state: route param reading, consent submission, and error handling.
  * Delegates visual rendering to `DbxFirebaseOAuthConsentViewComponent`.
  *
- * Reads interaction UID, client name, and scopes from route params (populated by
- * the server redirect).
+ * Reads interaction UID and client details from route params (populated by
+ * the server redirect), then assembles them into `OAuthInteractionLoginDetails`.
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent',
   standalone: true,
   imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
-    <dbx-firebase-oauth-consent-view [clientName]="resolvedClientName()" [scopes]="resolvedScopes()" [loading]="loading()" [error]="error()" [scopeInjectionConfig]="scopeInjectionConfig()" (approveClick)="approve()" (denyClick)="deny()"></dbx-firebase-oauth-consent-view>
+    <dbx-firebase-oauth-consent-view [details]="resolvedDetails()" [loading]="loading()" [error]="error()" [scopeInjectionConfig]="scopeInjectionConfig()" (approveClick)="approve()" (denyClick)="deny()"></dbx-firebase-oauth-consent-view>
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-consent'
@@ -52,25 +51,39 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   // Config input
   readonly config = input<Maybe<DbxOAuthConsentComponentConfig>>();
 
-  // Param key inputs for customization
-  readonly uidParamKey = input<string>();
-  readonly clientNameParamKey = input<string>();
-  readonly scopesParamKey = input<string>();
-
   // Route param readers
-  readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, this.oidcConfigService.oidcInteractionUidParamKey);
-  readonly clientNameParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, this.oidcConfigService.clientNameParamKey);
-  readonly scopesParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, this.oidcConfigService.scopesParamKey);
+  readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY);
+  readonly clientIdParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY);
+  readonly clientNameParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY);
+  readonly clientUriParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY);
+  readonly logoUriParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_LOGO_URI_PARAM_KEY);
+  readonly scopesParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_SCOPES_PARAM_KEY);
 
   // Signals from route params
   private readonly routeUid = toSignal(this.uidParamReader.value$);
+  private readonly routeClientId = toSignal(this.clientIdParamReader.value$);
   private readonly routeClientName = toSignal(this.clientNameParamReader.value$);
-  private readonly routeScopes = toSignal(this.scopesParamReader.value$.pipe(tapLog('xxx')));
+  private readonly routeClientUri = toSignal(this.clientUriParamReader.value$);
+  private readonly routeLogoUri = toSignal(this.logoUriParamReader.value$);
+  private readonly routeScopes = toSignal(this.scopesParamReader.value$);
 
-  // Resolved values from route params
+  // Resolved values
   readonly resolvedUid = computed(() => this.routeUid());
-  readonly resolvedClientName = computed(() => this.routeClientName() ?? '');
-  readonly resolvedScopes = computed<OidcScope[]>(() => SPACE_STRING_SPLIT_JOIN.splitStrings(this.routeScopes() ?? ''));
+  readonly resolvedDetails = computed<Maybe<OAuthInteractionLoginDetails>>(() => {
+    const client_id = this.routeClientId();
+
+    if (!client_id) {
+      return undefined;
+    }
+
+    return {
+      client_id,
+      client_name: this.routeClientName() || undefined,
+      client_uri: this.routeClientUri() || undefined,
+      logo_uri: this.routeLogoUri() || undefined,
+      scopes: this.routeScopes() ?? ''
+    };
+  });
 
   // Scope injection config: built from the configured scope list view class, falling back to config service, then the default
   readonly scopeInjectionConfig = computed<DbxInjectionComponentConfig>(() => ({
@@ -80,36 +93,12 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
-  constructor() {
-    // Update param keys when inputs change
-    effect(() => {
-      const key = this.uidParamKey();
-
-      if (key) {
-        this.uidParamReader.setParamKey(key);
-      }
-    });
-
-    effect(() => {
-      const key = this.clientNameParamKey();
-
-      if (key) {
-        this.clientNameParamReader.setParamKey(key);
-      }
-    });
-
-    effect(() => {
-      const key = this.scopesParamKey();
-
-      if (key) {
-        this.scopesParamReader.setParamKey(key);
-      }
-    });
-  }
-
   ngOnDestroy(): void {
     this.uidParamReader.destroy();
+    this.clientIdParamReader.destroy();
     this.clientNameParamReader.destroy();
+    this.clientUriParamReader.destroy();
+    this.logoUriParamReader.destroy();
     this.scopesParamReader.destroy();
   }
 
