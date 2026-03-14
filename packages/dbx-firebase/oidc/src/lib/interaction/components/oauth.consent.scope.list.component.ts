@@ -16,7 +16,7 @@ import { type OAuthConsentScope } from './oauth.consent.scope';
   template: `
     @for (scope of scopes(); track scope.name) {
       <div class="dbx-firebase-oauth-consent-scope-list-item dbx-mb2">
-        <span class="dbx-firebase-oauth-consent-scope-name">{{ scope.name }}</span>
+        <span class="dbx-firebase-oauth-consent-scope-name dbx-pb2">{{ scope.name }}</span>
         @if (scope.description) {
           <span class="dbx-firebase-oauth-consent-scope-description">{{ scope.description }}</span>
         }

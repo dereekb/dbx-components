@@ -52,7 +52,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   readonly config = input<Maybe<DbxOAuthConsentComponentConfig>>();
 
   // Route param readers
-  readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY);
+  readonly interactionUidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY);
   readonly clientIdParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY);
   readonly clientNameParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY);
   readonly clientUriParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY);
@@ -60,7 +60,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   readonly scopesParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_SCOPES_PARAM_KEY);
 
   // Signals from route params
-  private readonly routeUid = toSignal(this.uidParamReader.value$);
+  private readonly routeUid = toSignal(this.interactionUidParamReader.value$);
   private readonly routeClientId = toSignal(this.clientIdParamReader.value$);
   private readonly routeClientName = toSignal(this.clientNameParamReader.value$);
   private readonly routeClientUri = toSignal(this.clientUriParamReader.value$);
@@ -68,20 +68,20 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   private readonly routeScopes = toSignal(this.scopesParamReader.value$);
 
   // Resolved values
-  readonly resolvedUid = computed(() => this.routeUid());
+  readonly resolvedInteractionUid = computed(() => this.routeUid());
   readonly resolvedDetails = computed<Maybe<OAuthInteractionLoginDetails>>(() => {
-    const client_id = this.routeClientId();
-
-    if (!client_id) {
-      return undefined;
-    }
+    const client_id = this.routeClientId() ?? '';
+    const client_name = this.routeClientName();
+    const client_uri = this.routeClientUri();
+    const logo_uri = this.routeLogoUri();
+    const scopes = this.routeScopes() ?? '';
 
     return {
       client_id,
-      client_name: this.routeClientName() || undefined,
-      client_uri: this.routeClientUri() || undefined,
-      logo_uri: this.routeLogoUri() || undefined,
-      scopes: this.routeScopes() ?? ''
+      client_name,
+      client_uri,
+      logo_uri,
+      scopes
     };
   });
 
@@ -94,7 +94,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   readonly error = signal<string | null>(null);
 
   ngOnDestroy(): void {
-    this.uidParamReader.destroy();
+    this.interactionUidParamReader.destroy();
     this.clientIdParamReader.destroy();
     this.clientNameParamReader.destroy();
     this.clientUriParamReader.destroy();
@@ -111,7 +111,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   }
 
   private _submitConsent(approved: boolean): void {
-    const uid = this.resolvedUid();
+    const uid = this.resolvedInteractionUid();
 
     if (!uid) {
       this.error.set('Missing interaction UID');
