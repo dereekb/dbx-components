@@ -4,6 +4,10 @@ import { DbxFirebaseDocumentStoreContextStore } from '../../store/store.document
 import { map, type Observable } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 
+/**
+ * Factory that creates a {@link DbxFirebaseModelEntitiesSource} from a {@link DbxFirebaseDocumentStoreContextStore},
+ * mapping its entries into model entities grouped by identity.
+ */
 export const dbxFirebaseDocumentStoreContextModelEntitiesSourceFactory = (storeContextStore: DbxFirebaseDocumentStoreContextStore): DbxFirebaseModelEntitiesSource => {
   const entities$: Observable<DbxFirebaseModelEntity[]> = storeContextStore.entriesGroupedByIdentity$.pipe(map((entries) => entries.map((entry) => ({ store: entry.store, modelIdentity: entry.modelIdentity }))));
 
@@ -14,6 +18,7 @@ export const dbxFirebaseDocumentStoreContextModelEntitiesSourceFactory = (storeC
   return source;
 };
 
+/** Directive that provides a {@link DbxFirebaseModelEntitiesSource} from the current document store context. */
 @Directive({
   selector: '[dbxFirebaseDocumentStoreContextModelEntitiesSource]',
   providers: [

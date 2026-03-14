@@ -21,7 +21,9 @@ import { MatIcon } from '@angular/material/icon';
     <span #content [dbxClickToCopyText]="copyText()" [disableCopy]="clickIconToCopyOnly()" [highlighted]="highlighted()" [clipboardSnackbarMessagesEnabled]="clipboardSnackbarMessagesEnabled()" [clipboardSnackbarMessagesConfig]="clipboardSnackbarMessagesConfig()" [copyTextFromElement]="contentElementRef()">
       <ng-content></ng-content>
     </span>
-    <mat-icon class="dbx-click-to-copy-text-icon" (click)="dbxClickToCopyText()?._copyText()">{{ clickToCopyIcon() }}</mat-icon>
+    @if (showIcon()) {
+      <mat-icon class="dbx-click-to-copy-text-icon" (click)="dbxClickToCopyText()?._copyText()">{{ clickToCopyIcon() }}</mat-icon>
+    }
   `,
   host: {
     class: 'dbx-click-to-copy-text-component'
@@ -34,6 +36,7 @@ export class DbxClickToCopyTextComponent {
   readonly dbxClickToCopyText = viewChild<DbxClickToCopyTextDirective>(DbxClickToCopyTextDirective);
 
   readonly copyText = input<Maybe<string | null>>(undefined);
+  readonly showIcon = input<Maybe<boolean>>(true);
   readonly highlighted = input<boolean>(false);
   readonly clipboardSnackbarMessagesConfig = input<Maybe<CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig>>(undefined);
   readonly clipboardSnackbarMessagesEnabled = input<boolean>(true);

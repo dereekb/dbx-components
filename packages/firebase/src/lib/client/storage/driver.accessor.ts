@@ -6,14 +6,46 @@ import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory }
 import { cachedGetter, type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { map, Observable, shareReplay } from 'rxjs';
 
+/**
+ * Checks whether an error is a Firebase Storage "object not found" error.
+ *
+ * Useful for distinguishing missing-file errors from other storage failures,
+ * e.g., to silently handle deletion of already-deleted files.
+ *
+ * @param input - the error or error message to check
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await deleteObject(ref);
+ * } catch (e) {
+ *   if (isFirebaseStorageObjectNotFoundError(e)) {
+ *     // file already deleted, safe to ignore
+ *   }
+ * }
+ * ```
+ */
 export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
   return errorMessageContainsString(input, 'storage/object-not-found');
 }
 
+/**
+ * Creates a `StorageReference` from an abstract {@link StoragePath} using the client `firebase/storage` SDK.
+ *
+ * @param storage - the client Firebase Storage instance
+ * @param path - abstract storage path to resolve
+ */
 export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStorage, path: StoragePath): StorageReference {
   return ref(storage, firebaseStorageFilePathFromStorageFilePath(path));
 }
 
+/**
+ * Checks whether a file exists at the given `StorageReference` by attempting to read its metadata.
+ *
+ * Returns `true` if metadata is successfully retrieved, `false` for any error (including permission errors).
+ *
+ * @param ref - the storage reference to check
+ */
 export function firebaseStorageFileExists(ref: StorageReference): Promise<boolean> {
   return getMetadata(ref).then(
     (_) => true,
@@ -21,8 +53,26 @@ export function firebaseStorageFileExists(ref: StorageReference): Promise<boolea
   );
 }
 
+/**
+ * Client-side specialization of {@link FirebaseStorageAccessorFile} using `StorageReference` as the native reference type.
+ */
 export type FirebaseStorageClientAccessorFile = FirebaseStorageAccessorFile<StorageReference>;
 
+/**
+ * Creates a client-side {@link FirebaseStorageAccessorFile} for a specific storage path.
+ *
+ * Provides all file operations (upload, download, metadata, delete, resumable upload) backed by
+ * the `firebase/storage` SDK. Resumable uploads expose an Observable stream of upload progress snapshots.
+ *
+ * @param storage - the client Firebase Storage instance
+ * @param storagePath - the abstract storage path for the file
+ *
+ * @example
+ * ```ts
+ * const file = firebaseStorageClientAccessorFile(storage, { bucketId: 'my-bucket', pathString: 'uploads/photo.jpg' });
+ * const url = await file.getDownloadUrl();
+ * ```
+ */
 export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage, storagePath: StoragePath): FirebaseStorageClientAccessorFile {
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
 
@@ -138,13 +188,27 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
   return clientFile;
 }
 
+/**
+ * Client-side specialization of {@link FirebaseStorageAccessorFolder} using `StorageReference` as the native reference type.
+ */
 export type FirebaseStorageClientAccessorFolder = FirebaseStorageAccessorFolder<StorageReference>;
 
+/**
+ * Internal result wrapper for client-side storage list operations, holding the raw `ListResult`
+ * and the options used to produce it. Used by {@link firebaseStorageClientListFilesResultFactory}
+ * to support pagination and nested listing.
+ */
 export interface FirebaseStorageClientListResult {
   listResult: ListResult;
   options?: StorageListFilesOptions;
 }
 
+/**
+ * Pre-configured {@link storageListFilesResultFactory} for the client `firebase/storage` SDK.
+ *
+ * Handles pagination tokens, nested folder traversal, and mapping between Firebase `ListResult`
+ * items and the abstract {@link StorageListItemResult} interface.
+ */
 export const firebaseStorageClientListFilesResultFactory = storageListFilesResultFactory({
   hasItems: (result: FirebaseStorageClientListResult) => {
     return Boolean(result.listResult.items.length || result.listResult.prefixes.length);
@@ -176,6 +240,22 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
   }
 });
 
+/**
+ * Creates a client-side {@link FirebaseStorageAccessorFolder} for a specific storage path.
+ *
+ * Supports existence checks, paginated file/folder listing, and recursive nested listing
+ * when `includeNestedResults` is enabled.
+ *
+ * @param storage - the client Firebase Storage instance
+ * @param storagePath - the abstract storage path for the folder
+ *
+ * @example
+ * ```ts
+ * const folder = firebaseStorageClientAccessorFolder(storage, { bucketId: 'my-bucket', pathString: 'uploads/' });
+ * const result = await folder.list({ maxResults: 10 });
+ * const files = result.files();
+ * ```
+ */
 export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStorage, storagePath: StoragePath): FirebaseStorageClientAccessorFolder {
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
 
@@ -217,6 +297,19 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
   return folder;
 }
 
+/**
+ * Creates the client-side {@link FirebaseStorageAccessorDriver} that maps the abstract storage
+ * accessor interface to the `firebase/storage` SDK.
+ *
+ * Provides file and folder accessor factories and default bucket resolution.
+ * Used internally by {@link firebaseStorageClientDrivers}.
+ *
+ * @example
+ * ```ts
+ * const driver = firebaseStorageClientAccessorDriver();
+ * const file = driver.file(storage, storagePath);
+ * ```
+ */
 export function firebaseStorageClientAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
     type: 'client',

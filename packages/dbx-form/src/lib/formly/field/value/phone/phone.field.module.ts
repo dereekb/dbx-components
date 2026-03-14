@@ -4,6 +4,7 @@ import { DbxPhoneFieldComponent } from './phone.field.component';
 
 const importsAndExports = [DbxPhoneFieldComponent];
 
+/** Registers the `intphone` Formly field type for international phone number input. */
 @NgModule({
   imports: [
     ...importsAndExports,

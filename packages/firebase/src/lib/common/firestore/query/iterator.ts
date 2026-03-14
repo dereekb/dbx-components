@@ -31,6 +31,18 @@ export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
    * and should not be included here.
    */
   readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
+
+  /**
+   * Whether to infer the end of results when a page returns fewer items than
+   * the requested page size (limit).
+   *
+   * When enabled, if a query returns fewer documents than the limit, the iterator
+   * marks the result as the final page — avoiding an unnecessary extra fetch that
+   * would return zero results.
+   *
+   * Defaults to true.
+   */
+  readonly inferEndOfResultsFromPageSize?: Maybe<boolean>;
 }
 
 /**
@@ -192,7 +204,8 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
       const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = page > 0 ? request.lastItem$ : of(undefined);
 
       const { queryLike, itemsPerPage = DEFAULT_FIRESTORE_ITEM_PAGE_ITERATOR_ITEMS_PER_PAGE, filter, firestoreQueryDriver: driver } = iteratorConfig;
-      const { limit: filterLimit, constraints: filterConstraints } = filter ?? {};
+      const { limit: filterLimit, constraints: filterConstraints, inferEndOfResultsFromPageSize: inputInferEnd } = filter ?? {};
+      const inferEndOfResultsFromPageSize = inputInferEnd !== false; // defaults to true
 
       return prevQueryResult$.pipe(
         exhaustMap((prevResult) => {
@@ -239,7 +252,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
                     return driver.streamDocs(batchQuery, options?.options);
                   }
                 },
-                end: snapshot.empty
+                end: snapshot.empty || (inferEndOfResultsFromPageSize && docs.length < limitCount)
               };
 
               return result;

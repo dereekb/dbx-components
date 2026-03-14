@@ -1,4 +1,4 @@
-import { type DemoScheduleFunction, runDemoScheduledTasks } from '../function';
+import { type DemoScheduleFunction, runDemoScheduledTasks } from '../function.context';
 
 export const notificationHourlyUpdateSchedule: DemoScheduleFunction = async (request) => {
   console.log('notificationHourlyUpdateSchedule - running');

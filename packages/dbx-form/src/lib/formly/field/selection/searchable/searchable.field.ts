@@ -49,8 +49,20 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
 }
 
 // MARK: Chips
+/** Configuration for a searchable chip field that uses string values directly. */
 export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFieldConfig<string, M>, 'allowStringValues'>;
 
+/**
+ * Creates a searchable chip field pre-configured for string values.
+ *
+ * @param config - String-specific searchable chip field configuration
+ * @returns A {@link FormlyFieldConfig} with type `'searchablechipfield'`
+ *
+ * @example
+ * ```typescript
+ * const field = searchableStringChipField({ key: 'tags', label: 'Tags', search: searchFn });
+ * ```
+ */
 export function searchableStringChipField<M = unknown>(config: StringSearchableChipFieldConfig<M>): FormlyFieldConfig {
   return searchableChipField({
     ...config,
@@ -58,8 +70,24 @@ export function searchableStringChipField<M = unknown>(config: StringSearchableC
   });
 }
 
+/**
+ * Full configuration for a searchable chip field combining labeling, description,
+ * Material styling, and searchable chip behavior.
+ */
 export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig, SearchableChipValueFieldsFieldProps<T, M, H> {}
 
+/**
+ * Creates a Formly field configuration for a searchable chip field where users
+ * can search for and select values displayed as Material chips.
+ *
+ * @param config - Searchable chip field configuration
+ * @returns A validated {@link FormlyFieldConfig} with type `'searchablechipfield'`
+ *
+ * @example
+ * ```typescript
+ * const field = searchableChipField({ key: 'skills', label: 'Skills', search: searchFn, hashForValue: (s) => s.id });
+ * ```
+ */
 export function searchableChipField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableChipFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, placeholder, materialFormField } = config;
   return formlyField({
@@ -75,8 +103,23 @@ export function searchableChipField<T, M = unknown, H extends PrimativeKey = Pri
 }
 
 // MARK: Text
+/**
+ * Full configuration for a searchable text field with autocomplete.
+ */
 export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig, SearchableTextValueFieldsFieldProps<T, M, H> {}
 
+/**
+ * Creates a Formly field configuration for a searchable text field with autocomplete
+ * dropdown for selecting values.
+ *
+ * @param config - Searchable text field configuration
+ * @returns A validated {@link FormlyFieldConfig} with type `'searchabletextfield'`
+ *
+ * @example
+ * ```typescript
+ * const field = searchableTextField({ key: 'assignee', label: 'Assignee', search: searchFn });
+ * ```
+ */
 export function searchableTextField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableTextFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, materialFormField } = config;
   return formlyField({

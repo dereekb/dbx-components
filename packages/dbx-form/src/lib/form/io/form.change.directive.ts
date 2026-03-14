@@ -5,9 +5,14 @@ import { first, mergeMap, delay, map } from 'rxjs';
 import { DbxForm } from '../form';
 
 /**
- * Used to see form value changes.
+ * Directive that observes form value changes and emits the current value when the form is complete/valid,
+ * or `undefined` when the form is incomplete.
  *
- * Emits undefined when the form is incomplete, and the value when the form is complete.
+ * Subscribes to the form's stream during `ngOnInit` to ensure the first emission occurs after initialization.
+ *
+ * @selector `[dbxFormValueChange]`
+ *
+ * @typeParam T - The form value type.
  */
 @Directive({
   selector: '[dbxFormValueChange]',
@@ -16,6 +21,9 @@ import { DbxForm } from '../form';
 export class DbxFormValueChangeDirective<T> implements OnInit {
   readonly form = inject(DbxForm<T>, { host: true });
 
+  /**
+   * Emits the current form value when the form is complete/valid, or `undefined` when incomplete.
+   */
   readonly dbxFormValueChange = output<Maybe<T>>();
 
   protected readonly _sub = cleanSubscription();

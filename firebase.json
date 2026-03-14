@@ -20,6 +20,18 @@
         "function": "api"
       },
       {
+        "source": "/.well-known/**",
+        "function": "api"
+      },
+      {
+        "source": "/oidc/**",
+        "function": "api"
+      },
+      {
+        "source": "/interaction/**",
+        "function": "api"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

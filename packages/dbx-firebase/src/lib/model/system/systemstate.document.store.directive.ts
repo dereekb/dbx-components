@@ -3,6 +3,7 @@ import { type SystemState, type SystemStateDocument, type SystemStateStoredData 
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '../modules/store/store.document.directive';
 import { SystemStateDocumentStore } from './systemstate.document.store';
 
+/** Directive providing a {@link SystemStateDocumentStore} for accessing a single system state document. */
 @Directive({
   selector: '[dbxFirebaseSystemStateDocument]',
   providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseSystemStateDocumentStoreDirective, SystemStateDocumentStore)

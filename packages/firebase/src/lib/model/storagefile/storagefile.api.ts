@@ -8,18 +8,22 @@ import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '.
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type StorageFileId } from './storagefile.id';
 import { type SendNotificationResult } from '../notification/notification.api';
-import { clearable } from '@dereekb/model';
-import { ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
+import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 
 /**
- * Used for directly create a new StorageFile.
+ * Parameters for directly creating a new StorageFile document (no upload initialization).
+ *
+ * Typically used server-side or for testing. Validated with {@link createStorageFileParamsType}.
  */
 export interface CreateStorageFileParams {}
 
 export const createStorageFileParamsType = type({}) as Type<CreateStorageFileParams>;
 
 /**
- * Initializes all StorageFiles in the uploads folder.
+ * Parameters for batch-initializing all files found in the uploads folder.
+ *
+ * Scans the uploads folder (or a custom path) and runs the upload determination/initialization
+ * pipeline for each file found. Validated with {@link initializeAllStorageFilesFromUploadsParamsType}.
  */
 export interface InitializeAllStorageFilesFromUploadsParams {
   readonly maxFilesToInitialize?: Maybe<number>;
@@ -33,6 +37,9 @@ export const initializeAllStorageFilesFromUploadsParamsType = type({
   'overrideUploadsFolderPath?': clearable('string')
 }) as Type<InitializeAllStorageFilesFromUploadsParams>;
 
+/**
+ * Result of batch upload initialization, reporting visit and success/failure counts.
+ */
 export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreateModelResult {
   readonly filesVisited: number;
   readonly initializationsSuccessCount: number;
@@ -40,7 +47,10 @@ export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreate
 }
 
 /**
- * Initializes a StorageFile from the document at the given path.
+ * Parameters for initializing a single StorageFile from an uploaded file at a specific storage path.
+ *
+ * The file is run through the upload type determination pipeline and, if matched,
+ * creates a corresponding StorageFile document. Validated with {@link initializeStorageFileFromUploadParamsType}.
  */
 export interface InitializeStorageFileFromUploadParams extends Pick<StoragePath, 'pathString'> {
   readonly bucketId?: Maybe<StorageBucketId>;
@@ -54,6 +64,12 @@ export const initializeStorageFileFromUploadParamsType = type({
   'expediteProcessing?': 'boolean'
 }) as Type<InitializeStorageFileFromUploadParams>;
 
+/**
+ * Parameters for triggering processing of a specific StorageFile.
+ *
+ * Supports various modes: immediate processing, retry checking, force restart,
+ * and reprocessing already-successful files. Validated with {@link processStorageFileParamsType}.
+ */
 export interface ProcessStorageFileParams extends TargetModelParams {
   readonly runImmediately?: Maybe<boolean>;
   readonly checkRetryProcessing?: Maybe<boolean>;
@@ -115,6 +131,12 @@ export interface DeleteAllQueuedStorageFilesResult {
   readonly storageFilesFailedDeleting: number;
 }
 
+/**
+ * Parameters for generating a signed download URL for a StorageFile.
+ *
+ * Supports custom expiration, content disposition, and content type overrides.
+ * Admin downloads (`asAdmin`) allow longer expiration times. Validated with {@link downloadStorageFileParamsType}.
+ */
 export interface DownloadStorageFileParams extends TargetModelParams {
   readonly expiresAt?: Maybe<Date>;
   readonly expiresIn?: Maybe<Milliseconds>;
@@ -243,10 +265,22 @@ export interface InitializeAllApplicableStorageFileGroupsResult {
 }
 
 // MARK: Functions
+/**
+ * Custom (non-CRUD) function type map for StorageFile. Currently empty — all operations use CRUD functions.
+ */
 export type StorageFileFunctionTypeMap = {};
 
 export const storageFileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<StorageFileFunctionTypeMap> = {};
 
+/**
+ * CRUD function configuration map for the StorageFile model family.
+ *
+ * Defines all callable cloud function endpoints for StorageFile and StorageFileGroup,
+ * including creation (direct, from upload, batch), processing, sync, download, and deletion.
+ *
+ * Used by {@link StorageFileFunctions} and {@link storageFileFunctionMap} to generate
+ * typed callable function references.
+ */
 export type StorageFileModelCrudFunctionsConfig = {
   readonly storageFile: {
     create: {
@@ -266,7 +300,7 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: DeleteStorageFileParams;
     };
   };
-  storageFileGroup: {
+  readonly storageFileGroup: {
     update: {
       _: UpdateStorageFileGroupParams;
       regenerateContent: [RegenerateStorageFileGroupContentParams, RegenerateStorageFileGroupContentResult];
@@ -279,6 +313,12 @@ export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfi
   storageFileGroup: ['update:_,regenerateContent']
 };
 
+/**
+ * Abstract class defining all callable StorageFile cloud functions.
+ *
+ * Implement this in your app module to wire up the function endpoints.
+ * Use {@link storageFileFunctionMap} to create a client-side callable map.
+ */
 export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<StorageFileFunctionTypeMap, StorageFileModelCrudFunctionsConfig> {
   abstract storageFile: {
     createStorageFile: {
@@ -306,4 +346,13 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
   };
 }
 
+/**
+ * Client-side callable function map factory for all StorageFile and StorageFileGroup CRUD operations.
+ *
+ * @example
+ * ```ts
+ * const functions = storageFileFunctionMap(callableFactory);
+ * const result = await functions.storageFile.createStorageFile.fromUpload({ pathString: 'uploads/u/123/avatar.png' });
+ * ```
+ */
 export const storageFileFunctionMap = callModelFirebaseFunctionMapFactory(storageFileFunctionTypeConfigMap, storageFileModelCrudFunctionsConfig);

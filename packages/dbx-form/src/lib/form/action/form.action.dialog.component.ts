@@ -11,8 +11,20 @@ import { DbxFormlyComponent } from '../../formly/formly.form.component';
 import { DbxFormSourceDirective } from '../io/form.input.directive';
 import { DbxActionFormDirective } from './form.action.directive';
 
+/**
+ * Button configuration for the submit button in a {@link DbxFormActionDialogComponent}.
+ *
+ * Combines display properties (text, icon) with style properties (color, raised, etc.).
+ */
 export interface DbxFormActionDialogComponentButtonConfig extends DbxButtonDisplay, DbxButtonStyle {}
 
+/**
+ * Configuration for opening a {@link DbxFormActionDialogComponent}.
+ *
+ * Defines the dialog header, form fields, initial values, submit button, and dialog options.
+ *
+ * @typeParam O - The form value type produced by the dialog.
+ */
 export interface DbxFormActionDialogComponentConfig<O> {
   /**
    * Header text for the dialog.
@@ -37,7 +49,14 @@ export interface DbxFormActionDialogComponentConfig<O> {
 }
 
 /**
+ * A standalone dialog component that renders a dynamic Formly form within a Material dialog.
  *
+ * Provides a header, a configurable form, and a submit button wired to an action handler.
+ * The dialog closes with the submitted form value on success, or `undefined` if dismissed.
+ *
+ * Use {@link DbxFormActionDialogComponent.openDialogWithForm} to open the dialog programmatically.
+ *
+ * @typeParam O - The form value type produced by the dialog.
  */
 @Component({
   template: `
@@ -76,11 +95,21 @@ export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, 
     );
   }
 
+  /**
+   * Action handler that marks the action as successful and closes the dialog with the submitted value.
+   */
   readonly handleSubmitValue: WorkUsingContext<O> = (value, context) => {
     context.success();
     this.close(value);
   };
 
+  /**
+   * Opens a new dialog with a dynamic Formly form using the provided configuration.
+   *
+   * @param matDialog - The Angular Material dialog service.
+   * @param config - Configuration for the dialog, including fields, header, and initial value.
+   * @returns A reference to the opened dialog, which resolves to the submitted value or `undefined`.
+   */
   static openDialogWithForm<O>(matDialog: MatDialog, config: DbxFormActionDialogComponentConfig<O>): MatDialogRef<DbxFormActionDialogComponent<O>, Maybe<O>> {
     const dialogRef = matDialog.open(DbxFormActionDialogComponent<O>, {
       width: '90vw',

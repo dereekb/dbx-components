@@ -5,13 +5,20 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { map, type Observable } from 'rxjs';
 import { type DbxFirebaseLoginMode } from './login';
 
+/** Form value containing email (username) and password fields. */
 export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue;
 
+/** Configuration for the email login form, specifying mode and optional password constraints. */
 export interface DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
   readonly passwordConfig?: TextPasswordFieldConfig;
 }
 
+/**
+ * Formly-based email/password login form that adapts fields based on login vs. register mode.
+ *
+ * In register mode, includes a password verification field.
+ */
 @Component({
   selector: 'dbx-firebase-email-form',
   template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,

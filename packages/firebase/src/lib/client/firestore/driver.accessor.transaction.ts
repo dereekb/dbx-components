@@ -7,7 +7,11 @@ import { firestoreClientArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 /**
- * FirestoreDocumentDataAccessor implementation for a transaction.
+ * Client-side {@link FirestoreDocumentDataAccessor} that executes all operations within a Firestore `Transaction`.
+ *
+ * Unlike the default accessor, reads and writes are all routed through the transaction object,
+ * providing atomic read-then-write semantics. The `stream()` method emits a single snapshot
+ * from the transactional read rather than a live stream.
  */
 export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _transaction: FirebaseFirestoreTransaction;
@@ -73,10 +77,20 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 }
 
 /**
- * Creates a new FirestoreDocumentDataAccessorFactory for a Transaction.
+ * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces {@link TransactionFirestoreDocumentDataAccessor}
+ * instances bound to the given transaction. All operations from these accessors participate in the same transaction.
  *
- * @param transaction
- * @returns
+ * @param transaction - the Firestore `Transaction` to bind operations to
+ *
+ * @example
+ * ```ts
+ * await runTransaction(firestore, async (transaction) => {
+ *   const factory = transactionAccessorFactory<MyModel>(transaction);
+ *   const accessor = factory.accessorFor(docRef);
+ *   const snapshot = await accessor.get();
+ *   // ... modify and set
+ * });
+ * ```
  */
 export function transactionAccessorFactory<T>(transaction: FirebaseFirestoreTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {
@@ -85,6 +99,12 @@ export function transactionAccessorFactory<T>(transaction: FirebaseFirestoreTran
 }
 
 // MARK: Context
+/**
+ * Client-side {@link FirestoreDocumentContext} that executes all document operations within a Firestore `Transaction`.
+ *
+ * Provides accessors with {@link FirestoreDocumentContextType.TRANSACTION} semantics — all reads are
+ * consistent and all writes are applied atomically when the transaction completes.
+ */
 export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   private readonly _transaction: FirebaseFirestoreTransaction;
 
@@ -101,6 +121,17 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
   }
 }
 
+/**
+ * Factory function that creates a {@link TransactionFirestoreDocumentContext} for the given transaction.
+ *
+ * @param transaction - the Firestore `Transaction` to use for all document operations
+ *
+ * @example
+ * ```ts
+ * const context = transactionDocumentContext<MyModel>(transaction);
+ * const accessor = context.accessorFactory.accessorFor(docRef);
+ * ```
+ */
 export function transactionDocumentContext<T>(transaction: FirebaseFirestoreTransaction): TransactionFirestoreDocumentContext<T> {
   return new TransactionFirestoreDocumentContext<T>(transaction);
 }

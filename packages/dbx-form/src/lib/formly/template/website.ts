@@ -5,15 +5,19 @@ import { type ValidatorFn } from '@angular/forms';
 import { isWebsiteUrlValidator, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
 
 /**
- * websiteUrlField() configuration.
+ * Configuration for a website URL text field.
+ *
+ * Extends {@link TextFieldConfig} with URL validation options from {@link IsWebsiteUrlValidatorConfig}.
  */
 export interface WebsiteUrlFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key' | 'materialFormField'>>, IsWebsiteUrlValidatorConfig {}
 
 /**
- * Configured simple text password field.
+ * Creates a text field configured for website URL input with URL validation.
  *
- * @param config
- * @returns
+ * Defaults to the key `'website'` and label `'Website Url'` unless overridden in the config.
+ *
+ * @param config - Optional configuration for the website URL field.
+ * @returns A Formly field configuration with website URL validation.
  */
 export function websiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFieldConfig {
   const validators: ValidatorFn[] = [isWebsiteUrlValidator(config)];

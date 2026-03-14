@@ -4,11 +4,19 @@ import { type NotificationSendMessagesInstance } from './notification.send';
 import { type E164PhoneNumber } from '@dereekb/util';
 
 /**
- * NotificationTextSendService that ignores sending all messages.
+ * Creates a no-op {@link NotificationTextSendService} that marks all messages as ignored
+ * without actually sending any SMS.
  *
- * This is useful for cases where your app may eventually want to send text notifications and want the rest of your app configured like it currently does.
+ * Useful as a placeholder when your app's notification pipeline is fully wired for SMS
+ * but actual delivery is not yet enabled, avoiding the need for conditional logic elsewhere.
  *
- * @returns
+ * @example
+ * ```ts
+ * const textService = ignoreSendNotificationTextSendService();
+ * const sendInstance = await textService.buildSendInstanceForTextNotificationMessages(messages);
+ * const result = await sendInstance();
+ * // result.ignored contains all phone numbers; result.success and result.failed are empty
+ * ```
  */
 export function ignoreSendNotificationTextSendService(): NotificationTextSendService {
   const sendService: NotificationTextSendService = {

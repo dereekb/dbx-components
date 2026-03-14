@@ -1,10 +1,27 @@
+/**
+ * @module notification.task
+ *
+ * Checkpoint-based async task system built on top of the notification infrastructure.
+ *
+ * Task notifications use `NotificationSendType.TASK_NOTIFICATION` and run server-side async workflows
+ * with progress tracked via checkpoint strings. Each task handler returns a {@link NotificationTaskServiceHandleNotificationTaskResult}
+ * that tells the server whether the task is complete, partially done, failed, or should be delayed.
+ *
+ * Task lifecycle:
+ * 1. Task notification is created with a task type and optional checkpoint strings
+ * 2. Server picks it up via the send queue and routes to the registered handler
+ * 3. Handler returns a result indicating completion, partial progress, delay, or failure
+ * 4. Server updates the notification document accordingly and re-queues if not done
+ * 5. On completion (`true`), the notification document is deleted
+ */
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type NotificationTaskType } from './notification.id';
 import { type NotificationDocument, type NotificationTaskCheckpointString } from './notification';
 import { type ArrayOrValue, type Maybe, type Milliseconds } from '@dereekb/util';
 
 /**
- * A NotificationTask is the final result of the expanded notification with a task type.
+ * Expanded task context passed to a task handler. Provides the notification document, item,
+ * and current checkpoint progress for the handler to make decisions.
  */
 export interface NotificationTask<D extends NotificationItemMetadata = {}> {
   /**
@@ -58,16 +75,34 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
 }
 
 /**
- * Returns an empty array, which is used to signal that the task did not fail but has not complete the current checkpoint.
+ * Returns an empty checkpoint array, signaling the task is not done but hasn't failed.
+ *
+ * Use this when the handler needs more time but doesn't want to increment the failure counter.
+ * The task will be re-queued without counting as an error attempt.
+ *
+ * @example
+ * ```ts
+ * // Waiting for an external process — delay without failing
+ * return { completion: delayCompletion(), delayUntil: 60000 };
+ * ```
  */
 export function delayCompletion<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(): NotificationTaskServiceTaskHandlerCompletionType<S> {
   return [];
 }
 
 /**
- * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task should be retried after the specified delay.
+ * Returns a result that re-queues the task after a delay without incrementing the error counter.
  *
- * This does not affect the failure/retry count for a notification task.
+ * Use when the task needs to wait (e.g., for an external API to complete) but hasn't failed.
+ *
+ * @param delayUntil - absolute date or relative milliseconds from the task's run start time
+ * @param updateMetadata - optional metadata updates to merge into the notification item
+ *
+ * @example
+ * ```ts
+ * // Poll again in 30 seconds
+ * return notificationTaskDelayRetry(30000, { pollCount: task.data?.pollCount + 1 });
+ * ```
  */
 export function notificationTaskDelayRetry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(delayUntil: Date | Milliseconds, updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
@@ -78,7 +113,19 @@ export function notificationTaskDelayRetry<D extends NotificationItemMetadata = 
 }
 
 /**
- * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task was partially completed, and to process the next part in the future.
+ * Returns a result indicating one or more checkpoints completed, with more work remaining.
+ *
+ * The completed checkpoint strings are added to the notification's `tpr` set. The task is re-queued
+ * for the next checkpoint.
+ *
+ * @param completedParts - checkpoint string(s) that were just completed
+ * @param updateMetadata - optional metadata updates to merge into the notification item
+ *
+ * @example
+ * ```ts
+ * // Mark 'validate' checkpoint done, continue to 'process'
+ * return notificationTaskPartiallyComplete('validate');
+ * ```
  */
 export function notificationTaskPartiallyComplete<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(completedParts: ArrayOrValue<S>, updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
@@ -88,7 +135,15 @@ export function notificationTaskPartiallyComplete<D extends NotificationItemMeta
 }
 
 /**
- * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task was completed successfully.
+ * Returns a result indicating the task completed successfully. The notification document will be deleted.
+ *
+ * @param updateMetadata - optional final metadata update (applied before deletion if subtasks need it)
+ *
+ * @example
+ * ```ts
+ * // All done
+ * return notificationTaskComplete();
+ * ```
  */
 export function notificationTaskComplete<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
@@ -98,7 +153,18 @@ export function notificationTaskComplete<D extends NotificationItemMetadata = {}
 }
 
 /**
- * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task failed.
+ * Returns a result indicating the task failed. Increments the error attempt counter.
+ *
+ * After exceeding the maximum retry attempts, the task will be permanently deleted.
+ *
+ * @param updateMetadata - optional metadata updates
+ * @param removeFromCompletedCheckpoints - checkpoint(s) to remove from the completed set (e.g., to retry a checkpoint)
+ *
+ * @example
+ * ```ts
+ * // Task failed, retry with rolled-back checkpoint
+ * return notificationTaskFailed(undefined, 'process');
+ * ```
  */
 export function notificationTaskFailed<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(updateMetadata?: Maybe<Partial<D>>, removeFromCompletedCheckpoints?: Maybe<ArrayOrValue<S>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
@@ -109,11 +175,13 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}, 
 }
 
 /**
- * Wraps an existing NotificationTaskServiceHandleNotificationTaskResult<D> and sets canRunNextCheckpoint to true if it is undefined.
+ * Wraps a task result to allow immediate execution of the next checkpoint within the same run.
  *
- * @param result The result to use as a template.
- * @param force If true, then canRunNextCheckpoint will be set to true even if it is already defined.
- * @returns A new result.
+ * By default, only sets `canRunNextCheckpoint` if it isn't already defined.
+ * Use `force: true` to override an existing value.
+ *
+ * @param result - the task result to wrap
+ * @param force - when true, overrides any existing `canRunNextCheckpoint` value
  */
 export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(result: NotificationTaskServiceHandleNotificationTaskResult<D, S>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   if (force || result.canRunNextCheckpoint == null) {
@@ -132,17 +200,20 @@ export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemM
 export type NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> = ArrayOrValue<S>;
 
 /**
- * Result type of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
+ * Completion status returned by a task handler:
  *
- * true: The task was completed successfully and can now be discarded.
- * false: The task was not completed successfully and should be retried again in the future. Note there are a maximum number of retry attempts before the task is deleted. Use delayCompletion() to avoid increasing the attempt count.
- * NotificationTaskCheckpointString(s): The task has successfully completed this/these particular checkpoint(s) but is not complete and should be continued again in the future. Return an empty array to signal that the task did not fail but has not reached the next checkpoint.
+ * - `true` — task completed successfully; notification document will be deleted
+ * - `false` — task failed; error counter incremented, re-queued for retry (up to max attempts)
+ * - `string | string[]` — checkpoint(s) completed; added to `tpr` set, task continues
+ * - `[]` (empty array) — task is in progress but no checkpoint reached; re-queued without error increment
  */
 export type NotificationTaskServiceTaskHandlerCompletionType<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> = true | false | NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint<S>;
 
 // MARK: Server
 /**
- * Result of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
+ * Full result object returned by a task handler to the server-side task runner.
+ *
+ * Combines the completion status with optional metadata updates, delay scheduling, and checkpoint management.
  */
 export interface NotificationTaskServiceHandleNotificationTaskResult<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**

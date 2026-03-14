@@ -1,4 +1,4 @@
-import { type DemoCreateModelFunction } from '../function';
+import { type DemoCreateModelFunction } from '../function.context';
 import { type OnCallCreateModelResult } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
 

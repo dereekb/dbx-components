@@ -1,4 +1,4 @@
-import { DEFAULT_CUT_STRING_END_TEXT, cutStringFunction, flattenWhitespace, joinStrings, joinStringsWithSpaces, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder } from './string';
+import { COMMA_STRING_SPLIT_JOIN, DEFAULT_CUT_STRING_END_TEXT, SPACE_STRING_SPLIT_JOIN, cutStringFunction, flattenWhitespace, joinStrings, joinStringsInstance, joinStringsWithSpaces, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder, stringSplitJoinInstance } from './string';
 
 describe('joinStrings()', () => {
   it('should join the strings', () => {
@@ -167,5 +167,203 @@ describe('simplifyWhitespace()', () => {
 
     const result = simplifyWhitespace(testString);
     expect(result).toBe(expected);
+  });
+});
+
+describe('joinStringsInstance()', () => {
+  const commaJoin = joinStringsInstance({ joiner: ',' });
+  const spaceJoin = joinStringsInstance({ joiner: ' ', trimByDefault: true });
+
+  describe('properties', () => {
+    it('should expose the joiner', () => {
+      expect(commaJoin.joiner).toBe(',');
+    });
+
+    it('should expose trimByDefault as false when not configured', () => {
+      expect(commaJoin.trimByDefault).toBe(false);
+    });
+
+    it('should expose trimByDefault as true when configured', () => {
+      expect(spaceJoin.trimByDefault).toBe(true);
+    });
+  });
+
+  describe('comma joiner', () => {
+    it('should join strings with commas', () => {
+      const result = commaJoin(['a', 'b', 'c']);
+      expect(result).toBe('a,b,c');
+    });
+
+    it('should return null for null input', () => {
+      const result = commaJoin(null);
+      expect(result).toBeNull();
+    });
+
+    it('should return undefined for undefined input', () => {
+      const result = commaJoin(undefined);
+      expect(result).toBeUndefined();
+    });
+
+    it('should filter out null and undefined values', () => {
+      const result = commaJoin(['a', null, 'b', undefined, 'c']);
+      expect(result).toBe('a,b,c');
+    });
+
+    it('should handle a single string value', () => {
+      const result = commaJoin('a');
+      expect(result).toBe('a');
+    });
+
+    it('should not trim by default', () => {
+      const result = commaJoin([' a ', ' b ']);
+      expect(result).toBe(' a , b ');
+    });
+
+    it('should trim when trim is passed as true', () => {
+      const result = commaJoin([' a ', ' b '], true);
+      expect(result).toBe('a,b');
+    });
+  });
+
+  describe('space joiner with trimByDefault', () => {
+    it('should join strings with spaces', () => {
+      const result = spaceJoin(['a', 'b', 'c']);
+      expect(result).toBe('a b c');
+    });
+
+    it('should trim values by default', () => {
+      const result = spaceJoin([' a ', ' b ']);
+      expect(result).toBe('a b');
+    });
+
+    it('should filter out null/undefined and trim by default', () => {
+      const result = spaceJoin(['a', null, ' b ', undefined, 'c']);
+      expect(result).toBe('a b c');
+    });
+  });
+});
+
+describe('stringSplitJoinInstance()', () => {
+  describe('custom instance', () => {
+    const pipeInstance = stringSplitJoinInstance({ joiner: '|' });
+
+    describe('joinStrings()', () => {
+      it('should join strings with the configured delimiter', () => {
+        const result = pipeInstance.joinStrings(['a', 'b', 'c']);
+        expect(result).toBe('a|b|c');
+      });
+    });
+
+    describe('splitStrings()', () => {
+      it('should split strings by the configured delimiter', () => {
+        const result = pipeInstance.splitStrings('a|b|c');
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+    });
+
+    describe('splitJoinRemainder()', () => {
+      it('should split and rejoin overflow segments using the configured delimiter', () => {
+        const result = pipeInstance.splitJoinRemainder('a|b|c|d|e', 2);
+        expect(result).toEqual(['a', 'b|c|d|e']);
+      });
+
+      it('should return all segments when limit exceeds segment count', () => {
+        const result = pipeInstance.splitJoinRemainder('a|b|c', 10);
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+
+      it('should return the full string as a single segment when limit is 1', () => {
+        const result = pipeInstance.splitJoinRemainder('a|b|c', 1);
+        expect(result).toEqual(['a|b|c']);
+      });
+    });
+  });
+
+  describe('COMMA_STRING_SPLIT_JOIN', () => {
+    describe('joinStrings()', () => {
+      it('should join strings with commas', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.joinStrings(['a', 'b', 'c']);
+        expect(result).toBe('a,b,c');
+      });
+
+      it('should return null for null input', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.joinStrings(null);
+        expect(result).toBeNull();
+      });
+
+      it('should filter out null and undefined values', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.joinStrings(['a', null, 'b', undefined, 'c']);
+        expect(result).toBe('a,b,c');
+      });
+    });
+
+    describe('splitStrings()', () => {
+      it('should split a comma-separated string', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitStrings('a,b,c');
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+
+      it('should trim whitespace from split values', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitStrings('a, b , c');
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+
+      it('should map split values with a mapFn', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitStrings('1,2,3', Number);
+        expect(result).toEqual([1, 2, 3]);
+      });
+    });
+
+    describe('splitStringsToSet()', () => {
+      it('should return a Set of unique values', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitStringsToSet('a,b,a');
+        expect(result).toEqual(new Set(['a', 'b']));
+      });
+
+      it('should return an empty set for null input', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitStringsToSet(null);
+        expect(result).toEqual(new Set());
+      });
+
+      it('should return an empty set for undefined input', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitStringsToSet(undefined);
+        expect(result).toEqual(new Set());
+      });
+    });
+
+    describe('splitJoinRemainder()', () => {
+      it('should split and rejoin overflow segments using commas', () => {
+        const result = COMMA_STRING_SPLIT_JOIN.splitJoinRemainder('a,b,c,d,e', 3);
+        expect(result).toEqual(['a', 'b', 'c,d,e']);
+      });
+    });
+  });
+
+  describe('SPACE_STRING_SPLIT_JOIN', () => {
+    describe('joinStrings()', () => {
+      it('should join strings with spaces', () => {
+        const result = SPACE_STRING_SPLIT_JOIN.joinStrings(['a', 'b', 'c']);
+        expect(result).toBe('a b c');
+      });
+
+      it('should filter out null/undefined and trim by default', () => {
+        const result = SPACE_STRING_SPLIT_JOIN.joinStrings(['a', null, ' b ', undefined, 'c']);
+        expect(result).toBe('a b c');
+      });
+    });
+
+    describe('splitStrings()', () => {
+      it('should split a space-separated string', () => {
+        const result = SPACE_STRING_SPLIT_JOIN.splitStrings('a b c');
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+    });
+
+    describe('splitStringsToSet()', () => {
+      it('should return a Set of unique values', () => {
+        const result = SPACE_STRING_SPLIT_JOIN.splitStringsToSet('a b a');
+        expect(result).toEqual(new Set(['a', 'b']));
+      });
+    });
   });
 });

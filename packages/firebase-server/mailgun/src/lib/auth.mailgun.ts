@@ -2,16 +2,35 @@ import { type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRe
 import { AbstractFirebaseServerNewUserService, type FirebaseServerAuthContext, type FirebaseServerAuthNewUserSetupDetails, type FirebaseServerAuthService, type FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 
 /**
- * MailgunTemplateEmailRequest for AbstractMailgunContentFirebaseServerNewUserService.
+ * Partial {@link MailgunTemplateEmailRequest} for {@link AbstractMailgunContentFirebaseServerNewUserService}.
  *
- * Omits the "to" input since it gets configured by the input.
+ * The `to` field is omitted because the new user's email and details are automatically
+ * configured from the Firebase Auth user record during `sendSetupContentToUser`.
  */
 export interface NewUserMailgunContentRequest extends Omit<MailgunTemplateEmailRequest, 'to'> {
   to?: Partial<Omit<MailgunRecipient, 'email'>>;
 }
 
 /**
- * Abstract FirebaseServerNewUserService implementation that sends an email to a template on Mailgun.
+ * Abstract {@link FirebaseServerNewUserService} implementation that sends a welcome/setup email
+ * to newly created users via Mailgun templates.
+ *
+ * Subclasses implement `buildNewUserMailgunContentRequest` to define the template, subject,
+ * and any custom variables. The user's email, display name, UID, and setup password are
+ * automatically injected as Mailgun user variables.
+ *
+ * @example
+ * ```ts
+ * class WelcomeEmailService extends AbstractMailgunContentFirebaseServerNewUserService {
+ *   protected async buildNewUserMailgunContentRequest(user) {
+ *     return {
+ *       template: 'welcome',
+ *       subject: 'Welcome!',
+ *       from: 'noreply@example.com'
+ *     };
+ *   }
+ * }
+ * ```
  */
 export abstract class AbstractMailgunContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> extends AbstractFirebaseServerNewUserService<U, C, D> {
   constructor(

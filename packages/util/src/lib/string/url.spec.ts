@@ -1,4 +1,25 @@
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths, isWebsiteUrlWithPrefix, isWebsiteUrl, hasPortNumber, readPortNumber, readWebsiteProtocol, hasWebsiteTopLevelDomain, isStandardInternetAccessibleWebsiteUrl } from './url';
+import {
+  isolateWebsitePathFunction,
+  hasWebsiteDomain,
+  removeHttpFromUrl,
+  websiteDomainAndPathPairFromWebsiteUrl,
+  websitePathAndQueryPair,
+  websitePathFromWebsiteDomainAndPath,
+  websitePathFromWebsiteUrl,
+  fixExtraQueryParameters,
+  removeWebProtocolPrefix,
+  setWebProtocolPrefix,
+  baseWebsiteUrl,
+  websiteUrlFromPaths,
+  isWebsiteUrlWithPrefix,
+  isWebsiteUrl,
+  hasPortNumber,
+  readPortNumber,
+  readWebsiteProtocol,
+  hasWebsiteTopLevelDomain,
+  isStandardInternetAccessibleWebsiteUrl,
+  websiteUrlDetails
+} from './url';
 
 const domain = 'dereekb.com';
 
@@ -190,6 +211,40 @@ describe('isWebsiteUrl()', () => {
   });
 });
 
+describe('websiteUrlDetails()', () => {
+  describe('portNumber', () => {
+    it('should detect a port number in a URL with a domain', () => {
+      const result = websiteUrlDetails('https://dereekb.com:8080/path');
+      expect(result.hasPortNumber).toBe(true);
+      expect(result.portNumber).toBe(8080);
+    });
+
+    it('should detect a port number in a localhost URL', () => {
+      const result = websiteUrlDetails('http://localhost:9010/demo/app/oauth');
+      expect(result.hasPortNumber).toBe(true);
+      expect(result.portNumber).toBe(9010);
+    });
+
+    it('should detect a port number in a URL without a prefix', () => {
+      const result = websiteUrlDetails('localhost:3000');
+      expect(result.hasPortNumber).toBe(true);
+      expect(result.portNumber).toBe(3000);
+    });
+
+    it('should return false and undefined when no port number is present', () => {
+      const result = websiteUrlDetails('https://dereekb.com/path');
+      expect(result.hasPortNumber).toBe(false);
+      expect(result.portNumber).toBeUndefined();
+    });
+
+    it('should return false and undefined for a plain domain', () => {
+      const result = websiteUrlDetails('dereekb.com');
+      expect(result.hasPortNumber).toBe(false);
+      expect(result.portNumber).toBeUndefined();
+    });
+  });
+});
+
 describe('isWebsiteUrlWithPrefix()', () => {
   it('should return false for a valid website url without the prefix', () => {
     expect(isWebsiteUrlWithPrefix('dereek.com')).toBe(false);
@@ -280,6 +335,24 @@ describe('websiteUrlFromPaths()', () => {
     const expected = `${baseUrl}${path}`;
     const result = websiteUrlFromPaths(baseUrl + '/', path);
     expect(result).toBe(expected);
+  });
+
+  it('should create a path from an empty base and an array of path segments', () => {
+    const result = websiteUrlFromPaths('', ['/demo/oauth', '/login']);
+    expect(result).toBe('/demo/oauth/login');
+  });
+
+  it('should create a full url from a base url and an array of path segments', () => {
+    const baseUrl = 'http://localhost:9010';
+    const result = websiteUrlFromPaths(baseUrl, ['/demo/oauth', '/login']);
+    expect(result).toBe(`${baseUrl}/demo/oauth/login`);
+  });
+
+  it('should create a full url from a base url with port and a single path', () => {
+    const baseUrl = 'http://localhost:9010';
+    const path = '/demo/oauth/login';
+    const result = websiteUrlFromPaths(baseUrl, path);
+    expect(result).toBe(`${baseUrl}${path}`);
   });
 });
 

@@ -9,7 +9,13 @@ export interface NotificationTaskServiceRef {
 }
 
 /**
- * Service dedicated to providing access to NotificationMessageFunctionFactory values for specific NotificationTemplateTypes.
+ * Abstract service that dispatches {@link NotificationTask} instances to the appropriate
+ * {@link NotificationTaskServiceTaskHandler} based on the task's type.
+ *
+ * Implementations register handlers for each known {@link NotificationTaskType} and route
+ * incoming tasks during the notification send pipeline's task-processing phase.
+ *
+ * @see {@link notificationTaskService} for the default implementation.
  */
 export abstract class NotificationTaskService {
   /**
@@ -22,6 +28,12 @@ export abstract class NotificationTaskService {
   abstract taskHandlerForNotificationTaskType(notificationTaskType: NotificationTaskType): Maybe<NotificationTaskServiceTaskHandler>;
 }
 
+/**
+ * Function that processes a single {@link NotificationTask} and returns a result describing
+ * the completion state, any checkpoint progress, and optional metadata updates.
+ *
+ * @template D - the task's metadata type
+ */
 export type NotificationTaskServiceTaskHandlerFunction<D extends NotificationItemMetadata = {}> = (notificationTask: NotificationTask<D>) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D>>;
 
 /**

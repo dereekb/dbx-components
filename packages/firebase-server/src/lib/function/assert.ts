@@ -3,6 +3,17 @@ import { isContextWithAuthData } from './context';
 import { modelNotAvailableError, unauthenticatedContextHasNoUidError } from './error';
 import { type CallableContext } from '../type';
 
+/**
+ * Asserts that the callable context contains auth data with a valid UID.
+ *
+ * @throws {HttpsError} Throws unauthenticated error if no auth data is present.
+ *
+ * @example
+ * ```typescript
+ * assertContextHasAuth(context);
+ * // Safe to access context.auth.uid
+ * ```
+ */
 export function assertContextHasAuth(context: CallableContext): void {
   if (!isContextWithAuthData(context)) {
     throw unauthenticatedContextHasNoUidError();
@@ -10,11 +21,16 @@ export function assertContextHasAuth(context: CallableContext): void {
 }
 
 /**
- * Attempts to load data from the document. A modelNotAvailableError is thrown if the snapshot data is null/undefined (the document does not exist).
+ * Loads the snapshot data from a Firestore document, throwing if the document does not exist.
  *
- * @param document
- * @param message
- * @returns
+ * @param document - The Firestore document to load data from.
+ * @param message - Optional custom error message.
+ * @throws {HttpsError} Throws a {@link modelNotAvailableError} (404) if the document has no data.
+ *
+ * @example
+ * ```typescript
+ * const userData = await assertSnapshotData(userDocument);
+ * ```
  */
 export async function assertSnapshotData<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<FirestoreDocumentData<D>> {
   const data = await document.snapshotData();
@@ -29,11 +45,13 @@ export async function assertSnapshotData<D extends FirestoreDocument<any>>(docum
 }
 
 /**
- * Convenience function for assertSnapshotData that also attaches the id and key of the document to the data.
+ * Loads snapshot data and attaches the document's `id` and `key` to the result.
  *
- * @param document
- * @param message
- * @returns
+ * Combines {@link assertSnapshotData} with {@link setIdAndKeyFromKeyIdRefOnDocumentData}.
+ *
+ * @param document - The Firestore document to load data from.
+ * @param message - Optional custom error message.
+ * @throws {HttpsError} Throws a {@link modelNotAvailableError} (404) if the document has no data.
  */
 export async function assertSnapshotDataWithKey<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>> {
   const data = await assertSnapshotData(document, message);
@@ -41,11 +59,11 @@ export async function assertSnapshotDataWithKey<D extends FirestoreDocument<any>
 }
 
 /**
- * Asserts that the document exists. A modelNotAvailableError is thrown if the document does not exist.
+ * Asserts that the Firestore document exists without loading its data.
  *
- * @param document
- * @param message
- * @returns
+ * @param document - The Firestore document to check.
+ * @param message - Optional custom error message.
+ * @throws {HttpsError} Throws a {@link modelNotAvailableError} (404) if the document does not exist.
  */
 export async function assertDocumentExists<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<void> {
   const exists = await document.exists();
@@ -56,11 +74,9 @@ export async function assertDocumentExists<D extends FirestoreDocument<any>>(doc
 }
 
 /**
- * Error thrown by assertDocumentExists().
+ * Creates a {@link modelNotAvailableError} for the given document's model type.
  *
- * @param document
- * @param message
- * @returns
+ * Used by {@link assertDocumentExists} and other assertion functions.
  */
 export function documentModelNotAvailableError(document: Pick<FirestoreDocument<any>, 'modelType'>, message?: string) {
   return modelNotAvailableError({

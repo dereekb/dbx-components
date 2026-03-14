@@ -4,21 +4,25 @@ import { type StorageCustomMetadata } from '../../common/storage/types';
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 
 /**
- * Details from the input.
+ * Input for a {@link StoredFileReader}, carrying the storage bucket and path of the file.
  */
 export type StoredFileReaderInput = StoragePath;
 
 /**
- * Factory function that creates a StoredFileReader from the input details.
+ * Factory that creates a {@link StoredFileReader} from a {@link FirebaseStorageAccessorFile}.
+ *
+ * Use {@link storedFileReaderFactory} to create an instance.
  */
 export type StoredFileReaderFactory = FactoryWithRequiredInput<StoredFileReader, FirebaseStorageAccessorFile>;
 
 /**
- * A read-only accessor for file in FirebaseStorage.
+ * Read-only accessor for a file in Firebase Storage.
  *
- * It exposes only read-only methods for accessing details about the file.
+ * Provides lazy-loading access to file bytes, streams, metadata, and copy operations
+ * without exposing write/delete methods. Metadata is cached after first load.
  *
- * This accessor is generally a server-side only interface.
+ * Primarily used server-side for upload processing and file type determination
+ * (see {@link UploadedFileTypeDeterminer} in `storagefile.upload.determiner.ts`).
  */
 export interface StoredFileReader {
   /**
@@ -52,9 +56,20 @@ export interface StoredFileReader {
 }
 
 /**
- * Creates a StoredFileReaderFactory.
+ * Creates a {@link StoredFileReaderFactory} that wraps {@link FirebaseStorageAccessorFile} instances
+ * into read-only {@link StoredFileReader} accessors.
  *
- * Should generally only be used on the server-side, as copy may not be available on the client-side.
+ * File metadata is cached after first load; byte/stream accessors are not cached to avoid
+ * holding large data in memory.
+ *
+ * Should only be used server-side, as `copy` may not be available on the client.
+ *
+ * @example
+ * ```ts
+ * const factory = storedFileReaderFactory();
+ * const reader = factory(storageAccessorFile);
+ * const bytes = await reader.loadFileBytes();
+ * ```
  */
 export function storedFileReaderFactory(): StoredFileReaderFactory {
   return (file: FirebaseStorageAccessorFile) => {

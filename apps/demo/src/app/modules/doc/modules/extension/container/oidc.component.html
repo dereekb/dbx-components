@@ -1,0 +1,32 @@
+<dbx-content-container>
+  <doc-feature-layout header="OIDC / OAuth" hint="Components for OpenID Connect interaction flows.">
+    <!-- Login View -->
+    <doc-feature-example header="dbx-firebase-oauth-login-view" hint="Presentational login component with configurable states.">
+      <h3>no_user (not logged in)</h3>
+      <dbx-firebase-oauth-login-view [loginStateCase]="'no_user'">
+        <demo-login-view></demo-login-view>
+      </dbx-firebase-oauth-login-view>
+
+      <h3>user (auto-submitting)</h3>
+      <dbx-firebase-oauth-login-view [loginStateCase]="'user'"></dbx-firebase-oauth-login-view>
+
+      <h3>submitting</h3>
+      <dbx-firebase-oauth-login-view [loginStateCase]="'submitting'"></dbx-firebase-oauth-login-view>
+
+      <h3>error</h3>
+      <dbx-firebase-oauth-login-view [loginStateCase]="'error'" [error]="exampleError"></dbx-firebase-oauth-login-view>
+    </doc-feature-example>
+
+    <!-- Consent View -->
+    <doc-feature-example header="dbx-firebase-oauth-consent-view" hint="Presentational consent component with scope display.">
+      <h3>Consent View</h3>
+      <dbx-firebase-oauth-consent-view [details]="exampleDetails" [loading]="false" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
+
+      <h3>Loading</h3>
+      <dbx-firebase-oauth-consent-view [details]="exampleDetails" [loading]="true" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
+
+      <h3>Error</h3>
+      <dbx-firebase-oauth-consent-view [details]="exampleDetails" [loading]="false" [error]="exampleError" [scopeInjectionConfig]="customScopeConfig"></dbx-firebase-oauth-consent-view>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

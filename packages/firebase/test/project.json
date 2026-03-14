@@ -26,7 +26,7 @@
           }
         ],
         "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "tsc"
+        "compiler": "swc"
       },
       "configurations": {
         "production": {

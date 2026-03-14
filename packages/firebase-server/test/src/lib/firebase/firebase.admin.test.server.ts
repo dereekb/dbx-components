@@ -1,6 +1,22 @@
 import { type MockItemFirestoreCollection, mockItemFirestoreCollection, type TestFirestoreContextFixture, type TestFirestoreInstance } from '@dereekb/firebase/test';
 import { initFirebaseAdminTestEnvironment } from './firebase';
 
+/**
+ * Initializes the Firebase Admin test environment with the default emulator ports
+ * used by the `@dereekb/firebase-server` test suite.
+ *
+ * This is a convenience wrapper around {@link initFirebaseAdminTestEnvironment} that
+ * pre-configures auth (9903), firestore (9904), and storage (9906) on `0.0.0.0`.
+ * Call this once at the top of each test file (or in a global setup) before any
+ * Firebase Admin SDK calls are made.
+ *
+ * @example
+ * ```ts
+ * beforeAll(() => {
+ *   initFirebaseServerAdminTestEnvironment();
+ * });
+ * ```
+ */
 export function initFirebaseServerAdminTestEnvironment() {
   initFirebaseAdminTestEnvironment({
     emulators: {
@@ -11,6 +27,16 @@ export function initFirebaseServerAdminTestEnvironment() {
   });
 }
 
+/**
+ * Registers a smoke-test `describe` block that verifies basic Firestore connectivity
+ * against the emulator.
+ *
+ * Creates a {@link MockItemFirestoreCollection}, writes a document, and asserts it exists.
+ * Useful as a sanity check inside larger test suites to confirm the emulator is reachable
+ * and the fixture is wired up correctly.
+ *
+ * @param s - The firestore context fixture providing the active {@link TestFirestoreContext}.
+ */
 export function describeFirestoreTest(s: TestFirestoreContextFixture<TestFirestoreInstance>) {
   let collection: MockItemFirestoreCollection;
 

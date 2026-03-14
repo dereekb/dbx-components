@@ -36,10 +36,16 @@ import { type InjectionToken } from '@nestjs/common';
 
 // MARK: NotificationInitServerActionsContextConfig
 /**
- * Token to access/override the NotificationTemplateService's defaults records.
+ * NestJS injection token for the {@link NotificationInitServerActionsContextConfig},
+ * which provides the template functions used during {@link NotificationBox} and
+ * {@link NotificationSummary} initialization.
  */
 export const NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN: InjectionToken = 'NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG';
 
+/**
+ * Configuration providing the template functions that determine how notification models
+ * (boxes and summaries) are initialized for a given Firestore model.
+ */
 export interface NotificationInitServerActionsContextConfig {
   /**
    * MakeTemplateForNotificationBoxInitializationFunction used by the system for initializing the NotificationBoxes for models.
@@ -51,6 +57,10 @@ export interface NotificationInitServerActionsContextConfig {
   readonly makeTemplateForNotificationSummaryInitialization: MakeTemplateForNotificationSummaryInitializationFunction;
 }
 
+/**
+ * Input passed to the template function during notification model initialization,
+ * providing the Firestore transaction context and the model identity being initialized.
+ */
 export interface MakeTemplateForNotificationRelatedModelInitializationFunctionInput {
   readonly transaction: Transaction;
   readonly flatModelKey: TwoWayFlatFirestoreModelKey;
@@ -78,9 +88,23 @@ export type MakeTemplateForNotificationRelatedModelInitializationFunction<T> = (
 export type MakeTemplateForNotificationBoxInitializationFunction = MakeTemplateForNotificationRelatedModelInitializationFunction<NotificationBox>;
 export type MakeTemplateForNotificationSummaryInitializationFunction = MakeTemplateForNotificationRelatedModelInitializationFunction<NotificationSummary>;
 
-// MARK: Notificaiton Initialization Server Actions
+// MARK: Notification Initialization Server Actions
+/**
+ * Full context for notification initialization actions, combining Firebase infrastructure,
+ * notification Firestore collections, and the initialization template functions.
+ */
 export interface NotificationInitServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirestoreContextReference, NotificationInitServerActionsContextConfig {}
 
+/**
+ * Abstract service defining initialization actions for notification models.
+ *
+ * Provides methods to initialize individual {@link NotificationBox}/{@link NotificationSummary}
+ * documents or batch-process all uninitialized ones. Initialization uses the app-specific
+ * template functions from {@link NotificationInitServerActionsContextConfig} to determine
+ * the initial state for each model.
+ *
+ * @see {@link notificationInitServerActions} for the concrete implementation factory.
+ */
 export abstract class NotificationInitServerActions {
   abstract initializeNotificationBox(params: InitializeNotificationModelParams): AsyncNotificationBoxUpdateAction<InitializeNotificationModelParams>;
   abstract initializeAllApplicableNotificationBoxes(params: InitializeAllApplicableNotificationBoxesParams): Promise<TransformAndValidateFunctionResult<InitializeAllApplicableNotificationBoxesParams, () => Promise<InitializeAllApplicableNotificationBoxesResult>>>;
@@ -88,6 +112,19 @@ export abstract class NotificationInitServerActions {
   abstract initializeAllApplicableNotificationSummaries(params: InitializeAllApplicableNotificationSummariesParams): Promise<TransformAndValidateFunctionResult<InitializeAllApplicableNotificationSummariesParams, () => Promise<InitializeAllApplicableNotificationSummariesResult>>>;
 }
 
+/**
+ * Creates a concrete {@link NotificationInitServerActions} implementation by wiring each
+ * initialization action to its factory function.
+ *
+ * @param context - the initialization context with template functions and Firestore access
+ *
+ * @example
+ * ```ts
+ * const initActions = notificationInitServerActions(context);
+ * const initBox = await initActions.initializeNotificationBox({ key: modelKey });
+ * await initBox(notificationBoxDocument);
+ * ```
+ */
 export function notificationInitServerActions(context: NotificationInitServerActionsContext): NotificationInitServerActions {
   return {
     initializeNotificationBox: initializeNotificationBoxFactory(context),
@@ -97,6 +134,10 @@ export function notificationInitServerActions(context: NotificationInitServerAct
   };
 }
 
+/**
+ * Input for {@link initializeNotificationModelInTransaction}, providing the document,
+ * its current data, the template function, and the transaction context.
+ */
 export interface InitializeNotificationModelInTransactionInput<D extends FirestoreDocument<InitializedNotificationModel, any>> {
   readonly makeTemplateFunction: MakeTemplateForNotificationRelatedModelInitializationFunction<FirestoreDocumentData<D>>;
   readonly throwErrorIfAlreadyInitialized?: Maybe<boolean>;
@@ -105,6 +146,19 @@ export interface InitializeNotificationModelInTransactionInput<D extends Firesto
   readonly data: FirestoreDocumentData<D>;
 }
 
+/**
+ * Initializes a notification model document (box or summary) within a Firestore transaction.
+ *
+ * Uses the provided template function to determine the initial state:
+ * - Returns a partial template → applies it and marks as initialized (`s=null`)
+ * - Returns `null`/`undefined` → marks the model as invalid (`fi=true`)
+ * - Returns `false` → deletes the document entirely
+ *
+ * Skips initialization if the model is already initialized, optionally throwing an error.
+ *
+ * @param input - the document, transaction, template function, and options
+ * @throws notificationModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true
+ */
 export async function initializeNotificationModelInTransaction<D extends FirestoreDocument<InitializedNotificationModel, any>>(input: InitializeNotificationModelInTransactionInput<D>) {
   const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: notificationBox } = input;
 
@@ -153,6 +207,12 @@ export async function initializeNotificationModelInTransaction<D extends Firesto
   };
 }
 
+/**
+ * Factory for initializing a single {@link NotificationBox} within a Firestore transaction.
+ *
+ * Loads the box document in the transaction, reads its current data, and delegates
+ * to {@link initializeNotificationModelInTransaction} with the box-specific template function.
+ */
 export function initializeNotificationBoxInTransactionFactory(context: NotificationInitServerActionsContext) {
   const { notificationBoxCollection, makeTemplateForNotificationBoxInitialization } = context;
 
@@ -171,6 +231,12 @@ export function initializeNotificationBoxInTransactionFactory(context: Notificat
   };
 }
 
+/**
+ * Factory for the `initializeNotificationBox` action.
+ *
+ * Wraps the in-transaction initialization in a Firestore transaction
+ * and follows the transform-and-validate pattern.
+ */
 export function initializeNotificationBoxFactory(context: NotificationInitServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const initializeNotificationBoxInTransaction = initializeNotificationBoxInTransactionFactory(context);
@@ -183,6 +249,13 @@ export function initializeNotificationBoxFactory(context: NotificationInitServer
   });
 }
 
+/**
+ * Factory for the `initializeAllApplicableNotificationBoxes` action.
+ *
+ * Batch-processes all {@link NotificationBox} documents flagged for initialization
+ * by querying for entries with `s=true` (setup needed), then initializing each in
+ * parallel (up to 5 concurrent tasks). Loops until no more flagged boxes are found.
+ */
 export function initializeAllApplicableNotificationBoxesFactory(context: NotificationInitServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationCollectionGroup } = context;
   const initializeNotificationBoxInTransaction = initializeNotificationBoxInTransactionFactory(context);
@@ -249,6 +322,12 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
   });
 }
 
+/**
+ * Factory for initializing a single {@link NotificationSummary} within a Firestore transaction.
+ *
+ * Loads the summary document in the transaction, reads its current data, and delegates
+ * to {@link initializeNotificationModelInTransaction} with the summary-specific template function.
+ */
 export function initializeNotificationSummaryInTransactionFactory(context: NotificationInitServerActionsContext) {
   const { notificationSummaryCollection, makeTemplateForNotificationSummaryInitialization } = context;
 
@@ -267,6 +346,12 @@ export function initializeNotificationSummaryInTransactionFactory(context: Notif
   };
 }
 
+/**
+ * Factory for the `initializeNotificationSummary` action.
+ *
+ * Wraps the in-transaction summary initialization in a Firestore transaction
+ * and follows the transform-and-validate pattern.
+ */
 export function initializeNotificationSummaryFactory(context: NotificationInitServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const initializeNotificationSummaryInTransaction = initializeNotificationSummaryInTransactionFactory(context);
@@ -279,6 +364,13 @@ export function initializeNotificationSummaryFactory(context: NotificationInitSe
   });
 }
 
+/**
+ * Factory for the `initializeAllApplicableNotificationSummaries` action.
+ *
+ * Batch-processes all {@link NotificationSummary} documents flagged for initialization
+ * by querying for entries with `s=true` (setup needed), then initializing each in
+ * parallel (up to 5 concurrent tasks). Loops until no more flagged summaries are found.
+ */
 export function initializeAllApplicableNotificationSummariesFactory(context: NotificationInitServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationSummaryCollection, notificationCollectionGroup } = context;
   const initializeNotificationSummaryInTransaction = initializeNotificationSummaryInTransactionFactory(context);

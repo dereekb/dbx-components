@@ -2,14 +2,20 @@ import { type AuthClaims, type AuthClaimsObject, type AuthRoleSet, mappedUseFunc
 import { type FirebaseAuthToken, type FirebaseAuthUserId } from './auth';
 
 /**
- * Provides a context containing FirebaseAuthContextInfo
+ * Context that optionally carries the current user's authentication state.
+ *
+ * Used throughout the Firebase model and permission system to determine what
+ * the current caller is authorized to do. A missing `auth` implies an unauthenticated request.
  */
 export interface FirebaseAuthContext {
   readonly auth?: Maybe<FirebaseAuthContextInfo>;
 }
 
 /**
- * Auth contextual information
+ * Resolved authentication information for the current request/context.
+ *
+ * Provides the user's UID, admin status, custom claims, and auth roles.
+ * Typically derived from a decoded Firebase ID token or the Firebase Admin SDK.
  */
 export interface FirebaseAuthContextInfo {
   /**
@@ -38,7 +44,17 @@ export interface FirebaseAuthContextInfo {
   readonly token: FirebaseAuthToken;
 }
 
+/**
+ * {@link UseValue} wrapper for {@link FirebaseAuthContextInfo}.
+ */
 export type UseFirebaseAuthContextInfo<I extends FirebaseAuthContextInfo = FirebaseAuthContextInfo> = UseValue<I>;
 
+/**
+ * Extracts the {@link FirebaseAuthContextInfo} from a {@link FirebaseAuthContext}.
+ */
 export const useContextAuth: MappedUseFunction<FirebaseAuthContext, FirebaseAuthContextInfo> = mappedUseFunction((x) => x.auth);
+
+/**
+ * Extracts the user UID directly from a {@link FirebaseAuthContext}.
+ */
 export const useContextAuthUid: MappedUseFunction<FirebaseAuthContext, FirebaseAuthUserId> = mappedUseFunction((x) => x.auth?.uid);

@@ -4,14 +4,21 @@ import { type FirebaseStorageAccessorFile } from './accessor';
 import { StorageFileUploadStreamUnsupportedError } from './error';
 
 /**
- * Uploads a file using a Readable, using the uploadStream() method on the FirebaseStorageAccessorFile.
+ * Uploads data to a storage file by piping a readable stream into the file's writable upload stream.
  *
- * If uploadStream is not supported, a StorageFileUploadStreamUnsupportedError will be thrown.
+ * This is a server-side convenience — most client implementations don't support `uploadStream()`.
  *
- * @param file The file to upload to.
- * @param readableStream The stream to upload.
- * @param options The upload options.
- * @returns A promise that resolves when the upload is complete.
+ * @param file - the target file accessor to upload to
+ * @param readableStream - the source stream to pipe
+ * @param options - optional upload configuration (content type, metadata, etc.)
+ * @throws {StorageFileUploadStreamUnsupportedError} When the file accessor does not support stream uploads.
+ *
+ * @example
+ * ```ts
+ * const file = storageContext.file('data/export.csv');
+ * const readable = fs.createReadStream('/tmp/export.csv');
+ * await uploadFileWithStream(file, readable, { contentType: 'text/csv' });
+ * ```
  */
 export async function uploadFileWithStream<R = unknown>(file: FirebaseStorageAccessorFile<R>, readableStream: Pick<Readable, 'pipe'>, options?: StorageUploadOptions): Promise<void> {
   if (!file.uploadStream) {

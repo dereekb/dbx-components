@@ -1,6 +1,6 @@
 import { type ProfileDocument, type SetProfileUsernameParams } from 'demo-firebase';
 import { inAuthContext } from '@dereekb/firebase-server';
-import { onCallWithDemoNestContext } from '../function';
+import { onCallWithDemoNestContext } from '../function.context';
 import { userHasNoProfileError } from '../../common';
 import { profileForUserRequest } from './profile.util';
 

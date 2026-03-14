@@ -3,7 +3,8 @@ import { type GrantedRoleMap } from '@dereekb/model';
 import { type Getter, type Maybe } from '@dereekb/util';
 
 /**
- * grantStorageFileRolesForUserAuthFunction() configuration
+ * Configuration for {@link grantStorageFileRolesForUserAuthFunction}, providing the permission
+ * service output, auth context, and target StorageFile document.
  */
 export interface GrantStorageFileRolesForUserAuthFunctionConfig<T extends FirebaseModelContext> {
   readonly output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>;
@@ -11,6 +12,10 @@ export interface GrantStorageFileRolesForUserAuthFunctionConfig<T extends Fireba
   readonly model: StorageFileDocument;
 }
 
+/**
+ * Input for the role granting function, specifying which roles to grant based on
+ * user ownership and/or ownership key matching.
+ */
 export interface GrantStorageFileRolesForUserAuthInput {
   /**
    * Roles to grant if the user matches the storage file user.
@@ -25,10 +30,24 @@ export interface GrantStorageFileRolesForUserAuthInput {
 export type GrantStorageFileRolesForUserAuthFunction = (input: GrantStorageFileRolesForUserAuthInput) => GrantRolesOtherwiseFunction<StorageFileRoles>;
 
 /**
- * Creates a new GrantStorageFileRolesForUserAuthFunction given the input config/context.
+ * Creates a function that grants {@link StorageFileRoles} based on user authentication context.
  *
- * @param config
- * @returns
+ * The returned function checks two conditions in parallel:
+ * 1. Whether the authenticated user matches the StorageFile's `u` (user) field
+ * 2. Whether the StorageFile has an ownership key (`o`) that grants additional roles
+ *
+ * Use this within a permission service to define role-based access for StorageFile operations.
+ *
+ * @param config - the permission output, auth context, and target document
+ *
+ * @example
+ * ```ts
+ * const grantRoles = grantStorageFileRolesForUserAuthFunction({ output, context, model });
+ * const otherwise = grantRoles({
+ *   rolesForStorageFileUser: () => ({ download: true, update: true }),
+ *   rolesForStorageFileOwnershipKey: (key) => ({ read: true })
+ * });
+ * ```
  */
 export function grantStorageFileRolesForUserAuthFunction<T extends FirebaseModelContext>(config: GrantStorageFileRolesForUserAuthFunctionConfig<T>): GrantStorageFileRolesForUserAuthFunction {
   const { output, context, model } = config;

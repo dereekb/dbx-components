@@ -1,3 +1,11 @@
+/**
+ * @module notification.create
+ *
+ * Factory functions and template types for creating {@link Notification} documents.
+ *
+ * Provides a fluent input pattern ({@link CreateNotificationTemplateInput}) that maps friendly field names
+ * to the abbreviated Firestore fields, plus throttling support to avoid duplicate sends.
+ */
 import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues, isThrottled } from '@dereekb/util';
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
@@ -6,7 +14,8 @@ import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFires
 import { type NotificationItem } from './notification.item';
 
 /**
- * Template item for a new Notification
+ * Template for the embedded {@link NotificationItem} within a new notification.
+ * Omits auto-generated fields (`id`, `cat`) that are set during document creation.
  */
 export interface CreateNotificationTemplateItem extends Omit<NotificationItem, 'r' | 'id' | 'cat'> {
   /**
@@ -16,7 +25,9 @@ export interface CreateNotificationTemplateItem extends Omit<NotificationItem, '
 }
 
 /**
- * Template use for creating a new Notification
+ * Low-level template for creating a new {@link Notification} document. Uses Firestore field abbreviations directly.
+ *
+ * Prefer using {@link CreateNotificationTemplateInput} with {@link createNotificationTemplate} for a friendlier API.
  */
 export interface CreateNotificationTemplate extends Partial<Omit<Notification, 'n' | 'a' | 'd' | 'tsr' | 'esr'>> {
   /**
@@ -48,6 +59,22 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
   readonly overrideExistingTask?: Maybe<boolean>;
 }
 
+/**
+ * Friendly input type for creating notification templates. Maps readable field names to the abbreviated Firestore fields.
+ *
+ * Processed by {@link createNotificationTemplate} into a {@link CreateNotificationTemplate}.
+ *
+ * @example
+ * ```ts
+ * const template = createNotificationTemplate({
+ *   notificationModel: 'project/abc123',
+ *   type: 'comment',
+ *   subject: 'New comment',
+ *   message: 'Someone commented on your project',
+ *   createdBy: 'user-uid-123'
+ * });
+ * ```
+ */
 export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNotificationTemplate, 'notificationModel'>>, Partial<Omit<CreateNotificationTemplateItem, 't' | 'cat'>> {
   /**
    * Model key input of the NotificationBox's target model (not the NotificationBox/key)
@@ -95,6 +122,13 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
   readonly explicitOptInTextSmsSendOnly?: Maybe<boolean>;
 }
 
+/**
+ * Converts a {@link CreateNotificationTemplateInput} into a {@link CreateNotificationTemplate}
+ * ready for document creation.
+ *
+ * Maps friendly field names (`subject`, `message`, `createdBy`, etc.) to their Firestore abbreviations
+ * and filters out null/undefined metadata values.
+ */
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
   const {
     notificationModel: inputNotificationModel,
@@ -171,6 +205,12 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
 }
 
 // MARK: Create
+/**
+ * Input parameters controlling whether a notification should actually be created and sent.
+ *
+ * Supports both an explicit toggle (`sendNotification`) and time-based throttling
+ * to prevent duplicate sends within a configurable window.
+ */
 export interface ShouldSendCreatedNotificationInput {
   /**
    * Whether or not to actually create/save the notification. Defaults to true.
@@ -187,10 +227,9 @@ export interface ShouldSendCreatedNotificationInput {
 }
 
 /**
- * Returns true if the notification should be created/sent, given the input.
+ * Determines whether a notification should be created based on the explicit toggle and throttle settings.
  *
- * @param input
- * @returns
+ * Returns false if `sendNotification` is explicitly false, or if the throttle window hasn't elapsed.
  */
 export function shouldSendCreatedNotificationInput(input: ShouldSendCreatedNotificationInput): boolean {
   const { sendNotification, sendNotificationThrottleDate, sendNotificationThrottleTime: inputSendNotificationThrottleTime } = input;
@@ -199,6 +238,10 @@ export function shouldSendCreatedNotificationInput(input: ShouldSendCreatedNotif
   return sendNotification !== false && isNotThrottled;
 }
 
+/**
+ * Full input for creating a {@link Notification} document, including the template, transaction context,
+ * and collection accessors.
+ */
 export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNotificationInput {
   /**
    * Now to use when creating the notification.
@@ -228,6 +271,9 @@ export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNo
   readonly accessor?: FirestoreDocumentAccessor<Notification, NotificationDocument>;
 }
 
+/**
+ * Result of creating a notification document pair (document reference + data), before or after saving.
+ */
 export interface CreateNotificationDocumentPairResult extends Pick<CreateNotificationTemplate, 'overrideExistingTask'> {
   readonly notificationDocument: NotificationDocument;
   readonly notification: Notification;
@@ -242,11 +288,14 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
 }
 
 /**
- * Creates a CreateNotificationDocumentPairResult from the input.
+ * Creates a notification document reference and builds the {@link Notification} data, but does NOT save to Firestore.
  *
- * Only creates a pair. Used createNotificationDocument() to also save the document's data.
+ * Use {@link createNotificationDocument} to both create and save in one step.
  *
- * @param template
+ * For unique task notifications, generates a deterministic document ID from the target model and task type.
+ *
+ * @throws {Error} When neither an accessor nor sufficient context is provided
+ * @throws {Error} When `unique=true` but no target model is specified
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context, now } = input;
@@ -375,9 +424,10 @@ export async function _createNotificationDocumentFromPair(input: Pick<CreateNoti
   return pair;
 }
 /**
- * Creates a new Notification and saves it to Firestore. Returns the pair.
+ * Creates a new {@link Notification} document and saves it to Firestore.
  *
- * @param input
+ * For unique tasks with `overrideExistingTask`, uses `set()` to replace existing documents.
+ * Otherwise uses `create()` which fails if the document already exists.
  */
 export async function createNotificationDocument(input: CreateNotificationDocumentPairInput): Promise<CreateNotificationDocumentPairResult> {
   const pair = createNotificationDocumentPair(input);
@@ -385,10 +435,9 @@ export async function createNotificationDocument(input: CreateNotificationDocume
 }
 
 /**
- * Creates a new Notification and saves it to Firestore and returns the pair if sendNotification in the input is not false.
+ * Creates and saves a notification only if sending conditions are met (not throttled, not explicitly disabled).
  *
- * @param input
- * @returns
+ * Returns `undefined` if the notification was not created.
  */
 export async function createNotificationDocumentIfSending(input: CreateNotificationDocumentPairInput): Promise<Maybe<CreateNotificationDocumentPairResult>> {
   const pair = await createNotificationDocument(input);

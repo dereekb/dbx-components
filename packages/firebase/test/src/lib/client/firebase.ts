@@ -8,13 +8,28 @@ import { makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, typ
 import { TestFirebaseContextFixture, type TestFirebaseInstance } from '../common/firebase.instance';
 import { type TestFirebaseStorageInstance } from '../common/storage/storage.instance';
 
+/**
+ * Combined driver type providing both Firestore and Firebase Storage testing drivers.
+ */
 export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 
+/**
+ * Configuration for the authenticated context used in rules unit tests.
+ *
+ * When provided, the test runs as the specified user. When omitted,
+ * tests run as an unauthenticated context.
+ */
 export interface RulesUnitTestingContextConfig {
   readonly userId: string;
   readonly tokenOptions?: Maybe<TokenOptions>;
 }
 
+/**
+ * Extended {@link TestEnvironmentConfig} with additional options for emulator setup.
+ *
+ * The `collectionNames` field is required when using testing drivers that fuzz collection names
+ * to isolate parallel test runs.
+ */
 export interface RulesUnitTestingTestEnvironmentConfig extends TestEnvironmentConfig {
   /**
    * List of collection names used in the environment. Is required if using testing drivers.
@@ -24,16 +39,33 @@ export interface RulesUnitTestingTestEnvironmentConfig extends TestEnvironmentCo
   readonly storage?: EmulatorConfig;
 }
 
+/**
+ * Top-level configuration for {@link firebaseRulesUnitTestBuilder}.
+ *
+ * Combines the emulator environment config with an optional authenticated context.
+ */
 export interface RulesUnitTestingConfig {
   readonly testEnvironment: RulesUnitTestingTestEnvironmentConfig;
   readonly rulesContext?: Maybe<RulesUnitTestingContextConfig>;
 }
 
+/**
+ * Extends {@link TestFirestoreContext} with references to the underlying `@firebase/rules-unit-testing` objects.
+ *
+ * Useful when a test needs direct access to the rules test environment (e.g., for clearing data or
+ * switching auth contexts).
+ */
 export interface RulesUnitTestTestFirestoreContext extends TestFirestoreContext {
   readonly rulesTestEnvironment: RulesTestEnvironment;
   readonly rulesTestContext: RulesTestContext;
 }
 
+/**
+ * Creates a {@link TestFirestoreContext} backed by the rules unit testing emulator.
+ *
+ * Combines the Firestore client drivers with the rules test environment and context
+ * to produce a context suitable for client-side Firestore tests.
+ */
 export function makeRulesTestFirestoreContext(drivers: TestingFirestoreDrivers, rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext): TestFirestoreContext {
   const context: RulesUnitTestTestFirestoreContext = {
     ...firestoreContextFactory(drivers)(rulesTestContext.firestore()),
@@ -45,11 +77,20 @@ export function makeRulesTestFirestoreContext(drivers: TestingFirestoreDrivers, 
   return context;
 }
 
+/**
+ * Extends {@link TestFirebaseStorageContext} with references to the underlying `@firebase/rules-unit-testing` objects.
+ */
 export interface RulesUnitTestTestFirebaseStorageContext extends TestFirebaseStorageContext {
   readonly rulesTestEnvironment: RulesTestEnvironment;
   readonly rulesTestContext: RulesTestContext;
 }
 
+/**
+ * Creates a {@link TestFirebaseStorageContext} backed by the rules unit testing emulator.
+ *
+ * Combines the Storage client drivers with the rules test environment and context
+ * to produce a context suitable for client-side Firebase Storage tests.
+ */
 export function makeRulesTestFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext): TestFirebaseStorageContext {
   const context: RulesUnitTestTestFirebaseStorageContext = {
     ...firebaseStorageContextFactory(drivers)(rulesTestContext.storage()),
@@ -61,6 +102,13 @@ export function makeRulesTestFirebaseStorageContext(drivers: TestingFirebaseStor
   return context;
 }
 
+/**
+ * Test instance that provides both Firestore and Firebase Storage contexts via the
+ * `@firebase/rules-unit-testing` emulator.
+ *
+ * Lazily initializes contexts on first access using {@link cachedGetter}.
+ * Used as the instance type for {@link RulesUnitTestFirebaseTestingContextFixture}.
+ */
 export class RulesUnitTestTestFirebaseInstance implements TestFirebaseInstance, TestFirebaseStorageInstance {
   readonly _firestoreContext = cachedGetter(() => makeRulesTestFirestoreContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
   readonly _storageContext = cachedGetter(() => makeRulesTestFirebaseStorageContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
@@ -88,6 +136,12 @@ export class RulesUnitTestTestFirebaseInstance implements TestFirebaseInstance, 
   }
 }
 
+/**
+ * Concrete {@link TestFirebaseContextFixture} for client-side rules unit tests.
+ *
+ * Manages the lifecycle of a {@link RulesUnitTestTestFirebaseInstance}, handling
+ * setup and teardown of the emulator environment between test suites.
+ */
 export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseContextFixture<RulesUnitTestTestFirebaseInstance> {}
 
 /**
@@ -164,6 +218,12 @@ function rewriteRulesForFuzzedCollectionNames(rules: string | undefined, fuzzedC
 }
 
 // MARK: Utility
+/**
+ * Registers `beforeAll`/`afterAll` hooks to suppress verbose Firestore log output during tests.
+ *
+ * Sets the log level to `'error'` before tests and restores it to `'warn'` afterward.
+ * Call this at the top level of a `describe` block to reduce test noise.
+ */
 export function changeFirestoreLogLevelBeforeAndAfterTests() {
   beforeAll(() => setLogLevel('error'));
   afterAll(() => setLogLevel('warn'));

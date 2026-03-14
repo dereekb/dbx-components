@@ -6,6 +6,11 @@
     <!-- Content -->
     <div class="dbx-pickable-item-field-chips">
       <mat-chip-listbox [multiple]="multiSelect" [required]="required" [selectable]="!isReadonlyOrDisabled" [disabled]="readonly" #chipList>
+        @if (showSelectAllButton && multiSelect && !isReadonlyOrDisabled) {
+          <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
+            <span class="dbx-chip-label">All</span>
+          </mat-chip-option>
+        }
         @for (item of itemsSignal(); track item.itemValue.value) {
           <mat-chip-option (click)="itemClicked(item)" [selected]="item.selected" [disabled]="isReadonlyOrDisabled || item.disabled">
             @if (item.itemValue.icon) {

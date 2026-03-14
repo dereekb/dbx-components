@@ -1,3 +1,9 @@
+/**
+ * @module notification.item
+ *
+ * Defines the {@link NotificationItem} embedded data structure that carries notification content
+ * across multiple document types ({@link Notification}, {@link NotificationWeek}, {@link NotificationSummary}).
+ */
 import { separateValues, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, type SavedToFirestoreIfTrue } from '../../common';
 import { type NotificationTaskType, type NotificationId, type NotificationTemplateType } from './notification.id';
@@ -5,10 +11,15 @@ import { isAfter } from 'date-fns';
 import { sortByDateFunction } from '@dereekb/date';
 
 /**
- * Arbitrary metadata for a job. Derived/managed by the concrete job type.
+ * Arbitrary metadata attached to a {@link NotificationItem}. Content is defined by the concrete notification/task type.
+ *
+ * Stored directly in Firestore, so values must be Firestore-compatible (no class instances, functions, etc.).
  */
 export type NotificationItemMetadata = Readonly<Record<string, any>>;
 
+/**
+ * Pairs a {@link NotificationItem} with its resolved subject and message strings for display.
+ */
 export interface NotificationItemSubjectMessagePair<D extends NotificationItemMetadata = {}> {
   readonly item: NotificationItem<D>;
   readonly subject: string;
@@ -17,51 +28,64 @@ export interface NotificationItemSubjectMessagePair<D extends NotificationItemMe
 }
 
 /**
- * A notification item.
+ * Embeddable notification content carried inside {@link Notification}, {@link NotificationWeek}, and {@link NotificationSummary} documents.
  *
- * Is embedded within a Notification, NotificationWeek, and NotificationSummary.
+ * Each item has a template/task type (`t`) that determines how the notification is rendered and delivered.
+ * The optional `s` (subject) and `g` (message) fields can override the template's defaults.
+ *
+ * Field abbreviations:
+ * - `cat` — created-at timestamp
+ * - `t` — template or task type identifier
+ * - `cb` — created-by user UID
+ * - `m` — target model key
+ * - `s` — subject override
+ * - `g` — message override
+ * - `d` — metadata payload
+ * - `v` — viewed/read flag
  */
 export interface NotificationItem<D extends NotificationItemMetadata = {}> {
   /**
-   * Unique identifier
+   * Unique notification item identifier.
    */
   id: NotificationId;
   /**
-   * Notification date/time
+   * Creation timestamp of this notification item.
    */
   cat: Date;
   /**
-   * Notification task/template type.
+   * Template type (for standard notifications) or task type (for task notifications).
+   * Determines how the notification is rendered and which handler processes it.
    */
   t: NotificationTemplateType | NotificationTaskType;
   /**
-   * User who created this notification, if applicable.
+   * UID of the user who triggered this notification, if applicable.
    */
   cb?: Maybe<FirebaseAuthUserId>;
   /**
-   * Model/object that this notification item is targeting.
+   * Model key of the target object this notification relates to.
    */
   m?: Maybe<FirestoreModelKey>;
   /**
-   * Subject. Used to overwrite the template's default subject.
+   * Subject text override. Replaces the template's default subject when present.
    */
   s?: Maybe<string>;
   /**
-   * Message. Used to overwrite the template's default message.
+   * Message text override. Replaces the template's default message when present.
    */
   g?: Maybe<string>;
   /**
-   * Arbitrary metadata attached to the notification item.
-   *
-   * This is stored directly into Firestore, so be cautious about what is stored.
+   * Arbitrary metadata payload. Stored directly in Firestore — keep values serializable and small.
    */
   d?: Maybe<D>;
   /**
-   * True if this notification item is marked as read/viewed.
+   * Read/viewed flag. True if the recipient has seen this notification item.
    */
   v?: Maybe<SavedToFirestoreIfTrue>;
 }
 
+/**
+ * Firestore sub-object converter for embedding {@link NotificationItem} within parent documents.
+ */
 export const firestoreNotificationItem = firestoreSubObject<NotificationItem>({
   objectField: {
     fields: {
@@ -78,6 +102,9 @@ export const firestoreNotificationItem = firestoreSubObject<NotificationItem>({
   }
 });
 
+/**
+ * Result of splitting {@link NotificationItem} entries into read and unread groups.
+ */
 export interface UnreadNotificationItemsResult<D extends NotificationItemMetadata = {}> {
   readonly items: NotificationItem<D>[];
   readonly considerReadIfCreatedBefore?: Maybe<Date>;
@@ -86,9 +113,20 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
 }
 
 /**
- * Returns an object containing input notification items split up by their determined read/unread state.
+ * Separates notification items into read and unread groups based on the `v` (viewed) flag
+ * and an optional cutoff date.
  *
- * @param items
+ * Items are considered read if their `v` flag is true OR if they were created before the `considerReadIfCreatedBefore` date.
+ * This is used with {@link NotificationSummary.rat} to mark all older items as read.
+ *
+ * @param items - notification items to classify
+ * @param considerReadIfCreatedBefore - optional cutoff date; items created at or before this date are treated as read
+ *
+ * @example
+ * ```ts
+ * const result = unreadNotificationItems(summary.n, summary.rat);
+ * console.log(result.unread.length); // number of unread items
+ * ```
  */
 export function unreadNotificationItems<D extends NotificationItemMetadata = {}>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
   const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v || !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
@@ -102,4 +140,7 @@ export function unreadNotificationItems<D extends NotificationItemMetadata = {}>
   };
 }
 
+/**
+ * Sort comparator for {@link NotificationItem} arrays. Sorts ascending by creation date (`cat`).
+ */
 export const sortNotificationItemsFunction = sortByDateFunction<NotificationItem<any>>((x) => x.cat);

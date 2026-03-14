@@ -106,18 +106,46 @@ import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandle
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 
 /**
- * Injection token for the BaseNotificationServerActionsContext
+ * NestJS injection token for the {@link BaseNotificationServerActionsContext}, which provides
+ * the foundational Firebase context, Firestore collections, and auth service needed by notification actions.
+ *
+ * The full {@link NotificationServerActionsContext} is assembled from this base plus additional services.
  */
 export const BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'BASE_NOTIFICATION_SERVER_ACTION_CONTEXT';
 
 /**
- * Injection token for the NotificationServerActionsContext
+ * NestJS injection token for the fully assembled {@link NotificationServerActionsContext},
+ * which adds template, send, task, and expedite services on top of the base context.
  */
 export const NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'NOTIFICATION_SERVER_ACTION_CONTEXT';
 
+/**
+ * Minimal context providing Firebase infrastructure, Firestore notification collections,
+ * auth service, and Firestore context needed by all notification server actions.
+ */
 export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference {}
+
+/**
+ * Full context for notification server actions, extending the base with template resolution,
+ * send channel orchestration, task dispatch, and expedite services.
+ */
 export interface NotificationServerActionsContext extends BaseNotificationServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, NotificationTaskServiceRef {}
 
+/**
+ * Abstract service class defining all server-side notification CRUD and delivery actions.
+ *
+ * This is the central API surface for the notification system's backend. It provides:
+ *
+ * - **User management**: create/update {@link NotificationUser} records, resync user preferences
+ * - **Box management**: create/update {@link NotificationBox} containers and their recipients
+ * - **Summary management**: create/update {@link NotificationSummary} for in-app notification feeds
+ * - **Send pipeline**: send individual notifications, process queued notifications, and clean up sent ones
+ *
+ * Each method follows the transform-and-validate pattern: params are validated first,
+ * then a curried function is returned that operates on the target document.
+ *
+ * @see {@link notificationServerActions} for the concrete implementation factory.
+ */
 export abstract class NotificationServerActions {
   abstract createNotificationUser(params: CreateNotificationUserParams): AsyncNotificationUserCreateAction<CreateNotificationUserParams>;
   abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
@@ -133,6 +161,19 @@ export abstract class NotificationServerActions {
   abstract cleanupSentNotifications(params: CleanupSentNotificationsParams): Promise<TransformAndValidateFunctionResult<CleanupSentNotificationsParams, () => Promise<CleanupSentNotificationsResult>>>;
 }
 
+/**
+ * Creates a concrete {@link NotificationServerActions} implementation by wiring each action
+ * to its factory function using the provided context.
+ *
+ * @param context - the fully assembled notification server actions context
+ *
+ * @example
+ * ```ts
+ * const actions = notificationServerActions(context);
+ * const sendFn = await actions.sendNotification({ key: notificationKey });
+ * const result = await sendFn(notificationDocument);
+ * ```
+ */
 export function notificationServerActions(context: NotificationServerActionsContext): NotificationServerActions {
   return {
     createNotificationUser: createNotificationUserFactory(context),
@@ -151,6 +192,12 @@ export function notificationServerActions(context: NotificationServerActionsCont
 }
 
 // MARK: Actions
+/**
+ * Factory for the `createNotificationUser` action.
+ *
+ * Validates the UID exists in Firebase Auth, then creates a new {@link NotificationUser} document
+ * with empty default and global configs. Throws if the UID is not found in Auth.
+ */
 export function createNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
 
@@ -187,6 +234,13 @@ export function createNotificationUserFactory(context: NotificationServerActions
   });
 }
 
+/**
+ * Factory for the `updateNotificationUser` action.
+ *
+ * Updates a {@link NotificationUser}'s default config (`dc`), global config (`gc`), and/or
+ * box configs (`bc`). When the global config changes, iterates all box configs to propagate
+ * effective recipient changes and marks affected entries for sync.
+ */
 export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
@@ -270,6 +324,14 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
 const MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH = 50;
 
+/**
+ * Factory for the `resyncNotificationUser` action.
+ *
+ * Re-synchronizes a single {@link NotificationUser}'s box configs by iterating through
+ * entries flagged with `ns=true` (needs-sync), loading the corresponding {@link NotificationBox},
+ * and merging the user's preferences back into the box's recipient list. Handles removed entries
+ * and cleans up stale box references.
+ */
 export function resyncNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
@@ -434,6 +496,13 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
   });
 }
 
+/**
+ * Factory for the `resyncAllNotificationUsers` action.
+ *
+ * Batch-processes all {@link NotificationUser} documents flagged for sync by querying
+ * for entries with `ns=true`, then calling the resync logic for each in parallel
+ * (up to 5 concurrent tasks). Loops until no more flagged users are found.
+ */
 export function resyncAllNotificationUsersFactory(context: NotificationServerActionsContext) {
   const { notificationUserCollection } = context;
   const resyncNotificationUser = resyncNotificationUserFactory(context);
@@ -479,6 +548,12 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
   };
 }
 
+/**
+ * Factory for the `createNotificationSummary` action.
+ *
+ * Creates a new {@link NotificationSummary} document for a model, generating the summary ID
+ * from the model key and initializing it with a blank template.
+ */
 export function createNotificationSummaryFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
 
@@ -496,6 +571,12 @@ export function createNotificationSummaryFactory(context: NotificationServerActi
   });
 }
 
+/**
+ * Factory for the `updateNotificationSummary` action.
+ *
+ * Updates an existing {@link NotificationSummary} document's owner or setup flag.
+ * Runs within a Firestore transaction to ensure consistency.
+ */
 export function updateNotificationSummaryFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
 
@@ -536,6 +617,12 @@ export interface CreateNotificationBoxInTransactionInput extends NotificationBox
   readonly skipCreate?: Maybe<boolean>;
 }
 
+/**
+ * Factory that creates a {@link NotificationBox} within a Firestore transaction.
+ *
+ * Checks for existing boxes and throws if one already exists for the model.
+ * Also syncs initial recipients with their corresponding {@link NotificationUser} documents.
+ */
 export function createNotificationBoxInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { notificationBoxCollection } = context;
 
@@ -565,6 +652,12 @@ export function createNotificationBoxInTransactionFactory(context: BaseNotificat
   };
 }
 
+/**
+ * Factory for the `createNotificationBox` action.
+ *
+ * Wraps {@link createNotificationBoxInTransactionFactory} in a Firestore transaction
+ * and follows the transform-and-validate pattern.
+ */
 export function createNotificationBoxFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, notificationBoxCollection, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
@@ -601,6 +694,12 @@ export interface UpdateNotificationBoxRecipientExclusionInTransactionResult {
   readonly notificationUserUpdate: Partial<NotificationUser>;
 }
 
+/**
+ * Factory that updates recipient send exclusions on a {@link NotificationBox} within a transaction.
+ *
+ * Manages the exclusion list (`x`) on both the box recipient and the corresponding
+ * {@link NotificationUser}'s send exclusion array, keeping them in sync.
+ */
 export function updateNotificationBoxRecipientExclusionInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { notificationBoxCollection, notificationUserCollection } = context;
 
@@ -683,6 +782,13 @@ export interface UpdateNotificationBoxRecipientInTransactionResult {
   readonly notificationBoxDocument: NotificationBoxDocument;
 }
 
+/**
+ * Factory that updates a single recipient on a {@link NotificationBox} within a transaction.
+ *
+ * Handles inserting new recipients, updating existing ones, and removing recipients.
+ * Syncs changes with the recipient's {@link NotificationUser} document and manages
+ * recipient index assignment via a sorted-values free-index calculator.
+ */
 export function updateNotificationBoxRecipientInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { authService, notificationBoxCollection, notificationUserCollection } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
@@ -860,6 +966,12 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
   };
 }
 
+/**
+ * Factory for the `updateNotificationBoxRecipient` action.
+ *
+ * Wraps the in-transaction recipient update logic, handling both recipient changes
+ * and send exclusion updates in a single Firestore transaction.
+ */
 export function updateNotificationBoxRecipientFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const updateNotificationBoxRecipientInTransaction = updateNotificationBoxRecipientInTransactionFactory(context);
@@ -913,6 +1025,20 @@ export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
 
+/**
+ * Factory for the `sendNotification` action — the core of the notification delivery pipeline.
+ *
+ * Given a {@link Notification} document, this action:
+ * 1. Loads the notification and its parent {@link NotificationBox}
+ * 2. Expands recipients across all channels (email, SMS, notification summary)
+ * 3. Resolves the message template via {@link NotificationTemplateService}
+ * 4. Builds message content for each recipient using the template's message function
+ * 5. Dispatches messages through each configured channel's send service
+ * 6. Handles task completion, week-based archival, and cleanup of the notification document
+ *
+ * Supports throttling via `sendAt` time, configurable send flags, and task-based
+ * async workflows for notifications that require multi-step processing.
+ */
 export function sendNotificationFactory(context: NotificationServerActionsContext) {
   const { appNotificationTemplateTypeInfoRecordService, notificationSendService, notificationTaskService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
@@ -1672,13 +1798,30 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
   });
 }
 
+/**
+ * Warning threshold for the number of queued notifications. If exceeded, a warning is logged
+ * indicating the queue may be growing faster than it can be processed.
+ */
 export const SEND_QUEUE_NOTIFICATIONS_TASK_EXCESS_THRESHOLD = 5000;
 
+/**
+ * Optional input for the `sendQueuedNotifications` action, allowing callers to configure
+ * parallelism and observe individual send results.
+ */
 export interface SendQueuedNotificationsInput {
   readonly maxParellelSendTasks?: Maybe<number>;
   readonly onSendNotificationResult?: (result: SendNotificationResult, document: NotificationDocument) => void;
 }
 
+/**
+ * Factory for the `sendQueuedNotifications` action.
+ *
+ * Queries for {@link Notification} documents whose `sendAt` time has passed,
+ * then processes them in batches. Supports configurable batch sizes, time windows,
+ * and an optional {@link NotificationExpediteService} for immediate delivery.
+ * Continues processing batches until no more queued notifications are found
+ * or the time budget is exhausted.
+ */
 export function sendQueuedNotificationsFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationCollectionGroup } = context;
   const sendNotification = sendNotificationFactory(context);
@@ -1795,6 +1938,13 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
   });
 }
 
+/**
+ * Factory for the `cleanupSentNotifications` action.
+ *
+ * Queries for {@link Notification} documents that are ready for cleanup (fully sent,
+ * past the retention window) and deletes them in batches. Continues until no more
+ * cleanup-eligible notifications are found.
+ */
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory } = context;
 

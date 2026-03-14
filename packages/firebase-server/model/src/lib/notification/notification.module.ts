@@ -9,14 +9,25 @@ import { NotificationTaskService } from './notification.task.service';
 import { exportMutableNotificationExpediteService, MutableNotificationExpediteService, NotificationExpediteService, provideMutableNotificationExpediteService } from './notification.expedite.service';
 
 // MARK: Provider Factories
+/**
+ * Factory that assembles the full {@link NotificationServerActionsContext} by combining
+ * the base context with the template, send, task, and expedite services.
+ */
 export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService, notificationsExpediteService: NotificationExpediteService) {
   return { ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService };
 }
 
+/**
+ * Factory that creates a {@link NotificationServerActions} instance from the assembled context.
+ */
 export function notificationServerActionsFactory(context: NotificationServerActionsContext, mutableNotificationExpediteService: MutableNotificationExpediteService) {
   return notificationServerActions(context);
 }
 
+/**
+ * Factory that creates a {@link NotificationInitServerActions} instance by merging the
+ * server actions context with the init-specific configuration.
+ */
 export function notificationInitServerActionsFactory(context: NotificationServerActionsContext, notificationInitServerActionsContextConfig: NotificationInitServerActionsContextConfig) {
   return notificationInitServerActions({
     ...context,

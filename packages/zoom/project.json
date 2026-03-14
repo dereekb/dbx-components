@@ -30,7 +30,7 @@
         "outputPath": "dist/packages/zoom",
         "main": "packages/zoom/src/index.ts",
         "tsConfig": "packages/zoom/tsconfig.lib.json",
-        "compiler": "tsc",
+        "compiler": "swc",
         "project": "packages/zoom/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": true,

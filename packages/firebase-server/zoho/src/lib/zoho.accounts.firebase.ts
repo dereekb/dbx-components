@@ -5,9 +5,20 @@ import { type ZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
 import { type ZohoAccessTokenSystemStateData, loadZohoAccessTokenSystemState } from './zoho.accounts.firebase.system';
 
 /**
- * Creates a ZohoAccountsAccessTokenCacheService from the input SystemStateFirestoreCollection.
+ * Creates a {@link ZohoAccountsAccessTokenCacheService} backed by Firestore {@link SystemState} documents.
  *
- * @param collection
+ * Each Zoho service integration gets its own cached access token entry keyed by the service key.
+ * Tokens are stored in a single {@link SystemState} document (type {@link ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE})
+ * and token updates/clears use Firestore transactions for concurrency safety.
+ *
+ * @param systemStateCollection - the Firestore collection for system state documents
+ *
+ * @example
+ * ```ts
+ * const cacheService = firebaseZohoAccountsAccessTokenCacheService(systemStateCollection);
+ * const cache = cacheService.loadZohoAccessTokenCache('my-zoho-service');
+ * const token = await cache.loadCachedToken();
+ * ```
  */
 export function firebaseZohoAccountsAccessTokenCacheService(systemStateCollection: SystemStateFirestoreCollection): ZohoAccountsAccessTokenCacheService {
   const systemStateDocumentAccessor = systemStateCollection.documentAccessor();

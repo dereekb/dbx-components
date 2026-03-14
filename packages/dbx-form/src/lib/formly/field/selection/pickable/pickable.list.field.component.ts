@@ -13,6 +13,9 @@ import { NgTemplateOutlet } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 // MARK: Selection List
+/**
+ * Wrapper component for the pickable item selection list, providing the list view container.
+ */
 @Component({
   selector: 'dbx-form-pickable-item-field-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
@@ -30,7 +33,9 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
 }
 
 /**
- * NOTE: Values input are PickableItemFieldItem<T>, but output values are PickableValueFieldDisplayValue<T>.
+ * List view component that renders pickable items with selection support.
+ *
+ * Input values are {@link PickableItemFieldItem}, but output selection events emit {@link PickableValueFieldDisplayValue}.
  */
 @Component({
   template: `
@@ -94,9 +99,12 @@ export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDb
   readonly icon = this.itemValue.icon;
 }
 
-// List Field Component
+// MARK: List Field Component
 /**
- * Used for picking pre-set values using a selection list as the presentation.
+ * Formly field component that renders pickable values as a selectable list.
+ *
+ * Delegates to {@link DbxPickableListFieldItemListComponent} for list rendering and
+ * handles selection change events to update the form control value.
  */
 @Component({
   templateUrl: 'pickable.list.field.component.html',

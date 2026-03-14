@@ -3,7 +3,8 @@ import { type NotificationExpediteService, type NotificationExpediteServiceInsta
 import { _createNotificationDocumentFromPair, createNotificationDocumentPair, type CreateNotificationDocumentPairInput, type CreateNotificationDocumentPairResult, type SendNotificationResult } from '@dereekb/firebase';
 
 /**
- * Options related to the run
+ * Input for {@link createOrRunUniqueNotificationDocument}, extending the standard notification document
+ * creation input with options for immediate execution or expedited delivery.
  */
 export interface CreateOrRunUniqueNotificationDocumentRunInput extends Omit<CreateNotificationDocumentPairInput, 'transaction'> {
   /**
@@ -38,6 +39,10 @@ export interface CreateOrRunUniqueNotificationDocumentRunInput extends Omit<Crea
   readonly expediteInstance?: Maybe<NotificationExpediteServiceInstance>;
 }
 
+/**
+ * Result of {@link createOrRunUniqueNotificationDocument}, extending the pair result with
+ * optional send/enqueue outcomes.
+ */
 export interface CreateOrRunUniqueNotificationDocumentRunResult extends CreateNotificationDocumentPairResult {
   /**
    * Set if the notification was run.
@@ -50,12 +55,35 @@ export interface CreateOrRunUniqueNotificationDocumentRunResult extends CreateNo
 }
 
 /**
- * Alternative version of createNotificationDocument() that checks if the document exists, and can run it if it does instead of recreated it.
+ * Creates a unique notification document if it doesn't exist, or triggers a send/expedite
+ * if the document already exists.
  *
- * Does not support the use of a Transaction, as running should occur outside of a transaction.
+ * This is the idempotent alternative to `createNotificationDocument()` for notifications
+ * flagged as unique (`ut=true`). The behavior varies based on whether the document exists:
  *
- * @param input
- * @returns
+ * - **Document does not exist**: Creates it and optionally runs it immediately via `runImmediatelyIfCreated`.
+ * - **Document already exists**: Triggers the notification via the expedite service/instance,
+ *   or updates the `sat` (send-at time) if `updateNextRunAtTime` is set.
+ *
+ * Does not support Firestore transactions, as running should occur outside of a transaction.
+ *
+ * @param input - creation and run configuration
+ * @throws Error if the notification template is not flagged as unique
+ *
+ * @example
+ * ```ts
+ * const result = await createOrRunUniqueNotificationDocument({
+ *   ...createInput,
+ *   runImmediatelyIfCreated: true,
+ *   expediteService
+ * });
+ *
+ * if (result.notificationCreated) {
+ *   // newly created
+ * } else if (result.runResult) {
+ *   // existing doc was re-sent
+ * }
+ * ```
  */
 export async function createOrRunUniqueNotificationDocument(input: CreateOrRunUniqueNotificationDocumentRunInput): Promise<CreateOrRunUniqueNotificationDocumentRunResult> {
   const { expediteService, expediteInstance, updateNextRunAtTime, now: inputNow } = input;

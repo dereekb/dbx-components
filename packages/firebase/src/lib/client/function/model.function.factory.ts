@@ -11,27 +11,55 @@ import { type FirebaseFunctionTypeConfigMap, firebaseFunctionMapFactory } from '
 import { type OnCallCreateModelResult, CALL_MODEL_APP_FUNCTION_KEY, onCallTypedModelParamsFunction } from '../../common/model/function';
 
 /**
- * Used to specify which function to direct requests to.
+ * String identifier that routes a CRUD request to a specific sub-handler within a model's
+ * CRUD function. For example, a model's `update` might have specifiers like `'status'` or `'config'`
+ * to target different update behaviors.
  */
 export type ModelFirebaseCrudFunctionSpecifier = string;
 
 /**
- * Provides a reference to a ModelFirebaseCrudFunctionSpecifier if available.
+ * Optional reference to a {@link ModelFirebaseCrudFunctionSpecifier}, used to route CRUD requests
+ * to a specific sub-handler.
  */
 export type ModelFirebaseCrudFunctionSpecifierRef = {
   readonly specifier?: ModelFirebaseCrudFunctionSpecifier;
 };
 
+/**
+ * Generic CRUD function for a Firestore model. Wraps {@link FirebaseFunction} with model-specific input/output types.
+ */
 export type ModelFirebaseCrudFunction<I, O = void> = FirebaseFunction<I, O>;
+
+/**
+ * Create function for a model. Returns {@link OnCallCreateModelResult} containing the created document's key by default.
+ */
 export type ModelFirebaseCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = ModelFirebaseCrudFunction<I, O>;
+
+/** Read function for a model, returning the read data. */
 export type ModelFirebaseReadFunction<I, O> = ModelFirebaseCrudFunction<I, O>;
+
+/** Update function for a model. Returns void by default. */
 export type ModelFirebaseUpdateFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
+
+/** Delete function for a model. Returns void by default. */
 export type ModelFirebaseDeleteFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
+/**
+ * Maps each model type (from a {@link FirestoreModelIdentity}) to its CRUD function type configuration.
+ *
+ * Each entry defines which CRUD operations (create, read, update, delete) are available for
+ * that model type, along with optional specifiers for sub-operations.
+ */
 export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
   [K in FirestoreModelTypes<T>]: ModelFirebaseCrudFunctionTypeMapEntry;
 };
 
+/**
+ * Entry for a single model type in a {@link ModelFirebaseCrudFunctionTypeMap}.
+ *
+ * Can be `null`/`undefined` (no CRUD functions for this model) or a partial record of
+ * create/read/update/delete configurations, each optionally with specifiers.
+ */
 export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
 
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
@@ -53,16 +81,25 @@ export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
   readonly delete: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
+/**
+ * Default specifier string (`'_'`) used when a CRUD operation has specifiers but one
+ * should map to the base function name without a specifier suffix.
+ */
 export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT = '_';
 export type ModelFirebaseCrudFunctionSpecifierDefault = typeof MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT;
 
+/**
+ * Separator character (`','`) used to split multiple specifier keys in a config string.
+ * For example, `'update:status,config'` defines two update specifiers: `status` and `config`.
+ */
 export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER = ',';
 export type ModelFirebaseCrudFunctionSpecifierSplitter = typeof MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER;
 
 /**
- * The configuration for a types map.
+ * Configuration map that defines which CRUD operations and specifiers to generate for each model type.
  *
- * The FirestoreModelIdentities that are allowed are passed too which add type checking to make sure we're passing the expected identities.
+ * The {@link FirestoreModelIdentity} type parameter `T` constrains which model type keys are
+ * valid, providing compile-time safety. Entries are string arrays like `['create', 'update:status,config']`.
  */
 export type ModelFirebaseCrudFunctionConfigMap<C extends ModelFirebaseCrudFunctionTypeMap<T>, T extends FirestoreModelIdentity> = NonNever<{
   [K in FirestoreModelTypes<T>]: C[K] extends null ? never : ModelFirebaseCrudFunctionConfigMapEntry<C[K]>;
@@ -100,19 +137,41 @@ export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL extends string
 };
 
 export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig, K extends keyof E, CRUD extends string> = E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : CRUD extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
+/**
+ * Combined function map providing both custom functions ({@link FirebaseFunctionMap}) and
+ * auto-generated model CRUD functions ({@link ModelFirebaseCrudFunctionMap}).
+ */
 export type ModelFirebaseFunctionMap<M extends FirebaseFunctionTypeMap, C extends ModelFirebaseCrudFunctionTypeMap> = FirebaseFunctionMap<M> & ModelFirebaseCrudFunctionMap<C>;
 
 /**
- * Used for building a FirebaseFunctionMap<M> for a specific Functions instance.
+ * Factory that creates a {@link ModelFirebaseFunctionMap} for a given `Functions` instance.
  */
 export type ModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap> = (functionsInstance: Functions) => ModelFirebaseFunctionMap<M, U>;
 
 /**
- * Creates a ModelFirebaseFunctionMapFactory for the input config that targets the "callModel" Firebase function.
+ * Creates a {@link ModelFirebaseFunctionMapFactory} that routes model CRUD operations through the
+ * single `callModel` Cloud Function endpoint.
  *
- * @param configMap
- * @param crudConfigMap
- * @returns
+ * Rather than creating separate `HttpsCallable` instances for each CRUD operation, all model
+ * operations are multiplexed through a single Firebase function (identified by {@link CALL_MODEL_APP_FUNCTION_KEY}).
+ * The model type, CRUD operation, and optional specifier are encoded into the request parameters
+ * via {@link onCallTypedModelParamsFunction}.
+ *
+ * Custom (non-CRUD) functions from `configMap` get their own individual `HttpsCallable` instances.
+ *
+ * @param configMap - configuration for custom (non-CRUD) functions
+ * @param crudConfigMap - configuration for model CRUD functions with optional specifiers
+ *
+ * @example
+ * ```ts
+ * const factory = callModelFirebaseFunctionMapFactory<CustomFnMap, CrudMap>(
+ *   { customFn: null },
+ *   { notification: ['create', 'update:status,config', 'delete'] }
+ * );
+ * const fns = factory(getFunctions());
+ * await fns.createNotification(data);
+ * await fns.updateNotificationStatus(data);
+ * ```
  */
 export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>, crudConfigMap: ModelFirebaseCrudFunctionConfigMap<U, FirestoreModelIdentity>): ModelFirebaseFunctionMapFactory<M, U> {
   const functionFactory = firebaseFunctionMapFactory(configMap);

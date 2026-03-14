@@ -4,6 +4,20 @@ import { firstValue, type PartialOnKeys } from '@dereekb/util';
 import { shareReplay, exhaustMap, first, from, type Observable } from 'rxjs';
 import { type DbxFirebaseDocumentStore } from './store';
 
+// MARK: Config
+/**
+ * Optional configuration for store CRUD wrapper functions.
+ *
+ * Provides an `onResult` callback that fires after the wrapped function resolves.
+ * Useful for capturing one-time values (e.g. `client_secret`) from the response.
+ */
+export interface FirebaseDocumentStoreFunctionConfig<I, O = unknown> {
+  /**
+   * Called after the function resolves with the original params and the result.
+   */
+  readonly onResult?: (params: I, result: O) => void;
+}
+
 // MARK: Create
 export type DbxFirebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (params: I) => Observable<LoadingState<O>>;
 
@@ -12,9 +26,10 @@ export type DbxFirebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMode
  *
  * @param store
  * @param fn
+ * @param config - Optional config with an `onResult` callback.
  * @returns
  */
-export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseCreateFunction<I, O>): DbxFirebaseDocumentStoreCreateFunction<I, O> {
+export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseCreateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<I, O>): DbxFirebaseDocumentStoreCreateFunction<I, O> {
   return (params: I) =>
     loadingStateFromObs(
       lazyFrom(() =>
@@ -26,6 +41,7 @@ export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMod
             store.setKey(firstKey);
           }
 
+          config?.onResult?.(params, result);
           return result;
         })
       )
@@ -82,7 +98,7 @@ export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentS
  * @param fn
  * @returns
  */
-export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {
   return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>
     loadingStateFromObs(
       store.key$.pipe(
@@ -91,7 +107,10 @@ export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumen
           fn({
             ...params,
             key // inject key into the parameters.
-          } as I)
+          } as I).then((result) => {
+            config?.onResult?.(params, result);
+            return result;
+          })
         ),
         shareReplay(1)
       )

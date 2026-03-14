@@ -1,3 +1,30 @@
+# [13.3.0](https://github.com/dereekb/dbx-components/compare/v13.2.2-dev...v13.3.0) (2026-03-14)
+
+
+### Bug Fixes
+
+- added missing dest to child ng-package.json files ([7095d4c7](https://github.com/dereekb/dbx-components/commit/7095d4c7caf9379b50f9d38394d59b5c2da8fb9d))
+
+
+### Code Refactoring
+
+- test fix ([68eb1dd6](https://github.com/dereekb/dbx-components/commit/68eb1dd6b9b52eb0eceeb23bfc0869e366c9780a))
+
+
+### Documentation
+
+- added jsdoc and tests for radix36 encoded ([6eaaf0df](https://github.com/dereekb/dbx-components/commit/6eaaf0df24b6cd402edbc1451357c7af78685c9d))
+- jsdoc for firestore driver and supporting modules ([47390b01](https://github.com/dereekb/dbx-components/commit/47390b018c679740127db97b13a2119cf2bb40c8))
+- jsdoc improvements across @dereekb/firebase ([e120ae51](https://github.com/dereekb/dbx-components/commit/e120ae5196079c873fa5f141f1ffe717ac7535e7))
+
+
+### Features
+
+- added oidc-provider ([#37](https://github.com/dereekb/dbx-components/issues/37)) ([be49c483](https://github.com/dereekb/dbx-components/commit/be49c4833ec3bfe71c1239f8b2eee3663e7320d9)), closes [#37](https://github.com/dereekb/dbx-components/issues/37)
+
+
+
+
 ## [13.2.2](https://github.com/dereekb/dbx-components/compare/v13.2.1-dev...v13.2.2) (2026-03-10)
 
 

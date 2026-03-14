@@ -3,40 +3,57 @@ import { type DocumentReferenceRef } from '../firestore/reference';
 import { type FirestoreModelKey, type FirestoreModelType, type FirestoreModelTypeRef } from '../firestore/collection/collection';
 
 /**
- * Set of known call types. The basic CRUD functions.
+ * Standard CRUD call types used by the `callModel` Firebase function pattern.
  */
 export type KnownOnCallFunctionType = 'create' | 'read' | 'update' | 'delete';
 
 /**
- * A call function type specifier.
+ * Call type identifier — one of the standard CRUD types or a custom string.
  */
 export type OnCallFunctionType = KnownOnCallFunctionType | string;
 
+/**
+ * Parameters for a typed model call through the `callModel` Firebase function.
+ *
+ * Combines the target model type, CRUD call type, optional specifier for sub-operations,
+ * and the call payload. This is the standard envelope format for all model API calls.
+ *
+ * @template T - the call data payload type
+ */
 export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeRef {
   /**
-   * Call type. Should typically be defined.
+   * CRUD call type (create, read, update, delete) or a custom action type.
    */
   readonly call?: Maybe<OnCallFunctionType>;
   /**
-   * Call sub-function specifier.
+   * Sub-function specifier for distinguishing different operations within the same call type.
    */
   readonly specifier?: string;
   /**
-   * Call data
+   * The call payload data.
    */
   readonly data: T;
 }
 
 /**
- *
+ * Function that creates {@link OnCallTypedModelParams} for a given model type, pre-configured with a call type.
  */
 export type OnCallTypeModelParamsFunction = <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => OnCallTypedModelParams<T>;
 
 /**
- * Creates a OnCallTypedModelParamsFunction
+ * Creates an {@link OnCallTypeModelParamsFunction} pre-configured with the given call type.
  *
- * @param call
- * @returns
+ * The returned function builds {@link OnCallTypedModelParams} for any model type.
+ *
+ * @param call - the CRUD call type to embed in generated params
+ * @throws {Error} When `modelType` is not provided or empty.
+ *
+ * @example
+ * ```ts
+ * const createParams = onCallTypedModelParamsFunction('create');
+ * const params = createParams('notification', { title: 'Hello' });
+ * // params === { call: 'create', modelType: 'notification', data: { title: 'Hello' } }
+ * ```
  */
 export function onCallTypedModelParamsFunction(call?: Maybe<OnCallFunctionType>): OnCallTypeModelParamsFunction {
   return <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => {
@@ -121,6 +138,9 @@ export type OnCallUpdateModelParams<T = unknown> = OnCallTypedModelParams<T>;
 export type OnCallDeleteModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 // MARK: Result
+/**
+ * Standard result returned by model create operations, containing the key(s) of the created document(s).
+ */
 export interface OnCallCreateModelResult {
   /**
    * Key(s)/Paths of the created object(s)
@@ -128,10 +148,26 @@ export interface OnCallCreateModelResult {
   readonly modelKeys: ArrayOrValue<FirestoreModelKey>;
 }
 
+/**
+ * Creates an {@link OnCallCreateModelResult} from document references by extracting their paths as model keys.
+ *
+ * @param result - document reference(s) from a create operation
+ *
+ * @example
+ * ```ts
+ * const result = onCallCreateModelResultWithDocs(createdDocs);
+ * // result.modelKeys === ['notifications/abc123']
+ * ```
+ */
 export function onCallCreateModelResultWithDocs(result: ArrayOrValue<DocumentReferenceRef<unknown>>): OnCallCreateModelResult {
   return onCallCreateModelResult(asArray(result).map((x) => x.documentRef.path));
 }
 
+/**
+ * Creates an {@link OnCallCreateModelResult} from model key(s), normalizing to an array.
+ *
+ * @param modelKeys - the model key(s) of the created document(s)
+ */
 export function onCallCreateModelResult(modelKeys: ArrayOrValue<FirestoreModelKey>): OnCallCreateModelResult {
   return {
     modelKeys: asArray(modelKeys)

@@ -49,6 +49,12 @@ export const demoProfileFutureState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/profile/profile.module').then((m) => m.DemoProfileModule)
 };
 
+export const demoOidcFutureState: Ng2StateDeclaration = {
+  name: 'demo.app.oidc.**',
+  url: '/oidc',
+  loadChildren: () => import('./modules/oidc/oidc.module').then((m) => m.DemoAppOidcModule)
+};
+
 export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   //
   demoAppState,
@@ -57,5 +63,6 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   settingsState,
   notificationState,
   demoGuestbookFutureState,
-  demoProfileFutureState
+  demoProfileFutureState,
+  demoOidcFutureState
 ];

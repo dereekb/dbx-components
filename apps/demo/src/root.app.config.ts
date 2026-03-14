@@ -5,11 +5,12 @@ import { environment } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries } from '@dereekb/dbx-web';
-import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'demo-firebase';
+import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DEMO_OIDC_AVAILABLE_SCOPES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, DEMO_APP_OAUTH_INTERACTION_PATH } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
 import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
+import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
@@ -255,6 +256,14 @@ export const appConfig: ApplicationConfig = {
       termsOfServiceUrls: {
         tosUrl: '/tos/terms',
         privacyUrl: '/tos/privacy'
+      }
+    }),
+    provideDbxFirebaseOidc({
+      appCollectionClass: DemoFirestoreCollections,
+      oidcConfig: {
+        availableScopes: DEMO_OIDC_AVAILABLE_SCOPES,
+        tokenEndpointAuthMethods: DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
+        oauthInteractionRoute: DEMO_APP_OAUTH_INTERACTION_PATH
       }
     }),
     // App initializers

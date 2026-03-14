@@ -4,27 +4,38 @@ import { type FetchPageFactory, fetchPageFactory, type FetchPageFactoryInputOpti
 
 // MARK: IterateStorageListFilesFactory
 /**
- * Configuration for iterateStorageListFilesFactory()
+ * Configuration for {@link iterateStorageListFilesFactory}. Excludes `pageToken` since it is managed internally during iteration.
  */
 export type IterateStorageListFilesFactoryConfig = Omit<StorageListFilesOptions, 'pageToken'>;
 
+/**
+ * Input for a single page fetch during storage file iteration.
+ */
 export interface IterateStorageListFilesInput extends StorageListFilesOptions {
   /**
-   * The folder to iterate in.
+   * The folder to iterate files within.
    */
   readonly folder: FirebaseStorageAccessorFolder;
 }
 
 /**
- * A FetchPageFactory that iterates through the files in a storage folder.
+ * A {@link FetchPageFactory} specialized for paginating through files in a storage folder.
+ *
+ * Produced by {@link iterateStorageListFilesFactory}.
  */
 export type IterateStorageListFilesFactory = FetchPageFactory<IterateStorageListFilesInput, StorageListFilesResult>;
 
 /**
- * Creates a new IterateStorageListFilesFactory.
+ * Creates an {@link IterateStorageListFilesFactory} for paginated iteration over files in a storage folder.
  *
- * @param config
- * @returns
+ * Wraps the folder's `list()` API with cursor-based pagination via {@link fetchPageFactory}.
+ *
+ * @param config - default listing options (e.g., maxResults)
+ *
+ * @example
+ * ```ts
+ * const factory = iterateStorageListFilesFactory({ maxResults: 100 });
+ * ```
  */
 export function iterateStorageListFilesFactory(config: IterateStorageListFilesFactoryConfig): IterateStorageListFilesFactory {
   const { maxResults: factoryDefaultMaxResults } = config;
@@ -60,10 +71,16 @@ export function iterateStorageListFilesFactory(config: IterateStorageListFilesFa
 }
 
 // MARK: Iterate Each File
+/**
+ * Configuration for {@link iterateStorageListFilesByEachFile}, extending the per-item iteration config
+ * with folder and listing options.
+ */
 export type IterateStorageListFilesByEachFileConfig<T, R> = Omit<IterateFetchPagesByEachItemConfig<IterateStorageListFilesInput, StorageListFilesResult, T, R>, 'fetchPageFactory'> & Pick<IterateStorageListFilesInput, 'folder' | 'includeNestedResults' | 'pageToken'>;
 
 /**
- * Convenience function for calling iterateFetchPagesByEachItem() for a storage folder.
+ * Iterates through every file in a storage folder, invoking a callback for each individual file result.
+ *
+ * Convenience wrapper around {@link iterateFetchPagesByEachItem} pre-configured for storage listing.
  */
 export function iterateStorageListFilesByEachFile<T, R>(input: IterateStorageListFilesByEachFileConfig<T, R>) {
   const { folder, includeNestedResults, pageToken } = input;
@@ -75,10 +92,16 @@ export function iterateStorageListFilesByEachFile<T, R>(input: IterateStorageLis
 }
 
 // MARK: Iterate Pages
+/**
+ * Configuration for {@link iterateStorageListFiles}, extending the page-level iteration config
+ * with folder and listing options.
+ */
 export type IterateStorageListFilesConfig<R> = Omit<IterateFetchPagesConfigWithFactoryAndInput<IterateStorageListFilesInput, StorageListFilesResult, R>, 'fetchPageFactory'> & Pick<IterateStorageListFilesInput, 'folder' | 'includeNestedResults' | 'pageToken'>;
 
 /**
- * Convenience function for calling iterateFetchPages() for a storage folder.
+ * Iterates through pages of file results in a storage folder, invoking a callback for each page.
+ *
+ * Convenience wrapper around {@link iterateFetchPages} pre-configured for storage listing.
  */
 export function iterateStorageListFiles<R>(input: IterateStorageListFilesConfig<R>) {
   const { folder, includeNestedResults, pageToken } = input;

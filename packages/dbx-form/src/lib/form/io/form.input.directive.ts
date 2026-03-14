@@ -5,10 +5,33 @@ import { type Maybe } from '@dereekb/util';
 import { asObservable, type ObservableOrValue, cleanup, errorOnEmissionsInPeriod } from '@dereekb/rxjs';
 import { cleanSubscription } from '@dereekb/dbx-core';
 
+/**
+ * Creates an observable that pipes input values to a form based on the specified mode.
+ *
+ * This is a convenience wrapper around {@link dbxFormSourceObservableFromStream} that
+ * extracts the stream from the form instance.
+ *
+ * @param form - The mutable form to derive stream state from.
+ * @param inputObs - The source observable or value to pipe into the form.
+ * @param modeObs - Observable controlling when values are forwarded (reset, always, or every).
+ * @returns An observable of values to be set on the form.
+ */
 export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: ObservableOrValue<T>, modeObs: Observable<DbxFormSourceDirectiveMode>): Observable<T> {
   return dbxFormSourceObservableFromStream(form.stream$, inputObs, modeObs);
 }
 
+/**
+ * Creates an observable that pipes input values to a form based on the form's stream state and the specified mode.
+ *
+ * - `'reset'`: Only forwards the value when the form enters the RESET state.
+ * - `'always'`: Forwards values while not initializing, with throttling and loop detection.
+ * - `'every'`: Forwards values while not initializing, without throttling or loop protection.
+ *
+ * @param streamObs - Observable of the form's state stream.
+ * @param inputObs - The source observable or value to pipe into the form.
+ * @param modeObs - Observable or value controlling when values are forwarded.
+ * @returns An observable of values to be set on the form.
+ */
 export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFormStateRef>, inputObs: ObservableOrValue<T>, modeObs: ObservableOrValue<DbxFormSourceDirectiveMode>): Observable<T> {
   const value$ = asObservable(inputObs).pipe(shareReplay(1)); // catch/share the latest emission
 
@@ -91,16 +114,25 @@ export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFo
 }
 
 /**
- * DbxFormSourceDirective modes that define when to copy data from the source.
+ * Modes that define when to copy data from the source to the form.
  *
- * - reset: only copy data when the form is reset.
- * - always: always copy data when the data observable emits a value. Has a throttle of 20ms to prevent too many emissions. If emissions occur in a manner that appears to be a loop (more than 30 emissions in 1 second), then an error is thrown and warning printed to the console.
- * - every: equal to always, but has no throttle or error message warning.
+ * - `'reset'`: Only copy data when the form is reset.
+ * - `'always'`: Always copy data when the data observable emits a value. Has a throttle of 20ms to prevent too many emissions. If emissions occur in a manner that appears to be a loop (more than 30 emissions in 1 second), then an error is thrown and warning printed to the console.
+ * - `'every'`: Equal to always, but has no throttle or error message warning.
  */
 export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
 
 /**
- * Used with a FormComponent to set the value based on the input value.
+ * Directive that sets a form's value based on an input observable or value source.
+ *
+ * Supports different modes for when the value is forwarded to the form:
+ * - `'reset'` (default): Only sets the form value when the form is reset.
+ * - `'always'`: Sets the form value on every emission, with throttling and loop detection.
+ * - `'every'`: Sets the form value on every emission, without throttling.
+ *
+ * @selector `[dbxFormSource]`
+ *
+ * @typeParam T - The form value type.
  */
 @Directive({
   selector: '[dbxFormSource]',
@@ -109,7 +141,14 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
 export class DbxFormSourceDirective<T = unknown> {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
+  /**
+   * The mode controlling when the source value is forwarded to the form.
+   */
   readonly dbxFormSourceMode = input<Maybe<DbxFormSourceDirectiveMode>>();
+
+  /**
+   * The source value or observable to pipe into the form.
+   */
   readonly dbxFormSource = input<Maybe<ObservableOrValue<Maybe<Partial<T>>>>>();
 
   protected readonly _effectSub = cleanSubscription();

@@ -1,6 +1,6 @@
 import { type CreateGuestbookParams } from 'demo-firebase';
 import { onCallCreateModelResultWithDocs } from '@dereekb/firebase';
-import { type DemoCreateModelFunction } from '../function';
+import { type DemoCreateModelFunction } from '../function.context';
 
 export const createGuestbook: DemoCreateModelFunction<CreateGuestbookParams> = async (request) => {
   const { nest, auth, data } = request;

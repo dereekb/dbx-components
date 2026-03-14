@@ -4,6 +4,12 @@ import { type StorageFileGroupDocument, type StorageFileGroup, type StorageFileG
 import { storageFileGroupIdForModel, type StorageFileId } from './storagefile.id';
 
 // MARK: StorageFileGroup
+/**
+ * Reference to a StorageFileGroup document, either directly or by the related model key.
+ *
+ * Used by utility functions that need to load or update a StorageFileGroup but accept
+ * either a pre-loaded document or a model key for lazy loading.
+ */
 export interface StorageFileGroupDocumentReferencePair {
   /**
    * StorageFileGroupDocument to update.
@@ -17,6 +23,22 @@ export interface StorageFileGroupDocumentReferencePair {
   readonly storageFileGroupRelatedModelKey?: Maybe<FirestoreModelKey>;
 }
 
+/**
+ * Resolves a {@link StorageFileGroupDocumentReferencePair} to a concrete {@link StorageFileGroupDocument}.
+ *
+ * If a document is provided directly, it is returned as-is. Otherwise, the related model key
+ * is converted to a group ID via {@link storageFileGroupIdForModel} and loaded from the accessor.
+ *
+ * @throws {Error} When neither storageFileGroupDocument nor storageFileGroupRelatedModelKey is provided
+ *
+ * @example
+ * ```ts
+ * const doc = loadStorageFileGroupDocumentForReferencePair(
+ *   { storageFileGroupRelatedModelKey: 'notification/abc123' },
+ *   accessor
+ * );
+ * ```
+ */
 export function loadStorageFileGroupDocumentForReferencePair(input: StorageFileGroupDocumentReferencePair, accessor: FirestoreDocumentAccessor<StorageFileGroup, StorageFileGroupDocument>) {
   const { storageFileGroupDocument: inputStorageFileGroupDocument, storageFileGroupRelatedModelKey: inputStorageFileGroupRelatedModelKey } = input;
   let storageFileGroupDocument: StorageFileGroupDocument;
@@ -33,6 +55,10 @@ export function loadStorageFileGroupDocumentForReferencePair(input: StorageFileG
   return storageFileGroupDocument;
 }
 
+/**
+ * Input for {@link calculateStorageFileGroupEmbeddedFileUpdate}, specifying the current group state
+ * and files to insert/remove.
+ */
 export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
   readonly storageFileGroup: Pick<StorageFileGroup, 'f' | 're' | 'z' | 'zat'>;
   readonly insert?: Maybe<(Pick<StorageFileGroupEmbeddedFile, 's'> & Partial<Omit<StorageFileGroupEmbeddedFile, 's'>>)[]>;
@@ -47,6 +73,28 @@ export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
   readonly allowRecalculateRegenerateFlag?: Maybe<boolean>;
 }
 
+/**
+ * Calculates the updated embedded file list and regeneration flag for a StorageFileGroup
+ * after inserting and/or removing files.
+ *
+ * Handles deduplication via {@link ModelRelationUtility.insertCollection}, merging new entries
+ * with existing ones by StorageFile ID. Automatically flags regeneration when files are removed
+ * or when new files haven't been added to the zip yet.
+ *
+ * @param input - current group state, files to insert/remove, and regeneration options
+ * @returns updated `f` (embedded files) and `re` (regeneration flag)
+ *
+ * @example
+ * ```ts
+ * const update = calculateStorageFileGroupEmbeddedFileUpdate({
+ *   storageFileGroup: group,
+ *   insert: [{ s: 'newFileId' }],
+ *   remove: ['oldFileId']
+ * });
+ * // update.f = [...updated file list]
+ * // update.re = true (because a file was removed)
+ * ```
+ */
 export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStorageFileGroupEmbeddedFileUpdateInput): Pick<StorageFileGroup, 'f' | 're'> {
   const { storageFileGroup, insert, remove, allowRecalculateRegenerateFlag } = input;
   const { f: currentF, re: currentRe, z: currentZ, zat: currentZat } = storageFileGroup;
@@ -75,6 +123,9 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
   };
 }
 
+/**
+ * Input for {@link calculateStorageFileGroupRegeneration}.
+ */
 export interface CalculateStorageFileGroupRegenerationInput {
   readonly storageFileGroup: Pick<StorageFileGroup, 'f' | 'z' | 'zat'>;
   /**
@@ -95,10 +146,22 @@ export interface CalculateStorageFileGroupRegenerationResult {
 }
 
 /**
- * Calculates the regeneration flags for a StorageFileGroup.
+ * Determines whether a StorageFileGroup's derived content (e.g., zip files) needs regeneration.
  *
- * @param input CalculateStorageFileGroupRegenerationInput
- * @returns CalculateStorageFileGroupRegenerationResult
+ * The zip needs regeneration when:
+ * - `force` is true
+ * - The zip has never been generated (`zat` is unset) and files exist
+ * - Any embedded file has never been included in the zip (`zat` is unset on the entry)
+ *
+ * @param input - group state and optional force flag
+ *
+ * @example
+ * ```ts
+ * const { flagRegenerate, regenerateZip } = calculateStorageFileGroupRegeneration({
+ *   storageFileGroup: group,
+ *   force: false
+ * });
+ * ```
  */
 export function calculateStorageFileGroupRegeneration(input: CalculateStorageFileGroupRegenerationInput): CalculateStorageFileGroupRegenerationResult {
   const { storageFileGroup, force } = input;

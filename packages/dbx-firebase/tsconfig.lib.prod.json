@@ -6,5 +6,5 @@
   "angularCompilerOptions": {
     "compilationMode": "partial"
   },
-  "exclude": ["**/*.test.ts", "**/*.spec.ts", "jest.config.ts"]
+  "exclude": ["oidc/**", "**/*.test.ts", "**/*.spec.ts", "jest.config.ts"]
 }

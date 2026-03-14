@@ -1,13 +1,22 @@
+/**
+ * @module notification.details
+ *
+ * Template type metadata for the notification system. Each {@link NotificationTemplateType} is described by a
+ * {@link NotificationTemplateTypeInfo} entry that maps it to model identities, display info, and delivery rules.
+ *
+ * The {@link AppNotificationTemplateTypeInfoRecordService} provides runtime lookup of template types by model,
+ * enabling the server to discover which notification types apply to a given Firestore model.
+ */
 import { type Maybe, multiValueMapBuilder, type ArrayOrValue, asArray } from '@dereekb/util';
 import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
 
 /**
- * NotificationTemplateTypeInfoIdentityInfo alternative/derivative identity.
+ * Alternative model identity pair for cases where notifications are attached to a different model
+ * than the one defined in {@link NotificationTemplateTypeInfoIdentityInfo.notificationModelIdentity}.
  *
- * For example, this model may be directly related to the identity in "notificationModelIdentity" but notifications are actually attached to the corresponding "altNotificationModelIdentity" or "altTargetModelIdentity".
- *
- * The alternative model should always have a NotificationBox associated with it.
+ * For example, a notification may be defined for a "project" model but actually delivered via
+ * a "team" model's NotificationBox. The alternative model must always have a NotificationBox.
  */
 export interface NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair {
   /**
@@ -21,7 +30,8 @@ export interface NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentit
 }
 
 /**
- * NotificationTemplateTypeInfo identity info
+ * Model identity mapping for a notification template type. Defines which Firestore models
+ * are associated with this notification type and which one owns the NotificationBox.
  */
 export interface NotificationTemplateTypeInfoIdentityInfo {
   /**
@@ -51,31 +61,37 @@ export interface NotificationTemplateTypeInfoIdentityInfo {
 }
 
 /**
- * Template type identifier of the notification.
+ * Complete metadata for a notification template type. Defines display info, model associations,
+ * and delivery rules for a specific {@link NotificationTemplateType}.
  *
- * Provides default information for the notification.
- *
- * Types are generally intended to be handled case-insensitively by notification services.
+ * Registered in the application's {@link NotificationTemplateTypeInfoRecord} and accessed at runtime
+ * via the {@link AppNotificationTemplateTypeInfoRecordService}.
  */
 export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeInfoIdentityInfo {
   /**
-   * Notification type
+   * Template type identifier (e.g., `'comment'`, `'invite'`). Should be short to minimize Firestore storage.
    */
   readonly type: NotificationTemplateType;
   /**
-   * The notification's name
+   * Human-readable name for display in notification preference UIs.
    */
   readonly name: string;
   /**
-   * Description of the notification's content.
+   * Description of what this notification type conveys, shown in preference management UIs.
    */
   readonly description: string;
   /**
-   * If true, this notification will only be sent to recipients that explicitly enable recieving via respective NotificationBoxRecipientTemplateConfig for this type.
+   * When true, only sends to recipients who have explicitly enabled this template type in their
+   * {@link NotificationBoxRecipientTemplateConfig}. Recipients without an explicit opt-in are skipped.
+   *
+   * Overridable per-notification via {@link Notification.ois}.
    */
   readonly onlySendToExplicitlyEnabledRecipients?: boolean;
   /**
-   * If false, this notification will send sms/texts to all recipients, even if they have not explicitly opted in to recieving sms/texts.
+   * When false, sends text/SMS to all recipients regardless of explicit opt-in status
+   * (still respects explicit opt-outs).
+   *
+   * Overridable per-notification via {@link Notification.ots}.
    */
   readonly onlyTextExplicitlyEnabledRecipients?: boolean;
 }
@@ -86,10 +102,17 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
 export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType, NotificationTemplateTypeInfo>;
 
 /**
- * Creates a NotificationTemplateTypeInfoRecord from the input info array.
+ * Creates a {@link NotificationTemplateTypeInfoRecord} from an array of template type info entries.
  *
- * @param infoArray
- * @returns
+ * @throws {Error} When duplicate template types are found in the input array.
+ *
+ * @example
+ * ```ts
+ * const record = notificationTemplateTypeInfoRecord([
+ *   { type: 'comment', name: 'Comment', description: 'New comment notifications', notificationModelIdentity: projectIdentity },
+ *   { type: 'invite', name: 'Invite', description: 'Team invite notifications', notificationModelIdentity: teamIdentity }
+ * ]);
+ * ```
  */
 export function notificationTemplateTypeInfoRecord(infoArray: NotificationTemplateTypeInfo[]): NotificationTemplateTypeInfoRecord {
   const record: NotificationTemplateTypeInfoRecord = {};
@@ -108,12 +131,21 @@ export function notificationTemplateTypeInfoRecord(infoArray: NotificationTempla
 }
 
 /**
- * Reference to a NotificationTemplateTypeInfoRecord that contains a AppNotificationTemplateTypeInfoRecordService
+ * Reference to an {@link AppNotificationTemplateTypeInfoRecordService} instance.
+ *
+ * Used for dependency injection in modules that need access to the template type registry.
  */
 export interface AppNotificationTemplateTypeInfoRecordServiceRef {
   readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
 }
 
+/**
+ * Runtime service for looking up {@link NotificationTemplateTypeInfo} by model identity or template type.
+ *
+ * Built from a {@link NotificationTemplateTypeInfoRecord} via {@link appNotificationTemplateTypeInfoRecordService}.
+ * Provides indexed lookups for the server-side notification pipeline to discover which template types
+ * apply to a given model.
+ */
 export abstract class AppNotificationTemplateTypeInfoRecordService {
   /**
    * All records for this app.
@@ -178,6 +210,22 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
   abstract getTemplateTypeInfosForTargetModelIdentity(identity: FirestoreModelIdentity): NotificationTemplateTypeInfo[];
 }
 
+/**
+ * Creates an {@link AppNotificationTemplateTypeInfoRecordService} from the given template type record.
+ *
+ * Builds internal indexes for fast lookup by notification model identity and target model identity.
+ * Handles alternative model identities defined in {@link NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair}.
+ *
+ * @param appNotificationTemplateTypeInfoRecord - the complete template type registry for the application
+ *
+ * @example
+ * ```ts
+ * const service = appNotificationTemplateTypeInfoRecordService(
+ *   notificationTemplateTypeInfoRecord([commentInfo, inviteInfo])
+ * );
+ * const types = service.getTemplateTypesForNotificationModel('project/abc123');
+ * ```
+ */
 export function appNotificationTemplateTypeInfoRecordService(appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord): AppNotificationTemplateTypeInfoRecordService {
   const allNotificationModelIdentityValuesSet = new Set<FirestoreModelIdentity>();
 

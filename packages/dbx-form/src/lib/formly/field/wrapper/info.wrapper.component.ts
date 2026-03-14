@@ -3,10 +3,20 @@ import { FieldWrapper, type FormlyFieldConfig, type FormlyFieldProps } from '@ng
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
+/**
+ * Configuration for the info wrapper that adds an info icon button beside the field.
+ */
 export interface DbxFormInfoConfig extends FormlyFieldProps {
+  /** Callback invoked when the info button is clicked. */
   readonly onInfoClick: () => void;
 }
 
+/**
+ * Formly wrapper that renders a Material info icon button beside the wrapped field.
+ * Clicking the button invokes the configured `onInfoClick` callback.
+ *
+ * Registered as Formly wrapper `'info'`.
+ */
 @Component({
   template: `
     <div class="dbx-form-info-wrapper dbx-flex-bar">

@@ -1,4 +1,4 @@
-import { type FirebaseFunctionGetter, type FirebaseFunctionsConfigMap, type FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, lazyFirebaseFunctionsFactory, notificationFunctionMap, NotificationFunctions, type NotificationFunctionTypeMap, storageFileFunctionMap, StorageFileFunctions, type StorageFileFunctionTypeMap } from '@dereekb/firebase';
+import { type FirebaseFunctionGetter, type FirebaseFunctionsConfigMap, type FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, lazyFirebaseFunctionsFactory, notificationFunctionMap, NotificationFunctions, type NotificationFunctionTypeMap, storageFileFunctionMap, StorageFileFunctions, type StorageFileFunctionTypeMap, type OidcModelFunctionTypeMap, oidcModelFunctionMap, OidcModelFunctions } from '@dereekb/firebase';
 import { type Functions } from 'firebase/functions';
 import { demoDevelopmentFunctionMap, DemoDevelopmentFunctions, type DemoDevelopmentFunctionTypeMap } from './development';
 import { type ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, type GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions, SystemStateFunctions, systemStateFunctionMap, type SystemStateFunctionTypeMap } from './model';
@@ -12,6 +12,7 @@ export type DemoFirebaseFunctionsMap = {
   readonly notificationFunctions: NotificationFunctionTypeMap;
   readonly storageFileFunctions: StorageFileFunctionTypeMap;
   readonly systemStateFunctions: SystemStateFunctionTypeMap;
+  readonly oidcModelFunctions: OidcModelFunctionTypeMap;
   readonly [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
 };
 
@@ -28,6 +29,7 @@ export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFire
   developmentFunctions: [DemoDevelopmentFunctions, demoDevelopmentFunctionMap],
   notificationFunctions: [NotificationFunctions, notificationFunctionMap],
   storageFileFunctions: [StorageFileFunctions, storageFileFunctionMap],
+  oidcModelFunctions: [OidcModelFunctions, oidcModelFunctionMap],
   systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap]
 };
 
@@ -42,6 +44,7 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly developmentFunctions: FirebaseFunctionGetter<DemoDevelopmentFunctions>;
   abstract readonly notificationFunctions: FirebaseFunctionGetter<NotificationFunctions>;
   abstract readonly storageFileFunctions: FirebaseFunctionGetter<StorageFileFunctions>;
+  abstract readonly oidcModelFunctions: FirebaseFunctionGetter<OidcModelFunctions>;
   abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;
 }
 

@@ -1,8 +1,8 @@
 {
   "name": "@dereekb/rxjs",
-  "version": "13.2.2",
+  "version": "13.3.0",
   "peerDependencies": {
     "rxjs": "^7.8.0",
-    "@dereekb/util": "13.2.2"
+    "@dereekb/util": "13.3.0"
   }
 }

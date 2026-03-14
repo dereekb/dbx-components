@@ -4,6 +4,10 @@ import { type NotificationItem, type NotificationItemMetadata } from '@dereekb/f
 import { type Maybe } from '@dereekb/util';
 import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotificationTemplateType } from '../service';
 
+/**
+ * Renders a notification item using the widget system, resolving the appropriate
+ * display component based on the notification's template type.
+ */
 @Component({
   selector: 'dbx-firebase-notificationitem-view',
   template: `

@@ -2,7 +2,7 @@ import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import { type Request } from 'express';
 
 /**
- * Returns true if the request is from localhost:4200.
+ * Returns true if the request is from localhost.
  */
 export const IsRequestFromLocalHost = createParamDecorator((data: unknown, context: ExecutionContext) => {
   return isLocalhost(context);

@@ -17,12 +17,12 @@ $linear-line-height: 4px;
 
   $color-value: theming.$dbx-bg-color;
 
-  .loading-progress-view {
+  .loading-progress-view-indicator {
     background: none !important; // no background color
     --mat-progress-spinner-active-indicator-color: #{$color-value};
   }
 
-  .loading-progress-view.dbx-color > .mat-mdc-progress-bar {
+  .loading-progress-view-indicator.dbx-color > .mat-mdc-progress-bar {
     --mat-progress-bar-active-indicator-color: #{$color-value};
   }
 }

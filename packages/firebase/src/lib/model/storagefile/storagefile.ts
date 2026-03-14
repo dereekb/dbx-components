@@ -34,11 +34,35 @@ import {
 import { inferStorageFileGroupRelatedModelKey, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose, type StorageFileDisplayName } from './storagefile.id';
 import { type NotificationKey } from '../notification';
 
+/**
+ * @module storagefile
+ *
+ * Defines the StorageFile and StorageFileGroup Firestore models for managing files in Google Cloud Storage.
+ *
+ * **StorageFile** tracks individual files with ownership, state machine (INIT → OK → QUEUED_FOR_DELETE),
+ * processing lifecycle (INIT_OR_NONE → QUEUED → PROCESSING → SUCCESS/FAILED), and group membership.
+ * Files are created either directly, from uploads, or for a {@link StorageFileGroup}.
+ *
+ * **StorageFileGroup** aggregates multiple StorageFiles around a related model (e.g., a user or entity).
+ * Groups support automatic zip generation and content regeneration via the `re` flag.
+ *
+ * Server-side processing is handled via NotificationTask integration — see `@dereekb/firebase-server/model`
+ * for the StorageFile action service.
+ */
+
+/**
+ * Abstract base providing access to StorageFile and StorageFileGroup Firestore collections.
+ *
+ * Implement this in your app module to wire up the collections for dependency injection.
+ */
 export abstract class StorageFileFirestoreCollections {
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
 }
 
+/**
+ * Union of all StorageFile-related model identity types.
+ */
 export type StorageFileTypes = typeof storageFileIdentity | typeof storageFileGroupIdentity;
 
 /**
@@ -111,7 +135,10 @@ export interface StorageFileRelatedFileMetadata {
 }
 
 /**
- * The current file state.
+ * How a StorageFile was created, which affects document ID generation and initialization behavior.
+ *
+ * When {@link FOR_STORAGE_FILE_GROUP} is used, the StorageFile ID is derived deterministically
+ * from the parent StorageFileGroup, enabling predictable document references.
  */
 export enum StorageFileCreationType {
   /**
@@ -136,7 +163,13 @@ export enum StorageFileCreationType {
 }
 
 /**
- * The current file state.
+ * Lifecycle state of a StorageFile document.
+ *
+ * State transitions:
+ * - `INIT` → `OK` (successful initialization) or `INVALID` (failed initialization)
+ * - `OK` → `QUEUED_FOR_DELETE` (flagged for deletion)
+ * - `INVALID` → (deleted after a period)
+ * - `QUEUED_FOR_DELETE` → (deleted once `sdat` is reached)
  */
 export enum StorageFileState {
   /**
@@ -162,7 +195,17 @@ export enum StorageFileState {
 }
 
 /**
- * The current processing state of the file.
+ * Processing lifecycle state for a StorageFile.
+ *
+ * Processing is driven by NotificationTask integration. State transitions:
+ * - `INIT_OR_NONE` → `QUEUED_FOR_PROCESSING` (flagged for processing)
+ * - `QUEUED_FOR_PROCESSING` → `PROCESSING` (NotificationTask created)
+ * - `PROCESSING` → `SUCCESS` or `FAILED`
+ * - `FAILED` → `QUEUED_FOR_PROCESSING` (retry) or `DO_NOT_PROCESS`
+ * - `SUCCESS` → `QUEUED_FOR_PROCESSING` (reprocess) or `ARCHIVED`
+ * - `ARCHIVED` and `DO_NOT_PROCESS` are terminal states.
+ *
+ * Use {@link canQueueStorageFileForProcessing} to check if a file can be re-queued.
  */
 export enum StorageFileProcessingState {
   /**
@@ -204,15 +247,21 @@ export enum StorageFileProcessingState {
 }
 
 /**
- * If true, the StorageFile can safely be re-queued for processing.
+ * Checks whether a StorageFile can safely be re-queued for processing.
  *
- * Requirements:
- * - Has a purpose
- * - The processing state is not already queued for processing, or processing.
- * - The processing state is not archived or marked as do not process, as these should never be re-processed.
+ * A file is eligible when it has a purpose set and its processing state allows re-queuing
+ * (INIT_OR_NONE, FAILED, or SUCCESS). Files that are already QUEUED/PROCESSING, ARCHIVED,
+ * or DO_NOT_PROCESS are not eligible.
  *
- * @param state
- * @returns
+ * @param storageFile - the file's processing state (`ps`) and purpose (`p`) fields
+ * @returns true if the file can be queued for processing
+ *
+ * @example
+ * ```ts
+ * if (canQueueStorageFileForProcessing(storageFile)) {
+ *   // safe to set ps = QUEUED_FOR_PROCESSING
+ * }
+ * ```
  */
 export function canQueueStorageFileForProcessing(storageFile: Pick<StorageFile, 'ps' | 'p'>): boolean {
   const { p: purpose, ps: state } = storageFile;
@@ -220,7 +269,8 @@ export function canQueueStorageFileForProcessing(storageFile: Pick<StorageFile, 
 }
 
 /**
- * After 3 hours of being in the PROCESSING state, we can check for retring processing.
+ * Throttle duration (3 hours) after which a PROCESSING-state file is considered "stuck"
+ * and eligible for retry checks.
  */
 export const STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS = MS_IN_HOUR * 3;
 
@@ -248,9 +298,16 @@ export type StorageFileSignedDownloadUrl = StorageSignedDownloadUrl;
 export type StorageFileDownloadUrl = StorageFilePublicDownloadUrl | StorageFileSignedDownloadUrl;
 
 /**
- * A StorageFile in the system, which references a file in Google Cloud Storage.
+ * A StorageFile Firestore document that references a file in Google Cloud Storage.
  *
- * Contains file metadata and ownership information, along with other arbitrary metadata.
+ * Tracks file ownership, lifecycle state ({@link StorageFileState}), processing state
+ * ({@link StorageFileProcessingState}), group membership, and arbitrary metadata. Extends
+ * {@link StoragePath} to carry the bucket and path of the underlying storage object.
+ *
+ * Server-side processing is driven by the NotificationTask system — see
+ * `StorageFileActionServerActions` in `@dereekb/firebase-server/model`.
+ *
+ * @template M - type of the arbitrary metadata stored in the `d` field
  */
 export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata> extends StoragePath {
   /**
@@ -358,14 +415,26 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
  */
 export type StorageFileDownloadRole = 'download' | 'admin_download';
 
+/**
+ * All available permission roles for StorageFile operations.
+ *
+ * Includes download roles, sync/processing roles, and standard CRUD roles.
+ */
 export type StorageFileRoles = StorageFileDownloadRole | 'forceSyncWithGroups' | 'syncWithGroups' | 'process' | GrantedUpdateRole | GrantedReadRole;
 
+/**
+ * Firestore document wrapper for a {@link StorageFile}.
+ */
 export class StorageFileDocument extends AbstractFirestoreDocument<StorageFile, StorageFileDocument, typeof storageFileIdentity> {
   get modelIdentity() {
     return storageFileIdentity;
   }
 }
 
+/**
+ * Snapshot converter for {@link StorageFile} documents, handling field-level serialization
+ * between the application model and Firestore storage format.
+ */
 export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
   fields: {
     bucketId: firestoreString(),
@@ -390,12 +459,32 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
   }
 });
 
+/**
+ * Returns the raw Firestore CollectionReference for the StorageFile collection.
+ *
+ * @example
+ * ```ts
+ * const colRef = storageFileCollectionReference(firestoreContext);
+ * ```
+ */
 export function storageFileCollectionReference(context: FirestoreContext): CollectionReference<StorageFile> {
   return context.collection(storageFileIdentity.collectionName);
 }
 
+/**
+ * Typed FirestoreCollection for {@link StorageFile} documents.
+ */
 export type StorageFileFirestoreCollection = FirestoreCollection<StorageFile, StorageFileDocument>;
 
+/**
+ * Creates a fully configured {@link StorageFileFirestoreCollection} with snapshot conversion and document factory.
+ *
+ * @example
+ * ```ts
+ * const collection = storageFileFirestoreCollection(firestoreContext);
+ * const doc = collection.documentAccessor().newDocument();
+ * ```
+ */
 export function storageFileFirestoreCollection(firestoreContext: FirestoreContext): StorageFileFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: storageFileIdentity,
@@ -407,10 +496,15 @@ export function storageFileFirestoreCollection(firestoreContext: FirestoreContex
 }
 
 // MARK: StorageFileGroup
+/**
+ * Model identity for the StorageFileGroup collection (collection name: `storageFileGroup`, prefix: `sfg`).
+ */
 export const storageFileGroupIdentity = firestoreModelIdentity('storageFileGroup', 'sfg');
 
 /**
- * Current embedded state
+ * Represents a single StorageFile's embedding within a {@link StorageFileGroup}.
+ *
+ * Tracks when the file was added to the group and when it was last included in a zip archive.
  */
 export interface StorageFileGroupEmbeddedFile {
   /**
@@ -432,6 +526,10 @@ export interface StorageFileGroupEmbeddedFile {
   zat?: Maybe<Date>;
 }
 
+/**
+ * Firestore sub-object converter for {@link StorageFileGroupEmbeddedFile}, handling date serialization
+ * of `sat` and `zat` fields as Unix timestamp seconds.
+ */
 export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupEmbeddedFile>({
   objectField: {
     fields: {
@@ -444,9 +542,14 @@ export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupE
 });
 
 /**
- * A group of StorageFiles.
+ * A group of {@link StorageFile}s aggregated around a related model or common identifier.
  *
- * Contains file metadata and ownership information, along with other arbitrary metadata.
+ * Groups are identified by a two-way flat key derived from the related model's key
+ * (see {@link storageFileGroupIdForModel}). They support automatic zip file generation
+ * via the `z` flag and content regeneration via the `re` flag.
+ *
+ * Implements {@link InitializedStorageFileModel} for async initialization tracking —
+ * the `s` (needs sync) flag is set on creation and cleared once initialized.
  */
 export interface StorageFileGroup extends InitializedStorageFileModel {
   /**
@@ -487,10 +590,21 @@ export interface StorageFileGroup extends InitializedStorageFileModel {
   c?: Maybe<SavedToFirestoreIfTrue>;
 }
 
+/**
+ * Subset of {@link StorageFileGroup} fields controlling content generation flags.
+ */
 export type StorageFileGroupContentFlagsData = Pick<StorageFileGroup, 'z'>;
 
+/**
+ * Permission roles for StorageFileGroup operations.
+ */
 export type StorageFileGroupRoles = 'regenerate' | GrantedReadRole;
 
+/**
+ * Firestore document wrapper for a {@link StorageFileGroup}.
+ *
+ * Provides a convenience getter to infer the related model key from the group's own ID.
+ */
 export class StorageFileGroupDocument extends AbstractFirestoreDocument<StorageFileGroup, StorageFileGroupDocument, typeof storageFileGroupIdentity> {
   get modelIdentity() {
     return storageFileGroupIdentity;
@@ -501,6 +615,10 @@ export class StorageFileGroupDocument extends AbstractFirestoreDocument<StorageF
   }
 }
 
+/**
+ * Snapshot converter for {@link StorageFileGroup} documents, including nested
+ * {@link StorageFileGroupEmbeddedFile} array conversion.
+ */
 export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileGroup>({
   fields: {
     f: firestoreObjectArray({
@@ -518,12 +636,32 @@ export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileG
   }
 });
 
+/**
+ * Returns the raw Firestore CollectionReference for the StorageFileGroup collection.
+ *
+ * @example
+ * ```ts
+ * const colRef = storageFileGroupCollectionReference(firestoreContext);
+ * ```
+ */
 export function storageFileGroupCollectionReference(context: FirestoreContext): CollectionReference<StorageFileGroup> {
   return context.collection(storageFileGroupIdentity.collectionName);
 }
 
+/**
+ * Typed FirestoreCollection for {@link StorageFileGroup} documents.
+ */
 export type StorageFileGroupFirestoreCollection = FirestoreCollection<StorageFileGroup, StorageFileGroupDocument>;
 
+/**
+ * Creates a fully configured {@link StorageFileGroupFirestoreCollection} with snapshot conversion and document factory.
+ *
+ * @example
+ * ```ts
+ * const collection = storageFileGroupFirestoreCollection(firestoreContext);
+ * const doc = collection.documentAccessor().loadDocumentForId(groupId);
+ * ```
+ */
 export function storageFileGroupFirestoreCollection(firestoreContext: FirestoreContext): StorageFileGroupFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: storageFileGroupIdentity,

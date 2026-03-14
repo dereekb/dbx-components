@@ -9,6 +9,17 @@ import { EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP, type StorageFilePurposeSubgroup, t
 import { firestoreModelId, type ReadFirestoreModelKeyInput } from '../../common';
 
 // MARK: Create Document
+/**
+ * Input for creating a StorageFile document paired with its storage path.
+ *
+ * Provides all the fields needed to create a fully-configured {@link StorageFile} Firestore document,
+ * including ownership, purpose, group membership, and processing state.
+ *
+ * Either a `file`, `storagePathRef`, or `storagePath` must be provided to identify the storage location.
+ * Either an `accessor` or `context` must be provided for Firestore document creation.
+ *
+ * @template M - type of arbitrary metadata stored in the `d` field
+ */
 export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadata = StorageFileMetadata> {
   /**
    * Optional "now" value that is assigned to the "cat" value, created at time.
@@ -114,6 +125,9 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
   readonly accessor?: FirestoreDocumentAccessor<StorageFile, StorageFileDocument>;
 }
 
+/**
+ * Result of creating a StorageFile document pair, containing the document and its template data.
+ */
 export interface CreateStorageFileDocumentPairResult<M extends StorageFileMetadata = StorageFileMetadata> {
   /**
    * The StorageFileDocument that was created.
@@ -125,6 +139,10 @@ export interface CreateStorageFileDocumentPairResult<M extends StorageFileMetada
   readonly storageFile: StorageFile<M>;
 }
 
+/**
+ * Configuration for {@link createStorageFileDocumentPairFactory}, controlling default values
+ * for creation type, purpose subgroup, and processing state.
+ */
 export interface CreateStorageFileDocumentPairFactoryConfig {
   /**
    * The default creation type to use.
@@ -152,10 +170,29 @@ export interface CreateStorageFileDocumentPairFactoryConfig {
 export type CreateStorageFileDocumentPairFactory = <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => Promise<CreateStorageFileDocumentPairResult<M>>;
 
 /**
- * Creates a CreateStorageFileDocumentPairFactory.
+ * Creates a factory for producing StorageFile document pairs with pre-configured defaults.
  *
- * @param config
- * @returns
+ * The factory handles document ID generation (random for direct creation, deterministic for
+ * {@link StorageFileCreationType.FOR_STORAGE_FILE_GROUP}), storage path resolution, and
+ * initial state setup.
+ *
+ * @param config - optional defaults for creation type, subgroup, and processing state
+ * @throws {Error} When neither accessor nor context is provided
+ * @throws {Error} When no storage path can be resolved from the input
+ * @throws {Error} When FOR_STORAGE_FILE_GROUP is used without parentStorageFileGroup or purpose
+ *
+ * @example
+ * ```ts
+ * const factory = createStorageFileDocumentPairFactory({
+ *   defaultShouldBeProcessed: true
+ * });
+ *
+ * const { storageFileDocument, storageFile } = await factory({
+ *   storagePath: { bucketId: 'my-bucket', pathString: '/files/report.pdf' },
+ *   purpose: 'report',
+ *   context: collections
+ * });
+ * ```
  */
 export function createStorageFileDocumentPairFactory(config: CreateStorageFileDocumentPairFactoryConfig = {}): CreateStorageFileDocumentPairFactory {
   const { defaultCreationType: inputDefaultCreationType, defaultShouldBeProcessed: inputDefaultShouldBeProcessed, defaultPurposeSubgroup: inputDefaultPurposeSubgroup } = config;

@@ -1,5 +1,11 @@
 import { type PrimativeKey, type Maybe, type MapFunction, type LabelRef } from '@dereekb/util';
 
+/**
+ * A selectable value paired with optional metadata.
+ *
+ * @typeParam T - The underlying value type
+ * @typeParam M - Optional metadata type associated with the value
+ */
 export interface SelectionValue<T, M = unknown> {
   /**
    * Value associated with this field.

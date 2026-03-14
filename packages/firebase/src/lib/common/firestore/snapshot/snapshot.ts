@@ -6,6 +6,10 @@ import { type FirestoreModelData, type SnapshotConverterConfig, type SnapshotCon
 /**
  * Creates converter functions for transforming between Firestore document snapshots and application model objects.
  *
+ * This is the primary entry point for defining how your application models map to/from Firestore documents.
+ * The returned object implements Firebase's {@link FirestoreDataConverter} interface and can be passed directly
+ * to `withConverter()` on collection/document references.
+ *
  * This function generates a set of utility functions that handle the conversion between your application's
  * typed model objects and the data format stored in Firestore. It supports field-level conversions,
  * custom modifiers, and handles Firestore's merge options appropriately.

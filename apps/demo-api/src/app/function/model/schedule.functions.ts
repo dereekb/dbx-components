@@ -1,5 +1,5 @@
 import { exampleUsageOfSchedule, hourlySchedule } from '../example/example.schedule';
-import { onScheduleWithDemoNestContext } from '../function';
+import { onScheduleWithDemoNestContext } from '../function.context';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
 import { storageFileHourlyUpdateSchedule } from '../storagefile/storagefile.schedule';
 

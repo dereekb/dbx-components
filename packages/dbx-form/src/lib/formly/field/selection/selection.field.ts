@@ -4,15 +4,24 @@ import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
 import { type DescriptionFieldConfig, formlyField, type FormlyValueParser, type LabeledFieldConfig, type MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
 
+/**
+ * A selectable option with a value, label, and optional disabled state.
+ */
 export interface ValueSelectionOptionWithValue<T> extends LabeledValue<T> {
   disabled?: boolean;
 }
 
+/**
+ * A special "clear" option that resets the selection when chosen.
+ */
 export interface ValueSelectionOptionClear {
   label?: string;
   clear: true;
 }
 
+/**
+ * A selectable option: either a value option or a clear option.
+ */
 export type ValueSelectionOption<T> = ValueSelectionOptionWithValue<T> | ValueSelectionOptionClear;
 
 export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig {
@@ -40,6 +49,22 @@ export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, Descri
   readonly selectAllOption?: true | string;
 }
 
+/**
+ * Creates a Formly select field configuration with support for native/material select,
+ * clear option, multiple selection, and "select all".
+ *
+ * @param config - Selection field configuration
+ * @returns A validated {@link FormlyFieldConfig} with type `'select'` or `'native-select'`
+ *
+ * @example
+ * ```typescript
+ * const field = valueSelectionField({
+ *   key: 'color',
+ *   label: 'Color',
+ *   options: [{ label: 'Red', value: 'red' }, { label: 'Blue', value: 'blue' }]
+ * });
+ * ```
+ */
 export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): FormlyFieldConfig {
   const { key, native = false, addClearOption = false, selectAllOption: inputSelectAllOption, options: inputOptions, materialFormField } = config;
   let selectAllOptionConfig: Maybe<{ selectAllOption: string }>;
@@ -68,6 +93,13 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
   });
 }
 
+/**
+ * Creates a function that prepends a "clear" option to the selection options array
+ * if one doesn't already exist.
+ *
+ * @param label - Optional label for the clear option
+ * @returns A function that transforms selection options by prepending a clear option
+ */
 export function addValueSelectionOptionFunction<T>(label?: string | undefined): (options: ValueSelectionOption<T>[]) => ValueSelectionOption<T>[] {
   return (options: ValueSelectionOption<T>[]) => {
     const hasClear = options.findIndex((x) => (x as ValueSelectionOptionClear).clear) !== -1;

@@ -7,16 +7,17 @@ import { AbstractFirestoreDocumentDataAccessorWrapper, interceptAccessorFactoryF
 
 // MARK: Set Wrapper
 /**
- * Data accessor modes.
- * - always: Always modifies on update, set, or create.
- * - update: Only modifies when calling set with options
- * - set:    Only modifies when calling create or set without options
- * - create: Only modifies on create calls
+ * Controls when the modifier function is applied to document data.
+ *
+ * - `'always'`: Modifies data on every create, set, and update operation
+ * - `'update'`: Only modifies when calling `set()` with merge options (updating existing documents)
+ * - `'set'`: Only modifies when calling `create()` or `set()` without merge options (new documents)
+ * - `'create'`: Only modifies on `create()` calls
  */
 export type ModifyBeforeSetFistoreDataAccessorMode = 'always' | 'update' | 'set' | 'create';
 
 /**
- * Input fora ModifyBeforeSetFirestoreDocumentDataAccessorWrapper
+ * Input passed to the modifier function, containing the document data and reference context.
  */
 export interface ModifyBeforeSetFistoreDataAccessorInput<T> extends DocumentReferenceRef<T> {
   /**
@@ -43,7 +44,14 @@ export interface ModifyBeforeSetConfig<T extends object> {
 }
 
 /**
- * FirestoreDocumentDataAccessorWrapper that applies a modifier function to data being set. When the modifier functions are applied can be changed by the mode.
+ * Accessor wrapper that applies a modifier function to data before it is written to Firestore.
+ *
+ * The `when` mode in the config controls which write operations trigger the modifier.
+ * Common use case: automatically copying the document ID into a `uid` field for {@link UserRelated} models
+ * via {@link copyUserRelatedDataModifierConfig}.
+ *
+ * @template T - The document data type
+ * @template D - The raw document data type in Firestore
  */
 export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends object, D = DocumentData> extends AbstractFirestoreDocumentDataAccessorWrapper<T, D> {
   readonly modifier: ModifierFunction<ModifyBeforeSetFistoreDataAccessorInput<T>>;
@@ -125,10 +133,12 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
 
 // MARK: Modifier Functions
 /**
- * Creates a ModifyBeforeSetModifierFunction<T> to copy the documentRef's id to the target field on the data.
+ * Creates a modifier function that copies the document reference's ID into the specified field on the data.
  *
- * @param fieldName
- * @returns
+ * Useful for models that need to store their own document ID as a field (e.g., `uid` on {@link UserRelated} models).
+ *
+ * @param fieldName - The field to copy the document ID into
+ * @returns A modifier function that sets the field to the document's ID
  */
 export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldName: keyof T): ModifyBeforeSetModifierFunction<T> {
   return ({ data, documentRef }) => {
@@ -137,18 +147,25 @@ export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldNam
   };
 }
 
+/**
+ * Creates an {@link InterceptAccessorFactoryFunction} that wraps all created accessors with
+ * {@link ModifyBeforeSetFirestoreDocumentDataAccessorWrapper} using the provided config.
+ */
 export function modifyBeforeSetInterceptAccessorFactoryFunction<T extends object, D = DocumentData>(config: ModifyBeforeSetConfig<T>): InterceptAccessorFactoryFunction<T, D> {
   return interceptAccessorFactoryFunction((accessor) => new ModifyBeforeSetFirestoreDocumentDataAccessorWrapper(accessor, config));
 }
 
 // MARK: Templates
+/**
+ * Creates a modifier that copies the document ID to the `uid` field for {@link UserRelated} models.
+ */
 export function copyDocumentIdForUserRelatedModifierFunction<T extends UserRelated>(): ModifyBeforeSetModifierFunction<T> {
   return copyDocumentIdToFieldModifierFunction<T>('uid');
 }
 
 /**
- * Returns a pre-configured ModifyBeforeSetConfig<T> for UserRelated models
- * @returns
+ * Returns a pre-configured {@link ModifyBeforeSetConfig} for {@link UserRelated} models
+ * that copies the document ID to the `uid` field on set operations (new document creation).
  */
 export function copyUserRelatedDataModifierConfig<T extends UserRelated>(): ModifyBeforeSetConfig<T> {
   return {
@@ -157,8 +174,15 @@ export function copyUserRelatedDataModifierConfig<T extends UserRelated>(): Modi
   };
 }
 
+/**
+ * Cached singleton factory for the UserRelated data modifier accessor interceptor.
+ */
 export const COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION = cachedGetter(() => modifyBeforeSetInterceptAccessorFactoryFunction(copyUserRelatedDataModifierConfig()));
 
+/**
+ * Returns a typed {@link InterceptAccessorFactoryFunction} that applies the UserRelated
+ * document ID copy modifier to all accessors created by the factory.
+ */
 export function copyUserRelatedDataAccessorFactoryFunction<T extends UserRelated, D = DocumentData>(): InterceptAccessorFactoryFunction<T, D> {
   return COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION() as unknown as InterceptAccessorFactoryFunction<T, D>;
 }

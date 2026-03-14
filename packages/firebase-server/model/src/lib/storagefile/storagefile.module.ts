@@ -6,14 +6,25 @@ import { StorageFileInitializeFromUploadService } from './storagefile.upload.ser
 import { STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, storageFileInitServerActions, StorageFileInitServerActions, type StorageFileInitServerActionsContextConfig } from './storagefile.action.init.service';
 
 // MARK: Provider Factories
+/**
+ * Factory that assembles the full {@link StorageFileServerActionsContext} by combining
+ * the base context with the upload initialization service.
+ */
 export function storageFileServerActionsContextFactory(context: BaseStorageFileServerActionsContext, storageFileInitializeFromUploadService: StorageFileInitializeFromUploadService): StorageFileServerActionsContext {
   return { ...context, storageFileInitializeFromUploadService };
 }
 
+/**
+ * Factory that creates a {@link StorageFileServerActions} instance from the assembled context.
+ */
 export function storageFileServerActionsFactory(context: StorageFileServerActionsContext) {
   return storageFileServerActions(context);
 }
 
+/**
+ * Factory that creates a {@link StorageFileInitServerActions} instance by merging the
+ * server actions context with the init-specific configuration.
+ */
 export function storageFileInitServerActionsFactory(context: StorageFileServerActionsContext, storageFileInitServerActionsContextConfig: StorageFileInitServerActionsContextConfig) {
   return storageFileInitServerActions({
     ...context,

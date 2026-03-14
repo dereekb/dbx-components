@@ -30,6 +30,13 @@ export interface DbxComponentsVitestPresetConfigOptions {
   readonly junitFilePrefix?: string;
 
   /**
+   * Whether or not to print the console trace.
+   *
+   * Defaults to true.
+   */
+  readonly printConsoleTrace?: boolean;
+
+  /**
    * Whether or not firebase is used.
    *
    * Will also assert that the firebase environment is properly configured at runtime.
@@ -56,7 +63,7 @@ export interface DbxComponentsVitestPresetConfigOptions {
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace } = options;
 
   const currentPath = __dirname;
   const relativePath = path.relative(currentPath, pathFromRoot);
@@ -149,6 +156,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         }
       },
       test: {
+        printConsoleTrace: printConsoleTrace ?? true,
         passWithNoTests: true,
         watch: false,
         globals: true,

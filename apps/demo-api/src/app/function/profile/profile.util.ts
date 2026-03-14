@@ -1,7 +1,7 @@
 import { type ProfileDocument } from 'demo-firebase';
 import { type FirebaseAuthUserId, type InferredTargetModelParams, type TargetModelParams } from '@dereekb/firebase';
 import { type NestContextCallableRequestWithAuth } from '@dereekb/firebase-server';
-import { type DemoApiNestContext } from '../function';
+import { type DemoApiNestContext } from '../function.context';
 
 export function profileForUser(nest: DemoApiNestContext, uid: FirebaseAuthUserId): ProfileDocument {
   const profileFirestoreCollection = nest.demoFirestoreCollections.profileCollection;

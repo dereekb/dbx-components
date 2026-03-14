@@ -7,3 +7,4 @@ export * from './random';
 export * from './round';
 export * from './sort';
 export * from './transform';
+export * from './encoded';

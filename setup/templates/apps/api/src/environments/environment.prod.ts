@@ -1,5 +1,6 @@
 import { ServerEnvironmentConfig } from '@dereekb/nestjs';
 
 export const environment: ServerEnvironmentConfig = {
-  production: true
+  production: true,
+  appUrl: 'https://example.com'
 };

@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 
+/** Configuration for a login button's appearance and action handler. */
 export interface DbxFirebaseLoginButtonConfig {
   text: string;
   iconUrl?: string;
@@ -18,7 +19,9 @@ export interface DbxFirebaseLoginButtonConfig {
 }
 
 /**
- * Login button and action.
+ * Renders a styled login button that triggers a login action handler on click.
+ *
+ * Displays a logo image or icon alongside the login text with configurable colors.
  */
 @Component({
   selector: 'dbx-firebase-login-button',
@@ -75,6 +78,7 @@ export class DbxFirebaseLoginButtonComponent {
   };
 }
 
+/** Container component that wraps login button content with consistent spacing. */
 @Component({
   selector: 'dbx-firebase-login-button-container',
   template: `
@@ -86,18 +90,24 @@ export class DbxFirebaseLoginButtonComponent {
 })
 export class DbxFirebaseLoginButtonContainerComponent {}
 
+/** Default template for configured login button components. */
 export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
   <dbx-firebase-login-button-container>
     <dbx-firebase-login-button [config]="configSignal()"></dbx-firebase-login-button>
   </dbx-firebase-login-button-container>
 `;
 
+/** Shared component configuration for OAuth-style login button components. */
 export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE,
   imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 };
 
+/**
+ * Abstract base directive for login provider buttons that auto-configures appearance
+ * from the registered provider assets and delegates login handling to subclasses.
+ */
 @Directive()
 export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implements OnInit {
   abstract readonly loginProvider: FirebaseLoginMethodType;

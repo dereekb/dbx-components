@@ -3,9 +3,12 @@ import { type StoragePath } from '../../common/storage/storage';
 import { type FirebaseAuthUserId } from '../../common';
 
 /**
- * The base path for all uploaded files.
+ * Root path for all uploaded files in Firebase Storage.
  *
- * The uploads folder is a transient folder that is cleared/processed often of files that are uploaded to it.
+ * Files uploaded here are transient and are processed/cleared by the upload initialization
+ * service. The folder structure is: `uploads/u/{userId}/{fileName}`.
+ *
+ * See {@link userUploadsFolderSlashPathFactory} for building user-specific upload paths.
  */
 export const UPLOADS_FOLDER_PATH = 'uploads';
 
@@ -22,22 +25,50 @@ export const ALL_USER_UPLOADS_FOLDER_NAME = `u`;
 export const ALL_USER_UPLOADS_FOLDER_PATH = `${UPLOADS_FOLDER_PATH}/${ALL_USER_UPLOADS_FOLDER_NAME}`;
 
 /**
- * Creates a SlashPath for the input user's uploads folder.
+ * Factory that generates the uploads folder SlashPath for a given user ID.
  */
 export type UserUploadsFolderSlashPathFactory = FactoryWithRequiredInput<SlashPath, FirebaseAuthUserId>;
 
+/**
+ * Creates a {@link UserUploadsFolderSlashPathFactory} that generates per-user upload folder paths.
+ *
+ * @param inputBasePath - optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
+ *
+ * @example
+ * ```ts
+ * const factory = userUploadsFolderSlashPathFactory();
+ * const path = factory('user123');
+ * // path === '/uploads/u/user123'
+ * ```
+ */
 export function userUploadsFolderSlashPathFactory(inputBasePath?: Maybe<string>): UserUploadsFolderSlashPathFactory {
   const basePath = toAbsoluteSlashPathStartType(inputBasePath ?? ALL_USER_UPLOADS_FOLDER_PATH);
   return (userId) => `${basePath}/${userId}`;
 }
 
+/**
+ * Factory that generates a full {@link StoragePath} (with bucket) for a given user's uploads folder.
+ */
 export type UserUploadsFolderStoragePathFactory = FactoryWithRequiredInput<StoragePath, FirebaseAuthUserId>;
 
+/**
+ * Configuration for {@link userUploadsFolderStoragePathFactory}.
+ */
 export interface UserUploadsFolderStoragePathFactoryConfig {
   readonly bucketId: string;
   readonly basePath?: Maybe<string>;
 }
 
+/**
+ * Creates a {@link UserUploadsFolderStoragePathFactory} that includes the storage bucket ID.
+ *
+ * @example
+ * ```ts
+ * const factory = userUploadsFolderStoragePathFactory({ bucketId: 'my-bucket' });
+ * const storagePath = factory('user123');
+ * // storagePath === { pathString: '/uploads/u/user123', bucketId: 'my-bucket' }
+ * ```
+ */
 export function userUploadsFolderStoragePathFactory({ bucketId, basePath: inputBasePath }: UserUploadsFolderStoragePathFactoryConfig): UserUploadsFolderStoragePathFactory {
   const userUploadsFolderSlashPath = userUploadsFolderSlashPathFactory(inputBasePath);
   return (userId) => ({ pathString: userUploadsFolderSlashPath(userId), bucketId });
@@ -58,12 +89,13 @@ export type UploadedFileTypeIdentifier = string;
 
 // MARK: Upload Service
 /**
- * Result type of a StorageFileInitializeFromUploadService.handleNotificationTask() call.
+ * Result of a `StorageFileInitializeFromUploadService.handleNotificationTask()` call,
+ * indicating how the upload initialization concluded.
  *
- * success: The file was used/processed successfully.
- * no_determiner_match: Could not determine the proper processor for this file.
- * no_initializer_configured: There was no processor configured for this file.
- * initializer_error: There was an error thrown during processing.
- * permanent_initializer_failure: The initializer failed permanently and the file should be deleted.
+ * - `success` — file was used/processed successfully and a StorageFile was created
+ * - `no_determiner_match` — no {@link UploadedFileTypeDeterminer} could identify this file
+ * - `no_initializer_configured` — the file type was identified but no initializer is registered for it
+ * - `initializer_error` — the initializer threw an error during processing
+ * - `permanent_initializer_failure` — the initializer failed permanently; the file should be deleted
  */
 export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determiner_match' | 'no_initializer_configured' | 'initializer_error' | 'permanent_initializer_failure';

@@ -1,3 +1,9 @@
+/**
+ * @module notification.query
+ *
+ * Firestore query constraint builders for notification model documents.
+ * Used by the server-side action service to find documents that need processing.
+ */
 import { type FirestoreQueryConstraint, where } from '../../common/firestore';
 import { type NotificationSummary, type Notification, type NotificationBox, type NotificationUser } from './notification';
 import { toISODateString } from '@dereekb/date';
@@ -6,20 +12,18 @@ import { type ArrayOrValue } from '@dereekb/util';
 
 // MARK: NotificationUser
 /**
- * Query for notificationUsers that are flagged for initialization.
+ * Query constraints for finding {@link NotificationUser} documents that have pending config syncs (`ns == true`).
  *
- * @param now
- * @returns
+ * Used by the server to discover users whose configs need to be synced to their NotificationBox recipients.
  */
 export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('ns', '==', true)];
 }
 
 /**
- * Query for notificationUsers that have excluded any of the input notification box ids.
+ * Query constraints for finding {@link NotificationUser} documents that have any of the given exclusion IDs in their `x` array.
  *
- * @param now
- * @returns
+ * @param exclusionId - one or more box IDs or collection name prefixes to match against
  */
 export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<NotificationBoxSendExclusion>): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('x', 'array-contains-any', exclusionId)];
@@ -27,10 +31,7 @@ export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<Noti
 
 // MARK: NotificationSummary
 /**
- * Query for notificationSummaries that are flagged for initialization.
- *
- * @param now
- * @returns
+ * Query constraints for finding {@link NotificationSummary} documents that need server-side initialization (`s == true`).
  */
 export function notificationSummariesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationSummary>('s', '==', true)];
@@ -40,41 +41,37 @@ export function notificationSummariesFlaggedForNeedsInitializationQuery(): Fires
 
 // MARK: NotificationBox
 /**
- * Query for notificationBoxes that are flagged for initialization.
- *
- * @param now
- * @returns
+ * Query constraints for finding {@link NotificationBox} documents that need server-side initialization (`s == true`).
  */
 export function notificationBoxesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('s', '==', true)];
 }
 
 /**
- * Query for notificationBoxes that are flagged as invalid.
+ * Query constraints for finding {@link NotificationBox} documents flagged as invalid (`fi == true`).
  *
- * @param now
- * @returns
+ * Used by the server to clean up boxes that could not be initialized.
  */
 export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('fi', '==', true)];
 }
 
-// MARK: Notifcation
+// MARK: Notification
 /**
- * Query for notifications that are not done and the send at time is in the past.
+ * Query constraints for finding {@link Notification} documents that are ready to be sent
+ * (not done and `sat` is in the past).
  *
- * @param now
- * @returns
+ * This is the primary query used by the send queue processor.
+ *
+ * @param now - reference time for the `sat` comparison (defaults to current time)
  */
 export function notificationsPastSendAtTimeQuery(now = new Date()): FirestoreQueryConstraint[] {
   return [where<Notification>('d', '==', false), where<Notification>('sat', '<=', toISODateString(now))];
 }
 
 /**
- * Query for notifications that are marked ready for cleanup/deletion.
- *
- * @param now
- * @returns
+ * Query constraints for finding {@link Notification} documents marked as done (`d == true`)
+ * and ready to be archived to {@link NotificationWeek} and then deleted.
  */
 export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] {
   return [

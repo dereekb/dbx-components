@@ -1,4 +1,4 @@
-import { type DemoCreateModelFunction } from '../function';
+import { type DemoCreateModelFunction } from '../function.context';
 import { type OnCallCreateModelResult } from '@dereekb/firebase';
 import { optionalAuthContext } from '@dereekb/firebase-server';
 

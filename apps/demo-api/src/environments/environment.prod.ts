@@ -1,5 +1,6 @@
-import { type ServerEnvironmentConfig } from '@dereekb/nestjs';
+import { type FirebaseServerEnvironmentConfig } from '@dereekb/firebase-server';
 
-export const environment: ServerEnvironmentConfig = {
-  production: true
+export const environment: FirebaseServerEnvironmentConfig = {
+  production: true,
+  appUrl: 'https://components.dereekb.com'
 };

@@ -4,7 +4,12 @@ import { type StorageBucketId, storagePathFactory, type StoragePathFactory, type
 import { type FirebaseStorage } from './types';
 
 /**
- * A @dereekb/firebase FirebaseStorageContext. Wraps the main FirebaseStorage context and the drivers, as well as utility/convenience functions.
+ * Central context for Firebase Cloud Storage operations within `@dereekb/firebase`.
+ *
+ * Wraps the underlying {@link FirebaseStorage} instance and its {@link FirebaseStorageDrivers},
+ * while exposing convenience methods for file/folder access via {@link FirebaseStorageAccessor}.
+ *
+ * Created by {@link firebaseStorageContextFactory}.
  */
 export interface FirebaseStorageContext<F extends FirebaseStorage = FirebaseStorage> extends FirebaseStorageAccessor {
   readonly storage: F;
@@ -12,12 +17,14 @@ export interface FirebaseStorageContext<F extends FirebaseStorage = FirebaseStor
 }
 
 /**
- * Factory function for generating a FirebaseStorageContext given the input FirebaseStorage.
+ * Factory that creates a {@link FirebaseStorageContext} from a {@link FirebaseStorage} instance and optional configuration.
+ *
+ * Produced by {@link firebaseStorageContextFactory}.
  */
 export type FirebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage> = (firebaseStorage: F, config?: FirebaseStorageContextFactoryConfig) => FirebaseStorageContext;
 
 /**
- * firebaseStorageContextFactory() configuration
+ * Configuration for {@link firebaseStorageContextFactory}.
  */
 export interface FirebaseStorageContextFactoryConfig {
   /**
@@ -31,10 +38,20 @@ export interface FirebaseStorageContextFactoryConfig {
 }
 
 /**
- * Creates a new FirebaseStorageContextFactory given the input FirebaseStorageDrivers.
+ * Creates a {@link FirebaseStorageContextFactory} that produces storage contexts using the given drivers.
  *
- * @param drivers
- * @returns
+ * The returned factory resolves a default bucket (from driver, config, or error) and builds
+ * a {@link StoragePathFactory} to normalize all path inputs.
+ *
+ * @param drivers - the storage driver implementations to use
+ * @throws {Error} When a default bucket ID cannot be resolved from the driver or config.
+ *
+ * @example
+ * ```ts
+ * const factory = firebaseStorageContextFactory(myDrivers);
+ * const storageContext = factory(firebaseStorage, { defaultBucketId: 'my-bucket' });
+ * const file = storageContext.file('uploads/doc.pdf');
+ * ```
  */
 export function firebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage>(drivers: FirebaseStorageDrivers): FirebaseStorageContextFactory<F> {
   return (firebaseStorage: F, config?: FirebaseStorageContextFactoryConfig) => {

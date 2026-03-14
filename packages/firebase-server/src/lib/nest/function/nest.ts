@@ -3,18 +3,48 @@ import { type CallableRequest } from 'firebase-functions/v2/https';
 import { type CallableContextWithAuthData } from '../../function/context';
 import { type OnCallWithNestContextRequest } from './call';
 
+/**
+ * Augments a request type with a reference to the raw {@link INestApplicationContext}.
+ *
+ * This is the lowest-level nest integration type -- most handlers should prefer {@link NestContextRequest}
+ * which provides a typed, domain-specific context instead of the raw application context.
+ *
+ * @typeParam R - The base request type to augment.
+ */
 export type NestApplicationContextRequest<R> = R & {
   readonly nestApplication: INestApplicationContext;
 };
 
+/**
+ * Simple reference wrapper holding a typed nest context object.
+ *
+ * @typeParam N - The nest context type.
+ */
 export type NestRef<N> = {
   readonly nest: N;
 };
 
+/**
+ * Augments a request type with a typed nest context. This is the primary request shape used by
+ * nest-integrated Firebase function handlers throughout the codebase.
+ *
+ * @typeParam N - The nest context type, typically an application-specific context class.
+ * @typeParam R - The base request type to augment.
+ */
 export type NestContextRequest<N, R> = R & {
   readonly nest: N;
 };
 
+/**
+ * Creates a new request object with the typed nest context spread into it.
+ *
+ * Unlike {@link injectNestApplicationContextIntoRequest}, this attaches a domain-specific context rather
+ * than the raw NestJS application context.
+ *
+ * @param nest - The typed nest context to attach.
+ * @param request - The base request to augment.
+ * @returns A new object combining the request properties with the nest context.
+ */
 export function injectNestIntoRequest<N, R>(nest: N, request: R): NestContextRequest<N, R> {
   return {
     ...request,
@@ -22,6 +52,16 @@ export function injectNestIntoRequest<N, R>(nest: N, request: R): NestContextReq
   };
 }
 
+/**
+ * Creates a new request object with the raw {@link INestApplicationContext} spread into it.
+ *
+ * This is typically used at the outermost layer of function wiring before a {@link MakeNestContext}
+ * factory converts it into a typed context via {@link injectNestIntoRequest}.
+ *
+ * @param nestContext - The NestJS application context to attach.
+ * @param request - The base request to augment.
+ * @returns A new object combining the request properties with the application context.
+ */
 export function injectNestApplicationContextIntoRequest<R>(nestContext: INestApplicationContext, request: R): NestApplicationContextRequest<R> {
   return {
     ...request,
@@ -30,6 +70,12 @@ export function injectNestApplicationContextIntoRequest<R>(nestContext: INestApp
 }
 
 // MARK: Types
+/**
+ * A Firebase v2 {@link CallableRequest} augmented with a typed nest context.
+ *
+ * @typeParam N - The nest context type.
+ * @typeParam I - The callable request input data type.
+ */
 export type NestContextCallableRequest<N, I> = NestContextRequest<N, CallableRequest<I>>;
 
 /**

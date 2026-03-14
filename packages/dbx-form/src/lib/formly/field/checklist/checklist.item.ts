@@ -1,6 +1,10 @@
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Display content configuration for a single checklist item, controlling the label,
+ * sublabel, description, anchor link, and optional metadata.
+ */
 export interface ChecklistItemDisplayContent<T = unknown> {
   /**
    * Label to display.

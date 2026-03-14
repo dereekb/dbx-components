@@ -19,21 +19,51 @@ import { type NotificationSendMessagesInstance } from './notification.send';
 import { type Maybe, cutStringFunction, multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
 import { makeNewNotificationSummaryTemplate } from './notification.util';
 
+/**
+ * Configuration for creating a {@link FirestoreNotificationSummarySendService}.
+ */
 export interface FirestoreNotificationSummarySendServiceConfig {
   /**
-   * Whether or not to allow the creation of new NotificationSummary objects if one does not exist for a message.
+   * Whether to allow creating new {@link NotificationSummary} documents when one does not exist for a recipient.
    *
    * Defaults to true.
    */
   readonly allowCreateNotificationSummaries?: Maybe<boolean>;
+  /**
+   * Server context providing Firestore access, notification collections, and template type info.
+   */
   readonly context: FirebaseServerActionsContext & NotificationFirestoreCollections & FirestoreContextReference & AppNotificationTemplateTypeInfoRecordServiceRef;
 }
 
 /**
- * Default NotificationSummarySendService implementation
+ * Firestore-backed implementation of {@link NotificationSummarySendService} that persists
+ * notification items to {@link NotificationSummary} documents in Firestore.
  */
 export type FirestoreNotificationSummarySendService = NotificationSummarySendService;
 
+/**
+ * Creates a {@link NotificationSummarySendService} that writes notification items to Firestore
+ * {@link NotificationSummary} documents.
+ *
+ * Groups messages by their target {@link NotificationSummaryId}, deduplicates against existing items,
+ * appends new items (capped at {@link NOTIFICATION_SUMMARY_ITEM_LIMIT}), and either updates the
+ * existing summary or creates a new one (if `allowCreateNotificationSummaries` is enabled).
+ *
+ * Each summary update runs in a Firestore transaction to prevent concurrent write conflicts.
+ *
+ * @param config - service configuration including Firestore context and collection references
+ *
+ * @example
+ * ```ts
+ * const sendService = firestoreNotificationSummarySendService({
+ *   context: serverActionsContext,
+ *   allowCreateNotificationSummaries: true
+ * });
+ *
+ * const sendInstance = await sendService.buildSendInstanceForNotificationSummaryMessages(messages);
+ * const result = await sendInstance();
+ * ```
+ */
 export function firestoreNotificationSummarySendService(config: FirestoreNotificationSummarySendServiceConfig): FirestoreNotificationSummarySendService {
   const { context, allowCreateNotificationSummaries: inputAllowCreateNotificationSummaries } = config;
   const { firestoreContext, notificationSummaryCollection } = context;

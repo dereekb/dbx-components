@@ -15,6 +15,23 @@ import { incrementUpdateWithAccessorFunction } from './increment';
 import { type FirestoreDataConverterFactory, type FirestoreDataConverterFactoryRef, type InterceptFirestoreDataConverterFactory } from './converter';
 import { arrayUpdateWithAccessorFunction } from './array';
 
+/**
+ * Represents a typed Firestore document with full CRUD capabilities and reactive streaming.
+ *
+ * This is the primary interface for interacting with individual Firestore documents in the application.
+ * It combines document reference metadata, data conversion, and all read/write operations into a
+ * single cohesive interface. Documents are created via {@link FirestoreDocumentAccessor} which provides
+ * the appropriate execution context (standard, transaction, or batch).
+ *
+ * Key capabilities:
+ * - **Read**: `snapshot()`, `snapshotData()`, `exists()`
+ * - **Stream**: `snapshotStream()`, `snapshotDataStream()` for real-time updates
+ * - **Write**: `create()`, `update()`, `increment()`, `arrayUpdate()`
+ * - **Identity**: `id`, `key` (full path), `modelType`, `collectionName`
+ *
+ * @template T - The document data type
+ * @template I - The model identity type (provides modelType and collectionName)
+ */
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
   readonly id: string;
@@ -35,7 +52,19 @@ export interface FirestoreDocument<T, I extends FirestoreModelIdentity = Firesto
 export type FirestoreDocumentData<D extends FirestoreDocument<any>> = D extends FirestoreDocument<infer T> ? T : never;
 
 /**
- * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
+ * Abstract base implementation of {@link FirestoreDocument}.
+ *
+ * Provides the standard implementation for all document operations by delegating to the
+ * underlying {@link FirestoreDocumentDataAccessor}. The `update()` method uses the document's
+ * converter (via {@link updateWithAccessorUpdateAndConverterFunction}) so that partial updates
+ * go through the same conversion pipeline as full writes.
+ *
+ * Subclasses must implement `modelIdentity` to provide the model type and collection name.
+ * Also exposes `stream$` and `data$` lazy observables for reactive consumption.
+ *
+ * @template T - The document data type
+ * @template D - The concrete document subclass type (for self-referential typing)
+ * @template I - The model identity type
  */
 export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, I>, I extends FirestoreModelIdentity = FirestoreModelIdentity> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
   private readonly _accessor: FirestoreDocumentDataAccessor<T>;
@@ -176,12 +205,26 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 }
 
+/**
+ * Reference to a {@link LimitedFirestoreDocumentAccessor}.
+ */
 export interface LimitedFirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
   readonly documentAccessor: A;
 }
 
 export type FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorRef<T, D, FirestoreDocumentAccessor<T, D>>;
 
+/**
+ * Provides document loading capabilities without the ability to create new documents.
+ *
+ * Used in contexts where you have a document reference or key but don't have (or need) access
+ * to the parent collection — for example, in subcollection accessors or when loading documents
+ * from known paths. For full access including `newDocument()` and `loadDocumentForId()`,
+ * use {@link FirestoreDocumentAccessor}.
+ *
+ * @template T - The document data type
+ * @template D - The concrete FirestoreDocument subclass
+ */
 export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDataConverterRef<T>, FirestoreModelTypeModelIdentityRef, FirestoreAccessorDriverRef {
   readonly databaseContext: FirestoreDocumentContext<T>;
 
@@ -224,6 +267,16 @@ export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument
   readonly converterFactory: FirestoreDataConverterFactory<T>;
 }
 
+/**
+ * Full document accessor with collection-level operations including creating new documents.
+ *
+ * Extends {@link LimitedFirestoreDocumentAccessor} with `newDocument()` (auto-generates an ID)
+ * and `loadDocumentForId()` (loads by document ID relative to the collection). This is the
+ * standard accessor used when you have access to the collection reference.
+ *
+ * @template T - The document data type
+ * @template D - The concrete FirestoreDocument subclass
+ */
 export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LimitedFirestoreDocumentAccessor<T, D>, CollectionReferenceRef<T>, FirestoreAccessorDriverRef {
   readonly databaseContext: FirestoreDocumentContext<T>;
 
@@ -249,7 +302,10 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
 }
 
 /**
- * Used to generate a FirestoreDocument from an input FirestoreDocumentDataAccessor instance.
+ * Factory function that creates a typed {@link FirestoreDocument} from a raw data accessor.
+ *
+ * Used by the accessor factory system to create concrete document instances (e.g., `NotificationDocument`)
+ * from their underlying accessor and document accessor context.
  */
 export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) => D;
 
@@ -443,6 +499,13 @@ export function firestoreDocumentAccessorContextExtension<T, D extends Firestore
 }
 
 // MARK: Document With Parent (Subcollection Items)
+/**
+ * A {@link FirestoreDocument} that resides in a subcollection and provides access to its parent document reference.
+ *
+ * @template P - The parent document's data type
+ * @template T - This document's data type
+ * @template I - The model identity type
+ */
 export interface FirestoreDocumentWithParent<P, T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDocument<T, I> {
   readonly parent: DocumentReference<P>;
 }
@@ -458,6 +521,15 @@ export abstract class AbstractFirestoreDocumentWithParent<P, T, D extends Abstra
 }
 
 // MARK: Single-Document Accessor
+/**
+ * Accessor for collections that contain only a single known document (e.g., system state, user profile).
+ *
+ * Provides convenience methods that load the single document by its fixed identifier,
+ * supporting both transaction and write batch contexts.
+ *
+ * @template T - The document data type
+ * @template D - The concrete FirestoreDocument subclass
+ */
 export interface FirestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly singleItemIdentifier: string;
   loadDocument(): D;
@@ -492,6 +564,9 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
   };
 }
 
+/**
+ * Default document ID used for single-document collections. The document is stored at path `<collection>/0`.
+ */
 export const DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER = '0';
 
 export type SingleItemFirestoreCollectionDocumentIdentifier = string;

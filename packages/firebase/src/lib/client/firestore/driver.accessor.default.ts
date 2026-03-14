@@ -6,6 +6,15 @@ import { firestoreClientIncrementUpdateToUpdateData } from './increment';
 import { firestoreClientArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
+/**
+ * Default (non-transactional) client-side implementation of {@link FirestoreDocumentDataAccessor}.
+ *
+ * Wraps a single Firestore `DocumentReference` and provides CRUD operations, streaming,
+ * and field-level updates (increment, array union/remove) using the `firebase/firestore` SDK.
+ *
+ * Used as the base accessor class; {@link WriteBatchFirestoreDocumentDataAccessor} extends this
+ * to add batch write semantics.
+ */
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _documentRef: DocumentReference<T>;
 
@@ -60,6 +69,17 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 }
 
+/**
+ * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces {@link DefaultFirestoreDocumentDataAccessor} instances
+ * for direct (non-batched, non-transactional) Firestore operations.
+ *
+ * @example
+ * ```ts
+ * const factory = defaultFirestoreAccessorFactory<MyModel>();
+ * const accessor = factory.accessorFor(documentRef);
+ * const snapshot = await accessor.get();
+ * ```
+ */
 export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new DefaultFirestoreDocumentDataAccessor(ref)
@@ -67,6 +87,18 @@ export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAcces
 }
 
 // MARK: Context
+/**
+ * Creates a default (non-transactional, non-batched) {@link FirestoreDocumentContext} for client-side use.
+ *
+ * The context type is {@link FirestoreDocumentContextType.NONE}, meaning operations execute immediately
+ * against Firestore without transaction or batch grouping.
+ *
+ * @example
+ * ```ts
+ * const context = defaultFirestoreDocumentContext<MyModel>();
+ * const accessor = context.accessorFactory.accessorFor(docRef);
+ * ```
+ */
 export function defaultFirestoreDocumentContext<T>(): FirestoreDocumentContext<T> {
   return {
     contextType: FirestoreDocumentContextType.NONE,

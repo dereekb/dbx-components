@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/zoho/nestjs",
-  "version": "13.2.2",
+  "version": "13.3.0",
   "peerDependencies": {
-    "@dereekb/util": "13.2.2",
-    "@dereekb/zoho": "13.2.2",
+    "@dereekb/util": "13.3.0",
+    "@dereekb/zoho": "13.3.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0"
   },

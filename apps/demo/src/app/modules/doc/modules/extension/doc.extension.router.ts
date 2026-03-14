@@ -11,6 +11,7 @@ import { DocExtensionStorageFileComponent } from './container/storagefile.compon
 import { DocExtensionZipComponent } from './container/zip.component';
 import { DocExtensionWebFilePreviewComponent } from './container/webfilepreview.component';
 import { DocExtensionHelpComponent } from './container/help.component';
+import { DocExtensionOidcComponent } from './container/oidc.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -85,6 +86,12 @@ export const docExtensionHelpState: Ng2StateDeclaration = {
   component: DocExtensionHelpComponent
 };
 
+export const docExtensionOidcState: Ng2StateDeclaration = {
+  url: '/oidc',
+  name: 'doc.extension.oidc',
+  component: DocExtensionOidcComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -98,5 +105,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionStorageFileState,
   docExtensionZipState,
   docExtensionWebFilePreviewState,
-  docExtensionHelpState
+  docExtensionHelpState,
+  docExtensionOidcState
 ];

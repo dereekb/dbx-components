@@ -11,6 +11,7 @@ import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.au
 import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+/** Formly field properties for text input with optional custom validators. */
 export interface StringValueFieldsFieldProps extends FormlyFieldProps {
   /**
    * Custom input validators.
@@ -18,6 +19,12 @@ export interface StringValueFieldsFieldProps extends FormlyFieldProps {
   readonly textInputValidator?: ValidatorFn | ValidatorFn[];
 }
 
+/**
+ * Formly field properties for configuring a searchable value selection field.
+ *
+ * Supports search-as-you-type with autocomplete, display value caching via hash,
+ * optional string value input, anchor links, and custom display components.
+ */
 export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldProps, StringValueFieldsFieldProps {
   /**
    * Whether or not to allow string values to be used directly, or if values can only be chosen from searching.
@@ -376,6 +383,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     }
 
     if (!this.inputCtrl.valid) {
+      this.inputCtrl.markAsTouched();
       return;
     }
 
@@ -383,6 +391,25 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
       const value = this.convertStringValue ? this.convertStringValue(text) : (text as unknown as T);
       this.addValue(value);
     }
+  }
+
+  /**
+   * Returns the first validation error message from the input control, if any.
+   */
+  get inputErrorMessage(): string | undefined {
+    const errors = this.inputCtrl.errors;
+
+    if (errors) {
+      for (const key of Object.keys(errors)) {
+        const error = errors[key];
+
+        if (error?.message) {
+          return error.message;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   addWithDisplayValue(displayValue: SearchableValueFieldDisplayValue<T>): void {

@@ -1,25 +1,32 @@
-import { type ClassType, type Getter, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
-import { type DynamicModule, type FactoryProvider, type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider, type Type } from '@nestjs/common';
+import { type ClassType, type Getter, type WebsitePath, asGetter, makeGetter } from '@dereekb/util';
+import { type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
-import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import type * as admin from 'firebase-admin';
-import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
 import { type StorageBucketId } from '@dereekb/firebase';
-import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
-import { FirebaseServerEnvService } from '../env/env.service';
-import { DefaultFirebaseServerEnvService } from './env';
-import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
-import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
+import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
+import { type GlobalRoutePrefixConfig } from './middleware/globalprefix';
+import { buildNestServerRootModule } from './app.module';
 
+/**
+ * A running NestJS server instance backed by Express, paired with a lazy promise getter for the NestJS application context.
+ */
 export interface NestServer {
   readonly server: express.Express;
   readonly nest: NestAppPromiseGetter;
 }
 
+/**
+ * Lazy getter that returns a promise resolving to the initialized NestJS application context.
+ */
 export type NestAppPromiseGetter = Getter<Promise<INestApplicationContext>>;
 
+/**
+ * Manages the lifecycle of a NestJS server instance for Firebase Cloud Functions.
+ *
+ * Caches the server per Firebase app name so repeated invocations reuse the same instance.
+ */
 export interface NestServerInstance<T> {
   /**
    * Root module class of the app.
@@ -30,7 +37,7 @@ export interface NestServerInstance<T> {
    *
    * If already initialized the server will not be initialized again.
    */
-  initNestServer(firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer;
+  initNestServer(firebaseApp: admin.app.App, env?: NestFirebaseServerEnvironmentConfig): NestServer;
   /**
    * Terminates the nest server for the input app.
    *
@@ -39,10 +46,28 @@ export interface NestServerInstance<T> {
   removeNestServer(firebaseApp: admin.app.App): Promise<boolean>;
 }
 
-export class FirebaseNestServerRootModule {}
+/** @deprecated Use `FirebaseNestServerRootModule` from `./app.module` instead. */
+export { FirebaseNestServerRootModule } from './app.module';
 
+/**
+ * Optional hook to customize the NestJS application after creation but before initialization.
+ */
 export type ConfigureNestServerInstanceFunction = (nestApp: INestApplication) => INestApplication | void;
 
+/**
+ * Configuration for creating a {@link NestServerInstance}, including the root module class,
+ * global providers, middleware toggles, storage defaults, and app-level options.
+ *
+ * @example
+ * ```typescript
+ * const instance = nestServerInstance({
+ *   moduleClass: AppModule,
+ *   appCheckEnabled: true,
+ *   globalApiRoutePrefix: '/api',
+ *   configureWebhooks: true
+ * });
+ * ```
+ */
 export interface NestServerInstanceConfig<T> {
   /**
    * Module to instantiate.
@@ -79,100 +104,70 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly applicationOptions?: NestApplicationOptions;
   /**
-   * Global routing prefix.
+   * Global routing prefix or options.
    *
    * Example: '/api'
    */
-  readonly globalApiRoutePrefix?: string;
+  readonly globalApiRoutePrefix?: WebsitePath | GlobalRoutePrefixConfig;
   /**
    * Optional configuration function
    */
   readonly configureNestServerInstance?: ConfigureNestServerInstanceFunction;
 }
 
-export interface NestServerEnvironmentConfig {
-  readonly environment: ServerEnvironmentConfig;
+export interface NestFirebaseServerEnvironmentConfig {
+  readonly environment: FirebaseServerEnvironmentConfig;
 }
 
+// COMPAT: Deprecated alias for NestFirebaseServerEnvironmentConfig.
+/** @deprecated Use NestFirebaseServerEnvironmentConfig instead. */
+export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
+
+/**
+ * Creates a {@link NestServerInstance} that manages NestJS server lifecycle within Firebase Cloud Functions.
+ *
+ * The returned instance caches servers by Firebase app name, so calling `initNestServer` multiple
+ * times with the same app reuses the existing server. The factory wires up Firebase Admin,
+ * environment config, storage, AppCheck middleware, and webhook routes based on the config.
+ *
+ * @example
+ * ```typescript
+ * const instance = nestServerInstance({ moduleClass: AppModule, appCheckEnabled: true });
+ * const { server } = instance.initNestServer(firebaseApp, { environment: envConfig });
+ * ```
+ */
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
-  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix, configureNestServerInstance } = config;
+  const { moduleClass, configureNestServerInstance } = config;
   const serversCache = new Map<string, NestServer>();
 
-  const initNestServer = (firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer => {
+  const initNestServer = (firebaseApp: admin.app.App, env?: NestFirebaseServerEnvironmentConfig): NestServer => {
     const appName = firebaseApp.name;
-    const defaultStorageBucket = inputDefaultStorageBucket ?? firebaseApp.options.storageBucket;
 
     let nestServer = serversCache.get(appName);
 
     if (!nestServer) {
       const server = express();
       const createNestServer = async (expressInstance: express.Express) => {
-        const providers: (Provider | FactoryProvider)[] = [firebaseServerAppTokenProvider(asGetter(firebaseApp))];
-
-        // configure environment providers
-        if (env?.environment != null) {
-          providers.push(serverEnvTokenProvider(env.environment));
-
-          if (config.configureEnvService !== false) {
-            providers.push(
-              {
-                provide: FirebaseServerEnvService,
-                useClass: DefaultFirebaseServerEnvService
-              },
-              {
-                provide: ServerEnvironmentService,
-                useExisting: FirebaseServerEnvService
-              }
-            );
-          }
-        }
-
-        if (additionalProviders) {
-          pushItemOrArrayItemsIntoArray(providers, additionalProviders);
-        }
-
-        const imports: (Type<unknown> | DynamicModule)[] = [moduleClass];
+        const { rootModule, globalApiRoutePrefixConfig } = buildNestServerRootModule({
+          modules: moduleClass,
+          firebaseAppGetter: asGetter(firebaseApp),
+          additionalProviders: config.providers as Provider[] | undefined,
+          envConfig: env?.environment,
+          configureEnvService: config.configureEnvService,
+          defaultStorageBucket: config.defaultStorageBucket ?? firebaseApp.options.storageBucket,
+          forceStorageBucket: config.forceStorageBucket,
+          globalApiRoutePrefix: config.globalApiRoutePrefix,
+          configureWebhooks: config.configureWebhooks,
+          appCheckEnabled: config.appCheckEnabled !== false // defaults to true in production
+        });
 
         // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
         const options: NestApplicationOptions = { bodyParser: false }; // firebase already parses the requests
 
-        if (config.configureWebhooks) {
-          imports.push(ConfigureFirebaseWebhookMiddlewareModule);
-        }
+        let nestApp = await NestFactory.create(rootModule, new ExpressAdapter(expressInstance), options);
 
-        if (config.appCheckEnabled != false) {
-          imports.push(ConfigureFirebaseAppCheckMiddlewareModule);
-        }
-
-        if (defaultStorageBucket) {
-          providers.push(
-            firebaseServerStorageDefaultBucketIdTokenProvider({
-              defaultBucketId: defaultStorageBucket,
-              forceBucket: forceStorageBucket
-            })
-          );
-        }
-
-        // provide the global prefix config to the app
-        providers.push({
-          provide: GlobalRoutePrefixConfig,
-          useValue: {
-            globalApiRoutePrefix
-          }
-        });
-
-        const providersModule: DynamicModule = {
-          module: FirebaseNestServerRootModule,
-          imports,
-          providers,
-          exports: providers,
-          global: true
-        };
-
-        let nestApp = await NestFactory.create(providersModule, new ExpressAdapter(expressInstance), options);
-
-        if (globalApiRoutePrefix) {
-          nestApp = nestApp.setGlobalPrefix(globalApiRoutePrefix);
+        if (globalApiRoutePrefixConfig?.globalApiRoutePrefix != null) {
+          nestApp = nestApp.setGlobalPrefix(globalApiRoutePrefixConfig.globalApiRoutePrefix, globalApiRoutePrefixConfig);
         }
 
         if (configureNestServerInstance) {

@@ -13,6 +13,11 @@ import {
 } from '@dereekb/firebase';
 import { preconditionConflictError } from '@dereekb/firebase-server';
 
+/**
+ * Creates an error indicating that a required notification ID was missing during creation.
+ *
+ * Thrown when attempting to create a {@link Notification} document without providing the mandatory ID field.
+ */
 export function createNotificationIdRequiredError() {
   return preconditionConflictError({
     message: `The required id was not present when attempting to create a Notification.`,
@@ -20,6 +25,12 @@ export function createNotificationIdRequiredError() {
   });
 }
 
+/**
+ * Creates an error indicating that a notification model (box or summary) has already been initialized.
+ *
+ * Thrown during initialization when `throwErrorIfAlreadyInitialized` is true and the model's
+ * setup flag (`s`) indicates it was previously initialized.
+ */
 export function notificationModelAlreadyInitializedError() {
   return preconditionConflictError({
     message: `This model has already been initialized.`,
@@ -27,6 +38,13 @@ export function notificationModelAlreadyInitializedError() {
   });
 }
 
+/**
+ * Creates an error indicating that a {@link NotificationBox} is associated with an unregistered model type.
+ *
+ * Thrown when the model key's collection name does not match any registered notification model type.
+ *
+ * @param key - the Firestore model key that has no registered notification model type
+ */
 export function notificationBoxUnregistredModelTypeInitializationError(key: FirestoreModelKey) {
   return preconditionConflictError({
     message: `This NotificationBox is associated with an unregistered model type.`,
@@ -37,6 +55,11 @@ export function notificationBoxUnregistredModelTypeInitializationError(key: Fire
   });
 }
 
+/**
+ * Creates an error indicating that no {@link NotificationBox} exists for the target model.
+ *
+ * Thrown when an operation requires a NotificationBox but none has been created for the given model key.
+ */
 export function notificationBoxDoesNotExist() {
   return preconditionConflictError({
     message: `A NotificationBox does not exist for this model.`,
@@ -44,6 +67,12 @@ export function notificationBoxDoesNotExist() {
   });
 }
 
+/**
+ * Creates an error indicating that the exclusion target is invalid.
+ *
+ * Thrown when the target recipient on the {@link NotificationBox} does not exist on the box
+ * or does not have a UID, making it ineligible for exclusion.
+ */
 export function notificationBoxExclusionTargetInvalidError() {
   return preconditionConflictError({
     message: `The target for exclusion is invalid. The target recipient on the NotificationBox must be exist on the NotificationBox and have a uid to be excluded.`,
@@ -51,6 +80,11 @@ export function notificationBoxExclusionTargetInvalidError() {
   });
 }
 
+/**
+ * Creates an error indicating that a {@link NotificationBox} already exists for this model.
+ *
+ * Thrown when attempting to create a duplicate NotificationBox for a model that already has one.
+ */
 export function notificationBoxExistsForModelError() {
   return preconditionConflictError({
     message: `A NotificationBox already exists for this model.`,
@@ -58,6 +92,12 @@ export function notificationBoxExistsForModelError() {
   });
 }
 
+/**
+ * Creates an error indicating that the target recipient does not exist on the {@link NotificationBox}.
+ *
+ * Thrown when attempting to update a recipient that is not registered on the box
+ * and `insert=true` was not passed to allow creating a new recipient entry.
+ */
 export function notificationBoxRecipientDoesNotExistsError() {
   return preconditionConflictError({
     message: `An existing NotificationBox recipient for the target does not exist. You must pass insert=true to create a new recipient.`,
@@ -65,6 +105,13 @@ export function notificationBoxRecipientDoesNotExistsError() {
   });
 }
 
+/**
+ * Creates an error indicating that the given UID does not correspond to an existing Firebase Auth user.
+ *
+ * Thrown during {@link NotificationUser} creation when the provided UID cannot be found in Firebase Auth.
+ *
+ * @param uid - the Firebase Auth user ID that was not found
+ */
 export function notificationUserInvalidUidForCreateError(uid: FirebaseAuthUserId) {
   return preconditionConflictError({
     message: `The user with the uid '${uid}' does not exist. Cannot create a NotificationUser for them.`,
@@ -75,6 +122,14 @@ export function notificationUserInvalidUidForCreateError(uid: FirebaseAuthUserId
   });
 }
 
+/**
+ * Creates an error indicating that the user has blocked themselves from being added as a recipient.
+ *
+ * Thrown when a {@link NotificationUser} has the `bk` (blocked-from-add) flag set on their config
+ * and an operation attempts to insert them into a {@link NotificationBox}'s recipient list.
+ *
+ * @param uid - the Firebase Auth user ID of the blocked user
+ */
 export function notificationUserBlockedFromBeingAddedToRecipientsError(uid: FirebaseAuthUserId) {
   return preconditionConflictError({
     message: `The user with the uid '${uid}' has blocked themselves from from being added recipients.`,
@@ -85,6 +140,14 @@ export function notificationUserBlockedFromBeingAddedToRecipientsError(uid: Fire
   });
 }
 
+/**
+ * Creates an error indicating that the user has locked their notification configuration from external updates.
+ *
+ * Thrown when a {@link NotificationUser} has the `lk` (locked) flag set on their config
+ * and an operation attempts to modify their recipient settings on a {@link NotificationBox}.
+ *
+ * @param uid - the Firebase Auth user ID of the locked user
+ */
 export function notificationUserLockedConfigFromBeingUpdatedError(uid: FirebaseAuthUserId) {
   return preconditionConflictError({
     message: `The user with the uid '${uid}' has locked their config from being updated.`,

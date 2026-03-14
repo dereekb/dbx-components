@@ -1,4 +1,4 @@
-import { exhaustMap, filter } from 'rxjs';
+import { exhaustMap, filter, first, switchMap } from 'rxjs';
 import { Injectable, InjectionToken, inject } from '@angular/core';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { createEffect, ofType } from '@ngrx/effects';
@@ -29,6 +29,7 @@ export const DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN = new InjectionToken('DbxAppAuthR
  * Navigation only occurs when:
  * 1. The app is in one of the configured active context states (see {@link DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN}).
  * 2. The {@link DbxAppAuthRouterService.isAuthRouterEffectsEnabled} flag is `true`.
+ * 3. The current route is not in the ignored routes set (see {@link DbxAppAuthRouterService.addIgnoredRoute}).
  *
  * Extends {@link AbstractOnDbxAppContextStateEffects} to scope effect activation to specific app states.
  *
@@ -50,7 +51,8 @@ export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects
     () =>
       this.actions$.pipe(
         ofType(onDbxAppAuth.DbxAppAuthActions.loggedOut),
-        filter(() => this.dbxAppAuthRouterService.isAuthRouterEffectsEnabled),
+        switchMap(() => this.dbxAppAuthRouterService.shouldAuthEffectsRedirect$.pipe(first())),
+        filter((shouldRedirect) => shouldRedirect),
         exhaustMap(() => this.dbxAppAuthRouterService.goToLogin())
       ),
     { dispatch: false }
@@ -63,7 +65,8 @@ export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects
     () =>
       this.actions$.pipe(
         ofType(onDbxAppAuth.DbxAppAuthActions.loggedIn),
-        filter(() => this.dbxAppAuthRouterService.isAuthRouterEffectsEnabled),
+        switchMap(() => this.dbxAppAuthRouterService.shouldAuthEffectsRedirect$.pipe(first())),
+        filter((shouldRedirect) => shouldRedirect),
         exhaustMap(() => this.dbxAppAuthRouterService.goToApp())
       ),
     { dispatch: false }

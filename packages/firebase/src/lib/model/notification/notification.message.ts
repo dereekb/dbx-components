@@ -1,3 +1,13 @@
+/**
+ * @module notification.message
+ *
+ * Defines the message factory pattern for the notification system. A {@link NotificationMessageFunctionFactory}
+ * creates per-recipient {@link NotificationMessageFunction} instances that produce channel-specific content
+ * (email, text, push, summary) from a {@link NotificationItem}.
+ *
+ * The server's notification send pipeline calls these factories to expand each notification into concrete messages
+ * before dispatching them through the configured delivery channels.
+ */
 import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair, type ArrayOrValue } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
@@ -6,7 +16,7 @@ import { type DocumentDataWithIdAndKey } from '../../common';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 
 /**
- * Contextual information when
+ * Per-recipient context passed to a {@link NotificationMessageFunction} when generating message content.
  */
 export interface NotificationMessageInputContext {
   /**
@@ -124,27 +134,33 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
 
 export interface NotificationMessageNotificationSummaryContent {}
 
+/**
+ * Flags controlling whether a generated {@link NotificationMessage} should be delivered.
+ */
 export enum NotificationMessageFlag {
   /**
-   * No flag
+   * Normal delivery — message has content and should be sent.
    */
   NONE = 0,
   /**
-   * Special flag to indicate there is no content. Should not be sent.
+   * Message factory produced no content for this recipient. Delivery is skipped.
    */
   NO_CONTENT = 1,
   /**
-   * Special flag to not send the notification.
+   * Explicitly suppress delivery. Used when the factory determines the notification should not be sent.
    */
   DO_NOT_SEND = 2
 }
 
 /**
- * A NotificationMessage is the final result of the expanded notification.
+ * Expanded notification content for a single recipient, produced by a {@link NotificationMessageFunction}.
+ *
+ * Contains the base content plus optional channel-specific overrides for email, text, and notification summary.
+ * The `flag` field can suppress delivery if the factory determined no content or opted out.
  */
 export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   /**
-   * Optional flag
+   * Delivery control flag. When set to `NO_CONTENT` or `DO_NOT_SEND`, this message is skipped.
    */
   readonly flag?: NotificationMessageFlag;
   /**
@@ -175,26 +191,36 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   readonly notificationSummaryContent?: NotificationMessageNotificationSummaryContent;
 }
 
+/**
+ * Configuration input for a {@link NotificationMessageFunctionFactory}, providing the notification context
+ * needed to create a per-recipient message function.
+ */
 export interface NotificationMessageFunctionFactoryConfig<D extends NotificationItemMetadata = {}> {
   /**
-   * Notification item.
+   * The notification item containing content and metadata.
    */
   readonly item: NotificationItem<D>;
   /**
-   * NotificationBox details for this message.
+   * Parent NotificationBox context (model key for the box's associated model).
    */
   readonly notificationBox: Pick<NotificationBox, 'm'>;
   /**
-   * Full Notification for this message.
+   * Full Notification document data with its Firestore ID and key.
    */
   readonly notification: DocumentDataWithIdAndKey<Notification>;
 }
 
 /**
- * Creates a NotificationMessageFunction from the input config.
+ * Async factory that creates a {@link NotificationMessageFunction} for a specific notification.
+ *
+ * Registered per-template-type in the application's notification configuration. The server calls this
+ * factory once per notification, then invokes the returned function once per recipient.
  */
 export type NotificationMessageFunctionFactory<D extends NotificationItemMetadata = {}> = (config: NotificationMessageFunctionFactoryConfig<D>) => Promise<NotificationMessageFunction>;
 
+/**
+ * Details passed to {@link NotificationMessageFunctionExtras} lifecycle callbacks after a send attempt.
+ */
 export interface NotificationMessageFunctionExtrasCallbackDetails {
   readonly success: boolean;
   readonly updatedSendFlags: NotificationSendFlags;
@@ -203,36 +229,63 @@ export interface NotificationMessageFunctionExtrasCallbackDetails {
   readonly sendNotificationSummaryResult?: Maybe<NotificationSendNotificationSummaryMessagesResult>;
 }
 
+/**
+ * Callback function invoked by the send pipeline with delivery results.
+ */
 export type NotificationMessageFunctionExtrasCallbackFunction = (callbackDetails: NotificationMessageFunctionExtrasCallbackDetails) => PromiseOrValue<unknown>;
 
+/**
+ * Optional extensions attached to a {@link NotificationMessageFunction} to customize delivery behavior.
+ *
+ * Allows message factories to inject additional recipients and hook into the send lifecycle
+ * for side effects like logging, analytics, or cascading updates.
+ */
 export interface NotificationMessageFunctionExtras {
   /**
-   * Any global/additional recipient(s) that should be added to all Notifications associated with this NotificationMessageFunctionExtras.
+   * Additional recipients appended to every notification using this message function.
+   * Useful for always-CC recipients like admin accounts or audit logs.
    */
   readonly globalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
   /**
-   * Called each time the notification attempts to send something.
+   * Called after each send attempt (whether successful or not) with the delivery results.
    */
   readonly onSendAttempted?: NotificationMessageFunctionExtrasCallbackFunction;
   /**
-   * Called when the notification has is marked as done after sending to all recipients.
+   * Called when all channels have completed delivery and the notification is marked done.
    */
   readonly onSendSuccess?: NotificationMessageFunctionExtrasCallbackFunction;
 }
 
+/**
+ * Core message generation function that produces a {@link NotificationMessage} for a single recipient.
+ */
 export type NotificationMessageFunctionWithoutExtras = (inputContext: NotificationMessageInputContext) => Promise<NotificationMessage>;
 
 /**
- * Converts a NotificationMessageContext to a NotificationMessage.
+ * Combined message function type: a callable that generates per-recipient content,
+ * plus optional {@link NotificationMessageFunctionExtras} for delivery customization.
+ *
+ * Created by {@link notificationMessageFunction} or returned from a {@link NotificationMessageFunctionFactory}.
  */
 export type NotificationMessageFunction = NotificationMessageFunctionWithoutExtras & NotificationMessageFunctionExtras;
 
 /**
- * Creates a NotificationMessageFunction from the input.
+ * Creates a {@link NotificationMessageFunction} by attaching optional {@link NotificationMessageFunctionExtras}
+ * (global recipients, lifecycle callbacks) to a base message generation function.
  *
- * @param fn
- * @param extras
- * @returns
+ * @param fn - base function that generates message content per recipient
+ * @param extras - optional delivery customization (global recipients, send callbacks)
+ *
+ * @example
+ * ```ts
+ * const msgFn = notificationMessageFunction(
+ *   async (ctx) => ({
+ *     inputContext: ctx,
+ *     content: { title: 'New comment', openingMessage: 'Someone commented on your post' }
+ *   }),
+ *   { globalRecipients: [adminRecipient] }
+ * );
+ * ```
  */
 export function notificationMessageFunction(fn: NotificationMessageFunctionWithoutExtras, extras?: NotificationMessageFunctionExtras): NotificationMessageFunction {
   if (extras) {
@@ -246,6 +299,19 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
   }
 }
 
+/**
+ * Creates a {@link NotificationMessageFunctionFactory} that always returns `NO_CONTENT` messages.
+ *
+ * Useful as a placeholder factory for template types that should not produce deliverable content.
+ *
+ * @example
+ * ```ts
+ * const factory = noContentNotificationMessageFunctionFactory();
+ * const msgFn = await factory(config);
+ * const msg = await msgFn(inputContext);
+ * // msg.flag === NotificationMessageFlag.NO_CONTENT
+ * ```
+ */
 export function noContentNotificationMessageFunctionFactory<D extends NotificationItemMetadata = any>(): NotificationMessageFunctionFactory<D> {
   return async (config: NotificationMessageFunctionFactoryConfig<D>) => {
     // const { item } = config;

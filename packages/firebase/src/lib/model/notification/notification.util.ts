@@ -1,3 +1,9 @@
+/**
+ * @module notification.util
+ *
+ * Server-side utility functions for notification config resolution, exclusion management,
+ * send state evaluation, and recipient merging.
+ */
 import { type ArrayOrValue, asArray, type Configurable, filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
 import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, type NotificationUser } from './notification';
 import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
@@ -6,6 +12,10 @@ import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type Firestore
 import { type NotificationBoxId, notificationBoxIdForModel, type NotificationId, type NotificationBoxSendExclusionList, type NotificationBoxSendExclusion } from './notification.id';
 
 // MARK: NotificationUser
+/**
+ * Input for computing the effective {@link NotificationBoxRecipient} by merging the 3-level config hierarchy:
+ * recipient entry → user's per-box config → user's global config.
+ */
 export interface EffectiveNotificationBoxRecipientConfigInput {
   readonly uid: FirebaseAuthUserId;
   readonly m?: FirestoreModelKey;
@@ -15,6 +25,13 @@ export interface EffectiveNotificationBoxRecipientConfigInput {
   readonly recipient?: Maybe<NotificationBoxRecipient>;
 }
 
+/**
+ * Computes the effective {@link NotificationBoxRecipient} by merging configs from highest to lowest priority:
+ * global config (`gc`) → per-box user config (`boxConfig`) → existing box recipient.
+ *
+ * Filters template configs to only include types applicable to the notification box's model.
+ * Used during the server-side sync process to update box recipient entries from user configs.
+ */
 export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotificationBoxRecipientConfigInput) {
   const { uid, m: inputM, appNotificationTemplateTypeInfoRecordService, gc, boxConfig: notificationUserNotificationBoxConfig, recipient } = input;
 
@@ -50,6 +67,9 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
   return nextRecipient;
 }
 
+/**
+ * Input for adding/removing send exclusions on a {@link NotificationUser}.
+ */
 export interface UpdateNotificationUserNotificationSendExclusionsInput {
   readonly notificationUser: Pick<NotificationUser, 'b' | 'x' | 'bc'>;
   readonly addExclusions?: ArrayOrValue<NotificationBoxSendExclusion>;
@@ -61,6 +81,12 @@ export interface UpdateNotificationUserNotificationSendExclusionsResult {
   readonly update: Pick<NotificationUser, 'x' | 'ns' | 'bc'>;
 }
 
+/**
+ * Adds and/or removes send exclusions from a {@link NotificationUser}, validates them against associated boxes,
+ * and propagates exclusion flags to the per-box configs.
+ *
+ * Exclusions not matching any associated notification box are automatically filtered out.
+ */
 export function updateNotificationUserNotificationSendExclusions(input: UpdateNotificationUserNotificationSendExclusionsInput): UpdateNotificationUserNotificationSendExclusionsResult {
   const { notificationUser, addExclusions: inputAddExclusions, removeExclusions: inputRemoveExclusions } = input;
   const { b: associatedNotificationBoxes, x: currentExclusions, bc: notificationBoxConfigs } = notificationUser;
@@ -100,6 +126,9 @@ export function updateNotificationUserNotificationSendExclusions(input: UpdateNo
   };
 }
 
+/**
+ * Input for applying exclusion flags to per-box configs, updating the `x` and `ns` fields on each config.
+ */
 export interface ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsParams {
   readonly x?: NotificationBoxSendExclusionList;
   readonly bc?: Maybe<NotificationUserNotificationBoxRecipientConfig[]>;
@@ -109,6 +138,10 @@ export interface ApplyExclusionsToNotificationUserNotificationBoxRecipientConfig
 
 export type ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResult = Pick<NotificationUser, 'bc' | 'ns'>;
 
+/**
+ * Applies the current exclusion list to per-box configs, setting/clearing the `x` flag and marking
+ * changed configs as needing sync (`ns = true`).
+ */
 export function applyExclusionsToNotificationUserNotificationBoxRecipientConfigs(params: ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsParams): ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResult {
   const { x: inputX, bc: inputBc, notificationUser, recalculateNs } = params;
 
@@ -143,17 +176,25 @@ export function applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
   return update;
 }
 
+/**
+ * Returns true if any of the per-box configs need syncing (`ns == true`).
+ */
 export function calculateNsForNotificationUserNotificationBoxRecipientConfigs(configs: NotificationUserNotificationBoxRecipientConfig[]): boolean {
   return configs.some((x) => x.ns);
 }
 
 /**
- * Function that returns true if the notification is not excluded from being sent.
+ * Predicate function that returns true if the given notification/box ID is NOT excluded from delivery.
+ * Uses prefix matching against the exclusion list.
  */
 export type NotificationSendExclusionCanSendFunction = ((notification: NotificationId | NotificationBoxId) => boolean) & {
   readonly _exclusions: NotificationBoxSendExclusionList;
 };
 
+/**
+ * Creates a {@link NotificationSendExclusionCanSendFunction} from the given exclusion list.
+ * Returns true for IDs that don't match any exclusion prefix.
+ */
 export const notificationSendExclusionCanSendFunction = (exclusions: NotificationBoxSendExclusionList): NotificationSendExclusionCanSendFunction => {
   const fn = (notification: NotificationId | NotificationBoxId) => {
     return exclusions.findIndex((x) => notification.startsWith(x)) === -1;
@@ -166,20 +207,16 @@ export const notificationSendExclusionCanSendFunction = (exclusions: Notificatio
 
 // MARK: Notification
 /**
- * Returns true if the notification's send types are all marked as sent.
- *
- * @param input
- * @returns
+ * Returns true if all channels on the notification have reached a terminal state
+ * (NONE, NO_TRY, SENT, or SKIPPED). Used to determine if the notification can be marked done.
  */
 export function notificationSendFlagsImplyIsComplete(input: NotificationSendFlags): boolean {
   return isCompleteNotificationSendState(input.es) && isCompleteNotificationSendState(input.ps) && isCompleteNotificationSendState(input.ts) && isCompleteNotificationSendState(input.ns);
 }
 
 /**
- * Returns true if the state implies completion of sending (not necessarily success, but that attempts to send are done)
- *
- * @param input
- * @returns
+ * Returns true if the given send state is terminal — no further send attempts will be made.
+ * Terminal states: NONE, NO_TRY, SENT, SKIPPED.
  */
 export function isCompleteNotificationSendState(input: NotificationSendState): boolean {
   let isComplete = false;
@@ -199,6 +236,9 @@ export function isCompleteNotificationSendState(input: NotificationSendState): b
   return isComplete;
 }
 
+/**
+ * Resolved recipient group flags based on a {@link NotificationRecipientSendFlag}.
+ */
 export interface AllowedNotificationRecipients {
   readonly canSendToGlobalRecipients: boolean;
   readonly canSendToBoxRecipients: boolean;
@@ -206,10 +246,7 @@ export interface AllowedNotificationRecipients {
 }
 
 /**
- * Returns a AllowedNotificationRecipients from the input NotificationRecipientSendFlag.
- *
- * @param flag
- * @returns
+ * Resolves which recipient groups (global, box, explicit) are allowed based on the {@link NotificationRecipientSendFlag}.
  */
 export function allowedNotificationRecipients(flag?: Maybe<NotificationRecipientSendFlag>): AllowedNotificationRecipients {
   let canSendToGlobalRecipients: boolean = true;
@@ -246,18 +283,20 @@ export function allowedNotificationRecipients(flag?: Maybe<NotificationRecipient
 
 // MARK: NotificationWeek
 /**
- * Whether or not the Notification should be saved to the NotificationWeek.
+ * Returns true if the notification should be archived to a {@link NotificationWeek} after delivery.
  *
- * A Notification should only be saved when the notification can be sent to box recipients.
- *
- * @param notification
- * @returns
+ * Only notifications that can be sent to box recipients are archived (notifications restricted
+ * to only explicit or only global recipients are not saved to the weekly archive).
  */
 export function shouldSaveNotificationToNotificationWeek(notification: Notification): boolean {
   return allowedNotificationRecipients(notification.rf).canSendToBoxRecipients;
 }
 
 // MARK: NotificationBox
+/**
+ * Merges a partial update into a {@link NotificationUserNotificationBoxRecipientConfig},
+ * preserving user-controlled fields (`nb`, `rm`, `ns`, `lk`, `bk`) and respecting OPT_OUT state.
+ */
 export function mergeNotificationUserNotificationBoxRecipientConfigs(a: NotificationUserNotificationBoxRecipientConfig, b: Partial<NotificationUserNotificationBoxRecipientConfig>): NotificationUserNotificationBoxRecipientConfig {
   return {
     ...mergeNotificationBoxRecipients(a, b),
@@ -271,6 +310,9 @@ export function mergeNotificationUserNotificationBoxRecipientConfigs(a: Notifica
   };
 }
 
+/**
+ * Merges a partial update into a {@link NotificationBoxRecipient}, deeply merging the `c` (config record) field.
+ */
 export function mergeNotificationBoxRecipients<T extends NotificationBoxRecipient>(a: T, b: Partial<T>): T {
   return {
     ...a,
@@ -283,7 +325,10 @@ export function mergeNotificationBoxRecipients<T extends NotificationBoxRecipien
   };
 }
 
-// MARK: NotificationBox
+// MARK: NotificationBox Reference
+/**
+ * Input for resolving a {@link NotificationBoxDocument}, either directly or by computing its ID from a model key.
+ */
 export interface NotificationBoxDocumentReferencePair {
   /**
    * NotificationBoxDocument to update.
@@ -297,6 +342,11 @@ export interface NotificationBoxDocumentReferencePair {
   readonly notificationBoxRelatedModelKey?: Maybe<FirestoreModelKey>;
 }
 
+/**
+ * Resolves a {@link NotificationBoxDocument} from a reference pair, loading by model key if no document is provided directly.
+ *
+ * @throws {Error} When neither a document nor a model key is provided.
+ */
 export function loadNotificationBoxDocumentForReferencePair(input: NotificationBoxDocumentReferencePair, accessor: FirestoreDocumentAccessor<NotificationBox, NotificationBoxDocument>) {
   const { notificationBoxDocument: inputNotificationBoxDocument, notificationBoxRelatedModelKey: inputNotificationBoxRelatedModelKey } = input;
   let notificationBoxDocument: NotificationBoxDocument;

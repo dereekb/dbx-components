@@ -4,10 +4,23 @@ import { type FirestoreAccessorArrayUpdate } from '../../common/firestore/access
 import { type UpdateData } from '../../common/firestore/types';
 
 /**
- * Creates UpdateData corresponding to the input array update.
+ * Converts a {@link FirestoreAccessorArrayUpdate} into Firestore `UpdateData` using the
+ * client-side `arrayUnion()` and `arrayRemove()` FieldValue sentinels.
  *
- * @param input
- * @returns
+ * Processes both `union` (add elements) and `remove` (delete elements) operations,
+ * spreading array values as individual arguments since Firestore does not allow nested arrays.
+ *
+ * @param input - object with `union` and/or `remove` maps from field names to arrays of values
+ * @returns Firestore `UpdateData` with `FieldValue.arrayUnion()`/`FieldValue.arrayRemove()` sentinels
+ *
+ * @example
+ * ```ts
+ * const updateData = firestoreClientArrayUpdateToUpdateData<MyModel>({
+ *   union: { tags: ['newTag'] },
+ *   remove: { tags: ['oldTag'] }
+ * });
+ * await updateDoc(docRef, updateData);
+ * ```
  */
 export function firestoreClientArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {
   const union = input?.union;

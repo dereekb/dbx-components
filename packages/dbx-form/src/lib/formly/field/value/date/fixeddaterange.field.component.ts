@@ -17,11 +17,27 @@ import { MatInputModule } from '@angular/material/input';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 
+/**
+ * Date range input configuration without the `date` property, which is set by user selection.
+ */
 export type DbxFixedDateRangeDateRangeInput = Omit<DateRangeInput, 'date'>;
 
+/**
+ * Picker configuration for the fixed date range field.
+ */
 export type DbxFixedDateRangePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
+/**
+ * Selection mode for the fixed date range picker.
+ *
+ * - `'single'` — Picks one date, range is computed from the date range input config.
+ * - `'normal'` — Standard start/end range picking with two clicks.
+ * - `'arbitrary'` — Free-form range selection within a boundary.
+ * - `'arbitrary_quick'` — Like arbitrary, but immediately sets the value on first click.
+ */
 export type DbxFixedDateRangeSelectionMode = 'single' | 'normal' | 'arbitrary' | 'arbitrary_quick';
+
+/** Whether the user is currently picking the start or end of a range. */
 export type DbxFixedDateRangePicking = 'start' | 'end';
 
 export interface DbxFixedDateRangeFieldProps extends FormlyFieldProps {
@@ -111,8 +127,12 @@ function dbxFixedDateRangeOutputValueFactory(mode: DbxDateTimeValueMode, timezon
 
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
+/** Type of the most recent date range pick action. */
 export type FixedDateRangeScanType = 'start' | 'end' | 'startRepeat';
 
+/**
+ * Internal scan state used to track the progressive date range selection process.
+ */
 export interface FixedDateRangeScan {
   /**
    * Picked the start or end of the range on the last pick.
@@ -139,6 +159,15 @@ interface SelectedDateEvent {
   readonly range?: Maybe<Partial<DateRange>>;
 }
 
+/**
+ * Formly custom field type for selecting a fixed date range using an inline calendar.
+ *
+ * Supports multiple selection modes (single date, normal range, arbitrary range),
+ * timezone conversion, date range input configuration, and optional text inputs for
+ * start/end dates.
+ *
+ * Registered as Formly type `'fixeddaterange'`.
+ */
 @Component({
   templateUrl: 'fixeddaterange.field.component.html',
   providers: [
@@ -695,6 +724,12 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   }
 }
 
+/**
+ * Custom Material date range selection strategy for the fixed date range field.
+ *
+ * Provides preview highlighting on the calendar based on the current selection mode
+ * and boundary constraints.
+ */
 @Injectable()
 export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
   private readonly _dateAdapter = inject(DateAdapter<D>);

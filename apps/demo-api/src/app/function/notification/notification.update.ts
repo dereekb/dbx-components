@@ -1,6 +1,6 @@
 import { type SendNotificationParams, type SendNotificationResult, sendNotificationParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
-import { type DemoUpdateModelFunction } from '../function';
+import { type DemoUpdateModelFunction } from '../function.context';
 
 export const notificationSend: DemoUpdateModelFunction<SendNotificationParams, SendNotificationResult> = withApiDetails({
   inputType: sendNotificationParamsType,

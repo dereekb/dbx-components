@@ -13,6 +13,10 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 
+/**
+ * Wrapper component that injects dynamic display content into a checklist item
+ * via {@link DbxInjectionComponent}. Subscribes to the parent field's display content observable.
+ */
 @Component({
   selector: 'dbx-checklist-item-content-component',
   template: `
@@ -37,6 +41,10 @@ export class DbxChecklistItemContentComponent<T = unknown> {
   };
 }
 
+/**
+ * Formly field properties for a checklist item, providing the display content observable
+ * and an optional custom display component class.
+ */
 export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProps {
   /**
    * Observable used to retrieve content to display for the item.
@@ -48,6 +56,13 @@ export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProp
   readonly componentClass?: Type<ChecklistItemFieldDisplayComponent<T>>;
 }
 
+/**
+ * Formly field component that renders a single checklist item with a checkbox,
+ * optional anchor link, and dynamic display content.
+ *
+ * The display content is provided as an observable and rendered via a configurable
+ * component class (defaults to {@link DbxDefaultChecklistItemFieldDisplayComponent}).
+ */
 @Component({
   templateUrl: 'checklist.item.field.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

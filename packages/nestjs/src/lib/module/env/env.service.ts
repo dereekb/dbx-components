@@ -22,4 +22,8 @@ export class ServerEnvironmentService {
   get developerToolsEnabled() {
     return Boolean(!this.isProduction && this.env.developerToolsEnabled);
   }
+
+  get appUrl(): string | undefined {
+    return this.env.appUrl;
+  }
 }

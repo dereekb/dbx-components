@@ -19,6 +19,22 @@ let functionsInitialized = false;
  */
 let firebaseFunctionsTestInstance: Maybe<FeaturesList>;
 
+/**
+ * Initializes (or re-initializes) the firebase-functions-test singleton used by all admin function tests.
+ *
+ * Must be called after {@link initFirebaseAdminTestEnvironment}. When `reroll` is true, a fresh
+ * GCloud project ID is generated so successive test suites run against isolated projects.
+ *
+ * @param reroll - When `true`, generates a new project ID instead of reusing the current one.
+ * @returns The initialized {@link FeaturesList} singleton.
+ *
+ * @throws Error if `initFirebaseAdminTestEnvironment()` has not been called.
+ *
+ * @example
+ * ```ts
+ * setupFirebaseAdminFunctionTestSingleton();
+ * ```
+ */
 export function setupFirebaseAdminFunctionTestSingleton(reroll = false) {
   if (!isAdminEnvironmentInitialized()) {
     throw new Error('initFirebaseAdminTestEnvironment() was not called.');
@@ -40,6 +56,12 @@ export function setupFirebaseAdminFunctionTestSingleton(reroll = false) {
   return firebaseFunctionsTestInstance;
 }
 
+/**
+ * Convenience wrapper around {@link setupFirebaseAdminFunctionTestSingleton} that always generates
+ * a new GCloud project ID, ensuring complete isolation between test runs.
+ *
+ * @returns The re-initialized {@link FeaturesList} singleton.
+ */
 export function rerollFirebaseAdminFunctionTestSingleton() {
   return setupFirebaseAdminFunctionTestSingleton(true);
 }
@@ -55,10 +77,31 @@ export interface FirebaseAdminFunctionTestConfig {
   useFunctionSingletonContext: boolean;
 }
 
+/**
+ * Test context type for Firebase Admin function tests.
+ *
+ * Currently an alias for {@link FirebaseAdminTestContext}; exists as a semantic boundary
+ * so function-specific extensions can be added without changing downstream signatures.
+ */
 export type FirebaseAdminFunctionTestContext = FirebaseAdminTestContext;
 
+/**
+ * Combined interface providing both the {@link FirebaseAdminFunctionTestContext} services
+ * and the {@link TestContextFixture} lifecycle for a {@link FirebaseAdminFunctionTestContextInstance}.
+ *
+ * Useful when test helpers need access to both the Firebase services and the fixture's
+ * `instance` / `parent` references in a single type constraint.
+ */
 export interface FullFirebaseAdminFunctionTestContext extends FirebaseAdminFunctionTestContext, TestContextFixture<FirebaseAdminFunctionTestContextInstance> {}
 
+/**
+ * Fixture that wraps a {@link FirebaseAdminFunctionTestContextInstance} and forwards
+ * all {@link FirebaseAdminFunctionTestContext} properties to the underlying instance.
+ *
+ * Created automatically by {@link firebaseAdminFunctionTestBuilder}; tests receive this
+ * fixture and use it to access the Firebase Admin app, Firestore, Auth, Storage, and the
+ * firebase-functions-test wrapper during each test lifecycle.
+ */
 export class FirebaseAdminFunctionTestContextFixture extends AbstractTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
@@ -98,6 +141,14 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractTestContext
   }
 }
 
+/**
+ * Concrete instance that extends {@link FirebaseAdminTestContextInstance} with the
+ * firebase-functions-test {@link FeaturesList} needed to wrap and invoke Cloud Functions
+ * in an emulated environment.
+ *
+ * Each instance holds a lazily-created {@link FirebaseAdminCloudFunctionWrapper} via `fnWrapper`
+ * so Cloud Functions can be wrapped and invoked against the test project.
+ */
 export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
   private _fnWrapper = cachedGetter(() => firebaseAdminCloudFunctionWrapper(this.instance));
 
@@ -113,8 +164,24 @@ export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestC
   }
 }
 
+/**
+ * Module-level default for {@link FirebaseAdminFunctionTestConfig.useFunctionSingletonContext}.
+ *
+ * When `false` (the default), each test suite gets its own firebase-functions-test instance
+ * with a unique project ID. Change via {@link setDefaultFirebaseAdminFunctionTestUseFunctionSingleton}.
+ */
 export let DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = false;
 
+/**
+ * Globally sets whether new {@link FirebaseAdminFunctionTestConfig} instances default to
+ * singleton mode. Primarily used in global test setup files.
+ *
+ * @example
+ * ```ts
+ * // in jest globalSetup
+ * setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(true);
+ * ```
+ */
 export function setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(use: boolean) {
   DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = use;
 }
@@ -149,12 +216,26 @@ export const firebaseAdminFunctionTestBuilder = testContextBuilder<FirebaseAdmin
 
     const projectId = getGCloudTestProjectId();
     const storageBucket = 'b-' + projectId;
-    const app = admin.initializeApp({ projectId, storageBucket });
+    let app: admin.app.App;
+
+    try {
+      app = admin.initializeApp({ projectId, storageBucket });
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('already exists')) {
+        // Safety net: a previous test's teardown failed to delete the app.
+        // Delete the stale app and re-initialize with the correct config.
+        app = admin.app();
+        await app.delete();
+        app = admin.initializeApp({ projectId, storageBucket });
+      } else {
+        throw e;
+      }
+    }
 
     return new FirebaseAdminFunctionTestContextInstance(firebaseFunctionsTestInstance!, app);
   },
   teardownInstance: async (instance, config) => {
-    if (config.useFunctionSingletonContext === false) {
+    if (!config.useFunctionSingletonContext) {
       try {
         await instance.app.delete(); // will be called in cleanup
         firebaseFunctionsTestInstance!.cleanup();
@@ -167,5 +248,23 @@ export const firebaseAdminFunctionTestBuilder = testContextBuilder<FirebaseAdmin
   }
 });
 
+/**
+ * Factory type that produces a {@link FirebaseAdminFunctionTestContextFixture} for each test suite.
+ */
 export type FirebaseAdminFunctionTestContextFactory = TestContextFactory<FirebaseAdminFunctionTestContextFixture>;
+
+/**
+ * Pre-built factory using default configuration. Drop this into any test file to get
+ * a fully configured Firebase Admin + functions test context with automatic setup/teardown.
+ *
+ * @example
+ * ```ts
+ * firebaseAdminFunctionTestContextFactory((f) => {
+ *   it('should invoke cloud function', async () => {
+ *     const app = f.app;
+ *     // ... test logic
+ *   });
+ * });
+ * ```
+ */
 export const firebaseAdminFunctionTestContextFactory: FirebaseAdminFunctionTestContextFactory = firebaseAdminFunctionTestBuilder({});

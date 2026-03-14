@@ -6,7 +6,11 @@ import { firestoreServerArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 /**
- * FirestoreDocumentDataAccessor implementation for a transaction.
+ * Google Cloud Firestore implementation of {@link FirestoreDocumentDataAccessor} that executes
+ * all operations within a Firestore {@link Transaction}.
+ *
+ * Reads performed through this accessor are included in the transaction's read set, ensuring
+ * consistency. Writes are committed atomically when the transaction completes.
  */
 export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _transaction: GoogleCloudTransaction;
@@ -76,10 +80,22 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 }
 
 /**
- * Creates a new FirestoreDocumentDataAccessorFactory for a Transaction.
+ * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces transaction-backed accessors.
  *
- * @param transaction
- * @returns
+ * All accessors share the same transaction, so reads and writes participate in the same
+ * atomic operation.
+ *
+ * @param transaction - The Google Cloud Transaction to execute operations within.
+ *
+ * @example
+ * ```typescript
+ * await firestore.runTransaction(async (transaction) => {
+ *   const factory = transactionAccessorFactory<User>(transaction);
+ *   const accessor = factory.accessorFor(userDocRef);
+ *   const snapshot = await accessor.get();
+ *   await accessor.update({ name: 'Updated' });
+ * });
+ * ```
  */
 export function transactionAccessorFactory<T>(transaction: GoogleCloudTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {
@@ -88,6 +104,11 @@ export function transactionAccessorFactory<T>(transaction: GoogleCloudTransactio
 }
 
 // MARK: Context
+/**
+ * A {@link FirestoreDocumentContext} backed by a Google Cloud {@link Transaction}.
+ *
+ * All document accessors created from this context operate within the same transaction.
+ */
 export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   private readonly _transaction: GoogleCloudTransaction;
 
@@ -104,6 +125,9 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
   }
 }
 
+/**
+ * Creates a {@link TransactionFirestoreDocumentContext} wrapping the given transaction.
+ */
 export function transactionDocumentContext<T>(transaction: GoogleCloudTransaction): TransactionFirestoreDocumentContext<T> {
   return new TransactionFirestoreDocumentContext<T>(transaction);
 }

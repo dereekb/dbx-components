@@ -4,7 +4,11 @@ import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default'
 
 // MARK: Accessor
 /**
- * FirestoreDocumentDataAccessor implementation for a batch.
+ * Client-side {@link FirestoreDocumentDataAccessor} that queues write operations into a Firestore `WriteBatch`.
+ *
+ * Extends {@link DefaultFirestoreDocumentDataAccessor} to override `delete`, `set`, and `update` so they
+ * add operations to the batch rather than executing immediately. Read operations (`get`, `stream`, `exists`)
+ * still execute directly against Firestore. The batch must be committed separately after all operations are queued.
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _batch: FirebaseFirestoreWriteBatch;
@@ -36,10 +40,20 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestore
 }
 
 /**
- * Creates a new FirestoreDocumentDataAccessorFactory for a Batch.
+ * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces {@link WriteBatchFirestoreDocumentDataAccessor}
+ * instances bound to the given `WriteBatch`. All write operations from these accessors are queued
+ * into the same batch.
  *
- * @param batch
- * @returns
+ * @param writeBatch - the Firestore `WriteBatch` to queue operations into
+ *
+ * @example
+ * ```ts
+ * const batch = writeBatch(firestore);
+ * const factory = writeBatchAccessorFactory<MyModel>(batch);
+ * const accessor = factory.accessorFor(docRef);
+ * await accessor.set(data);
+ * await batch.commit();
+ * ```
  */
 export function writeBatchAccessorFactory<T>(writeBatch: FirebaseFirestoreWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {
@@ -48,6 +62,12 @@ export function writeBatchAccessorFactory<T>(writeBatch: FirebaseFirestoreWriteB
 }
 
 // MARK: Context
+/**
+ * Client-side {@link FirestoreDocumentContext} that groups all document operations into a single `WriteBatch`.
+ *
+ * Provides accessors with {@link FirestoreDocumentContextType.BATCH} semantics — writes are queued
+ * and only applied when the batch is committed.
+ */
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   private readonly _batch: FirebaseFirestoreWriteBatch;
 
@@ -64,6 +84,17 @@ export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentC
   }
 }
 
+/**
+ * Factory function that creates a {@link WriteBatchFirestoreDocumentContext} for the given batch.
+ *
+ * @param batch - the Firestore `WriteBatch` to use for all document operations
+ *
+ * @example
+ * ```ts
+ * const batch = writeBatch(firestore);
+ * const context = writeBatchDocumentContext<MyModel>(batch);
+ * ```
+ */
 export function writeBatchDocumentContext<T>(batch: FirebaseFirestoreWriteBatch): WriteBatchFirestoreDocumentContext<T> {
   return new WriteBatchFirestoreDocumentContext<T>(batch);
 }

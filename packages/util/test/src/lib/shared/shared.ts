@@ -1,4 +1,4 @@
-import { type PromiseOrValue, type PromiseReference, promiseReference } from '@dereekb/util';
+import { type Maybe, type PromiseOrValue, type PromiseReference, promiseReference } from '@dereekb/util';
 
 // MARK: Test Done Callback
 /**
@@ -279,7 +279,7 @@ export interface UseContextFixture<C extends TestContextFixture<I>, I> {
 export function useTestContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;
 
-  let clearInstance: TestContextFixtureClearInstanceFunction;
+  let clearInstance: Maybe<TestContextFixtureClearInstanceFunction> = null;
   let instance: I;
 
   // Create an instance
@@ -311,7 +311,7 @@ export function useTestContextFixture<C extends TestContextFixture<I>, I>(config
       console.warn('Expected instance to be set on fixture for cleanup but was set to something else.');
     }
 
-    if (destroyInstance) {
+    if (destroyInstance && instance != null) {
       try {
         await destroyInstance(instance);
         instance = undefined as any;

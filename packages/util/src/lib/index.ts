@@ -33,3 +33,4 @@ export * from './page';
 export * from './path';
 export * from './sort';
 export * from './type';
+export * from './encryption';

@@ -2,7 +2,11 @@ import { type ArrayOrValue, type DateOrUnixDateTimeMillisecondsNumber, type File
 import { type Observable } from 'rxjs';
 
 // MARK: Storage
-// These types are provided to avoid us from using the "any".
+/**
+ * Minimal shape of the Firebase client-side Storage object.
+ *
+ * Used to avoid depending on the concrete Firebase SDK type — keeps the library SDK-agnostic.
+ */
 export type FirebaseStorageLikeStorage = {
   /**
    * The maximum time to retry uploads in milliseconds.
@@ -15,13 +19,18 @@ export type FirebaseStorageLikeStorage = {
   readonly maxOperationRetryTime: number;
 };
 
+/**
+ * Minimal shape of the Google Cloud Storage (server-side) object.
+ */
 export type GoogleCloudLikeStorage = {
   readonly baseUrl: string;
   readonly projectId: string;
 };
 
 /**
- * Cast to the local type's Storage if direct access is needed. In most cases, direct access to this type is unncessary.
+ * Union of client-side and server-side Firebase Storage types.
+ *
+ * Cast to the concrete type if direct SDK access is needed. In most cases, use {@link FirebaseStorageContext} instead.
  */
 export type FirebaseStorage = FirebaseStorageLikeStorage | GoogleCloudLikeStorage;
 
@@ -143,27 +152,35 @@ export type StorageDataString = StorageRawDataString | StorageBase64DataString |
 export type StorageDataStringType = StorageRawDataStringType | StorageBase64DataStringType | StorageBase64UrlDataStringType | StorageDataUrlStringType;
 
 /**
- * Blob and Byte array types that can be uploaded by the client implementation.
+ * Binary types that can be uploaded via the client-side Firebase Storage SDK.
  */
 export type StorageClientUploadBytesInput = File | Blob | Uint8Array;
 
 /**
- * Known types that can be uploaded by the client implementation.
+ * All types that can be uploaded via the client-side Firebase Storage SDK (binary or string-encoded).
  */
 export type StorageClientUploadInput = StorageClientUploadBytesInput | StorageDataString;
 
 /**
- * Known types that can be uploaded by the client implementation.
+ * Binary types that can be uploaded via the server-side Google Cloud Storage SDK.
  */
 export type StorageServerUploadBytesInput = Buffer | Uint8Array;
 
 /**
- * Known types that can be uploaded by the server implementation.
+ * All types that can be uploaded via the server-side Google Cloud Storage SDK (binary or string-encoded).
  */
 export type StorageServerUploadInput = StorageServerUploadBytesInput | StorageDataString;
 
+/**
+ * Union of all uploadable input types across client and server.
+ */
 export type StorageUploadInput = StorageClientUploadInput | StorageServerUploadInput;
 
+/**
+ * Represents a resumable upload task with controls for pausing, cancelling, and monitoring progress.
+ *
+ * Primarily used on the client side via `uploadResumable()` on {@link FirebaseStorageAccessorFile}.
+ */
 export interface StorageUploadTask<R = unknown> {
   /**
    * Exposes the internal reference type.
