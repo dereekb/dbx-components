@@ -1,3 +1,19 @@
+## [13.3.1](https://github.com/dereekb/dbx-components/compare/v13.3.0-dev...v13.3.1) (2026-03-16)
+
+
+### Code Refactoring
+
+- added missing package ([1845b7d9](https://github.com/dereekb/dbx-components/commit/1845b7d91062d9c6d6f9e4b7024142d462fd4d9b))
+- updated @nestjs dependencies to latest ([15ab7bc8](https://github.com/dereekb/dbx-components/commit/15ab7bc8ea5ad6deb34a2b2a5949a0095b70c55d))
+
+
+### Documentation
+
+- jsdoc improvements across @dereekb/dbx-analytics ([67b5af21](https://github.com/dereekb/dbx-components/commit/67b5af2100706a7845445f2c6d55d231d9cadeed))
+
+
+
+
 # [13.3.0](https://github.com/dereekb/dbx-components/compare/v13.2.2-dev...v13.3.0) (2026-03-14)
 
 

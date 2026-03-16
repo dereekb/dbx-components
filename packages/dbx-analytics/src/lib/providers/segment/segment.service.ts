@@ -2,8 +2,21 @@ import { Injectable, InjectionToken, inject } from '@angular/core';
 import { AbstractAsyncWindowLoadedService } from '@dereekb/browser';
 import { poll } from '@dereekb/util';
 
+/**
+ * Injection token for optionally preloading the Segment analytics script.
+ */
 export const PRELOAD_SEGMENT_TOKEN = new InjectionToken<string>('DbxAnalyticsSegmentApiServicePreload');
 
+/**
+ * Configuration for the Segment analytics integration.
+ *
+ * @example
+ * ```ts
+ * const config = new DbxAnalyticsSegmentApiServiceConfig('your-segment-write-key');
+ * config.active = environment.production;
+ * config.logging = !environment.production;
+ * ```
+ */
 export class DbxAnalyticsSegmentApiServiceConfig {
   writeKey: string;
   logging = true;
@@ -14,14 +27,31 @@ export class DbxAnalyticsSegmentApiServiceConfig {
 }
 
 /**
- * When the Segment library finishes loading, it is invoked.
+ * Extended Segment analytics type that includes the `invoked` flag set after the snippet initializes.
  */
 type SegmentAnalyticsInvoked = SegmentAnalytics.AnalyticsJS & { invoked?: boolean };
 
 /**
- * Segment API Service used for waiting/retrieving the segment API from window when initialized.
+ * Service that manages the async loading and initialization of the Segment analytics SDK from `window.analytics`.
  *
- * This requires some setup in index.html.
+ * Polls for the Segment snippet to be invoked, then calls `analytics.load()` with the configured write key.
+ * Once Segment reports ready, the resolved SDK instance is available via the inherited `service$` observable.
+ *
+ * Requires the Segment analytics snippet to be included in `index.html`.
+ *
+ * Provided via {@link provideDbxAnalyticsSegmentApiService}.
+ *
+ * @example
+ * ```ts
+ * // In app.config.ts
+ * provideDbxAnalyticsSegmentApiService({
+ *   dbxAnalyticsSegmentApiServiceConfigFactory: (injector) => {
+ *     const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
+ *     config.active = environment.production;
+ *     return config;
+ *   }
+ * })
+ * ```
  */
 @Injectable()
 export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedService<SegmentAnalytics.AnalyticsJS> {
