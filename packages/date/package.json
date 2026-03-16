@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/date",
-  "version": "13.3.0",
+  "version": "13.3.1",
   "peerDependencies": {
-    "@dereekb/rxjs": "13.3.0",
-    "@dereekb/util": "13.3.0",
+    "@dereekb/rxjs": "13.3.1",
+    "@dereekb/util": "13.3.1",
     "@vvo/tzdb": "^6.0.0",
     "arktype": "^2.2.0",
     "date-fns": "^4.0.0",
@@ -13,6 +13,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dereekb/rxjs": "13.3.0"
+    "@dereekb/rxjs": "13.3.1"
   }
 }
