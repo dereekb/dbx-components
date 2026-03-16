@@ -5,30 +5,87 @@ import { type DbxAnalyticsEvent, type DbxAnalyticsEventData, type DbxAnalyticsEv
 import { type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
 import { type Maybe, type Destroyable, safeCompareEquality } from '@dereekb/util';
 
+/**
+ * Abstract emitter interface for sending analytics events.
+ *
+ * Implemented by {@link DbxAnalyticsService} as the primary concrete implementation.
+ * Components and services use this to fire analytics events without coupling to a specific provider.
+ *
+ * @example
+ * ```ts
+ * // Inject and send a custom event
+ * const emitter = inject(DbxAnalyticsEventEmitterService);
+ * emitter.sendEventData('Button Clicked', { buttonId: 'save' });
+ * ```
+ */
 export abstract class DbxAnalyticsEventEmitterService {
   abstract sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void;
   abstract sendUserLoginEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void;
   abstract sendUserLogoutEvent(data?: DbxAnalyticsEventData): void;
   abstract sendUserPropertiesEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void;
-  abstract sendEventData(name: DbxAnalyticsEventName, data?: DbxAnalyticsEventData): void;
+  /**
+   * @deprecated When sending an event with no data, use {@link sendEventType} instead.
+   */
+  abstract sendEventData(name: DbxAnalyticsEventName): void;
+  abstract sendEventData(name: DbxAnalyticsEventName, data: DbxAnalyticsEventData): void;
   abstract sendEvent(event: DbxAnalyticsEvent): void;
   abstract sendPageView(page?: string): void;
 }
 
+/**
+ * Abstract interface exposing the analytics event stream as an observable.
+ *
+ * Implemented by {@link DbxAnalyticsService}. Listeners subscribe to `events$` to forward events to external providers.
+ */
 export abstract class DbxAnalyticsEventStreamService {
   abstract readonly events$: Observable<DbxAnalyticsStreamEvent>;
 }
 
+/**
+ * Abstract source for the current analytics user identity.
+ *
+ * Provide an implementation to automatically associate a user with all emitted analytics events.
+ * Typically backed by the auth system (e.g., {@link DbxFirebaseAnalyticsUserSource}).
+ *
+ * @example
+ * ```ts
+ * // Provide a static user source
+ * const userSource: DbxAnalyticsUserSource = {
+ *   analyticsUser$: of({ user: 'uid_abc123', properties: { role: 'admin' } })
+ * };
+ * ```
+ */
 export abstract class DbxAnalyticsUserSource {
   abstract readonly analyticsUser$: Observable<Maybe<DbxAnalyticsUser>>;
 }
 
+/**
+ * Abstract listener that receives analytics events from {@link DbxAnalyticsService}.
+ *
+ * Implement this to forward events to an external analytics provider (e.g., Segment, Mixpanel).
+ * Register listeners via {@link DbxAnalyticsServiceConfiguration.listeners}.
+ */
 export abstract class DbxAnalyticsServiceListener {
   public abstract listenToService(service: DbxAnalyticsService): void;
 }
 
 /**
- * Abstract AnalyticsServiceListener implementation.
+ * Base class for analytics service listeners that manages subscription lifecycle and provides
+ * reactive access to the analytics service and its event stream.
+ *
+ * Subclasses implement {@link _initializeServiceSubscription} to subscribe to events and forward them
+ * to an external analytics provider.
+ *
+ * @example
+ * ```ts
+ * class MyAnalyticsListener extends AbstractDbxAnalyticsServiceListener {
+ *   protected _initializeServiceSubscription(): Subscription | false {
+ *     return this.analyticsEvents$.subscribe((event) => {
+ *       console.log('Event:', event.type, event.event?.name);
+ *     });
+ *   }
+ * }
+ * ```
  */
 export abstract class AbstractDbxAnalyticsServiceListener implements DbxAnalyticsServiceListener, Destroyable {
   private _sub = new SubscriptionObject();
@@ -59,6 +116,23 @@ export abstract class AbstractDbxAnalyticsServiceListener implements DbxAnalytic
   }
 }
 
+/**
+ * Configuration for {@link DbxAnalyticsService}, controlling which listeners receive events,
+ * whether analytics runs in production mode, and optionally providing a user source.
+ *
+ * In non-production mode, listeners are not initialized and all events are logged to the console instead.
+ * Provide via {@link provideDbxAnalyticsService} using a factory function.
+ *
+ * @example
+ * ```ts
+ * const config: DbxAnalyticsServiceConfiguration = {
+ *   isProduction: environment.production,
+ *   logEvents: !environment.production,
+ *   listeners: [segmentListener],
+ *   userSource: firebaseAnalyticsUserSource
+ * };
+ * ```
+ */
 export abstract class DbxAnalyticsServiceConfiguration {
   readonly listeners: DbxAnalyticsServiceListener[] = [];
   readonly isProduction?: boolean;
@@ -66,6 +140,11 @@ export abstract class DbxAnalyticsServiceConfiguration {
   readonly userSource?: DbxAnalyticsUserSource;
 }
 
+/**
+ * A fully resolved analytics stream event that includes the event payload, type, user context, and extracted user ID.
+ *
+ * Created by {@link dbxAnalyticsStreamEventAnalyticsEventWrapper} and emitted through the analytics event stream.
+ */
 export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyticsStreamEvent {
   readonly event: DbxUserAnalyticsEvent;
   readonly type: DbxAnalyticsStreamEventType;
@@ -73,6 +152,23 @@ export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyti
   readonly userId: string | undefined;
 }
 
+/**
+ * Wraps a {@link DbxUserAnalyticsEvent} into a {@link DbxAnalyticsStreamEventAnalyticsEventWrapper},
+ * extracting the user ID for convenient access by listeners.
+ *
+ * @param event - the analytics event with optional user context
+ * @param type - the stream event type classification; defaults to `Event`
+ * @returns a wrapper combining the event, type, user, and extracted userId
+ *
+ * @example
+ * ```ts
+ * const wrapper = dbxAnalyticsStreamEventAnalyticsEventWrapper(
+ *   { name: 'Button Clicked', user: { user: 'uid_123' } },
+ *   DbxAnalyticsStreamEventType.Event
+ * );
+ * // wrapper.userId === 'uid_123'
+ * ```
+ */
 export function dbxAnalyticsStreamEventAnalyticsEventWrapper(event: DbxUserAnalyticsEvent, type: DbxAnalyticsStreamEventType = DbxAnalyticsStreamEventType.Event) {
   const { user } = event;
   const userId = user ? user.user : undefined;
@@ -86,7 +182,27 @@ export function dbxAnalyticsStreamEventAnalyticsEventWrapper(event: DbxUserAnaly
 }
 
 /**
- * Primary analytics service that emits analytics events that components can listen to.
+ * Central analytics service that emits typed analytics events for consumption by registered listeners.
+ *
+ * Acts as both the event emitter (components call methods like {@link sendEventData}, {@link sendPageView})
+ * and the event stream source (listeners subscribe to {@link events$}).
+ *
+ * In production mode, registered {@link DbxAnalyticsServiceListener} instances (e.g., Segment) receive all events.
+ * In non-production mode, events are logged to the console for debugging.
+ *
+ * Provided via {@link provideDbxAnalyticsService} with a {@link DbxAnalyticsServiceConfiguration} factory.
+ *
+ * @example
+ * ```ts
+ * // Send a custom event from a component
+ * const analytics = inject(DbxAnalyticsService);
+ * analytics.sendEventData('Interview Started', { candidateId: 'abc123' });
+ *
+ * // Send a page view on route transitions
+ * transitionService.onSuccess({}, () => {
+ *   analytics.sendPageView();
+ * });
+ * ```
  */
 @Injectable()
 export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxAnalyticsEventEmitterService, Destroyable {
@@ -124,7 +240,11 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
 
   // MARK: Source
   /**
-   * Sets the user directly, overridding the UserSource.
+   * Sets the analytics user directly, overriding any configured {@link DbxAnalyticsUserSource}.
+   *
+   * Pass `undefined` to clear the current user (e.g., on logout).
+   *
+   * @param user - the user to identify, or undefined to clear
    */
   public setUser(user: Maybe<DbxAnalyticsUser>): void {
     let source: Maybe<DbxAnalyticsUserSource>;
@@ -140,13 +260,21 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     }
   }
 
+  /**
+   * Sets the reactive user source that automatically updates the analytics user as auth state changes.
+   *
+   * @param source - the user source providing an observable of the current analytics user
+   */
   public setUserSource(source: DbxAnalyticsUserSource): void {
     this._userSource.next(source);
   }
 
   // MARK: AnalyticsEventEmitterService
   /**
-   * Sends an event.
+   * Emits a new user registration event, typically sent once after account creation.
+   *
+   * @param user - the newly registered user
+   * @param data - registration-specific data including the signup method
    */
   public sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void {
     this.sendNextEvent(
@@ -159,6 +287,12 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     );
   }
 
+  /**
+   * Emits a user login event, identifying the user in analytics providers.
+   *
+   * @param user - the user who logged in
+   * @param data - optional additional event data
+   */
   public sendUserLoginEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void {
     this.sendNextEvent(
       {
@@ -170,6 +304,12 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     );
   }
 
+  /**
+   * Emits a user logout event and optionally clears the current analytics user.
+   *
+   * @param data - optional additional event data
+   * @param clearUser - whether to reset the analytics user identity; defaults to `true`
+   */
   public sendUserLogoutEvent(data?: DbxAnalyticsEventData, clearUser = true): void {
     this.sendNextEvent(
       {
@@ -184,6 +324,12 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     }
   }
 
+  /**
+   * Emits a user properties update event, used to sync user traits to analytics providers.
+   *
+   * @param user - the user whose properties are being updated
+   * @param data - optional additional event data
+   */
   public sendUserPropertiesEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void {
     this.sendNextEvent(
       {
@@ -195,6 +341,27 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     );
   }
 
+  /**
+   * @deprecated When sending an event with no data, use {@link sendEventType} instead.
+   */
+  public sendEventData(name: DbxAnalyticsEventName): void;
+  /**
+   * Sends a named analytics event with a data payload.
+   *
+   * This is the primary method for tracking custom events with associated properties.
+   *
+   * @param name - the event name (e.g., `'Interview Ended'`)
+   * @param data - key-value data attached to the event
+   *
+   * @example
+   * ```ts
+   * analytics.sendEventData('Interview Ended', {
+   *   seconds: 120,
+   *   endedDueToTime: 'true'
+   * });
+   * ```
+   */
+  public sendEventData(name: DbxAnalyticsEventName, data: DbxAnalyticsEventData): void;
   public sendEventData(name: DbxAnalyticsEventName, data?: DbxAnalyticsEventData): void {
     return this.sendEvent({
       name,
@@ -202,6 +369,16 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     });
   }
 
+  /**
+   * Sends a named event with no additional data, useful for simple occurrence tracking.
+   *
+   * @param eventType - the event name to track
+   *
+   * @example
+   * ```ts
+   * analytics.sendEventType('Finish Account Setup');
+   * ```
+   */
   public sendEventType(eventType: DbxAnalyticsEventName): void {
     this.sendNextEvent(
       {
@@ -211,10 +388,28 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     );
   }
 
+  /**
+   * Sends a fully constructed analytics event object.
+   *
+   * @param event - the event containing name, optional value, and data
+   */
   public sendEvent(event: DbxAnalyticsEvent): void {
     this.sendNextEvent(event, DbxAnalyticsStreamEventType.Event);
   }
 
+  /**
+   * Sends a page view event, typically called on successful route transitions.
+   *
+   * @param page - optional page name/path override; if omitted, the provider determines the current page
+   *
+   * @example
+   * ```ts
+   * // In a router config function
+   * transitionService.onSuccess({}, () => {
+   *   analyticsService.sendPageView();
+   * });
+   * ```
+   */
   public sendPageView(page?: string): void {
     this.sendNextEvent(
       {

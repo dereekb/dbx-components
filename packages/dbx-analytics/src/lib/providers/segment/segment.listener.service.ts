@@ -5,7 +5,28 @@ import { AbstractDbxAnalyticsServiceListener, type DbxAnalyticsStreamEvent, DbxA
 import { DbxAnalyticsSegmentApiService } from './segment.service';
 
 /**
- * DbxAnalyticsServiceListener adapter for Segment.
+ * Analytics listener that forwards {@link DbxAnalyticsStreamEvent} events to the Segment SDK.
+ *
+ * Automatically maps event types to the appropriate Segment methods:
+ * - {@link DbxAnalyticsStreamEventType.Event} / {@link DbxAnalyticsStreamEventType.UserLoginEvent} -> `track()`
+ * - {@link DbxAnalyticsStreamEventType.UserChange} / {@link DbxAnalyticsStreamEventType.NewUserEvent} -> `identify()`
+ * - {@link DbxAnalyticsStreamEventType.UserLogoutEvent} -> `reset()`
+ * - {@link DbxAnalyticsStreamEventType.PageView} -> `page()`
+ *
+ * Events are only sent when the Segment configuration is marked as `active`.
+ * Provided at root level and registered as a listener via {@link DbxAnalyticsServiceConfiguration.listeners}.
+ *
+ * @example
+ * ```ts
+ * // Register in analytics configuration factory
+ * function analyticsConfigFactory(injector: Injector): DbxAnalyticsServiceConfiguration {
+ *   const segmentListener = injector.get(DbxAnalyticsSegmentServiceListener);
+ *   return {
+ *     isProduction: true,
+ *     listeners: [segmentListener]
+ *   };
+ * }
+ * ```
  */
 @Injectable({
   providedIn: 'root'
