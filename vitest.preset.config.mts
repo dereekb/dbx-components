@@ -169,7 +169,12 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         exclude,
         setupFiles,
         reporters,
-        isolate: testConfig?.isolate ?? isolate,
+        /**
+         * Is is important to isolate while using --watch so that all file changes are properly processed/compiled.
+         *
+         * See: https://github.com/vitest-dev/vitest/issues/9499
+         */
+        isolate: testConfig?.isolate ?? (process.argv.includes('--watch') ? true : isolate),
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const
