@@ -1,0 +1,16 @@
+{
+  "name": "@dereekb/analytics",
+  "version": "13.3.1",
+  "exports": {
+    "./nestjs": {
+      "module": "./nestjs/index.esm.js",
+      "types": "./nestjs/index.d.ts",
+      "import": "./nestjs/index.cjs.mjs",
+      "default": "./nestjs/index.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/util": "13.3.1"
+  },
+  "devDependencies": {}
+}

@@ -5,6 +5,9 @@ import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestConte
 import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { type NestContextCallableRequest } from '../function/nest';
 import { type OnCallApiDetailsRef, aggregateCrudModelApiDetails, aggregateModelApiDetails } from './api.details';
+import { readAnalyticsDetails } from './analytics.details';
+import { type OnCallModelAnalyticsHandler, ON_CALL_MODEL_ANALYTICS_HANDLER } from './analytics.handler';
+import { wrapWithAnalytics } from './analytics.emit';
 
 // MARK: Function
 /**
@@ -29,6 +32,11 @@ export interface OnCallModelConfig {
    * Throw to reject the request.
    */
   readonly preAssert?: AssertModelCrudRequestFunction<unknown, OnCallTypedModelParams>;
+  /**
+   * Override the analytics handler injection token.
+   * Default: {@link ON_CALL_MODEL_ANALYTICS_HANDLER}
+   */
+  readonly analyticsToken?: string;
 }
 
 /**
@@ -53,9 +61,23 @@ export interface OnCallModelConfig {
  * ```
  */
 export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> & OnCallApiDetailsRef {
-  const { preAssert = () => undefined } = config;
+  const { preAssert = () => undefined, analyticsToken } = config;
+  const resolvedToken = analyticsToken ?? ON_CALL_MODEL_ANALYTICS_HANDLER;
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
+    // Try to resolve analytics handler from NestContext (silent if unavailable)
+    let analyticsHandler: OnCallModelAnalyticsHandler | undefined;
+
+    try {
+      analyticsHandler = (request as any).nest?.nestApplication?.get(resolvedToken, { strict: false });
+    } catch {
+      // silent — analytics is optional
+    }
+
+    if (analyticsHandler) {
+      (request as any)._analyticsHandler = analyticsHandler;
+    }
+
     const call = request.data?.call;
 
     if (call) {
@@ -164,11 +186,26 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
       const specifier = request.data.specifier;
       assertRequestRequiresAuthForFunction(crudFn, request);
       preAssert({ call: callType, request, modelType, specifier });
-      return crudFn({
-        ...request,
-        specifier,
-        data: request.data.data
-      });
+
+      const analyticsHandler: OnCallModelAnalyticsHandler | undefined = (request as any)._analyticsHandler;
+      const analyticsDetails = readAnalyticsDetails(crudFn);
+
+      // Propagate call/modelType on request for specifier-level analytics access
+      if (analyticsHandler) {
+        (request as any)._call = callType;
+        (request as any)._modelType = modelType;
+      }
+
+      if (analyticsHandler && analyticsDetails) {
+        const context = { call: callType, modelType, specifier, uid: (request as any).auth?.uid, data: request.data?.data };
+        return wrapWithAnalytics(analyticsHandler, analyticsDetails, context, () => crudFn({ ...request, specifier, data: request.data.data }));
+      } else {
+        return crudFn({
+          ...request,
+          specifier,
+          data: request.data.data
+        });
+      }
     } else {
       throw throwOnUnknownModelType(modelType);
     }

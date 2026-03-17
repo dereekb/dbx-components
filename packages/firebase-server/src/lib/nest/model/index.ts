@@ -1,3 +1,6 @@
+export * from './analytics.details';
+export * from './analytics.emit';
+export * from './analytics.handler';
 export * from './api.details';
 export * from './permission.error';
 export * from './specifier.function';

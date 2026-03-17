@@ -2,6 +2,7 @@
   "name": "@dereekb/dbx-analytics",
   "version": "13.3.1",
   "peerDependencies": {
+    "@dereekb/analytics": "13.3.1",
     "@dereekb/rxjs": "13.3.1",
     "rxjs": "^7.8.0",
     "@angular/core": "^21.0.0",

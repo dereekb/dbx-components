@@ -1,4 +1,5 @@
 import { type Configurable, type Maybe } from '@dereekb/util';
+import { type OnCallModelFunctionAnalyticsDetails, type OnCallModelFunctionAnalyticsDetailsRef } from './analytics.details';
 
 // MARK: JSON Schema
 /**
@@ -142,6 +143,11 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
    */
   readonly optionalAuth?: boolean;
   /**
+   * Optional analytics lifecycle configuration for this handler.
+   * When provided, the dispatch chain will emit analytics events around handler execution.
+   */
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails;
+  /**
    * The handler function.
    */
   readonly fn: F;
@@ -177,15 +183,19 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  * });
  * ```
  */
-export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
-  const { optionalAuth, fn, ...apiDetails } = config;
+export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef & OnCallModelFunctionAnalyticsDetailsRef {
+  const { optionalAuth, analytics, fn, ...apiDetails } = config;
   (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails;
+
+  if (analytics) {
+    (fn as Configurable<OnCallModelFunctionAnalyticsDetailsRef>)._analyticsDetails = analytics;
+  }
 
   if (optionalAuth) {
     (fn as any)._requireAuth = false;
   }
 
-  return fn as F & OnCallModelFunctionApiDetailsRef;
+  return fn as F & OnCallModelFunctionApiDetailsRef & OnCallModelFunctionAnalyticsDetailsRef;
 }
 
 // MARK: Aggregation Utilities
