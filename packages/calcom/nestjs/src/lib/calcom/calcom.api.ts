@@ -61,20 +61,40 @@ export class CalcomApi {
 
   // MARK: Context Creation
   /**
-   * Creates a {@link CalcomApiContextInstance} for a specific user (mentor) using their OAuth refresh token.
-   * The returned instance has all API functions scoped to that mentor's account.
+   * Creates a {@link CalcomApiContextInstance} for a specific user using their OAuth refresh token.
+   * The returned instance has all API functions scoped to that user's account.
+   *
+   * When no explicit `accessTokenCache` is provided, a per-user cache is automatically
+   * resolved from the cache service using an md5 hash of the refresh token as the key.
+   * This ensures tokens persist across requests and server restarts without collisions.
    *
    * @example
    * ```ts
-   * const mentorInstance = calcomApi.makeUserContextInstance({
-   *   refreshToken: mentor.calcomRefreshToken,
-   *   accessTokenCache: mentorTokenCache
+   * // Automatic per-user caching (recommended):
+   * const userInstance = calcomApi.makeUserContextInstance({
+   *   refreshToken: user.calcomRefreshToken
    * });
-   * await mentorInstance.createEventType({ title: 'Mentoring', slug: 'mentoring', lengthInMinutes: 30 });
+   *
+   * // With explicit cache override:
+   * const userInstance = calcomApi.makeUserContextInstance({
+   *   refreshToken: user.calcomRefreshToken,
+   *   accessTokenCache: customCache
+   * });
    * ```
    */
   makeUserContextInstance(input: CalcomUserContextFactoryInput): CalcomApiContextInstance {
-    const userContext: CalcomUserContext = this.calcom.calcomServerContext.makeUserContext(input);
+    const contextInput = { ...input };
+
+    // Auto-resolve per-user cache from the refresh token if no explicit cache was given
+    if (!contextInput.accessTokenCache && contextInput.refreshToken) {
+      const userCache = this.calcomOAuthApi.cacheForRefreshToken(contextInput.refreshToken);
+
+      if (userCache) {
+        contextInput.accessTokenCache = userCache;
+      }
+    }
+
+    const userContext: CalcomUserContext = this.calcom.calcomServerContext.makeUserContext(contextInput);
     return this.makeContextInstance(userContext);
   }
 
