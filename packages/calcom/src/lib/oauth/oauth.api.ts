@@ -26,9 +26,18 @@ export interface CalcomOAuthAccessTokenErrorResponse {
 }
 
 /**
- * Retrieves a new AccessToken using a refresh token.
+ * Refreshes an access token using a refresh token. Cal.com rotates refresh tokens
+ * on every use, so the new `refresh_token` from the response must be persisted.
  *
  * Cal.com uses JSON body (not Basic Auth) for token requests.
+ *
+ * @see https://cal.com/docs/api-reference/v2/oauth/refresh-an-existing-access-token
+ *
+ * @example
+ * ```ts
+ * const response = await refreshAccessToken(context)({ refreshToken: 'existing-refresh-token' });
+ * console.log(response.access_token, response.refresh_token);
+ * ```
  */
 export function refreshAccessToken(context: CalcomOAuthContext): (input?: CalcomOAuthRefreshTokenInput) => Promise<CalcomOAuthTokenResponse> {
   return (input) => {
@@ -49,9 +58,21 @@ export function refreshAccessToken(context: CalcomOAuthContext): (input?: Calcom
 }
 
 /**
- * Exchanges an authorization code for an access token.
+ * Exchanges an OAuth authorization code for access and refresh tokens.
+ * Used during the initial OAuth flow when a user authorizes your app.
  *
  * Cal.com uses JSON body (not Basic Auth) for token requests.
+ *
+ * @see https://cal.com/docs/api-reference/v2/oauth/exchange-an-authorization-code-for-access-tokens
+ *
+ * @example
+ * ```ts
+ * const response = await exchangeAuthorizationCode(context)({
+ *   code: 'auth-code-from-redirect',
+ *   redirectUri: 'https://example.com/callback'
+ * });
+ * console.log(response.access_token, response.refresh_token);
+ * ```
  */
 export function exchangeAuthorizationCode(context: CalcomOAuthContext): (input: CalcomOAuthExchangeAuthorizationCodeInput) => Promise<CalcomOAuthTokenResponse> {
   return (input) => {

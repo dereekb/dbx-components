@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Seconds } from '@dereekb/util';
 import { type CalcomRefreshToken } from '../calcom.config';
 import { CalcomOAuthAuthFailureError } from './oauth.error.api';
 
@@ -25,7 +25,7 @@ export interface CalcomAccessToken {
   /**
    * Length of time the token is valid for.
    */
-  readonly expiresIn: number;
+  readonly expiresIn: Seconds;
   /**
    * Date the token expires at.
    */

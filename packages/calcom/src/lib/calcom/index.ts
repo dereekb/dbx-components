@@ -4,7 +4,7 @@ export * from './calcom.api.user';
 export * from './calcom.api.schedule';
 export * from './calcom.api.slot';
 export * from './calcom.api.booking';
-export * from './calcom.api.event-type';
+export * from './calcom.api.eventtype';
 export * from './calcom.api.calendar';
 export * from './calcom.api.webhook';
 export * from './calcom.error.api';
