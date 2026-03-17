@@ -31,6 +31,7 @@
       "@dereekb/dbx-form": ["packages/dbx-form/src/index.ts"],
       "@dereekb/dbx-form/calendar": ["packages/dbx-form/calendar/src/index.ts"],
       "@dereekb/dbx-form/mapbox": ["packages/dbx-form/mapbox/src/index.ts"],
+      "@dereekb/dbx-form/quiz": ["packages/dbx-form/quiz/src/index.ts"],
       "@dereekb/dbx-web": ["packages/dbx-web/src/index.ts"],
       "@dereekb/dbx-web/calendar": ["packages/dbx-web/calendar/src/index.ts"],
       "@dereekb/dbx-web/mapbox": ["packages/dbx-web/mapbox/src/index.ts"],

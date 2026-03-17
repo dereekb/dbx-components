@@ -38,6 +38,8 @@ import { HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO, DocExtensionHelpExampleWidgetTw
 import { DocExtensionHelpExampleWidgetExampleHeaderComponent } from './component/help.widget.example.header.component';
 import { DocExtensionHelpListBottomExampleComponent } from './component/help.list.bottom.component';
 import { DocExtensionOidcComponent } from './container/oidc.component';
+import { DocExtensionQuizComponent } from './container/quiz.component';
+import { DocExtensionQuizExampleResultComponent } from './component/quiz.example.result.component';
 
 @NgModule({
   imports: [
@@ -85,7 +87,9 @@ import { DocExtensionOidcComponent } from './container/oidc.component';
     DocExtensionDownloadComponent,
     DocExtensionStorageFileComponent,
     DocExtensionHelpComponent,
-    DocExtensionOidcComponent
+    DocExtensionOidcComponent,
+    DocExtensionQuizComponent,
+    DocExtensionQuizExampleResultComponent
   ]
 })
 export class DocExtensionModule {

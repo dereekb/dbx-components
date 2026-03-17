@@ -1,0 +1,55 @@
+<div class="dbx-quiz" (dbxWindowKeyDownListener)="handleKeyDown($event)" [dbxWindowKeyDownFilter]="keysFilter">
+  @switch (viewStateSignal()) {
+    @case ('pre-quiz') {
+      <ng-container *ngTemplateOutlet="preQuizTemplate"></ng-container>
+    }
+    @case ('quiz') {
+      <ng-container *ngTemplateOutlet="quizTemplate"></ng-container>
+    }
+    @case ('post-quiz') {
+      <ng-container *ngTemplateOutlet="postQuizTemplate"></ng-container>
+    }
+  }
+</div>
+
+<!-- Pre-Quiz -->
+<ng-template #preQuizTemplate>
+  <div class="dbx-quiz-pre-quiz">
+    <dbx-injection [config]="preQuizComponentConfigSignal()"></dbx-injection>
+  </div>
+</ng-template>
+
+<!-- Quiz -->
+<ng-template #quizTemplate>
+  <div class="dbx-quiz-quiz">
+    <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
+    <div class="dbx-quiz-question dbx-pb3">
+      <h4 class="dbx-quiz-question-title">{{ questionTitleSignal() }}</h4>
+      <dbx-injection [config]="questionComponentConfigSignal()"></dbx-injection>
+    </div>
+    <div class="dbx-quiz-answer dbx-pt3">
+      <dbx-injection [config]="answerComponentConfigSignal()"></dbx-injection>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Post-Quiz -->
+<ng-template #postQuizTemplate>
+  <div class="dbx-quiz-post-quiz">
+    <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
+    <dbx-injection [config]="resultsComponentConfigSignal()"></dbx-injection>
+  </div>
+</ng-template>
+
+<!-- Header Template -->
+<ng-template #headerTemplate>
+  <div class="dbx-quiz-header">
+    <div class="dbx-flex-group">
+      <dbx-button [disabled]="!canGoToPreviousQuestionSignal()" icon="arrow_back" (buttonClick)="clickPreviousQuestion()"></dbx-button>
+      <span class="spacer"></span>
+      <span class="mat-h2">{{ quizTitleSignal() }}</span>
+      <span class="spacer"></span>
+      <dbx-button [disabled]="!canGoToNextQuestionSignal()" icon="arrow_forward" (buttonClick)="clickNextQuestion()"></dbx-button>
+    </div>
+  </div>
+</ng-template>

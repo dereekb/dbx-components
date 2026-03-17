@@ -12,6 +12,7 @@ import { DocExtensionZipComponent } from './container/zip.component';
 import { DocExtensionWebFilePreviewComponent } from './container/webfilepreview.component';
 import { DocExtensionHelpComponent } from './container/help.component';
 import { DocExtensionOidcComponent } from './container/oidc.component';
+import { DocExtensionQuizComponent } from './container/quiz.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -92,6 +93,12 @@ export const docExtensionOidcState: Ng2StateDeclaration = {
   component: DocExtensionOidcComponent
 };
 
+export const docExtensionQuizState: Ng2StateDeclaration = {
+  url: '/quiz',
+  name: 'doc.extension.quiz',
+  component: DocExtensionQuizComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -106,5 +113,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionZipState,
   docExtensionWebFilePreviewState,
   docExtensionHelpState,
-  docExtensionOidcState
+  docExtensionOidcState,
+  docExtensionQuizState
 ];
