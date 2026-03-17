@@ -8,6 +8,9 @@ defaults: &defaults
     - image: cimg/node:24.13
 
 parameters:
+  run_build:
+    type: boolean
+    default: true
   run_tests:
     type: boolean
     default: true
@@ -114,6 +117,10 @@ jobs:
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
     <<: *defaults
+    parameters:
+      skip_build:
+        type: boolean
+        default: false
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
@@ -122,8 +129,17 @@ jobs:
       GIT_USER_NAME: CI_GIT_USER_NAME
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/code
+      # attach workspace from build job when build was not skipped
+      - unless:
+          condition: << parameters.skip_build >>
+          steps:
+            - attach_workspace:
+                at: ~/code
+      # install packages directly when build was skipped
+      - when:
+          condition: << parameters.skip_build >>
+          steps:
+            - node/install-packages
       # SETUP REQUIRED - Add an SSH key from GitHub to your project's CircleCI configuration. This is require to push changes to github
       # https://circleci.com/docs/2.0/add-ssh-key/#adding-ssh-keys-to-a-job
       - add_ssh_keys:
@@ -228,6 +244,7 @@ workflows:
   version: 2
   # builds and tests the content. Occurs on every branch.
   build-and-test-and-version:
+    when: << pipeline.parameters.run_build >>
     jobs:
       - build
       - test-with-node:
@@ -241,6 +258,16 @@ workflows:
             - build
             - test-with-node
             - test-with-node-firebase
+          filters:
+            branches:
+              only: release
+  # Skips build/test and runs release directly. Trigger manually with run_build=false.
+  release-only:
+    when:
+      not: << pipeline.parameters.run_build >>
+    jobs:
+      - run-release-and-push-to-main:
+          skip_build: true
           filters:
             branches:
               only: release
