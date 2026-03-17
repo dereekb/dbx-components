@@ -1,0 +1,16 @@
+{
+  "name": "@dereekb/calcom/nestjs",
+  "version": "13.3.1",
+  "peerDependencies": {
+    "@dereekb/nestjs": "13.3.1",
+    "@dereekb/util": "13.3.1",
+    "@dereekb/calcom": "13.3.1",
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/config": "^4.0.3",
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.14",
+    "date-fns": "^4.0.0"
+  }
+}

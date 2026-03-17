@@ -21,6 +21,8 @@
     "baseUrl": ".",
     "paths": {
       "@dereekb/browser": ["packages/browser/src/index.ts"],
+      "@dereekb/calcom": ["packages/calcom/src/index.ts"],
+      "@dereekb/calcom/nestjs": ["packages/calcom/nestjs/src/index.ts"],
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
       "@dereekb/dbx-core": ["packages/dbx-core/src/index.ts"],

@@ -1,0 +1,96 @@
+{
+  "name": "calcom",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/calcom/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["util-fetch", "!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/calcom"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run calcom:build-base"
+          },
+          {
+            "command": "npx nx run calcom-nestjs:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/calcom",
+        "outputPath": "dist/packages/calcom",
+        "main": "packages/calcom/src/index.ts",
+        "tsConfig": "packages/calcom/tsconfig.lib.json",
+        "compiler": "swc",
+        "project": "packages/calcom/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/calcom/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run calcom tests",
+            "command": "npx nx test calcom"
+          },
+          {
+            "description": "run calcom-nestjs tests",
+            "command": "npx nx test calcom-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/calcom && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/calcom"
+      }
+    }
+  }
+}
