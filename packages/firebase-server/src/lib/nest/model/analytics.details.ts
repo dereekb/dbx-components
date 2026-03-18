@@ -60,15 +60,26 @@ export interface OnCallModelFunctionAnalyticsDetails<R = any, O = any> {
 // MARK: Context
 /**
  * Context available to the dispatch chain for building analytics emitters.
- * Includes the full request object and auth data.
+ *
+ * Captured at the start of a handler invocation and used to auto-fill event fields
+ * (call, modelType, specifier, uid, auth) on every emitted {@link OnCallModelAnalyticsEvent}.
+ *
+ * @typeParam I - The input/request data type.
  */
 export interface OnCallAnalyticsContext<I = any> {
+  /** The CRUD operation type (e.g., `'create'`, `'update'`). */
   readonly call: string;
+  /** The model type being operated on (e.g., `'guestbook'`). */
   readonly modelType: string;
+  /** Optional operation specifier for variant handlers. */
   readonly specifier: string | undefined;
+  /** The Firebase Auth UID of the calling user. */
   readonly uid?: string;
+  /** The full Firebase Auth context. */
   readonly auth?: AuthData | undefined;
+  /** The typed request data. */
   readonly data?: I;
+  /** The full NestContext callable request with auth and specifier. */
   readonly request: NestContextCallableRequestWithAuth<unknown, I> & ModelFirebaseCrudFunctionSpecifierRef;
 }
 

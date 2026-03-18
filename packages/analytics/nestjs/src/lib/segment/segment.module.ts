@@ -24,6 +24,13 @@ export function segmentServiceConfigFactory(configService: ConfigService, server
   return config;
 }
 
+/**
+ * NestJS module that provides the {@link SegmentService} and its dependencies.
+ *
+ * Reads `SEGMENT_WRITE_KEY` and `SEGMENT_LOG_ONLY` from environment variables via {@link ConfigModule}.
+ * When a {@link ServerEnvironmentService} is available and the environment is a testing environment,
+ * `logOnly` is forced to `true`.
+ */
 @Module({
   imports: [ConfigModule],
   providers: [

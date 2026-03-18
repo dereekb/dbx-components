@@ -7,8 +7,10 @@
     "@dereekb/util": "13.3.1",
     "@nestjs/common": "^11.1.16",
     "@nestjs/config": "^4.0.3",
+    "@nestjs/core": "^11.1.16",
     "@nestjs/event-emitter": "^3.0.1",
-    "@segment/analytics-node": "^2.3.0"
+    "@segment/analytics-node": "^2.3.0",
+    "rxjs": "^7.8.0"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.1.14"

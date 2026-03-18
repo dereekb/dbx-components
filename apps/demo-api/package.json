@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "adm-zip": "0.5.16",
-    "date-fns": "^4.0.0"
+    "date-fns": "^4.0.0",
+    "supertest": "^7.2.2"
   }
 }

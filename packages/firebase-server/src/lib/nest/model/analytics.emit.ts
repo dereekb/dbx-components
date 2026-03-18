@@ -79,11 +79,29 @@ export interface CallWithAnalyticsConfig<O> {
 }
 
 /**
- * Wraps a handler call with analytics lifecycle emission.
- * Always async — awaits the execute function. Fire-and-forget — never blocks response.
+ * Wraps a handler execution with analytics lifecycle emission.
  *
- * Creates an {@link OnCallAnalyticsEmitter} per lifecycle stage and passes it to the
- * configured lifecycle callbacks along with the request.
+ * Creates an {@link OnCallAnalyticsEmitter} per lifecycle stage and invokes the configured
+ * callbacks in order: `onTriggered` → execute → `onSuccess`/`onError` → `onComplete`.
+ *
+ * Analytics callback errors are caught and logged but never propagate — the handler result
+ * or error is always returned/thrown unmodified.
+ *
+ * @param config - the handler, analytics details, service, and context
+ * @returns the handler's return value
+ *
+ * @example
+ * ```ts
+ * const result = await callWithAnalytics({
+ *   service,
+ *   details: {
+ *     onTriggered: (emitter) => emitter.sendEventType('Widget Create Triggered'),
+ *     onSuccess: (emitter, req, result) => emitter.sendEvent('Widget Created', { id: result.id })
+ *   },
+ *   context,
+ *   execute: () => createWidget(request)
+ * });
+ * ```
  */
 export async function callWithAnalytics<O>(config: CallWithAnalyticsConfig<O>): Promise<O> {
   const { service, details, context, execute } = config;

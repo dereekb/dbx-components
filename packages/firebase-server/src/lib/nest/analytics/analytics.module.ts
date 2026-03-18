@@ -4,26 +4,41 @@ import { FirebaseServerAnalyticsService } from './analytics.service';
 import { ON_CALL_MODEL_ANALYTICS_SERVICE } from '../model';
 
 // MARK: App Analytics Module
+/**
+ * Configuration for {@link appAnalyticsModuleMetadata}.
+ */
 export interface ProvideAppAnalyticsMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
-   * Module that exports the required dependencies for this module.
-   * Must export {@link FirebaseServerAnalyticsServiceListener}.
+   * Optional dependency module that provides a {@link FirebaseServerAnalyticsServiceListener} implementation.
+   *
+   * If omitted, the {@link FirebaseServerAnalyticsService} falls back to a no-op listener.
+   *
+   * @example
+   * ```ts
+   * appAnalyticsModuleMetadata({
+   *   dependencyModule: FirebaseServerAnalyticsSegmentModule
+   * })
+   * ```
    */
   readonly dependencyModule?: Maybe<Required<ModuleMetadata>['imports'][0]>;
 }
 
 /**
- * Convenience function used to generate ModuleMetadata for an app's analytics module.
+ * Generates NestJS {@link ModuleMetadata} for an app's analytics module.
  *
- * This generated module requires the following dependencies in order to initialize properly:
- * - {@link FirebaseServerAnalyticsServiceListener}
+ * Provides {@link FirebaseServerAnalyticsService} and registers it as the
+ * {@link ON_CALL_MODEL_ANALYTICS_SERVICE} token for the onCall dispatch chain.
  *
- * By default this module exports:
- * - {@link FirebaseServerAnalyticsService}
- * - {@link ON_CALL_MODEL_ANALYTICS_SERVICE}
+ * @param config - the configuration including an optional dependency module and additional providers
+ * @returns module metadata ready for use with `@Module()`
  *
- * @param config
- * @returns
+ * @example
+ * ```ts
+ * @Module(appAnalyticsModuleMetadata({
+ *   dependencyModule: FirebaseServerAnalyticsSegmentModule
+ * }))
+ * export class AppAnalyticsModule {}
+ * ```
  */
 export function appAnalyticsModuleMetadata(config: ProvideAppAnalyticsMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;
