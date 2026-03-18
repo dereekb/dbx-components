@@ -1,4 +1,4 @@
-import { type Configurable, cachedGetter, type PromiseOrValue, serverError, Maybe } from '@dereekb/util';
+import { type Configurable, type PromiseOrValue, serverError, Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelType, type FirestoreModelTypes, type ModelFirebaseCrudFunctionSpecifierRef, type OnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestContext, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext, type OnCallWithNestContextRequest } from '../function/call';
@@ -68,18 +68,17 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
   const aggregatedApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
   const modelApiDetails: OnCallModelApiDetails = (aggregatedApiDetails as OnCallModelApiDetails | undefined) ?? {};
 
-  // Lazily resolve analytics service from NestContext (cached after first request)
-  const getAnalyticsService = cachedGetter<Maybe<OnCallModelAnalyticsService>, OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>>((request) => {
-    let result: Maybe<OnCallModelAnalyticsService>;
-
+  // Resolve analytics service from NestContext per-request.
+  // Not cached because the NestJS application instance may differ across test suites
+  // when the onCallModel closure is shared as a module-level singleton.
+  function getAnalyticsService(request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>): Maybe<OnCallModelAnalyticsService> {
     try {
-      result = request?.nestApplication?.get(resolvedToken, { strict: false });
+      return request?.nestApplication?.get(resolvedToken, { strict: false });
     } catch {
       // silent — analytics is optional
+      return undefined;
     }
-
-    return result;
-  });
+  }
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
     const call = request.data?.call;

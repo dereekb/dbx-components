@@ -13,6 +13,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       beforeEach(() => {
         capturedEvents = [];
+
         const analyticsService = f.nest.get(FirebaseServerAnalyticsService);
 
         if (!originalHandleEvent) {
