@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type DbxAnalyticsUser, type DbxUserAnalyticsEvent, type DbxAnalyticsUserId } from './analytics';
+import { type AnalyticsUser, type UserAnalyticsEvent, type AnalyticsUserId } from './analytics';
 
 /**
  * Categorizes the kind of analytics stream event emitted by {@link DbxAnalyticsService}.
@@ -54,7 +54,7 @@ export enum DbxAnalyticsStreamEventType {
  */
 export interface DbxAnalyticsStreamEvent {
   readonly type: DbxAnalyticsStreamEventType;
-  readonly user?: Maybe<DbxAnalyticsUser>;
-  readonly event?: DbxUserAnalyticsEvent;
-  readonly userId?: DbxAnalyticsUserId;
+  readonly user?: Maybe<AnalyticsUser>;
+  readonly event?: UserAnalyticsEvent;
+  readonly userId?: AnalyticsUserId;
 }

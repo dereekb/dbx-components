@@ -111,6 +111,7 @@ export function cloudEventHandlerWithNestContextFactory<N>(makeNestContext: Make
           nestAppPromiseGetter().then((nestApplication) =>
             handler({
               ...event,
+              nestApplication,
               nest: makeNestContext(nestApplication)
             })
           );

@@ -1,4 +1,5 @@
 import { type Configurable, type Maybe } from '@dereekb/util';
+import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
 // MARK: JSON Schema
 /**
@@ -48,6 +49,11 @@ export interface OnCallModelFunctionApiDetails {
    * MCP-specific customization. Auto-generated if omitted.
    */
   readonly mcp?: OnCallModelFunctionMcpDetails;
+  /**
+   * Analytics lifecycle configuration for this handler.
+   * When provided, the dispatch chain will call lifecycle hooks around handler execution.
+   */
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails;
 }
 
 /**
@@ -64,7 +70,8 @@ export interface OnCallModelFunctionApiDetailsRef {
  * Produced by onCallSpecifierHandler when its handlers carry _apiDetails.
  * Maps specifier keys (e.g., '_', 'username', 'fromUpload') to handler-level details.
  */
-export interface OnCallSpecifierApiDetails {
+export interface OnCallModelTypeApiDetails {
+  readonly isSpecifier: boolean;
   readonly specifiers: { readonly [key: string]: OnCallModelFunctionApiDetails | undefined };
 }
 
@@ -72,11 +79,12 @@ export interface OnCallSpecifierApiDetails {
  * API details aggregated at the CRUD model level.
  *
  * Produced by onCallCreateModel/onCallReadModel/etc.
- * Maps model type strings (e.g., 'profile', 'guestbook') to either handler-level
- * details (for direct handlers) or specifier-level details (for specifier handlers).
+ * Maps model type strings (e.g., 'profile', 'guestbook') to specifier-level details.
+ * Direct (non-specifier) handlers are wrapped with `isSpecifier: false` and their
+ * details placed under the `_` key.
  */
 export interface OnCallCrudModelApiDetails {
-  readonly modelTypes: { readonly [key: string]: OnCallModelFunctionApiDetails | OnCallSpecifierApiDetails | undefined };
+  readonly modelTypes: { readonly [key: string]: OnCallModelTypeApiDetails | undefined };
 }
 
 /**
@@ -95,7 +103,7 @@ export interface OnCallModelApiDetails {
 /**
  * Union of all API details types at any aggregation level.
  */
-export type OnCallApiDetails = OnCallModelFunctionApiDetails | OnCallSpecifierApiDetails | OnCallCrudModelApiDetails | OnCallModelApiDetails;
+export type OnCallApiDetails = OnCallModelFunctionApiDetails | OnCallModelTypeApiDetails | OnCallCrudModelApiDetails | OnCallModelApiDetails;
 
 /**
  * Ref interface for functions at any level of the call model tree.
@@ -108,7 +116,7 @@ export interface OnCallApiDetailsRef {
 /**
  * Whether the details are specifier-level (has specifiers map).
  */
-export function isOnCallSpecifierApiDetails(details: OnCallApiDetails): details is OnCallSpecifierApiDetails {
+export function isOnCallModelTypeApiDetails(details: OnCallApiDetails): details is OnCallModelTypeApiDetails {
   return details != null && 'specifiers' in details;
 }
 
@@ -126,6 +134,14 @@ export function isOnCallHandlerApiDetails(details: OnCallApiDetails): details is
   return details != null && !('specifiers' in details) && !('modelTypes' in details);
 }
 
+/**
+ * Whether the specifier-level details represent a true specifier (multiple sub-operations)
+ * vs a wrapped direct handler (`isSpecifier: false`, details under `_`).
+ */
+export function isActualSpecifier(details: OnCallModelTypeApiDetails): boolean {
+  return details.isSpecifier;
+}
+
 // MARK: Wrapper
 /**
  * Configuration for withApiDetails().
@@ -141,6 +157,14 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
    * which would lose _apiDetails since optionalAuthContext creates a new wrapper function.
    */
   readonly optionalAuth?: boolean;
+  /**
+   * Optional analytics lifecycle configuration for this handler.
+   * When provided, the dispatch chain will call lifecycle hooks around handler execution.
+   *
+   * The request type and return type are inferred from the `fn` parameter, providing
+   * full type safety in lifecycle callbacks.
+   */
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails<Parameters<F>[0], Awaited<ReturnType<F>>>;
   /**
    * The handler function.
    */
@@ -199,9 +223,9 @@ export function readApiDetails(fn: Maybe<OnCallApiDetailsRef>): OnCallApiDetails
 /**
  * Aggregates _apiDetails from a specifier handler config object.
  *
- * Returns OnCallSpecifierApiDetails if any handlers have _apiDetails, otherwise undefined.
+ * Returns OnCallModelTypeApiDetails if any handlers have _apiDetails, otherwise undefined.
  */
-export function aggregateSpecifierApiDetails(config: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): OnCallSpecifierApiDetails | undefined {
+export function aggregateSpecifierApiDetails(config: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): OnCallModelTypeApiDetails | undefined {
   const specifiers: { [key: string]: OnCallModelFunctionApiDetails | undefined } = {};
   let hasAny = false;
 
@@ -215,7 +239,7 @@ export function aggregateSpecifierApiDetails(config: { readonly [key: string]: M
     }
   }
 
-  return hasAny ? { specifiers } : undefined;
+  return hasAny ? { isSpecifier: true, specifiers } : undefined;
 }
 
 /**
@@ -224,14 +248,21 @@ export function aggregateSpecifierApiDetails(config: { readonly [key: string]: M
  * Returns OnCallCrudModelApiDetails if any handlers have _apiDetails, otherwise undefined.
  */
 export function aggregateCrudModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): OnCallCrudModelApiDetails | undefined {
-  const modelTypes: { [key: string]: OnCallModelFunctionApiDetails | OnCallSpecifierApiDetails | undefined } = {};
+  const modelTypes: { [key: string]: OnCallModelTypeApiDetails | undefined } = {};
   let hasAny = false;
 
   for (const [key, handler] of Object.entries(map)) {
     const details = readApiDetails(handler);
 
     if (details != null) {
-      modelTypes[key] = details as OnCallModelFunctionApiDetails | OnCallSpecifierApiDetails;
+      if (isOnCallModelTypeApiDetails(details)) {
+        // Already specifier-level details
+        modelTypes[key] = details;
+      } else {
+        // Wrap direct handler details as a non-specifier with `_` key
+        modelTypes[key] = { isSpecifier: false, specifiers: { _: details as OnCallModelFunctionApiDetails } };
+      }
+
       hasAny = true;
     }
   }
@@ -262,15 +293,18 @@ export function aggregateModelApiDetails(map: { readonly [key: string]: Maybe<On
 
 // MARK: Model-First View
 /**
- * Handler or specifier-level details for a single CRUD call on a model type.
+ * API details for a single CRUD call on a model type.
+ *
+ * Always {@link OnCallModelTypeApiDetails} — direct handlers are wrapped with
+ * `isSpecifier: false` and their details placed under the `_` key.
  */
-export type ModelCallApiDetails = OnCallModelFunctionApiDetails | OnCallSpecifierApiDetails;
+export type ModelCallApiDetails = OnCallModelTypeApiDetails;
 
 /**
  * CRUD calls available for a single model type.
  *
  * Keyed by call type ('create', 'read', 'update', 'delete').
- * Each value is either handler-level details (direct handler) or specifier-level details.
+ * Each value is specifier-level details (direct handlers wrapped with `isSpecifier: false`).
  */
 export interface ModelCallsApiDetails {
   readonly create?: ModelCallApiDetails;
@@ -354,3 +388,34 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): Mod
 
   return Object.keys(models).length > 0 ? { models } : undefined;
 }
+
+// MARK: Analytics Resolution
+/**
+ * Resolves leaf-level analytics details from the aggregated _apiDetails tree.
+ *
+ * Walks: call → modelType → specifier (if specifier-level), then reads the `analytics`
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}.
+ */
+export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: string, modelType: string, specifier?: string): OnCallModelFunctionAnalyticsDetails | undefined {
+  const modelDetails = apiDetails[call]?.modelTypes[modelType];
+
+  if (modelDetails) {
+    // All entries are now OnCallModelTypeApiDetails. For non-specifier handlers,
+    // the details are under the `_` key.
+    const key = specifier ?? '_';
+    return modelDetails.specifiers[key]?.analytics;
+  }
+
+  return undefined;
+}
+
+// MARK: Compat
+/**
+ * @deprecated Use {@link OnCallModelTypeApiDetails} instead.
+ */
+export type OnCallSpecifierApiDetails = OnCallModelTypeApiDetails;
+
+/**
+ * @deprecated Use {@link isOnCallModelTypeApiDetails} instead.
+ */
+export const isOnCallSpecifierApiDetails = isOnCallModelTypeApiDetails;

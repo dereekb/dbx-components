@@ -68,7 +68,7 @@ export type OnCallSpecifierHandlerConfig<N> = {
  * delegated to each individual specifier handler.
  *
  * API details from all specifier handlers are aggregated into
- * {@link OnCallSpecifierApiDetails} for MCP introspection.
+ * {@link OnCallModelTypeApiDetails} for MCP introspection.
  *
  * @param config - Maps specifier keys to their handler functions.
  * @returns A callable function that dispatches by specifier, with aggregated API details.

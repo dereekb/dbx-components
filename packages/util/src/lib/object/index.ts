@@ -5,5 +5,6 @@ export * from './object.equal';
 export * from './object.key';
 export * from './object.map';
 export * from './object';
+export * from './object.flatten';
 export * from './object.filter.tuple';
 export * from './object.filter.pojo';

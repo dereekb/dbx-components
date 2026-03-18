@@ -1,14 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { type DbxAnalyticsUser, type DbxAnalyticsUserProperties, type DbxAnalyticsUserSource } from '@dereekb/dbx-analytics';
+import { type AnalyticsUser, type AnalyticsUserProperties, type DbxAnalyticsUserSource } from '@dereekb/dbx-analytics';
 import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { BehaviorSubject, map, type Observable, of, switchMap, shareReplay, combineLatest } from 'rxjs';
 import { type AuthUserInfo } from '../auth/auth';
 import { DbxFirebaseAuthService } from '../auth/service/firebase.auth.service';
 
-export type DbxFirebaseAnalyticsUserPropertiesFactory = FactoryWithRequiredInput<Observable<DbxAnalyticsUserProperties>, AuthUserInfo>;
+export type DbxFirebaseAnalyticsUserPropertiesFactory = FactoryWithRequiredInput<Observable<AnalyticsUserProperties>, AuthUserInfo>;
 
-export function readDbxAnalyticsUserPropertiesFromAuthUserInfo(user: AuthUserInfo): DbxAnalyticsUserProperties {
-  const properties: DbxAnalyticsUserProperties = {
+export function readDbxAnalyticsUserPropertiesFromAuthUserInfo(user: AuthUserInfo): AnalyticsUserProperties {
+  const properties: AnalyticsUserProperties = {
     name: user.displayName ?? '',
     email: user.email ?? '',
     createdAt: user.creationTime ?? ''
@@ -30,9 +30,9 @@ export class DbxFirebaseAnalyticsUserSource implements DbxAnalyticsUserSource {
 
   private _userPropertiesFactory = new BehaviorSubject<DbxFirebaseAnalyticsUserPropertiesFactory>(DEFAULT_DBX_FIREBASE_ANALYTICS_USER_PROPERTIES_FACTORY);
 
-  readonly analyticsUser$: Observable<Maybe<DbxAnalyticsUser>> = combineLatest([this._userPropertiesFactory, this.dbxFirebaseAuthService.currentAuthUserInfo$]).pipe(
+  readonly analyticsUser$: Observable<Maybe<AnalyticsUser>> = combineLatest([this._userPropertiesFactory, this.dbxFirebaseAuthService.currentAuthUserInfo$]).pipe(
     switchMap(([userPropertiesFactory, x]) => {
-      let analyticsUser: Observable<Maybe<DbxAnalyticsUser>>;
+      let analyticsUser: Observable<Maybe<AnalyticsUser>>;
 
       if (x != null) {
         analyticsUser = userPropertiesFactory(x).pipe(
