@@ -1,7 +1,7 @@
 import { type ObservableOrValue, asObservable } from './rxjs/getter';
 import { defaultIfEmpty, delay, filter, first, map, shareReplay, type Subscription, switchMap, tap, startWith, timeout, type Observable, of, BehaviorSubject, Subject } from 'rxjs';
 import { cleanup, combineLatestFromMapValuesObsFn, preventComplete } from './rxjs';
-import { type Destroyable, type Maybe, reduceBooleansWithOrFn, MS_IN_SECOND } from '@dereekb/util';
+import { type Destroyable, type Maybe, type Milliseconds, type Seconds, reduceBooleansWithOrFn, MS_IN_SECOND } from '@dereekb/util';
 import { SubscriptionObject } from './subscription';
 
 /**
@@ -30,9 +30,9 @@ export interface OnLockSetUnlockedConfig {
   /** Optional callback to invoke when the lock set unlocks or the timeout is reached. */
   readonly fn?: Maybe<OnLockSetUnlockedFunction>;
   /** Maximum time in milliseconds to wait for unlock before timing out. Defaults to 50 seconds. */
-  readonly timeout?: Maybe<number>;
+  readonly timeout?: Maybe<Milliseconds>;
   /** Optional delay in milliseconds after the unlock is detected before invoking the callback. */
-  readonly delayTime?: Maybe<number>;
+  readonly delayTime?: Maybe<Milliseconds>;
 }
 
 /**
@@ -53,7 +53,7 @@ export interface SetLockedConfig {
    *
    * Only relevant for locking.
    */
-  readonly duration?: number;
+  readonly duration?: Milliseconds;
 }
 
 /**
@@ -171,8 +171,8 @@ export class LockSet implements Destroyable {
    * @param duration - optional auto-unlock duration in milliseconds (only used with boolean config)
    */
   setLocked(key: LockKey, config: SetLockedConfig): void;
-  setLocked(key: LockKey, config: boolean, duration?: number): void;
-  setLocked(key: LockKey, config?: boolean | SetLockedConfig, duration?: number): void {
+  setLocked(key: LockKey, config: boolean, duration?: Milliseconds): void;
+  setLocked(key: LockKey, config?: boolean | SetLockedConfig, duration?: Milliseconds): void {
     let lockedConfig: SetLockedConfig;
 
     if (typeof config === 'object') {
@@ -202,7 +202,7 @@ export class LockSet implements Destroyable {
    *
    * @param seconds - duration in seconds
    */
-  lockForSeconds(seconds: number): void {
+  lockForSeconds(seconds: Seconds): void {
     this.lockForTime(seconds * 1000);
   }
 
@@ -212,7 +212,7 @@ export class LockSet implements Destroyable {
    * @param milliseconds - lock duration
    * @param key - optional lock key, defaults to {@link DEFAULT_LOCK_SET_TIME_LOCK_KEY}
    */
-  lockForTime(milliseconds: number, key?: LockKey): void {
+  lockForTime(milliseconds: Milliseconds, key?: LockKey): void {
     this.addLock(key ?? DEFAULT_LOCK_SET_TIME_LOCK_KEY, of(false).pipe(delay(milliseconds), startWith(true)));
   }
 
@@ -272,7 +272,7 @@ export class LockSet implements Destroyable {
    * @param delayTime - optional delay in milliseconds after unlock before invoking the callback
    * @returns subscription that can be unsubscribed to cancel the wait
    */
-  onNextUnlock(config: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: number): Subscription {
+  onNextUnlock(config: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: Milliseconds): Subscription {
     return onLockSetNextUnlock({
       lockSet: this,
       delayTime,
@@ -330,7 +330,7 @@ export class LockSet implements Destroyable {
    * @param config - optional callback or configuration for the unlock wait
    * @param delayTime - optional delay in milliseconds after unlock before invoking the callback
    */
-  destroyOnNextUnlock(config?: Maybe<DestroyOnNextUnlockConfig['fn'] | DestroyOnNextUnlockConfig>, delayTime?: number): void {
+  destroyOnNextUnlock(config?: Maybe<DestroyOnNextUnlockConfig['fn'] | DestroyOnNextUnlockConfig>, delayTime?: Milliseconds): void {
     let fn: Maybe<OnLockSetUnlockedFunction>;
     let mergeConfig: Maybe<DestroyOnNextUnlockConfig>;
 

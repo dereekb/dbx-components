@@ -10,6 +10,15 @@ import { SegmentService } from './segment.service';
  *
  * When a {@link ServerEnvironmentService} is provided and the current environment is a
  * testing environment, `logOnly` is forced to true regardless of the env variable.
+ *
+ * @param configService - NestJS ConfigService for reading environment variables.
+ * @param serverEnvironmentService - Service that identifies the current server environment.
+ * @returns A validated {@link SegmentServiceConfig} instance.
+ *
+ * @example
+ * ```ts
+ * const config = segmentServiceConfigFactory(configService, serverEnvironmentService);
+ * ```
  */
 export function segmentServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): SegmentServiceConfig {
   const isTestingEnv = serverEnvironmentService.isTestingEnv;

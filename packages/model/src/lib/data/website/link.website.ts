@@ -39,12 +39,8 @@ export const WEBSITE_LINK_ISOLATE_BASE_URL_PROFILE_ID = isolateWebsitePathFuncti
  */
 export function usernameFromUsernameOrWebsiteWithBaseUrlUsername(input: ModelKey | WebsiteUrl, prefix?: string) {
   const username = toRelativeSlashPathStartType(WEBSITE_LINK_ISOLATE_BASE_URL_PROFILE_ID(usernameOrWebsiteUrlToWebsiteUrl(input)));
-
-  if (prefix) {
-    return addPrefix(prefix, username);
-  } else {
-    return username;
-  }
+  const result = prefix ? addPrefix(prefix, username) : username;
+  return result;
 }
 
 /**

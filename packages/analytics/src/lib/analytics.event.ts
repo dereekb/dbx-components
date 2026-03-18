@@ -68,5 +68,5 @@ export type NewUserRegistrationMethod = 'facebook' | 'google' | 'email' | string
  * Event data for new user registration events, requiring the registration method.
  */
 export interface NewUserAnalyticsEventData extends AnalyticsEventData {
-  method: NewUserRegistrationMethod;
+  readonly method: NewUserRegistrationMethod;
 }

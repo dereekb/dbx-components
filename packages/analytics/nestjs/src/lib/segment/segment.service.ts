@@ -1,4 +1,5 @@
 import { type Maybe } from '@dereekb/util';
+import { type AnalyticsUserId } from '@dereekb/analytics';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SegmentApi } from './segment.api';
 import { SegmentServiceConfig } from './segment.config';
@@ -37,7 +38,7 @@ export class SegmentService {
    * });
    * ```
    */
-  track(userId: string, event: SegmentTrackEvent): void {
+  track(userId: AnalyticsUserId, event: SegmentTrackEvent): void {
     if (!userId) {
       throw new Error('No userId was provided to track().');
     }
@@ -66,7 +67,7 @@ export class SegmentService {
    * @param userId - the user to associate with the event, or nullish to skip
    * @param event - the track event containing event name, properties, and optional context
    */
-  tryTrack(userId: Maybe<string>, event: SegmentTrackEvent): void {
+  tryTrack(userId: Maybe<AnalyticsUserId>, event: SegmentTrackEvent): void {
     if (userId) {
       this.track(userId, event);
     }
@@ -101,7 +102,7 @@ export class SegmentService {
     }
   }
 
-  private _appContext(): SegmentEventContext | undefined {
+  private _appContext(): Maybe<SegmentEventContext> {
     const appContext = this.config.appContext;
     let result: SegmentEventContext | undefined;
 

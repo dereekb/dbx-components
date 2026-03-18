@@ -1,4 +1,4 @@
-import { build, type CachedFactoryWithInput, cachedGetter, type Destroyable, type Maybe } from '@dereekb/util';
+import { build, type CachedFactoryWithInput, cachedGetter, type Destroyable, type Maybe, type Milliseconds } from '@dereekb/util';
 import { throttleTime, distinctUntilChanged, BehaviorSubject, type Observable, type Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
 import { skipAllInitialMaybe } from './value';
@@ -32,19 +32,19 @@ export interface AsyncPusherConfig<T> {
   /**
    * Time to throttle each emission.
    */
-  throttle?: number;
+  readonly throttle?: Milliseconds;
   /**
    * Whether or not to filter on distinct values.
    */
-  distinct?: boolean;
+  readonly distinct?: boolean;
   /**
    * Configuration function to build onto the internal observable.
    */
-  pipe?: (obs: Observable<T>) => Observable<T>;
+  readonly pipe?: (obs: Observable<T>) => Observable<T>;
   /**
    * (Optional) Observable to watch for cleaunup.
    */
-  cleanupObs?: Observable<unknown>;
+  readonly cleanupObs?: Observable<unknown>;
 }
 
 /**

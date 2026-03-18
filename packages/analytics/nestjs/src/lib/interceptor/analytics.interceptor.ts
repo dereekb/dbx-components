@@ -1,3 +1,5 @@
+import { type Maybe } from '@dereekb/util';
+import { type AnalyticsEventName } from '@dereekb/analytics';
 import { type CallHandler, type ExecutionContext, Injectable, type NestInterceptor, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -8,8 +10,12 @@ export const ANALYTICS_INTERCEPTOR_METADATA_KEY = 'analyticsevent';
 
 /**
  * Function that extracts analytics event data from a handler result.
+ *
+ * @param result - The handler's return value.
+ * @param context - The NestJS execution context for the current request.
+ * @returns An object of event data to attach to the analytics event, or nothing if no data should be emitted.
  */
-export type AnalyticsEventDataFunction<T> = (result: T, context: ExecutionContext) => object | undefined;
+export type AnalyticsEventDataFunction<T> = (result: T, context: ExecutionContext) => Maybe<object>;
 
 /**
  * Configuration for the {@link EmitAnalyticsEvent} decorator.
@@ -18,7 +24,7 @@ export interface AnalyticsEventInterceptorConfig<T> {
   /**
    * The analytics event name to emit.
    */
-  readonly name: string;
+  readonly name: AnalyticsEventName;
   /**
    * Optional function to extract event data from the handler result.
    */
@@ -30,6 +36,18 @@ export interface AnalyticsEventInterceptorConfig<T> {
  *
  * Used in conjunction with {@link AnalyticsEventInterceptor} to emit events
  * to NestJS EventEmitter2 after the handler completes.
+ *
+ * @param config - The analytics event configuration specifying the event name and optional data extractor.
+ * @returns A method decorator that attaches analytics metadata.
+ *
+ * @example
+ * ```ts
+ * @EmitAnalyticsEvent({ name: 'User Registered', fn: (result) => ({ userId: result.id }) })
+ * @Post('register')
+ * async register(@Body() body: RegisterDto) {
+ *   return this.authService.register(body);
+ * }
+ * ```
  */
 export const EmitAnalyticsEvent = <T>(config: AnalyticsEventInterceptorConfig<T>) => {
   if (!config.name) {
@@ -50,6 +68,14 @@ export class AnalyticsEventInterceptor<T = any> implements NestInterceptor {
     readonly eventEmitter: EventEmitter2
   ) {}
 
+  /**
+   * Intercepts the request pipeline, emitting an analytics event after the handler completes
+   * if the method is decorated with {@link EmitAnalyticsEvent}.
+   *
+   * @param context - The NestJS execution context.
+   * @param next - The next handler in the pipeline.
+   * @returns An observable that emits the handler result after triggering the analytics event.
+   */
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const handler = context.getHandler();
     const config = this.reflector.get<AnalyticsEventInterceptorConfig<T>>(ANALYTICS_INTERCEPTOR_METADATA_KEY, handler);

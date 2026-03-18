@@ -201,17 +201,19 @@ export function loadingStateType(loadingState: LoadingState): LoadingStateType {
  * @returns true if loading is complete
  */
 export function isLoadingStateFinishedLoading<L extends LoadingState>(state: Maybe<L>): boolean {
+  let result = false;
+
   if (state) {
     const loading = state.loading;
 
     if (loading === true) {
-      return false;
+      result = false;
     } else {
-      return loading === false || Boolean(state.value || state.error) || state.value === null;
+      result = loading === false || Boolean(state.value || state.error) || state.value === null;
     }
-  } else {
-    return false;
   }
+
+  return result;
 }
 /**
  * Creates an idle {@link LoadingState} with `loading: false` and no value or error.
@@ -361,11 +363,8 @@ export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): bool
 export function isLoadingStateWithStateType(type: LoadingStateType) {
   const defaultResult = type === LoadingStateType.IDLE ? true : false;
   return <L extends LoadingState>(state: Maybe<L>) => {
-    if (state) {
-      return loadingStateType(state) === type;
-    } else {
-      return defaultResult;
-    }
+    const result = state ? loadingStateType(state) === type : defaultResult;
+    return result;
   };
 }
 
@@ -420,11 +419,8 @@ export const isLoadingStateInErrorState = isLoadingStateWithStateType(LoadingSta
  * @returns true if the state has a defined (non-undefined) value
  */
 export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
-  if (state) {
-    return state.value !== undefined;
-  } else {
-    return false;
-  }
+  const result = state ? state.value !== undefined : false;
+  return result;
 }
 
 /**
@@ -440,11 +436,8 @@ export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Ma
  * @returns true if the state has an error
  */
 export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
-  if (state) {
-    return state.error != null;
-  } else {
-    return false;
-  }
+  const result = state ? state.error != null : false;
+  return result;
 }
 
 /**
@@ -454,11 +447,8 @@ export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> 
  * @returns true if finished loading with a non-undefined value
  */
 export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
-  if (state) {
-    return isLoadingStateFinishedLoading(state) && state.value !== undefined;
-  } else {
-    return false;
-  }
+  const result = state ? isLoadingStateFinishedLoading(state) && state.value !== undefined : false;
+  return result;
 }
 
 /**
@@ -468,11 +458,8 @@ export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingS
  * @returns true if finished loading with an error
  */
 export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
-  if (state) {
-    return isLoadingStateFinishedLoading(state) && state.error != null;
-  } else {
-    return false;
-  }
+  const result = state ? isLoadingStateFinishedLoading(state) && state.error != null : false;
+  return result;
 }
 
 /**
@@ -636,8 +623,8 @@ export function mergeLoadingStateWithError<S extends LoadingState = LoadingState
 export type MapMultipleLoadingStateValuesFn<T, X> = (input: X[]) => T;
 
 export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends LoadingState<X>[], R extends LoadingState<T>> {
-  mapValues?: MapMultipleLoadingStateValuesFn<T, X>;
-  mapState?: (input: L) => R;
+  readonly mapValues?: MapMultipleLoadingStateValuesFn<T, X>;
+  readonly mapState?: (input: L) => R;
 }
 
 /**
@@ -679,9 +666,9 @@ export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>,
 export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
 
 export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
-  alwaysMapValue?: boolean;
-  mapValue?: MapLoadingStateValuesFn<A, B, L>;
-  mapState?: MapLoadingStateFn<A, B, L, O>;
+  readonly alwaysMapValue?: boolean;
+  readonly mapValue?: MapLoadingStateValuesFn<A, B, L>;
+  readonly mapState?: MapLoadingStateFn<A, B, L, O>;
 }
 
 /**
