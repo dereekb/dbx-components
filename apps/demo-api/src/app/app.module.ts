@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { DemoApiApiModule } from './api/api.module';
 import { DemoApiFirebaseModule, DemoApiModelModule } from './common';
 import { GlobalNotificationModule } from '@dereekb/firebase-server/model';
 import { DemoApiServerModule } from './server/server.module';
 import { appAnalyticsModuleMetadata, FirebaseServerAnalyticsSegmentModule } from '@dereekb/firebase-server';
 
+@Global()
 @Module(
   appAnalyticsModuleMetadata({
     dependencyModule: FirebaseServerAnalyticsSegmentModule
