@@ -6,7 +6,8 @@
     "build-all": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx nx run-many -t build --all --parallel=1",
+        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx run-many -t build --all" }],
+        "parallel": false,
         "color": true
       }
     },
@@ -52,6 +53,19 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only firestore:rules,storage"
+      }
+    },
+    "ci-test-firebase-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [{ "command": "npx nx run-all-tests firebase" }, { "command": "npx nx run-all-tests firebase-server" }, { "command": "npx nx run-tests dbx-firebase" }, { "command": "npx nx run-tests demo-api" }],
+        "parallel": false
+      }
+    },
+    "ci-test-firebase-all-with-emulators": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run workspace:ci-test-firebase-all'"
       }
     },
     "update-peer-deps": {
