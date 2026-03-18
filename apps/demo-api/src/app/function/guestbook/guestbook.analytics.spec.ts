@@ -3,13 +3,35 @@ import { type CreateGuestbookParams, guestbookIdentity } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type OnCallCreateModelResult, onCallCreateModelParams } from '@dereekb/firebase';
-import { ON_CALL_MODEL_ANALYTICS_SERVICE } from '@dereekb/firebase-server';
-import { DemoAnalyticsHandler } from '../../common/model/analytics/demo.analytics.handler';
+import { FirebaseServerAnalyticsService, ON_CALL_MODEL_ANALYTICS_SERVICE, type OnCallModelAnalyticsEvent } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCallableRequestTest('guestbook analytics', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
-      it('should emit analytics events when creating a guestbook', async () => {
+      let capturedEvents: OnCallModelAnalyticsEvent[];
+      let originalHandleEvent: (event: OnCallModelAnalyticsEvent) => void;
+
+      beforeEach(() => {
+        capturedEvents = [];
+        const analyticsService = f.nest.get(FirebaseServerAnalyticsService);
+
+        if (!originalHandleEvent) {
+          originalHandleEvent = analyticsService.handleOnCallAnalyticsEvent.bind(analyticsService);
+        }
+
+        analyticsService.handleOnCallAnalyticsEvent = (event: OnCallModelAnalyticsEvent) => {
+          capturedEvents.push(event);
+          originalHandleEvent(event);
+        };
+      });
+
+      it('should verify analytics service is wired up via token', () => {
+        const analyticsService = f.nest.get(FirebaseServerAnalyticsService);
+        const tokenService = f.nest.get(ON_CALL_MODEL_ANALYTICS_SERVICE);
+        expect(tokenService).toBe(analyticsService);
+      });
+
+      it('should emit onTriggered, onSuccess, and onComplete events when creating a guestbook', async () => {
         const params: CreateGuestbookParams = {
           name: 'analyticsTest'
         };
@@ -18,21 +40,51 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(result).toBeDefined();
         expect(result.modelKeys).toBeDefined();
 
-        // Resolve the analytics service from the NestJS context
-        const analyticsService = f.nest.get(ON_CALL_MODEL_ANALYTICS_SERVICE) as DemoAnalyticsHandler;
-        expect(analyticsService).toBeDefined();
-        expect(analyticsService).toBeInstanceOf(DemoAnalyticsHandler);
+        // Verify onTriggered
+        const triggeredEvents = capturedEvents.filter((e) => e.event === 'Guestbook Create Triggered');
+        expect(triggeredEvents).toHaveLength(1);
+        expect(triggeredEvents[0].lifecycle).toBe('triggered');
 
-        // Only onSuccess is configured, so expect 1 event
-        const guestbookEvents = analyticsService.events.filter((e) => e.event === 'Guestbook Created');
-        expect(guestbookEvents).toHaveLength(1);
+        // Verify onSuccess
+        const successEvents = capturedEvents.filter((e) => e.event === 'Guestbook Created');
+        expect(successEvents).toHaveLength(1);
+        expect(successEvents[0].lifecycle).toBe('success');
+        expect(successEvents[0].call).toBe('create');
+        expect(successEvents[0].modelType).toBe('guestbook');
+        expect(successEvents[0].properties?.modelKeys).toEqual(result.modelKeys);
 
-        const successEvent = guestbookEvents[0];
-        expect(successEvent.lifecycle).toBe('success');
-        expect(successEvent.call).toBe('create');
-        expect(successEvent.modelType).toBe('guestbook');
-        expect(successEvent.properties?.modelKeys).toBeDefined();
-        expect(successEvent.properties?.modelKeys).toEqual(result.modelKeys);
+        // Verify onComplete
+        const completeEvents = capturedEvents.filter((e) => e.event === 'Guestbook Create Complete');
+        expect(completeEvents).toHaveLength(1);
+        expect(completeEvents[0].lifecycle).toBe('complete');
+      });
+
+      it('should emit onError and onComplete events when create fails with invalid input', async () => {
+        // Pass invalid params (missing required name) to trigger a validation error
+        let caughtError: unknown;
+
+        try {
+          await u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(guestbookIdentity, {} as any));
+        } catch (e) {
+          caughtError = e;
+        }
+
+        expect(caughtError).toBeDefined();
+
+        // Verify onTriggered still fires before the error
+        const triggeredEvents = capturedEvents.filter((e) => e.event === 'Guestbook Create Triggered');
+        expect(triggeredEvents).toHaveLength(1);
+        expect(triggeredEvents[0].lifecycle).toBe('triggered');
+
+        // Verify onError was emitted
+        const errorEvents = capturedEvents.filter((e) => e.event === 'Guestbook Create Failed');
+        expect(errorEvents).toHaveLength(1);
+        expect(errorEvents[0].lifecycle).toBe('error');
+
+        // Verify onComplete still fires on error
+        const completeEvents = capturedEvents.filter((e) => e.event === 'Guestbook Create Complete');
+        expect(completeEvents).toHaveLength(1);
+        expect(completeEvents[0].lifecycle).toBe('complete');
       });
     });
   });

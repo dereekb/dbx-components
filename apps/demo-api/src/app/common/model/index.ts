@@ -1,4 +1,3 @@
-export * from './analytics';
 export * from './guestbook';
 export * from './notification';
 export * from './oidc';

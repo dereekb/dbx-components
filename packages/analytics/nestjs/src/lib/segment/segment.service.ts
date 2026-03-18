@@ -16,7 +16,7 @@ export class SegmentService {
   constructor(
     @Inject(SegmentApi) public readonly segmentApi: SegmentApi,
     @Inject(SegmentServiceConfig) public readonly config: SegmentServiceConfig
-  ) {}
+  ) { }
 
   /**
    * Tracks an event for a user. Requires a userId.
@@ -70,11 +70,13 @@ export class SegmentService {
 
   private _appContext(): SegmentEventContext | undefined {
     const appContext = this.config.appContext;
+    let result: SegmentEventContext | undefined;
 
     if (appContext) {
-      return { app: appContext };
+      result = { app: appContext };
     }
 
-    return undefined;
+    return result;
   }
+
 }

@@ -1,7 +1,7 @@
 import { withApiDetails, readApiDetails, getModelApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { createGuestbookParamsType, insertGuestbookEntryParamsType, subscribeToGuestbookNotificationsParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
-import { type DemoOnCallCreateModelMap, type DemoOnCallUpdateModelMap } from '../function';
 import { demoCreateModelMap } from './crud.functions';
+import { DemoOnCallCreateModelMap, DemoOnCallUpdateModelMap } from '../function.context';
 
 /**
  * Tests the model-first API details view using actual demo ArkType param types.

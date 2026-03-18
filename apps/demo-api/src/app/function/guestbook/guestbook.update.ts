@@ -4,13 +4,6 @@ import { hasAuthRolesInRequest, withApiDetails } from '@dereekb/firebase-server'
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 
 export const guestbookSubscribeToNotifications: DemoUpdateModelFunction<SubscribeToGuestbookNotificationsParams> = withApiDetails({
-  analytics: {
-    onError: (analytics, request, error) => {
-      analytics.sendEvent('Guestbook Subscribe To Notifications Failed', {
-        errorCode: (error as any)?.code
-      });
-    }
-  },
   fn: async (request) => {
     const { nest, auth, data: inputData } = request;
 
