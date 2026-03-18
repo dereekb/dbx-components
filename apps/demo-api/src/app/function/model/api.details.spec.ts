@@ -1,7 +1,7 @@
-import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallSpecifierApiDetails, isOnCallHandlerApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelFunctionApiDetails, type OnCallSpecifierApiDetails, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
+import { withApiDetails, readApiDetails, getModelApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { createGuestbookParamsType, insertGuestbookEntryParamsType, subscribeToGuestbookNotificationsParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
-import { type DemoOnCallCreateModelMap, type DemoOnCallUpdateModelMap } from '../function';
 import { demoCreateModelMap } from './crud.functions';
+import { type DemoOnCallCreateModelMap, type DemoOnCallUpdateModelMap } from '../function.context';
 
 /**
  * Tests the model-first API details view using actual demo ArkType param types.
@@ -11,13 +11,13 @@ import { demoCreateModelMap } from './crud.functions';
  */
 describe('demo api.details integration', () => {
   // MARK: Baseline
-  describe('existing demo call model (baseline — no withApiDetails yet)', () => {
-    it('should not have _apiDetails on existing handlers', () => {
-      expect(readApiDetails(demoCreateModelMap.guestbook as unknown as OnCallApiDetailsRef)).toBeUndefined();
+  describe('existing demo call model handlers', () => {
+    it('should have _apiDetails on handlers using withApiDetails', () => {
+      const details = readApiDetails(demoCreateModelMap.guestbook as unknown as OnCallApiDetailsRef);
+      expect(details).toBeDefined();
     });
 
-    it('should return undefined from getModelApiDetails', () => {
-      // Build onCallModel from the existing maps — no handlers have api details
+    it('should return undefined from getModelApiDetails for empty call model', () => {
       const callModel = onCallModel({});
       expect(getModelApiDetails(callModel)).toBeUndefined();
     });
@@ -76,12 +76,12 @@ describe('demo api.details integration', () => {
 
     // MARK: guestbook
     describe('models.guestbook', () => {
-      it('should have create call with createGuestbookParamsType', () => {
+      it('should have create call with createGuestbookParamsType (wrapped as non-specifier)', () => {
         const guestbook = details.models['guestbook'];
         expect(guestbook.calls.create).toBeDefined();
-        expect(isOnCallHandlerApiDetails(guestbook.calls.create!)).toBe(true);
+        expect(guestbook.calls.create!.isSpecifier).toBe(false);
 
-        const createDetails = guestbook.calls.create as OnCallModelFunctionApiDetails;
+        const createDetails = guestbook.calls.create!.specifiers['_']!;
         expect(createDetails.inputType).toBe(createGuestbookParamsType);
         expect(createDetails.mcp?.description).toBe('Create a new guestbook');
       });
@@ -89,16 +89,16 @@ describe('demo api.details integration', () => {
       it('should have update call with specifier for subscribeToNotifications', () => {
         const guestbook = details.models['guestbook'];
         expect(guestbook.calls.update).toBeDefined();
-        expect(isOnCallSpecifierApiDetails(guestbook.calls.update!)).toBe(true);
+        expect(guestbook.calls.update!.isSpecifier).toBe(true);
 
-        const updateSpecifiers = (guestbook.calls.update as OnCallSpecifierApiDetails).specifiers;
+        const updateSpecifiers = guestbook.calls.update!.specifiers;
         expect(updateSpecifiers['subscribeToNotifications']).toBeDefined();
         expect(updateSpecifiers['subscribeToNotifications']!.inputType).toBe(subscribeToGuestbookNotificationsParamsType);
         expect(updateSpecifiers['subscribeToNotifications']!.mcp?.description).toBe('Subscribe user to guestbook notifications');
       });
 
       it('should have the ArkType inputType reference accessible on create', () => {
-        const createDetails = details.models['guestbook'].calls.create as OnCallModelFunctionApiDetails;
+        const createDetails = details.models['guestbook'].calls.create!.specifiers['_']!;
         expect(createDetails.inputType).toBe(createGuestbookParamsType);
         expect(typeof createDetails.inputType!.toJsonSchema).toBe('function');
       });
@@ -106,12 +106,12 @@ describe('demo api.details integration', () => {
 
     // MARK: guestbookEntry
     describe('models.guestbookEntry', () => {
-      it('should have update call with insertGuestbookEntryParamsType', () => {
+      it('should have update call with insertGuestbookEntryParamsType (wrapped as non-specifier)', () => {
         const entry = details.models['guestbookEntry'];
         expect(entry.calls.update).toBeDefined();
-        expect(isOnCallHandlerApiDetails(entry.calls.update!)).toBe(true);
+        expect(entry.calls.update!.isSpecifier).toBe(false);
 
-        const updateDetails = entry.calls.update as OnCallModelFunctionApiDetails;
+        const updateDetails = entry.calls.update!.specifiers['_']!;
         expect(updateDetails.inputType).toBe(insertGuestbookEntryParamsType);
       });
 
@@ -128,9 +128,9 @@ describe('demo api.details integration', () => {
       it('should have update call with specifiers for _ and username', () => {
         const profile = details.models['profile'];
         expect(profile.calls.update).toBeDefined();
-        expect(isOnCallSpecifierApiDetails(profile.calls.update!)).toBe(true);
+        expect(profile.calls.update!.isSpecifier).toBe(true);
 
-        const updateSpecifiers = (profile.calls.update as OnCallSpecifierApiDetails).specifiers;
+        const updateSpecifiers = profile.calls.update!.specifiers;
         expect(updateSpecifiers['_']).toBeDefined();
         expect(updateSpecifiers['_']!.inputType).toBe(updateProfileParamsType);
         expect(updateSpecifiers['username']).toBeDefined();
@@ -139,7 +139,7 @@ describe('demo api.details integration', () => {
       });
 
       it('should have the ArkType inputType reference accessible on the username specifier', () => {
-        const updateSpecifiers = (details.models['profile'].calls.update as OnCallSpecifierApiDetails).specifiers;
+        const updateSpecifiers = details.models['profile'].calls.update!.specifiers;
         // setProfileUsernameParamsType uses string predicates that ArkType can't fully convert
         // to JSON Schema without a fallback handler. Verify the type reference is preserved
         // so the MCP layer can call toJsonSchema() with appropriate options.
@@ -151,8 +151,7 @@ describe('demo api.details integration', () => {
     describe('full tree JSON Schema extraction', () => {
       it('should have an inputType on every handler in the tree', () => {
         // Walk every model, every call, every specifier and verify inputType is present.
-        // Some ArkType types use predicates that can't be converted to JSON Schema without
-        // a fallback handler, so we verify the reference exists rather than calling toJsonSchema().
+        // All call details are now OnCallModelTypeApiDetails, so traverse specifiers uniformly.
         let inputTypeCount = 0;
 
         for (const [, modelEntry] of Object.entries(details.models)) {
@@ -161,16 +160,9 @@ describe('demo api.details integration', () => {
               continue;
             }
 
-            if (isOnCallSpecifierApiDetails(callDetails)) {
-              for (const [, specDetails] of Object.entries(callDetails.specifiers)) {
-                if (specDetails?.inputType) {
-                  expect(typeof specDetails.inputType.toJsonSchema).toBe('function');
-                  inputTypeCount++;
-                }
-              }
-            } else if (isOnCallHandlerApiDetails(callDetails)) {
-              if (callDetails.inputType) {
-                expect(typeof callDetails.inputType.toJsonSchema).toBe('function');
+            for (const [, specDetails] of Object.entries(callDetails.specifiers)) {
+              if (specDetails?.inputType) {
+                expect(typeof specDetails.inputType.toJsonSchema).toBe('function');
                 inputTypeCount++;
               }
             }

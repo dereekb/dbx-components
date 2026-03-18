@@ -33,6 +33,7 @@ export function taskQueueFunctionHandlerWithNestContextFactory<N>(makeNestContex
           nestAppPromiseGetter().then((nestApplication) =>
             handler({
               ...taskRequest,
+              nestApplication,
               nest: makeNestContext(nestApplication)
             })
           );

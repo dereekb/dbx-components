@@ -1,27 +1,29 @@
 import { type SubscribeToGuestbookNotificationsParams } from 'demo-firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
-import { hasAuthRolesInRequest } from '@dereekb/firebase-server';
+import { hasAuthRolesInRequest, withApiDetails } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 
-export const guestbookSubscribeToNotifications: DemoUpdateModelFunction<SubscribeToGuestbookNotificationsParams> = async (request) => {
-  const { nest, auth, data: inputData } = request;
+export const guestbookSubscribeToNotifications: DemoUpdateModelFunction<SubscribeToGuestbookNotificationsParams> = withApiDetails({
+  fn: async (request) => {
+    const { nest, auth, data: inputData } = request;
 
-  let data = inputData;
+    let data = inputData;
 
-  if (!data.uid || (data.uid !== auth.uid && !hasAuthRolesInRequest(request, AUTH_ADMIN_ROLE))) {
-    data = {
-      ...data,
-      uid: auth.uid
-    };
+    if (!data.uid || (data.uid !== auth.uid && !hasAuthRolesInRequest(request, AUTH_ADMIN_ROLE))) {
+      data = {
+        ...data,
+        uid: auth.uid
+      };
+    }
+
+    const guestbookDocument = await nest.useModel('guestbook', {
+      request,
+      key: data.key,
+      roles: 'subscribeToNotifications',
+      use: (x) => x.document
+    });
+
+    const subscribeToGuestbookNotifications = await nest.guestbookActions.subscribeToGuestbookNotifications(data);
+    await subscribeToGuestbookNotifications(guestbookDocument);
   }
-
-  const guestbookDocument = await nest.useModel('guestbook', {
-    request,
-    key: data.key,
-    roles: 'subscribeToNotifications',
-    use: (x) => x.document
-  });
-
-  const subscribeToGuestbookNotifications = await nest.guestbookActions.subscribeToGuestbookNotifications(data);
-  await subscribeToGuestbookNotifications(guestbookDocument);
-};
+});

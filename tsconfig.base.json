@@ -21,6 +21,10 @@
     "baseUrl": ".",
     "paths": {
       "@dereekb/browser": ["packages/browser/src/index.ts"],
+      "@dereekb/analytics": ["packages/analytics/src/index.ts"],
+      "@dereekb/analytics/nestjs": ["packages/analytics/nestjs/src/index.ts"],
+      "@dereekb/calcom": ["packages/calcom/src/index.ts"],
+      "@dereekb/calcom/nestjs": ["packages/calcom/nestjs/src/index.ts"],
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
       "@dereekb/dbx-core": ["packages/dbx-core/src/index.ts"],
@@ -29,6 +33,7 @@
       "@dereekb/dbx-form": ["packages/dbx-form/src/index.ts"],
       "@dereekb/dbx-form/calendar": ["packages/dbx-form/calendar/src/index.ts"],
       "@dereekb/dbx-form/mapbox": ["packages/dbx-form/mapbox/src/index.ts"],
+      "@dereekb/dbx-form/quiz": ["packages/dbx-form/quiz/src/index.ts"],
       "@dereekb/dbx-web": ["packages/dbx-web/src/index.ts"],
       "@dereekb/dbx-web/calendar": ["packages/dbx-web/calendar/src/index.ts"],
       "@dereekb/dbx-web/mapbox": ["packages/dbx-web/mapbox/src/index.ts"],

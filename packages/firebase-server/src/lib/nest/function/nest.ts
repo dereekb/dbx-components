@@ -25,13 +25,16 @@ export type NestRef<N> = {
 };
 
 /**
- * Augments a request type with a typed nest context. This is the primary request shape used by
- * nest-integrated Firebase function handlers throughout the codebase.
+ * Augments a request type with a typed nest context and the raw {@link INestApplicationContext}.
+ *
+ * This is the primary request shape used by nest-integrated Firebase function handlers throughout the codebase.
+ * It extends {@link NestApplicationContextRequest} so that handlers always have access to both the
+ * typed domain context and the underlying NestJS application context.
  *
  * @typeParam N - The nest context type, typically an application-specific context class.
  * @typeParam R - The base request type to augment.
  */
-export type NestContextRequest<N, R> = R & {
+export type NestContextRequest<N, R> = NestApplicationContextRequest<R> & {
   readonly nest: N;
 };
 
@@ -39,17 +42,18 @@ export type NestContextRequest<N, R> = R & {
  * Creates a new request object with the typed nest context spread into it.
  *
  * Unlike {@link injectNestApplicationContextIntoRequest}, this attaches a domain-specific context rather
- * than the raw NestJS application context.
+ * than the raw NestJS application context. The input request must already be a {@link NestApplicationContextRequest}
+ * so that the resulting {@link NestContextRequest} retains access to the raw application context.
  *
  * @param nest - The typed nest context to attach.
- * @param request - The base request to augment.
+ * @param request - The base request to augment (must include the nestApplication reference).
  * @returns A new object combining the request properties with the nest context.
  */
-export function injectNestIntoRequest<N, R>(nest: N, request: R): NestContextRequest<N, R> {
+export function injectNestIntoRequest<N, R>(nest: N, request: NestApplicationContextRequest<R>): NestContextRequest<N, R> {
   return {
-    ...request,
+    ...(request as NestApplicationContextRequest<R> & R),
     nest
-  };
+  } as NestContextRequest<N, R>;
 }
 
 /**

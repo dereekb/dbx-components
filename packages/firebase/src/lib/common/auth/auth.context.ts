@@ -21,7 +21,7 @@ export interface FirebaseAuthContextInfo {
   /**
    * Current UID
    */
-  readonly uid: string;
+  readonly uid: FirebaseAuthUserId;
 
   /**
    * Returns true if the user is considered a system admin.

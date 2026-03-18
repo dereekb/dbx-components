@@ -1,0 +1,45 @@
+{
+  "name": "calcom-nestjs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/calcom/nestjs/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/calcom/nestjs",
+        "outputPath": "dist/packages/calcom/nestjs",
+        "tsConfig": "packages/calcom/nestjs/tsconfig.lib.json",
+        "project": "packages/calcom/nestjs/package.json",
+        "main": "packages/calcom/nestjs/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "swc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/calcom/nestjs"
+      }
+    }
+  }
+}

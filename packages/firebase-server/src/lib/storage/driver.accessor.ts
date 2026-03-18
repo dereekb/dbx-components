@@ -328,7 +328,7 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
   nextPageTokenFromResult(result: GoogleCloudListResult): Maybe<StorageListFilesPageToken> {
     return result.nextQuery?.pageToken;
   },
-  next(storage: GoogleCloudStorage, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
+  next(storage: GoogleCloudStorage, options: Maybe<StorageListFilesOptions>, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
     return folder.list({ ...options, ...result.nextQuery });
   },
   file(storage: GoogleCloudStorage, fileResult: StorageListItemResult): FirebaseStorageAccessorFile {

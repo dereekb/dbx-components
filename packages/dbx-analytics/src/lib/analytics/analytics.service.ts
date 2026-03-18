@@ -1,7 +1,7 @@
 import { type Observable, Subject, BehaviorSubject, of, type Subscription, first, shareReplay, switchMap, distinctUntilChanged } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
-import { type DbxAnalyticsEvent, type DbxAnalyticsEventData, type DbxAnalyticsEventName, type DbxAnalyticsUser, type NewUserAnalyticsEventData, type DbxUserAnalyticsEvent } from './analytics';
+import { type AnalyticsEvent, type AnalyticsEventData, type AnalyticsEventName, type AnalyticsUser, type NewUserAnalyticsEventData, type UserAnalyticsEvent } from './analytics';
 import { type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
 import { type Maybe, type Destroyable, safeCompareEquality } from '@dereekb/util';
 
@@ -19,16 +19,16 @@ import { type Maybe, type Destroyable, safeCompareEquality } from '@dereekb/util
  * ```
  */
 export abstract class DbxAnalyticsEventEmitterService {
-  abstract sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void;
-  abstract sendUserLoginEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void;
-  abstract sendUserLogoutEvent(data?: DbxAnalyticsEventData): void;
-  abstract sendUserPropertiesEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void;
+  abstract sendNewUserEvent(user: AnalyticsUser, data: NewUserAnalyticsEventData): void;
+  abstract sendUserLoginEvent(user: AnalyticsUser, data?: AnalyticsEventData): void;
+  abstract sendUserLogoutEvent(data?: AnalyticsEventData): void;
+  abstract sendUserPropertiesEvent(user: AnalyticsUser, data?: AnalyticsEventData): void;
   /**
    * @deprecated When sending an event with no data, use {@link sendEventType} instead.
    */
-  abstract sendEventData(name: DbxAnalyticsEventName): void;
-  abstract sendEventData(name: DbxAnalyticsEventName, data: DbxAnalyticsEventData): void;
-  abstract sendEvent(event: DbxAnalyticsEvent): void;
+  abstract sendEventData(name: AnalyticsEventName): void;
+  abstract sendEventData(name: AnalyticsEventName, data: AnalyticsEventData): void;
+  abstract sendEvent(event: AnalyticsEvent): void;
   abstract sendPageView(page?: string): void;
 }
 
@@ -56,7 +56,7 @@ export abstract class DbxAnalyticsEventStreamService {
  * ```
  */
 export abstract class DbxAnalyticsUserSource {
-  abstract readonly analyticsUser$: Observable<Maybe<DbxAnalyticsUser>>;
+  abstract readonly analyticsUser$: Observable<Maybe<AnalyticsUser>>;
 }
 
 /**
@@ -146,14 +146,14 @@ export abstract class DbxAnalyticsServiceConfiguration {
  * Created by {@link dbxAnalyticsStreamEventAnalyticsEventWrapper} and emitted through the analytics event stream.
  */
 export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyticsStreamEvent {
-  readonly event: DbxUserAnalyticsEvent;
+  readonly event: UserAnalyticsEvent;
   readonly type: DbxAnalyticsStreamEventType;
-  readonly user: Maybe<DbxAnalyticsUser>;
+  readonly user: Maybe<AnalyticsUser>;
   readonly userId: string | undefined;
 }
 
 /**
- * Wraps a {@link DbxUserAnalyticsEvent} into a {@link DbxAnalyticsStreamEventAnalyticsEventWrapper},
+ * Wraps a {@link UserAnalyticsEvent} into a {@link DbxAnalyticsStreamEventAnalyticsEventWrapper},
  * extracting the user ID for convenient access by listeners.
  *
  * @param event - the analytics event with optional user context
@@ -169,7 +169,7 @@ export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyti
  * // wrapper.userId === 'uid_123'
  * ```
  */
-export function dbxAnalyticsStreamEventAnalyticsEventWrapper(event: DbxUserAnalyticsEvent, type: DbxAnalyticsStreamEventType = DbxAnalyticsStreamEventType.Event) {
+export function dbxAnalyticsStreamEventAnalyticsEventWrapper(event: UserAnalyticsEvent, type: DbxAnalyticsStreamEventType = DbxAnalyticsStreamEventType.Event) {
   const { user } = event;
   const userId = user ? user.user : undefined;
 
@@ -246,7 +246,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    *
    * @param user - the user to identify, or undefined to clear
    */
-  public setUser(user: Maybe<DbxAnalyticsUser>): void {
+  public setUser(user: Maybe<AnalyticsUser>): void {
     let source: Maybe<DbxAnalyticsUserSource>;
 
     if (user) {
@@ -269,14 +269,14 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     this._userSource.next(source);
   }
 
-  // MARK: AnalyticsEventEmitterService
+  // MARK: DbxAnalyticsEventEmitterService
   /**
    * Emits a new user registration event, typically sent once after account creation.
    *
    * @param user - the newly registered user
    * @param data - registration-specific data including the signup method
    */
-  public sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void {
+  public sendNewUserEvent(user: AnalyticsUser, data: NewUserAnalyticsEventData): void {
     this.sendNextEvent(
       {
         name: DbxAnalyticsService.USER_REGISTRATION_EVENT_NAME,
@@ -293,7 +293,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    * @param user - the user who logged in
    * @param data - optional additional event data
    */
-  public sendUserLoginEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void {
+  public sendUserLoginEvent(user: AnalyticsUser, data?: AnalyticsEventData): void {
     this.sendNextEvent(
       {
         name: DbxAnalyticsService.USER_LOGIN_EVENT_NAME,
@@ -310,7 +310,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    * @param data - optional additional event data
    * @param clearUser - whether to reset the analytics user identity; defaults to `true`
    */
-  public sendUserLogoutEvent(data?: DbxAnalyticsEventData, clearUser = true): void {
+  public sendUserLogoutEvent(data?: AnalyticsEventData, clearUser = true): void {
     this.sendNextEvent(
       {
         name: DbxAnalyticsService.USER_LOGOUT_EVENT_NAME,
@@ -330,7 +330,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    * @param user - the user whose properties are being updated
    * @param data - optional additional event data
    */
-  public sendUserPropertiesEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void {
+  public sendUserPropertiesEvent(user: AnalyticsUser, data?: AnalyticsEventData): void {
     this.sendNextEvent(
       {
         name: DbxAnalyticsService.USER_PROPERTIES_EVENT_NAME,
@@ -344,7 +344,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * @deprecated When sending an event with no data, use {@link sendEventType} instead.
    */
-  public sendEventData(name: DbxAnalyticsEventName): void;
+  public sendEventData(name: AnalyticsEventName): void;
   /**
    * Sends a named analytics event with a data payload.
    *
@@ -361,8 +361,8 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    * });
    * ```
    */
-  public sendEventData(name: DbxAnalyticsEventName, data: DbxAnalyticsEventData): void;
-  public sendEventData(name: DbxAnalyticsEventName, data?: DbxAnalyticsEventData): void {
+  public sendEventData(name: AnalyticsEventName, data: AnalyticsEventData): void;
+  public sendEventData(name: AnalyticsEventName, data?: AnalyticsEventData): void {
     return this.sendEvent({
       name,
       data
@@ -379,7 +379,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    * analytics.sendEventType('Finish Account Setup');
    * ```
    */
-  public sendEventType(eventType: DbxAnalyticsEventName): void {
+  public sendEventType(eventType: AnalyticsEventName): void {
     this.sendNextEvent(
       {
         name: eventType
@@ -393,7 +393,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    *
    * @param event - the event containing name, optional value, and data
    */
-  public sendEvent(event: DbxAnalyticsEvent): void {
+  public sendEvent(event: AnalyticsEvent): void {
     this.sendNextEvent(event, DbxAnalyticsStreamEventType.Event);
   }
 
@@ -426,15 +426,15 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    * @param type
    * @param userOverride Uses this user if set as null or an override value. If undefined the current analytics user is used.
    */
-  protected sendNextEvent(event: DbxAnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: Maybe<DbxAnalyticsUser>): void {
+  protected sendNextEvent(event: AnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: Maybe<AnalyticsUser>): void {
     this.user$.pipe(first()).subscribe((analyticsUser) => {
-      const user: Maybe<DbxAnalyticsUser> = userOverride !== undefined ? userOverride : analyticsUser;
-      const analyticsEvent: DbxUserAnalyticsEvent = { ...event, user };
+      const user: Maybe<AnalyticsUser> = userOverride !== undefined ? userOverride : analyticsUser;
+      const analyticsEvent: UserAnalyticsEvent = { ...event, user };
       this.nextEvent(analyticsEvent, type);
     });
   }
 
-  protected nextEvent(event: DbxUserAnalyticsEvent, type: DbxAnalyticsStreamEventType): void {
+  protected nextEvent(event: UserAnalyticsEvent, type: DbxAnalyticsStreamEventType): void {
     const wrapper = dbxAnalyticsStreamEventAnalyticsEventWrapper(event, type);
     this._subject.next(wrapper);
   }

@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, type MonoTypeOperatorFunction, type Observable, of, type OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues, type MaybeSoStrict } from '@dereekb/util';
+import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, type Milliseconds, filterMaybeArrayValues, type MaybeSoStrict } from '@dereekb/util';
 import { asObservable, asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter, type MaybeObservableOrValue } from './getter';
 import { type ObservableDecisionFunction } from './decision';
 
@@ -206,7 +206,7 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
 }
 
 export interface SwitchMapObjectConfig<T> {
-  defaultGetter?: GetterOrValue<Maybe<T>>;
+  readonly defaultGetter?: GetterOrValue<Maybe<T>>;
 }
 
 /**
@@ -341,7 +341,7 @@ export function combineLatestMapFrom<A, B, C>(combineObs: Observable<B>, mapFn: 
  *
  * If the delay is not provided, or is falsy, then the second value is never emitted.
  */
-export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<number>): Observable<T> {
+export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<Milliseconds>): Observable<T> {
   let obs = of(startWith);
 
   if (delayTime) {
@@ -354,6 +354,6 @@ export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<numbe
 /**
  * Emits a value after a given delay after every new emission.
  */
-export function emitAfterDelay<T>(value: T, delayTime: number): MonoTypeOperatorFunction<T> {
+export function emitAfterDelay<T>(value: T, delayTime: Milliseconds): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => obs.pipe(switchMap((x) => of(value).pipe(delay(delayTime), startWith(x))));
 }

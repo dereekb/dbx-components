@@ -1,0 +1,33 @@
+<div class="dbx-post-quiz text-center">
+  <h3>Quiz Completed</h3>
+  <div>
+    <ng-container *ngTemplateOutlet="contentTemplate"></ng-container>
+    @if (stateSignal() === 'presubmit') {
+      <ng-container *ngTemplateOutlet="preSubmitTemplate"></ng-container>
+    } @else {
+      <ng-container *ngTemplateOutlet="postSubmitTemplate"></ng-container>
+    }
+  </div>
+</div>
+
+<!-- Pre-Submit -->
+<ng-template #preSubmitTemplate>
+  <ng-content select="[presubmit]"></ng-content>
+  @if (handleSubmitQuiz()) {
+    <div class="dbx-post-quiz-submit">
+      <div dbxAction dbxActionLogger dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleSubmitQuizButton" [dbxActionSuccessHandler]="handleSubmitQuizSuccess">
+        <dbx-button [disabled]="quizSubmittedSignal()" [raised]="true" dbxActionButton>Submit Quiz</dbx-button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+<!-- Post-Submit -->
+<ng-template #postSubmitTemplate>
+  <ng-content select="[postsubmit]"></ng-content>
+</ng-template>
+
+<!-- Content -->
+<ng-template #contentTemplate>
+  <ng-content></ng-content>
+</ng-template>

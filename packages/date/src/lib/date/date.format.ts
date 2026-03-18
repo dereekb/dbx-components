@@ -28,21 +28,21 @@ export interface FormatDateRangeFunctionConfig {
   /**
    * Function used to format each individual date in the range.
    */
-  format: FormatDateFunction;
+  readonly format: FormatDateFunction;
   /**
    * Whether to normalize dates to UTC before formatting.
    */
-  normalizeToUTC?: boolean;
+  readonly normalizeToUTC?: boolean;
   /**
    * Separator string placed between the formatted start and end dates. Defaults to `'-'`.
    */
-  separator?: string;
+  readonly separator?: string;
   /**
    * Whether to output a single formatted date when both dates fall on the same day.
    *
    * False by default.
    */
-  simplifySameDate?: boolean;
+  readonly simplifySameDate?: boolean;
 }
 
 export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDateRangeFunctionConfig;
@@ -436,7 +436,10 @@ export function formatToISO8601DayStringForUTC(date: Date = new Date()): ISO8601
 }
 
 /** date-fns format string for `MM/dd/yyyy` (e.g., `"01/15/2024"`). */
-export const monthDaySlashDateStringFormat = 'MM/dd/yyyy';
+export const MONTH_DAY_SLASH_DATE_STRING_FORMAT = 'MM/dd/yyyy';
+
+/** @deprecated use MONTH_DAY_SLASH_DATE_STRING_FORMAT instead. */
+export const monthDaySlashDateStringFormat = MONTH_DAY_SLASH_DATE_STRING_FORMAT;
 
 /**
  * Formats a Date as a month/day/year slash-separated string (`MM/dd/yyyy`). Defaults to the current date.
@@ -452,7 +455,7 @@ export const monthDaySlashDateStringFormat = 'MM/dd/yyyy';
  * ```
  */
 export function formatToMonthDaySlashDate(date: Date = new Date()): MonthDaySlashDate {
-  return format(date, monthDaySlashDateStringFormat);
+  return format(date, MONTH_DAY_SLASH_DATE_STRING_FORMAT);
 }
 
 /**
@@ -461,7 +464,10 @@ export function formatToMonthDaySlashDate(date: Date = new Date()): MonthDaySlas
 export const formatToShortDateString = formatToMonthDaySlashDate;
 
 /** date-fns format string for `MM/dd` (e.g., `"01/15"`). */
-export const dateMonthDayStringFormat = 'MM/dd';
+export const DATE_MONTH_DAY_STRING_FORMAT = 'MM/dd';
+
+/** @deprecated use DATE_MONTH_DAY_STRING_FORMAT instead. */
+export const dateMonthDayStringFormat = DATE_MONTH_DAY_STRING_FORMAT;
 
 /**
  * Formats a Date as a month/day string (`MM/dd`) without the year. Defaults to the current date.
@@ -477,7 +483,7 @@ export const dateMonthDayStringFormat = 'MM/dd';
  * ```
  */
 export function formatToMonthDayString(date: Date = new Date()): ISO8601DayString {
-  return format(date, dateMonthDayStringFormat);
+  return format(date, DATE_MONTH_DAY_STRING_FORMAT);
 }
 
 /**
@@ -498,7 +504,10 @@ export function formatToDateString(date: Date): string {
 }
 
 /** date-fns format string for 12-hour time with AM/PM (e.g., `"9:00 AM"`). */
-export const dateTimeStringFormat = 'h:mm a';
+export const DATE_TIME_STRING_FORMAT = 'h:mm a';
+
+/** @deprecated use DATE_TIME_STRING_FORMAT instead. */
+export const dateTimeStringFormat = DATE_TIME_STRING_FORMAT;
 
 /**
  * Formats a Date as a 12-hour time string with AM/PM (e.g., `"9:00 AM"`).
@@ -514,11 +523,14 @@ export const dateTimeStringFormat = 'h:mm a';
  * ```
  */
 export function formatToTimeString(date: Date): string {
-  return format(date, dateTimeStringFormat);
+  return format(date, DATE_TIME_STRING_FORMAT);
 }
 
 /** Combined date-fns format string for `MM/dd/yyyy h:mm a` (e.g., `"01/15/2024 9:00 AM"`). */
-export const dateShortDateAndTimeStringFormat = `${monthDaySlashDateStringFormat} ${dateTimeStringFormat}`;
+export const DATE_SHORT_DATE_AND_TIME_STRING_FORMAT = `${MONTH_DAY_SLASH_DATE_STRING_FORMAT} ${DATE_TIME_STRING_FORMAT}`;
+
+/** @deprecated use DATE_SHORT_DATE_AND_TIME_STRING_FORMAT instead. */
+export const dateShortDateAndTimeStringFormat = DATE_SHORT_DATE_AND_TIME_STRING_FORMAT;
 
 /**
  * Formats a Date as a short date and time string (e.g., `"01/15/2024 9:00 AM"`).
@@ -534,7 +546,7 @@ export const dateShortDateAndTimeStringFormat = `${monthDaySlashDateStringFormat
  * ```
  */
 export function formatToShortDateAndTimeString(date: Date): string {
-  return format(date, dateShortDateAndTimeStringFormat);
+  return format(date, DATE_SHORT_DATE_AND_TIME_STRING_FORMAT);
 }
 
 /**

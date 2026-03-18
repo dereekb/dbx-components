@@ -508,11 +508,8 @@ export function documentData<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDa
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: true): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: false): Maybe<T>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId = false): Maybe<T> | Maybe<DocumentDataWithIdAndKey<T>> {
-  if (withId) {
-    return documentDataWithIdAndKey(snapshot);
-  } else {
-    return snapshot.data();
-  }
+  const result = withId ? documentDataWithIdAndKey(snapshot) : snapshot.data();
+  return result;
 }
 
 /**

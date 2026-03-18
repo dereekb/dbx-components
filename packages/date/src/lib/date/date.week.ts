@@ -130,13 +130,15 @@ export function yearWeekCodeFromPair(pair: YearWeekCodePair): YearWeekCode {
  * ```
  */
 export function yearWeekCodeFromDate(date: Date, timezone?: YearWeekCodeDateTimezoneInput): YearWeekCode {
+  let result: YearWeekCode;
+
   if (timezone) {
-    // use specified timezone
-    return yearWeekCodeFactory({ timezone })(date);
+    result = yearWeekCodeFactory({ timezone })(date);
   } else {
-    // Use system timezone
-    return yearWeekCodeFromPair(yearWeekCodePairFromDate(date));
+    result = yearWeekCodeFromPair(yearWeekCodePairFromDate(date));
   }
+
+  return result;
 }
 
 /**
@@ -154,7 +156,7 @@ export interface YearWeekCodeConfig {
    *
    * Configured to use the system timezone by default.
    */
-  timezone?: YearWeekCodeDateTimezoneInput;
+  readonly timezone?: YearWeekCodeDateTimezoneInput;
 }
 
 /**
@@ -379,9 +381,9 @@ export type YearWeekCodeDateReader<B> = MapFunction<B, Maybe<Date | YearWeekCode
 export type YearWeekCodeReader = MapFunction<YearWeekCode | YearWeekCodeString, YearWeekCode>;
 
 export interface YearWeekCodeGroupFactoryConfig<B> {
-  yearWeekCodeFactory?: YearWeekCodeFactory | YearWeekCodeConfig;
-  yearWeekCodeReader?: YearWeekCodeReader;
-  dateReader: YearWeekCodeDateReader<B>;
+  readonly yearWeekCodeFactory?: YearWeekCodeFactory | YearWeekCodeConfig;
+  readonly yearWeekCodeReader?: YearWeekCodeReader;
+  readonly dateReader: YearWeekCodeDateReader<B>;
 }
 
 /**

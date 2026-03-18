@@ -1,0 +1,31 @@
+{
+  "name": "dbx-form-quiz",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/dbx-form/quiz/src",
+  "prefix": "dbx",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/angular:package",
+      "options": {
+        "project": "packages/dbx-form/quiz/ng-package.json",
+        "tsConfig": "packages/dbx-form/quiz/tsconfig.lib.json"
+      },
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-form/quiz"],
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/dbx-form/quiz/tsconfig.lib.prod.json"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "reportsDirectory": "../../../coverage/packages/dbx-form/quiz"
+      }
+    }
+  }
+}

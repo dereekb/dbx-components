@@ -1,4 +1,4 @@
-import { type ErrorMessageOrPartialServerError, isServerError, partialServerError, type ServerError, type StringErrorCode, type ThrowErrorFunction } from '@dereekb/util';
+import { type ErrorMessageOrPartialServerError, isServerError, type Maybe, partialServerError, type ServerError, type StringErrorCode, type ThrowErrorFunction } from '@dereekb/util';
 import type * as admin from 'firebase-admin';
 import { DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE, type FirebaseErrorCode } from '@dereekb/firebase';
 import { HttpsError } from 'firebase-functions/https';
@@ -287,7 +287,7 @@ export function firebaseServerErrorInfo(e: unknown): FirebaseServerErrorInfo {
 /**
  * Returns a tuple of [firebaseErrorCode, errorInfo] for pattern-matching on Firebase error codes.
  */
-export function firebaseServerErrorInfoCodePair(e: unknown): [FirebaseErrorCode | undefined, FirebaseServerErrorInfo] {
+export function firebaseServerErrorInfoCodePair(e: unknown): [Maybe<FirebaseErrorCode>, FirebaseServerErrorInfo] {
   const info = firebaseServerErrorInfo(e);
   return [info.firebaseErrorCode, info];
 }
@@ -295,7 +295,7 @@ export function firebaseServerErrorInfoCodePair(e: unknown): [FirebaseErrorCode 
 /**
  * Returns a tuple of [serverError, errorInfo] for pattern-matching on embedded server error details.
  */
-export function firebaseServerErrorInfoServerErrorPair(e: unknown): [ServerError | undefined, FirebaseServerErrorInfo] {
+export function firebaseServerErrorInfoServerErrorPair(e: unknown): [Maybe<ServerError>, FirebaseServerErrorInfo] {
   const info = firebaseServerErrorInfo(e);
   return [info.httpsErrorDetailsServerError, info];
 }
@@ -303,7 +303,7 @@ export function firebaseServerErrorInfoServerErrorPair(e: unknown): [ServerError
 /**
  * Returns a tuple of [serverErrorCode, errorInfo] for pattern-matching on server error string codes.
  */
-export function firebaseServerErrorInfoServerErrorCodePair(e: unknown): [StringErrorCode | undefined, FirebaseServerErrorInfo] {
+export function firebaseServerErrorInfoServerErrorCodePair(e: unknown): [Maybe<StringErrorCode>, FirebaseServerErrorInfo] {
   const info = firebaseServerErrorInfo(e);
   return [info.serverErrorCode, info];
 }

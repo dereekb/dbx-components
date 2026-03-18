@@ -10,6 +10,9 @@ defaults: &defaults
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
 parameters:
+  run_build:
+    type: boolean
+    default: true
   run_tests:
     type: boolean
     default: true
@@ -97,7 +100,7 @@ jobs:
           command: npx nx test-timezones-world date
       - store_test_results:
           path: ~/code/.reports/junit
-  # Runs tests for the projects that do not require the firebase emulators and are more complex (nestjs, angular)
+  # Runs tests for the Angular/dbx projects
   test-with-node-complex:
     <<: *defaults
     environment:
@@ -119,6 +122,18 @@ jobs:
       - run:
           name: run dbx-form tests
           command: npx nx test dbx-form
+      - store_test_results:
+          path: ~/code/.reports/junit/
+  # Runs tests for nestjs and standalone API integration packages (zoho, zoom, calcom)
+  test-with-node-nestjs:
+    <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
       - run:
           name: run nestjs tests
           command: npx nx run-all-tests nestjs
@@ -128,6 +143,12 @@ jobs:
       - run:
           name: run zoom tests
           command: npx nx run-all-tests zoom
+      - run:
+          name: run calcom tests
+          command: npx nx run-all-tests calcom
+      - run:
+          name: run analytics tests
+          command: npx nx run-all-tests analytics
       - store_test_results:
           path: ~/code/.reports/junit/
   # Runs tests for the projects that require the firebase emulators.
@@ -219,13 +240,26 @@ jobs:
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
     <<: *defaults
+    parameters:
+      skip_build:
+        type: boolean
+        default: false
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/code
+      # attach workspace from build job when build was not skipped
+      - unless:
+          condition: << parameters.skip_build >>
+          steps:
+            - attach_workspace:
+                at: ~/code
+      # install packages directly when build was skipped
+      - when:
+          condition: << parameters.skip_build >>
+          steps:
+            - node/install-packages
       - add_ssh_keys:
           fingerprints:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
@@ -296,7 +330,7 @@ jobs:
       - run: npx nx run vitest:publish-npmjs && npx nx run util:publish-npmjs && npx nx run rxjs:publish-npmjs
       - run: npx nx run date:publish-npmjs && npx nx run model:publish-npmjs && npx nx run browser:publish-npmjs
       - run: npx nx run nestjs:publish-npmjs && npx nx run firebase:publish-npmjs && npx nx run firebase-server:publish-npmjs
-      - run: npx nx run zoho:publish-npmjs && npx nx run zoom:publish-npmjs
+      - run: npx nx run analytics:publish-npmjs && npx nx run zoho:publish-npmjs && npx nx run zoom:publish-npmjs && npx nx run calcom:publish-npmjs
       - run: npx nx run dbx-core:publish-npmjs && npx nx run dbx-web:publish-npmjs && npx nx run dbx-analytics:publish-npmjs && npx nx run dbx-form:publish-npmjs
       - run: npx nx run dbx-firebase:publish-npmjs
 # --- WORKFLOWS ---
@@ -304,12 +338,16 @@ workflows:
   version: 2
   # builds and tests the content. Occurs on every branch.
   build-and-test-and-version:
+    when: << pipeline.parameters.run_build >>
     jobs:
       - build
       - test-with-node-basic:
           requires:
             - build
       - test-with-node-complex:
+          requires:
+            - build
+      - test-with-node-nestjs:
           requires:
             - build
       - test-with-node-firebase:
@@ -323,8 +361,19 @@ workflows:
             - build
             - test-with-node-basic
             - test-with-node-complex
+            - test-with-node-nestjs
             - test-with-node-firebase
             - test-setup-script
+          filters:
+            branches:
+              only: release
+  # Skips build/test and runs release directly. Trigger manually with run_build=false.
+  release-only:
+    when:
+      not: << pipeline.parameters.run_build >>
+    jobs:
+      - run-release-and-push-to-main:
+          skip_build: true
           filters:
             branches:
               only: release

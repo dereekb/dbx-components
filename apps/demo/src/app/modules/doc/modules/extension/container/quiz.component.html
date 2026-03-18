@@ -1,0 +1,12 @@
+<dbx-content-container>
+  <doc-feature-layout header="Quiz" hint="@dereekb/dbx-form/quiz - Interactive quiz system with configurable questions and answers.">
+    <doc-feature-example header="dbx-quiz" hint="Complete quiz example with multiple choice and Likert scale questions.">
+      <dbx-quiz [quiz]="quiz"></dbx-quiz>
+    </doc-feature-example>
+    <doc-feature-example header="QuizStore State" hint="Live QuizStore state displayed via JsonPipe.">
+      <dbx-content-pit [scrollable]="'large'">
+        <pre>{{ storeStateSignal() | json }}</pre>
+      </dbx-content-pit>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

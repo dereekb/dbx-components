@@ -18,7 +18,7 @@ import { firestoreFixedItemPageIterationFactory, type FirestoreFixedItemPageIter
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
 import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront, stringContains } from '@dereekb/util';
+import { type ArrayOrValue, arrayToObject, asArray, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront, stringContains } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -328,11 +328,8 @@ export function firestoreModelId(input: FirestoreModelIdInput): FirestoreModelId
     key = input;
   }
 
-  if (id) {
-    return id;
-  } else {
-    return lastValue(key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR));
-  }
+  const result = id ? id : lastValue(key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR));
+  return result;
 }
 
 /**
@@ -574,11 +571,7 @@ export function firestoreModelKeyPath(...parts: FirestoreModelKeyPart[]): Firest
  * @returns
  */
 export function childFirestoreModelKeyPath(parent: FirestoreModelKeyPart, children: ArrayOrValue<FirestoreModelKeyPart>): FirestoreModelKey[] {
-  if (Array.isArray(children)) {
-    return children.map((childPath) => `${parent}${FIRESTORE_COLLECTION_NAME_SEPARATOR}${childPath}`);
-  } else {
-    return [`${parent}${FIRESTORE_COLLECTION_NAME_SEPARATOR}${children}`];
-  }
+  return asArray(children).map((childPath) => `${parent}${FIRESTORE_COLLECTION_NAME_SEPARATOR}${childPath}`);
 }
 
 export type FirestoreModelCollectionAndIdPairObject = Record<FirestoreCollectionName, FirestoreModelId>;

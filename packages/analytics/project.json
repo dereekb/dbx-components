@@ -1,0 +1,96 @@
+{
+  "name": "analytics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/analytics/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/analytics"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run analytics:build-base"
+          },
+          {
+            "command": "npx nx run analytics-nestjs:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/analytics",
+        "outputPath": "dist/packages/analytics",
+        "main": "packages/analytics/src/index.ts",
+        "tsConfig": "packages/analytics/tsconfig.lib.json",
+        "compiler": "swc",
+        "project": "packages/analytics/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/analytics/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run analytics tests",
+            "command": "npx nx test analytics"
+          },
+          {
+            "description": "run analytics-nestjs tests",
+            "command": "npx nx test analytics-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/analytics && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/packages/analytics"
+      }
+    }
+  }
+}

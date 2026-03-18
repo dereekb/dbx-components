@@ -674,73 +674,78 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
   async function taskInputFactory() {
     // Perform another query, then pass the results to the task factory.
-    if (hasReachedEnd) {
-      return null; // issue no more tasks
-    }
+    let result: { i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> } | null = null;
 
-    const constraints = constraintsFactory();
-    const startAfterFilter = cursorDocument ? startAfter(cursorDocument) : undefined;
+    if (!hasReachedEnd) {
+      const constraints = constraintsFactory();
+      const startAfterFilter = cursorDocument ? startAfter(cursorDocument) : undefined;
 
-    if (startAfterFilter) {
-      constraints.push(startAfterFilter);
-    }
-
-    if (limitPerCheckpoint != null) {
-      const totalPossibleNumberOfItemsLeftToLoad = Math.max(0, totalSnapshotsLimit - totalSnapshotsVisited);
-      const nextLimit = Math.min(limitPerCheckpoint, totalPossibleNumberOfItemsLeftToLoad);
-
-      if (nextLimit === 0) {
-        // we're at the end
-        cursorDocument = null;
-        hasReachedEnd = true;
-        totalSnapshotsLimitReached = true; // should have already been reached, but flag again just incase
-        return null; // exit immediately
-      } else {
-        constraints.push(limit(nextLimit));
+      if (startAfterFilter) {
+        constraints.push(startAfterFilter);
       }
-    }
 
-    const query = queryFactory.query(constraints);
-    const docQuerySnapshot = await query.getDocs();
-    const docSnapshots = docQuerySnapshot.docs;
+      let shouldContinue = true;
 
-    // check for repeat cursor
-    const nextCursorDocument: Maybe<QueryDocumentSnapshot<T>> = lastValue(docSnapshots);
+      if (limitPerCheckpoint != null) {
+        const totalPossibleNumberOfItemsLeftToLoad = Math.max(0, totalSnapshotsLimit - totalSnapshotsVisited);
+        const nextLimit = Math.min(limitPerCheckpoint, totalPossibleNumberOfItemsLeftToLoad);
 
-    if (nextCursorDocument != null) {
-      const cursorPath = readFirestoreModelKeyFromDocumentSnapshot(nextCursorDocument);
-
-      if (visitedCursorPaths.has(cursorPath)) {
-        const shouldContinue = await handleRepeatCursor(nextCursorDocument);
-
-        if (shouldContinue === false) {
+        if (nextLimit === 0) {
+          // we're at the end
           cursorDocument = null;
           hasReachedEnd = true;
-          return null; // exit immediately
+          totalSnapshotsLimitReached = true; // should have already been reached, but flag again just incase
+          shouldContinue = false;
+        } else {
+          constraints.push(limit(nextLimit));
         }
-      } else {
-        visitedCursorPaths.add(cursorPath);
+      }
+
+      if (shouldContinue) {
+        const query = queryFactory.query(constraints);
+        const docQuerySnapshot = await query.getDocs();
+        const docSnapshots = docQuerySnapshot.docs;
+
+        // check for repeat cursor
+        const nextCursorDocument: Maybe<QueryDocumentSnapshot<T>> = lastValue(docSnapshots);
+
+        if (nextCursorDocument != null) {
+          const cursorPath = readFirestoreModelKeyFromDocumentSnapshot(nextCursorDocument);
+
+          if (visitedCursorPaths.has(cursorPath)) {
+            const repeatResult = await handleRepeatCursor(nextCursorDocument);
+
+            if (repeatResult === false) {
+              cursorDocument = null;
+              hasReachedEnd = true;
+              shouldContinue = false;
+            }
+          } else {
+            visitedCursorPaths.add(cursorPath);
+          }
+        }
+
+        if (shouldContinue) {
+          cursorDocument = nextCursorDocument; // set the next cursor document
+
+          // update state
+          const newSnapshotsVisited = docSnapshots.length;
+          totalSnapshotsVisited += newSnapshotsVisited;
+
+          if (!cursorDocument || totalSnapshotsVisited > totalSnapshotsLimit) {
+            hasReachedEnd = true; // mark as having reached the end
+            totalSnapshotsLimitReached = true; // mark as having reached the limit
+          }
+
+          const i = currentIndex;
+          currentIndex += 1; // increase our current index
+
+          result = { i, docQuerySnapshot };
+        }
       }
     }
 
-    cursorDocument = nextCursorDocument; // set the next cursor document
-
-    // update state
-    const newSnapshotsVisited = docSnapshots.length;
-    totalSnapshotsVisited += newSnapshotsVisited;
-
-    if (!cursorDocument || totalSnapshotsVisited > totalSnapshotsLimit) {
-      hasReachedEnd = true; // mark as having reached the end
-      totalSnapshotsLimitReached = true; // mark as having reached the limit
-    }
-
-    const i = currentIndex;
-    currentIndex += 1; // increase our current index
-
-    return {
-      i,
-      docQuerySnapshot
-    };
+    return result;
   }
 
   const performTaskFn = performTasksFromFactoryInParallelFunction({

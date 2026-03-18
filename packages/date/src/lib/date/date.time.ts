@@ -165,23 +165,24 @@ export class DateTimeUtilityInstance {
    */
   parseTimeString(input: ReadableTimeString, config?: ParseTimeString): Maybe<ParsedTimeString> {
     const timestringResult = this._timeStringToDate(input, config);
+    let result: Maybe<ParsedTimeString>;
 
     if (isValidDateFromTimestringResult(timestringResult)) {
-      const { result, raw } = timestringResult;
+      const { result: dateResult, raw } = timestringResult;
 
       // Use minutes since start of day. Since differenceInMinutes uses system time, we convert the raw to system time first.
       const inSystemTime = systemNormalDateToBaseDate(raw);
       const minutesSinceStartOfDay = differenceInMinutes(inSystemTime, startOfDay(inSystemTime));
 
-      return {
+      result = {
         utc: raw,
-        date: result,
+        date: dateResult,
         minutesSinceStartOfDay,
         am: minutesSinceStartOfDay < 720 ? TimeAM.AM : TimeAM.PM
       };
-    } else {
-      return undefined;
     }
+
+    return result;
   }
 
   /**
@@ -203,12 +204,7 @@ export class DateTimeUtilityInstance {
    */
   timeStringToDate(input: ReadableTimeString | LogicalDateStringCode, config?: ParseTimeString): Maybe<Date> {
     const { result, valid } = this._timeStringToDate(input, config);
-
-    if (valid) {
-      return result;
-    } else {
-      return undefined;
-    }
+    return valid ? result : undefined;
   }
 
   _timeStringToDate(input: ReadableTimeString | LogicalDateStringCode, config: ParseTimeString = {}): DateFromTimestringResult | ValidDateFromTimestringResult {

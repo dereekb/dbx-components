@@ -558,19 +558,19 @@ export interface DistinctLoadingStateConfig<L extends LoadingState> {
    *
    * By default this uses a DecisionFunction that returns true on undefined and false on null.
    */
-  passRetainedValue?: (value: Maybe<LoadingStateValue<L>>, previousValue: Maybe<LoadingStateValue<L>>, state: L, previousState: Maybe<L>) => boolean;
+  readonly passRetainedValue?: (value: Maybe<LoadingStateValue<L>>, previousValue: Maybe<LoadingStateValue<L>>, state: L, previousState: Maybe<L>) => boolean;
   /**
    * Whether or not to compare the
    */
-  compareOnUndefinedValue?: boolean;
+  readonly compareOnUndefinedValue?: boolean;
   /**
    * Used for comparing the values of the LoadingState.
    */
-  valueComparator: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>>;
+  readonly valueComparator: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>>;
   /**
    * Used for comparing the metadata values of the LoadingState. By default uses isPageLoadingStateMetadataEqual.
    */
-  metadataComparator?: EqualityComparatorFunction<Maybe<Partial<L>>>;
+  readonly metadataComparator?: EqualityComparatorFunction<Maybe<Partial<L>>>;
 }
 
 /**

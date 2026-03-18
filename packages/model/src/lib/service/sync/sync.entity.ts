@@ -47,14 +47,18 @@ export type SyncEntityCommonTypeIdPairFactory = (input: SyncEntityCommonTypeIdPa
  */
 export function syncEntityCommonTypeIdPairFactory(commonType: SyncEntityCommonType): SyncEntityCommonTypeIdPairFactory {
   return (input: SyncEntityCommonTypeIdPairFactoryInput) => {
+    let result: SyncEntityCommonTypeIdPair;
+
     if (typeof input === 'string') {
-      return {
+      result = {
         commonType,
         commonId: input
       };
     } else {
-      return input;
+      result = input;
     }
+
+    return result;
   };
 }
 

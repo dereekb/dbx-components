@@ -14,7 +14,7 @@ export interface StorageListFilesResultFactoryDelegate<S, R> {
   hasItems(result: R): boolean;
   hasNext(result: R): boolean;
   nextPageTokenFromResult(result: R): Maybe<StorageListFilesPageToken>;
-  next(storage: S, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: R): Promise<StorageListFilesResult>;
+  next(storage: S, options: Maybe<StorageListFilesOptions>, folder: FirebaseStorageAccessorFolder, result: R): Promise<StorageListFilesResult>;
   file(storage: S, fileResult: StorageListItemResult): FirebaseStorageAccessorFile;
   folder(storage: S, folderResult: StorageListItemResult): FirebaseStorageAccessorFolder;
   filesFromResult(result: R, folder: FirebaseStorageAccessorFolder): StorageListItemResult[];
@@ -24,7 +24,7 @@ export interface StorageListFilesResultFactoryDelegate<S, R> {
 /**
  * Factory function that transforms a raw SDK list result into a normalized {@link StorageListFilesResult}.
  */
-export type StorageListFilesResultFactory<S, R> = (storage: S, folder: FirebaseStorageAccessorFolder, options: StorageListFilesOptions | undefined, result: R) => StorageListFilesResult;
+export type StorageListFilesResultFactory<S, R> = (storage: S, folder: FirebaseStorageAccessorFolder, options: Maybe<StorageListFilesOptions>, result: R) => StorageListFilesResult;
 
 /**
  * Creates a {@link StorageListFilesResultFactory} from a platform-specific delegate.
@@ -42,7 +42,7 @@ export type StorageListFilesResultFactory<S, R> = (storage: S, folder: FirebaseS
  * ```
  */
 export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesResultFactoryDelegate<S, R>): StorageListFilesResultFactory<S, R> {
-  return (storage: S, folder: FirebaseStorageAccessorFolder, options: StorageListFilesOptions | undefined, result: R) => {
+  return (storage: S, folder: FirebaseStorageAccessorFolder, options: Maybe<StorageListFilesOptions>, result: R) => {
     function fileResult(item: StorageListItemResult): StorageListFileResult {
       (item as StorageListFileResult).file = () => delegate.file(storage, item);
       return item as StorageListFileResult;

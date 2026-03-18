@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { combineLatest } from 'rxjs';
-import { AbstractDbxAnalyticsServiceListener, type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType, type DbxAnalyticsUser } from '../../analytics';
+import { AbstractDbxAnalyticsServiceListener, type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType, type AnalyticsUser } from '../../analytics';
 import { DbxAnalyticsSegmentApiService } from './segment.service';
 
 /**
@@ -138,7 +138,7 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
     }
   }
 
-  private changeUser(api: SegmentAnalytics.AnalyticsJS, user: Maybe<DbxAnalyticsUser>): void {
+  private changeUser(api: SegmentAnalytics.AnalyticsJS, user: Maybe<AnalyticsUser>): void {
     if (user?.user) {
       api.identify(
         user.user,

@@ -259,23 +259,29 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
   }
 
   containsAnyRole(roles: ArrayOrValue<R>): boolean {
+    let result = false;
+
     for (const role of roles) {
       if ((this._map as GrantedRoleKeysMap)[role]) {
-        return true;
+        result = true;
+        break;
       }
     }
 
-    return false;
+    return result;
   }
 
   containsEachRole(roles: ArrayOrValue<R>): boolean {
+    let result = true;
+
     for (const role of roles) {
       if (!(this._map as GrantedRoleKeysMap)[role]) {
-        return false;
+        result = false;
+        break;
       }
     }
 
-    return true;
+    return result;
   }
 }
 

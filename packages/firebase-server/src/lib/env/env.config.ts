@@ -1,5 +1,6 @@
 import { type InjectionToken, type Provider } from '@nestjs/common';
 import { SERVER_ENV_TOKEN, type ServerEnvironmentConfig } from '@dereekb/nestjs';
+import { type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * Extension of ServerEnvironmentConfig for Firebase server applications.
@@ -7,7 +8,7 @@ import { SERVER_ENV_TOKEN, type ServerEnvironmentConfig } from '@dereekb/nestjs'
  * Requires appUrl to be provided.
  */
 export interface FirebaseServerEnvironmentConfig extends ServerEnvironmentConfig {
-  readonly appUrl: string;
+  readonly appUrl: WebsiteUrlWithPrefix;
 }
 
 // MARK: Tokens

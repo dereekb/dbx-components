@@ -138,7 +138,7 @@ export interface YearMonthDayCodeConfig {
    *
    * Configured to use the system timezone by default.
    */
-  timezone?: YearMonthDayCodeDateTimezoneInput;
+  readonly timezone?: YearMonthDayCodeDateTimezoneInput;
 }
 
 /**
@@ -332,11 +332,11 @@ export interface YearMonthDayCodeGroupFactoryConfig<B> {
    * Factory or config used to convert dates to day codes. Accepts either a pre-built
    * {@link YearMonthDayCodeFactory} or raw {@link YearMonthDayCodeConfig} to create one.
    */
-  yearMonthDayCodeFactory?: YearMonthDayCodeFactory | YearMonthDayCodeConfig;
+  readonly yearMonthDayCodeFactory?: YearMonthDayCodeFactory | YearMonthDayCodeConfig;
   /**
    * Function that extracts the relevant Date from each item for day-code grouping.
    */
-  dateReader: YearMonthDayCodeDateReader<B>;
+  readonly dateReader: YearMonthDayCodeDateReader<B>;
 }
 
 /**

@@ -144,16 +144,19 @@ export function filterWithDateRange<T>(field: StringKeyPropertyKeys<T>, dateRang
 export function filterWithDateRange(field: FieldPathOrStringPath, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function filterWithDateRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
   const { start, end } = dateRange;
+  let result: FirestoreQueryConstraint[];
 
   if (start && end) {
-    return whereDateIsBetween(fieldPath as FieldPathOrStringPath, { start, end }, sortDirection);
+    result = whereDateIsBetween(fieldPath as FieldPathOrStringPath, { start, end }, sortDirection);
   } else if (start) {
-    return whereDateIsOnOrAfterWithSort(fieldPath as FieldPathOrStringPath, start, sortDirection);
+    result = whereDateIsOnOrAfterWithSort(fieldPath as FieldPathOrStringPath, start, sortDirection);
   } else if (end) {
-    return whereDateIsOnOrBeforeWithSort(fieldPath as FieldPathOrStringPath, end, sortDirection);
+    result = whereDateIsOnOrBeforeWithSort(fieldPath as FieldPathOrStringPath, end, sortDirection);
   } else {
-    return [];
+    result = [];
   }
+
+  return result;
 }
 
 /**

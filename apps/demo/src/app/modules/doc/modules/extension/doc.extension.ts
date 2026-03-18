@@ -64,6 +64,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'OIDC',
     detail: 'oidc oauth components',
     ref: 'doc.extension.oidc'
+  },
+  {
+    icon: 'quiz',
+    title: 'Quiz',
+    detail: 'dbx-form/quiz',
+    ref: 'doc.extension.quiz'
   }
 ];
 

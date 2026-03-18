@@ -1,0 +1,10 @@
+<div>
+  <div>
+    <h1>{{ titleSignal() }}</h1>
+    <h2>{{ subtitleSignal() }}</h2>
+    <p>{{ descriptionSignal() }}</p>
+  </div>
+  <div>
+    <dbx-button [raised]="true" (buttonClick)="quizStore.startQuiz()" text="Start Quiz"></dbx-button>
+  </div>
+</div>

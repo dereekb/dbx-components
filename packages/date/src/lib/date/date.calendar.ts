@@ -1,4 +1,4 @@
-import { parseISO8601DayStringToUTCDate, type ISO8601DayString } from '@dereekb/util';
+import { parseISO8601DayStringToUTCDate, type ISO8601DayString, type TimezoneString } from '@dereekb/util';
 import { daysToMinutes } from './date';
 import { type DateDurationSpan } from './date.duration';
 import { dateTimezoneUtcNormal } from './date.timezone';
@@ -36,7 +36,7 @@ export interface CalendarDateConfig {
    * If defined, will apply the target timezone's offset.
    * If false, will be generated in UTC.
    */
-  timezone?: string | false;
+  readonly timezone?: TimezoneString | false;
 }
 
 /**
@@ -93,7 +93,7 @@ export function calendarDateFactory(config?: CalendarDateConfig): CalendarDateFa
  * // event.type === CalendarDateType.DAYS
  * ```
  */
-export function calendarDate(day: ISO8601DayString, days?: number, timezone?: string | false): CalendarDate {
+export function calendarDate(day: ISO8601DayString, days?: number, timezone?: TimezoneString | false): CalendarDate {
   return calendarDateFactory({ timezone })(day, days);
 }
 

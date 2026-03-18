@@ -42,11 +42,6 @@ export function distinctUntilObjectValuesChanged<T>(): MonoTypeOperatorFunction<
 export function filterIfObjectValuesUnchanged<F>(inputFilter: F): MonoTypeOperatorFunction<F>;
 export function filterIfObjectValuesUnchanged<F>(obs: Observable<F>): MonoTypeOperatorFunction<F>;
 export function filterIfObjectValuesUnchanged<F>(input: F | Observable<F>): MonoTypeOperatorFunction<F> {
-  if (isObservable(input)) {
-    return mergeMap<F, Observable<F>>((inputFilter) => {
-      return input.pipe(filterIfObjectValuesUnchanged(inputFilter));
-    });
-  } else {
-    return filter((inputObject) => !areEqualPOJOValues(input, inputObject));
-  }
+  const result: MonoTypeOperatorFunction<F> = isObservable(input) ? mergeMap<F, Observable<F>>((inputFilter) => input.pipe(filterIfObjectValuesUnchanged(inputFilter))) : filter((inputObject) => !areEqualPOJOValues(input, inputObject));
+  return result;
 }
