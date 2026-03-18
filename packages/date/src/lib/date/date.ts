@@ -608,7 +608,7 @@ export function roundDateDownTo(date: Date, roundToUnit: DateHourMinuteOrSecond)
 export function roundDateTo(date: Date, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): Date;
 export function roundDateTo(unixDateTimeNumber: UnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): UnixDateTimeMillisecondsNumber;
 export function roundDateTo(date: DateOrUnixDateTimeMillisecondsNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): DateOrUnixDateTimeMillisecondsNumber {
-  return typeof date === 'number' ? roundDateToUnixDateTimeNumber(date, roundToUnit, roundType) : roundDateTo(date, roundToUnit, roundType);
+  return typeof date === 'number' ? roundDateToUnixDateTimeNumber(date, roundToUnit, roundType) : roundDateToDate(date, roundToUnit, roundType);
 }
 
 /**

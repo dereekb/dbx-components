@@ -116,14 +116,17 @@ export class LastIterResult extends BaseRRuleIter {
     ++this.total;
 
     const tooLate = date > this.maxDate;
+    let result: boolean;
 
     if (tooLate) {
-      return false;
+      result = false;
     } else {
       this.add(date);
       const maxIterationReached = this.total >= this._maxIterationsAllowed;
-      return !maxIterationReached;
+      result = !maxIterationReached;
     }
+
+    return result;
   }
 
   add(date: Date): boolean {
@@ -154,14 +157,17 @@ export class NextIterResult extends BaseRRuleIter {
   accept(date: Date): boolean {
     this.total += 1;
     const tooEarly = this.minDate > date;
+    let result: boolean;
 
     if (tooEarly) {
       const maxIterationReached = this.total >= this.maxIterationsAllowed;
-      return !maxIterationReached;
+      result = !maxIterationReached;
     } else {
       this.add(date);
-      return false;
+      result = false;
     }
+
+    return result;
   }
 
   add(date: Date): boolean {
@@ -196,20 +202,23 @@ export class AnyIterResult extends BaseRRuleIter {
   accept(date: Date): boolean {
     ++this.total;
     const tooEarly = this.minDate != null && this.minDate > date;
+    let result: boolean;
 
     if (tooEarly) {
       const maxIterationReached = this.total >= this.maxIterationsAllowed;
-      return !maxIterationReached;
+      result = !maxIterationReached;
     } else {
       const tooLate = this.maxDate != null && this.maxDate < date;
 
       if (tooLate) {
-        return true;
+        result = true;
       } else {
         this.add(date);
-        return false;
+        result = false;
       }
     }
+
+    return result;
   }
 
   add(date: Date): boolean {

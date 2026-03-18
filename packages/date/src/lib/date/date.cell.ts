@@ -485,12 +485,14 @@ export function isSameFullDateCellTiming(a: Maybe<FullDateCellTiming>, b: Maybe<
  * @returns whether the input matches the DateCellTiming shape
  */
 export function isDateCellTiming(input: unknown): input is DateCellTiming {
+  let result = false;
+
   if (typeof input === 'object') {
     const asTiming = input as DateCellTiming;
-    return isDate(asTiming.startsAt) && isDate(asTiming.end) && typeof asTiming.timezone === 'string' && typeof asTiming.duration === 'number';
+    result = isDate(asTiming.startsAt) && isDate(asTiming.end) && typeof asTiming.timezone === 'string' && typeof asTiming.duration === 'number';
   }
 
-  return false;
+  return result;
 }
 
 /**
@@ -502,12 +504,14 @@ export function isDateCellTiming(input: unknown): input is DateCellTiming {
  * @returns whether the input matches the FullDateCellTiming shape
  */
 export function isFullDateCellTiming(input: unknown): input is FullDateCellTiming {
+  let result = false;
+
   if (typeof input === 'object') {
     const asTiming = input as FullDateCellTiming;
-    return isDate(asTiming.start) && isDateCellTiming(asTiming);
+    result = isDate(asTiming.start) && isDateCellTiming(asTiming);
   }
 
-  return false;
+  return result;
 }
 
 /**

@@ -121,7 +121,10 @@ export interface RRuleExdateAttribute {
 /**
  * Delimiter separating the property name/params from values in an RRule line.
  */
-export const RRuleStringSplitter = ':';
+export const RRULE_STRING_SPLITTER = ':';
+
+/** @deprecated use RRULE_STRING_SPLITTER instead. */
+export const RRuleStringSplitter = RRULE_STRING_SPLITTER;
 
 /**
  * Utility class for parsing and manipulating RFC 5545 RRule strings.
@@ -305,19 +308,22 @@ export class DateRRuleParseUtility {
    * Falls back to treating a single-segment line as an RRULE value.
    */
   static parseRawLine(line: RRuleLineString): RRuleRawLine {
-    const [params, values] = splitJoinRemainder(line, RRuleStringSplitter, 2);
+    const [params, values] = splitJoinRemainder(line, RRULE_STRING_SPLITTER, 2);
+    let result: RRuleRawLine;
 
     if (line.length === 1) {
-      return {
+      result = {
         params: 'RRULE',
         values: params
       };
     } else {
-      return {
+      result = {
         params,
         values
       };
     }
+
+    return result;
   }
 
   // MARK: String

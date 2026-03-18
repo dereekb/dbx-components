@@ -164,11 +164,15 @@ export type DateOrDateRange = Date | DateRange;
  * ```
  */
 export function dateOrDateRangeToDateRange(startOrDateRange: DateOrDateRange, end?: Maybe<Date>): DateRange {
+  let result: DateRange;
+
   if (isDate(startOrDateRange)) {
-    return { start: startOrDateRange, end: (end as Date) ?? startOrDateRange };
+    result = { start: startOrDateRange, end: (end as Date) ?? startOrDateRange };
   } else {
-    return startOrDateRange;
+    result = startOrDateRange;
   }
+
+  return result;
 }
 
 export enum DateRangeType {
@@ -554,7 +558,7 @@ export interface ExpandDaysForDateRangeConfig {
    *
    * Defaults to 1500 days.
    */
-  maxExpansionSize?: number | 0 | false;
+  readonly maxExpansionSize?: number | 0 | false;
 }
 
 export const DEFAULT_EXPAND_DAYS_FOR_DATE_RANGE_MAX_EXPANSION_SIZE = 1500;
@@ -619,13 +623,17 @@ export function expandDaysForDateRange(range: DateRange): Date[] {
  * ```
  */
 export function dateRangeRelativeState({ start, end }: DateRange, now: Date = new Date()): DateRelativeState {
+  let result: DateRelativeState;
+
   if (isAfter(now, end)) {
-    return 'past';
+    result = 'past';
   } else if (isBefore(now, start)) {
-    return 'future';
+    result = 'future';
   } else {
-    return 'present';
+    result = 'present';
   }
+
+  return result;
 }
 
 export interface GroupDateRangesByDateRelativeStatesResult<T extends DateRange> {
