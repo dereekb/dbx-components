@@ -1,4 +1,4 @@
-import type { AnalyticsEventName, AnalyticsUserId, AnalyticsUserProperties, AnalyticsUser, AnalyticsEventData, AnalyticsEvent, UserAnalyticsEvent, NewUserRegistrationMethod, NewUserAnalyticsEventData } from '@dereekb/analytics';
+import type { AnalyticsEventName, AnalyticsUserId, AnalyticsUserProperties, AnalyticsUser, AnalyticsEventData, AnalyticsEvent, UserAnalyticsEvent } from '@dereekb/analytics';
 
 // Re-export canonical types directly
 export type { AnalyticsEventName, AnalyticsUserId, AnalyticsUserProperties, AnalyticsUser, AnalyticsEventData, AnalyticsEvent, UserAnalyticsEvent, NewUserRegistrationMethod, NewUserAnalyticsEventData } from '@dereekb/analytics';

@@ -1,4 +1,4 @@
-import { type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type PromiseOrValue } from '@dereekb/util';
 import { type OnCallModelFunctionAnalyticsDetails, type OnCallAnalyticsContext, type OnCallAnalyticsEmitter } from './analytics.details';
 import { type OnCallModelAnalyticsService, type OnCallModelAnalyticsEvent } from './analytics.handler';
 

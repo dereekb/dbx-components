@@ -1,7 +1,7 @@
 import { type InjectionToken } from '@nestjs/common';
 import { type AuthData } from '../../type';
 import { type FirebaseAuthUserId, type OnCallFunctionType, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Structured analytics event emitted by the onCall CRUD dispatch chain.

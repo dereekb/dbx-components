@@ -1,5 +1,4 @@
-import { type Maybe } from '@dereekb/util';
-import { flattenObject } from '@dereekb/util';
+import { type Maybe , flattenObject } from '@dereekb/util';
 import { type AnalyticsEventData } from './analytics.event';
 
 /**
