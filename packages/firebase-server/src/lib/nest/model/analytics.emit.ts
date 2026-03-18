@@ -1,55 +1,119 @@
-import { isPromiseLike, type PromiseOrValue } from '@dereekb/util';
-import { type OnCallModelFunctionAnalyticsDetails, type OnCallAnalyticsContext } from './analytics.details';
-import { type OnCallModelAnalyticsHandler, type OnCallModelAnalyticsEvent } from './analytics.handler';
+import { type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type OnCallModelFunctionAnalyticsDetails, type OnCallAnalyticsContext, type OnCallAnalyticsEmitter } from './analytics.details';
+import { type OnCallModelAnalyticsService, type OnCallModelAnalyticsEvent } from './analytics.handler';
+
+// MARK: Emitter Factory
+/**
+ * Configuration for {@link onCallAnalyticsEmitterInstance}.
+ */
+export interface OnCallAnalyticsEmitterInstanceConfig {
+  readonly service: OnCallModelAnalyticsService;
+  readonly context: OnCallAnalyticsContext;
+}
+
+/**
+ * Factory instance that creates {@link OnCallAnalyticsEmitter} instances for a specific lifecycle stage.
+ *
+ * Pre-binds the analytics service and dispatch context so each lifecycle stage only needs
+ * to provide the lifecycle discriminator.
+ *
+ * @example
+ * ```typescript
+ * const emitterFactory = onCallAnalyticsEmitterInstance({ service, context });
+ * const triggeredEmitter = emitterFactory('triggered');
+ * triggeredEmitter.sendEvent('Handler Starting');
+ * ```
+ */
+export type OnCallAnalyticsEmitterInstance = (lifecycle: OnCallModelAnalyticsEvent['lifecycle']) => OnCallAnalyticsEmitter;
+
+/**
+ * Creates an {@link OnCallAnalyticsEmitterInstance} that produces {@link OnCallAnalyticsEmitter} instances
+ * for each lifecycle stage, pre-bound to the given service and context.
+ *
+ * @example
+ * ```typescript
+ * const emitter = onCallAnalyticsEmitterInstance({ service, context });
+ * emitter('triggered').sendEventType('Handler Starting');
+ * emitter('success').sendEvent('Widget Created', { id: result.id });
+ * ```
+ */
+export function onCallAnalyticsEmitterInstance(config: OnCallAnalyticsEmitterInstanceConfig): OnCallAnalyticsEmitterInstance {
+  const { service, context } = config;
+
+  return (lifecycle: OnCallModelAnalyticsEvent['lifecycle']): OnCallAnalyticsEmitter => {
+    const emitter: OnCallAnalyticsEmitter = {
+      service,
+      context,
+      lifecycle,
+      sendEvent(event: string, properties?: Record<string, any>): void {
+        service.handleAnalyticsEvent({
+          event,
+          lifecycle,
+          call: context.call,
+          modelType: context.modelType,
+          specifier: context.specifier,
+          uid: context.uid,
+          auth: context.auth,
+          request: context.request,
+          properties
+        });
+      },
+      sendEventType(event: string): void {
+        emitter.sendEvent(event);
+      }
+    };
+
+    return emitter;
+  };
+}
+
+// MARK: Wrap
+/**
+ * Configuration for {@link callWithAnalytics}.
+ */
+export interface CallWithAnalyticsConfig<O> {
+  readonly service: Maybe<OnCallModelAnalyticsService>;
+  readonly details: Maybe<OnCallModelFunctionAnalyticsDetails>;
+  readonly context: OnCallAnalyticsContext;
+  readonly execute: () => PromiseOrValue<O>;
+}
 
 /**
  * Wraps a handler call with analytics lifecycle emission.
- * Handles both sync and async results. Fire-and-forget — never blocks response.
+ * Always async — awaits the execute function. Fire-and-forget — never blocks response.
+ *
+ * Creates an {@link OnCallAnalyticsEmitter} per lifecycle stage and passes it to the
+ * configured lifecycle callbacks along with the request.
  */
-export function wrapWithAnalytics<O>(handler: OnCallModelAnalyticsHandler, details: OnCallModelFunctionAnalyticsDetails, context: OnCallAnalyticsContext, execute: () => PromiseOrValue<O>): PromiseOrValue<O> {
-  // 1. onTriggered (pre-call)
-  _emitLifecycle(handler, details, 'triggered', context, details.onTriggered?.(context));
+export async function callWithAnalytics<O>(config: CallWithAnalyticsConfig<O>): Promise<O> {
+  const { service, details, context, execute } = config;
+  let result: O;
 
-  try {
-    const result = execute();
-
-    if (isPromiseLike(result)) {
-      return (result as Promise<O>).then(
-        (resolved) => {
-          _emitLifecycle(handler, details, 'success', context, details.onSuccess?.(context, resolved));
-          _emitLifecycle(handler, details, 'complete', context, details.onComplete?.(context, resolved));
-          return resolved;
-        },
-        (error) => {
-          _emitLifecycle(handler, details, 'error', context, details.onError?.(context, error), error);
-          _emitLifecycle(handler, details, 'complete', context, details.onComplete?.(context, undefined, error), error);
-          throw error;
-        }
-      );
-    } else {
-      // Sync success
-      _emitLifecycle(handler, details, 'success', context, details.onSuccess?.(context, result));
-      _emitLifecycle(handler, details, 'complete', context, details.onComplete?.(context, result));
-      return result;
+  function _safeCall(fn: () => void): void {
+    try {
+      fn();
+    } catch (error) {
+      // only log the error, but don't throw
+      console.error(`callWithAnalytics: Failed to emit analytics event:`, error);
     }
-  } catch (error) {
-    // Sync error
-    _emitLifecycle(handler, details, 'error', context, details.onError?.(context, error), error);
-    _emitLifecycle(handler, details, 'complete', context, details.onComplete?.(context, undefined, error), error);
-    throw error;
   }
-}
 
-function _emitLifecycle(handler: OnCallModelAnalyticsHandler, details: OnCallModelFunctionAnalyticsDetails, lifecycle: OnCallModelAnalyticsEvent['lifecycle'], context: OnCallAnalyticsContext, properties?: Record<string, any>, error?: unknown): void {
-  try {
-    handler.handleAnalyticsEvent({
-      event: details.event,
-      lifecycle,
-      ...context,
-      properties,
-      error
-    });
-  } catch {
-    // Fire-and-forget: never let analytics break the request
+  if (!service || !details) {
+    result = await execute();
+  } else {
+    const emitter = onCallAnalyticsEmitterInstance({ service, context });
+    _safeCall(() => details.onTriggered?.(emitter('triggered'), context.request));
+
+    try {
+      result = await execute();
+      _safeCall(() => details.onSuccess?.(emitter('success'), context.request, result));
+      _safeCall(() => details.onComplete?.(emitter('complete'), context.request, result));
+    } catch (error) {
+      _safeCall(() => details.onError?.(emitter('error'), context.request, error));
+      _safeCall(() => details.onComplete?.(emitter('complete'), context.request, undefined, error));
+      throw error;
+    }
   }
+
+  return result;
 }

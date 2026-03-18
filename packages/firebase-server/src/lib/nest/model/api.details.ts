@@ -1,5 +1,5 @@
 import { type Configurable, type Maybe } from '@dereekb/util';
-import { type OnCallModelFunctionAnalyticsDetails, type OnCallModelFunctionAnalyticsDetailsRef } from './analytics.details';
+import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
 // MARK: JSON Schema
 /**
@@ -49,6 +49,11 @@ export interface OnCallModelFunctionApiDetails {
    * MCP-specific customization. Auto-generated if omitted.
    */
   readonly mcp?: OnCallModelFunctionMcpDetails;
+  /**
+   * Analytics lifecycle configuration for this handler.
+   * When provided, the dispatch chain will call lifecycle hooks around handler execution.
+   */
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails;
 }
 
 /**
@@ -144,9 +149,12 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
   readonly optionalAuth?: boolean;
   /**
    * Optional analytics lifecycle configuration for this handler.
-   * When provided, the dispatch chain will emit analytics events around handler execution.
+   * When provided, the dispatch chain will call lifecycle hooks around handler execution.
+   *
+   * The request type and return type are inferred from the `fn` parameter, providing
+   * full type safety in lifecycle callbacks.
    */
-  readonly analytics?: OnCallModelFunctionAnalyticsDetails;
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails<Parameters<F>[0], Awaited<ReturnType<F>>>;
   /**
    * The handler function.
    */
@@ -183,19 +191,15 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  * });
  * ```
  */
-export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef & OnCallModelFunctionAnalyticsDetailsRef {
-  const { optionalAuth, analytics, fn, ...apiDetails } = config;
+export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
+  const { optionalAuth, fn, ...apiDetails } = config;
   (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails;
-
-  if (analytics) {
-    (fn as Configurable<OnCallModelFunctionAnalyticsDetailsRef>)._analyticsDetails = analytics;
-  }
 
   if (optionalAuth) {
     (fn as any)._requireAuth = false;
   }
 
-  return fn as F & OnCallModelFunctionApiDetailsRef & OnCallModelFunctionAnalyticsDetailsRef;
+  return fn as F & OnCallModelFunctionApiDetailsRef;
 }
 
 // MARK: Aggregation Utilities
@@ -363,4 +367,27 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): Mod
   }
 
   return Object.keys(models).length > 0 ? { models } : undefined;
+}
+
+// MARK: Analytics Resolution
+/**
+ * Resolves leaf-level analytics details from the aggregated _apiDetails tree.
+ *
+ * Walks: call → modelType → specifier (if specifier-level), then reads the `analytics`
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}.
+ */
+export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: string, modelType: string, specifier?: string): OnCallModelFunctionAnalyticsDetails | undefined {
+  let result: OnCallModelFunctionAnalyticsDetails | undefined;
+
+  const modelDetails = apiDetails[call]?.modelTypes[modelType];
+
+  if (modelDetails && isOnCallSpecifierApiDetails(modelDetails)) {
+    if (specifier) {
+      result = modelDetails.specifiers[specifier]?.analytics;
+    }
+  } else if (modelDetails) {
+    result = (modelDetails as OnCallModelFunctionApiDetails).analytics;
+  }
+
+  return result;
 }

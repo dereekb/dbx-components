@@ -4,9 +4,6 @@ import { type NestContextCallableRequestWithOptionalAuth, type NestContextCallab
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
 import { type OnCallApiDetailsRef, aggregateSpecifierApiDetails } from './api.details';
-import { readAnalyticsDetails } from './analytics.details';
-import { type OnCallModelAnalyticsHandler } from './analytics.handler';
-import { wrapWithAnalytics } from './analytics.emit';
 
 /**
  * Request type for specifier-dispatched handlers that require authentication.
@@ -94,18 +91,7 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
 
     if (handler != null) {
       assertRequestRequiresAuthForFunction(handler, request);
-
-      const analyticsHandler: OnCallModelAnalyticsHandler | undefined = (request as any)._analyticsHandler;
-      const analyticsDetails = readAnalyticsDetails(handler);
-
-      if (analyticsHandler && analyticsDetails) {
-        const call = (request as any)._call;
-        const modelType = (request as any)._modelType;
-        const context = { call, modelType, specifier, uid: (request as any).auth?.uid };
-        return wrapWithAnalytics(analyticsHandler, analyticsDetails, context, () => handler(request as any) as PromiseOrValue<O>);
-      } else {
-        return handler(request as any) as PromiseOrValue<O>;
-      }
+      return handler(request as any) as PromiseOrValue<O>;
     } else {
       throw unknownModelCrudFunctionSpecifierError(specifier);
     }

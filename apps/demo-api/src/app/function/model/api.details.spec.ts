@@ -11,13 +11,13 @@ import { demoCreateModelMap } from './crud.functions';
  */
 describe('demo api.details integration', () => {
   // MARK: Baseline
-  describe('existing demo call model (baseline — no withApiDetails yet)', () => {
-    it('should not have _apiDetails on existing handlers', () => {
-      expect(readApiDetails(demoCreateModelMap.guestbook as unknown as OnCallApiDetailsRef)).toBeUndefined();
+  describe('existing demo call model handlers', () => {
+    it('should have _apiDetails on handlers using withApiDetails', () => {
+      const details = readApiDetails(demoCreateModelMap.guestbook as unknown as OnCallApiDetailsRef);
+      expect(details).toBeDefined();
     });
 
-    it('should return undefined from getModelApiDetails', () => {
-      // Build onCallModel from the existing maps — no handlers have api details
+    it('should return undefined from getModelApiDetails for empty call model', () => {
       const callModel = onCallModel({});
       expect(getModelApiDetails(callModel)).toBeUndefined();
     });

@@ -4,10 +4,10 @@ import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestContext, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext, type OnCallWithNestContextRequest } from '../function/call';
 import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { type NestContextCallableRequest } from '../function/nest';
-import { type OnCallApiDetailsRef, aggregateCrudModelApiDetails, aggregateModelApiDetails } from './api.details';
-import { readAnalyticsDetails } from './analytics.details';
-import { type OnCallModelAnalyticsHandler, ON_CALL_MODEL_ANALYTICS_HANDLER } from './analytics.handler';
-import { wrapWithAnalytics } from './analytics.emit';
+import { type OnCallApiDetailsRef, type OnCallModelApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, resolveAnalyticsFromApiDetails } from './api.details';
+import { type OnCallAnalyticsContext } from './analytics.details';
+import { type OnCallModelAnalyticsService, ON_CALL_MODEL_ANALYTICS_SERVICE } from './analytics.handler';
+import { callWithAnalytics } from './analytics.emit';
 
 // MARK: Function
 /**
@@ -34,7 +34,7 @@ export interface OnCallModelConfig {
   readonly preAssert?: AssertModelCrudRequestFunction<unknown, OnCallTypedModelParams>;
   /**
    * Override the analytics handler injection token.
-   * Default: {@link ON_CALL_MODEL_ANALYTICS_HANDLER}
+   * Default: {@link ON_CALL_MODEL_ANALYTICS_SERVICE}
    */
   readonly analyticsToken?: string;
 }
@@ -62,44 +62,47 @@ export interface OnCallModelConfig {
  */
 export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> & OnCallApiDetailsRef {
   const { preAssert = () => undefined, analyticsToken } = config;
-  const resolvedToken = analyticsToken ?? ON_CALL_MODEL_ANALYTICS_HANDLER;
+  const resolvedToken = analyticsToken ?? ON_CALL_MODEL_ANALYTICS_SERVICE;
+
+  // Aggregate _apiDetails from CRUD handlers in the map (built once at setup, not per-request)
+  const aggregatedApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
+  const modelApiDetails: OnCallModelApiDetails = (aggregatedApiDetails as OnCallModelApiDetails | undefined) ?? {};
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
-    // Try to resolve analytics handler from NestContext (silent if unavailable)
-    let analyticsHandler: OnCallModelAnalyticsHandler | undefined;
+    // Try to resolve analytics service from NestContext (silent if unavailable)
+    let analyticsService: OnCallModelAnalyticsService | undefined;
 
     try {
-      analyticsHandler = (request as any).nest?.nestApplication?.get(resolvedToken, { strict: false });
+      analyticsService = (request as any).nestApplication?.get(resolvedToken, { strict: false });
     } catch {
       // silent — analytics is optional
     }
 
-    if (analyticsHandler) {
-      (request as any)._analyticsHandler = analyticsHandler;
-    }
-
     const call = request.data?.call;
 
-    if (call) {
-      const callFn = map[call];
-
-      if (callFn) {
-        const { specifier, modelType } = request.data;
-        preAssert({ call, request, modelType, specifier });
-        return callFn(request);
-      } else {
-        throw onCallModelUnknownCallTypeError(call);
-      }
-    } else {
+    if (!call) {
       throw onCallModelMissingCallTypeError();
     }
+
+    const callFn = map[call];
+
+    if (!callFn) {
+      throw onCallModelUnknownCallTypeError(call);
+    }
+
+    const { specifier, modelType } = request.data;
+    const auth = (request as any).auth;
+    const context: OnCallAnalyticsContext = { call, modelType, specifier, uid: auth?.uid, auth, data: request.data?.data, request: request as any };
+
+    preAssert(context);
+
+    // Resolve analytics from _apiDetails tree — callWithAnalytics handles undefined details
+    const analyticsDetails = resolveAnalyticsFromApiDetails(modelApiDetails, call, modelType, specifier);
+    return callWithAnalytics({ service: analyticsService, details: analyticsDetails, context, execute: () => callFn(request) });
   };
 
-  // Aggregate _apiDetails from CRUD handlers in the map
-  const modelApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
-
-  if (modelApiDetails != null) {
-    (fn as Configurable<OnCallApiDetailsRef>)._apiDetails = modelApiDetails;
+  if (aggregatedApiDetails != null) {
+    (fn as Configurable<OnCallApiDetailsRef>)._apiDetails = aggregatedApiDetails;
   }
 
   return fn;
@@ -187,25 +190,11 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
       assertRequestRequiresAuthForFunction(crudFn, request);
       preAssert({ call: callType, request, modelType, specifier });
 
-      const analyticsHandler: OnCallModelAnalyticsHandler | undefined = (request as any)._analyticsHandler;
-      const analyticsDetails = readAnalyticsDetails(crudFn);
-
-      // Propagate call/modelType on request for specifier-level analytics access
-      if (analyticsHandler) {
-        (request as any)._call = callType;
-        (request as any)._modelType = modelType;
-      }
-
-      if (analyticsHandler && analyticsDetails) {
-        const context = { call: callType, modelType, specifier, uid: (request as any).auth?.uid, data: request.data?.data };
-        return wrapWithAnalytics(analyticsHandler, analyticsDetails, context, () => crudFn({ ...request, specifier, data: request.data.data }));
-      } else {
-        return crudFn({
-          ...request,
-          specifier,
-          data: request.data.data
-        });
-      }
+      return crudFn({
+        ...request,
+        specifier,
+        data: request.data.data
+      });
     } else {
       throw throwOnUnknownModelType(modelType);
     }

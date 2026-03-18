@@ -1,66 +1,91 @@
+import { type OnCallModelAnalyticsService, type OnCallModelAnalyticsEvent } from './analytics.handler';
+import { type AuthData } from '../../type';
+import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
+
+// MARK: Emitter
 /**
- * Analytics lifecycle configuration for a single onCall model handler.
- * Mirrors the frontend DbxActionAnalyticsConfig pattern.
+ * Per-invocation analytics emitter passed to lifecycle callbacks.
+ *
+ * Pre-binds the analytics service, dispatch context, and lifecycle stage so callbacks
+ * can send events with convenience methods without manually constructing full event objects.
+ *
+ * Analogous to how {@link DbxAnalyticsService} is passed to {@link DbxActionAnalyticsConfig} callbacks.
  */
-export interface OnCallModelFunctionAnalyticsDetails<I = any, O = any> {
+export interface OnCallAnalyticsEmitter {
+  readonly service: OnCallModelAnalyticsService;
+  readonly context: OnCallAnalyticsContext;
+  readonly lifecycle: OnCallModelAnalyticsEvent['lifecycle'];
   /**
-   * Analytics event name (e.g., 'Guestbook Created').
+   * Send a named event with optional properties.
+   * Context (call, modelType, specifier, uid, lifecycle) is auto-filled from the dispatch context.
    */
-  readonly event: string;
+  sendEvent(event: string, properties?: Record<string, any>): void;
   /**
-   * Called before handler executes. Return properties to include in the event.
+   * Send a named event type with no properties.
    */
-  readonly onTriggered?: OnCallAnalyticsLifecycleFn<I, void>;
-  /**
-   * Called after successful handler completion. Return properties to include in the event.
-   */
-  readonly onSuccess?: OnCallAnalyticsLifecycleFn<I, O>;
-  /**
-   * Called when handler throws. Return properties to include in the event.
-   */
-  readonly onError?: OnCallAnalyticsErrorFn<I>;
-  /**
-   * Called always after handler completes (success or error). Return properties to include in the event.
-   */
-  readonly onComplete?: OnCallAnalyticsCompleteFn<I, O>;
+  sendEventType(event: string): void;
 }
 
+// MARK: Details
 /**
- * Context available to all analytics lifecycle functions.
+ * Analytics lifecycle configuration for a single onCall model handler.
+ *
+ * Mirrors the frontend {@link DbxActionAnalyticsConfig} pattern: lifecycle callbacks
+ * receive an {@link OnCallAnalyticsEmitter} and the typed request, and are responsible
+ * for deciding what analytics events to emit.
+ *
+ * @typeParam R - The request type passed to the handler function.
+ * @typeParam O - The output/return type of the handler function.
+ */
+export interface OnCallModelFunctionAnalyticsDetails<R = any, O = any> {
+  /**
+   * Called before handler executes.
+   */
+  readonly onTriggered?: OnCallAnalyticsLifecycleFn<R, void>;
+  /**
+   * Called after successful handler completion.
+   */
+  readonly onSuccess?: OnCallAnalyticsLifecycleFn<R, O>;
+  /**
+   * Called when handler throws.
+   */
+  readonly onError?: OnCallAnalyticsErrorFn<R>;
+  /**
+   * Called always after handler completes (success or error).
+   */
+  readonly onComplete?: OnCallAnalyticsCompleteFn<R, O>;
+}
+
+// MARK: Context
+/**
+ * Context available to the dispatch chain for building analytics emitters.
+ * Includes the full request object and auth data.
  */
 export interface OnCallAnalyticsContext<I = any> {
   readonly call: string;
   readonly modelType: string;
-  readonly specifier?: string;
+  readonly specifier: string | undefined;
   readonly uid?: string;
+  readonly auth?: AuthData | undefined;
   readonly data?: I;
+  readonly request: NestContextCallableRequestWithAuth<unknown, I> & ModelFirebaseCrudFunctionSpecifierRef;
 }
 
+// MARK: Lifecycle Functions
 /**
  * Lifecycle function for onTriggered/onSuccess.
+ *
+ * Receives the {@link OnCallAnalyticsEmitter} for sending events and the typed request.
  */
-export type OnCallAnalyticsLifecycleFn<I, O> = (context: OnCallAnalyticsContext<I>, result?: O) => Record<string, any> | undefined;
+export type OnCallAnalyticsLifecycleFn<R, O> = (emitter: OnCallAnalyticsEmitter, request: R, result?: O) => void;
 
 /**
  * Lifecycle function for onError.
  */
-export type OnCallAnalyticsErrorFn<I> = (context: OnCallAnalyticsContext<I>, error: unknown) => Record<string, any> | undefined;
+export type OnCallAnalyticsErrorFn<R> = (emitter: OnCallAnalyticsEmitter, request: R, error: unknown) => void;
 
 /**
  * Lifecycle function for onComplete.
  */
-export type OnCallAnalyticsCompleteFn<I, O> = (context: OnCallAnalyticsContext<I>, result?: O, error?: unknown) => Record<string, any> | undefined;
-
-/**
- * Ref interface for functions carrying _analyticsDetails.
- */
-export interface OnCallModelFunctionAnalyticsDetailsRef {
-  readonly _analyticsDetails?: OnCallModelFunctionAnalyticsDetails;
-}
-
-/**
- * Reads _analyticsDetails from a function if present.
- */
-export function readAnalyticsDetails(fn: any): OnCallModelFunctionAnalyticsDetails | undefined {
-  return fn?._analyticsDetails;
-}
+export type OnCallAnalyticsCompleteFn<R, O> = (emitter: OnCallAnalyticsEmitter, request: R, result?: O, error?: unknown) => void;

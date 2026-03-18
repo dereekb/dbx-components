@@ -62,6 +62,28 @@ describe('api.details', () => {
       const wrapped = withApiDetails({ fn: handler });
       expect(wrapped).toBe(handler);
     });
+
+    it('should attach analytics inside _apiDetails when analytics config is provided', () => {
+      const analytics = { onSuccess: () => {} };
+      const wrapped = withApiDetails({ analytics, fn: mockHandler() });
+      expect(wrapped._apiDetails).toBeDefined();
+      expect(wrapped._apiDetails!.analytics).toBeDefined();
+      expect(wrapped._apiDetails!.analytics!.onSuccess).toBeDefined();
+    });
+
+    it('should not attach analytics when analytics is not provided', () => {
+      const wrapped = withApiDetails({ fn: mockHandler() });
+      expect(wrapped._apiDetails?.analytics).toBeUndefined();
+    });
+
+    it('should attach both inputType and analytics inside _apiDetails', () => {
+      const inputType = mockJsonSchemaRef('TestInput');
+      const analytics = { onSuccess: () => {} };
+      const wrapped = withApiDetails({ inputType, analytics, fn: mockHandler() });
+      expect(wrapped._apiDetails).toBeDefined();
+      expect(wrapped._apiDetails!.inputType).toBe(inputType);
+      expect(wrapped._apiDetails!.analytics).toBeDefined();
+    });
   });
 
   // MARK: readApiDetails
@@ -79,6 +101,20 @@ describe('api.details', () => {
     it('should return undefined for null/undefined', () => {
       expect(readApiDetails(null)).toBeUndefined();
       expect(readApiDetails(undefined)).toBeUndefined();
+    });
+  });
+
+  // MARK: Analytics via _apiDetails
+  describe('analytics via _apiDetails', () => {
+    it('should return analytics from a wrapped function via _apiDetails', () => {
+      const analytics = { onSuccess: () => {} };
+      const handler = withApiDetails({ analytics, fn: mockHandler() });
+      expect(handler._apiDetails?.analytics).toBe(analytics);
+    });
+
+    it('should return undefined analytics from a function without analytics config', () => {
+      const handler = withApiDetails({ fn: mockHandler() });
+      expect(handler._apiDetails?.analytics).toBeUndefined();
     });
   });
 
