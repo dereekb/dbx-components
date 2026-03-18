@@ -6,7 +6,7 @@ import { OnCallModelAnalyticsService, type OnCallModelAnalyticsEvent } from './a
 class MockAnalyticsService extends OnCallModelAnalyticsService {
   readonly events: OnCallModelAnalyticsEvent[] = [];
 
-  handleAnalyticsEvent(event: OnCallModelAnalyticsEvent): void {
+  handleOnCallAnalyticsEvent(event: OnCallModelAnalyticsEvent): void {
     this.events.push(event);
   }
 }

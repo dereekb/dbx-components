@@ -155,6 +155,7 @@ export function blockingFunctionHandlerWithNestContextFactory<N>(makeNestContext
           nestAppPromiseGetter().then((nestApplication) =>
             handler({
               ...event,
+              nestApplication,
               nest: makeNestContext(nestApplication)
             })
           );

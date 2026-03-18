@@ -4,9 +4,10 @@ import { OnCallModelAnalyticsService, type OnCallModelAnalyticsEvent } from '@de
 @Injectable()
 export class DemoAnalyticsHandler extends OnCallModelAnalyticsService {
   private readonly logger = new Logger('DemoAnalytics');
+
   readonly events: OnCallModelAnalyticsEvent[] = [];
 
-  handleAnalyticsEvent(event: OnCallModelAnalyticsEvent): void {
+  handleOnCallAnalyticsEvent(event: OnCallModelAnalyticsEvent): void {
     this.events.push(event);
     this.logger.log(`[${event.lifecycle}] ${event.event} - ${event.call}/${event.modelType}`, {
       specifier: event.specifier,

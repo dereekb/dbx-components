@@ -1,4 +1,4 @@
-import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallSpecifierApiDetails, isOnCallCrudModelApiDetails, isOnCallHandlerApiDetails, aggregateSpecifierApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, type OnCallModelFunctionApiDetails, type OnCallSpecifierApiDetails, type OnCallCrudModelApiDetails, type OnCallModelApiDetails, type JsonSchemaRef, type OnCallApiDetailsRef, type OnCallModelFunctionApiDetailsRef } from './api.details';
+import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallModelTypeApiDetails, isOnCallCrudModelApiDetails, isOnCallHandlerApiDetails, isActualSpecifier, aggregateSpecifierApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, type OnCallModelFunctionApiDetails, type OnCallModelTypeApiDetails, type OnCallCrudModelApiDetails, type OnCallModelApiDetails, type JsonSchemaRef, type OnCallApiDetailsRef, type OnCallModelFunctionApiDetailsRef } from './api.details';
 import { onCallSpecifierHandler } from './specifier.function';
 import { onCallCreateModel, type OnCallCreateModelMap } from './create.model.function';
 import { onCallUpdateModel } from './update.model.function';
@@ -123,21 +123,28 @@ describe('api.details', () => {
     it('isOnCallHandlerApiDetails should identify handler-level details', () => {
       const details: OnCallModelFunctionApiDetails = { inputType: mockJsonSchemaRef('Test') };
       expect(isOnCallHandlerApiDetails(details)).toBe(true);
-      expect(isOnCallSpecifierApiDetails(details)).toBe(false);
+      expect(isOnCallModelTypeApiDetails(details)).toBe(false);
       expect(isOnCallCrudModelApiDetails(details)).toBe(false);
     });
 
-    it('isOnCallSpecifierApiDetails should identify specifier-level details', () => {
-      const details: OnCallSpecifierApiDetails = { specifiers: { _: { inputType: mockJsonSchemaRef('Test') } } };
-      expect(isOnCallSpecifierApiDetails(details)).toBe(true);
+    it('isOnCallModelTypeApiDetails should identify specifier-level details', () => {
+      const details: OnCallModelTypeApiDetails = { isSpecifier: true, specifiers: { _: { inputType: mockJsonSchemaRef('Test') } } };
+      expect(isOnCallModelTypeApiDetails(details)).toBe(true);
       expect(isOnCallHandlerApiDetails(details)).toBe(false);
     });
 
+    it('isActualSpecifier should distinguish true specifiers from wrapped direct handlers', () => {
+      const trueSpecifier: OnCallModelTypeApiDetails = { isSpecifier: true, specifiers: { _: {}, custom: {} } };
+      const wrappedDirect: OnCallModelTypeApiDetails = { isSpecifier: false, specifiers: { _: {} } };
+      expect(isActualSpecifier(trueSpecifier)).toBe(true);
+      expect(isActualSpecifier(wrappedDirect)).toBe(false);
+    });
+
     it('isOnCallCrudModelApiDetails should identify CRUD-model-level details', () => {
-      const details: OnCallCrudModelApiDetails = { modelTypes: { profile: { inputType: mockJsonSchemaRef('Test') } } };
+      const details: OnCallCrudModelApiDetails = { modelTypes: { profile: { isSpecifier: false, specifiers: { _: { inputType: mockJsonSchemaRef('Test') } } } } };
       expect(isOnCallCrudModelApiDetails(details)).toBe(true);
       expect(isOnCallHandlerApiDetails(details)).toBe(false);
-      expect(isOnCallSpecifierApiDetails(details)).toBe(false);
+      expect(isOnCallModelTypeApiDetails(details)).toBe(false);
     });
 
     it('isOnCallHandlerApiDetails should return true for empty details', () => {
@@ -158,6 +165,7 @@ describe('api.details', () => {
       });
 
       expect(result).toBeDefined();
+      expect(result!.isSpecifier).toBe(true);
       expect(result!.specifiers['_']!.inputType).toBe(inputA);
       expect(result!.specifiers['custom']!.inputType).toBe(inputB);
     });
@@ -184,7 +192,7 @@ describe('api.details', () => {
   });
 
   describe('aggregateCrudModelApiDetails()', () => {
-    it('should aggregate from model type map', () => {
+    it('should aggregate from model type map and wrap direct handlers', () => {
       const inputType = mockJsonSchemaRef('Params');
       const result = aggregateCrudModelApiDetails({
         profile: { _apiDetails: { inputType } } as OnCallApiDetailsRef
@@ -192,6 +200,20 @@ describe('api.details', () => {
 
       expect(result).toBeDefined();
       expect(result!.modelTypes['profile']).toBeDefined();
+      expect(result!.modelTypes['profile']!.isSpecifier).toBe(false);
+      expect(result!.modelTypes['profile']!.specifiers['_']!.inputType).toBe(inputType);
+    });
+
+    it('should pass through specifier-level details as-is', () => {
+      const inputType = mockJsonSchemaRef('Params');
+      const specDetails: OnCallModelTypeApiDetails = { isSpecifier: true, specifiers: { _: { inputType }, custom: {} } };
+      const result = aggregateCrudModelApiDetails({
+        profile: { _apiDetails: specDetails } as OnCallApiDetailsRef
+      });
+
+      expect(result).toBeDefined();
+      expect(result!.modelTypes['profile']!.isSpecifier).toBe(true);
+      expect(result!.modelTypes['profile']!.specifiers['_']!.inputType).toBe(inputType);
     });
 
     it('should return undefined when no entries have details', () => {
@@ -204,7 +226,7 @@ describe('api.details', () => {
 
   describe('aggregateModelApiDetails()', () => {
     it('should aggregate from call model map', () => {
-      const crudDetails: OnCallCrudModelApiDetails = { modelTypes: { widget: { inputType: mockJsonSchemaRef('X') } } };
+      const crudDetails: OnCallCrudModelApiDetails = { modelTypes: { widget: { isSpecifier: false, specifiers: { _: { inputType: mockJsonSchemaRef('X') } } } } };
       const result = aggregateModelApiDetails({
         create: { _apiDetails: crudDetails } as OnCallApiDetailsRef
       });
@@ -239,9 +261,9 @@ describe('api.details', () => {
       const details = readApiDetails(specifierHandler as unknown as OnCallApiDetailsRef);
 
       expect(details).toBeDefined();
-      expect(isOnCallSpecifierApiDetails(details!)).toBe(true);
+      expect(isOnCallModelTypeApiDetails(details!)).toBe(true);
 
-      const specDetails = details as OnCallSpecifierApiDetails;
+      const specDetails = details as OnCallModelTypeApiDetails;
       expect(specDetails.specifiers['_']!.inputType).toBe(inputTypeA);
       expect(specDetails.specifiers['custom']!.inputType).toBe(inputTypeB);
     });
@@ -263,14 +285,14 @@ describe('api.details', () => {
         noDetails: mockHandler() as any
       });
 
-      const details = readApiDetails(specifierHandler as unknown as OnCallApiDetailsRef) as OnCallSpecifierApiDetails;
+      const details = readApiDetails(specifierHandler as unknown as OnCallApiDetailsRef) as OnCallModelTypeApiDetails;
       expect(details.specifiers['_']).toBeDefined();
       expect(details.specifiers['noDetails']).toBeUndefined();
     });
   });
 
   describe('onCallCreateModel aggregation', () => {
-    it('should aggregate from direct handlers', () => {
+    it('should aggregate from direct handlers (wrapped as non-specifier)', () => {
       const inputType = mockJsonSchemaRef('CreateParams');
       const handler = withApiDetails({ inputType, fn: mockHandler() });
 
@@ -279,7 +301,10 @@ describe('api.details', () => {
 
       expect(details).toBeDefined();
       expect(isOnCallCrudModelApiDetails(details)).toBe(true);
-      expect((details.modelTypes['widget'] as OnCallModelFunctionApiDetails).inputType).toBe(inputType);
+
+      const widgetDetails = details.modelTypes['widget']!;
+      expect(widgetDetails.isSpecifier).toBe(false);
+      expect(widgetDetails.specifiers['_']!.inputType).toBe(inputType);
     });
 
     it('should aggregate from specifier handlers', () => {
@@ -295,9 +320,9 @@ describe('api.details', () => {
       const details = readApiDetails(createModel as unknown as OnCallApiDetailsRef) as OnCallCrudModelApiDetails;
 
       expect(details).toBeDefined();
-      expect(isOnCallSpecifierApiDetails(details.modelTypes['widget']!)).toBe(true);
+      expect(isOnCallModelTypeApiDetails(details.modelTypes['widget']!)).toBe(true);
 
-      const specDetails = details.modelTypes['widget'] as OnCallSpecifierApiDetails;
+      const specDetails = details.modelTypes['widget'] as OnCallModelTypeApiDetails;
       expect(specDetails.specifiers['_']!.inputType).toBe(inputTypeA);
       expect(specDetails.specifiers['custom']!.inputType).toBe(inputTypeB);
     });
@@ -326,7 +351,9 @@ describe('api.details', () => {
       expect(details.delete).toBeUndefined(); // empty map, no handlers
 
       const createDetails = details.create as OnCallCrudModelApiDetails;
-      expect((createDetails.modelTypes['widget'] as OnCallModelFunctionApiDetails).inputType).toBe(createInput);
+      const widgetDetails = createDetails.modelTypes['widget']!;
+      expect(widgetDetails.isSpecifier).toBe(false);
+      expect(widgetDetails.specifiers['_']!.inputType).toBe(createInput);
     });
 
     it('should build a complete tree with mixed direct and specifier handlers', () => {
@@ -353,13 +380,14 @@ describe('api.details', () => {
       const details = readApiDetails(callModel as unknown as OnCallApiDetailsRef) as OnCallModelApiDetails;
       const createDetails = details.create as OnCallCrudModelApiDetails;
 
-      // Direct handler
-      expect(isOnCallHandlerApiDetails(createDetails.modelTypes['simple']!)).toBe(true);
-      expect((createDetails.modelTypes['simple'] as OnCallModelFunctionApiDetails).inputType).toBe(directInput);
+      // Direct handler — wrapped as non-specifier
+      const simpleDetails = createDetails.modelTypes['simple']!;
+      expect(simpleDetails.isSpecifier).toBe(false);
+      expect(simpleDetails.specifiers['_']!.inputType).toBe(directInput);
 
-      // Specifier handler
-      expect(isOnCallSpecifierApiDetails(createDetails.modelTypes['complex']!)).toBe(true);
-      const complexDetails = createDetails.modelTypes['complex'] as OnCallSpecifierApiDetails;
+      // Specifier handler — true specifier
+      const complexDetails = createDetails.modelTypes['complex']!;
+      expect(complexDetails.isSpecifier).toBe(true);
       expect(complexDetails.specifiers['_']!.inputType).toBe(specInputA);
       expect(complexDetails.specifiers['variant']!.inputType).toBe(specInputB);
     });
@@ -388,8 +416,8 @@ describe('api.details', () => {
       expect(result!.models['widget'].calls.read).toBeUndefined();
       expect(result!.models['widget'].calls.delete).toBeUndefined();
 
-      expect((result!.models['widget'].calls.create as OnCallModelFunctionApiDetails).inputType).toBe(createInput);
-      expect((result!.models['widget'].calls.update as OnCallModelFunctionApiDetails).inputType).toBe(updateInput);
+      expect(result!.models['widget'].calls.create!.specifiers['_']!.inputType).toBe(createInput);
+      expect(result!.models['widget'].calls.update!.specifiers['_']!.inputType).toBe(updateInput);
     });
 
     it('should group multiple model types from different CRUD operations', () => {
@@ -433,12 +461,10 @@ describe('api.details', () => {
       const result = getModelApiDetails(callModel as unknown as OnCallApiDetailsRef)!;
 
       const widgetUpdate = result.models['widget'].calls.update!;
-      expect(isOnCallSpecifierApiDetails(widgetUpdate)).toBe(true);
-
-      const specDetails = widgetUpdate as OnCallSpecifierApiDetails;
-      expect(specDetails.specifiers['_']!.inputType).toBe(specInputA);
-      expect(specDetails.specifiers['custom']!.inputType).toBe(specInputB);
-      expect(specDetails.specifiers['custom']!.mcp?.description).toBe('Custom operation');
+      expect(widgetUpdate.isSpecifier).toBe(true);
+      expect(widgetUpdate.specifiers['_']!.inputType).toBe(specInputA);
+      expect(widgetUpdate.specifiers['custom']!.inputType).toBe(specInputB);
+      expect(widgetUpdate.specifiers['custom']!.mcp?.description).toBe('Custom operation');
     });
 
     it('should return undefined when no _apiDetails are present', () => {
@@ -481,7 +507,7 @@ describe('api.details', () => {
       // Walk the full tree
       const topDetails = readApiDetails(callModel as unknown as OnCallApiDetailsRef) as OnCallModelApiDetails;
       const crudDetails = topDetails.create as OnCallCrudModelApiDetails;
-      const specDetails = crudDetails.modelTypes['widget'] as OnCallSpecifierApiDetails;
+      const specDetails = crudDetails.modelTypes['widget'] as OnCallModelTypeApiDetails;
       const handlerDetails = specDetails.specifiers['_'] as OnCallModelFunctionApiDetails;
 
       expect(handlerDetails.inputType!.toJsonSchema()).toEqual(schema);

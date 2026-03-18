@@ -24,7 +24,7 @@ export interface OnCallModelAnalyticsEvent {
  * Apps extend this class and provide it via {@link ON_CALL_MODEL_ANALYTICS_SERVICE}.
  */
 export abstract class OnCallModelAnalyticsService {
-  abstract handleAnalyticsEvent(event: OnCallModelAnalyticsEvent): void;
+  abstract handleOnCallAnalyticsEvent(event: OnCallModelAnalyticsEvent): void;
 }
 
 /**
@@ -33,6 +33,7 @@ export abstract class OnCallModelAnalyticsService {
  */
 export const ON_CALL_MODEL_ANALYTICS_SERVICE = 'ON_CALL_MODEL_ANALYTICS_SERVICE' as InjectionToken<OnCallModelAnalyticsService>;
 
+// MARK: Compat
 /**
  * @deprecated Use {@link OnCallModelAnalyticsService} instead.
  */

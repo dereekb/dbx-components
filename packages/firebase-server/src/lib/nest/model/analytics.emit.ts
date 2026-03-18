@@ -46,7 +46,7 @@ export function onCallAnalyticsEmitterInstance(config: OnCallAnalyticsEmitterIns
       context,
       lifecycle,
       sendEvent(event: string, properties?: Record<string, any>): void {
-        service.handleAnalyticsEvent({
+        service.handleOnCallAnalyticsEvent({
           event,
           lifecycle,
           call: context.call,
@@ -72,8 +72,8 @@ export function onCallAnalyticsEmitterInstance(config: OnCallAnalyticsEmitterIns
  * Configuration for {@link callWithAnalytics}.
  */
 export interface CallWithAnalyticsConfig<O> {
-  readonly service: Maybe<OnCallModelAnalyticsService>;
-  readonly details: Maybe<OnCallModelFunctionAnalyticsDetails>;
+  readonly service: OnCallModelAnalyticsService;
+  readonly details: OnCallModelFunctionAnalyticsDetails;
   readonly context: OnCallAnalyticsContext;
   readonly execute: () => PromiseOrValue<O>;
 }
@@ -98,21 +98,17 @@ export async function callWithAnalytics<O>(config: CallWithAnalyticsConfig<O>): 
     }
   }
 
-  if (!service || !details) {
-    result = await execute();
-  } else {
-    const emitter = onCallAnalyticsEmitterInstance({ service, context });
-    _safeCall(() => details.onTriggered?.(emitter('triggered'), context.request));
+  const emitter = onCallAnalyticsEmitterInstance({ service, context });
+  _safeCall(() => details.onTriggered?.(emitter('triggered'), context.request));
 
-    try {
-      result = await execute();
-      _safeCall(() => details.onSuccess?.(emitter('success'), context.request, result));
-      _safeCall(() => details.onComplete?.(emitter('complete'), context.request, result));
-    } catch (error) {
-      _safeCall(() => details.onError?.(emitter('error'), context.request, error));
-      _safeCall(() => details.onComplete?.(emitter('complete'), context.request, undefined, error));
-      throw error;
-    }
+  try {
+    result = await execute();
+    _safeCall(() => details.onSuccess?.(emitter('success'), context.request, result));
+    _safeCall(() => details.onComplete?.(emitter('complete'), context.request, result));
+  } catch (error) {
+    _safeCall(() => details.onError?.(emitter('error'), context.request, error));
+    _safeCall(() => details.onComplete?.(emitter('complete'), context.request, undefined, error));
+    throw error;
   }
 
   return result;
