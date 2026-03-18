@@ -1,5 +1,5 @@
 import { type JsonSerializableObject, type Maybe } from '@dereekb/util';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField } from '../../common';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField, type FirebaseAuthUserId } from '../../common';
 import { type GrantedDeleteRole, type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 
 /**
@@ -56,7 +56,7 @@ export interface OidcEntry {
   /**
    * The oidc-provider model type (e.g., 'Session', 'AccessToken', 'Client').
    */
-  type: string;
+  type: OidcEntryType;
   /**
    * Serialized JSON of the full oidc-provider AdapterPayload.
    *
@@ -74,7 +74,7 @@ export interface OidcEntry {
   /**
    * User identifier. Extracted from the payload for indexed queries.
    */
-  uid?: Maybe<string>;
+  uid?: Maybe<FirebaseAuthUserId>;
   /**
    * Grant identifier for revocation support. Extracted from the payload for indexed queries.
    */
@@ -110,7 +110,7 @@ export class OidcEntryDocument extends AbstractFirestoreDocument<OidcEntry, Oidc
  */
 export const oidcEntryConverter = snapshotConverterFunctions<OidcEntry>({
   fields: {
-    type: firestoreString({ default: 'unknown' }),
+    type: firestoreString<OidcEntryType>({ default: 'unknown' }),
     payload: firestorePassThroughField(),
     o: optionalFirestoreString(),
     uid: optionalFirestoreString(),

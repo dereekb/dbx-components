@@ -1,4 +1,4 @@
-import { type ArrayOrValue, type DateOrUnixDateTimeMillisecondsNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, type Maybe, type ContentDispositionString, type ContentTypeMimeType } from '@dereekb/util';
+import { type ArrayOrValue, type DateOrUnixDateTimeMillisecondsNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString, type Maybe, type ContentDispositionString, type ContentTypeMimeType, type WebsiteUrl } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
 // MARK: Storage
@@ -11,19 +11,19 @@ export type FirebaseStorageLikeStorage = {
   /**
    * The maximum time to retry uploads in milliseconds.
    */
-  readonly maxUploadRetryTime: number;
+  readonly maxUploadRetryTime: Milliseconds;
   /**
    * The maximum time to retry operations other than uploads or downloads in
    * milliseconds.
    */
-  readonly maxOperationRetryTime: number;
+  readonly maxOperationRetryTime: Milliseconds;
 };
 
 /**
  * Minimal shape of the Google Cloud Storage (server-side) object.
  */
 export type GoogleCloudLikeStorage = {
-  readonly baseUrl: string;
+  readonly baseUrl: WebsiteUrl;
   readonly projectId: string;
 };
 
@@ -286,27 +286,27 @@ export interface ConfigurableStorageMetadata {
   /**
    * Served as the 'Cache-Control' header on object download.
    */
-  readonly cacheControl?: string | undefined;
+  readonly cacheControl?: string;
   /**
    * Served as the 'Content-Disposition' header on object download.
    */
-  readonly contentDisposition?: string | undefined;
+  readonly contentDisposition?: string;
   /**
    * Served as the 'Content-Encoding' header on object download.
    */
-  readonly contentEncoding?: string | undefined;
+  readonly contentEncoding?: string;
   /**
    * Served as the 'Content-Language' header on object download.
    */
-  readonly contentLanguage?: string | undefined;
+  readonly contentLanguage?: string;
   /**
    * Served as the 'Content-Type' header on object download.
    */
-  readonly contentType?: string | undefined;
+  readonly contentType?: string;
   /**
    * Any user-specified custom metdata.
    */
-  readonly customMetadata?: StorageCustomMetadata | undefined;
+  readonly customMetadata?: StorageCustomMetadata;
 }
 
 /**
@@ -343,7 +343,7 @@ export interface StorageMetadata extends ConfigurableStorageMetadata {
   /**
    * The size of this object, in bytes.
    */
-  readonly size: number;
+  readonly size: FileSize;
   /**
    * A date string representing when this object was created.
    */
@@ -355,7 +355,7 @@ export interface StorageMetadata extends ConfigurableStorageMetadata {
   /**
    * A Base64-encoded MD5 hash of the object being uploaded.
    */
-  readonly md5Hash?: string | undefined;
+  readonly md5Hash?: string;
 }
 
 /**

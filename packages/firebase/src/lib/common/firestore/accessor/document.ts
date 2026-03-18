@@ -34,11 +34,11 @@ import { arrayUpdateWithAccessorFunction } from './array';
  */
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
-  readonly id: string;
+  readonly id: FirestoreModelId;
   snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>>;
-  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<T | undefined>;
+  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>>;
   snapshot(): Promise<DocumentSnapshot<T>>;
-  snapshotData(options?: SnapshotOptions): Promise<T | undefined>;
+  snapshotData(options?: SnapshotOptions): Promise<Maybe<T>>;
   exists(): Promise<boolean>;
   create(data: T): Promise<WriteResult | void>;
   update(data: Partial<T>): Promise<WriteResult | void>;
@@ -131,7 +131,7 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    * @param options
    * @returns
    */
-  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<T | undefined> {
+  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>> {
     return snapshotStreamDataForAccessor(this.accessor, mode, options);
   }
 
@@ -148,7 +148,7 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    * @param options
    * @returns
    */
-  snapshotData(options?: SnapshotOptions): Promise<T | undefined> {
+  snapshotData(options?: SnapshotOptions): Promise<Maybe<T>> {
     return this.snapshot().then((x) => x.data(options));
   }
 

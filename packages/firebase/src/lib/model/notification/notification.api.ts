@@ -32,7 +32,7 @@ export const NOTIFICATION_MESSAGE_MAX_LENGTH = 1000;
  * Config entries are inserted, unless marked as remove.
  */
 export interface NotificationBoxRecipientTemplateConfigArrayEntryParam extends NotificationBoxRecipientTemplateConfigArrayEntry {
-  readonly type: string;
+  readonly type: NotificationTemplateType;
   readonly sd?: Maybe<boolean>;
   readonly se?: Maybe<boolean>;
   readonly st?: Maybe<boolean>;

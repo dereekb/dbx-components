@@ -219,7 +219,7 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
   nextPageTokenFromResult(result: FirebaseStorageClientListResult): Maybe<StorageListFilesPageToken> {
     return result.listResult.nextPageToken;
   },
-  next(storage: ClientFirebaseStorage, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
+  next(storage: ClientFirebaseStorage, options: Maybe<StorageListFilesOptions>, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
     return folder.list({
       ...options,
       ...result.options,

@@ -1,5 +1,6 @@
 import { type AuthData } from '../../type';
 import { type Request } from 'express';
+import { type FirebaseAuthUserId } from '@dereekb/firebase';
 
 /**
  * Minimum auth data shape shared by all server-side auth contexts.
@@ -10,7 +11,7 @@ export interface FirebaseServerAuthData extends AuthData {
   /**
    * The authenticated user's UID.
    */
-  readonly uid: string;
+  readonly uid: FirebaseAuthUserId;
 }
 
 /**

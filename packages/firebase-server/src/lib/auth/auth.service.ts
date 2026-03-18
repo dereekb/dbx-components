@@ -240,12 +240,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   async loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>> {
     const claims = await this.loadClaims<T>();
-
-    if (claims.resetPassword != null) {
-      return claims;
-    } else {
-      return undefined;
-    }
+    const result: Maybe<T> = claims.resetPassword != null ? claims : undefined;
+    return result;
   }
 
   async setPassword(password: PasswordString): Promise<admin.auth.UserRecord> {

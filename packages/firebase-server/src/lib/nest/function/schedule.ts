@@ -1,4 +1,4 @@
-import { type Configurable, type Minutes, type PromiseOrValue } from '@dereekb/util';
+import { type Configurable, type Minutes, type PromiseOrValue, type Seconds, type TimezoneString } from '@dereekb/util';
 import { type MakeNestContext, type NestApplicationFunctionFactory } from '../nest.provider';
 import { type NestApplicationContextRequest, type NestContextRequest } from './nest';
 
@@ -24,7 +24,7 @@ export interface OnScheduleConfig {
   /**
    * Optional timezone to specify.
    */
-  readonly timezone?: string;
+  readonly timezone?: TimezoneString;
   /**
    * The number of retry attempts for a failed run.
    */
@@ -32,15 +32,15 @@ export interface OnScheduleConfig {
   /**
    * The time limit for retrying.
    */
-  readonly maxRetrySeconds?: number;
+  readonly maxRetrySeconds?: Seconds;
   /**
    * The minimum time to wait before retying.
    */
-  readonly minBackoffSeconds?: number;
+  readonly minBackoffSeconds?: Seconds;
   /**
    * The maximum time to wait before retrying.
    */
-  readonly maxBackoffSeconds?: number;
+  readonly maxBackoffSeconds?: Seconds;
   /**
    * The time between will double max doublings times.
    */

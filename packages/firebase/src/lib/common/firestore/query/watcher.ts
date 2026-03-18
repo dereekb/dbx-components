@@ -5,7 +5,7 @@
  * It tracks document additions, modifications, and removals, and provides an event-based
  * system for reacting to these changes in real-time.
  */
-import { groupValues, type Building, build, calculateExpirationDate } from '@dereekb/util';
+import { groupValues, type Building, build, calculateExpirationDate, type Milliseconds } from '@dereekb/util';
 import { map, type Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { type DocumentChange, type QuerySnapshot } from '../types';
 import { type FirestoreItemPageIteration, type FirestoreItemPageQueryResult } from './iterator';
@@ -38,7 +38,7 @@ export interface IterationQueryDocChangeWatcherConfig<T = unknown> {
    * This delay is applied after the first successful page result is received.
    * Default is 0 (start immediately).
    */
-  readonly delay?: number;
+  readonly delay?: Milliseconds;
 }
 
 /**

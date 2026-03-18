@@ -1,7 +1,8 @@
 import { type OnCallModelAnalyticsService, type OnCallModelAnalyticsEvent } from './analytics.handler';
 import { type AuthData } from '../../type';
 import { type NestContextCallableRequestWithAuth } from '../function/nest';
-import { type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
+import { type ModelFirebaseCrudFunctionSpecifierRef, type FirebaseAuthUserId, type OnCallFunctionType, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 
 // MARK: Emitter
 /**
@@ -68,15 +69,15 @@ export interface OnCallModelFunctionAnalyticsDetails<R = any, O = any> {
  */
 export interface OnCallAnalyticsContext<I = any> {
   /** The CRUD operation type (e.g., `'create'`, `'update'`). */
-  readonly call: string;
+  readonly call: OnCallFunctionType;
   /** The model type being operated on (e.g., `'guestbook'`). */
-  readonly modelType: string;
+  readonly modelType: FirestoreModelType;
   /** Optional operation specifier for variant handlers. */
-  readonly specifier: string | undefined;
+  readonly specifier: Maybe<ModelFirebaseCrudFunctionSpecifier>;
   /** The Firebase Auth UID of the calling user. */
-  readonly uid?: string;
+  readonly uid?: FirebaseAuthUserId;
   /** The full Firebase Auth context. */
-  readonly auth?: AuthData | undefined;
+  readonly auth?: AuthData;
   /** The typed request data. */
   readonly data?: I;
   /** The full NestContext callable request with auth and specifier. */

@@ -1,4 +1,5 @@
 import { type Configurable, type Maybe } from '@dereekb/util';
+import { type OnCallFunctionType, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
 // MARK: JSON Schema
@@ -216,7 +217,7 @@ export function withApiDetails<F extends (...args: any[]) => any>(config: WithAp
 /**
  * Reads _apiDetails from a function if present.
  */
-export function readApiDetails(fn: Maybe<OnCallApiDetailsRef>): OnCallApiDetails | undefined {
+export function readApiDetails(fn: Maybe<OnCallApiDetailsRef>): Maybe<OnCallApiDetails> {
   return fn?._apiDetails;
 }
 
@@ -225,7 +226,7 @@ export function readApiDetails(fn: Maybe<OnCallApiDetailsRef>): OnCallApiDetails
  *
  * Returns OnCallModelTypeApiDetails if any handlers have _apiDetails, otherwise undefined.
  */
-export function aggregateSpecifierApiDetails(config: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): OnCallModelTypeApiDetails | undefined {
+export function aggregateSpecifierApiDetails(config: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): Maybe<OnCallModelTypeApiDetails> {
   const specifiers: { [key: string]: OnCallModelFunctionApiDetails | undefined } = {};
   let hasAny = false;
 
@@ -247,7 +248,7 @@ export function aggregateSpecifierApiDetails(config: { readonly [key: string]: M
  *
  * Returns OnCallCrudModelApiDetails if any handlers have _apiDetails, otherwise undefined.
  */
-export function aggregateCrudModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): OnCallCrudModelApiDetails | undefined {
+export function aggregateCrudModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): Maybe<OnCallCrudModelApiDetails> {
   const modelTypes: { [key: string]: OnCallModelTypeApiDetails | undefined } = {};
   let hasAny = false;
 
@@ -275,7 +276,7 @@ export function aggregateCrudModelApiDetails(map: { readonly [key: string]: Mayb
  *
  * Returns OnCallModelApiDetails if any CRUD handlers have _apiDetails, otherwise undefined.
  */
-export function aggregateModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): OnCallModelApiDetails | undefined {
+export function aggregateModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): Maybe<OnCallModelApiDetails> {
   const result: { [call: string]: OnCallCrudModelApiDetails | undefined } = {};
   let hasAny = false;
 
@@ -358,8 +359,8 @@ export interface ModelApiDetailsModelEntry {
  * // details.models['profile'].calls.update => { specifiers: { _: {...}, username: {...} } }
  * ```
  */
-export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): ModelApiDetailsResult | undefined {
-  const topDetails = readApiDetails(callModelFn) as OnCallModelApiDetails | undefined;
+export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): Maybe<ModelApiDetailsResult> {
+  const topDetails = readApiDetails(callModelFn) as Maybe<OnCallModelApiDetails>;
 
   if (topDetails == null) {
     return undefined;
@@ -396,7 +397,7 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): Mod
  * Walks: call → modelType → specifier (if specifier-level), then reads the `analytics`
  * field from the handler-level {@link OnCallModelFunctionApiDetails}.
  */
-export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: string, modelType: string, specifier?: string): OnCallModelFunctionAnalyticsDetails | undefined {
+export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OnCallModelFunctionAnalyticsDetails> {
   const modelDetails = apiDetails[call]?.modelTypes[modelType];
 
   if (modelDetails) {

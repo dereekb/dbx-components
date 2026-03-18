@@ -213,7 +213,7 @@ export interface StorageListFilesResult<R = unknown> {
   /**
    * Options used to retrieve the result.
    */
-  readonly options: StorageListFilesOptions | undefined;
+  readonly options: Maybe<StorageListFilesOptions>;
   /**
    * Whether or not there are more results available.
    */

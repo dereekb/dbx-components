@@ -199,7 +199,7 @@ export enum FirestoreAccessorStreamMode {
  * @param options - Options for how to format the document data
  * @returns An Observable that emits the document data or undefined if the document doesn't exist
  */
-export function snapshotStreamDataForAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>, mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<T | undefined> {
+export function snapshotStreamDataForAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>, mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>> {
   return dataFromSnapshotStream<T>(snapshotStreamForAccessor(accessor, mode), options);
 }
 

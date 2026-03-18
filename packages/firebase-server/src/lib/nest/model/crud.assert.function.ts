@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type NestContextCallableRequest } from '../function/nest';
-import { type OnCallFunctionType } from '@dereekb/firebase';
+import { type OnCallFunctionType, type FirestoreModelType } from '@dereekb/firebase';
 
 /**
  * Discriminator for the category of CRUD operation being asserted.
@@ -25,7 +25,7 @@ export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
   /** The CRUD call type string (e.g., 'create', 'read'). */
   readonly call: OnCallFunctionType;
   /** The Firestore model type being targeted (e.g., 'profile', 'guestbook'). */
-  readonly modelType: string;
+  readonly modelType: FirestoreModelType;
   /** The optional sub-operation specifier (e.g., 'username', 'fromUpload'). */
   readonly specifier: Maybe<string>;
 }

@@ -18,7 +18,7 @@ import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } fr
  * @param b - array of update params to apply
  * @param limitToAllowedConfigTypes - when provided, filters the result to only include these template types
  */
-export function updateNotificationBoxRecipientTemplateConfigRecord(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigArrayEntryParam[], limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationBoxRecipientTemplateConfigRecord | undefined {
+export function updateNotificationBoxRecipientTemplateConfigRecord(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigArrayEntryParam[], limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationBoxRecipientTemplateConfigRecord> {
   let c: NotificationBoxRecipientTemplateConfigRecord | undefined;
 
   if (b != null) {
@@ -70,7 +70,7 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(a: N
  *
  * Automatically sets `ns = true` (needs sync) when changes are detected and the recipient has been indexed.
  */
-export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a: NotificationUserNotificationBoxRecipientConfig, b: UpdateNotificationUserNotificationBoxRecipientParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationUserNotificationBoxRecipientConfig | undefined {
+export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a: NotificationUserNotificationBoxRecipientConfig, b: UpdateNotificationUserNotificationBoxRecipientParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationUserNotificationBoxRecipientConfig> {
   const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk } = b;
   const c = (inputC != null ? updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes) : undefined) ?? a.c;
 
@@ -106,7 +106,7 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
  *
  * Returns `undefined` if no changes were made.
  */
-export function updateNotificationUserNotificationBoxRecipientConfigs(a: NotificationUserNotificationBoxRecipientConfig[], b: UpdateNotificationUserNotificationBoxRecipientParams[], filterWithService?: AppNotificationTemplateTypeInfoRecordService): NotificationUserNotificationBoxRecipientConfig[] | undefined {
+export function updateNotificationUserNotificationBoxRecipientConfigs(a: NotificationUserNotificationBoxRecipientConfig[], b: UpdateNotificationUserNotificationBoxRecipientParams[], filterWithService?: AppNotificationTemplateTypeInfoRecordService): Maybe<NotificationUserNotificationBoxRecipientConfig[]> {
   const boxesMap = makeModelMap(a, (x) => x.nb);
 
   let hasChanges = false;

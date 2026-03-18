@@ -1,5 +1,7 @@
 import { type InjectionToken } from '@nestjs/common';
 import { type AuthData } from '../../type';
+import { type FirebaseAuthUserId, type OnCallFunctionType, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Structured analytics event emitted by the onCall CRUD dispatch chain.
@@ -15,21 +17,21 @@ export interface OnCallModelAnalyticsEvent {
   /** The lifecycle stage at which this event was emitted. */
   readonly lifecycle: 'triggered' | 'success' | 'error' | 'complete';
   /** The CRUD operation type (e.g., `'create'`, `'update'`, `'delete'`). */
-  readonly call: string;
+  readonly call: OnCallFunctionType;
   /** The model type being operated on (e.g., `'guestbook'`, `'profile'`). */
-  readonly modelType: string;
+  readonly modelType: FirestoreModelType;
   /** Optional operation specifier for variant handlers (e.g., `'subscribeToNotifications'`). */
-  readonly specifier?: string;
+  readonly specifier?: Maybe<ModelFirebaseCrudFunctionSpecifier>;
   /** The Firebase Auth UID of the calling user, if authenticated. */
-  readonly uid?: string;
+  readonly uid?: Maybe<FirebaseAuthUserId>;
   /** The full Firebase Auth context, if available. */
-  readonly auth?: AuthData;
+  readonly auth?: Maybe<AuthData>;
   /** The raw request object passed to the handler. */
-  readonly request?: any;
+  readonly request?: Maybe<unknown>;
   /** Custom key-value properties attached by lifecycle callbacks. */
-  readonly properties?: Record<string, any>;
+  readonly properties?: Maybe<Record<string, any>>;
   /** The error object, if this event was emitted during the `'error'` lifecycle stage. */
-  readonly error?: unknown;
+  readonly error?: Maybe<unknown>;
 }
 
 /**
