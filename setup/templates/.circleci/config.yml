@@ -32,7 +32,6 @@ jobs:
         default: false # flag true if you want to scan for vulnerabilities with snyk
     environment:
       CYPRESS_INSTALL_BINARY: 0
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
     steps:
       - checkout
@@ -62,11 +61,11 @@ jobs:
                 paths:
                   - node_modules
                   - dist
+                  - .nx/cache
   # Runs tests for the projects that do not require the firebase emulators.
   test-with-node:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
     steps:
       - checkout
@@ -85,7 +84,6 @@ jobs:
       GCE_METADATA_HOST: 0.0.0.0
       DETECT_GCP_RETRIES: 0
       METADATA_SERVER_DETECTION: none
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
     steps:
       - checkout
@@ -95,7 +93,9 @@ jobs:
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       # restore the emulators cache
       - restore_cache:
-          key: firebase-cache-
+          keys:
+            - firebase-cache-v1-{{ checksum "package-lock.json" }}
+            - firebase-cache-v1-
       # Skip tests if run_tests is false
       - unless:
           condition:
@@ -109,7 +109,7 @@ jobs:
             #    command: npx firebase --project=default emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
       # store the emulators cache
       - save_cache:
-          key: firebase-cache-
+          key: firebase-cache-v1-{{ checksum "package-lock.json" }}
           paths:
             - ~/.cache/firebase
       - store_test_results:
@@ -122,7 +122,6 @@ jobs:
         type: boolean
         default: false
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
       # SETUP REQUIRED - Set the git username and email to the desired values
       GIT_USER_EMAIL: CI_GIT_USER_EMAIL
@@ -172,7 +171,6 @@ jobs:
   deploy-to-firebase-staging:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
@@ -195,7 +193,6 @@ jobs:
   deploy-to-firebase-prod:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
@@ -220,7 +217,6 @@ jobs:
   publish-to-npm:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'false'
       NX_NO_CLOUD: 'true'
     steps:
       - checkout
