@@ -5,7 +5,7 @@ import { type DbxValueListItem, type AbstractDbxValueListViewConfig, type DbxVal
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
-import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { type Maybe, ModelKeyRef, spaceSeparatedCssClasses, UniqueModel } from '@dereekb/util';
 import { type DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
 import { MatListModule, MatNavList } from '@angular/material/list';
@@ -96,9 +96,12 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
 
 // MARK: DbxValueListViewContentComponent
 /**
- * Default track-by function that tracks items by their index position.
+ * Default track-by function for list view content components.
+ *
+ * Uses the item's {@link DbxValueListItem.key} when available for stable identity across
+ * data updates, falling back to a prefixed index string to avoid collisions with key values.
  */
-export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index: number) => index;
+export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackByFunction<DbxValueListItem<unknown>> = (index: number, item: DbxValueListItem<unknown>) => item?.key ?? (item?.itemValue as Partial<ModelKeyRef>)?.key ?? (item?.itemValue as Partial<UniqueModel>)?.id ?? `__list__${index}__`;
 
 /**
  * Renders a Material nav list of grouped value list items. Can be used directly when items are pre-configured,

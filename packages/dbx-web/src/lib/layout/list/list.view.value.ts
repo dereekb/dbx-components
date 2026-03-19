@@ -12,7 +12,22 @@ export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<unknown>('DbxValueLis
  * Describes a single item within a value-based list view, including its value, display options, and interaction state.
  */
 export interface DbxValueListItem<T, M = unknown> {
+  /**
+   * The underlying value for this list item.
+   *
+   * The default trackBy function checks this value for a `key` ({@link ModelKeyRef}) or `id` ({@link UniqueModel})
+   * property to use as a stable tracking identity. To override this behavior, set {@link DbxValueListItem.key} explicitly
+   * or provide a custom trackBy via the list view directive.
+   */
   itemValue: T;
+  /**
+   * Optional stable key for tracking this item across data updates.
+   *
+   * When provided, the default trackBy function uses this instead of the item's index
+   * or the `itemValue`'s `key`/`id`, preventing unnecessary component recreation when
+   * the list re-renders.
+   */
+  key?: Maybe<string>;
   /**
    * Arbitrary meta details available to the meta component.
    */
