@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Seconds } from '@dereekb/util';
 import { ZohoAccountsAuthFailureError } from './accounts.error.api';
 import { type ZohoApiServiceName } from '../zoho.config';
 
@@ -36,9 +36,9 @@ export interface ZohoAccessToken {
   readonly scope: ZohoAccessTokenScopesString;
   readonly apiDomain: ZohoAccessTokenApiDomain;
   /**
-   * Length of time the token is valid for.
+   * Length of time the token is valid for, in seconds.
    */
-  readonly expiresIn: number;
+  readonly expiresIn: Seconds;
   /**
    * Date the token expires at.
    */

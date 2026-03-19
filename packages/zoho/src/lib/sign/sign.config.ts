@@ -24,11 +24,11 @@ export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiU
 
 export type ZohoSignConfig = ZohoConfig;
 
-export interface ZohoSignFetchFactoryInput {
+export interface ZohoSignFetchFactoryParams {
   readonly apiUrl: ZohoSignApiUrl;
 }
 
-export type ZohoSignFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoSignFetchFactoryInput>;
+export type ZohoSignFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoSignFetchFactoryParams>;
 
 export interface ZohoSignContext extends ZohoRateLimiterRef {
   readonly fetch: ConfiguredFetch;
@@ -40,3 +40,9 @@ export interface ZohoSignContext extends ZohoRateLimiterRef {
 export interface ZohoSignContextRef {
   readonly signContext: ZohoSignContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZohoSignFetchFactoryParams instead.
+ */
+export type ZohoSignFetchFactoryInput = ZohoSignFetchFactoryParams;

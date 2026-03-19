@@ -92,7 +92,7 @@ export function logZoomServerErrorFunction(zoomApiNamePrefix: string): LogZoomSe
  */
 export type HandleZoomErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZoomServerErrorFunction) => ConfiguredFetch;
 
-export type ParsedZoomServerError = FetchRequestFactoryError | ZoomServerError | undefined;
+export type ParsedZoomServerError = Maybe<FetchRequestFactoryError | ZoomServerError>;
 export type ParseZoomFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ParsedZoomServerError>;
 
 /**

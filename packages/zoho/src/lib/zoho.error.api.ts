@@ -192,7 +192,7 @@ export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: 
  */
 export type HandleZohoErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZohoServerErrorFunction, onError?: (error: ParsedZohoServerError) => void) => ConfiguredFetch;
 
-export type ParsedZohoServerError = FetchRequestFactoryError | ZohoServerError | undefined;
+export type ParsedZohoServerError = Maybe<FetchRequestFactoryError | ZohoServerError>;
 export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ParsedZohoServerError>;
 
 /**

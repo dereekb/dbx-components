@@ -1,4 +1,4 @@
-import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
+import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type Maybe, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -106,16 +106,16 @@ export type ZohoRecruitCommaSeparateFieldNames = CommaSeparatedString;
 export type ZohoRecruitTrueFalseBoth = 'true' | 'false' | 'both';
 
 export interface ZohoRecruitReferenceData {
-  name: string;
-  id: ZohoRecruitId;
+  readonly name: string;
+  readonly id: ZohoRecruitId;
 }
 
 /**
  * Reference pair of a Zoho Recruit user name and id
  */
 export interface ZohoRecruitUserReferenceData {
-  name: string;
-  id: ZohoRecruitUserId;
+  readonly name: string;
+  readonly id: ZohoRecruitUserId;
 }
 
 export interface ZohoRecruitReferenceDataWithModule extends ZohoRecruitReferenceData, ZohoRecruitModuleNameRef {}
@@ -142,11 +142,11 @@ export type ZohoRecruitValidUrl = WebsiteUrl;
  * Update details returned by the server for a created/updated object.
  */
 export interface ZohoRecruitChangeObjectDetails {
-  id: ZohoRecruitRecordId;
-  Modified_Time: ISO8601DateString;
-  Modified_By: ZohoRecruitCreatedByData;
-  Created_Time: ISO8601DateString;
-  Created_By: ZohoRecruitCreatedByData;
+  readonly id: ZohoRecruitRecordId;
+  readonly Modified_Time: ISO8601DateString;
+  readonly Modified_By: ZohoRecruitCreatedByData;
+  readonly Created_Time: ISO8601DateString;
+  readonly Created_By: ZohoRecruitCreatedByData;
 }
 
 // MARK: Zoho Recruit Record
@@ -315,7 +315,7 @@ export interface ZohoRecruitRecordAttachmentMetadata {
   /**
    * Direct URL to the attachment, when available
    */
-  Attachment_URL: string | null;
+  Attachment_URL: Maybe<WebsiteUrl>;
   /**
    * User who last modified this attachment
    */
@@ -339,7 +339,7 @@ export interface ZohoRecruitRecordAttachmentMetadata {
   /**
    * Link URL when the attachment is a link
    */
-  $link_url?: string | null;
+  $link_url?: Maybe<WebsiteUrl>;
   /**
    * Number of linked documents
    */

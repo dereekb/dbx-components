@@ -44,11 +44,11 @@ export interface ZohoAccountsConfig extends ZohoConfig, ZohoAuthClientIdAndSecre
   readonly accessTokenCache?: Maybe<ZohoAccessTokenCache>;
 }
 
-export interface ZohoAccountsFetchFactoryInput {
+export interface ZohoAccountsFetchFactoryParams {
   readonly apiUrl: ZohoApiUrl;
 }
 
-export type ZohoAccountsFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoAccountsFetchFactoryInput>;
+export type ZohoAccountsFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoAccountsFetchFactoryParams>;
 
 export interface ZohoAccountsContext {
   readonly fetch: ConfiguredFetch;
@@ -60,3 +60,9 @@ export interface ZohoAccountsContext {
 export interface ZohoAccountsContextRef {
   readonly accountsContext: ZohoAccountsContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZohoAccountsFetchFactoryParams instead.
+ */
+export type ZohoAccountsFetchFactoryInput = ZohoAccountsFetchFactoryParams;

@@ -29,5 +29,7 @@ export abstract class AbstractDbxListAccordionViewDirective<T> extends AbstractD
 }
 
 // COMPAT: Deprecated aliases
-/** @deprecated use DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead. */
+/**
+ * @deprecated use DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead.
+ */
 export const dbxListAccordionViewComponentImportsAndExports = DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS;

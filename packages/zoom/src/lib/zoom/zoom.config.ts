@@ -6,11 +6,11 @@ import { type ZoomAccessTokenCache, type ZoomAccessTokenStringFactory } from '..
 
 export type ZoomApiKey = ZoomRefreshToken;
 
-export interface ZoomFetchFactoryInput {
+export interface ZoomFetchFactoryParams {
   readonly zoomAccessTokenStringFactory: ZoomAccessTokenStringFactory;
 }
 
-export type ZoomFetchFactory = FactoryWithInput<ConfiguredFetch, ZoomFetchFactoryInput>;
+export type ZoomFetchFactory = FactoryWithInput<ConfiguredFetch, ZoomFetchFactoryParams>;
 
 /**
  * Denotes the type of authorization used by the ZoomContext.
@@ -46,7 +46,7 @@ export interface ZoomServerContext extends ZoomContext {
   readonly config: ZoomConfig;
 }
 
-export interface ZoomUserContextFactoryInput {
+export interface ZoomUserContextFactoryParams {
   /**
    * The user's refresh token.
    */
@@ -62,7 +62,7 @@ export interface ZoomUserContextFactoryInput {
 /**
  * Creates a ZoomUserContext from the input.
  */
-export type ZoomUserContextFactory = FactoryWithRequiredInput<ZoomUserContext, ZoomUserContextFactoryInput>;
+export type ZoomUserContextFactory = FactoryWithRequiredInput<ZoomUserContext, ZoomUserContextFactoryParams>;
 
 /**
  * Context used for performing fetch requests for a specific user.
@@ -77,3 +77,14 @@ export interface ZoomUserContext extends ZoomContext {
 export interface ZoomServerContextRef {
   readonly zoomServerContext: ZoomServerContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZoomFetchFactoryParams instead.
+ */
+export type ZoomFetchFactoryInput = ZoomFetchFactoryParams;
+
+/**
+ * @deprecated use ZoomUserContextFactoryParams instead.
+ */
+export type ZoomUserContextFactoryInput = ZoomUserContextFactoryParams;

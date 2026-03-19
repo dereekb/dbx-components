@@ -29,5 +29,7 @@ export abstract class AbstractDbxListGridViewDirective<T> extends AbstractDbxLis
 }
 
 // COMPAT: Deprecated aliases
-/** @deprecated use DBX_LIST_GRID_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead. */
+/**
+ * @deprecated use DBX_LIST_GRID_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead.
+ */
 export const dbxListGridViewComponentImportsAndExports = DBX_LIST_GRID_VIEW_COMPONENT_IMPORTS_AND_EXPORTS;

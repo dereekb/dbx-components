@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZohoAccountsConfig, type ZohoAccountsContext, type ZohoAccountsContextRef, type ZohoAccountsFetchFactory, type ZohoAccountsFetchFactoryInput, zohoAccountsConfigApiUrl } from './accounts.config';
+import { type ZohoAccountsConfig, type ZohoAccountsContext, type ZohoAccountsContextRef, type ZohoAccountsFetchFactory, type ZohoAccountsFetchFactoryParams, zohoAccountsConfigApiUrl } from './accounts.config';
 import { type LogZohoServerErrorFunction } from '../zoho.error.api';
 import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch, interceptZohoAccounts200StatusWithErrorResponse } from './accounts.error.api';
 import { type ZohoAccessToken, type ZohoAccessTokenCache, type ZohoAccessTokenFactory, type ZohoAccessTokenRefresher } from './accounts';
@@ -22,11 +22,11 @@ export interface ZohoAccountsFactoryConfig {
    * Custom fetch factory for creating the underlying HTTP client.
    * Defaults to a standard fetch service with JSON content headers and a 20-second timeout.
    */
-  fetchFactory?: ZohoAccountsFetchFactory;
+  readonly fetchFactory?: ZohoAccountsFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
-  logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
 /**
@@ -71,7 +71,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
 
   const {
     logZohoServerErrorFunction,
-    fetchFactory = (input: ZohoAccountsFetchFactoryInput) =>
+    fetchFactory = (input: ZohoAccountsFetchFactoryParams) =>
       fetchApiFetchService.makeFetch({
         baseUrl: input.apiUrl,
         baseRequest: {

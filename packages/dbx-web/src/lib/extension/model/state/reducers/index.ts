@@ -26,5 +26,7 @@ export const selectDbxModelFeature = createFeatureSelector<State, DbxModelState>
 export const selectDbxModelFeatureObjectModuleConfig = createSelector(selectDbxModelFeature, (state: DbxModelState) => state[fromObjectModuleConfig.STATE_FEATURE_KEY]);
 
 // COMPAT: Deprecated aliases
-/** @deprecated use FEATURE_KEY instead. */
+/**
+ * @deprecated use FEATURE_KEY instead.
+ */
 export const featureKey = FEATURE_KEY;

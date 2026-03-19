@@ -18,7 +18,7 @@ export type ZoomMeetingTemplateId = string;
  */
 export type ZoomMeetingTopic = string;
 
-export type ZoomMeetingOccurrenceDuration = number;
+export type ZoomMeetingOccurrenceDuration = Minutes;
 
 /**
  * URL for participants to join the meeting.

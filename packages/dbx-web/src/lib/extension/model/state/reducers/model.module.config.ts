@@ -28,7 +28,11 @@ export const reducer = createReducer(
 );
 
 // COMPAT: Deprecated aliases
-/** @deprecated use STATE_FEATURE_KEY instead. */
+/**
+ * @deprecated use STATE_FEATURE_KEY instead.
+ */
 export const stateFeatureKey = STATE_FEATURE_KEY;
-/** @deprecated use INITIAL_STATE instead. */
+/**
+ * @deprecated use INITIAL_STATE instead.
+ */
 export const initialState = INITIAL_STATE;

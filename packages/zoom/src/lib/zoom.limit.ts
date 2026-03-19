@@ -13,7 +13,7 @@ export interface ZoomRateLimiterRef {
  */
 export type ZoomRateLimitedTooManyRequestsLogFunction = (headers: ZoomRateLimitHeaderDetails, response: Response, fetchResponseError?: FetchResponseError) => PromiseOrValue<void>;
 
-export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = (headers: ZoomRateLimitHeaderDetails) => {
+export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION = (headers: ZoomRateLimitHeaderDetails) => {
   console.warn(`zoomRateLimitedFetchHandler(): Too many requests made. The limit is ${headers.limit} requests per reset period. RetryAt is set for ${headers.retryAfterAt}.`);
 };
 
@@ -41,7 +41,7 @@ export interface ZoomRateLimitedFetchHandlerConfig {
 export type ZoomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPromiseRateLimiter>;
 
 export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchHandlerConfig>): ZoomRateLimitedFetchHandler {
-  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION) : undefined;
+  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOOM_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD;
 
@@ -104,3 +104,9 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
     }
   });
 }
+
+// MARK: Compat
+/**
+ * @deprecated use DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION instead.
+ */
+export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION;

@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZohoCrmConfig, type ZohoCrmContext, type ZohoCrmContextRef, type ZohoCrmFetchFactory, type ZohoCrmFetchFactoryInput, zohoCrmConfigApiUrl } from './crm.config';
+import { type ZohoCrmConfig, type ZohoCrmContext, type ZohoCrmContextRef, type ZohoCrmFetchFactory, type ZohoCrmFetchFactoryParams, zohoCrmConfigApiUrl } from './crm.config';
 import { type LogZohoServerErrorFunction, ZohoInvalidTokenError } from '../zoho.error.api';
 import { handleZohoCrmErrorFetch, interceptZohoCrm200StatusWithErrorResponse } from './crm.error.api';
 import { type ZohoAccountsContextRef } from '../accounts/accounts.config';
@@ -20,16 +20,16 @@ export interface ZohoCrmFactoryConfig extends ZohoAccountsContextRef {
   /**
    * Custom rate limiter configuration to control request concurrency and throttling.
    */
-  rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
+  readonly rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
    * Custom fetch factory for creating the underlying HTTP client.
    * Defaults to a standard fetch service with OAuth Bearer token headers and a 20-second timeout.
    */
-  fetchFactory?: ZohoCrmFetchFactory;
+  readonly fetchFactory?: ZohoCrmFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
-  logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
 /**
@@ -69,7 +69,7 @@ export function zohoCrmFactory(factoryConfig: ZohoCrmFactoryConfig): ZohoCrmFact
 
   const {
     logZohoServerErrorFunction,
-    fetchFactory = (input: ZohoCrmFetchFactoryInput) =>
+    fetchFactory = (input: ZohoCrmFetchFactoryParams) =>
       fetchApiFetchService.makeFetch({
         baseUrl: input.apiUrl,
         baseRequest: async () => ({

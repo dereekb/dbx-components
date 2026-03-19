@@ -19,7 +19,7 @@ export type ZohoRateLimitedTooManyRequestsLogFunction = (headers: ZohoRateLimitH
 /**
  * Default handler that logs a warning to the console when the Zoho API rate limit is exceeded.
  */
-export const DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = (headers: ZohoRateLimitHeaderDetails) => {
+export const DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION = (headers: ZohoRateLimitHeaderDetails) => {
   console.warn(`zohoRateLimitedFetchHandler(): Too many requests made. The limit is ${headers.limit} requests per reset period. Will be reset at ${headers.resetAt}.`);
 };
 
@@ -75,7 +75,7 @@ export type ZohoRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPro
  * @returns A rate-limited fetch handler with the underlying rate limiter accessible via `_rateLimiter`
  */
 export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchHandlerConfig>): ZohoRateLimitedFetchHandler {
-  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION) : undefined;
+  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOHO_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD;
 
@@ -141,3 +141,9 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
     }
   });
 }
+
+// MARK: Compat
+/**
+ * @deprecated use DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION instead.
+ */
+export const DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION;

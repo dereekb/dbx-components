@@ -28,23 +28,23 @@ export interface ZohoAccountsAccessTokenResponse {
   /**
    * Short-lived OAuth access token for authenticating API calls.
    */
-  access_token: ZohoAccessTokenString;
+  readonly access_token: ZohoAccessTokenString;
   /**
    * Comma-separated list of OAuth scopes granted to this token.
    */
-  scope: ZohoAccessTokenScopesString;
+  readonly scope: ZohoAccessTokenScopesString;
   /**
    * The API domain to use for subsequent API calls (e.g. `'https://www.zohoapis.com'`).
    */
-  api_domain: ZohoAccessTokenApiDomain;
+  readonly api_domain: ZohoAccessTokenApiDomain;
   /**
    * Token type, always `'Bearer'`.
    */
-  token_type: 'Bearer';
+  readonly token_type: 'Bearer';
   /**
    * Number of seconds until the access token expires.
    */
-  expires_in: Seconds;
+  readonly expires_in: Seconds;
 }
 
 /**

@@ -44,13 +44,34 @@ export function zohoConfigServiceReaderFunction(inputOrKey: ZohoServiceAccessTok
   };
 }
 
+export interface ReadZohoConfigFromConfigServiceConfig {
+  readonly configService: ConfigService;
+  readonly servicePrefix?: string;
+  readonly assertValid?: boolean;
+}
+
 /**
  * Reads the ZohoConfig config from the ConfigService.
  *
- * @param configService
- * @param prefix
+ * @param config - Configuration for reading from the config service
+ * @returns ZohoConfig read from environment variables
  */
-export function readZohoConfigFromConfigService(configService: ConfigService, servicePrefix?: string, assertValid = true): ZohoConfig {
+export function readZohoConfigFromConfigService(config: ReadZohoConfigFromConfigServiceConfig): ZohoConfig;
+/**
+ * @deprecated Use the config object overload instead.
+ */
+export function readZohoConfigFromConfigService(configService: ConfigService, servicePrefix?: string, assertValid?: boolean): ZohoConfig;
+export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigFromConfigServiceConfig | ConfigService, servicePrefix?: string, assertValid = true): ZohoConfig {
+  let configService: ConfigService;
+
+  if ('configService' in configOrService) {
+    configService = configOrService.configService;
+    servicePrefix = configOrService.servicePrefix;
+    assertValid = configOrService.assertValid ?? true;
+  } else {
+    configService = configOrService;
+  }
+
   const servicePrefixString = servicePrefix ? `${servicePrefix}_` : '';
   const apiUrlConfigKey = `${servicePrefixString}${ZOHO_API_URL_CONFIG_KEY}`;
 

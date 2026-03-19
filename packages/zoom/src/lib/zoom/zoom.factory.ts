@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryInput, type ZoomUserContext, type ZoomUserContextFactory, type ZoomUserContextFactoryInput } from './zoom.config';
+import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryParams, type ZoomUserContext, type ZoomUserContextFactory, type ZoomUserContextFactoryParams } from './zoom.config';
 import { type LogZoomServerErrorFunction } from '../zoom.error.api';
 import { handleZoomErrorFetch } from './zoom.error.api';
 import { type ZoomOAuthContextRef } from '../oauth/oauth.config';
@@ -34,7 +34,7 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
 
   const {
     logZoomServerErrorFunction,
-    fetchFactory = (input: ZoomFetchFactoryInput) =>
+    fetchFactory = (input: ZoomFetchFactoryParams) =>
       fetchApiFetchService.makeFetch({
         baseUrl: ZOOM_API_URL,
         baseRequest: async () => ({
@@ -61,7 +61,7 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
     });
 
     // MARK: Make User Context
-    const makeUserContext: ZoomUserContextFactory = (input: ZoomUserContextFactoryInput) => {
+    const makeUserContext: ZoomUserContextFactory = (input: ZoomUserContextFactoryParams) => {
       const userAccessTokenFactory = oauthContext.makeUserAccessTokenFactory({
         refreshToken: input.refreshToken,
         userAccessTokenCache: input.accessTokenCache

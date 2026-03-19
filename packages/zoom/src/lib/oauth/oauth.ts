@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Seconds } from '@dereekb/util';
 import { ZoomOAuthAuthFailureError } from './oauth.error.api';
 
 /**
@@ -31,9 +31,9 @@ export interface ZoomAccessToken {
    */
   readonly apiDomain: ZoomAccessTokenApiDomain;
   /**
-   * Length of time the token is valid for.
+   * Length of time the token is valid for, in seconds.
    */
-  readonly expiresIn: number;
+  readonly expiresIn: Seconds;
   /**
    * Date the token expires at.
    */
