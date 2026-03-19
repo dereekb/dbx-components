@@ -1,5 +1,5 @@
 import { type Observable, map } from 'rxjs';
-import { isThrottled, unixDateTimeSecondsNumberForNow, DataDoesNotExistError, DataIsExpiredError, type ReadStoredData, type StoredData, type StoredDataStorageKey, type StoredDataString, type Maybe, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
+import { isThrottled, unixDateTimeSecondsNumberForNow, DataDoesNotExistError, DataIsExpiredError, type ReadStoredData, type StoredData, type StoredDataStorageKey, type StoredDataString, type Maybe, type Milliseconds, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
 import { type StorageAccessor } from './storage.accessor';
 
 // MARK: SimpleStorageAccessor
@@ -113,7 +113,7 @@ export interface SimpleStorageAccessorConfig {
   /**
    * Time in milliseconds after which stored data is considered expired.
    */
-  readonly expiresIn?: number;
+  readonly expiresIn?: Milliseconds;
 }
 
 interface ConfiguredSimpleStorageAccessorConfig extends SimpleStorageAccessorConfig {

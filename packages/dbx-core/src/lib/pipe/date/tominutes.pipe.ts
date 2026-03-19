@@ -1,7 +1,8 @@
 import { Pipe, type PipeTransform } from '@angular/core';
+import { type Milliseconds, type Minutes, millisecondsToMinutes } from '@dereekb/util';
 
 /**
- * Converts a duration in milliseconds to whole minutes by dividing by 60,000 and flooring the result.
+ * Converts a duration in milliseconds to whole minutes using {@link millisecondsToMinutes}.
  *
  * Returns the original value (0 or falsy) if the input is falsy.
  *
@@ -20,11 +21,13 @@ import { Pipe, type PipeTransform } from '@angular/core';
   pure: true
 })
 export class ToMinutesPipe implements PipeTransform {
-  transform(milliseconds: number): number {
+  transform(milliseconds: Milliseconds): Minutes {
+    let result: Minutes = milliseconds;
+
     if (milliseconds) {
-      return Math.floor(milliseconds / (60 * 1000));
+      result = millisecondsToMinutes(milliseconds);
     }
 
-    return milliseconds;
+    return result;
   }
 }

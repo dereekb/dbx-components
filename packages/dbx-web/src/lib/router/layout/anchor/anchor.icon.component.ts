@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { type ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +19,7 @@ import { DbxAnchorComponent } from './anchor.component';
   selector: 'dbx-anchor-icon',
   standalone: true,
   imports: [MatIconModule, MatButtonModule, DbxAnchorComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dbx-anchor [anchor]="anchor()">
       <button mat-icon-button>

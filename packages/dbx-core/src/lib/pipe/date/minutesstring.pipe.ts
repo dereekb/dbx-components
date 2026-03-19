@@ -1,5 +1,5 @@
 import { Pipe, type PipeTransform } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Minutes, MINUTES_IN_DAY, MINUTES_IN_HOUR } from '@dereekb/util';
 
 /**
  * Converts a numeric minute value into a human-readable duration string with automatic unit scaling.
@@ -19,7 +19,7 @@ import { type Maybe } from '@dereekb/util';
  * <!-- Output: "~5 hours" -->
  *
  * <span>{{ 5000 | minutesString }}</span>
- * <!-- Output: "~2 days" -->
+ * <!-- Output: "~4 days" -->
  * ```
  */
 @Pipe({
@@ -28,23 +28,25 @@ import { type Maybe } from '@dereekb/util';
   pure: false
 })
 export class MinutesStringPipe implements PipeTransform {
-  transform(input: Maybe<number | string>): Maybe<string> {
+  transform(input: Maybe<Minutes | string>): Maybe<string> {
     const minutes = Number(input);
 
+    let result: Maybe<string>;
+
     if (input != null && !isNaN(minutes)) {
-      if (minutes > 3600) {
-        const unrounded = minutes / 3600;
+      if (minutes > MINUTES_IN_DAY * 2.5) {
+        const unrounded = minutes / MINUTES_IN_DAY;
         const days = Math.ceil(unrounded);
-        return (unrounded !== days ? '~' : '') + days + ' days';
-      } else if (minutes > 180) {
-        const unrounded = minutes / 60;
+        result = (unrounded !== days ? '~' : '') + days + ' days';
+      } else if (minutes > MINUTES_IN_HOUR * 3) {
+        const unrounded = minutes / MINUTES_IN_HOUR;
         const hours = Math.ceil(unrounded);
-        return (unrounded !== hours ? '~' : '') + hours + ' hours';
+        result = (unrounded !== hours ? '~' : '') + hours + ' hours';
       } else {
-        return minutes + ' minutes';
+        result = minutes + ' minutes';
       }
-    } else {
-      return undefined;
     }
+
+    return result;
   }
 }

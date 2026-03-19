@@ -8,14 +8,14 @@ import { type DbxValueAsListItem } from '../list.view.value';
  */
 export const DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-list-accordion-view [config]="config"></dbx-list-accordion-view>';
 
-export const dbxListAccordionViewComponentImportsAndExports = [DbxValueListAccordionViewComponent];
+export const DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS = [DbxValueListAccordionViewComponent];
 
 /**
  * Convenience module that imports and exports {@link DbxValueListAccordionViewComponent}.
  */
 @NgModule({
-  exports: dbxListAccordionViewComponentImportsAndExports,
-  imports: dbxListAccordionViewComponentImportsAndExports
+  exports: DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS,
+  imports: DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS
 })
 export class DbxListAccordionViewComponentImportsModule {}
 
@@ -27,3 +27,7 @@ export class DbxListAccordionViewComponentImportsModule {}
 export abstract class AbstractDbxListAccordionViewDirective<T> extends AbstractDbxListViewDirective<T> {
   abstract readonly config: DbxValueListAccordionViewConfig<DbxValueAsListItem<T>>;
 }
+
+// COMPAT: Deprecated aliases
+/** @deprecated use DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead. */
+export const dbxListAccordionViewComponentImportsAndExports = DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS;

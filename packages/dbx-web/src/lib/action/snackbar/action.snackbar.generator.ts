@@ -1,5 +1,5 @@
 import { type DbxActionContextSourceReference } from '@dereekb/dbx-core';
-import { type Milliseconds, type Maybe, type GetterOrValue, getValueFromGetter, type Getter } from '@dereekb/util';
+import { type Configurable, type Milliseconds, type Maybe, type GetterOrValue, getValueFromGetter, type Getter } from '@dereekb/util';
 import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarEvent } from './action.snackbar';
 
 /**
@@ -91,7 +91,7 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxM
 
     if (eventConfig) {
       const { undoButtonText } = eventConfig;
-      result = {
+      const building: Configurable<DbxActionSnackbarDisplayConfig<T, O>> = {
         button: eventConfig.button,
         message: eventConfig.message,
         snackbar: eventConfig.snackbar
@@ -109,12 +109,14 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxM
         if (!reference) {
           console.error('Expected action source reference was not provided to undo...');
         } else {
-          result.action = {
+          building.action = {
             button: undoButtonText ?? 'Undo',
             reference
           };
         }
       }
+
+      result = building;
     }
 
     return result;

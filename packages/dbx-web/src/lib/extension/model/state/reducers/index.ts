@@ -3,24 +3,28 @@ import { type Action, combineReducers, createFeatureSelector, createSelector } f
 import * as fromObjectModuleConfig from './model.module.config';
 import { type DbxModelModuleStateConfiguration } from './model.module.config';
 
-export const featureKey = 'app.model';
+export const FEATURE_KEY = 'app.model';
 
 export interface DbxModelState {
-  [fromObjectModuleConfig.stateFeatureKey]: DbxModelModuleStateConfiguration;
+  [fromObjectModuleConfig.STATE_FEATURE_KEY]: DbxModelModuleStateConfiguration;
 }
 
 export interface State {
-  [featureKey]: DbxModelState;
+  [FEATURE_KEY]: DbxModelState;
 }
 
 export function reducers(state: DbxModelState | undefined, action: Action) {
   return combineReducers({
-    [fromObjectModuleConfig.stateFeatureKey]: fromObjectModuleConfig.reducer
+    [fromObjectModuleConfig.STATE_FEATURE_KEY]: fromObjectModuleConfig.reducer
   })(state, action);
 }
 
 // MARK: Context
-export const selectDbxModelFeature = createFeatureSelector<State, DbxModelState>(featureKey);
+export const selectDbxModelFeature = createFeatureSelector<State, DbxModelState>(FEATURE_KEY);
 
 // MARK: Module Config
-export const selectDbxModelFeatureObjectModuleConfig = createSelector(selectDbxModelFeature, (state: DbxModelState) => state[fromObjectModuleConfig.stateFeatureKey]);
+export const selectDbxModelFeatureObjectModuleConfig = createSelector(selectDbxModelFeature, (state: DbxModelState) => state[fromObjectModuleConfig.STATE_FEATURE_KEY]);
+
+// COMPAT: Deprecated aliases
+/** @deprecated use FEATURE_KEY instead. */
+export const featureKey = FEATURE_KEY;
