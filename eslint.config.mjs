@@ -1,6 +1,10 @@
 import nx from '@nx/eslint-plugin';
 import unusedImports from 'eslint-plugin-unused-imports';
 import importPlugin from 'eslint-plugin-import';
+import prettierConfig from 'eslint-config-prettier';
+import jsdocPlugin from 'eslint-plugin-jsdoc';
+import sonarjsPlugin from 'eslint-plugin-sonarjs';
+import unicornPlugin from 'eslint-plugin-unicorn';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -75,6 +79,57 @@ export default [
     }
   },
   {
+    files: ['**/*.ts', '**/*.tsx', '!**/*.spec.{ts,tsx}'],
+    plugins: { sonarjs: sonarjsPlugin },
+    rules: {
+      'sonarjs/cognitive-complexity': ['warn', 15],
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],
+      'sonarjs/no-identical-functions': 'warn',
+      'sonarjs/no-collapsible-if': 'warn',
+      'sonarjs/prefer-immediate-return': 'warn',
+      'sonarjs/no-nested-template-literals': 'warn',
+      'sonarjs/no-redundant-jump': 'warn',
+      'sonarjs/no-unused-collection': 'warn'
+    }
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '!**/*.spec.{ts,tsx}'],
+    plugins: { jsdoc: jsdocPlugin },
+    rules: {
+      'jsdoc/require-jsdoc': [
+        'warn',
+        {
+          require: { FunctionDeclaration: true, ArrowFunctionExpression: false, FunctionExpression: false },
+          checkGetters: false,
+          checkSetters: false,
+          publicOnly: true,
+          enableFixer: false
+        }
+      ],
+      'jsdoc/require-param': ['warn', { enableFixer: false }],
+      'jsdoc/require-returns': ['warn', { enableFixer: false }],
+      'jsdoc/multiline-blocks': ['warn', { noSingleLineBlocks: true }],
+      'jsdoc/tag-lines': ['warn', 'any', { startLines: 1 }]
+    }
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: { unicorn: unicornPlugin },
+    rules: {
+      'unicorn/prefer-array-find': 'warn',
+      'unicorn/prefer-array-flat-map': 'warn',
+      'unicorn/prefer-array-some': 'warn',
+      'unicorn/prefer-string-starts-ends-with': 'warn',
+      'unicorn/no-lonely-if': 'warn',
+      'unicorn/no-useless-spread': 'warn',
+      'unicorn/prefer-spread': 'warn',
+      'unicorn/no-for-loop': 'warn',
+      'unicorn/prefer-includes': 'warn',
+      'unicorn/prefer-optional-catch-binding': 'warn',
+      'unicorn/throw-new-error': 'warn'
+    }
+  },
+  {
     files: ['{package,project}.json'],
     parser: 'jsonc-eslint-parser',
     rules: {
@@ -89,5 +144,6 @@ export default [
         }
       ]
     }
-  }
+  },
+  prettierConfig
 ];
