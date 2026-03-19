@@ -125,7 +125,6 @@
       "analyzeSourceFiles": true
     }
   },
-  "nxCloudAccessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU=",
   "useInferencePlugins": false,
   "defaultBase": "main",
   "release": {
@@ -174,5 +173,6 @@
       }
     },
     "releaseTagPattern": "v{version}"
-  }
+  },
+  "nxCloudId": "61d7cd6324de6860e56a98b7"
 }
