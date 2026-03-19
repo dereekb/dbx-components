@@ -173,7 +173,7 @@ export const MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY = `h:Reply-To`;
 
 export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig extends MailgunTemplateEmailRequestRecipientVariablesConfig {
   readonly request: MailgunTemplateEmailRequest;
-  readonly defaultSender?: string;
+  readonly defaultSender?: EmailParticipantString;
   readonly isTestingEnvironment?: boolean;
 }
 

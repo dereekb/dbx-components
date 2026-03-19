@@ -1,3 +1,4 @@
+import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { Inject, Injectable } from '@nestjs/common';
 import { isTestNodeEnv } from './env';
 import { type ServerEnvironmentConfig } from './env.config';
@@ -23,7 +24,7 @@ export class ServerEnvironmentService {
     return Boolean(!this.isProduction && this.env.developerToolsEnabled);
   }
 
-  get appUrl(): string | undefined {
+  get appUrl(): Maybe<WebsiteUrl> {
     return this.env.appUrl;
   }
 }

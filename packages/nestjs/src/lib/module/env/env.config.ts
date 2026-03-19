@@ -1,3 +1,5 @@
+import { type Maybe, type WebsiteUrl } from '@dereekb/util';
+
 /**
  * A server environment configuration.
  *
@@ -9,11 +11,11 @@ export abstract class ServerEnvironmentConfig {
   /**
    * Whether or not this is a production environment.
    */
-  abstract production: boolean;
+  abstract readonly production: boolean;
   /**
    * Whether or not this is a staging environment.
    */
-  abstract staging?: boolean;
+  abstract readonly staging?: boolean;
   /**
    * (Optional) Whether or not custom "developer tools" should be enabled.
    *
@@ -21,11 +23,11 @@ export abstract class ServerEnvironmentConfig {
    *
    * This is always false when production is true.
    */
-  abstract developerToolsEnabled?: boolean;
+  abstract readonly developerToolsEnabled?: boolean;
   /**
    * The primary URL of the application (e.g., 'https://app.example.com').
    *
    * Should not end with a trailing slash.
    */
-  abstract appUrl?: string;
+  abstract readonly appUrl?: Maybe<WebsiteUrl>;
 }

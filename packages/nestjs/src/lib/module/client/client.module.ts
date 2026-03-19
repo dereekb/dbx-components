@@ -22,7 +22,8 @@ export function clientAppConfigFactory(configService: ConfigService): ClientAppS
       provide: ClientAppServiceConfig,
       inject: [ConfigService],
       useFactory: clientAppConfigFactory
-    }
+    },
+    ClientAppService
   ],
   exports: [ClientAppService]
 })

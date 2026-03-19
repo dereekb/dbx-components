@@ -67,20 +67,39 @@ export interface DiscordFetchMessagePageFactoryConfig<T> {
 }
 
 /**
+ * Configuration for {@link discordFetchMessagePageFactory}.
+ *
+ * @typeParam I - The input filter type
+ * @typeParam T - The message type
+ */
+export interface DiscordFetchMessagePageFactoryInput<I extends DiscordMessagePageFilter, T> {
+  /**
+   * The Discord fetch function to paginate over.
+   */
+  readonly fetch: DiscordFetchMessagePageFetchFunction<I, T>;
+  /**
+   * Optional config for reading message IDs.
+   */
+  readonly config?: Maybe<DiscordFetchMessagePageFactoryConfig<T>>;
+  /**
+   * Optional default configuration for the page factory.
+   */
+  readonly defaults?: Maybe<FetchPageFactoryConfigDefaults>;
+}
+
+/**
  * Creates a page factory that wraps a Discord message fetch function with automatic cursor-based pagination.
  *
  * Discord paginates via `before`/`after` snowflake IDs. This factory automatically reads the last
  * message's ID from each response and sets it as the `before` cursor for the next request.
  * When the number of returned messages is less than the requested limit, pagination stops.
  *
- * @param fetch - The Discord fetch function to paginate over
- * @param config - Optional config for reading message IDs
- * @param defaults - Optional default configuration for the page factory
+ * @param input - The factory input configuration
  * @returns A page factory that produces iterable page fetchers
  *
  * @example
  * ```typescript
- * const pageFactory = discordFetchMessagePageFactory(fetchChannelMessages);
+ * const pageFactory = discordFetchMessagePageFactory({ fetch: fetchChannelMessages });
  *
  * const fetchPage = pageFactory({ limit: 50 });
  * const firstPage = await fetchPage.fetchNext();
@@ -90,7 +109,8 @@ export interface DiscordFetchMessagePageFactoryConfig<T> {
  * }
  * ```
  */
-export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilter, T extends { id: string }>(fetch: DiscordFetchMessagePageFetchFunction<I, T>, config?: Maybe<DiscordFetchMessagePageFactoryConfig<T>>, defaults?: Maybe<FetchPageFactoryConfigDefaults>): FetchPageFactory<I, DiscordMessagePageResult<T>> {
+export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilter, T extends { id: string }>(input: DiscordFetchMessagePageFactoryInput<I, T>): FetchPageFactory<I, DiscordMessagePageResult<T>> {
+  const { fetch, config, defaults } = input;
   const readMessageId = config?.readMessageId ?? ((message: T) => message.id);
 
   return fetchPageFactory<I, DiscordMessagePageResult<T>>({

@@ -1,16 +1,16 @@
 import type Stripe from 'stripe';
 
 export interface StripeServiceApiConfig {
-  secret: string;
-  webhookSecret: string;
-  config: Stripe.StripeConfig;
+  readonly secret: string;
+  readonly webhookSecret: string;
+  readonly config: Stripe.StripeConfig;
 }
 
 /**
  * Configuration for StripeService
  */
 export abstract class StripeServiceConfig {
-  stripe!: StripeServiceApiConfig;
+  readonly stripe!: StripeServiceApiConfig;
 
   static assertValidConfig(config: StripeServiceConfig) {
     if (!config.stripe.secret) {

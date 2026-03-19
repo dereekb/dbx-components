@@ -162,7 +162,7 @@ export interface TypeformFormMultipleChoicesAnswer<T extends TypeformFormChoiceA
 
 export interface TypeformFormUrlAnswer extends TypeformFormAnswerFieldRef<'website' | 'calendly'> {
   readonly type: 'url';
-  readonly url: string;
+  readonly url: WebsiteUrl;
 }
 
 /**

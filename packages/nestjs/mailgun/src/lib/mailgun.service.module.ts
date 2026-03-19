@@ -1,10 +1,12 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { convertMailgunRecipientToString } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
+
+const mailgunLogger = new Logger('MailgunServiceModule');
 
 export function mailgunServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): MailgunServiceConfig {
   const isTestingEnv = serverEnvironmentService.isTestingEnv;
@@ -21,10 +23,10 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
     if (!key || !domain) {
       throw new Error('USE_MAILGUN_SANDBOX is set to "true" (or current environment is a testing environment), but no environment variables for the sandbox (MAILGUN_SANDBOX_API_KEY, MAILGUN_SANDBOX_DOMAIN) are provided.');
     } else if (!serverEnvironmentService.isTestingEnv) {
-      console.log('Using Mailgun Sandbox Domain: ', domain);
+      mailgunLogger.log(`Using Mailgun Sandbox Domain: ${domain}`);
     }
   } else if (!serverEnvironmentService.isTestingEnv) {
-    console.log('Using Mailgun Production Domain: ', domain);
+    mailgunLogger.log(`Using Mailgun Production Domain: ${domain}`);
   }
 
   const name = configService.get<string>('MAILGUN_SENDER_NAME');

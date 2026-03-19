@@ -29,9 +29,9 @@ export interface TypeformWebhookEventVerificationErrorResult {
 export type TypeformWebhookEventVerifier = (req: Request, rawBody: Buffer) => Promise<TypeformWebhookEventVerificationResult>;
 
 /**
- * Verifies a Typeform webhook event header.
+ * Verifies a Typeform webhook event header using HMAC-SHA256 signature verification.
  *
- * @param vapiSecretTokenGetter The Typeform secret token. The Vapi client allows for using an AsyncGetterOrValue type, so the verifier supports that as well.
+ * @param config - The verification config containing the Typeform webhook secret token.
  * @returns A function that verifies a Typeform webhook event.
  */
 export function typeFormWebhookEventVerifier(config: TypeformWebhookEventVerificationConfig): TypeformWebhookEventVerifier {
@@ -41,12 +41,12 @@ export function typeFormWebhookEventVerifier(config: TypeformWebhookEventVerific
     const requestBodyString = String(request.body);
 
     const headers = request.headers;
-    const vapiSignature = headers['typeform-signature'];
+    const typeformSignature = headers['typeform-signature'];
 
     const hashForVerify = createHmac('sha256', secret).update(requestBodyString).digest('base64');
     const signature = `sha256=${hashForVerify}`;
 
-    const valid = vapiSignature === signature;
+    const valid = typeformSignature === signature;
     const event = JSON.parse(requestBodyString) as RawTypeformWebhookEvent;
 
     const result: TypeformWebhookEventVerificationResult = {

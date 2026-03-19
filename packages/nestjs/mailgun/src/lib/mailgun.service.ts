@@ -1,10 +1,11 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type MailgunTemplateEmailRequest, type MailgunEmailMessageSendResult, convertMailgunTemplateEmailRequestToMailgunMessageData } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 
 @Injectable()
 export class MailgunService {
+  private readonly logger = new Logger('MailgunService');
   private readonly _mailgunApi: MailgunApi;
   private readonly _serverEnvironmentService: ServerEnvironmentService;
 
@@ -36,7 +37,7 @@ export class MailgunService {
       try {
         result = await this.mailgunApi.messages.create(domain, data);
       } catch (e) {
-        console.error('Failed sending email: ', e);
+        this.logger.error('Failed sending email: ', e);
         throw e;
       }
     } else {

@@ -1,4 +1,4 @@
-import { createParamDecorator, type ExecutionContext, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { createParamDecorator, type ExecutionContext, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import rawbody from 'raw-body';
 import { parse as parseQueryString, type ParsedUrlQuery } from 'querystring';
@@ -21,10 +21,12 @@ export type RawBodyBuffer = Buffer;
  * handleWebhook(@ParseRawBody() body: RawBodyBuffer) { ... }
  * ```
  */
+const rawBodyLogger = new Logger('RawBody');
+
 export const ParseRawBody = createParamDecorator(async (_, context: ExecutionContext) => {
   const req: Request = context.switchToHttp().getRequest();
   if (!req.readable) {
-    console.error('RawBody request was not readable. This is generally due to bad configuration.');
+    rawBodyLogger.error('RawBody request was not readable. This is generally due to bad configuration.');
     throw new BadRequestException('Invalid body');
   }
 
@@ -50,7 +52,7 @@ export const RawBody = createParamDecorator(async (_, context: ExecutionContext)
   const body = req.body as RawBodyBuffer;
 
   if (!Buffer.isBuffer(body)) {
-    console.error('RawBody expected a buffer set to req.body.');
+    rawBodyLogger.error('RawBody expected a buffer set to req.body.');
     throw new InternalServerErrorException('failed parsing body');
   }
 
