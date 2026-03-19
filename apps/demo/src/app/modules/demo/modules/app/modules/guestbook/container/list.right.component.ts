@@ -1,4 +1,4 @@
-import { type OnDestroy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, type OnDestroy, Component, inject } from '@angular/core';
 import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { GuestbookDocumentStore } from 'demo-components';
@@ -7,7 +7,8 @@ import { DemoGuestbookViewComponent } from './guestbook.view.component';
 @Component({
   templateUrl: './list.right.component.html',
   imports: [DbxTwoColumnRightComponent, DemoGuestbookViewComponent],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookListPageRightComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);

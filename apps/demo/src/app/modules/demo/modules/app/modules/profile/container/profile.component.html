@@ -27,7 +27,7 @@
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">
-      <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ username$ | async }})" hint="Change your profile username.">
+      <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ usernameSignal() }})" hint="Change your profile username.">
         <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
         <dbx-button dbxActionButton text="Change Username"></dbx-button>
         <dbx-error dbxActionError></dbx-error>

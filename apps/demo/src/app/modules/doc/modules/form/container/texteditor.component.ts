@@ -1,5 +1,5 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxFormFormlyTextEditorFieldModule, textEditorField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -10,7 +10,8 @@ import { DocFormExampleComponent } from '../component/example.form.component';
 @Component({
   templateUrl: './texteditor.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyTextEditorFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyTextEditorFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormTextEditorComponent {
   readonly textEditorField: FormlyFieldConfig[] = [

@@ -1,5 +1,5 @@
 import { type Observable, of, map } from 'rxjs';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type DocFormExampleChecklistValues, type DocFormExampleChecklistFieldsConfig } from '../component/checklist.example';
 import { successResult } from '@dereekb/rxjs';
 import { type DocFormExampleChecklistFormValue, DocFormExampleChecklistFormComponent } from '../component/checklist.example.form.component';
@@ -12,7 +12,8 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './checklist.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormChecklistComponent {
   value?: DocFormExampleChecklistFormValue;

@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { type ClickableAnchor, type ClickableAnchorLink, type ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
 import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxButtonComponent } from '@dereekb/dbx-web';
@@ -11,7 +11,8 @@ import { MatRipple } from '@angular/material/core';
 @Component({
   templateUrl: './anchor.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxAnchorComponent, MatButton, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxAnchorComponent, MatButton, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocRouterAnchorComponent {
   readonly buttonClicksSignal = signal(0);

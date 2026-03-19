@@ -2,7 +2,7 @@
   <dbx-loading [context]="context">
     <dbx-content-container>
       <div class="dbx-pt4">
-        <dbx-firebase-notificationitem-view [item]="selectedItem$ | async"></dbx-firebase-notificationitem-view>
+        <dbx-firebase-notificationitem-view [item]="selectedItemSignal()"></dbx-firebase-notificationitem-view>
       </div>
     </dbx-content-container>
   </dbx-loading>

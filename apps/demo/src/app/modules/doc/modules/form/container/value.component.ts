@@ -1,5 +1,5 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   addressField,
   addressListField,
@@ -43,7 +43,8 @@ import { DocFormExampleComponent } from '../component/example.form.component';
 @Component({
   templateUrl: './value.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormFormlyArrayFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormFormlyArrayFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormValueComponent {
   readonly dateValues$ = of({

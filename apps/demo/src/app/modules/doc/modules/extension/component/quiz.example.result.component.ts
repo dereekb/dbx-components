@@ -1,6 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { loadingStateFromObs, type WorkUsingContext } from '@dereekb/rxjs';
-import { DbxQuizPostQuizComponent, QuizStore, QuizAnswerMultipleChoiceComponent, QuizAnswerNumberComponent, DbxQuizScoreComponent, type DbxQuizScoreInput, type QuizAnswer , type MultipleChoiceAnswer } from '@dereekb/dbx-form/quiz';
+import { DbxQuizPostQuizComponent, QuizStore, QuizAnswerMultipleChoiceComponent, QuizAnswerNumberComponent, DbxQuizScoreComponent, type DbxQuizScoreInput, type QuizAnswer, type MultipleChoiceAnswer } from '@dereekb/dbx-form/quiz';
 import { delay, first, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe } from '@dereekb/util';
@@ -17,7 +17,8 @@ import { type Maybe } from '@dereekb/util';
     </dbx-quiz-post-quiz>
   `,
   imports: [DbxQuizPostQuizComponent, DbxQuizScoreComponent],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionQuizExampleResultComponent {
   readonly quizStore = inject(QuizStore);

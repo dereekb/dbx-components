@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxAvatarComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -6,7 +6,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 @Component({
   templateUrl: './avatar.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAvatarComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocLayoutAvatarComponent {
   readonly demoAvatarUrl = 'https://www.gravatar.com/avatar/205d5c6f1f0075bf8cb6a6021b223206';

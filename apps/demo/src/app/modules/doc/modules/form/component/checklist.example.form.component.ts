@@ -1,5 +1,5 @@
 import { type Observable, map } from 'rxjs';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type DocFormExampleChecklistFieldsConfig, docFormExampleChecklistFieldsSection, type DocFormExampleChecklistValues } from './checklist.example';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
@@ -14,7 +14,8 @@ export type DocFormExampleChecklistFormValue = BooleanKeyValueTransformMap<DocFo
   selector: 'dbx-form-example-checklist-form',
   providers: [provideFormlyContext()],
   standalone: true,
-  imports: [DbxFormlyComponent]
+  imports: [DbxFormlyComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleChecklistFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleChecklistFormValue, DocFormExampleChecklistFieldsConfig> {
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(

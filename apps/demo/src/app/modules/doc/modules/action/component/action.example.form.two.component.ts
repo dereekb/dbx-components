@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { provideFormlyContext, AbstractSyncFormlyFormDirective, textField, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 
@@ -14,7 +14,8 @@ export interface DocActionFormExampleValue {
   selector: 'doc-action-form-example-form-two',
   providers: [provideFormlyContext()],
   standalone: true,
-  imports: [DbxFormlyComponent]
+  imports: [DbxFormlyComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionFormExampleFormTwoComponent extends AbstractSyncFormlyFormDirective<DocActionFormExampleValue> {
   readonly fields: FormlyFieldConfig[] = [textField({ key: 'name', label: 'Name', maxLength: 30, required: true, autocomplete: false })];

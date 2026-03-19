@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractDbxSearchableFieldDisplayDirective } from '@dereekb/dbx-form';
 
 @Component({
@@ -6,7 +6,8 @@ import { AbstractDbxSearchableFieldDisplayDirective } from '@dereekb/dbx-form';
     <div class="dbx-primary-bg">
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExamplePrimarySearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {}
 
@@ -15,7 +16,8 @@ export class DocFormExamplePrimarySearchableFieldDisplayComponent<T> extends Abs
     <div class="dbx-accent-bg">
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleAccentSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {}
 
@@ -24,6 +26,7 @@ export class DocFormExampleAccentSearchableFieldDisplayComponent<T> extends Abst
     <div class="dbx-warn-bg">
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleWarnSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {}

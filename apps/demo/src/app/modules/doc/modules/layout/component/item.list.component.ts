@@ -27,7 +27,8 @@ export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirecti
   selector: 'doc-item-list-view',
   templateUrl: './item.list.component.html',
   imports: [MatListModule, MatIconModule],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
   readonly valuesSignal = toSignal(this.values$);

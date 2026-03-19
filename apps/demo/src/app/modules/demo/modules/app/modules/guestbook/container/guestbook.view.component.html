@@ -2,7 +2,7 @@
   <dbx-content-container>
     <dbx-two-block class="guestbook-view">
       <div top class="guestbook-view-header">
-        <h2>{{ name$ | async }}</h2>
+        <h2>{{ nameSignal() }}</h2>
         <div>
           @switch (guestbookEntry.exists$ | async) {
             @case (true) {

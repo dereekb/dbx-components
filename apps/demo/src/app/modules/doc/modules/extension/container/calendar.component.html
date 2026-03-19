@@ -7,7 +7,7 @@
     <!-- Examples -->
     <doc-feature-example header="dbx-calendar" hint="Used to render a calendar. Uses a DbxCalendarStore.">
       <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
-      <p>Picked Date: {{ date$ | async | date }}</p>
+      <p>Picked Date: {{ dateSignal() | date }}</p>
       <p>Clicked Event: {{ event | json }}</p>
     </doc-feature-example>
     <doc-feature-example header="dbx-calendar in restricted two-column" hint="Example showing a calendar in a two-column view with a set height.">
@@ -54,7 +54,7 @@
         <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
         <h3>Other Customization</h3>
         <p>Can customize the calendar days of the month more directly. It is configured to be readonly when red and hides the modify buttons when readonly. Shows .dbx-schedule-selection-calendar-compact-icons usage.</p>
-        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfigSignal()"></doc-extension-calendar-schedule-example>
       </dbx-subsection>
     </doc-feature-example>
     <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
@@ -71,7 +71,7 @@
         <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
         <h3>Other Customization</h3>
         <p>Can customize the calendar days of the month more directly. It is configured to be readonly when red and hides the modify buttons when readonly. Shows .dbx-schedule-selection-calendar-compact-icons usage.</p>
-        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfigSignal()"></doc-extension-calendar-schedule-example>
       </dbx-subsection>
     </doc-feature-example>
     <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
@@ -88,7 +88,7 @@
         <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
         <h3>Other Customization</h3>
         <p>Can customize the calendar days of the month more directly. It is configured to be readonly when red and hides the modify buttons when readonly. Shows .dbx-schedule-selection-calendar-compact-icons usage.</p>
-        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfigSignal()"></doc-extension-calendar-schedule-example>
       </dbx-subsection>
     </doc-feature-example>
   </doc-feature-layout>

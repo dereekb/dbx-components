@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { type Milliseconds } from '@dereekb/util';
@@ -15,7 +15,8 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 @Component({
   templateUrl: './button.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
+  imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionButtonComponent {
   private readonly _workingIncreaseSub = new SubscriptionObject();

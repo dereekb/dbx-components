@@ -1,4 +1,4 @@
-import { Component, type ElementRef, type OnInit } from '@angular/core';
+import { Component, type ElementRef, type OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { MatButton } from '@angular/material/button';
@@ -32,7 +32,8 @@ export interface DocInteractionPopoverConfig {
     </dbx-popover-content>
   `,
   standalone: true,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent]
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirective<number> implements OnInit {
   readonly onCloseValue = 12345;

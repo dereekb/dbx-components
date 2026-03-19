@@ -1,5 +1,5 @@
 import { DbxFormFormlyTextFieldModule, type DbxFormSearchFormFieldsConfig, DbxFormSearchFormComponent } from '@dereekb/dbx-form';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -7,7 +7,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 @Component({
   templateUrl: './form.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective, DbxFormFormlyTextFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective, DbxFormFormlyTextFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormFormComponent {
   searchText = '';

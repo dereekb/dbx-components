@@ -1,11 +1,12 @@
 import { DOC_FORM_ROUTES } from '../doc.form';
 import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   templateUrl: './home.component.html',
   standalone: true,
-  imports: [DocFeatureCardListComponent]
+  imports: [DocFeatureCardListComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormHomeComponent {
   cards: DocFeatureCard[] = DOC_FORM_ROUTES.map((anchor) => ({

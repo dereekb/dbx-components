@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { MatIcon } from '@angular/material/icon';
 
@@ -31,7 +31,8 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
     </div>
   `,
   standalone: true,
-  imports: [DbxContentBoxDirective, MatIcon]
+  imports: [DbxContentBoxDirective, MatIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFeatureDerivedComponent {
   readonly type = input<DocFeatureDerviedType>('integrated');

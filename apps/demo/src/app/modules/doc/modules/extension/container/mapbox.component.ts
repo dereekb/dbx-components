@@ -1,6 +1,7 @@
 import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { ChangeDetectorRef, Component, type OnDestroy, type OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import {
@@ -33,7 +34,7 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MapComponent } from 'ngx-mapbox-gl';
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
@@ -73,9 +74,9 @@ import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereek
     DbxFormSourceDirective,
     DbxMapboxInjectionComponent,
     DbxMapboxMapStoreInjectionBlockDirective,
-    AsyncPipe,
     JsonPipe
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
@@ -85,44 +86,69 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
   readonly side$ = this._side.asObservable();
+  readonly sideSignal = toSignal(this.side$, { initialValue: undefined });
 
   private _open = new BehaviorSubject<Maybe<boolean>>(undefined);
   readonly open$ = this._open.asObservable();
+  readonly openSignal = toSignal(this.open$, { initialValue: undefined });
 
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
   readonly color$: Observable<Maybe<DbxThemeColor>> = this._color.asObservable();
+  readonly colorSignal = toSignal(this.color$, { initialValue: undefined });
 
   private _showMarkers = new BehaviorSubject<boolean>(true);
   readonly showMarkers$ = this._showMarkers.asObservable();
+  readonly showMarkersSignal = toSignal(this.showMarkers$, { initialValue: true });
 
   menuValue?: Maybe<number> = undefined;
 
   readonly mapService$ = this.dbxMapboxMapStore.mapService$;
+  readonly mapServiceSignal = toSignal(this.mapService$, { initialValue: undefined });
   readonly mapInstance$ = this.dbxMapboxMapStore.mapInstance$;
+  readonly mapInstanceSignal = toSignal(this.mapInstance$, { initialValue: undefined });
   readonly moveState$ = this.dbxMapboxMapStore.moveState$;
+  readonly moveStateSignal = toSignal(this.moveState$, { initialValue: undefined });
   readonly zoomState$ = this.dbxMapboxMapStore.zoomState$;
+  readonly zoomStateSignal = toSignal(this.zoomState$, { initialValue: undefined });
   readonly rotateState$ = this.dbxMapboxMapStore.rotateState$;
+  readonly rotateStateSignal = toSignal(this.rotateState$, { initialValue: undefined });
   readonly lifecycleState$ = this.dbxMapboxMapStore.lifecycleState$;
+  readonly lifecycleStateSignal = toSignal(this.lifecycleState$, { initialValue: undefined });
   readonly zoom$ = this.dbxMapboxMapStore.zoom$;
+  readonly zoomSignal = toSignal(this.zoom$, { initialValue: undefined });
   readonly zoomNow$ = this.dbxMapboxMapStore.zoomNow$;
+  readonly zoomNowSignal = toSignal(this.zoomNow$, { initialValue: undefined });
   readonly center$ = this.dbxMapboxMapStore.center$;
+  readonly centerSignal = toSignal(this.center$, { initialValue: undefined });
   readonly centerNow$ = this.dbxMapboxMapStore.centerNow$;
+  readonly centerNowSignal = toSignal(this.centerNow$, { initialValue: undefined });
   readonly pitch$ = this.dbxMapboxMapStore.pitch$;
+  readonly pitchSignal = toSignal(this.pitch$, { initialValue: undefined });
   readonly pitchNow$ = this.dbxMapboxMapStore.pitchNow$;
+  readonly pitchNowSignal = toSignal(this.pitchNow$, { initialValue: undefined });
   readonly bearing$ = this.dbxMapboxMapStore.bearing$;
+  readonly bearingSignal = toSignal(this.bearing$, { initialValue: undefined });
   readonly bearingNow$ = this.dbxMapboxMapStore.bearingNow$;
+  readonly bearingNowSignal = toSignal(this.bearingNow$, { initialValue: undefined });
   readonly rawBound$ = this.dbxMapboxMapStore.rawBound$;
+  readonly rawBoundSignal = toSignal(this.rawBound$, { initialValue: undefined });
   readonly bound$ = this.dbxMapboxMapStore.bound$;
+  readonly boundSignal = toSignal(this.bound$, { initialValue: undefined });
   readonly boundSizing$ = this.dbxMapboxMapStore.boundSizing$;
+  readonly boundSizingSignal = toSignal(this.boundSizing$, { initialValue: undefined });
   readonly mapCanvasSize$ = this.dbxMapboxMapStore.mapCanvasSize$;
+  readonly mapCanvasSizeSignal = toSignal(this.mapCanvasSize$, { initialValue: undefined });
   readonly virtualMapCanvasSize$ = this.dbxMapboxMapStore.virtualMapCanvasSize$;
+  readonly virtualMapCanvasSizeSignal = toSignal(this.virtualMapCanvasSize$, { initialValue: undefined });
   readonly virtualBound$ = this.dbxMapboxMapStore.virtualBound$;
+  readonly virtualBoundSignal = toSignal(this.virtualBound$, { initialValue: undefined });
 
   readonly boundSizingRatio$ = combineLatest([this.boundSizing$, this.mapCanvasSize$]).pipe(
     map(([point, vector]) => ({ x: point.lng / vector.x, y: point.lat / vector.y })),
     tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
+  readonly boundSizingRatioSignal = toSignal(this.boundSizingRatio$, { initialValue: undefined });
 
   readonly viewportBoundFunction$ = this.dbxMapboxMapStore.viewportBoundFunction$;
   readonly viewportBoundFunctionCalc$ = combineLatest([this.center$, this.zoom$, this.viewportBoundFunction$]).pipe(
@@ -130,12 +156,18 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
+  readonly viewportBoundFunctionCalcSignal = toSignal(this.viewportBoundFunctionCalc$, { initialValue: undefined });
 
   readonly boundNow$ = this.dbxMapboxMapStore.rawBoundNow$;
+  readonly boundNowSignal = toSignal(this.boundNow$, { initialValue: undefined });
   readonly click$ = this.dbxMapboxMapStore.clickEvent$.pipe(map((x) => x?.lngLat.toArray()));
+  readonly clickSignal = toSignal(this.click$, { initialValue: undefined });
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
+  readonly doubleClickSignal = toSignal(this.doubleClick$, { initialValue: undefined });
   readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), x: x?.originalEvent?.pageX, y: x?.originalEvent?.pageY })));
+  readonly rightClickSignal = toSignal(this.rightClick$, { initialValue: undefined });
   readonly boundWrapsAroundWorld$ = this.dbxMapboxMapStore.boundWrapsAroundWorld$;
+  readonly boundWrapsAroundWorldSignal = toSignal(this.boundWrapsAroundWorld$, { initialValue: undefined });
   readonly margin$ = this.dbxMapboxMapStore.margin$;
   readonly centerGivenMargin$ = this.dbxMapboxMapStore.centerGivenMargin$;
 
@@ -265,6 +297,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   private _addedMarkersData = new BehaviorSubject<LatLngTuple[]>([]);
   readonly addedMapboxMarkersData$ = this._addedMarkersData.asObservable();
+  readonly addedMapboxMarkersDataSignal = toSignal(this.addedMapboxMarkersData$, { initialValue: [] as LatLngTuple[] });
 
   readonly markersInView$ = combineLatest([
     // default items
@@ -287,6 +320,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     map((x) => x.map((y) => ({ label: y.label, center: y.latLng }))),
     shareReplay(1)
   );
+  readonly markersInViewSignal = toSignal(this.markersInView$, { initialValue: undefined });
 
   ngOnInit(): void {
     this.dbxMapboxMapStore.setDrawerContent({

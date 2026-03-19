@@ -1,5 +1,5 @@
 import { LOREM } from './../../shared/lorem';
-import { type Type, InjectionToken, Inject, Component } from '@angular/core';
+import { type Type, InjectionToken, inject, Component, ChangeDetectionStrategy } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
@@ -20,7 +20,8 @@ export interface DocFormExampleComponentFormConfig {
   selector: 'dbx-form-example-component-form',
   providers: [provideFormlyContext()],
   standalone: true,
-  imports: [DbxFormlyComponent]
+  imports: [DbxFormlyComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleComponentFormValue, DocFormExampleComponentFormConfig> {
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(
@@ -51,12 +52,13 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
     </div>
   `,
   standalone: true,
-  imports: [DbxContentBoxDirective, DbxSectionComponent]
+  imports: [DbxContentBoxDirective, DbxSectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleComponentFormTestViewAComponent {
   lorem = LOREM;
 
-  constructor(@Inject(DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN) readonly injectedData: string) {}
+  readonly injectedData = inject(DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN) as string;
 }
 
 @Component({
@@ -71,6 +73,7 @@ export class DocFormExampleComponentFormTestViewAComponent {
     </div>
   `,
   standalone: true,
-  imports: [DbxLinkComponent]
+  imports: [DbxLinkComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleComponentFormTestViewBComponent {}

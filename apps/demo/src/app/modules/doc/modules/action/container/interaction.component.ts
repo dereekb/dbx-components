@@ -1,6 +1,6 @@
 import { MatDialog } from '@angular/material/dialog';
 import { type DbxActionDialogFunction, DbxPopoverService, type DbxActionPopoverFunction, type DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
-import { ChangeDetectorRef, Component, type OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, inject } from '@angular/core';
 import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
@@ -37,7 +37,8 @@ import { DbxFormActionDialogComponent, textAreaField } from '@dereekb/dbx-form';
     DbxActionPopoverDirective,
     DbxActionDialogDirective,
     DbxActionAnalyticsDirective
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionInteractionComponent implements OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

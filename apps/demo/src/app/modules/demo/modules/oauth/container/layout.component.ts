@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxContentPageDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
   standalone: true,
-  imports: [DbxContentPageDirective, DbxContentContainerDirective, UIView]
+  imports: [DbxContentPageDirective, DbxContentContainerDirective, UIView],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoAppOAuthLayoutComponent {}

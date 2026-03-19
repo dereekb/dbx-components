@@ -1,5 +1,5 @@
 import { type ClickableAnchor } from '@dereekb/dbx-core';
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
@@ -17,7 +17,8 @@ export interface DocFeatureCard {
   templateUrl: './feature.card.list.component.html',
   styleUrls: ['./feature.card.list.component.scss'],
   standalone: true,
-  imports: [FlexModule, DbxAnchorComponent, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardActions]
+  imports: [FlexModule, DbxAnchorComponent, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardActions],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFeatureCardListComponent {
   readonly cards = input<DocFeatureCard[]>([]);

@@ -13,7 +13,7 @@
       <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleLoadingContextDelegate"></dbx-table-view>
       <h3>Data Loading</h3>
       <p class="dbx-hint">This example shows how loading the data is handled. The delegate also provides a loadMore() functionality, allowing more items to load as the table is scrolled.</p>
-      @if (isLoading$ | async) {
+      @if (isLoadingSignal()) {
         <button mat-raised-button (click)="loadMoreItems()">Finish Loading Items</button>
       }
       <p></p>

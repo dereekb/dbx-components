@@ -207,6 +207,11 @@ jobs:
           keys:
             - firebase-cache-v1-{{ checksum "package-lock.json" }}
             - firebase-cache-v1-
+      # Restore npm download cache to speed up the many npm install calls in setup-project.sh
+      - restore_cache:
+          keys:
+            - npm-cache-v1-{{ checksum "package-lock.json" }}
+            - npm-cache-v1-
       # Skip setup test if run_setup_test is false
       - unless:
           condition:
@@ -239,6 +244,10 @@ jobs:
             - run:
                 name: Run tests
                 command: cd ~/setup-test/myproject && npx nx test myproject-components && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-firebase' && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
+      - save_cache:
+          key: npm-cache-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/.npm
     # todo: add checks, etc.
   # Performs release operations on the release branch.
   run-release-and-push-to-main:

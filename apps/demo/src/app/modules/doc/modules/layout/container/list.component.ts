@@ -23,7 +23,8 @@ import {
 import { type CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { type ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, type Observable, delay, of } from 'rxjs';
-import { ChangeDetectorRef, Component, type OnInit, type OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnInit, type OnDestroy, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type DocValue, type DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { type Maybe, takeFront } from '@dereekb/util';
 import { pascalCase } from 'change-case-all';
@@ -31,7 +32,7 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
 
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { DocItemListComponent } from '../component/item.list.component';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 import { DocItemListGridComponent } from '../component/item.list.grid.component';
@@ -59,9 +60,9 @@ import { DocItemListAccordionComponent } from '../component/item.list.accordion.
     DbxListItemDisableRippleModifierDirective,
     DbxListTitleGroupDirective,
     DbxListEmptyContentComponent,
-    AsyncPipe,
     JsonPipe
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);
@@ -77,6 +78,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>('view');
 
   readonly selectionMode$ = this._selectionMode.asObservable();
+  readonly selectionModeSignal = toSignal(this.selectionMode$, { initialValue: 'view' as Maybe<DbxListSelectionMode> });
 
   readonly state$: Observable<ListLoadingState<DocValue>> = this._values.pipe(
     switchMap((x) => {
@@ -156,6 +158,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly staticState$: Observable<ListLoadingState<DocValue>> = of(successResult(this.makeValues()));
 
   readonly count$ = this.state$.pipe(map((x) => x.value?.length ?? 0));
+  readonly countSignal = toSignal(this.count$, { initialValue: 0 });
 
   clickedModifiedAnchorItem?: CustomDocValue;
 

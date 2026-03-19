@@ -1,5 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper, toggleField, DbxFormFormlyWrapperModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormFormlyTextFieldModule } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
@@ -10,7 +10,8 @@ import { DocFormExampleComponent } from '../component/example.form.component';
 @Component({
   templateUrl: './wrapper.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormWrapperComponent {
   readonly matDialog = inject(MatDialog);

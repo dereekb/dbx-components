@@ -1,5 +1,5 @@
 import { DbxButtonComponent, DbxContentContainerDirective, DbxContentLayoutModule, DbxWebFilePreviewComponent, type DbxWebFilePreviewComponentConfig, DbxWebFilePreviewService } from '@dereekb/dbx-web';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';
@@ -7,7 +7,8 @@ import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';
 @Component({
   templateUrl: './webfilepreview.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxButtonComponent, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxWebFilePreviewComponent]
+  imports: [DbxContentContainerDirective, DbxButtonComponent, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxWebFilePreviewComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionWebFilePreviewComponent {
   readonly webFilePreviewService = inject(DbxWebFilePreviewService);

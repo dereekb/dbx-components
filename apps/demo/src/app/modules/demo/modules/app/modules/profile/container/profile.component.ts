@@ -1,11 +1,10 @@
-import { type OnInit, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, type OnInit, Component, inject } from '@angular/core';
 import { type WorkUsingContext, type IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, type StorageFileUploadConfig, storageFileUploadHandler, type StorageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, type DemoProfileFormValue, DemoProfileUsernameFormComponent, type DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { AsyncPipe } from '@angular/common';
 import { userAvatarUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
@@ -20,7 +19,6 @@ import { type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
     DbxSectionLayoutModule,
     DbxActionFormDirective,
     DbxFormSourceDirective,
-    AsyncPipe,
     DbxLoadingComponent,
     DbxContentBoxDirective,
     DbxSectionComponent,
@@ -35,7 +33,8 @@ import { type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
     DbxLoadingProgressComponent,
     DbxFirebaseStorageFileDownloadButtonComponent
   ],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoProfileViewComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
@@ -77,6 +76,7 @@ export class DemoProfileViewComponent implements OnInit {
   readonly avatarUrl$ = this.profileData$.pipe(map((x) => x.avatar));
   readonly avatarStorageFileKey$ = this.profileData$.pipe(map((x) => x.avatarStorageFile));
   readonly username$ = this.profileData$.pipe(map((x) => x.username));
+  readonly usernameSignal = toSignal(this.username$);
 
   readonly avatarUrlSignal = toSignal(this.avatarUrl$);
   readonly avatarStorageFileKeySignal = toSignal(this.avatarStorageFileKey$);

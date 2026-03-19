@@ -1,4 +1,4 @@
-import { Component, type OnInit } from '@angular/core';
+import { Component, type OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AbstractFilterSourceDirective, provideFilterSourceDirective, type ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { type DbxPresetFilterMenuConfig, DbxPartialPresetFilterMenuComponent } from '@dereekb/dbx-web';
 import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PARTIAL_PRESETS } from './filter';
@@ -8,7 +8,8 @@ import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PARTIAL_PRESETS } f
   template: '<dbx-partial-preset-filter-menu [config]="menuConfig" [partialPresets]="partialPresets"></dbx-partial-preset-filter-menu>',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPartialPresetMenuComponent)],
   standalone: true,
-  imports: [DbxPartialPresetFilterMenuComponent]
+  imports: [DbxPartialPresetFilterMenuComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestFilterPartialPresetMenuComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> implements OnInit {
   readonly menuConfig: DbxPresetFilterMenuConfig = {

@@ -9,13 +9,13 @@
         <p>In this demo, ~50% are selected already, and ~20% are disabled.</p>
 
         <div>
-          <button mat-button mat-raised-button [color]="(selectionMode$ | async) !== 'select' ? 'accent' : null" (click)="setSelectionMode('view')">View Mode</button>
+          <button mat-button mat-raised-button [color]="selectionModeSignal() !== 'select' ? 'accent' : null" (click)="setSelectionMode('view')">View Mode</button>
           <dbx-button-spacer></dbx-button-spacer>
-          <button mat-button mat-raised-button [color]="(selectionMode$ | async) === 'select' ? 'accent' : null" (click)="setSelectionMode('select')">Select Mode</button>
+          <button mat-button mat-raised-button [color]="selectionModeSignal() === 'select' ? 'accent' : null" (click)="setSelectionMode('select')">Select Mode</button>
         </div>
 
         <div style="height: 200px">
-          <doc-complex-item-list [selectionMode]="selectionMode$ | async" [state]="stateWithSelection$">
+          <doc-complex-item-list [selectionMode]="selectionModeSignal()" [state]="stateWithSelection$">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-complex-item-list>
         </div>
@@ -112,7 +112,7 @@
       <doc-feature-example header="dbx-list">
         <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to its full content height.</p>
         <p>Selected: {{ selectionState | json }}</p>
-        <p>Values: {{ count$ | async }}</p>
+        <p>Values: {{ countSignal() }}</p>
         <div style="height: 200px">
           <doc-item-list [state]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
             <p top>This is the top.</p>

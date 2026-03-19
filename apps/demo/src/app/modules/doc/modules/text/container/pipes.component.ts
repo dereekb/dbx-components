@@ -1,4 +1,5 @@
-import { Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { dateTimeField, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
@@ -8,7 +9,7 @@ import { DbxContentContainerDirective, DbxContentBorderDirective, DbxDetailBlock
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
 
 @Component({
@@ -24,7 +25,6 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
     DbxFormlyFieldsContextDirective,
     DbxFormSourceDirective,
     DbxFormValueChangeDirective,
-    AsyncPipe,
     DatePipe,
     DateDistancePipe,
     DateRangeDistancePipe,
@@ -40,7 +40,8 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
     TimeDistanceCountdownPipe,
     TimeDistancePipe,
     DbxFormTimezoneStringFieldModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocTextPipesComponent implements OnDestroy {
   // TODO: Should not require a delay to set the value properly
@@ -56,17 +57,22 @@ export class DocTextPipesComponent implements OnDestroy {
   readonly nonDaylightSavingsDate = new Date('2022-04-01T06:00:00.000Z');
 
   readonly date$ = this._date.pipe(shareReplay(1));
+  readonly dateSignal = toSignal(this.date$, { initialValue: undefined });
   readonly dateRange$ = this.date$.pipe(
     map((date) => dateRange({ date: date ?? undefined, type: DateRangeType.DAYS_RANGE, distance: 15 })),
     shareReplay(1)
   );
+  readonly dateRangeSignal = toSignal(this.dateRange$, { initialValue: undefined });
   readonly zeroDayDateRange$ = this.date$.pipe(
     map((date) => dateRange({ date: date ?? undefined, type: DateRangeType.DAY })),
     shareReplay(1)
   );
+  readonly zeroDayDateRangeSignal = toSignal(this.zeroDayDateRange$, { initialValue: undefined });
 
   readonly end$ = this.dateRange$.pipe(map((x) => x.end));
+  readonly endSignal = toSignal(this.end$, { initialValue: undefined });
   readonly timezone$ = this._timezone.asObservable();
+  readonly timezoneSignal = toSignal(this.timezone$, { initialValue: undefined });
   readonly dateTimezoneFields: FormlyFieldConfig[] = [
     //
     dateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),

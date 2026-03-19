@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, type OnDestroy, input } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 
 @Component({
@@ -10,15 +10,10 @@ import { MatButton } from '@angular/material/button';
     </div>
   `,
   standalone: true,
-  imports: [MatButton]
+  imports: [MatButton],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocInteractionExamplePopupContentComponent implements OnDestroy {
+export class DocInteractionExamplePopupContentComponent {
   readonly reopen = input<() => void>();
-
-  @Output()
-  readonly shouldClose = new EventEmitter<void>();
-
-  ngOnDestroy(): void {
-    this.shouldClose.complete();
-  }
+  readonly shouldClose = output<void>();
 }

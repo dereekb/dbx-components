@@ -1,5 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, type DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
@@ -9,12 +10,12 @@ import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { AsyncPipe } from '@angular/common';
 
 @Component({
   templateUrl: './value.date.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, AsyncPipe, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent implements OnDestroy {
   readonly dateValues$ = of({
@@ -392,6 +393,8 @@ export function schoolInfoJobSettingsEndTimeField() {
       )
     })
   ]).pipe(delay(1000)); // add an artificial delay
+
+  readonly asyncTimeFormConfigSignal = toSignal(this.asyncTimeFormConfig$, { initialValue: undefined });
 
   readonly asyncTimeFormTemplate$ = this._newDateValue.pipe(
     map((date) => {

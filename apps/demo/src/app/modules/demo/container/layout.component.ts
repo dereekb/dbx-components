@@ -1,18 +1,19 @@
 import { type ClickableAnchorLinkSegueRef, type ClickableAnchorLink, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { Component, ViewEncapsulation, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject } from '@angular/core';
 import { type Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, type DbxFirebaseModelEntitiesPopoverButtonConfig } from '@dereekb/dbx-firebase';
 import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
-import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['../demo.scss'],
   encapsulation: ViewEncapsulation.None,
   standalone: true,
-  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective]
+  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoLayoutComponent {
   readonly dbxAuthService = inject(DbxFirebaseAuthService);
@@ -65,6 +66,8 @@ export class DemoLayoutComponent {
     shareReplay(1)
   );
 
+  readonly navAnchorsSignal = toSignal(this.navAnchors$);
+
   readonly noUserBottomAnchors: ClickableAnchorLink[] = [
     {
       title: 'Log In',
@@ -109,6 +112,8 @@ export class DemoLayoutComponent {
     }),
     shareReplay(1)
   );
+
+  readonly bottomNavAnchorsSignal = toSignal(this.bottomNavAnchors$);
 
   readonly entitiesButtonConfig: DbxFirebaseModelEntitiesPopoverButtonConfig = {};
 }

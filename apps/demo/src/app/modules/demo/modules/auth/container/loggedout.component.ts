@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatAnchor } from '@angular/material/button';
 import { AnchorUISref, UISref } from '@uirouter/angular';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
@@ -13,6 +13,7 @@ import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
     </div>
   `,
   standalone: true,
-  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective]
+  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoAuthLoggedOutComponent {}

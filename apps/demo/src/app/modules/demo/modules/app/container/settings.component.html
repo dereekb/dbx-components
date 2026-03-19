@@ -4,10 +4,10 @@
       <dbx-section header="Notifications"></dbx-section>
       <dbx-section header="Token">
         <dbx-content-pit>
-          <dbx-label-block>{{ currentIdTokenString$ | async }}</dbx-label-block>
+          <dbx-label-block>{{ currentIdTokenStringSignal() }}</dbx-label-block>
         </dbx-content-pit>
         <dbx-content-pit>
-          <p class="dbx-json" style="overflow: hidden">{{ idTokenResult$ | async | json }}</p>
+          <p class="dbx-json" style="overflow: hidden">{{ idTokenResultSignal() | json }}</p>
         </dbx-content-pit>
         <dbx-button (buttonClick)="refreshToken()" text="Refresh Token"></dbx-button>
       </dbx-section>

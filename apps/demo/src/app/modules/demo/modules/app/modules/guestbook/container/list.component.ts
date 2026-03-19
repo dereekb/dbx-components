@@ -1,6 +1,6 @@
 import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
 import { type Guestbook, publishedGuestbook } from 'demo-firebase';
-import { Component, inject, viewChild, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, viewChild, type OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookListComponent } from 'demo-components';
 import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective } from '@dereekb/dbx-firebase';
@@ -11,7 +11,8 @@ import { type DocumentDataWithIdAndKey } from '@dereekb/firebase';
 @Component({
   templateUrl: './list.component.html',
   imports: [UIView, DbxTwoColumnLayoutModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxListModifierModule, DemoGuestbookDocumentStoreDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective, DbxListItemAnchorModifierDirective],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookListPageComponent implements OnInit {
   readonly demoAppRouterService = inject(DemoAppRouterService);

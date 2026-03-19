@@ -1,4 +1,5 @@
-import { type OnInit, Component, inject } from '@angular/core';
+import { type OnInit, Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarComponent, type DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { type DateCell, type DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
@@ -16,7 +17,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MatButton } from '@angular/material/button';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
 import { DocExtensionCalendarScheduleSelectionComponent } from '../component/selection.calendar.component';
-import { AsyncPipe, JsonPipe, DatePipe } from '@angular/common';
+import { JsonPipe, DatePipe } from '@angular/common';
 
 export interface TestCalendarEventData extends DateCell {
   value: string;
@@ -46,11 +47,11 @@ export interface TestCalendarEventData extends DateCell {
     DocExtensionCalendarScheduleSelectionWithFilterComponent,
     DocExtensionCalendarScheduleSelectionComponent,
     DbxFormDateScheduleRangeFieldModule,
-    AsyncPipe,
     JsonPipe,
     DatePipe,
     DbxFormTimezoneStringFieldModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionCalendarComponent implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);
@@ -190,6 +191,7 @@ export class DocExtensionCalendarComponent implements OnInit {
   ];
 
   readonly date$ = this.calendarStore.date$;
+  readonly dateSignal = toSignal(this.date$, { initialValue: undefined });
 
   readonly singleSelectionConfig: DbxScheduleSelectionCalendarComponentConfig = {};
 
@@ -220,6 +222,8 @@ export class DocExtensionCalendarComponent implements OnInit {
     }),
     shareReplay(1)
   );
+
+  readonly scheduleConfigSignal = toSignal(this.scheduleConfig$, { initialValue: undefined });
 
   ngOnInit(): void {
     function makeEvents(name: string, iFilter = 1, minutes = 90) {

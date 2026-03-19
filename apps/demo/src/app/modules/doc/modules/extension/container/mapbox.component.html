@@ -8,15 +8,15 @@
           <doc-feature-example header="dbx-mapbox-layout" hint="This component provides a Google-maps like layout using a mat-sidenav.">
             <dbx-content-container style="height: 300px">
               <!-- Map View-->
-              <dbx-mapbox-layout (drawerOpenedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [openDrawer]="open$ | async" [drawerButtonColor]="color$ | async">
+              <dbx-mapbox-layout (drawerOpenedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="sideSignal()" [openDrawer]="openSignal()" [drawerButtonColor]="colorSignal()">
                 <!-- Drawer -->
                 <mgl-map dbxMapboxMap>
                   @for (marker of mapboxDemoMarkers; track marker) {
                     <dbx-mapbox-marker [marker]="marker"></dbx-mapbox-marker>
                   }
                   <dbx-mapbox-markers [data]="mapboxMarkersData" [markerFactory]="mapboxMarkerFactory"></dbx-mapbox-markers>
-                  @if (showMarkers$ | async) {
-                    <doc-extension-mapbox-markers-example [locations]="addedMapboxMarkersData$ | async"></doc-extension-mapbox-markers-example>
+                  @if (showMarkersSignal()) {
+                    <doc-extension-mapbox-markers-example [locations]="addedMapboxMarkersDataSignal()"></doc-extension-mapbox-markers-example>
                   }
                 </mgl-map>
               </dbx-mapbox-layout>
@@ -45,22 +45,22 @@
             <p>RXJS OperatorFunction that allows for filtering on objects that are in view when the map stops moving, using each item's center and zoom values to derive bounds.</p>
             <p>Markers that are considered in view is displayed below.</p>
             <dbx-detail-block header="Current Canvas Size">
-              <p>{{ virtualMapCanvasSize$ | async | json }}</p>
+              <p>{{ virtualMapCanvasSizeSignal() | json }}</p>
             </dbx-detail-block>
             <dbx-detail-block header="Current Bound (Raw)">
-              <p>{{ rawBound$ | async | json }}</p>
+              <p>{{ rawBoundSignal() | json }}</p>
             </dbx-detail-block>
             <dbx-detail-block header="Current Bound (Virtual)">
-              <p>{{ virtualBound$ | async | json }}</p>
+              <p>{{ virtualBoundSignal() | json }}</p>
             </dbx-detail-block>
             <dbx-detail-block header="Markers In View">
-              <p>{{ markersInView$ | async | json }}</p>
+              <p>{{ markersInViewSignal() | json }}</p>
             </dbx-detail-block>
             <h5>With dbxMapboxLayoutVirtualResizeSync</h5>
             <p>This example also uses the dbxMapboxLayoutVirtualResizeSync directive to set the virtual viewpot size in the map store to set the "minimum" width of the viewportBoundFunction$'s calculation. This is useful for mobile when the sidebar is open fully and only a small sliver of the map is visible.</p>
             <h4>dbx-mapbox-menu</h4>
             <p>The dbx-mapbox-menu component can be used to attach a mat-menu to the DbxMapboxStoreState directive.</p>
-            <p>Right Click: {{ rightClick$ | async | json }}</p>
+            <p>Right Click: {{ rightClickSignal() | json }}</p>
             @if (menuValue) {
               <p>Picked Item {{ menuValue }}</p>
             }
@@ -84,25 +84,25 @@
             <dbx-content-container>
               <dbx-content-container>
                 <h4>DbxMapboxMapStore</h4>
-                <p>Map Service: {{ mapService$ | async }} Map Instance: {{ mapInstance$ | async }}</p>
-                <p>Lifecycle State: {{ lifecycleState$ | async }} | Move State: {{ moveState$ | async }}</p>
-                <p>Zoom State: {{ zoomState$ | async }} | Rotate State: {{ rotateState$ | async }}</p>
-                <p>Zoom: {{ zoom$ | async }} - Updates only when the map stops zooming.</p>
-                <p>Zoom Now: {{ zoomNow$ | async }} - Updates every 200ms as the map zooms.</p>
-                <p>Center: {{ center$ | async | json }} - Updates only when the map stops moving.</p>
-                <p>Center Now: {{ centerNow$ | async | json }} - Updates every 200ms as the map moves.</p>
-                <p>Pitch: {{ pitch$ | async | json }} | Pitch Now: {{ pitchNow$ | async | json }}</p>
-                <p>Bearing: {{ bearing$ | async | json }} | Bearing Now: {{ bearingNow$ | async | json }}</p>
+                <p>Map Service: {{ mapServiceSignal() }} Map Instance: {{ mapInstanceSignal() }}</p>
+                <p>Lifecycle State: {{ lifecycleStateSignal() }} | Move State: {{ moveStateSignal() }}</p>
+                <p>Zoom State: {{ zoomStateSignal() }} | Rotate State: {{ rotateStateSignal() }}</p>
+                <p>Zoom: {{ zoomSignal() }} - Updates only when the map stops zooming.</p>
+                <p>Zoom Now: {{ zoomNowSignal() }} - Updates every 200ms as the map zooms.</p>
+                <p>Center: {{ centerSignal() | json }} - Updates only when the map stops moving.</p>
+                <p>Center Now: {{ centerNowSignal() | json }} - Updates every 200ms as the map moves.</p>
+                <p>Pitch: {{ pitchSignal() | json }} | Pitch Now: {{ pitchNowSignal() | json }}</p>
+                <p>Bearing: {{ bearingSignal() | json }} | Bearing Now: {{ bearingNowSignal() | json }}</p>
                 <dbx-detail-block header="Bound">
-                  {{ bound$ | async | json }}
+                  {{ boundSignal() | json }}
                 </dbx-detail-block>
                 <dbx-detail-block header="Bound Now">
-                  {{ boundNow$ | async | json }}
+                  {{ boundNowSignal() | json }}
                 </dbx-detail-block>
                 <dbx-detail-block header="Bound Wraps Around World">
-                  {{ boundWrapsAroundWorld$ | async }}
+                  {{ boundWrapsAroundWorldSignal() }}
                 </dbx-detail-block>
-                <p>Click: {{ click$ | async | json }} | Double Click: {{ doubleClick$ | async | json }} | Right Click: {{ rightClick$ | async | json }}</p>
+                <p>Click: {{ clickSignal() | json }} | Double Click: {{ doubleClickSignal() | json }} | Right Click: {{ rightClickSignal() | json }}</p>
               </dbx-content-container>
               <div style="height: 300px; width: 100%">
                 <mgl-map dbxMapboxMap></mgl-map>
@@ -127,14 +127,14 @@
       <mat-tab label="Directive w/ Forms Example">
         <ng-template matTabContent>
           <doc-feature-example hint="This example shows the use of the mapbox formly fields configured to use a parent [dbxMapboxMap] instance.">
-            <p>Bound: {{ bound$ | async | json }}</p>
-            <p>Bound Sizing: {{ boundSizing$ | async | json }}</p>
-            <p>Canvas Size: {{ mapCanvasSize$ | async | json }}</p>
-            <p>Bound ratio: {{ boundSizingRatio$ | async | json }}</p>
-            <p>Viewport Calc: {{ viewportBoundFunctionCalc$ | async | json }}</p>
+            <p>Bound: {{ boundSignal() | json }}</p>
+            <p>Bound Sizing: {{ boundSizingSignal() | json }}</p>
+            <p>Canvas Size: {{ mapCanvasSizeSignal() | json }}</p>
+            <p>Bound ratio: {{ boundSizingRatioSignal() | json }}</p>
+            <p>Viewport Calc: {{ viewportBoundFunctionCalcSignal() | json }}</p>
             <dbx-content-container style="height: 500px">
               <!-- Map View-->
-              <dbx-mapbox-layout [side]="side$ | async" [forceHasDrawerContent]="true" [openDrawer]="true">
+              <dbx-mapbox-layout [side]="sideSignal()" [forceHasDrawerContent]="true" [openDrawer]="true">
                 <!-- Drawer -->
                 <div drawer style="overflow-y: scroll; height: 100%; max-width: 400px">
                   <doc-feature-example header="Mapbox Forms with Directive">
