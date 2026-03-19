@@ -22,7 +22,6 @@ parameters:
 
 orbs:
   nx: nrwl/nx@1.7.0
-  node: circleci/node@7.2.1
   snyk: snyk/snyk@2.3.0
 
 jobs:
@@ -40,8 +39,22 @@ jobs:
       NX_NO_CLOUD: "true"
     steps:
       - checkout
-      # install node packages
-      - node/install-packages
+      # NOTE: We cache node_modules directly instead of using the circleci/node orb's install-packages command
+      # because the orb defaults to npm ci, which always deletes node_modules and reinstalls from scratch,
+      # making its with-cache option effectively a no-op. This approach skips install entirely on cache hit.
+      - restore_cache:
+          keys:
+            - node-modules-v1-{{ checksum "package-lock.json" }}
+      - run:
+          name: install packages
+          command: |
+            if [ ! -d node_modules ]; then
+              npm ci
+            fi
+      - save_cache:
+          key: node-modules-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
       # scan vulnerabilities with snyk if enabled
       - when:
           condition: << parameters.scan_with_snyk >>
@@ -248,7 +261,19 @@ jobs:
       - when:
           condition: << parameters.skip_build >>
           steps:
-            - node/install-packages
+            - restore_cache:
+                keys:
+                  - node-modules-v1-{{ checksum "package-lock.json" }}
+            - run:
+                name: install packages
+                command: |
+                  if [ ! -d node_modules ]; then
+                    npm ci
+                  fi
+            - save_cache:
+                key: node-modules-v1-{{ checksum "package-lock.json" }}
+                paths:
+                  - node_modules
       - add_ssh_keys:
           fingerprints:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
