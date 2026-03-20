@@ -13,6 +13,9 @@ export const DBX_LIST_ITEM_IS_SELECTED_ITEM_MODIFIER_KEY = 'is_selected_item_mod
 
 /**
  * Default decision function that returns the item's current `selected` state (defaulting to false).
+ *
+ * @param item - the list item to check for selection
+ * @returns `true` if the item is currently selected, `false` otherwise
  */
 export const DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION: DbxValueListItemDecisionFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
   return item.selected ?? false;

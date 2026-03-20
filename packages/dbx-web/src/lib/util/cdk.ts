@@ -28,6 +28,8 @@ export function disableRightClickInCdkBackdrop(classes: string = 'cdk-overlay-co
     target.addEventListener('contextmenu', eventListener);
     return () => target.removeEventListener('contextmenu', eventListener);
   } else {
-    return () => {};
+    return () => {
+      /* noop */
+    };
   }
 }

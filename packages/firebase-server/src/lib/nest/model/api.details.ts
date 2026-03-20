@@ -121,7 +121,6 @@ export interface OnCallApiDetailsRef {
  * @returns True if the details contain a specifiers map.
  */
 export function isOnCallModelTypeApiDetails(details: OnCallApiDetails): details is OnCallModelTypeApiDetails {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return details != null && 'specifiers' in details;
 }
 
@@ -132,7 +131,6 @@ export function isOnCallModelTypeApiDetails(details: OnCallApiDetails): details 
  * @returns True if the details contain a modelTypes map.
  */
 export function isOnCallCrudModelApiDetails(details: OnCallApiDetails): details is OnCallCrudModelApiDetails {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return details != null && 'modelTypes' in details;
 }
 
@@ -143,7 +141,6 @@ export function isOnCallCrudModelApiDetails(details: OnCallApiDetails): details 
  * @returns True if the details are handler-level (no specifiers or modelTypes).
  */
 export function isOnCallHandlerApiDetails(details: OnCallApiDetails): details is OnCallModelFunctionApiDetails {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return details != null && !('specifiers' in details) && !('modelTypes' in details);
 }
 

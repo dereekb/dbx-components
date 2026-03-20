@@ -16,6 +16,10 @@ export interface DbxEmbedDialogConfig extends Omit<MatDialogConfig, 'data'> {
 /**
  * Opens a dialog containing a {@link DbxEmbedComponent} to display embedded content from a URL or Blob.
  *
+ * @param matDialog - The Angular Material dialog service used to open the dialog
+ * @param config - Configuration specifying the content source (URL or Blob), MIME type, and dialog options
+ * @returns A reference to the opened dialog for controlling or subscribing to its lifecycle
+ *
  * @example
  * ```ts
  * const ref = openEmbedDialog(matDialog, { srcUrl: 'https://example.com/doc.pdf', embedMimeType: 'application/pdf' });

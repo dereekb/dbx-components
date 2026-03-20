@@ -92,6 +92,8 @@ export class DbxLinkifyService {
   // MARK: Get
   /**
    * Returns the default entry.
+   *
+   * @returns the default linkify service entry, or undefined if none is registered
    */
   getDefaultEntry(): Maybe<DbxLinkifyServiceEntry> {
     return this._entries.get(DEFAULT_DBX_LINKIFY_STRING_TYPE);
@@ -99,6 +101,9 @@ export class DbxLinkifyService {
 
   /**
    * Returns the entry for the given type.
+   *
+   * @param type - the linkify string type to look up
+   * @returns the registered entry for the given type, or undefined if not found
    */
   getEntryRegisteredForType(type: DbxLinkifyStringType): Maybe<DbxLinkifyServiceEntry> {
     return this._entries.get(type);
@@ -106,6 +111,9 @@ export class DbxLinkifyService {
 
   /**
    * Returns the entry for the given type, or the default type if there is no entry registered or the input type is null/undefined.
+   *
+   * @param type - the linkify string type to look up, or nullish to retrieve the default entry
+   * @returns the matching entry, or the default entry if the type is not provided
    */
   getEntry(type?: Maybe<DbxLinkifyStringType>): Maybe<DbxLinkifyServiceEntry> {
     return type ? this._entries.get(type) : this.getDefaultEntry();

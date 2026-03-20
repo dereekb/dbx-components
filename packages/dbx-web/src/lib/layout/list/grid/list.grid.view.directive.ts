@@ -32,4 +32,5 @@ export abstract class AbstractDbxListGridViewDirective<T> extends AbstractDbxLis
 /**
  * @deprecated use DBX_LIST_GRID_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const dbxListGridViewComponentImportsAndExports = DBX_LIST_GRID_VIEW_COMPONENT_IMPORTS_AND_EXPORTS;

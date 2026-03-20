@@ -9,6 +9,8 @@ import { MemoryStorageObject } from './storage.object.memory';
  * Creates the default {@link FullStorageObject}, preferring `localStorage` and
  * falling back to an in-memory store if `localStorage` is unavailable.
  *
+ * @returns A FullStorageObject backed by localStorage or an in-memory fallback.
+ *
  * @example
  * ```typescript
  * const storage = defaultStorageObjectFactory();
@@ -29,6 +31,8 @@ export function defaultStorageObjectFactory(): FullStorageObject {
  * Registers the default storage object and {@link SimpleStorageAccessorFactory} as environment-level providers.
  *
  * Call in your application config to enable storage-based services throughout the app.
+ *
+ * @returns The environment providers for storage services.
  *
  * @example
  * ```typescript

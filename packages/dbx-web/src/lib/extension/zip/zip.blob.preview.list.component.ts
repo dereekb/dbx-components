@@ -13,6 +13,9 @@ export type DbxZipPreviewEntryWithSelection = DbxValueAsListItem<DbxZipBlobPrevi
 /**
  * Returns the appropriate Material icon name for a zip entry tree node: "folder" for directories, "note" for files with a known MIME type, or "question_mark" for unknown files.
  *
+ * @param entry - The zip entry tree node to determine the icon for
+ * @returns The Material icon name: "folder", "note", or "question_mark"
+ *
  * @example
  * ```typescript
  * const icon = iconForDbxZipPreviewEntryWithSelection(treeNode); // 'folder', 'note', or 'question_mark'

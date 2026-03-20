@@ -75,6 +75,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 
   readonly configSignal = toSignal(this.config$);
 
+  // eslint-disable-next-line @angular-eslint/prefer-inject
   constructor(initConfig: ObservableOrValue<C>) {
     this._config.next(initConfig);
   }

@@ -11,8 +11,8 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 describe('Action Button', () => {
   const sub = new SubscriptionObject();
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({});
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
   });
 
   afterEach(() => {
@@ -128,7 +128,7 @@ describe('Action Button', () => {
 @Component({
   template: `
     <div dbxAction>
-      <button dbxButton dbxActionButtonTrigger></button>
+      <button dbxButton dbxActionButtonTrigger>Trigger</button>
     </div>
   `,
   standalone: true,
@@ -143,7 +143,7 @@ class TestDbxActionButtonTriggerDirectiveComponent {
 @Component({
   template: `
     <div dbxAction>
-      <button dbxButton dbxActionButton></button>
+      <button dbxButton dbxActionButton>Action</button>
     </div>
   `,
   standalone: true,

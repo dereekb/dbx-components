@@ -24,6 +24,7 @@ import { formatToTimeString, toJsDate } from '@dereekb/date';
 export class DateFormatFromToPipe implements PipeTransform {
   private readonly locale = inject(LOCALE_ID);
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   static formatFromTo(input: Maybe<DateOrDateString>, format: string, minutes: Minutes, locale: string): Maybe<string> {
     if (input) {
       const date = toJsDate(input);

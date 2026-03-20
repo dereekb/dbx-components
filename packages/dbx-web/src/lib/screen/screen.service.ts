@@ -3,7 +3,7 @@ import { MediaMatcher } from '@angular/cdk/layout';
 import { type ObservableOrValue, asObservable, initialize } from '@dereekb/rxjs';
 import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, type Observable, combineLatest } from 'rxjs';
 import { type ScreenMediaWidthType, type ScreenMediaHeightType, screenMediaWidthTypeIsActive } from './screen';
-import { Inject, Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 /**
  * Abstract configuration class for {@link DbxScreenMediaService} defining responsive breakpoints.
@@ -87,8 +87,8 @@ export class DbxScreenMediaService implements Destroyable {
     shareReplay(1)
   );
 
-  constructor(@Inject(DbxScreenMediaServiceConfig) config: DbxScreenMediaServiceConfig) {
-    const { microScreenWidthMax, smallScreenWidthMax, tabletScreenWidthMax, largeScreenWidthMax } = config;
+  constructor() {
+    const { microScreenWidthMax, smallScreenWidthMax, tabletScreenWidthMax, largeScreenWidthMax } = inject(DbxScreenMediaServiceConfig);
 
     this._microQuery = this._media.matchMedia(`screen and (max-width:${microScreenWidthMax}px)`);
     this._smallQuery = this._media.matchMedia(`screen and (max-width:${smallScreenWidthMax}px)`);

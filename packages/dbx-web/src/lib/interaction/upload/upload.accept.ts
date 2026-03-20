@@ -8,8 +8,8 @@ export type FileAcceptString = string;
 /**
  * Returns a string that can be used as the "accept" attribute of a file input element.
  *
- * @param accept
- * @returns
+ * @param accept - A file accept string or array of filter type strings to convert
+ * @returns A comma-separated string suitable for the HTML accept attribute
  */
 export function fileAcceptString(accept: FileAcceptString | FileAcceptFilterTypeStringArray): FileAcceptString {
   return typeof accept === 'string' ? accept : accept.join(',');
@@ -29,6 +29,9 @@ export type FileAcceptFilterTypeStringArray = FileAcceptFilterTypeString[];
 
 /**
  * Converts a comma-separated accept string or array into a {@link FileAcceptFilterTypeStringArray}.
+ *
+ * @param accept - A file accept string or array of filter type strings to normalize
+ * @returns An array of individual filter type strings
  *
  * @example
  * ```ts
@@ -95,6 +98,9 @@ export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMat
 /**
  * Creates a {@link FileArrayAcceptMatchFunction} that filters and separates files based on accept criteria and multiple file support.
  *
+ * @param config - Configuration specifying the accept criteria and whether multiple files are allowed
+ * @returns A function that accepts an array of files and returns the categorized match result
+ *
  * @example
  * ```ts
  * const matchFn = fileArrayAcceptMatchFunction({ accept: 'image/*', multiple: false });
@@ -136,6 +142,9 @@ export type FileAcceptFunction = DecisionFunction<FileAcceptFunctionInput>;
 /**
  * Creates a {@link FileAcceptFunction} that checks individual files against accept criteria (MIME types, wildcards, or file extensions).
  *
+ * @param accept - A file accept string or array specifying which MIME types, wildcards, or file extensions to allow
+ * @returns A decision function that returns true if a file matches any of the accept criteria
+ *
  * @example
  * ```ts
  * const isAccepted = fileAcceptFunction(['image/*', '.pdf']);
@@ -150,7 +159,7 @@ export function fileAcceptFunction(accept: FileAcceptString | FileAcceptFilterTy
   if (acceptList.length === 0) {
     fileAcceptFunction = asDecisionFunction(true);
   } else {
-    const hasWildcard = acceptList.some((x) => x === '*');
+    const hasWildcard = acceptList.includes('*');
 
     if (hasWildcard) {
       fileAcceptFunction = asDecisionFunction(true);
@@ -170,7 +179,7 @@ export function fileAcceptFunction(accept: FileAcceptString | FileAcceptFilterTy
       });
 
       fileAcceptFunction = (input: FileAcceptFunctionInput) => {
-        return isAcceptedFunctions.findIndex((x) => x(input)) !== -1;
+        return isAcceptedFunctions.some((x) => x(input));
       };
     }
   }

@@ -156,7 +156,6 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
       rolesSetIncludes: select.rolesSetIncludes
     } as UseFirebaseModelsServiceSelection<Y, T>);
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- `use` may be undefined when select is UseModelInputForRolesReader despite the cast
     const use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O> = (select as UseModelInput<FirebaseAppModelContext<A>, Y, T, O>).use ?? ((x) => x as unknown as O);
     return usePromise(use);
   }

@@ -40,6 +40,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 export class DbxAnchorContentComponent {
   readonly parent = inject(DbxAnchorComponent, { optional: true });
 
+  // eslint-disable-next-line @angular-eslint/no-input-rename
   readonly inputAnchor = input<Maybe<Partial<ClickableAnchorLink>>>(undefined, { alias: 'anchor' });
 
   private readonly _inputAnchor = toObservable(this.inputAnchor);

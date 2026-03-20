@@ -33,6 +33,8 @@ export enum DbxRouterTransitionEventType {
  * @see {@link DbxRouterTransitionService}
  */
 export interface DbxRouterTransitionEvent {
-  /** The type of transition event (start or success). */
+  /**
+   * The type of transition event (start or success).
+   */
   type: DbxRouterTransitionEventType;
 }

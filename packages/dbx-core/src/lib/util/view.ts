@@ -11,6 +11,7 @@ import { type Maybe } from '@dereekb/util';
  *
  * @param cdRef - The change detector to trigger. If `null`/`undefined`, the operator is a no-op.
  * @param timeout - Delay in milliseconds before calling `detectChanges`.
+ * @returns An RxJS operator that triggers change detection on each emission.
  *
  * @example
  * ```typescript
@@ -18,6 +19,7 @@ import { type Maybe } from '@dereekb/util';
  * ```
  */
 export function tapDetectChanges<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0): MonoTypeOperatorFunction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return cdRef ? tap(() => setTimeout(() => safeDetectChanges(cdRef), timeout)) : tap();
 }
 
@@ -29,6 +31,7 @@ export function tapDetectChanges<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0
  * @param cdRef - The change detector to trigger.
  */
 export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   safeUseCdRef(cdRef, () => cdRef.detectChanges());
 }
 
@@ -42,6 +45,7 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
  *
  * @param cdRef - The change detector to mark. If `null`/`undefined`, the operator is a no-op.
  * @param timeout - Delay in milliseconds before calling `markForCheck`.
+ * @returns An RxJS operator that marks the view for check on each emission.
  *
  * @example
  * ```typescript
@@ -49,6 +53,7 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
  * ```
  */
 export function tapSafeMarkForCheck<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0): MonoTypeOperatorFunction<T> {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return cdRef ? tap(() => setTimeout(() => safeMarkForCheck(cdRef), timeout)) : tap();
 }
 
@@ -60,6 +65,7 @@ export function tapSafeMarkForCheck<T>(cdRef: Maybe<ChangeDetectorRef>, timeout 
  * @param cdRef - The change detector to mark.
  */
 export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   safeUseCdRef(cdRef, () => cdRef.markForCheck());
 }
 
@@ -84,6 +90,7 @@ export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetect
  * Useful for conditionally showing fallback content when no projection is provided.
  *
  * @param ref - Reference to the wrapper element around `ng-content`.
+ * @returns `true` if the wrapper element has any child nodes.
  *
  * @example
  * ```typescript

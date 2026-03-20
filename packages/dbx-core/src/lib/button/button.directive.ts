@@ -107,6 +107,8 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
 
   /**
    * Sets the button interceptor. If any interceptor is already set, it is replaced.
+   *
+   * @param interceptor - The interceptor to set on the button.
    */
   public setButtonInterceptor(interceptor: DbxButtonInterceptor): void {
     this._buttonInterceptor.next(interceptor);

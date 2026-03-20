@@ -280,7 +280,6 @@ export function initializeAllApplicableStorageFileGroupsFactory(context: Storage
         );
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
       while (true) {
         const initializeStorageFileGroupsResults = await initializeStorageFileGroups();
         initializeStorageFileGroupsResults.results.forEach((x) => {

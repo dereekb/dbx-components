@@ -74,7 +74,6 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
   // when the onCallModel closure is shared as a module-level singleton.
   function getAnalyticsService(request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>): Maybe<OnCallModelAnalyticsService> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       return request?.nestApplication?.get(resolvedToken, { strict: false });
     } catch {
       // silent — analytics is optional
@@ -91,7 +90,6 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
 
     const callFn = map[call];
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!callFn) {
       throw onCallModelUnknownCallTypeError(call);
     }

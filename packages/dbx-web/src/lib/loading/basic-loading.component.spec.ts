@@ -93,7 +93,7 @@ describe('DbxBasicLoadingComponent', () => {
 
           waitForComponentToBeLoading(() => {
             runInInjectionContext(injector, () => {
-              toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
+              toObservable(fixture.componentInstance.component()!.hasNoCustomLoadingSignal)
                 .pipe(
                   filter((x) => x),
                   first()
@@ -116,7 +116,7 @@ describe('DbxBasicLoadingComponent', () => {
 
           waitForComponentToBeLoading(() => {
             runInInjectionContext(injector, () => {
-              toObservable(fixture.componentInstance.component()?.hasNoCustomLoadingSignal!)
+              toObservable(fixture.componentInstance.component()!.hasNoCustomLoadingSignal)
                 .pipe(
                   filter((x) => x),
                   first()
@@ -170,7 +170,7 @@ describe('DbxBasicLoadingComponent', () => {
 
           waitForComponentToHaveError(() => {
             runInInjectionContext(injector, () => {
-              toObservable(fixture.componentInstance.component()?.hasNoCustomErrorSignal!)
+              toObservable(fixture.componentInstance.component()!.hasNoCustomErrorSignal)
                 .pipe(
                   filter((x) => x),
                   first()
@@ -228,7 +228,7 @@ describe('DbxBasicLoadingComponent', () => {
           const injector = TestBed.inject(Injector);
 
           runInInjectionContext(injector, () => {
-            toObservable(component.component()?.hasNoCustomErrorSignal!)
+            toObservable(component.component()!.hasNoCustomErrorSignal)
               .pipe(
                 filter((x) => !x),
                 first()
@@ -280,7 +280,7 @@ describe('DbxBasicLoadingComponent', () => {
           const injector = TestBed.inject(Injector);
 
           runInInjectionContext(injector, () => {
-            toObservable(component.component()?.hasNoCustomLoadingSignal!)
+            toObservable(component.component()!.hasNoCustomLoadingSignal)
               .pipe(
                 filter((x) => !x),
                 first()
@@ -304,7 +304,7 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
   template: `
     <dbx-basic-loading [loading]="loadingSignal()" [error]="errorSignal()">
       <div>
-        <p id="test-content">${TEST_CONTENT}</p>
+        <p id="test-content">Content</p>
       </div>
     </dbx-basic-loading>
   `,
@@ -323,7 +323,7 @@ class BasicLoadingWithContentComponent {
   template: `
     <dbx-basic-loading [error]="errorSignal()">
       <div error>
-        <p id="test-error">${CUSTOM_ERROR_CONTENT}</p>
+        <p id="test-error">Error.</p>
       </div>
     </dbx-basic-loading>
   `,
@@ -341,7 +341,7 @@ class BasicLoadingWithCustomErrorComponent {
     <dbx-basic-loading [loading]="loadingSignal()">
       <div>Content</div>
       <div loading>
-        <p id="custom-loading">${CUSTOM_LOADING_CONTENT}</p>
+        <p id="custom-loading">Custom Loading...</p>
       </div>
     </dbx-basic-loading>
   `,

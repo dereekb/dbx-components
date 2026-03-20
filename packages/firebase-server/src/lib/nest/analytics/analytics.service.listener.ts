@@ -52,6 +52,7 @@ export abstract class FirebaseServerAnalyticsServiceListener {
  * @returns A no-op listener that silently discards all analytics events.
  */
 export function noopFirebaseServerAnalyticsServiceListener(): FirebaseServerAnalyticsServiceListener {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const noop = () => {};
 
   return {

@@ -56,9 +56,9 @@ export interface NotificationExpediteServiceInstance {
 
 /**
  * Creates a new NotificationExpediteServiceInstance with the input NotificationExpediteService.
- *
- * @param notificationExpediteService - the expedite service used to send enqueued notifications
- * @returns a new {@link NotificationExpediteServiceInstance} that can enqueue and batch-send notifications
+ 
+ * @param notificationExpediteService - the expedite service to use for sending
+ * @returns a new {@link NotificationExpediteServiceInstance} with an internal queue
  */
 export function notificationExpediteServiceInstance(notificationExpediteService: NotificationExpediteService): NotificationExpediteServiceInstance {
   let _documentsToSend: NotificationDocument[] = [];
@@ -72,8 +72,14 @@ export function notificationExpediteServiceInstance(notificationExpediteService:
   };
 
   const enqueueCreateResult = (createResult: CreateNotificationDocumentPairResult) => {
-    enqueue(createResult.notificationDocument);
-    return true;
+    let enqueued = false;
+
+    if (createResult.notificationDocument) {
+      enqueue(createResult.notificationDocument);
+      enqueued = true;
+    }
+
+    return enqueued;
   };
 
   const send = async (options?: Maybe<NotificationExpediteServiceSendNotificationOptions>) => {
@@ -122,7 +128,7 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
   /**
    * Sets the NotificationServerActions instance to use.
    *
-   * @param notificationServerActions - the actions instance to configure on this service
+   * @param notificationServerActions - the actions instance to configure
    */
   setNotificationServerActions(notificationServerActions: NotificationServerActions) {
     this._notificationServerActions = notificationServerActions;
@@ -144,7 +150,7 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
  *
  * This should generally be used in the global module of an app.
  *
- * @returns an array of NestJS providers for the mutable expedite service
+ * @returns an array of NestJS providers for both MutableNotificationExpediteService and NotificationExpediteService
  */
 export function provideMutableNotificationExpediteService(): Provider[] {
   return [
@@ -161,8 +167,9 @@ export function provideMutableNotificationExpediteService(): Provider[] {
  *
  * This should generally be used in the global module of an app.
  *
- * @returns an array of abstract types to export from the NestJS module
+ * @returns an array of abstract classes to export from the NestJS module
  */
-export function exportMutableNotificationExpediteService(): Abstract<unknown>[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function exportMutableNotificationExpediteService(): Abstract<any>[] {
   return [NotificationExpediteService, MutableNotificationExpediteService];
 }

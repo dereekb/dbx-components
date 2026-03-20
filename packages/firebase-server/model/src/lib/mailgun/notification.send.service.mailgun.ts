@@ -114,7 +114,6 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const builderForKey = lowercaseKeysMessageBuilders[sendTemplateNameToLowercase as any];
 
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive check for runtime record access
           if (!builderForKey) {
             throw new Error(`mailgunNotificationEmailSendService(): A template builder was not available for template type "${sendTemplateName}".`);
           } else {

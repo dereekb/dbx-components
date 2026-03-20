@@ -306,7 +306,6 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
 
       // iterate through all NotificationBox items that need to be synced
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
       while (true) {
         const initializeNotificationBoxesResults = await initializeNotificationBoxes();
         initializeNotificationBoxesResults.results.forEach((x) => {
@@ -432,7 +431,6 @@ export function initializeAllApplicableNotificationSummariesFactory(context: Not
 
       // iterate through all NotificationSummary items that need to be synced
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
       while (true) {
         const initializeNotificationSummariesResults = await initializeNotificationSummaries();
         initializeNotificationSummariesResults.results.forEach((x) => {

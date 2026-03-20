@@ -57,11 +57,9 @@ export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boo
   }
 
   static openDialog(matDialog: MatDialog, config?: Maybe<DbxPromptConfirmDialogConfig>): MatDialogRef<DbxPromptConfirmDialogComponent, boolean> {
-    const dialogRef = matDialog.open(DbxPromptConfirmDialogComponent, {
+    return matDialog.open(DbxPromptConfirmDialogComponent, {
       data: config ?? DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG
     });
-
-    return dialogRef;
   }
 
   confirm(): void {

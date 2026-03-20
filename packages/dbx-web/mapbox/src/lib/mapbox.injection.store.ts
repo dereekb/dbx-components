@@ -50,7 +50,7 @@ export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectio
   );
 
   readonly allInjectionConfigs$: Observable<DbxMapboxInjectionConfig[]> = this.map$.pipe(
-    map((x) => Array.from(x.values())),
+    map((x) => [...x.values()]),
     shareReplay(1)
   );
 
@@ -59,11 +59,25 @@ export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectio
   readonly removeInjectionConfigWithKey = this.updater(updateDbxMapboxMapInjectionStoreStateWithRemovedKey);
 }
 
+/**
+ * Returns an updated store state with the given injection config added or replaced in the map, keyed by its unique key.
+ *
+ * @param state - The current mapbox injection store state.
+ * @param config - The injection configuration to add or update.
+ * @returns The updated store state containing the new or replaced config.
+ */
 export function updateDbxMapboxMapInjectionStoreStateWithInjectionConfig(state: DbxMapboxMapInjectionStoreState, config: DbxMapboxInjectionConfig) {
   const map = new Map(state.map).set(config.key, config);
   return { ...state, map };
 }
 
+/**
+ * Returns an updated store state with the injection config for the given key removed. If the key does not exist, returns the state unchanged.
+ *
+ * @param state - The current mapbox injection store state.
+ * @param key - The injection key to remove from the map.
+ * @returns The updated store state with the key removed, or the original state if the key was not present.
+ */
 export function updateDbxMapboxMapInjectionStoreStateWithRemovedKey(state: DbxMapboxMapInjectionStoreState, key: DbxMapboxInjectionKey) {
   // only create a new state if the key is going to get removed
   if (state.map.has(key)) {

@@ -41,10 +41,14 @@ export class DbxAppAuthRouterService implements OnDestroy {
   private readonly _isAuthRouterEffectsEnabled = new BehaviorSubject<boolean>(true);
   private readonly _ignoredRoutes = new BehaviorSubject<Set<SegueRefOrSegueRefRouterLink>>(new Set());
 
-  /** Observable of whether auth router effects are currently enabled. */
+  /**
+   * Observable of whether auth router effects are currently enabled.
+   */
   readonly isAuthRouterEffectsEnabled$ = this._isAuthRouterEffectsEnabled.asObservable();
 
-  /** Observable of the set of route refs that are excluded from auth redirect effects. */
+  /**
+   * Observable of the set of route refs that are excluded from auth redirect effects.
+   */
   readonly ignoredRoutes$ = this._ignoredRoutes.asObservable();
 
   /**
@@ -80,6 +84,8 @@ export class DbxAppAuthRouterService implements OnDestroy {
   // MARK: Effects
   /**
    * Whether or not DbxAppAuthRouterEffects are enabled.
+   *
+   * @returns Whether auth router effects are currently enabled.
    */
   get isAuthRouterEffectsEnabled(): boolean {
     return this._isAuthRouterEffectsEnabled.value;
@@ -96,6 +102,8 @@ export class DbxAppAuthRouterService implements OnDestroy {
    *
    * Uses hierarchical matching — adding a parent route (e.g., `'/app/oauth'`)
    * will also ignore all child routes (e.g., `'/app/oauth/login'`).
+   *
+   * @param ref - The route ref to add to the ignored set.
    */
   addIgnoredRoute(ref: SegueRefOrSegueRefRouterLink): void {
     const current = this._ignoredRoutes.value;
@@ -106,6 +114,8 @@ export class DbxAppAuthRouterService implements OnDestroy {
 
   /**
    * Removes a route from the ignored set.
+   *
+   * @param ref - The route ref to remove from the ignored set.
    */
   removeIgnoredRoute(ref: SegueRefOrSegueRefRouterLink): void {
     const current = this._ignoredRoutes.value;
@@ -116,6 +126,8 @@ export class DbxAppAuthRouterService implements OnDestroy {
 
   /**
    * Returns `true` if the current route matches any of the ignored routes.
+   *
+   * @returns Whether the current route is in the ignored set.
    */
   get isCurrentRouteIgnoredByAuthEffects(): boolean {
     return this._checkCurrentRouteIgnored(this._ignoredRoutes.value);

@@ -99,8 +99,7 @@ export abstract class AbstractProgressButtonDirective {
     const config = this.configSignal();
     const configWorking = config?.working;
 
-    const workingProgress = dbxActionWorkProgress([working, configWorking]);
-    return workingProgress;
+    return dbxActionWorkProgress([working, configWorking]);
   });
 
   readonly isWorkingSignal = computed(() => isDefinedAndNotFalse(this.workingProgressSignal()));

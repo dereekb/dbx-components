@@ -16,6 +16,9 @@ import { type Subject } from 'rxjs';
  * @example
  * // Clean up a destroy function directly:
  * clean(() => resource.release());
+ *
+ * @param input - The Destroyable object or destroy function to register for cleanup.
+ * @returns The same input, for chaining.
  */
 export function clean<T extends Destroyable | DestroyFunction>(input: T): T {
   const destroyRef = inject(DestroyRef);
@@ -42,8 +45,11 @@ export function clean<T extends Destroyable | DestroyFunction>(input: T): T {
  * @example
  * // Complete a ReplaySubject when the component is destroyed:
  * readonly events$ = completeOnDestroy(new ReplaySubject<Event>(1));
+ *
+ * @param input - The Subject to register for completion on destroy.
+ * @returns The same input, for chaining.
  */
-export function completeOnDestroy<T extends Pick<Subject<any>, 'complete' | 'error'>>(input: T): T {
+export function completeOnDestroy<T extends Pick<Subject<unknown>, 'complete' | 'error'>>(input: T): T {
   clean(() => input.complete());
   return input;
 }

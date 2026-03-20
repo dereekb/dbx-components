@@ -1,4 +1,4 @@
-import { OIDC_ENTRY_CLIENT_TYPE, type OidcEntry } from '@dereekb/firebase';
+import { OIDC_ENTRY_CLIENT_TYPE, OidcEntryOAuthClientPayloadData, type OidcEntry } from '@dereekb/firebase';
 import { Component, input } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, provideDbxListView, type DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
@@ -50,13 +50,13 @@ export class DbxFirebaseOidcEntryClientListViewItemClientComponent {
   readonly entry = input.required<OidcEntry>();
 
   get name(): string {
-    const payload = this.entry().payload as Record<string, unknown>;
-    return (payload?.['client_name'] as string) || 'OAuth Client';
+    const payload = this.entry().payload as Partial<OidcEntryOAuthClientPayloadData>;
+    return payload?.client_name || 'OAuth Client';
   }
 
   get clientId(): string {
-    const payload = this.entry().payload as Record<string, unknown>;
-    return (payload?.['client_id'] as string) || '';
+    const payload = this.entry().payload as Partial<OidcEntryOAuthClientPayloadData>;
+    return payload?.client_id || '';
   }
 }
 

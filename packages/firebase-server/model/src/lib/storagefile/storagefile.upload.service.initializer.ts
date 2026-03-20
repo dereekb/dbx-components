@@ -255,6 +255,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
   return {
     checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized ?? asDecisionFunction(true),
     determineUploadFileType,
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     initializeFromUpload: async (input: StorageFileInitializeFromUploadInput) => {
       const determinerResult = await determineUploadFileType(input);
 
@@ -266,12 +267,9 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
       if (determinerResult) {
         const { input: fileDetailsAccessor } = determinerResult;
-
         resultType = 'success';
 
         const initializer = initializers[determinerResult.type];
-
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- record access may return undefined at runtime
         if (initializer) {
           try {
             const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });
@@ -297,7 +295,6 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
             } else {
               let flagPreviousForDelete: Maybe<StorageFilePurposeAndUserQueryInput>;
 
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- discriminating union variant via type assertion
               if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult).createStorageFileResult) {
                 const { createStorageFileResult, flagPreviousForDelete: flagPreviousForDeleteResult } = initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult;
 
@@ -328,7 +325,6 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
               }
 
               // sanitize the returned value, incase the result comes from a transaction
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive check; type assertions above may not hold at runtime
               if (storageFileDocument) {
                 storageFileDocument = storageFileCollection.documentAccessor().loadDocumentFrom(storageFileDocument);
               }

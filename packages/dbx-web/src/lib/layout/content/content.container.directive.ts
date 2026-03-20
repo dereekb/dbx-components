@@ -39,7 +39,6 @@ export class DbxContentContainerDirective {
   readonly topPadding = input<DbxContentContainerPadding>('none');
 
   readonly classConfig = computed(() => {
-    const classConfig = 'container-' + this.grow() + ' container-padding-' + this.padding() + ' container-top-padding-' + this.topPadding();
-    return classConfig;
+    return 'container-' + this.grow() + ' container-padding-' + this.padding() + ' container-top-padding-' + this.topPadding();
   });
 }

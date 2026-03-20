@@ -8,5 +8,5 @@ import { fromDbxAppContext } from './state';
  * @returns EnvironmentProviders
  */
 export function provideDbxAppContextState(): EnvironmentProviders {
-  return makeEnvironmentProviders([provideState(fromDbxAppContext.featureKey, fromDbxAppContext.reducers)]);
+  return makeEnvironmentProviders([provideState(fromDbxAppContext.FEATURE_KEY, fromDbxAppContext.reducers)]);
 }

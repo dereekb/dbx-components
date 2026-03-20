@@ -32,6 +32,9 @@ export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends 
 
 /**
  * Type guard that checks if an object is a {@link ClickableFilterPreset}.
+ *
+ * @param preset - The object to check.
+ * @returns `true` if the object has a `presetValue` property.
  */
 export function isClickableFilterPreset<F extends FilterWithPreset<P>, P extends string = string>(preset: object): preset is ClickableFilterPreset<F, P> {
   return objectHasKey(preset, 'presetValue');
@@ -60,6 +63,9 @@ export interface ClickablePartialFilterPreset<F> extends Pick<ClickableAnchorLin
 
 /**
  * Type guard that checks if an object is a {@link ClickablePartialFilterPreset}.
+ *
+ * @param preset - The object to check.
+ * @returns `true` if the object has `partialPresetValue` and `isActive` properties.
  */
 export function isClickablePartialFilterPreset<F>(preset: object): preset is ClickablePartialFilterPreset<F> {
   return objectHasKeys(preset, ['partialPresetValue', 'isActive']);

@@ -17,7 +17,7 @@ export class DbxHelpContextService {
    */
   readonly activeHelpContextKeys$: Observable<Set<DbxHelpContextKey>> = this._contextReferences.pipe(
     switchMap((allReferences) =>
-      combineLatest(Array.from(allReferences).map((ref) => ref.helpContextKeys$)).pipe(
+      combineLatest([...allReferences].map((ref) => ref.helpContextKeys$)).pipe(
         map((x) => x.flat()),
         defaultIfEmpty([]),
         map((x) => new Set(x))
@@ -31,7 +31,7 @@ export class DbxHelpContextService {
    * Observable array of all currently active help context key strings.
    */
   readonly activeHelpContextKeysArray$ = this.activeHelpContextKeys$.pipe(
-    map((x) => Array.from(x)),
+    map((x) => [...x]),
     shareReplay(1)
   );
 

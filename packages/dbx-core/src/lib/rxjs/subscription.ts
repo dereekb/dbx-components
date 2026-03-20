@@ -16,6 +16,9 @@ import { clean } from './clean';
  * // Or create first, then set the subscription later:
  * readonly _sub = cleanSubscription();
  * this._sub.subscription = obs$.subscribe(handler);
+ *
+ * @param sub - Optional subscription or getter to wrap.
+ * @returns A SubscriptionObject that is automatically destroyed when the context is destroyed.
  */
 export function cleanSubscription<T extends Unsubscribable = Unsubscribable>(sub?: Maybe<GetterOrValue<T>>): SubscriptionObject<T> {
   const subscription = getValueFromGetter(sub);

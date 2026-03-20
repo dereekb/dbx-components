@@ -256,7 +256,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   async loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>> {
     const claims = await this.loadClaims<T>();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- claims are cast from raw custom claims which may not have resetPassword at runtime
+
     const result: Maybe<T> = claims.resetPassword != null ? claims : undefined;
     return result;
   }

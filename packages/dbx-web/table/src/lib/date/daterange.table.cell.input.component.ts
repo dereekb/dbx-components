@@ -157,6 +157,14 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent {
   }
 }
 
+/**
+ * Creates an injection component config for a date-range day-distance input cell.
+ *
+ * Initializes the component with the provided configuration for day distance, date bounds, and button format.
+ *
+ * @param componentConfig - optional configuration for the date range input (day distance, min/max dates, button format)
+ * @returns an injection component config that renders a {@link DbxTableDateRangeDayDistanceInputCellInputComponent}
+ */
 export function dbxTableDateRangeDayDistanceInputCellInput(componentConfig?: DbxTableDateRangeDayDistanceInputCellInputComponentConfig): DbxInjectionComponentConfig<DbxTableDateRangeDayDistanceInputCellInputComponent> {
   const config: DbxInjectionComponentConfig<DbxTableDateRangeDayDistanceInputCellInputComponent> = {
     componentClass: DbxTableDateRangeDayDistanceInputCellInputComponent,

@@ -65,7 +65,7 @@ export abstract class AbstractMailgunContentFirebaseServerNewUserService<U exten
           uid
         }
       },
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional
+
       sendTestEmails: baseRequest.sendTestEmails || user.sendDetailsInTestEnvironment || undefined
     });
   }

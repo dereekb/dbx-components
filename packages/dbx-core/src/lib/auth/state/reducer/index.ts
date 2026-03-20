@@ -6,7 +6,7 @@ import * as fromDbxAppAuthUserState from './user.reducer';
  *
  * The auth state is registered under `'app.auth'` in the root NgRx state tree.
  */
-export const featureKey = 'app.auth';
+export const FEATURE_KEY = 'app.auth';
 
 /**
  * Shape of the auth feature state slice, containing all auth-related sub-states.
@@ -17,7 +17,7 @@ export const featureKey = 'app.auth';
  * @see {@link DbxAppAuthStateUser} for the user sub-state shape.
  */
 export interface DbxAppAuthFeatureState {
-  [fromDbxAppAuthUserState.dbxAppAuthUserFeatureKey]: fromDbxAppAuthUserState.DbxAppAuthStateUser;
+  [fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]: fromDbxAppAuthUserState.DbxAppAuthStateUser;
 }
 
 /**
@@ -29,7 +29,7 @@ export interface DbxAppAuthFeatureState {
  * @see {@link DbxAppAuthFullState} for the public alias of this type.
  */
 export interface State {
-  [featureKey]: DbxAppAuthFeatureState;
+  [FEATURE_KEY]: DbxAppAuthFeatureState;
 }
 
 /**
@@ -44,14 +44,14 @@ export interface State {
  */
 export function reducers(state: DbxAppAuthFeatureState | undefined, action: Action) {
   return combineReducers({
-    [fromDbxAppAuthUserState.dbxAppAuthUserFeatureKey]: fromDbxAppAuthUserState.reducer
+    [fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]: fromDbxAppAuthUserState.reducer
   })(state, action);
 }
 
 /**
  * NgRx feature selector that retrieves the entire {@link DbxAppAuthFeatureState} from the global store.
  */
-export const selectAppAuthFeature = createFeatureSelector<DbxAppAuthFeatureState>(featureKey);
+export const selectAppAuthFeature = createFeatureSelector<DbxAppAuthFeatureState>(FEATURE_KEY);
 
 /**
  * NgRx selector that retrieves the {@link DbxAppAuthStateUser} from the auth feature state.
@@ -60,4 +60,4 @@ export const selectAppAuthFeature = createFeatureSelector<DbxAppAuthFeatureState
  *
  * @see {@link DbxAppAuthStateService.authStateUser$} for the observable wrapper.
  */
-export const selectDbxAppAuthUser = createSelector(selectAppAuthFeature, (featureState: DbxAppAuthFeatureState) => featureState[fromDbxAppAuthUserState.dbxAppAuthUserFeatureKey]);
+export const selectDbxAppAuthUser = createSelector(selectAppAuthFeature, (featureState: DbxAppAuthFeatureState) => featureState[fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]);

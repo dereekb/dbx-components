@@ -18,10 +18,11 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> {
   }
 
   private _showPopoverRef(origin?: ElementRef): void {
-    this._popoverRef = this._makePopoverRef(origin);
-    this._afterOpened(this._popoverRef);
+    const popoverRef = this._makePopoverRef(origin);
+    this._popoverRef = popoverRef;
+    this._afterOpened(popoverRef);
     this._popoverSub.setSub(
-      this._popoverRef!.afterClosed$.subscribe((x) => {
+      popoverRef.afterClosed$.subscribe((x) => {
         this._afterClosed(x);
         this._popoverRef = undefined;
       })
@@ -30,11 +31,11 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> {
 
   protected abstract _makePopoverRef(origin?: ElementRef): NgPopoverRef<T, R>;
 
-  protected _afterOpened(popoverRef: NgPopoverRef<T, R>): void {
+  protected _afterOpened(_popoverRef: NgPopoverRef<T, R>): void {
     // Do nothing. Override in parent type
   }
 
-  protected _afterClosed(value: NgPopoverCloseEvent<R>): void {
+  protected _afterClosed(_value: NgPopoverCloseEvent<R>): void {
     // Do nothing. Override in parent type
   }
 }

@@ -14,9 +14,7 @@ const CUSTOM_CONTENT = 'Custom Content';
 // TODO(TEST): add tests showing AbstractForwardDbxInjectionContextDirective usage.
 
 @Component({
-  template: `
-    <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
-  `,
+  template: '<span id="custom-content">Custom Content</span>',
   standalone: true
 })
 class TestInjectionContent implements OnDestroy {
@@ -28,10 +26,8 @@ class TestInjectionContent implements OnDestroy {
 }
 
 @Component({
-  selector: 'test-existing-content',
-  template: `
-    <span id="${EXISTING_CONTENT_ID}">${EXISTING_CONTENT}</span>
-  `,
+  selector: 'dbx-test-existing-content',
+  template: '<span id="existing-content">Existing Content</span>',
   standalone: true
 })
 class TestExistingInjectionContent implements OnDestroy {
@@ -57,8 +53,8 @@ class TestInjectionContextDirective<T = any> {
 }
 
 describe('DbxInjectionContextDirective', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [BrowserModule]
     }).compileComponents();
   });
@@ -148,7 +144,7 @@ describe('DbxInjectionContextDirective', () => {
         it(
           'should show the config-injected content.',
           callbackTest((done) => {
-            directive
+            void directive
               .showContext({
                 config: {
                   componentClass: TestInjectionContent
@@ -173,7 +169,7 @@ describe('DbxInjectionContextDirective', () => {
           callbackTest((done) => {
             assetExistingContentVisible();
 
-            directive
+            void directive
               .showContext({
                 config: {
                   componentClass: TestInjectionContent

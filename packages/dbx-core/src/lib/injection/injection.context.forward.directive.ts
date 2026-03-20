@@ -28,6 +28,9 @@ export abstract class AbstractForwardDbxInjectionContextDirective implements Dbx
   // MARK: DbxInjectionContext
   /**
    * {@inheritDoc DbxInjectionContext.showContext}
+   *
+   * @param config - The injection context configuration to forward to the host context.
+   * @returns A promise that resolves with the output of the injected component's usage.
    */
   showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T, unknown>): Promise<O> {
     return this.dbxInjectionContext.showContext(config);
@@ -35,6 +38,8 @@ export abstract class AbstractForwardDbxInjectionContextDirective implements Dbx
 
   /**
    * {@inheritDoc DbxInjectionContext.resetContext}
+   *
+   * @returns `true` if an active context was cleared, `false` otherwise.
    */
   resetContext(): boolean {
     return this.dbxInjectionContext.resetContext();

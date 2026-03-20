@@ -182,7 +182,7 @@ export class DbxZipBlobPreviewComponent {
 
   readonly selectedFileEntry$ = toObservable(this.selectedFileNodeSignal);
   readonly selectedFileEntryBlob$: Observable<Maybe<Blob>> = this.selectedFileEntry$.pipe(
-    switchMap((x) => (x && x.value.getBlob ? x.value.getBlob() : of(undefined))),
+    switchMap((x) => (x?.value.getBlob ? x.value.getBlob() : of(undefined))),
     shareReplay(1)
   );
   readonly selectedFileEntryBlobSignal: Signal<Maybe<Blob>> = toSignal(this.selectedFileEntryBlob$);

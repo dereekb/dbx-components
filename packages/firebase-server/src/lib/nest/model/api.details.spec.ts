@@ -64,6 +64,7 @@ describe('api.details', () => {
     });
 
     it('should attach analytics inside _apiDetails when analytics config is provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const analytics = { onSuccess: () => {} };
       const wrapped = withApiDetails({ analytics, fn: mockHandler() });
       expect(wrapped._apiDetails).toBeDefined();
@@ -78,6 +79,7 @@ describe('api.details', () => {
 
     it('should attach both inputType and analytics inside _apiDetails', () => {
       const inputType = mockJsonSchemaRef('TestInput');
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const analytics = { onSuccess: () => {} };
       const wrapped = withApiDetails({ inputType, analytics, fn: mockHandler() });
       expect(wrapped._apiDetails).toBeDefined();
@@ -107,6 +109,7 @@ describe('api.details', () => {
   // MARK: Analytics via _apiDetails
   describe('analytics via _apiDetails', () => {
     it('should return analytics from a wrapped function via _apiDetails', () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const analytics = { onSuccess: () => {} };
       const handler = withApiDetails({ analytics, fn: mockHandler() });
       expect(handler._apiDetails?.analytics).toBe(analytics);

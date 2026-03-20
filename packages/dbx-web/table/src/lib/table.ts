@@ -64,6 +64,14 @@ export interface DefaultDbxTableItemGroup<T, G = unknown> extends DbxTableItemGr
   readonly default: true;
 }
 
+/**
+ * Creates a default (ungrouped) table item group that wraps all items under the {@link NO_GROUPS_ID} identifier.
+ *
+ * Used when no explicit grouping function is provided to the table.
+ *
+ * @param items - the array of items to include in the default group
+ * @returns a default group containing all the provided items
+ */
 export function defaultDbxTableItemGroup<T, G = unknown>(items: T[]): DefaultDbxTableItemGroup<T, G> {
   return {
     groupId: NO_GROUPS_ID,
@@ -78,6 +86,7 @@ export type DbxTableGroupByFunction<T, G = unknown> = (items: T[]) => Observable
 /**
  * Delegate used for generating view configurations given the input.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any -- any required for DbxInjectionComponentConfig compatibility with diverse component types */
 export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G = unknown> {
   /**
    * Track by
@@ -158,3 +167,4 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    */
   tableClasses?: CssClassesArray;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */

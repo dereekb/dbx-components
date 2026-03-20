@@ -68,7 +68,7 @@ export interface CreateOrRunUniqueNotificationDocumentRunResult extends CreateNo
  * Does not support Firestore transactions, as running should occur outside of a transaction.
  *
  * @param input - creation and run configuration
- * @returns the created or existing document pair, with optional send/enqueue result
+ * @returns the creation pair result with optional send/enqueue outcomes
  * @throws Error if the notification template is not flagged as unique
  *
  * @example

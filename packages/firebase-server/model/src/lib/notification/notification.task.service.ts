@@ -34,7 +34,7 @@ export abstract class NotificationTaskService {
  *
  * @template D - the task's metadata type
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- {} is the correct default for NotificationItemMetadata which uses any
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type NotificationTaskServiceTaskHandlerFunction<D extends NotificationItemMetadata = {}> = (notificationTask: NotificationTask<D>) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D>>;
 
 /**

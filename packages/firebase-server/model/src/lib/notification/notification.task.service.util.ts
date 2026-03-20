@@ -1,4 +1,4 @@
-import { type NotificationItemMetadata, type NotificationTaskCheckpointString, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { type NotificationTaskCheckpointString, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 import { asArray } from '@dereekb/util';
 
 /**
@@ -21,7 +21,8 @@ import { asArray } from '@dereekb/util';
  * // remaining === ['validate', 'cleanup']
  * ```
  */
-export function removeFromCompletionsArrayWithTaskResult<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(inputCompletions: S[], handleTaskResult: Pick<NotificationTaskServiceHandleNotificationTaskResult<NotificationItemMetadata, S>, 'removeAllCompletedCheckpoints' | 'removeFromCompletedCheckpoints'>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function removeFromCompletionsArrayWithTaskResult<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(inputCompletions: S[], handleTaskResult: Pick<NotificationTaskServiceHandleNotificationTaskResult<any, S>, 'removeAllCompletedCheckpoints' | 'removeFromCompletedCheckpoints'>) {
   const { removeAllCompletedCheckpoints, removeFromCompletedCheckpoints } = handleTaskResult;
 
   let result: S[];

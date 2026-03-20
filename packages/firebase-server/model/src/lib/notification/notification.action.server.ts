@@ -1248,7 +1248,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         }
 
         // update the notification send at time and attempt count
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- notification may be undefined when snapshot data is missing
+
         if (notification != null && nextSat != null && !deletedNotification) {
           const isAtMaxAttempts = notification.a >= NOTIFICATION_MAX_SEND_ATTEMPTS;
 
@@ -1257,7 +1257,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           }
 
           // check if it was just deleted
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- deleteNotification() mutates this variable via closure
+
           if (!deletedNotification) {
             const a = isNotificationTask && tryRun ? notification.a : notification.a + 1; // do not update a notification task's attempt count here, unless tryRun fails
 
@@ -2024,7 +2024,6 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
       // iterate through all Notification items that need to be cleaned up
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
       while (true) {
         const cleanupSentNotificationsResults = await cleanupSentNotifications();
 

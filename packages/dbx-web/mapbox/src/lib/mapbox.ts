@@ -30,6 +30,12 @@ export type MapboxZoomLevelRange = ZoomLevelRange;
 export const MAPBOX_MIN_ZOOM_LEVEL: MapboxZoomLevel = 0;
 export const MAPBOX_MAX_ZOOM_LEVEL: MapboxZoomLevel = 22;
 
+/**
+ * Clamps a numeric value to the valid Mapbox zoom level range (0 to 22).
+ *
+ * @param input - The raw zoom level number to clamp.
+ * @returns The zoom level clamped between {@link MAPBOX_MIN_ZOOM_LEVEL} and {@link MAPBOX_MAX_ZOOM_LEVEL}.
+ */
 export function mapboxZoomLevel(input: number): MapboxZoomLevel {
   return Math.min(Math.max(input, MAPBOX_MIN_ZOOM_LEVEL), MAPBOX_MAX_ZOOM_LEVEL);
 }

@@ -6,6 +6,7 @@ import { DbxAppEnviromentService } from './environment.service';
  * Registers {@link DbxAppEnviroment} and {@link DbxAppEnviromentService} as environment-level providers.
  *
  * @param environment - The concrete environment configuration to provide.
+ * @returns The environment providers for the application environment.
  *
  * @example
  * ```typescript

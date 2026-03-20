@@ -14,6 +14,9 @@ import { clean } from './clean';
  * // Create first, then set the destroy function later:
  * readonly _destroy = cleanDestroy();
  * this._destroy.setDestroyFunction(() => resource.release());
+ *
+ * @param input - Optional destroy function to wrap.
+ * @returns A DestroyFunctionObject that will be automatically destroyed when the context is destroyed.
  */
 export function cleanDestroy(input?: Maybe<DestroyFunction>): DestroyFunctionObject {
   const destroyFunction = new DestroyFunctionObject(input);

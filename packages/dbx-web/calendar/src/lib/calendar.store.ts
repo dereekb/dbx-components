@@ -27,10 +27,18 @@ export interface CalendarViewDateRange {
   readonly isMaxDateVisible: boolean;
 }
 
+/**
+ * Compares two {@link CalendarViewDateRange} values for equality by checking type, start/end dates, distance, and min/max visibility flags.
+ *
+ * @param a - First calendar view date range to compare.
+ * @param b - Second calendar view date range to compare.
+ * @returns Whether the two date ranges are considered equal.
+ */
 export function isCalendarViewDateRangeEqual(a: CalendarViewDateRange, b: CalendarViewDateRange): boolean {
   return a.type === b.type && isSameDay(a.start, b.start) && isSameDay(a.end, b.end) && a.distance === b.distance && a.isMinDateVisible === b.isMinDateVisible && a.isMaxDateVisible === b.isMaxDateVisible;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface CalendarState<T = any> {
   /**
    * Calendar display mode
@@ -62,6 +70,13 @@ export interface CalendarState<T = any> {
   readonly showPageButtons?: boolean;
 }
 
+/**
+ * Computes the visible date range for the given calendar state based on display type (month, week, or day)
+ * and the optional navigation range limit.
+ *
+ * @param calendarState - The current calendar state containing display type, date, and navigation limits.
+ * @returns The computed visible date range including start, end, distance, and min/max visibility flags.
+ */
 export function visibleDateRangeForCalendarState(calendarState: CalendarState): CalendarViewDateRange {
   const { navigationRangeLimit, type, date } = calendarState;
 
@@ -93,7 +108,7 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
   // TODO: Consider changing min/max date visible logical utility to be fully within the current month or not,
   // not just visible, since it can change to a locked out calendar and doesn't feel as UI friendly.
 
-  const result = {
+  return {
     type,
     start,
     end,
@@ -101,13 +116,12 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
     isMinDateVisible,
     isMaxDateVisible
   };
-
-  return result;
 }
 
 const distinctUntilDateOrTypeOrEventsChanged = distinctUntilChanged<CalendarState>((a, b) => a?.date === b?.date && a?.type === b?.type && a?.events === b?.events);
 
 @Injectable()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> {
   constructor() {
     super({
@@ -319,18 +333,34 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   readonly setShowPageButtons = this.updater((state, showPageButtons: Maybe<boolean>) => ({ ...state, showPageButtons: showPageButtons != null ? showPageButtons : false }));
 }
 
+/**
+ * Returns an updated calendar state after tapping a date. Only updates if the date differs from the current one
+ * and falls within the navigation range limit. Toggles `dateTappedTwice` when the same day is tapped again.
+ *
+ * @param state - The current calendar state.
+ * @param date - The date that was tapped.
+ * @returns The updated calendar state reflecting the tapped date.
+ */
 export function updateCalendarStateWithTappedDate(state: CalendarState, date: Date) {
   // only update the date if it is different
-  if (!isSameDateDay(state.date, date)) {
-    // Only update the date if it is within the date range
-    if (!state.navigationRangeLimit || isDateInDateRange(date, state.navigationRangeLimit)) {
-      state = { ...state, date, dateTappedTwice: isSameDay(date, state.date) ? !state.dateTappedTwice : false };
-    }
+  if (
+    !isSameDateDay(state.date, date) && // Only update the date if it is within the date range
+    (!state.navigationRangeLimit || isDateInDateRange(date, state.navigationRangeLimit))
+  ) {
+    state = { ...state, date, dateTappedTwice: isSameDay(date, state.date) ? !state.dateTappedTwice : false };
   }
 
   return state;
 }
 
+/**
+ * Returns an updated calendar state with a new navigation range limit. If the current date falls outside
+ * the new range, it is clamped to fit within the limit.
+ *
+ * @param state - The current calendar state.
+ * @param navigationRangeLimit - The new navigation date range limit, or undefined/null to remove the limit.
+ * @returns The updated calendar state with the applied navigation range limit.
+ */
 export function updateCalendarStateWithNavigationRangeLimit(state: CalendarState, navigationRangeLimit: Maybe<Partial<DateRange>>) {
   const { date } = state;
 

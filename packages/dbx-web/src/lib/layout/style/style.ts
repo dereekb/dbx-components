@@ -101,6 +101,9 @@ export const DBX_THEME_COLORS: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...D
  * dbxColorBackground('primary'); // 'dbx-primary-bg'
  * dbxColorBackground(undefined); // 'dbx-default'
  * ```
+ *
+ * @param color - the theme color to convert, or nullish/empty for the default class
+ * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'` or `'dbx-default'`)
  */
 export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
   let cssClass = 'dbx-default'; // background by default
@@ -116,6 +119,8 @@ export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
     case 'disabled':
     case 'default':
       cssClass = `dbx-${color}-bg`;
+      break;
+    default:
       break;
   }
 

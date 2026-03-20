@@ -57,13 +57,11 @@ export class DbxInjectionDialogComponent<T = unknown> extends AbstractDialogDire
   }
 
   static openDialog<T>(matDialog: MatDialog, config: DbxInjectionDialogComponentConfig<T>): MatDialogRef<DbxInjectionDialogComponent<T>, void> {
-    const dialogRef = matDialog.open(DbxInjectionDialogComponent<T>, {
+    return matDialog.open(DbxInjectionDialogComponent<T>, {
       width: '80vw',
       height: '80vh',
       ...config,
       data: config
     });
-
-    return dialogRef;
   }
 }

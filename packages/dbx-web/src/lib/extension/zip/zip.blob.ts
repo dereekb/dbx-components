@@ -22,6 +22,9 @@ export type DbxZipBlobPreviewEntryTreeRoot = SlashPathDirectoryTreeRoot<Entry, D
 /**
  * Builds a directory tree from an array of zip archive entries, enriching each node with MIME type detection and blob retrieval capability.
  *
+ * @param entries - Array of zip archive entries to build the tree from, or null/undefined for an empty tree
+ * @returns The root node of the constructed directory tree with MIME types and blob getters attached
+ *
  * @example
  * ```typescript
  * const root = dbxZipBlobPreviewEntryTreeFromEntries(zipEntries);

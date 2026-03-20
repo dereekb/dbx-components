@@ -126,7 +126,7 @@ describe('AnchorComponent', () => {
 
             const anchorElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`));
             anchorElement.triggerEventHandler('click', new MouseEvent('click'));
-            fixture.whenStable().then(() => {
+            void fixture.whenStable().then(() => {
               expect(clicked).toBe(true);
               done();
             });
@@ -230,7 +230,7 @@ const CUSTOM_CONTENT = 'Custom Content';
 @Component({
   template: `
     <dbx-anchor [anchor]="anchor()" [disabled]="disabled()">
-      <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
+      <span id="custom-content">Custom Content</span>
     </dbx-anchor>
   `,
   standalone: true,

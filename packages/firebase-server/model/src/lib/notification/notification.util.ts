@@ -44,7 +44,7 @@ import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUse
  * and initializes with an empty notifications array.
  *
  * @param model - the model key to associate the summary with
- * @returns a new {@link NotificationSummary} template with default values
+ * @returns a blank {@link NotificationSummary} with creation timestamp and empty notifications
  *
  * @example
  * ```ts
@@ -199,7 +199,7 @@ export interface ExpandNotificationRecipientsResult {
  *
  * Recipients are each configurable and may be defined with as little info as a single contact info, or have multiple contact info pieces associated with them.
  *
- * @param input - the notification, box, auth service, and recipient configuration to expand
+ * @param input - the notification, box, auth service, and recipient configuration
  * @returns channel-specific recipient lists (email, text, notification summary) ready for delivery
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
@@ -214,7 +214,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
   const onlySendToExplicitlyEnabledRecipients = inputOnlySendToExplicitlyEnabledRecipients === true; // defaults to false
   const onlyEmailExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
-  const _onlySendPushNotificationExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
+  // const onlySendPushNotificationExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
   const onlySendNotificationSummaryExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
 
   const { canSendToGlobalRecipients, canSendToBoxRecipients, canSendToExplicitRecipients } = allowedNotificationRecipients(recipientFlag);
@@ -243,10 +243,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   allBoxRecipientConfigs.forEach((x) => {
     // ignore opt-out flagged recipients and excluded recipients
     if (!x.f && !x.x) {
-      const relevantConfig = x.c[notificationTemplateType] as NotificationBoxRecipientTemplateConfig | undefined;
+      const relevantConfig = x.c[notificationTemplateType];
       const effectiveTemplateConfig = relevantConfig ? effectiveNotificationBoxRecipientTemplateConfig(relevantConfig) : undefined;
 
-      if (!effectiveTemplateConfig || effectiveTemplateConfig.st || effectiveTemplateConfig.se || effectiveTemplateConfig.sp) {
+      if (!effectiveTemplateConfig || effectiveTemplateConfig.st || effectiveTemplateConfig.se || effectiveTemplateConfig.sp || effectiveTemplateConfig.st) {
         relevantBoxRecipientConfigs.push({
           recipient: x,
           effectiveTemplateConfig
@@ -441,7 +441,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       if (userEmailAddress && shouldSendEmail && !emailUidsSet.has(uid)) {
         const emailAddress = userEmailAddress.toLowerCase();
 
-        const name = displayName ?? x.n;
+        const name = displayName || x.n;
         const emailRecipient: ExpandedNotificationRecipientEmail = {
           emailAddress,
           name,
@@ -525,7 +525,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       const sendText = checkShouldSendText(sendTextEnabled);
 
       if (phoneNumber != null && sendText && !textUidsSet.has(uid)) {
-        const name = displayName ?? x.n;
+        const name = displayName || x.n;
         const textRecipient: ExpandedNotificationRecipientText = {
           phoneNumber: phoneNumber as E164PhoneNumber,
           name,
@@ -610,7 +610,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       const sendNotificationSummaryEnabled = x.sn;
       const shouldSendNotificationSummary = checkShouldSendNotificationSummary(sendNotificationSummaryEnabled);
 
-      if (shouldSendNotificationSummary && !notificationSummaryUidsSet.has(uid)) {
+      if (shouldSendNotificationSummary && !notificationSummaryUidsSet.has(uid ?? '')) {
         let notificationSummaryId: Maybe<NotificationSummaryId>;
 
         if (uid) {
@@ -621,7 +621,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
         }
 
         if (notificationSummaryId && !notificationSummaryKeysSet.has(notificationSummaryId)) {
-          const name = displayName ?? x.n;
+          const name = displayName || x.n;
           const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
             notificationSummaryId,
             otherRecipient: x,
@@ -717,7 +717,7 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
  * Also re-applies send exclusions to the updated config array.
  *
  * @param input - the current state and intended change
- * @returns the updated box configs array and the updated notification box recipient, if changes were made
+ * @returns the updated box config array and notification box recipient, if changes occurred
  * @throws notificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user
  * @throws notificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config
  */

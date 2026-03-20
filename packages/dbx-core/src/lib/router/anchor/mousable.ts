@@ -16,9 +16,13 @@ export type MouseEventType = 'enter' | 'leave';
  * ```
  */
 export interface MouseEventPair<T> {
-  /** The type of mouse event that occurred. */
+  /**
+   * The type of mouse event that occurred.
+   */
   readonly type: MouseEventType;
-  /** Data associated with this mouse event. */
+  /**
+   * Data associated with this mouse event.
+   */
   readonly data: T;
 }
 
@@ -33,6 +37,8 @@ export interface MouseEventPair<T> {
  * ```
  */
 export interface MousableFunction {
-  /** Optional handler invoked on mouse enter and leave events. */
+  /**
+   * Optional handler invoked on mouse enter and leave events.
+   */
   onMouse?: (type: MouseEventType, event?: Maybe<MouseEvent>) => void;
 }

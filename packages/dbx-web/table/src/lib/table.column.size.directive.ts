@@ -93,6 +93,7 @@ export class DbxTableColumnSizeDirective {
  * References a specific element and the index of the column.
  */
 @Directive({
+  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: '[dbx-column-size-column]',
   standalone: true
 })

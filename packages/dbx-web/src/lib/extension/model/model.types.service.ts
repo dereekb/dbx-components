@@ -129,6 +129,7 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
    * Returns an observable of the Material icon name for the given model type.
    *
    * @param type - The model type string to look up
+   * @returns Observable emitting the icon name for the given model type
    */
   iconForType(type: ModelTypeString): Observable<string> {
     return this.iconMap$.pipe(map((x) => x[type]));

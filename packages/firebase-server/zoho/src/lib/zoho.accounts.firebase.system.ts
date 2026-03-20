@@ -61,7 +61,7 @@ export const zohoAccessTokenSystemStateDataConverter: SystemStateStoredDataField
       tokens: firestoreObjectArray({
         firestoreField: zohoAccessTokenSystemStateEmbeddedTokenConverter,
         filterUnique: filterUniqueFunction((x) => x.key), // only one token per key is allowed
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- expiresAt may be absent from Firestore data at runtime
+
         filter: (x) => (x?.expiresAt ? !isPast(x.expiresAt) : true) // filter out expired values or values that have no expiration
       }),
       lat: firestoreDate({ saveDefaultAsNow: true })

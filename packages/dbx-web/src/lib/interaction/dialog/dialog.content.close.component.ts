@@ -28,6 +28,7 @@ import { MatIconModule } from '@angular/material/icon';
 export class DbxDialogContentCloseComponent {
   readonly padded = input<boolean>(true);
 
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly close = output<void>();
 
   closeClicked() {

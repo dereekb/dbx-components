@@ -10,7 +10,7 @@ import { type E164PhoneNumber } from '@dereekb/util';
  * Useful as a placeholder when your app's notification pipeline is fully wired for SMS
  * but actual delivery is not yet enabled, avoiding the need for conditional logic elsewhere.
  *
- * @returns a {@link NotificationTextSendService} that ignores all messages without sending
+ * @returns a no-op {@link NotificationTextSendService} that ignores all messages
  *
  * @example
  * ```ts

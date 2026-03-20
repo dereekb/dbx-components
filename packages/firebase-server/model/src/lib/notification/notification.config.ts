@@ -33,7 +33,8 @@ export interface NotificationTemplateServiceTypeConfig {
   /**
    * Factory that creates {@link NotificationMessageFunction} instances for this type.
    */
-  readonly factory: NotificationMessageFunctionFactory;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly factory: NotificationMessageFunctionFactory<any>;
 }
 
 /**

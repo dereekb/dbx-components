@@ -18,6 +18,12 @@ function timeSubtitleForEvent(event: CalendarEvent): string {
   return subtitle;
 }
 
+/**
+ * Appends time/duration subtitles to each calendar event's title and sorts the events by start date in ascending order.
+ *
+ * @param events - The calendar events to prepare and sort.
+ * @returns A new array of calendar events with updated titles, sorted by start date.
+ */
 export function prepareAndSortCalendarEvents(events: CalendarEvent[]): CalendarEvent[] {
   return events
     .map((event: CalendarEvent) => {

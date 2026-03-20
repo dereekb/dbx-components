@@ -145,6 +145,8 @@ export class DbxEmbedComponent {
                     embed.setAttribute('type', type);
                   }
                   break;
+                default:
+                  break;
               }
 
               element.appendChild(embed);

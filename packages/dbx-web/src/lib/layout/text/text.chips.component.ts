@@ -7,15 +7,25 @@ import { type Maybe } from '@dereekb/util';
  * Configuration for a single chip displayed by {@link DbxTextChipsComponent}.
  */
 export interface TextChip<T = unknown> {
-  /** Display label for the chip. */
+  /**
+   * Display label for the chip.
+   */
   text: string;
-  /** Optional tooltip shown on hover. */
+  /**
+   * Optional tooltip shown on hover.
+   */
   tooltip?: string;
-  /** Whether the chip appears selected. */
+  /**
+   * Whether the chip appears selected.
+   */
   selected?: boolean;
-  /** Theme color applied to the chip. */
+  /**
+   * Theme color applied to the chip.
+   */
   color?: 'primary' | 'accent' | 'warn' | undefined;
-  /** Arbitrary data payload associated with the chip. */
+  /**
+   * Arbitrary data payload associated with the chip.
+   */
   data?: T;
 }
 

@@ -37,6 +37,8 @@ export class DbxAppEnviromentService {
 
   /**
    * Returns the environment, typed as a specific type.
+   *
+   * @returns The environment cast to the specified type.
    */
   getEnvironment<T extends DbxAppEnviroment>(): T {
     return this.environment as T;

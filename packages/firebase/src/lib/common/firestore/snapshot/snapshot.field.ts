@@ -419,7 +419,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
         loadDefaultReadValueFn = () => inputDefaultReadValue as D;
       }
 
-      fromData = (x) => transformFrom(x ?? (loadDefaultReadValueFn as Getter<D>)());
+      fromData = (x) => transformFrom(x == null ? (loadDefaultReadValueFn as Getter<D>)() : x);
     } else if (transformFrom !== passThrough) {
       fromData = ((x) => (x != null ? transformFrom(x) : x)) as MapFunction<Maybe<D>, Maybe<V>>;
     } else {
@@ -878,7 +878,7 @@ export interface FirestoreNumberConfig<N extends number = number> extends MapCon
  * @returns A field mapping configuration for number values
  */
 export function firestoreNumber<N extends number = number>(config: FirestoreNumberConfig<N>) {
-  const transform: Maybe<TransformNumberFunctionConfig<N>> = config.transform ? (typeof config.transform === 'function' ? { transform: config.transform } : config.transform) : undefined;
+  const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
   const transformData = transform ? (transformNumberFunction<N>(transform) as MapFunction<N, N>) : passThrough;
 
   return firestoreField<N, N>({
@@ -904,7 +904,7 @@ export type OptionalFirestoreNumberFieldConfig<N extends number = number> = Opti
  * @returns A field mapping configuration for optional number values
  */
 export function optionalFirestoreNumber<N extends number = number>(config?: OptionalFirestoreNumberFieldConfig<N>) {
-  const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config.transform } : config.transform) : undefined;
+  const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
   const transformData = transform ? (transformNumberFunction<N>(transform) as MapFunction<N, N>) : passThrough;
 
   return optionalFirestoreField<N>({
@@ -998,7 +998,7 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
       : undefined;
   }
 
-  const inputFilterUnique: Maybe<FilterUniqueFunction<T, PrimativeKey>> = config?.filterUnique === true ? (unique as FilterUniqueFunction<T, PrimativeKey>) : (config?.filterUnique as Maybe<FilterUniqueFunction<T, PrimativeKey>>);
+  const inputFilterUnique = config?.filterUnique === true ? (unique as FilterUniqueFunction<T, any>) : (config?.filterUnique as FilterUniqueFunction<T, any>);
   const filterUniqueValuesFn: Maybe<MapSameFunction<T[]>> =
     inputFilterUnique != null
       ? (x) => {
@@ -1041,7 +1041,7 @@ export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extend
  */
 export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
   const { filterUnique: inputFilterUnique } = config;
-  const filterUnique = inputFilterUnique === true ? (unique as FilterUniqueFunction<T, PrimativeKey>) : inputFilterUnique;
+  const filterUnique = inputFilterUnique === true ? (unique as FilterUniqueFunction<T, any>) : inputFilterUnique;
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   return firestoreField<T[], T[]>({
@@ -1503,7 +1503,7 @@ export type FirestoreObjectArrayFieldConfig<T extends object, O extends object =
     /**
      * Filters the objects array uniquely.
      */
-    readonly filterUnique?: FilterUniqueFunction<T, PrimativeKey>;
+    readonly filterUnique?: FilterUniqueFunction<T, any>;
     /**
      * Arbitrary filter to apply to the array. Is run after the filterUnique function is run.
      */
@@ -1566,7 +1566,7 @@ export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O e
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
   const { filterUnique: inputFilterUnique, filter: filterFn } = config;
 
-  const objectField = (config as Partial<FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
+  const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   const { from, to: baseTo } = toModelMapFunctions<T, O>(objectField);
@@ -1687,7 +1687,8 @@ export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   const transform = latLngStringFunction({ precision, wrap: false, validate: true });
 
   return firestoreString<LatLngString>({
-    default: defaultValue ?? DEFAULT_LAT_LNG_STRING_VALUE,
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional
+    default: defaultValue || DEFAULT_LAT_LNG_STRING_VALUE,
     defaultBeforeSave,
     transform
   });
@@ -1699,15 +1700,13 @@ export type FirestoreTimezoneStringConfig = DefaultMapConfiguredFirestoreFieldCo
  * Default configuration for a TimezoneString.
  *
  * The value defaults to UTC
- *
- * @param config - Optional default value and defaultBeforeSave configuration
- * @returns A field mapping configuration for TimezoneString values
  */
 export function firestoreTimezoneString(config?: FirestoreTimezoneStringConfig) {
   const { default: defaultValue, defaultBeforeSave } = config ?? {};
 
   return firestoreString<TimezoneString>({
-    default: defaultValue ?? DEFAULT_LAT_LNG_STRING_VALUE,
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional
+    default: defaultValue || DEFAULT_LAT_LNG_STRING_VALUE,
     defaultBeforeSave
   });
 }
@@ -1806,7 +1805,9 @@ export const assignDateCellRangeFunction = assignValuesToPOJOFunction<DateCellRa
 export const firestoreDateCellRangeAssignFn: MapFunction<DateCellRange, DateCellRange> = (input) => {
   const block = assignDateCellRangeFunction(DEFAULT_DATE_CELL_RANGE_VALUE, input);
 
-  block.to ??= block.i;
+  if (block.to == null) {
+    block.to = block.i;
+  }
 
   return block;
 };

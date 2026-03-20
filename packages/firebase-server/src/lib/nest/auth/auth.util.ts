@@ -136,6 +136,6 @@ export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   const claims = request.nest.authService.context(request).claims;
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
   return claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY] != null;
 }

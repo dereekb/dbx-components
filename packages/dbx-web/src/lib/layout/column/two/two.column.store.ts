@@ -77,8 +77,7 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
        * The right side is less-than or equal to half the total width when resizing, so we can use the total width to guess the best case current scenario.
        */
       const expectedRightWidth = (x.totalWidth ?? 0) / 2;
-      const hideLeft = x.showRight && expectedRightWidth < x.minRightWidth;
-      return hideLeft;
+      return x.showRight && expectedRightWidth < x.minRightWidth;
     })
   );
 
@@ -194,6 +193,8 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
  * })
  * export class MyColumnLayoutComponent { }
  * ```
+ *
+ * @returns an array of Angular providers that supply a new {@link TwoColumnsContextStore}
  */
 export function provideTwoColumnsContext(): Provider[] {
   return [

@@ -40,6 +40,7 @@ export class DbxDialogContentFooterComponent {
   readonly closeTextSignal = computed(() => this.closeText() ?? this.config()?.closeText ?? 'Close');
   readonly buttonColorSignal = computed(() => this.buttonColor() ?? this.config()?.buttonColor ?? undefined);
 
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly close = output<void>();
 
   closeClicked() {

@@ -21,7 +21,7 @@ export type NotificationItemMetadata = Readonly<Record<string, any>>;
 /**
  * Pairs a {@link NotificationItem} with its resolved subject and message strings for display.
  */
-export interface NotificationItemSubjectMessagePair<D extends NotificationItemMetadata = NotificationItemMetadata> {
+export interface NotificationItemSubjectMessagePair<D extends NotificationItemMetadata = {}> {
   readonly item: NotificationItem<D>;
   readonly subject: string;
   readonly message: string;
@@ -44,7 +44,7 @@ export interface NotificationItemSubjectMessagePair<D extends NotificationItemMe
  * - `d` — metadata payload
  * - `v` — viewed/read flag
  */
-export interface NotificationItem<D extends NotificationItemMetadata = NotificationItemMetadata> {
+export interface NotificationItem<D extends NotificationItemMetadata = {}> {
   /**
    * Unique notification item identifier.
    */
@@ -106,7 +106,7 @@ export const firestoreNotificationItem = firestoreSubObject<NotificationItem>({
 /**
  * Result of splitting {@link NotificationItem} entries into read and unread groups.
  */
-export interface UnreadNotificationItemsResult<D extends NotificationItemMetadata = NotificationItemMetadata> {
+export interface UnreadNotificationItemsResult<D extends NotificationItemMetadata = {}> {
   readonly items: NotificationItem<D>[];
   readonly considerReadIfCreatedBefore?: Maybe<Date>;
   readonly read: NotificationItem<D>[];
@@ -130,7 +130,7 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  * console.log(result.unread.length); // number of unread items
  * ```
  */
-export function unreadNotificationItems<D extends NotificationItemMetadata = NotificationItemMetadata>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
+export function unreadNotificationItems<D extends NotificationItemMetadata = {}>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
   const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v ?? !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
   const { included: read, excluded: unread } = separateValues<NotificationItem<D>>(items, checkIsRead);
 

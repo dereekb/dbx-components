@@ -347,7 +347,9 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
         // At max scroll, scrollHeight = scrollTop + clientHeight;
         const { scrollTop, scrollHeight, clientHeight } = element;
         return scrollHeight - (scrollTop + clientHeight);
-      } catch (e) {}
+      } catch {
+        /* ignored */
+      }
     }
 
     return 0;
@@ -359,7 +361,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     if (element) {
       try {
         element.scrollTop = element.scrollHeight;
-      } catch (err) {
+      } catch {
         // do nothing.
       }
     }
@@ -372,7 +374,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
       try {
         const { scrollHeight, clientHeight } = element;
         element.scrollTop = scrollHeight - (clientHeight + pos);
-      } catch (err) {
+      } catch {
         // do nothing.
       }
     }

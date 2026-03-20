@@ -5,7 +5,8 @@ import { type Configurable, separateValues } from '@dereekb/util';
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.
  */
-export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = NotificationItemMetadata, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**
    * Checkpoint this flow entry represents.
    */
@@ -16,7 +17,8 @@ export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends Notificat
   readonly fn: NotificationTaskServiceTaskHandlerFunction<D>;
 }
 
-export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = NotificationItemMetadata, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   readonly type: NotificationTaskType;
   /**
    * The order/flow of checkpoints and handler functions.
@@ -41,7 +43,8 @@ export interface NotificationTaskServiceConfig {
   /**
    * Handler configurations that define the checkpoint-based flow for each task type.
    */
-  readonly handlers: NotificationTaskServiceTaskHandlerConfig[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly handlers: NotificationTaskServiceTaskHandlerConfig<any, any>[];
 }
 
 /**
@@ -52,7 +55,7 @@ export interface NotificationTaskServiceConfig {
  * If all checkpoints are complete, the task is marked as done.
  *
  * @param config - handler configurations and optional validation list
- * @returns a {@link NotificationTaskService} instance with type checking and task dispatch
+ * @returns a {@link NotificationTaskService} that dispatches tasks to the registered handlers
  *
  * @example
  * ```ts
@@ -79,7 +82,8 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
     handlers[type] = handlerForConfig(handlerConfig);
   });
 
-  function handlerForConfig(handlerConfig: NotificationTaskServiceTaskHandlerConfig): NotificationTaskServiceTaskHandler {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handlerForConfig(handlerConfig: NotificationTaskServiceTaskHandlerConfig<any, any>): NotificationTaskServiceTaskHandler {
     const { flow: inputFlows, allowRunMultipleParts } = handlerConfig;
     const { included: checkpointFlows, excluded: nonCheckpointFlows } = separateValues(inputFlows, (x) => x.checkpoint != null);
 
@@ -96,7 +100,6 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
 
         switch (completedCheckpoints.length) {
           case 0:
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array index access may return undefined at runtime
             fn = (nonCheckpointFlows[0] ?? checkpointFlows[0])?.fn;
             break;
           default: {
@@ -132,7 +135,6 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
 
   return {
     isKnownNotificationTaskType: (notificationTaskType: NotificationTaskType) => {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- record access may return undefined at runtime
       return handlers[notificationTaskType] !== undefined;
     },
     taskHandlerForNotificationTaskType: (notificationTaskType: NotificationTaskType) => handlers[notificationTaskType]

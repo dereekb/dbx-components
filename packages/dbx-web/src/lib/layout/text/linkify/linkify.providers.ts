@@ -28,6 +28,9 @@ export interface ProvideDbxLinkifyConfig {
  *   })
  * });
  * ```
+ *
+ * @param config - configuration containing the factory function for creating the linkify service config
+ * @returns environment providers that register the DbxLinkifyServiceConfig
  */
 export function provideDbxLinkify(config: ProvideDbxLinkifyConfig): EnvironmentProviders {
   const { dbxLinkifyServiceConfigFactory } = config;

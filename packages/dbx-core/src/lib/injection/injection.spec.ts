@@ -43,6 +43,7 @@ describe('dbxInjectionComponentConfigIsEqual()', () => {
 
   describe('structural equality', () => {
     it('should return true when componentClass, data, init, and injector are the same', () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const init = (instance: unknown) => {};
       const configA: DbxInjectionComponentConfig = { componentClass: TestComponentA, data: 'test', init };
       const configB: DbxInjectionComponentConfig = { componentClass: TestComponentA, data: 'test', init };
@@ -65,8 +66,10 @@ describe('dbxInjectionComponentConfigIsEqual()', () => {
     });
 
     it('should return false when init differs', () => {
+      /* eslint-disable @typescript-eslint/no-empty-function */
       const configA: DbxInjectionComponentConfig = { componentClass: TestComponentA, init: () => {} };
       const configB: DbxInjectionComponentConfig = { componentClass: TestComponentA, init: () => {} };
+      /* eslint-enable @typescript-eslint/no-empty-function */
 
       expect(dbxInjectionComponentConfigIsEqual(configA, configB)).toBe(false);
     });

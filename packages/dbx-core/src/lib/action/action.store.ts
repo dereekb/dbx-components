@@ -142,7 +142,9 @@ export function loadingStateForActionContextState<O = unknown>(state: ActionCont
     case DbxActionState.DISABLED:
       loadingState = idleLoadingState();
       break;
-    default:
+    case DbxActionState.TRIGGERED:
+    case DbxActionState.VALUE_READY:
+    case DbxActionState.WORKING:
       loadingState = beginLoading(state.workProgress != null ? { loadingProgress: state.workProgress } : undefined);
       break;
   }
@@ -432,7 +434,10 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    *
    * Updates every state update instead of when the value changes.
    */
-  readonly isModifiedAndCanTriggerUpdates$ = this.state$.pipe(map((x) => actionContextIsModifiedAndCanTrigger(x), shareReplay(1)));
+  readonly isModifiedAndCanTriggerUpdates$ = this.state$.pipe(
+    map((x) => actionContextIsModifiedAndCanTrigger(x)),
+    shareReplay(1)
+  );
 
   /**
    * Whether or not it can be triggered and modified.
@@ -555,6 +560,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   }
 
   // MARK: Cleanup
+  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
   override ngOnDestroy(): void {
     // do not call super.destroy here, to keep the component store from destroying itself.
     // the lockset is configured to cleanup the component store.

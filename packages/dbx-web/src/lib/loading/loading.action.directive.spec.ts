@@ -123,7 +123,7 @@ const TEST_CONTENT = 'Content';
     <div dbxAction>
       <dbx-loading dbxActionLoadingContext [text]="text()" [show]="show()">
         <div>
-          <p id="test-content">${TEST_CONTENT}</p>
+          <p id="test-content">Content</p>
         </div>
       </dbx-loading>
     </div>

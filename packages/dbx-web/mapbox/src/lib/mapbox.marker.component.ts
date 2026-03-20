@@ -71,9 +71,13 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
               width = 24;
               height = 32;
               break;
+            default:
+              break;
           }
           break;
         }
+        break;
+      default:
         break;
     }
 
@@ -84,14 +88,14 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     const imageInput = marker?.image;
     const image = imageInput ? (typeof imageInput === 'string' ? imageInput : getValueFromGetter(imageInput, width)) : undefined;
 
-    const style: any = {
+    const style: Record<string, unknown> = {
       ...marker?.style,
       'background-image': image
     };
 
     if (width && height) {
-      style.width = width + 'px';
-      style.height = height + 'px';
+      style['width'] = width + 'px';
+      style['height'] = height + 'px';
       style['font-size'] = width + 'px';
     }
 
@@ -114,6 +118,8 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
           cssClasses.push('dbx-chip-small');
         }
 
+        break;
+      default:
         break;
     }
 

@@ -20,12 +20,20 @@ import { type SegueRefOrSegueRefRouterLink } from '../../router/segue';
  * @see {@link provideDbxAppAuthRouter} for registering this configuration.
  */
 export abstract class DbxAppAuthRoutes {
-  /** Route reference for the login page. Users are redirected here when authentication is required. */
+  /**
+   * Route reference for the login page. Users are redirected here when authentication is required.
+   */
   abstract readonly loginRef: SegueRefOrSegueRefRouterLink;
-  /** Optional route reference for the logged-out page. Falls back to {@link loginRef} if not provided. */
+  /**
+   * Optional route reference for the logged-out page. Falls back to {@link loginRef} if not provided.
+   */
   abstract readonly loggedOutRef?: SegueRefOrSegueRefRouterLink;
-  /** Optional route reference for the onboarding/setup page. Falls back to {@link appRef} if not provided. */
+  /**
+   * Optional route reference for the onboarding/setup page. Falls back to {@link appRef} if not provided.
+   */
   abstract readonly onboardRef?: SegueRefOrSegueRefRouterLink;
-  /** Route reference for the main application page. Users are redirected here after successful authentication. */
+  /**
+   * Route reference for the main application page. Users are redirected here after successful authentication.
+   */
   abstract readonly appRef: SegueRefOrSegueRefRouterLink;
 }

@@ -45,6 +45,9 @@ export interface DbxModelViewTrackerEventSet {
  * ```typescript
  * const keys = allDbxModelViewTrackerEventSetModelKeys(eventSet);
  * ```
+ *
+ * @param eventSet - The event set from which to extract model keys
+ * @returns Array of model keys from all events in the set
  */
 export function allDbxModelViewTrackerEventSetModelKeys(eventSet: DbxModelViewTrackerEventSet): ModelKey[] {
   return allDbxModelViewTrackerEventModelKeys(eventSet.e);
@@ -57,6 +60,9 @@ export function allDbxModelViewTrackerEventSetModelKeys(eventSet: DbxModelViewTr
  * ```typescript
  * const keys = allDbxModelViewTrackerEventModelKeys(events);
  * ```
+ *
+ * @param events - Array of view tracker events from which to extract model keys
+ * @returns Array of model keys, one per event
  */
 export function allDbxModelViewTrackerEventModelKeys(events: DbxModelViewTrackerEvent[]): ModelKey[] {
   return events.map((y) => y.m.key);

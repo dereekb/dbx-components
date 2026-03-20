@@ -26,11 +26,17 @@ export type AuthTransitionDecision = true | false | SegueRefOrSegueRefRouterLink
  * for making authorization decisions.
  */
 export interface AuthTransitionDecisionGetterInput {
-  /** The UIRouter transition that triggered the auth check. */
+  /**
+   * The UIRouter transition that triggered the auth check.
+   */
   readonly transition: Transition;
-  /** The Angular injector for resolving additional dependencies. */
+  /**
+   * The Angular injector for resolving additional dependencies.
+   */
   readonly injector: Injector;
-  /** The auth service for querying the current authentication state. */
+  /**
+   * The auth service for querying the current authentication state.
+   */
   readonly authService: DbxAuthService;
 }
 

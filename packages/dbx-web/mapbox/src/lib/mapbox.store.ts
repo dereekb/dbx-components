@@ -540,11 +540,10 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
         this.center$.pipe(
           first(),
           map((center) => {
-            const newCenter = {
+            return {
               lat: offset.lat + center.lat,
               lng: offset.lng + center.lng
             };
-            return newCenter;
           })
         )
       )
@@ -663,7 +662,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   );
 
   readonly whenInitialized$ = this.isInitialized$.pipe(
-    filter((x) => true),
+    filter(() => true),
     shareReplay(1)
   );
 
@@ -842,7 +841,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
 
   readonly margin$ = this.state$.pipe(
     map((x) => x.margin),
-    distinctUntilChanged((a, b) => a != null && b != null && a.fullWidth === b.fullWidth && a.leftMargin === b.leftMargin && a.rightMargin === b.rightMargin),
+    distinctUntilChanged((a, b) => a != null && a.fullWidth === b?.fullWidth && a.leftMargin === b.leftMargin && a.rightMargin === b.rightMargin),
     shareReplay(1)
   );
 
@@ -922,7 +921,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
             case 'only_after_render_finishes':
               obs = this.isRendering$.pipe(
                 onTrueToFalse(),
-                switchMap((x) => this.rawBoundNow$.pipe(first()))
+                switchMap(() => this.rawBoundNow$.pipe(first()))
               );
               break;
           }

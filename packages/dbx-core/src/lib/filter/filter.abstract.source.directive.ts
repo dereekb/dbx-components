@@ -34,6 +34,7 @@ export type ProvideFilterSourceDirectiveDefaultFilterFactoryFunction<F = unknown
  *
  * @param sourceType - The concrete directive class.
  * @param defaultFilterFactory - Optional factory to provide an initial filter value via DI.
+ * @returns An array of Angular providers for the filter source directive.
  *
  * @example
  * ```typescript

@@ -65,7 +65,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> implements OnI
     return snackbarFunction ? snackbarFunction(input) : this.dbxActionSnackbarService.generateDisplayConfig(this.dbxActionSnackbarDefault(), input);
   }
 
-  protected showSnackbarForConfiguration(config: DbxActionSnackbarDisplayConfig<T, O>, event: DbxActionSnackbarEvent<O>) {
+  protected showSnackbarForConfiguration(config: DbxActionSnackbarDisplayConfig<T, O>, _event: DbxActionSnackbarEvent<O>) {
     this.dbxActionSnackbarService.openSnackbar(config);
   }
 }

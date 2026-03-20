@@ -81,8 +81,7 @@ export class DbxHelpViewListComponent {
     distinctUntilHasDifferentValues(),
     map((x) => {
       const sortPriorityMap = this.helpWidgetService.getSortPriorityMap();
-      const sorted = [...x].sort(sortByNumberFunction((x) => sortPriorityMap.get(x) ?? -2));
-      return sorted;
+      return [...x].sort(sortByNumberFunction((x) => sortPriorityMap.get(x) ?? -2));
     }),
     shareReplay(1)
   );

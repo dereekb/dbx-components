@@ -35,7 +35,7 @@ export default [
     }
   },
   {
-    files: ['**/*.{ts,tsx,mts,cts}'],
+    files: ['**/*.{ts,tsx,mts,cts,html}'],
     rules: {
       'import/no-unresolved': 'off',
       'import/namespace': 'off'
