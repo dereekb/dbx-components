@@ -6,7 +6,8 @@ import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.co
 import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
-import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from './auth.service.error';
+import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from './auth.service.error';
+import { FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR, FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR, FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR } from '@dereekb/firebase';
 import { type CallableContext } from '../type';
 
 /**
@@ -501,7 +502,10 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly email?: EmailAddress;
   /**
-   * Phone for the new user, if applicable.
+   * Phone for the new user, if applicable. Must be a valid {@link E164PhoneNumber} (e.g. `'+17206620850'`).
+   *
+   * Firebase Auth requires E.164 format. If the value is not valid, {@link FirebaseServerAuthUserBadInputError}
+   * is thrown with code `auth/invalid-phone-number`.
    */
   readonly phone?: E164PhoneNumber;
   /**
@@ -728,6 +732,13 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
     const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, sendSetupDetailsOnce, sendSetupIgnoreThrottle, sendSetupThrowErrors, data, sendDetailsInTestEnvironment } = input;
 
+    // Existing user lookup uses a priority-based approach: uid > email > phone.
+    // Only the highest-priority identifier provided is used for the lookup. If both email and phone
+    // are provided, only the email is checked. This means that if the email is new but the phone
+    // belongs to an existing account, the lookup will not find an existing user, and createNewUser()
+    // will be called. If createUser() then fails because the phone (or another identifier) is already
+    // in use, a FirebaseServerAuthUserExistsError or FirebaseServerAuthUserBadInputError is thrown.
+    // Callers providing multiple identifiers should handle these errors accordingly.
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
     if (uid) {
@@ -879,13 +890,30 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     const { uid, displayName, email, phone: phoneNumber, setupPassword: inputPassword } = input;
     const password = inputPassword ?? this.generateRandomSetupPassword();
 
-    const user = await this.authService.auth.createUser({
-      uid,
-      displayName,
-      email,
-      phoneNumber,
-      password
-    });
+    let user: admin.auth.UserRecord;
+
+    try {
+      user = await this.authService.auth.createUser({
+        uid,
+        displayName,
+        email,
+        phoneNumber,
+        password
+      });
+    } catch (e: unknown) {
+      const firebaseError = e as { code?: string };
+      const errorCode = firebaseError?.code;
+
+      if (errorCode === FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR && phoneNumber) {
+        throw new FirebaseServerAuthUserExistsError(errorCode, 'phone', phoneNumber);
+      } else if (errorCode === FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR && email) {
+        throw new FirebaseServerAuthUserExistsError(errorCode, 'email', email);
+      } else if (errorCode === FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR && phoneNumber) {
+        throw new FirebaseServerAuthUserBadInputError(errorCode, phoneNumber);
+      }
+
+      throw e;
+    }
 
     return {
       user,

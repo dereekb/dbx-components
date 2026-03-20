@@ -13,7 +13,8 @@ import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
 import { addDays } from 'date-fns';
-import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from '../../auth/auth.service.error';
+import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from '../../auth/auth.service.error';
+import { FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR, FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR } from '@dereekb/firebase';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   a: { roles: [AUTH_ADMIN_ROLE] }
@@ -358,6 +359,82 @@ describe('firebase server nest auth', () => {
         });
       });
 
+      describe('initializeNewUser() with conflicting phone number', () => {
+        const email = 'newuser-phone-conflict@test.com';
+        const phone = '+15551234567';
+
+        beforeEach(async () => {
+          // Create an existing user with the phone number
+          await authService.auth.createUser({
+            email: 'existing-phone-user@test.com',
+            phoneNumber: phone,
+            password: 'testpassword123'
+          });
+        });
+
+        itShouldFail('with FirebaseServerAuthUserExistsError for phone conflict', async () => {
+          await expectFail(
+            () =>
+              newUserService.initializeNewUser({
+                email,
+                phone,
+                sendSetupContent: false
+              }),
+            (error) => {
+              expect(error).toBeInstanceOf(FirebaseServerAuthUserExistsError);
+              const typedError = error as FirebaseServerAuthUserExistsError;
+              expect(typedError.code).toBe(FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR);
+              expect(typedError.identifierType).toBe('phone');
+              expect(typedError.identifierValue).toBe(phone);
+            }
+          );
+        });
+      });
+
+      describe('initializeNewUser() with conflicting email', () => {
+        const existingEmail = 'duplicate-email@test.com';
+
+        beforeEach(async () => {
+          // Create an existing user with the email
+          await authService.auth.createUser({
+            email: existingEmail,
+            password: 'testpassword123'
+          });
+        });
+
+        it('should return the existing user when the email already exists', async () => {
+          const result = await newUserService.initializeNewUser({
+            email: existingEmail,
+            sendSetupContent: false
+          });
+
+          expect(result).toBeDefined();
+          expect(result.email).toBe(existingEmail);
+        });
+      });
+
+      describe('initializeNewUser() with invalid phone number', () => {
+        const email = 'newuser-bad-phone@test.com';
+        const invalidPhone = '7206620850'; // not E.164 format — missing the required '+' country code prefix (e.g. '+17206620850')
+
+        itShouldFail('with FirebaseServerAuthUserBadInputError for invalid phone', async () => {
+          await expectFail(
+            () =>
+              newUserService.initializeNewUser({
+                email,
+                phone: invalidPhone as any,
+                sendSetupContent: false
+              }),
+            (error) => {
+              expect(error).toBeInstanceOf(FirebaseServerAuthUserBadInputError);
+              const typedError = error as FirebaseServerAuthUserBadInputError;
+              expect(typedError.code).toBe(FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR);
+              expect(typedError.inputValue).toBe(invalidPhone);
+            }
+          );
+        });
+      });
+
       describe('newly initialized user', () => {
         const email = 'inittest@test.com';
         let initializedUser: admin.auth.UserRecord;
@@ -532,6 +609,7 @@ describe('firebase server nest auth', () => {
             it('should return true.', async () => {
               const request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any> = {
                 nest: context,
+                nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
                 data: {} as any,
@@ -547,6 +625,7 @@ describe('firebase server nest auth', () => {
             it('should return true.', async () => {
               const request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any> = {
                 nest: context,
+                nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
                 data: {} as any,
@@ -578,6 +657,7 @@ describe('firebase server nest auth', () => {
             it('should return false', async () => {
               const request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any> = {
                 nest: context,
+                nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
                 data: {} as any,
@@ -595,6 +675,7 @@ describe('firebase server nest auth', () => {
             beforeEach(() => {
               request = {
                 nest: context,
+                nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
                 data: {} as any,

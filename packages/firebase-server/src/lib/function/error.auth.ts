@@ -1,3 +1,4 @@
+import { FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR } from '@dereekb/firebase';
 import { type ThrowErrorFunction } from '@dereekb/util';
 import type * as admin from 'firebase-admin';
 import { handleFirebaseError, preconditionConflictError } from './error';
@@ -29,7 +30,7 @@ export function phoneNumberAlreadyExistsError() {
 export function handleFirebaseAuthError(e: unknown, handleUnknownCode?: ThrowErrorFunction<admin.FirebaseError>): never | void {
   handleFirebaseError(e, (firebaseError) => {
     switch (firebaseError.code) {
-      case 'auth/phone-number-already-exists':
+      case FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR:
         throw phoneNumberAlreadyExistsError();
       default:
         handleUnknownCode?.(firebaseError);
