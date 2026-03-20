@@ -936,7 +936,7 @@ export function zohoRecruitUploadAttachmentForRecord(context: ZohoRecruitContext
       attachments_category: joinStringsWithCommas(attachmentCategoryName)
     };
 
-    if (!urlParams.attachments_category_id.length && !urlParams.attachments_category.length) {
+    if (!urlParams.attachments_category_id?.length && !urlParams.attachments_category?.length) {
       throw new Error('attachmentCategoryId or attachmentCategoryName must be provided and not empty.');
     }
 

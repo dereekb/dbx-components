@@ -100,7 +100,8 @@ export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails
  */
 export function assertZohoRecruitRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecruitModuleName, recordId?: ZohoRecruitRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
-    if (!x.data.length) {
+    // eslint-disable-next-line eqeqeq -- fetchJson may return null for empty results despite type
+    if (x == null || !x.data?.length) {
       throw new ZohoRecruitRecordNoContentError(moduleName, recordId);
     } else {
       return x;

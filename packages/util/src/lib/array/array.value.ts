@@ -19,11 +19,15 @@ export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<Maybe<T>[]>) =
  */
 export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>['filter']>[0]): FilterMaybeArrayFunction<T> {
   return ((values: Maybe<Maybe<T[]>>) => {
+    let result: T[];
+
     if (values != null) {
-      return values.filter(filterFn);
+      result = values.filter(filterFn);
     } else {
-      return [];
+      result = [];
     }
+
+    return result;
   }) as FilterMaybeArrayFunction<T>;
 }
 
