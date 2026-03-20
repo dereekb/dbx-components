@@ -55,7 +55,7 @@ export function filteredPage<F = unknown>(page: PageNumber, request?: Filter<F>)
  * @throws Error if neither `use` nor `usePage` is specified in `iterFn`
  */
 export async function iterateFilteredPages<T, F>(inputPage: FilteredPage<F>, loadFn: (page: FilteredPage<F>) => Promise<T[]>, iterFn: FilteredPageIterateFn<T>): Promise<number> {
-  let currentPage = inputPage?.page ?? 0;
+  let currentPage = inputPage.page;
   let hasMore = true;
   let count = 0;
 

@@ -96,9 +96,13 @@ export type HandlerFactory<T, K extends PrimativeKey = string, R = HandleResult>
  * Options for configuring default and negative results in a {@link HandlerFactory}.
  */
 export interface HandlerFactoryOptions<R = HandleResult> {
-  /** The result returned when a handler function returns void. */
+  /**
+   * The result returned when a handler function returns void.
+   */
   readonly defaultResult: R;
-  /** The result returned when no handler matches the input key. */
+  /**
+   * The result returned when no handler matches the input key.
+   */
   readonly negativeResult: R;
 }
 
@@ -137,7 +141,7 @@ export function handlerFactory<T, K extends PrimativeKey = string, R = HandleRes
       set(key, bindHandle);
     };
 
-    const fn = build<Handler<T, K, R>>({
+    return build<Handler<T, K, R>>({
       base: ((value: T) => {
         const key = readKey(value);
         const handler = (key != null ? map.get(key) : undefined) ?? catchAll;
@@ -158,8 +162,6 @@ export function handlerFactory<T, K extends PrimativeKey = string, R = HandleRes
         x.setCatchAll = setCatchAll;
       }
     });
-
-    return fn;
   };
 }
 

@@ -107,7 +107,7 @@ export type PrimativeKeyDencoderFunction<D extends PrimativeKey, E extends Prima
  * Default fallback factory for {@link PrimativeKeyDencoderFunction} that always returns null,
  * causing an error to be thrown for unknown values.
  */
-export const PRIMATIVE_KEY_DENCODER_VALUE = (input: unknown) => null;
+export const PRIMATIVE_KEY_DENCODER_VALUE = (_input: unknown) => null;
 
 /**
  * Creates a new {@link PrimativeKeyDencoderFunction} that can bidirectionally encode/decode
@@ -123,8 +123,7 @@ export function primativeKeyDencoder<D extends PrimativeKey, E extends Primative
 
   const fn = ((input: ArrayOrValue<E | D>) => {
     if (Array.isArray(input)) {
-      const values = filterMaybeArrayValues(input.map((x) => map.get(x)));
-      return values;
+      return filterMaybeArrayValues(input.map((x) => map.get(x)));
     } else {
       let value: Maybe<D | E> = map.get(input);
 
@@ -183,7 +182,7 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
 
   if (splitter) {
     dencoderMap._tuples.forEach((x) => {
-      if (x[0].toString().indexOf(splitter) !== -1) {
+      if (x[0].toString().includes(splitter)) {
         throw new Error(`primativeKeyStringDencoder() encountered a value (${x[0]}) that contains the splitter (${splitter}).`);
       }
     });
@@ -196,9 +195,9 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
     });
   }
 
-  const joiner = splitter || '';
+  const joiner = splitter ?? '';
 
-  const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => Array.from(encodedValues);
+  const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => [...encodedValues];
 
   return (input: string | (E | D)[]) => {
     if (typeof input === 'string') {

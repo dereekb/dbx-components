@@ -218,9 +218,9 @@ export function chainMapSameFunctions<I>(input: ArrayOrValue<Maybe<MapSameFuncti
 export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>): MapSameFunction<I>;
 export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>, apply?: boolean): MapSameFunction<I>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>): MapFunction<I, B>;
-export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot): MapFunction<I, O>;
+export function chainMapFunction<I, O, _B>(a: MapFunction<I, O>, b: MaybeNot): MapFunction<I, O>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: false): MapFunction<I, O>;
-export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot, apply: true): MapFunction<I, O>;
+export function chainMapFunction<I, O, _B>(a: MapFunction<I, O>, b: MaybeNot, apply: true): MapFunction<I, O>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>, apply: true): MapFunction<I, B>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: boolean): MapFunction<I, O> | MapFunction<I, B>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply = true): MapFunction<I, O> | MapFunction<I, B> {

@@ -56,6 +56,7 @@ export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is
  * @param value - the value to check
  */
 export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   return Boolean(value || value !== '');
 }
 

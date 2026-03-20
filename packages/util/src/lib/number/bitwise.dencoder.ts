@@ -91,10 +91,8 @@ export function bitwiseSetDencoder<D extends BitwiseEncodedSetIndex>(maxIndex?: 
   return ((input: BitwiseEncodedSet | Set<D>) => {
     if (typeof input === 'number') {
       return decoder(input);
-    } else if (input != null) {
-      return encodeBitwiseSet(input);
     } else {
-      return 0;
+      return encodeBitwiseSet(input);
     }
   }) as BitwiseSetDencoder<D>;
 }
@@ -180,10 +178,8 @@ export function bitwiseObjectDencoder<T extends object, D extends BitwiseEncoded
   return ((input: BitwiseEncodedSet | T) => {
     if (typeof input === 'number') {
       return decoder(input);
-    } else if (input != null) {
-      return encoder(input);
     } else {
-      return 0;
+      return encoder(input);
     }
   }) as BitwiseObjectDencoder<T>;
 }

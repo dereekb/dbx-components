@@ -139,6 +139,7 @@ export class ModelRelationUtility {
    */
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T>): T[];
+  // eslint-disable-next-line @typescript-eslint/max-params
   static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { mask, readKey } = config;
 
@@ -159,11 +160,19 @@ export class ModelRelationUtility {
    * The mask results are merged together.
    *
    * Order from the "current" is retained. Anything in currentRetain overrides modifiedResults.
+   *
+   * @param current - the original array whose ordering is preserved
+   * @param currentRetain - items from `current` that were excluded from modification and take precedence in the merge
+   * @param modifiedResults - items that were modified or added during the relation change
+   * @param readKey - function that extracts the relation key from each item for ordering
+   * @returns the merged array with original ordering restored
    */
+  // eslint-disable-next-line @typescript-eslint/max-params
   private static _mergeMaskResults<T extends RelationObject>(current: T[], currentRetain: T[], modifiedResults: T[], readKey: ReadRelationKeyFn<T>) {
     return restoreOrderWithValues(current, [...currentRetain, ...modifiedResults], { readKey });
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyCollectionWithoutMask<T extends RelationObject>(current: T[], change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { readKey, merge, shouldRemove } = config;
 
@@ -238,6 +247,7 @@ export class ModelRelationUtility {
   /**
    * Used to modify a collection which may be multi-type. If readType is provided, the collection is handled as a multi-type map.
    */
+  // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: Maybe<ReadRelationModelTypeFn<T>>): T[] {
     if (readType) {
       return ModelRelationUtility._modifyMultiTypeCollection(current, mods, readType, modifyCollection);
@@ -246,6 +256,7 @@ export class ModelRelationUtility {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyMultiTypeCollection<T extends RelationObject>(input: T[], mods: T[], readType: ReadRelationModelTypeFn<T>, modifyCollection: (subSetCurrent: T[], mods: T[]) => T[]): T[] {
     const inputMap = makeValuesGroupMap(input, readType);
     const modsMap = makeValuesGroupMap(mods, readType);
@@ -253,7 +264,7 @@ export class ModelRelationUtility {
     const typesModified = new Set<Maybe<string>>([...inputMap.keys(), ...modsMap.keys()]);
 
     // Break the collections up into their individual types and process separately.
-    const modifiedSubcollections = Array.from(typesModified).map((type) => {
+    const modifiedSubcollections = [...typesModified].map((type) => {
       const values = inputMap.get(type) ?? [];
       const mods = modsMap.get(type) ?? [];
 
@@ -266,7 +277,7 @@ export class ModelRelationUtility {
     });
 
     // Rejoin all changes.
-    return modifiedSubcollections.reduce((x, y) => x.concat(y), []);
+    return modifiedSubcollections.reduce((x, y) => [...x, ...y], [] as T[]);
   }
 
   private static _insertSingleTypeCollection<T extends RelationObject>(current: T[], insert: T[], { readKey, merge }: UpdateRelationConfig<T>): T[] {
@@ -285,8 +296,7 @@ export class ModelRelationUtility {
     });
 
     const added = ModelRelationUtility.addToCollection(current, addValues, readKey);
-    const results = ModelRelationUtility._updateSingleTypeCollection(added, updateValues, { readKey, merge });
-    return results;
+    return ModelRelationUtility._updateSingleTypeCollection(added, updateValues, { readKey, merge });
   }
 
   private static _updateSingleTypeCollection<T extends RelationObject>(current: T[], update: T[], { readKey, merge }: UpdateRelationConfig<T>): T[] {
@@ -330,6 +340,7 @@ export class ModelRelationUtility {
    * @param shouldRemove - Optional predicate that must return true for a matched item to actually be removed.
    * @returns The collection with matching items removed.
    */
+  // eslint-disable-next-line @typescript-eslint/max-params
   static removeFromCollection<T extends RelationObject>(current: Maybe<T[]>, remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
     if (current?.length) {
       if (shouldRemove) {

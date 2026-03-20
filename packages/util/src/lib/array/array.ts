@@ -137,8 +137,7 @@ export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
 export function flattenArray<T>(array: Maybe<T[]>[]): T[] {
   const filteredValues: T[][] = array.filter((x) => Boolean(x)) as T[][];
 
-  // concat with spread is faster than a depth-one flat
-  return ([] as T[]).concat(...filteredValues);
+  return filteredValues.flat();
 }
 
 /**
@@ -158,7 +157,7 @@ export function flattenArrayOrValueArray<T>(array: ArrayOrValue<Maybe<T>>[]): T[
  * @returns a new array with the same elements, or an empty array if input is nullish
  */
 export function copyArray<T>(input: Maybe<T[]>): T[] {
-  return input != null ? Array.from(input) : ([] as T[]);
+  return input != null ? [...input] : ([] as T[]);
 }
 
 /**
@@ -195,9 +194,7 @@ export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
  * @returns the mutated target array, or a new array if the target was nullish
  */
 export function mergeArraysIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): T[] {
-  if (target == null) {
-    target = [];
-  }
+  target ??= [];
 
   arrays.forEach((array) => {
     if (array != null) {

@@ -14,7 +14,7 @@ export type TryWithPromiseFactoriesFunction<I, O> = (input: I, config?: TryWithP
 /**
  * Optional per-call configuration for {@link TryWithPromiseFactoriesFunction}.
  */
-export interface TryWithPromiseFactoriesFunctionOptionalConfig<I, O> {
+export interface TryWithPromiseFactoriesFunctionOptionalConfig<_I, _O> {
   /**
    * Whether or not to return a Maybe value if it is returned by one of the created promises.
    *
@@ -60,9 +60,9 @@ export function tryWithPromiseFactoriesFunction<I, O>(config: TryWithPromiseFact
 
     let result: Maybe<O>;
 
-    for (let i = 0; i < promiseFactories.length; i += 1) {
+    for (const factory of promiseFactories) {
       try {
-        const nextPromise = promiseFactories[i](input);
+        const nextPromise = factory(input);
         result = await nextPromise;
 
         if (result != null || successOnMaybe) {

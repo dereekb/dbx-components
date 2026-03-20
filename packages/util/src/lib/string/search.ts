@@ -54,7 +54,7 @@ export function searchStringFilterFunction<T>(config: SearchStringFilterFunction
       let match = false;
 
       if (Array.isArray(searchResult)) {
-        match = searchResult.findIndex(decision) !== -1;
+        match = searchResult.some(decision);
       } else if (searchResult != null) {
         match = decision(searchResult);
       }
@@ -72,5 +72,5 @@ export function searchStringFilterFunction<T>(config: SearchStringFilterFunction
  */
 export const caseInsensitiveFilterByIndexOfDecisionFactory: SearchStringDecisionFunctionFactory = (filterText: string) => {
   const searchString = filterText.toLocaleLowerCase();
-  return (string: string) => string.toLocaleLowerCase().indexOf(searchString) !== -1;
+  return (string: string) => string.toLocaleLowerCase().includes(searchString);
 };

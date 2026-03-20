@@ -1,4 +1,4 @@
-import { batch, restoreOrder, restoreOrderWithValues } from './grouping';
+import { batch, restoreOrder, restoreOrderWithValues, arrayContentsDiffer, separateValues } from './grouping';
 
 describe('batch', () => {
   it('should split an array into batches.', () => {
@@ -70,5 +70,96 @@ describe('restoreOrder', () => {
         });
       });
     });
+  });
+});
+
+describe('arrayContentsDiffer()', () => {
+  interface TestItem {
+    key: string;
+    value: number;
+  }
+
+  const params = {
+    groupKeyFn: (x: TestItem) => x.key,
+    isEqual: (a: TestItem, b: TestItem) => a.value === b.value
+  };
+
+  it('should return false for two equal arrays.', () => {
+    const a: TestItem[] = [
+      { key: 'a', value: 1 },
+      { key: 'b', value: 2 }
+    ];
+    const b: TestItem[] = [
+      { key: 'a', value: 1 },
+      { key: 'b', value: 2 }
+    ];
+
+    expect(arrayContentsDiffer(a, b, params)).toBe(false);
+  });
+
+  it('should return true for two arrays with different values.', () => {
+    const a: TestItem[] = [
+      { key: 'a', value: 1 },
+      { key: 'b', value: 2 }
+    ];
+    const b: TestItem[] = [
+      { key: 'a', value: 1 },
+      { key: 'b', value: 99 }
+    ];
+
+    expect(arrayContentsDiffer(a, b, params)).toBe(true);
+  });
+
+  it('should return false for two empty arrays.', () => {
+    expect(arrayContentsDiffer([], [], params)).toBe(false);
+  });
+
+  it('should return false for arrays with the same elements in different order.', () => {
+    const a: TestItem[] = [
+      { key: 'a', value: 1 },
+      { key: 'b', value: 2 }
+    ];
+    const b: TestItem[] = [
+      { key: 'b', value: 2 },
+      { key: 'a', value: 1 }
+    ];
+
+    expect(arrayContentsDiffer(a, b, params)).toBe(false);
+  });
+
+  it('should return true for arrays with different lengths.', () => {
+    const a: TestItem[] = [{ key: 'a', value: 1 }];
+    const b: TestItem[] = [
+      { key: 'a', value: 1 },
+      { key: 'b', value: 2 }
+    ];
+
+    expect(arrayContentsDiffer(a, b, params)).toBe(true);
+  });
+});
+
+describe('separateValues()', () => {
+  it('should put all values in included when all pass the check.', () => {
+    const values = [1, 2, 3];
+    const result = separateValues(values, () => true);
+
+    expect(result.included).toEqual([1, 2, 3]);
+    expect(result.excluded).toEqual([]);
+  });
+
+  it('should put all values in excluded when none pass the check.', () => {
+    const values = [1, 2, 3];
+    const result = separateValues(values, () => false);
+
+    expect(result.included).toEqual([]);
+    expect(result.excluded).toEqual([1, 2, 3]);
+  });
+
+  it('should separate mixed values across groups.', () => {
+    const values = [1, 2, 3, 4, 5];
+    const result = separateValues(values, (x) => x % 2 === 0);
+
+    expect(result.included).toEqual([2, 4]);
+    expect(result.excluded).toEqual([1, 3, 5]);
   });
 });

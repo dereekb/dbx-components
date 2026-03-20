@@ -3,6 +3,8 @@ import { type StringEncryptionProvider, selectiveFieldEncryptor } from './encryp
 
 /**
  * Simple mock encryption provider that wraps/unwraps values with a marker for testing.
+ *
+ * @returns a StringEncryptionProvider that wraps values with double underscores
  */
 function mockEncryptionProvider(): StringEncryptionProvider {
   return {
@@ -19,6 +21,8 @@ function mockEncryptionProvider(): StringEncryptionProvider {
 
 /**
  * AES-256-GCM encryption provider for realistic round-trip testing.
+ *
+ * @returns a StringEncryptionProvider using AES-256-GCM with a randomly generated key
  */
 function aesEncryptionProvider(): StringEncryptionProvider {
   const key = randomBytes(32);
@@ -52,6 +56,9 @@ interface TestObject {
   metadata?: { nested: boolean };
 }
 
+const CLIENT_SECRET_FIELD = 'client_secret';
+const ENCRYPTED_CLIENT_SECRET_FIELD = '$client_secret';
+
 describe('selectiveFieldEncryptor()', () => {
   describe('with mock provider', () => {
     const provider = mockEncryptionProvider();
@@ -59,15 +66,15 @@ describe('selectiveFieldEncryptor()', () => {
     describe('with single field', () => {
       const encryptor = selectiveFieldEncryptor<TestObject, 'client_secret'>({
         provider,
-        fields: ['client_secret']
+        fields: [CLIENT_SECRET_FIELD]
       });
 
       it('should encrypt the specified field and prefix the key', () => {
         const input: TestObject = { client_id: 'abc', client_secret: 's3cret', client_name: 'My App' };
         const encrypted = encryptor.encrypt(input);
 
-        expect(encrypted).toHaveProperty('$client_secret');
-        expect(encrypted).not.toHaveProperty('client_secret');
+        expect(encrypted).toHaveProperty(ENCRYPTED_CLIENT_SECRET_FIELD);
+        expect(encrypted).not.toHaveProperty(CLIENT_SECRET_FIELD);
         expect(encrypted.client_id).toBe('abc');
         expect(encrypted.client_name).toBe('My App');
       });
@@ -84,16 +91,16 @@ describe('selectiveFieldEncryptor()', () => {
     describe('with multiple fields', () => {
       const encryptor = selectiveFieldEncryptor<TestObject, 'client_secret' | 'client_name'>({
         provider,
-        fields: ['client_secret', 'client_name']
+        fields: [CLIENT_SECRET_FIELD, 'client_name']
       });
 
       it('should encrypt all specified fields', () => {
         const input: TestObject = { client_id: 'abc', client_secret: 's3cret', client_name: 'My App' };
         const encrypted = encryptor.encrypt(input);
 
-        expect(encrypted).toHaveProperty('$client_secret');
+        expect(encrypted).toHaveProperty(ENCRYPTED_CLIENT_SECRET_FIELD);
         expect(encrypted).toHaveProperty('$client_name');
-        expect(encrypted).not.toHaveProperty('client_secret');
+        expect(encrypted).not.toHaveProperty(CLIENT_SECRET_FIELD);
         expect(encrypted).not.toHaveProperty('client_name');
         expect(encrypted.client_id).toBe('abc');
       });
@@ -110,7 +117,7 @@ describe('selectiveFieldEncryptor()', () => {
     describe('non-encrypted fields', () => {
       const encryptor = selectiveFieldEncryptor<TestObject, 'client_secret'>({
         provider,
-        fields: ['client_secret']
+        fields: [CLIENT_SECRET_FIELD]
       });
 
       it('should pass non-encrypted fields through unchanged', () => {
@@ -125,14 +132,14 @@ describe('selectiveFieldEncryptor()', () => {
     describe('missing optional fields', () => {
       const encryptor = selectiveFieldEncryptor<TestObject, 'client_secret' | 'metadata'>({
         provider,
-        fields: ['client_secret', 'metadata']
+        fields: [CLIENT_SECRET_FIELD, 'metadata']
       });
 
       it('should skip missing fields during encryption', () => {
         const input = { client_id: 'abc', client_secret: 's3cret', client_name: 'App' } as TestObject;
         const encrypted = encryptor.encrypt(input);
 
-        expect(encrypted).toHaveProperty('$client_secret');
+        expect(encrypted).toHaveProperty(ENCRYPTED_CLIENT_SECRET_FIELD);
         expect(encrypted).not.toHaveProperty('$metadata');
         expect(encrypted).not.toHaveProperty('metadata');
       });
@@ -165,7 +172,7 @@ describe('selectiveFieldEncryptor()', () => {
     describe('custom prefix', () => {
       const encryptor = selectiveFieldEncryptor<TestObject, 'client_secret'>({
         provider,
-        fields: ['client_secret'],
+        fields: [CLIENT_SECRET_FIELD],
         prefix: 'enc_'
       });
 
@@ -174,8 +181,8 @@ describe('selectiveFieldEncryptor()', () => {
         const encrypted = encryptor.encrypt(input);
 
         expect(encrypted).toHaveProperty('enc_client_secret');
-        expect(encrypted).not.toHaveProperty('$client_secret');
-        expect(encrypted).not.toHaveProperty('client_secret');
+        expect(encrypted).not.toHaveProperty(ENCRYPTED_CLIENT_SECRET_FIELD);
+        expect(encrypted).not.toHaveProperty(CLIENT_SECRET_FIELD);
       });
 
       it('should round-trip with custom prefix', () => {
@@ -193,16 +200,16 @@ describe('selectiveFieldEncryptor()', () => {
 
     const encryptor = selectiveFieldEncryptor<TestObject, 'client_secret'>({
       provider,
-      fields: ['client_secret']
+      fields: [CLIENT_SECRET_FIELD]
     });
 
     it('should produce an opaque encrypted value for the field', () => {
       const input: TestObject = { client_id: 'abc', client_secret: 's3cret', client_name: 'App' };
       const encrypted = encryptor.encrypt(input);
 
-      expect(encrypted).toHaveProperty('$client_secret');
-      expect((encrypted as Record<string, unknown>)['$client_secret']).not.toBe('s3cret');
-      expect((encrypted as Record<string, unknown>)['$client_secret']).not.toContain('s3cret');
+      expect(encrypted).toHaveProperty(ENCRYPTED_CLIENT_SECRET_FIELD);
+      expect((encrypted as Record<string, unknown>)[ENCRYPTED_CLIENT_SECRET_FIELD]).not.toBe('s3cret');
+      expect((encrypted as Record<string, unknown>)[ENCRYPTED_CLIENT_SECRET_FIELD]).not.toContain('s3cret');
     });
 
     it('should round-trip encrypt then decrypt back to the original', () => {
@@ -231,7 +238,7 @@ describe('selectiveFieldEncryptor()', () => {
       const encrypted1 = encryptor.encrypt(input);
       const encrypted2 = encryptor.encrypt(input);
 
-      expect((encrypted1 as Record<string, unknown>)['$client_secret']).not.toBe((encrypted2 as Record<string, unknown>)['$client_secret']);
+      expect((encrypted1 as Record<string, unknown>)[ENCRYPTED_CLIENT_SECRET_FIELD]).not.toBe((encrypted2 as Record<string, unknown>)[ENCRYPTED_CLIENT_SECRET_FIELD]);
     });
   });
 });

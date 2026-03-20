@@ -78,9 +78,7 @@ export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
  * ```
  */
 export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Maybe<ModifierMap<T>>): ModifierMap<T> {
-  if (!map) {
-    map = new Map();
-  }
+  map ??= new Map();
 
   forEachWithArray(modifiers, (modifier) => (map as ModifierMap<T>).set(modifier.key, modifier));
 

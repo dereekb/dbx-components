@@ -50,7 +50,7 @@ export const filterEmptyArrayValues = filterMaybeArrayFunction(hasValueOrNotEmpt
  * @returns `true` if every value in the array is null or undefined.
  */
 export function allValuesAreMaybeNot<T>(values: Maybe<T>[]): values is MaybeNot[] {
-  return values.findIndex((x) => x != null) === -1;
+  return !values.some((x) => x != null);
 }
 
 /**
@@ -60,5 +60,5 @@ export function allValuesAreMaybeNot<T>(values: Maybe<T>[]): values is MaybeNot[
  * @returns `true` if every value in the array is non-null and non-undefined.
  */
 export function allValuesAreNotMaybe<T>(values: Maybe<T>[]): values is T[] {
-  return values.findIndex((x) => x == null) === -1;
+  return !values.some((x) => x == null);
 }

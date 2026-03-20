@@ -40,15 +40,25 @@ export type ZipCodeString = string;
  * Basic US address with two address lines, city, state, and zip code.
  */
 export interface UnitedStatesAddress {
-  /** Primary street address line. */
+  /**
+   * Primary street address line.
+   */
   line1: AddressLineString;
-  /** Secondary address line (apartment, suite, etc.). */
+  /**
+   * Secondary address line (apartment, suite, etc.).
+   */
   line2?: AddressLineString;
-  /** City name. */
+  /**
+   * City name.
+   */
   city: CityString;
-  /** State name or two-letter state code. */
+  /**
+   * State name or two-letter state code.
+   */
   state: StateString | StateCodeString;
-  /** Postal/zip code. */
+  /**
+   * Postal/zip code.
+   */
   zip: ZipCodeString;
 }
 
@@ -57,9 +67,13 @@ export interface UnitedStatesAddress {
  * such as a recipient name and phone number.
  */
 export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
-  /** Contact name associated with this address. */
+  /**
+   * Contact name associated with this address.
+   */
   name?: string;
-  /** Phone number associated with this address. */
+  /**
+   * Phone number associated with this address.
+   */
   phone?: string;
 }
 

@@ -21,6 +21,8 @@ export interface LimitArrayConfig {
  *
  * @param array - source array to limit
  * @param inputConfig - configuration controlling the limit count and direction
+ * @param inputConfig.limit - maximum number of items to include in the result
+ * @param inputConfig.limitFromEnd - when true, items are taken from the end of the array instead of the front
  * @returns a new array with at most the configured number of items, or the original array if no limit is specified
  */
 export function limitArray<T>(array: T[], { limit, limitFromEnd }: Partial<LimitArrayConfig>): T[];

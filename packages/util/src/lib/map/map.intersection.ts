@@ -16,7 +16,7 @@ export interface MapKeysIntersectionObject<T> {
  * @returns An array of values from the matching keys
  */
 export function mapKeysIntersectionObjectToArray<T>(object: MapKeysIntersectionObject<T>, keys: Iterable<string>): T[] {
-  const keysToApply = Array.from(keys);
+  const keysToApply = [...keys];
   const applyArray: T[] = [];
 
   keysToApply.forEach((key: string) => {

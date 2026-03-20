@@ -42,7 +42,8 @@ export default [
   {
     files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx', '!{projectRoot}/test/**'],
     rules: {
-      '@nx/enforce-module-boundaries': 'off'
+      '@nx/enforce-module-boundaries': 'off',
+      'sonarjs/no-duplicate-string': 'off' // test descriptions and fixture values naturally repeat across describe blocks
     }
   }
 ];

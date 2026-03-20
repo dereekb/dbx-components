@@ -1,5 +1,5 @@
 import { makeTestBuilder, type TestJestTestContextFixture } from './jest.spec';
-import { type JestTestWrappedContextFactoryBuilder, wrapJestTestContextFactory } from './jest.wrap';
+import { type TestWrappedContextFactoryBuilder, wrapTestContextFactory } from '../shared/shared.wrap';
 
 export class WrappedTestJestTestContextFixture {
   constructor(readonly fixture: TestJestTestContextFixture) {}
@@ -11,8 +11,8 @@ export interface WrappedTestConfigureWrapperExampleConfig {
   onTeardown?: (effect: number) => void;
 }
 
-export function configureWrapperExample(config?: WrappedTestConfigureWrapperExampleConfig): JestTestWrappedContextFactoryBuilder<WrappedTestJestTestContextFixture, TestJestTestContextFixture> {
-  return wrapJestTestContextFactory<WrappedTestJestTestContextFixture, TestJestTestContextFixture, number>({
+export function configureWrapperExample(config?: WrappedTestConfigureWrapperExampleConfig): TestWrappedContextFactoryBuilder<WrappedTestJestTestContextFixture, TestJestTestContextFixture> {
+  return wrapTestContextFactory<WrappedTestJestTestContextFixture, TestJestTestContextFixture, number>({
     wrapFixture: (fixture) => new WrappedTestJestTestContextFixture(fixture),
     setupWrap: async (fixture: WrappedTestJestTestContextFixture) => {
       // Do nothing, but we could use the config here to initialize our new fixture for the tests it will be used it.

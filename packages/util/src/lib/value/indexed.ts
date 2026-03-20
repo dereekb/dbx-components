@@ -823,6 +823,7 @@ export function stepsFromIndexFunction(config: StepsFromIndexFunctionConfig): St
  * @param wrapAround - whether to wrap out-of-bound results; defaults to false
  * @returns the resulting index, or undefined if out of bounds without wrapping
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function stepsFromIndex(range: IndexRange, startIndex: number, step = 1, wrapAround = false): Maybe<number> {
   return stepsFromIndexFunction({ range })(startIndex, wrapAround, step);
 }

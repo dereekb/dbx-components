@@ -127,23 +127,25 @@ describe('isConsideredUtcTimezoneString()', () => {
   });
 });
 
+const START_OF_DAY_UTC = '2023-01-01T00:00:00.000Z';
+
 describe('startOfDayForUTCDateInUTC()', () => {
   it('should return the same date if it is already the start of the day in UTC', () => {
-    const date = new Date('2023-01-01T00:00:00.000Z');
+    const date = new Date(START_OF_DAY_UTC);
     const result = startOfDayForUTCDateInUTC(date);
-    expect(result.toISOString()).toBe('2023-01-01T00:00:00.000Z');
+    expect(result.toISOString()).toBe(START_OF_DAY_UTC);
   });
 
   it('should return the start of the day in UTC for a date with time components', () => {
     const date = new Date('2023-01-01T12:34:56.789Z');
     const result = startOfDayForUTCDateInUTC(date);
-    expect(result.toISOString()).toBe('2023-01-01T00:00:00.000Z');
+    expect(result.toISOString()).toBe(START_OF_DAY_UTC);
   });
 
   it('should return the start of the day in UTC for a date near the end of the day', () => {
     const date = new Date('2023-01-01T23:59:59.999Z');
     const result = startOfDayForUTCDateInUTC(date);
-    expect(result.toISOString()).toBe('2023-01-01T00:00:00.000Z');
+    expect(result.toISOString()).toBe(START_OF_DAY_UTC);
   });
 
   it('should handle dates from different timezones correctly by converting to UTC first', () => {
@@ -152,7 +154,7 @@ describe('startOfDayForUTCDateInUTC()', () => {
     const dateInNonUTC = new Date('2023-01-01T10:00:00.000-08:00'); // Example: PST
     const result = startOfDayForUTCDateInUTC(dateInNonUTC);
     // The function is expected to consider the UTC date part. So 2023-01-01 in UTC.
-    expect(result.toISOString()).toBe('2023-01-01T00:00:00.000Z');
+    expect(result.toISOString()).toBe(START_OF_DAY_UTC);
   });
 });
 
@@ -221,7 +223,7 @@ describe('parseISO8601DayStringToUTCDate()', () => {
   it('should correctly parse a date at the beginning of a month', () => {
     const dayString = '2023-01-01';
     const result = parseISO8601DayStringToUTCDate(dayString);
-    expect(result.toISOString()).toBe('2023-01-01T00:00:00.000Z');
+    expect(result.toISOString()).toBe(START_OF_DAY_UTC);
   });
 
   it('should correctly parse a date at the end of a month', () => {

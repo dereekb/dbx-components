@@ -155,7 +155,7 @@ export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iter
  * @returns An array of values present in only one of the sets.
  */
 export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
-  return Array.from(symmetricDifference(a, b));
+  return [...symmetricDifference(a, b)];
 }
 
 /**
@@ -499,7 +499,7 @@ export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable
     const valuesToFindArray = iterableToArray(valuesToFind);
 
     if (valuesToFindArray.length > 0) {
-      result = valuesToFindArray.findIndex((x) => valuesSet.has(x)) !== -1;
+      result = valuesToFindArray.some((x) => valuesSet.has(x));
     } else {
       result = emptyValuesToFindArrayResult;
     }
@@ -541,7 +541,7 @@ export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: Iterabl
     const valuesToFindArray = iterableToArray(valuesToFind);
 
     if (valuesToFindArray.length > 0) {
-      result = valuesToFindArray.findIndex((x) => !valuesSet.has(x)) == -1;
+      result = !valuesToFindArray.some((x) => !valuesSet.has(x));
     } else {
       result = emptyValuesToFindArrayResult;
     }

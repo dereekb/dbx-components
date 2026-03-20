@@ -36,9 +36,9 @@ export interface MakeUrlSearchParamsOptions {
 /**
  * Creates URLSearchParams from the input objects. The input objects are merged together.
  *
- * @param input
- * @param omitKeys
- * @returns
+ * @param input - one or more objects (or nullish values) whose key-value pairs become search parameters
+ * @param options - optional configuration for filtering, omitting keys, and space encoding
+ * @returns a URLSearchParams instance built from the merged and filtered input
  */
 export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>) {
   const { omitKeys, filterEmptyValues: filterValues } = options ?? {};
@@ -73,6 +73,9 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
 
 /**
  * Merges an array of MakeUrlSearchParamsOptions into a single MakeUrlSearchParamsOptions value.
+ *
+ * @param options - one or more options objects whose omitKeys sets are combined
+ * @returns a single MakeUrlSearchParamsOptions with the union of all omitKeys
  */
 export function mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<MakeUrlSearchParamsOptions>>): MakeUrlSearchParamsOptions {
   const omitKeys = new Set<ObjectKey>();
@@ -84,6 +87,6 @@ export function mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<Make
   });
 
   return {
-    omitKeys: omitKeys.size > 0 ? Array.from(omitKeys) : undefined
+    omitKeys: omitKeys.size > 0 ? [...omitKeys] : undefined
   };
 }

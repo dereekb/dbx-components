@@ -1,4 +1,4 @@
-import { AbstractJestTestContextFixture, jestTestContextBuilder, type JestTestContextBuilderFunction } from './jest';
+import { AbstractTestContextFixture, testContextBuilder, type TestContextBuilderFunction } from '../shared/shared';
 
 export interface TestConfig {
   a: string;
@@ -8,10 +8,10 @@ export class TestInstance {
   constructor(readonly config?: TestConfig) {}
 }
 
-export class TestJestTestContextFixture extends AbstractJestTestContextFixture<TestInstance> {}
+export class TestJestTestContextFixture extends AbstractTestContextFixture<TestInstance> {}
 
 export function makeTestBuilder() {
-  return jestTestContextBuilder<TestInstance, TestJestTestContextFixture, TestConfig>({
+  return testContextBuilder<TestInstance, TestJestTestContextFixture, TestConfig>({
     buildConfig: (input?: Partial<TestConfig>) => ({ a: '0', ...input }),
     buildFixture: () => new TestJestTestContextFixture(),
     setupInstance: async (config) => new TestInstance(config),
@@ -19,7 +19,7 @@ export function makeTestBuilder() {
   });
 }
 
-describe('jestTestContextBuilder', () => {
+describe('testContextBuilder', () => {
   it('should return a builder function', () => {
     const testBuilder = makeTestBuilder();
 
@@ -27,8 +27,8 @@ describe('jestTestContextBuilder', () => {
     expect(typeof testBuilder).toBe('function');
   });
 
-  describe('JestTestContextBuilderFunction', () => {
-    const testBuilder: JestTestContextBuilderFunction<TestInstance, TestJestTestContextFixture, TestConfig> = makeTestBuilder();
+  describe('TestContextBuilderFunction', () => {
+    const testBuilder: TestContextBuilderFunction<TestInstance, TestJestTestContextFixture, TestConfig> = makeTestBuilder();
 
     it('should create a new test context with no config provided.', () => {
       const testContext = testBuilder();

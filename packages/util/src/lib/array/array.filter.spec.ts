@@ -34,7 +34,7 @@ describe('Array Filter Functions', () => {
 
     it('should filter out values with null from getValue', () => {
       const input = [1, 6, null, 20, undefined];
-      const result = filterValuesByDistanceNoOrder(input, 5, (x) => (x === null || x === undefined ? null : x));
+      const result = filterValuesByDistanceNoOrder(input, 5, (x) => x ?? null);
       expect(result).toEqual([1, 6, 20]);
     });
 

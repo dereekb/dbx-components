@@ -1,23 +1,27 @@
 import { stringTrimFunction, stringToUppercaseFunction, stringToLowercaseFunction, transformStringFunctionConfig, transformStringFunction, addPrefix, addPrefixFunction, addSuffix, addSuffixFunction, padStartFunction, sliceStringFunction, type TransformStringFunctionConfig, type TransformStringFunction } from './transform';
 
+const HELLO_WORLD = 'hello world';
+const HELLO_WORLD_UPPER = 'HELLO WORLD';
+const HELLO_WORLD_PADDED = '  Hello World  ';
+
 describe('stringTrimFunction', () => {
   it('should trim whitespace from both ends of the string.', () => {
-    expect(stringTrimFunction('  hello world  ')).toBe('hello world');
+    expect(stringTrimFunction('  hello world  ')).toBe(HELLO_WORLD);
   });
   it('should not change a string with no leading/trailing whitespace.', () => {
-    expect(stringTrimFunction('hello world')).toBe('hello world');
+    expect(stringTrimFunction(HELLO_WORLD)).toBe(HELLO_WORLD);
   });
 });
 
 describe('stringToUppercaseFunction', () => {
   it('should convert a string to uppercase.', () => {
-    expect(stringToUppercaseFunction('hello world')).toBe('HELLO WORLD');
+    expect(stringToUppercaseFunction(HELLO_WORLD)).toBe(HELLO_WORLD_UPPER);
   });
 });
 
 describe('stringToLowercaseFunction', () => {
   it('should convert a string to lowercase.', () => {
-    expect(stringToLowercaseFunction('HELLO WORLD')).toBe('hello world');
+    expect(stringToLowercaseFunction(HELLO_WORLD_UPPER)).toBe(HELLO_WORLD);
   });
 });
 
@@ -38,7 +42,7 @@ describe('transformStringFunctionConfig', () => {
 });
 
 describe('transformStringFunction', () => {
-  const testString = '  Hello World  ';
+  const testString = HELLO_WORLD_PADDED;
   const customTransform: TransformStringFunction = (s) => `transformed(${s})`;
 
   it('should return identity function if config is empty.', () => {
@@ -68,12 +72,12 @@ describe('transformStringFunction', () => {
 
   it('should trim and then convert to lowercase.', () => {
     const transformFn = transformStringFunction({ trim: true, toLowercase: true });
-    expect(transformFn(testString)).toBe('hello world');
+    expect(transformFn(testString)).toBe(HELLO_WORLD);
   });
 
   it('should trim and then convert to uppercase.', () => {
     const transformFn = transformStringFunction({ trim: true, toUppercase: true });
-    expect(transformFn(testString)).toBe('HELLO WORLD');
+    expect(transformFn(testString)).toBe(HELLO_WORLD_UPPER);
   });
 
   it('should trim and then apply custom transform.', () => {

@@ -21,6 +21,7 @@ export function indexRangeForArray<T>(array: T[]): IndexRange {
  * @param steps - Number of steps forward from the found index. Defaults to 1.
  * @returns The value at the next index, or undefined if no match is found or no next value exists.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function findNext<T>(array: Maybe<T[]>, find: ArrayFindDecisionFunction<T>, wrapAround = false, steps?: number): Maybe<T> {
   let result: Maybe<T>;
 
@@ -50,6 +51,7 @@ export function findNext<T>(array: Maybe<T[]>, find: ArrayFindDecisionFunction<T
  * @param steps - Number of steps forward from the current index.
  * @returns The computed next index, or undefined if the input index is out of bounds.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function getArrayNextIndex<T>(array: T[], index: number, wrapAround = false, steps = 1): Maybe<number> {
   let nextIndex: Maybe<number>;
   const arrayLength = array.length;
@@ -139,11 +141,17 @@ export function indexedValuesArrayAccessorFactory<T>(readIndexRange: ReadIndexRa
  * Contains the match result for a ranged index lookup, including the matched value and its neighbors.
  */
 export interface RangedIndexValuesArrayAccessorInfo<T> {
-  /** The value from the range immediately before the matched or queried range. */
+  /**
+   * The value from the range immediately before the matched or queried range.
+   */
   readonly prev?: Maybe<T>;
-  /** The value whose range contains the queried index, or undefined if no range matched. */
+  /**
+   * The value whose range contains the queried index, or undefined if no range matched.
+   */
   readonly match?: Maybe<T>;
-  /** The value from the range immediately after the matched or queried range. */
+  /**
+   * The value from the range immediately after the matched or queried range.
+   */
   readonly next?: Maybe<T>;
 }
 

@@ -17,7 +17,7 @@ import { type AscendingSortCompareFunction } from '../sort';
  * @param getValue - Function that extracts a numeric value from each item for distance comparison
  * @returns A filtered array with only values that are at least minDistance apart
  */
-export function filterValuesByDistance<T>(input: T[], minDistance: number, getValue: (value: T) => number | null): T[] {
+export function filterValuesByDistance<T>(_input: T[], _minDistance: number, _getValue: (value: T) => number | null): T[] {
   // TODO(FUTURE): Implement if needed.
 
   throw new Error('Incomplete implementation!');
@@ -35,7 +35,7 @@ export function filterValuesByDistance<T>(input: T[], minDistance: number, getVa
  * @returns A filtered array with only values that are at least minDistance apart, sorted by the extracted value
  */
 export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number, getValue: (value: T) => number | null): T[] {
-  const values: [T, number][] = input.map((x) => [x, getValue(x)] as [T, number]).filter((x) => x[1] != null);
+  const values: [T, number][] = input.map((x) => [x, getValue(x)] as [T, number | null]).filter((x): x is [T, number] => x[1] != null);
   return _filterValuesByDistance(values, minDistance, (x) => x[0]);
 }
 
@@ -86,6 +86,7 @@ function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: numbe
  * @param updateNonBestFit - Function that transforms non-best-fit items
  * @returns A new array with only the best fit item and transformed non-best-fit items
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
   return applyBestFit<T>(copyArray(input), filter, compare, updateNonBestFit);
 }
@@ -102,6 +103,7 @@ export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compar
  * @param updateNonBestFit - Function that transforms non-best-fit items
  * @returns The modified input array with only the best fit item and transformed non-best-fit items
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function applyBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
   const matchIndexSet = findToIndexSet(input, filter);
 

@@ -91,7 +91,7 @@ export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFet
     iteratePageItems: async (items, fetchPageResult, startIndex) => {
       const itemIndexPairs = items.map((x, i) => [x, i + startIndex] as const);
 
-      const performTasksResults = await performAsyncTasks(
+      return performAsyncTasks(
         itemIndexPairs,
         ([item, i]) => {
           return iterateEachPageItem(item, i, fetchPageResult);
@@ -101,8 +101,6 @@ export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFet
           ...iteratePerformTasksConfig
         }
       );
-
-      return performTasksResults;
     }
   });
 }
@@ -196,7 +194,7 @@ export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<Iterate
  * Result of {@link iterateFetchPagesByItems}, extending page-level results
  * with item-level counters.
  */
-export interface IterateFetchPagesByItemsResult<I, O, T, R> extends IterateFetchPagesResult {
+export interface IterateFetchPagesByItemsResult<_I, _O, _T, _R> extends IterateFetchPagesResult {
   /**
    * Total number of raw items loaded from all pages (pre-filter).
    */

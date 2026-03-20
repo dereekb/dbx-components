@@ -3,6 +3,7 @@ import { type Maybe } from '../value/maybe.type';
 
 /**
  * Trims leading and trailing whitespace from a string.
+ *
  * @param input The string to trim.
  * @returns The trimmed string.
  */
@@ -12,6 +13,7 @@ export function stringTrimFunction(input: string): string {
 
 /**
  * Converts a string to uppercase.
+ *
  * @param input The string to convert.
  * @returns The uppercase string.
  */
@@ -21,6 +23,7 @@ export function stringToUppercaseFunction(input: string): string {
 
 /**
  * Converts a string to lowercase.
+ *
  * @param input The string to convert.
  * @returns The lowercase string.
  */
@@ -67,7 +70,9 @@ export type TransformStringFunctionConfig<S extends string = string> = {
  * @template S The specific string type, defaults to `string`.
  */
 export interface TransformStringFunctionConfigRef<S extends string = string> {
-  /** The string transformation configuration. */
+  /**
+   * The string transformation configuration.
+   */
   readonly transform: TransformStringFunctionConfig<S>;
 }
 
@@ -145,9 +150,7 @@ export function transformStringFunction<S extends string = string>(config: Trans
     }
   }
 
-  if (transform == null) {
-    transform = MAP_IDENTITY as TransformStringFunction;
-  }
+  transform ??= MAP_IDENTITY as TransformStringFunction;
 
   return transform as unknown as TransformStringFunction<S>;
 }
@@ -168,6 +171,7 @@ export function addPrefix(prefix: string, input: string): string {
 export type AddPrefixFunction = (input: string) => string;
 /**
  * Creates a function that adds a configured prefix to the input string if it does not exist on that string.
+ *
  * @param prefix The prefix to add.
  * @returns A function that adds the prefix to a string.
  */
@@ -183,6 +187,7 @@ export type AddSuffixFunction = TransformStringFunction;
 
 /**
  * Adds a suffix to a string if it does not already end with that suffix.
+ *
  * @param suffix The suffix to add.
  * @param input The string to modify.
  * @returns The modified string.
@@ -193,6 +198,7 @@ export function addSuffix(suffix: string, input: string): string {
 
 /**
  * Creates a function that adds a configured suffix to the input string if it does not exist on that string.
+ *
  * @param suffix The suffix to add.
  * @returns A function that adds the suffix to a string.
  */
@@ -209,6 +215,7 @@ export type PadStartFunction = TransformStringFunction;
 
 /**
  * Pads the start of a string to a minimum length.
+ *
  * @param minLength The minimum length of the string.
  * @param padCharacter The character to use for padding.
  * @returns A function that pads the start of a string.

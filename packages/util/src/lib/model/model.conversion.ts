@@ -211,7 +211,7 @@ export type ModelFieldMapToFunction<I, O> = ModelFieldMapFunction<I, O>;
  */
 export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): ModelFieldMapFunction<I, O> {
   const convert = (config as ModelFieldMapMaybeWithDefaultConfig<I, O>).convert;
-  const convertMaybe = (config as ModelFieldMapMaybeTooConfig<I, O>).convertMaybe;
+  const convertMaybe = 'convertMaybe' in config ? (config as ModelFieldMapMaybeTooConfig<I, O>).convertMaybe : undefined;
   const defaultOutput = (config as ModelFieldMapMaybeWithDefaultDataConfig<I, O>).default;
   const defaultInput = (config as ModelFieldMapMaybeWithDefaultValueConfig<I, O>).defaultInput;
 
@@ -227,7 +227,7 @@ export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): 
       result = convert(input);
     } else {
       if (convertMaybe) {
-        result = convertMaybe(input ?? getDefaultInput());
+        result = convertMaybe(input);
       } else if (hasDefaultInput) {
         result = convert(getDefaultInput() as MaybeSo<I>);
       } else {
@@ -259,7 +259,7 @@ export type ToModelFieldConversionsInput<T extends object, O extends object> = M
  * @returns Resolved field conversions
  */
 export function toModelFieldConversions<T extends object, O extends object>(input: ToModelFieldConversionsInput<T, O>) {
-  const conversions: ModelFieldConversions<T, O> = (input as ModelFieldConversionsRef<T, O>).fieldConversions ?? modelFieldConversions<T, O>((input as ModelFieldConversionsConfigRef<T, O>).fields);
+  const conversions: ModelFieldConversions<T, O> = 'fieldConversions' in input ? (input as ModelFieldConversionsRef<T, O>).fieldConversions : modelFieldConversions<T, O>((input as ModelFieldConversionsConfigRef<T, O>).fields);
   return conversions;
 }
 
@@ -280,7 +280,7 @@ export type ToModelMapFunctionsInput<T extends object, O extends object> = ToMod
 export function toModelMapFunctions<T extends object, O extends object>(input: ToModelMapFunctionsInput<T, O>): ModelMapFunctions<T, O> {
   let mapFunctions: ModelMapFunctions<T, O>;
 
-  if ((input as ModelMapFunctionsRef<T, O>).mapFunctions != null) {
+  if ('mapFunctions' in input) {
     mapFunctions = (input as ModelMapFunctionsRef<T, O>).mapFunctions;
   } else {
     const conversions: ModelFieldConversions<T, O> = toModelFieldConversions(input as ToModelFieldConversionsInput<T, O>);

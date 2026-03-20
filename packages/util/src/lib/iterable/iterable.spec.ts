@@ -25,6 +25,32 @@ describe('isIterable()', () => {
   it('should return false for a number.', () => {
     expect(isIterable('test')).toBe(false);
   });
+
+  it('should return false for null.', () => {
+    expect(isIterable(null)).toBe(false);
+  });
+
+  it('should return false for undefined.', () => {
+    expect(isIterable(undefined)).toBe(false);
+  });
+
+  it('should return false for 0.', () => {
+    expect(isIterable(0)).toBe(false);
+  });
+
+  it('should return true for a custom iterable with Symbol.iterator.', () => {
+    const customIterable = {
+      [Symbol.iterator]() {
+        let i = 0;
+        return {
+          next() {
+            return i < 3 ? { value: i++, done: false } : { value: undefined, done: true };
+          }
+        };
+      }
+    };
+    expect(isIterable(customIterable)).toBe(true);
+  });
 });
 
 describe('isEmptyIterable()', () => {

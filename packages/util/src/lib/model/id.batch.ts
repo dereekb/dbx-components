@@ -78,7 +78,7 @@ export function idBatchFactory<T, K extends PrimativeKey = PrimativeKey>(config:
         const verifiedIds = await verifyTags(newIds);
 
         // concat identifiers
-        ids = ids.concat(verifiedIds);
+        ids = [...ids, ...verifiedIds];
 
         // restart loop if there are still items to be generated.
       }

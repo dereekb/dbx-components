@@ -18,7 +18,9 @@ export type IndexSetPairSet<T> = IndexSetPair<T>[];
  * Pairs an array item with its index position.
  */
 export interface IndexSetPair<T> extends IndexRef {
-  /** The item at the index, or undefined if no item exists at that position. */
+  /**
+   * The item at the index, or undefined if no item exists at that position.
+   */
   item: Maybe<T>;
 }
 

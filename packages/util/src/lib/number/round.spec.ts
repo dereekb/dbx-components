@@ -64,7 +64,7 @@ describe('cutValueToPrecision', () => {
     it('cutting repeating value', () => {
       const expectedValue = 5.555;
       const precision = 3;
-      const value = 5.5555555555555555555555;
+      const value = 5.555555555555555;
 
       const result = cutValueToPrecision(value, precision);
 

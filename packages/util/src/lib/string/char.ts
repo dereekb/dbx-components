@@ -36,8 +36,8 @@ export function firstAndLastCharacterOccurrence(input: string, find: string): Fi
     throw new Error('firstAndLastCharacterOccurrence() expects a single character as find input.');
   }
 
-  for (let i = 0; i < input.length; i += 1) {
-    if (input[i] === find) {
+  for (const [i, char] of [...input].entries()) {
+    if (char === find) {
       if (first === -1) {
         first = i;
       } else {
@@ -67,7 +67,7 @@ export function firstAndLastCharacterOccurrence(input: string, find: string): Fi
  * @returns true if the substring is found within the input
  */
 export function stringContains(input: string, find: string): boolean {
-  return input.indexOf(find) !== -1;
+  return input.includes(find);
 }
 
 /**
@@ -111,6 +111,7 @@ export function replaceLastCharacterIf(input: string, replacement: string, decis
  * @param decision - function that determines whether the character should be replaced
  * @returns the modified string, or the original if the decision is false
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function replaceCharacterAtIndexIf(input: string, index: number, replacement: string, decision: DecisionFunction<string>): string {
   if (decision(input[index])) {
     return replaceCharacterAtIndexWith(input, index, replacement);
@@ -172,8 +173,7 @@ export const UTF_PRIVATE_USAGE_AREA_START = '\uf8ff';
 export function stringCharactersToIndexRecord(chars: string): Record<string, number> {
   const record: Record<string, number> = {} as Record<string, number>;
 
-  for (let i = 0; i < chars.length; i += 1) {
-    const char = chars[i];
+  for (const [i, char] of [...chars].entries()) {
     record[char] = i;
   }
 

@@ -20,7 +20,7 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
  * @returns True if the input is a ServerError
  */
 export function isServerError(input: unknown): input is ServerError {
-  return input != null && typeof input === 'object' && (input as ServerError).status != null && (input as ServerError).code != null;
+  return input != null && typeof input === 'object' && 'status' in input && 'code' in input;
 }
 
 /**
@@ -32,6 +32,7 @@ export type ErrorMessageOrPartialServerError<T = ServerErrorResponseData> = stri
  * Normalizes a string or partial error into a Partial ServerError object.
  * If the input is a string, it becomes the message property.
  *
+ * @param message - a plain error message string that becomes the `message` property of the returned object
  * @param messageOrError - A string message or partial server error object
  * @returns A partial ServerError object
  */
@@ -44,6 +45,7 @@ export function partialServerError<T = ServerErrorResponseData>(messageOrError: 
   if (typeof messageOrError === 'string') {
     serverError = { message: messageOrError };
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     serverError = (messageOrError as Partial<ServerError<T>>) ?? {};
   }
 

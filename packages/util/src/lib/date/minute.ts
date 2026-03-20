@@ -38,14 +38,6 @@ export function millisecondsToMinutesAndSeconds(milliseconds: Milliseconds): Min
 }
 
 /**
- * A pair of minutes and seconds.
- */
-export interface MinutesAndSeconds {
-  readonly minute: number;
-  readonly second: number;
-}
-
-/**
  * Converts the input number of seconds to the equivalent in minutes and seconds.
  *
  * @param inputSeconds - The number of seconds to convert

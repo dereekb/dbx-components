@@ -33,7 +33,8 @@ type TestComplexClaims = {
 describe('authRoleClaimsFactory()', () => {
   describe('function', () => {
     function testConversion<T extends AuthClaimsObject>(service: AuthRoleClaimsService<T>, rolesSet: AuthRoleSet, name?: string) {
-      it(`should convert the the roles ${name ? `"${name}"` : ''} to claims claims and back.`, () => {
+      const nameLabel = name ? `"${name}"` : '';
+      it(`should convert the the roles ${nameLabel} to claims claims and back.`, () => {
         const claims = service.toClaims(rolesSet);
 
         expect(claims).toBeDefined();
@@ -170,6 +171,10 @@ describe('authRoleClaimsFactory()', () => {
                 return [AUTH_ADMIN_ROLE];
               case 2:
                 return [AUTH_USER_ROLE];
+              case undefined:
+              case null:
+              default:
+                break;
             }
           }
         },

@@ -87,8 +87,7 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
   const parsedExpiresFromDate = expiresFromDate != null ? dateFromDateOrTimeMillisecondsNumber(expiresFromDate) : null;
 
   function getNow(nowOverride?: Maybe<Date>) {
-    const now = nowOverride ?? inputNow ?? new Date();
-    return now;
+    return nowOverride ?? inputNow ?? new Date();
   }
 
   function hasExpired(nowOverride?: Maybe<Date>, defaultIfNoExpirationDate: boolean = false) {
@@ -141,7 +140,7 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
  * @param input - Input configuration used to calculate the expiration date
  * @returns The calculated expiration date, or null if no expiration is defined
  */
-export function calculateExpirationDate(input: ExpirationDetailsInput<any>): Maybe<Date> {
+export function calculateExpirationDate(input: ExpirationDetailsInput<Expires>): Maybe<Date> {
   return expirationDetails(input).getExpirationDate();
 }
 
@@ -190,7 +189,7 @@ export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<
  * @param details - Collection of ExpirationDetails to check
  * @returns True if at least one item has not expired, false otherwise
  */
-export function checkAtleastOneNotExpired(details: ExpirationDetails<any>[]): boolean {
+export function checkAtleastOneNotExpired(details: ExpirationDetails<Expires>[]): boolean {
   const firstExpired = details.findIndex((detail) => !detail.hasExpired());
   return firstExpired !== -1;
 }
@@ -205,7 +204,7 @@ export function checkAtleastOneNotExpired(details: ExpirationDetails<any>[]): bo
  * @param defaultIfEmpty - Default value to return if the list is empty (defaults to true)
  * @returns True if any item has expired, or the defaultIfEmpty value for an empty list
  */
-export function checkAnyHaveExpired(details: ExpirationDetails<any>[], defaultIfEmpty: boolean = true): boolean {
+export function checkAnyHaveExpired(details: ExpirationDetails<Expires>[], defaultIfEmpty: boolean = true): boolean {
   if (details.length === 0) {
     return defaultIfEmpty;
   }

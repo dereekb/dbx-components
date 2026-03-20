@@ -17,12 +17,18 @@ import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from '.
  */
 export type WebsiteProtocol = string;
 
-/** The HTTP protocol string literal type. */
+/**
+ * The HTTP protocol string literal type.
+ */
 export type HttpWebsiteProtocol = 'http';
-/** The HTTPS protocol string literal type. */
+/**
+ * The HTTPS protocol string literal type.
+ */
 export type HttpsWebsiteProtocol = 'https';
 
-/** Known HTTP protocols: `"http"` or `"https"`. */
+/**
+ * Known HTTP protocols: `"http"` or `"https"`.
+ */
 export type KnownHttpWebsiteProtocol = HttpWebsiteProtocol | HttpsWebsiteProtocol;
 
 /**
@@ -79,7 +85,7 @@ export type WebsiteTopLevelDomain = string;
  * This Regex is really only reliable for detecting that the TLD exists, but due to the nature of tld's
  * it cannot always be determined whether or not the part of the url is part of the tld or a subdomain.
  */
-export const WEBSITE_TLD_DETECTION_REGEX = /[^\/.\s]([^.\s]+)\.([^.\s]+)$/;
+export const WEBSITE_TLD_DETECTION_REGEX = /[^/.\s]([^.\s]+)\.([^.\s]+)$/;
 
 /**
  * Returns true if the input url has a website top level domain.
@@ -96,7 +102,7 @@ export function hasWebsiteTopLevelDomain(input: string): boolean {
 /**
  * Regex that matches a colon followed by digits, used to detect port numbers in URLs.
  */
-export const HAS_PORT_NUMBER_REGEX = /\:(\d+)/;
+export const HAS_PORT_NUMBER_REGEX = /:(\d+)/;
 
 /**
  * A connection port number.
@@ -199,27 +205,49 @@ export function isWebsiteUrl(input: string): input is WebsiteUrl {
  * Detailed analysis of whether an input string is a valid website URL, including its parsed components.
  */
 export interface WebsiteUrlDetails {
-  /** The original input string. */
+  /**
+   * The original input string.
+   */
   readonly input: string;
-  /** Whether the input is a valid website URL. */
+  /**
+   * Whether the input is a valid website URL.
+   */
   readonly isWebsiteUrl: boolean;
-  /** Whether the input has an `http://` or `https://` prefix. */
+  /**
+   * Whether the input has an `http://` or `https://` prefix.
+   */
   readonly hasHttpPrefix: boolean;
-  /** Whether the input contains a website domain. */
+  /**
+   * Whether the input contains a website domain.
+   */
   readonly hasWebsiteDomain: boolean;
-  /** Whether the input contains a port number. */
+  /**
+   * Whether the input contains a port number.
+   */
   readonly hasPortNumber: boolean;
-  /** The port number, or `undefined` if none is present. */
+  /**
+   * The port number, or `undefined` if none is present.
+   */
   readonly portNumber: PortNumber | undefined;
-  /** The domain and path split pair. */
+  /**
+   * The domain and path split pair.
+   */
   readonly splitPair: WebsiteDomainAndPathPair;
-  /** The extracted domain. */
+  /**
+   * The extracted domain.
+   */
   readonly domain: WebsiteDomain;
-  /** The full website path including query string. */
+  /**
+   * The full website path including query string.
+   */
   readonly websitePath: WebsitePath;
-  /** The path portion without query parameters. */
+  /**
+   * The path portion without query parameters.
+   */
   readonly path: string;
-  /** The query string portion, or undefined if none. */
+  /**
+   * The query string portion, or undefined if none.
+   */
   readonly query: string | undefined;
 }
 
@@ -427,8 +455,7 @@ export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionCon
   ]);
 
   return (input: WebsitePath | WebsiteDomainAndPath | WebsiteUrl) => {
-    const path = pathTransform(websitePathFromWebsiteUrl(input));
-    return path;
+    return pathTransform(websitePathFromWebsiteUrl(input));
   };
 }
 
@@ -436,9 +463,13 @@ export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionCon
  * A pair containing the path and optional query string components of a website URL.
  */
 export interface WebsitePathAndQueryPair {
-  /** The path portion of the URL (before the `?`). */
+  /**
+   * The path portion of the URL (before the `?`).
+   */
   path: WebsitePath;
-  /** The query string portion of the URL (including the leading `?`), if present. */
+  /**
+   * The query string portion of the URL (including the leading `?`), if present.
+   */
   query?: Maybe<WebsiteQueryString>;
 }
 
@@ -522,9 +553,13 @@ export function websitePathFromWebsiteDomainAndPath(input: WebsiteDomainAndPath)
  * A pair containing the domain and path components of a website URL.
  */
 export interface WebsiteDomainAndPathPair {
-  /** The domain portion of the URL. */
+  /**
+   * The domain portion of the URL.
+   */
   domain: WebsiteDomain;
-  /** The path portion of the URL. */
+  /**
+   * The path portion of the URL.
+   */
   path: WebsitePath;
 }
 
@@ -623,7 +658,9 @@ export function hasHttpPrefix(input: string): input is BaseWebsiteUrl {
  * Object representation of a `mailto:` URL.
  */
 export interface MailToUrl {
-  /** The email address for the mailto link. */
+  /**
+   * The email address for the mailto link.
+   */
   email: string;
 }
 

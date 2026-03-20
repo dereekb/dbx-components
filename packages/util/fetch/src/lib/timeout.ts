@@ -2,15 +2,26 @@ import { BaseError } from 'make-error';
 import { type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 
 export class FetchTimeoutError extends BaseError {
-  constructor(readonly response: Response, readonly timeout: number) {
+  constructor(
+    readonly response: Response,
+    readonly timeout: number
+  ) {
     super(`Fetch response was timed out (${timeout})`);
   }
 }
 
+/**
+ * Wraps a fetch function to add automatic timeout/abort support. If a timeout value
+ * is present on the RequestInit or Request and no abort signal is already provided,
+ * an AbortController is created to abort the request after the specified duration.
+ *
+ * @param inputFetch - the fetch function to wrap with timeout behavior
+ * @returns a wrapped fetch function that enforces timeouts via AbortController
+ */
 export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
   return (input: RequestInfo | URL, init: RequestInit | undefined) => {
     let controller: AbortController | undefined;
-    const timeout: number | null | undefined = (init as RequestInitWithTimeout)?.timeout ?? (input as RequestWithTimeout).timeout;
+    const timeout: number | null | undefined = (init as RequestInitWithTimeout | undefined)?.timeout ?? (input as RequestWithTimeout).timeout;
 
     // if signal is not provided, and a timeout is specified, configure the timeout
     if (!init?.signal && timeout) {

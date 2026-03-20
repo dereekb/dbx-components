@@ -11,6 +11,7 @@ describe('invertBooleanReturnFunction()', () => {
   });
 
   it('should return a function that is properly passed all the arguments from the input.', () => {
+    // eslint-disable-next-line @typescript-eslint/max-params
     const baseFilter = (a: number, b: string, c: string[], d: boolean) => {
       expect(typeof a).toBe('number');
       expect(typeof b).toBe('string');

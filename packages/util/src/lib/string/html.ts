@@ -45,7 +45,7 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<CssClassesArray>): Sp
 
   if (cssClasses) {
     const allClasses = cssClassesSet(cssClasses);
-    result = joinStringsWithSpaces(Array.from(allClasses));
+    result = joinStringsWithSpaces([...allClasses]);
   }
 
   return result;
@@ -63,13 +63,7 @@ export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass>
 
   if (cssClasses) {
     const arrayOfClasses = iterableToArray(cssClasses, false);
-    const arrayOfAllClassValues = arrayOfClasses
-      .map((x) =>
-        asArray(x)
-          .map((x) => x.split(' '))
-          .flat()
-      )
-      .flat();
+    const arrayOfAllClassValues = arrayOfClasses.flatMap((x) => asArray(x).flatMap((x) => x.split(' ')));
 
     result = new Set(arrayOfAllClassValues);
   } else {

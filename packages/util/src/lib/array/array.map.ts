@@ -53,11 +53,11 @@ export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(value
  * @param generateFn - function to create a new item for a key not found in existing items
  * @returns an array of items corresponding to each input key, in the same order
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function generateIfDoesNotExist<T, K extends PrimativeKey = PrimativeKey>(keys: K[], existing: T[], readKey: ReadKeyFunction<T, K>, generateFn: (key: K) => T): T[] {
   const map = arrayToMap(existing, readKey);
 
   return keys.map((x) => {
-    const value = map.get(x) ?? generateFn(x);
-    return value;
+    return map.get(x) ?? generateFn(x);
   });
 }

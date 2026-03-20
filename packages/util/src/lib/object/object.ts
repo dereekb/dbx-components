@@ -11,7 +11,7 @@ export type POJOKey = PrimativeKey | symbol;
 /**
  * This is an object that can be serialized to JSON and back and be equivalent.
  */
-export type JsonSerializableObject = Record<PrimativeKey, any>;
+export type JsonSerializableObject = Record<PrimativeKey, unknown>;
 
 /**
  * String key of an object.

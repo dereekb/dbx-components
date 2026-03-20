@@ -14,6 +14,8 @@ describe('fetchService()', () => {
 });
 
 describe('fetchRequestFactory()', () => {
+  const BEARER_TOKEN = 'Bearer token';
+
   describe('function', () => {
     describe('with baseRequest', () => {
       const baseUrl = 'https://components.dereekb.com/api/';
@@ -24,7 +26,7 @@ describe('fetchRequestFactory()', () => {
           baseRequest: {
             headers: {
               'Content-Type': 'application/json',
-              Authorization: 'Bearer token'
+              Authorization: BEARER_TOKEN
             }
           }
         });
@@ -32,7 +34,7 @@ describe('fetchRequestFactory()', () => {
         it('should use the base request', async () => {
           const result = await factory('test');
           const authHeader = result.headers.get('Authorization');
-          expect(authHeader).toBe('Bearer token');
+          expect(authHeader).toBe(BEARER_TOKEN);
         });
       });
 
@@ -42,7 +44,7 @@ describe('fetchRequestFactory()', () => {
           baseRequest: () => ({
             headers: {
               'Content-Type': 'application/json',
-              Authorization: 'Bearer token'
+              Authorization: BEARER_TOKEN
             }
           })
         });
@@ -50,7 +52,7 @@ describe('fetchRequestFactory()', () => {
         it('should use the base request', async () => {
           const result = await factory('test');
           const authHeader = result.headers.get('Authorization');
-          expect(authHeader).toBe('Bearer token');
+          expect(authHeader).toBe(BEARER_TOKEN);
         });
       });
 
@@ -60,7 +62,7 @@ describe('fetchRequestFactory()', () => {
           baseRequest: async () => ({
             headers: {
               'Content-Type': 'application/json',
-              Authorization: 'Bearer token'
+              Authorization: BEARER_TOKEN
             }
           })
         });
@@ -68,7 +70,7 @@ describe('fetchRequestFactory()', () => {
         it('should use the base request', async () => {
           const result = await factory('test');
           const authHeader = result.headers.get('Authorization');
-          expect(authHeader).toBe('Bearer token');
+          expect(authHeader).toBe(BEARER_TOKEN);
         });
       });
 
@@ -114,10 +116,10 @@ describe('fetchRequestFactory()', () => {
 
     describe('with baseUrl', () => {
       describe('invalid', () => {
-        itShouldFail('when creating a factory with an invalid base url', () => {
+        itShouldFail('when creating a factory with an invalid base url', async () => {
           const baseUrl = 'invalidurl';
 
-          expectFail(() =>
+          await expectFail(() =>
             testFetch.fetchRequestFactory({
               baseUrl
             })

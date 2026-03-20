@@ -72,9 +72,13 @@ export type PerformAsyncTaskFn<T, K = unknown> = (value: T, tryNumber?: number) 
  * The result of executing a single async task via {@link performAsyncTask}.
  */
 export interface PerformAsyncTaskResult<O> {
-  /** The resulting value if the task succeeded, or undefined on failure. */
+  /**
+   * The resulting value if the task succeeded, or undefined on failure.
+   */
   readonly value: Maybe<O>;
-  /** Whether the task completed successfully. */
+  /**
+   * Whether the task completed successfully.
+   */
   readonly success: boolean;
 }
 
@@ -82,13 +86,21 @@ export interface PerformAsyncTaskResult<O> {
  * The aggregated result of executing multiple async tasks via {@link performAsyncTasks}.
  */
 export interface PerformAsyncTasksResult<I, O> {
-  /** Input values whose tasks succeeded. */
+  /**
+   * Input values whose tasks succeeded.
+   */
   readonly succeded: I[];
-  /** Input values whose tasks failed. */
+  /**
+   * Input values whose tasks failed.
+   */
   readonly failed: I[];
-  /** Tuples of [input, output] for each successful task. */
+  /**
+   * Tuples of [input, output] for each successful task.
+   */
   readonly results: [I, O][];
-  /** Tuples of [input, error] for each failed task. */
+  /**
+   * Tuples of [input, error] for each failed task.
+   */
   readonly errors: [I, unknown][];
 }
 
@@ -187,7 +199,8 @@ export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: Per
 async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<[I, O, boolean]> {
   const { throwError: inputThrowError, retriesAllowed: inputRetriesAllowed, retryWait = 200, beforeRetry } = config;
   const throwError = inputThrowError ?? true; // throw errors by default
-  const retriesAllowed = inputRetriesAllowed ? inputRetriesAllowed : 0;
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const retriesAllowed = inputRetriesAllowed || 0;
 
   async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
     try {
@@ -271,7 +284,7 @@ export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksI
  * @returns A function that accepts an array of inputs and returns a Promise resolving when all tasks complete.
  */
 export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
-  const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
+  const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks: _waitBetweenTasks } = config;
   const defaultNonConcurrentTaskKeyFactory = makeDefaultNonConcurrentTaskKeyFactory();
   const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
 
@@ -378,7 +391,7 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  * with configurable concurrency limits and non-concurrent key constraints.
  *
  * @param config - Configuration for the task factory, parallelism, and concurrency behavior.
- * @returns A function that accepts a task input factory and returns a Promise resolving when all tasks complete.
+ * @returns a function that accepts a task input factory and returns a Promise that resolves when all tasks complete
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
   /**
@@ -431,11 +444,11 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           await waitForMs(waitBetweenTaskInputRequests);
         }
 
-        if (!isFulfillingTask && requestTasksQueue.length) {
+        if (requestTasksQueue.length) {
           const nextItemInQueue = requestTasksQueue.pop();
 
           if (nextItemInQueue) {
-            fulfillRequestMoreTasks(nextItemInQueue[0], nextItemInQueue[1]);
+            void fulfillRequestMoreTasks(nextItemInQueue[0], nextItemInQueue[1]);
           }
         }
       }
@@ -449,10 +462,9 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           if (isFulfillingTask) {
             requestTasksQueue.push([parallelIndex, promiseRef]);
 
-            const waited = await promiseRef.promise;
-            return waited;
+            return await promiseRef.promise;
           } else {
-            fulfillRequestMoreTasks(parallelIndex, promiseRef);
+            void fulfillRequestMoreTasks(parallelIndex, promiseRef);
           }
 
           return promiseRef.promise;
@@ -470,9 +482,29 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       const visitedTaskIndexes = new Set<IndexNumber>();
       const waitingConcurrentTasks = multiValueMapBuilder<(typeof incompleteTasks)[0], K>();
 
+      function tryAcquireTask(candidate: NonNullable<NextIncompleteTask>): 'skip' | 'defer' | 'acquired' {
+        const candidateIndex = candidate[2];
+
+        if (visitedTaskIndexes.has(candidateIndex)) {
+          return 'skip';
+        }
+
+        const keys = candidate[1];
+        const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
+
+        if (keyOfTaskCurrentlyInUse) {
+          keys.forEach((key) => waitingConcurrentTasks.addTuples(key, candidate));
+          return 'defer';
+        }
+
+        addToSet(currentParellelTaskKeys, keys);
+        return 'acquired';
+      }
+
       async function getNextTask(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
         let nextTask: NextIncompleteTask = undefined;
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- nextTask is reassigned within the loop but always reset to undefined before the condition is re-checked; loop exits via break
         while (!nextTask) {
           // request more tasks if the tasks list is empty
           if (!isOutOfTasks && incompleteTasks.length === 0) {
@@ -481,28 +513,17 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 
           nextTask = nextTask ?? incompleteTasks.pop();
 
-          if (nextTask != null) {
-            const nextTaskTuple = nextTask;
-            const nextTaskTupleIndex = nextTaskTuple[2];
-
-            if (visitedTaskIndexes.has(nextTaskTupleIndex)) {
-              // already run. Ignore.
-              nextTask = undefined;
-            } else {
-              const keys = nextTaskTuple[1];
-              const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
-
-              if (keyOfTaskCurrentlyInUse) {
-                keys.forEach((key) => waitingConcurrentTasks.addTuples(key, nextTaskTuple)); // add to each key as waiting
-                nextTask = undefined; // clear to continue loop
-              } else {
-                addToSet(currentParellelTaskKeys, keys); // add to the current task keys, exit loop
-                break;
-              }
-            }
-          } else {
-            break; // no tasks remaining, break.
+          if (nextTask == null) {
+            break;
           }
+
+          const result = tryAcquireTask(nextTask);
+
+          if (result === 'acquired') {
+            break;
+          }
+
+          nextTask = undefined;
         }
 
         if (nextTask) {
@@ -513,7 +534,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
         return nextTask;
       }
 
-      function onTaskCompleted(task: (typeof incompleteTasks)[0], parallelIndex: IndexNumber): void {
+      function onTaskCompleted(task: (typeof incompleteTasks)[0], _parallelIndex: IndexNumber): void {
         const keys = task[1];
         const indexesPushed = new Set<IndexNumber>();
 
@@ -522,6 +543,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           currentParellelTaskKeys.delete(key);
           const waitingForKey = waitingConcurrentTasks.get(key);
 
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
           while (true) {
             const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
 
@@ -556,10 +578,10 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
             const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
             currentRunIndex += 1;
 
-            promise.then(
+            void promise.then(
               () => {
                 onTaskCompleted(nextTask, parallelIndex);
-                setTimeout(() => dispatchNextPromise(parallelIndex), waitBetweenTasks);
+                setTimeout(() => void dispatchNextPromise(parallelIndex), waitBetweenTasks);
               },
               (e) => {
                 hasEncounteredFailure = true;
@@ -579,7 +601,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 
       // run the initial promises
       range(0, maxPromisesToRunAtOneTime).forEach((parallelIndex) => {
-        dispatchNextPromise(parallelIndex);
+        void dispatchNextPromise(parallelIndex);
       });
     });
   };
@@ -590,6 +612,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
  *
  * @returns A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }

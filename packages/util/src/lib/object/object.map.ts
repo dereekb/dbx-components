@@ -87,7 +87,7 @@ export function mapObjectToTargetObject<M extends ObjectMap<I>, I = unknown, O =
 /**
  * Maps each key of the input object to a new object using the pre-configured function.
  */
-export type MapObjectKeysFunction<M> = (object: M) => any;
+export type MapObjectKeysFunction<M> = (object: M) => unknown;
 
 /**
  * Map function that returns the new POJOKey using the input key/value pair.
@@ -102,6 +102,7 @@ export type MapObjectKeyFunction<M> = <K extends keyof M>(key: K, value: M[K]) =
  */
 export function mapObjectKeysFunction<M extends object>(mapKeyFn: MapObjectKeyFunction<M>): MapObjectKeysFunction<M> {
   return (object: M) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const target: any = {};
 
     Object.entries(object).forEach(([key, value]) => {

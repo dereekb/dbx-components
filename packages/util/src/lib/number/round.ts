@@ -222,6 +222,7 @@ export function roundNumberToStepFunction(input: RoundNumberToStepFunctionInput)
   const fn: Writable<RoundNumberToStepFunction> = ((input: Maybe<number>) => {
     let value: number;
 
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (typeof input) {
       case 'number':
         value = input;

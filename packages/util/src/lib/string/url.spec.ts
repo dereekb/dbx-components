@@ -22,6 +22,8 @@ import {
 } from './url';
 
 const domain = 'dereekb.com';
+const DOMAIN = 'dereekb.com';
+const HTTPS_DOMAIN = 'https://dereekb.com';
 
 describe('hasWebsiteDomain()', () => {
   it('should return true for website domains', () => {

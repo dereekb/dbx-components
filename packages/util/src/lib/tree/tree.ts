@@ -10,13 +10,21 @@
  *             which is suitable for basic trees but can be overridden for custom node types.
  */
 export interface TreeNode<T, N extends TreeNode<T, N> = TreeNode<T, any>> {
-  /** The depth of the node in the tree. The root node has a depth of 0. */
+  /**
+   * The depth of the node in the tree. The root node has a depth of 0.
+   */
   depth: number;
-  /** The value associated with this tree node. */
+  /**
+   * The value associated with this tree node.
+   */
   value: T;
-  /** A reference to the parent node, or undefined if this is the root node. */
+  /**
+   * A reference to the parent node, or undefined if this is the root node.
+   */
   parent?: N;
-  /** An array of child nodes, or undefined if this node has no children. */
+  /**
+   * An array of child nodes, or undefined if this node has no children.
+   */
   children?: N[];
 }
 

@@ -45,75 +45,99 @@ export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: Fil
     return false;
   }
 
-  // object check
-  if (typeof a === 'object') {
-    // check if they are arrays
-    if (isIterable(a, false)) {
-      if (Array.isArray(a)) {
-        if (a.length !== (b as any[]).length) {
-          return false;
-        }
-
-        const firstInequalityIndex = a.findIndex((aValue, i) => {
-          const bValue = (b as any[])[i];
-          return !areEqualPOJOValuesUsingPojoFilter(aValue, bValue, pojoFilter);
-        });
-
-        return firstInequalityIndex === -1;
-      } else if (a instanceof Set) {
-        return setsAreEquivalent(a, b as Set<any>);
-      } else if (a instanceof Map) {
-        const bMap = b as Map<any, any>;
-
-        if (a.size !== bMap.size) {
-          return false;
-        }
-
-        const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
-          const bValue = bMap.get(key);
-          return !areEqualPOJOValuesUsingPojoFilter(aValue, bValue, pojoFilter);
-        });
-
-        return firstInequalityIndex === -1;
-      }
-    } else if (typeof b === 'object') {
-      // check contructors/types
-      const firstType = a?.constructor.name;
-      const secondType = b?.constructor.name;
-
-      if (firstType !== secondType) {
-        return false; // false if not the same type
-      }
-
-      // check Date comparison
-      if (isDate(a)) {
-        return isEqualDate(a, b as Date);
-      }
-
-      // check object comparison via keys
-      const aObject = a as Record<string, any>;
-      const bObject = b as Record<string, any>;
-
-      const aKeys = Object.keys(aObject);
-      const bKeys = Object.keys(bObject);
-
-      // compare keys
-      if (aKeys.length === bKeys.length) {
-        const firstInequalityIndex = aKeys.findIndex((key) => {
-          const aKeyValue = aObject[key];
-          const bKeyValue = bObject[key];
-          return !areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
-        });
-
-        if (firstInequalityIndex === -1) {
-          return true; // is equal if no non-matching key/value pair is found
-        }
-      }
-    }
+  if (typeof a !== 'object') {
+    return false;
   }
 
-  // still not equal if down here
+  // check if they are iterables (arrays, Sets, Maps)
+  if (isIterable(a, false)) {
+    return _compareIterables(a, b, pojoFilter);
+  }
+
+  // check plain object comparison
+  if (typeof b === 'object') {
+    return _compareObjects(a, b, pojoFilter);
+  }
+
   return false;
+}
+
+function _compareIterables<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  if (Array.isArray(a)) {
+    return _compareArrays(a, b as unknown[], pojoFilter);
+  }
+
+  if (a instanceof Set) {
+    return setsAreEquivalent(a, b as Set<unknown>);
+  }
+
+  if (a instanceof Map) {
+    return _compareMaps(a, b as Map<unknown, unknown>, pojoFilter);
+  }
+
+  return false;
+}
+
+function _compareArrays<F>(a: unknown[], b: unknown[], pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  const firstInequalityIndex = a.findIndex((aValue, i) => {
+    const bValue = b[i];
+    return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
+  });
+
+  return firstInequalityIndex === -1;
+}
+
+function _compareMaps<F>(a: Map<unknown, unknown>, b: Map<unknown, unknown>, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
+
+  const firstInequalityIndex = [...a.entries()].findIndex(([key, aValue]) => {
+    const bValue = b.get(key);
+    return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
+  });
+
+  return firstInequalityIndex === -1;
+}
+
+function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  // check constructors/types
+  const firstType = (a as object)?.constructor.name;
+  const secondType = (b as object)?.constructor.name;
+
+  if (firstType !== secondType) {
+    return false;
+  }
+
+  // check Date comparison
+  if (isDate(a)) {
+    return isEqualDate(a, b as Date);
+  }
+
+  // check object comparison via keys
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const aObject = a as Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bObject = b as Record<string, any>;
+
+  const aKeys = Object.keys(aObject);
+  const bKeys = Object.keys(bObject);
+
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+
+  const firstInequalityIndex = aKeys.findIndex((key) => {
+    const aKeyValue = aObject[key];
+    const bKeyValue = bObject[key];
+    return !areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
+  });
+
+  return firstInequalityIndex === -1;
 }
 
 // MARK: ObjectFieldEqualityChecker
@@ -124,7 +148,7 @@ export interface ObjectFieldEqualityCheckerConfig<T extends object> {
   /**
    * Fields to capture as part of the compressor.
    */
-  readonly fields: (ObjectFieldEqualityCheckerFieldConfig<T, any> | FieldOfType<T>)[];
+  readonly fields: (ObjectFieldEqualityCheckerFieldConfig<T, FieldOfType<T>> | FieldOfType<T>)[];
   /**
    * Default equality function to use when a field's equality function is not provided.
    */
@@ -175,7 +199,7 @@ export interface ObjectFieldEqualityCheckResults<T extends object> {
  * Function used to check if two objects are considered equal.
  */
 export type ObjectFieldEqualityChecker<T extends object> = ((a: Partial<T>, b: Partial<T>) => ObjectFieldEqualityCheckResults<T>) & {
-  readonly _fields: Map<keyof T, ObjectFieldEqualityCheckerFieldConfig<T, any>>;
+  readonly _fields: Map<keyof T, ObjectFieldEqualityCheckerFieldConfig<T, FieldOfType<T>>>;
 };
 
 /**
@@ -188,10 +212,10 @@ export type ObjectFieldEqualityChecker<T extends object> = ((a: Partial<T>, b: P
  */
 export function objectFieldEqualityChecker<T extends object>(config: ObjectFieldEqualityCheckerConfig<T>): ObjectFieldEqualityChecker<T> {
   const { fields, defaultEqualityFunction = (a, b) => a === b } = config;
-  const _fields = new Map<keyof T, ObjectFieldEqualityCheckerFieldConfig<T, any>>();
+  const _fields = new Map<keyof T, ObjectFieldEqualityCheckerFieldConfig<T, FieldOfType<T>>>();
 
   fields.forEach((input) => {
-    let field: ObjectFieldEqualityCheckerFieldConfig<T, any>;
+    let field: ObjectFieldEqualityCheckerFieldConfig<T, FieldOfType<T>>;
 
     if (typeof input === 'object') {
       field = input;
@@ -211,7 +235,11 @@ export function objectFieldEqualityChecker<T extends object>(config: ObjectField
 
     _fields.forEach((fieldConfig, fieldName) => {
       const { isEqual } = fieldConfig;
-      isEqual(a[fieldName], b[fieldName]) ? equalFields.push(fieldName) : unequalFields.push(fieldName);
+      if (isEqual(a[fieldName], b[fieldName])) {
+        equalFields.push(fieldName);
+      } else {
+        unequalFields.push(fieldName);
+      }
     });
 
     return {

@@ -32,8 +32,8 @@ export interface MakeFileForFetchInput {
 /**
  * Creates a File object from the given input.
  *
- * @example
- * makeFileForFetch({ content: pdfBuffer, fileName: 'doc.pdf', mimeType: 'application/pdf' })
+ * @param input - configuration containing the file content, name, optional MIME type, and last modified timestamp
+ * @returns a File object constructed from the provided input
  */
 export function makeFileForFetch(input: MakeFileForFetchInput): File {
   const options: FilePropertyBag = {};
@@ -79,9 +79,8 @@ export interface FetchFileFromUrlInput {
  *
  * When safe is true, returns undefined instead of throwing on fetch failure.
  *
- * @example
- * const file = await fetchFileFromUrl({ url: 'https://example.com/doc.pdf' })
- * formData.append('file', file)
+ * @param input - configuration containing the URL, optional file name, MIME type override, and fetch function
+ * @returns the downloaded content as a File object, or undefined in safe mode on failure
  */
 export async function fetchFileFromUrl(input: FetchFileFromUrlInput): Promise<File>;
 export async function fetchFileFromUrl(input: FetchFileFromUrlInput, safe: true): Promise<Maybe<File>>;
@@ -155,6 +154,7 @@ export interface FetchUploadFile {
   readonly url: string;
   readonly fetch?: typeof fetch;
   readonly method?: FetchMethod;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   readonly body: FetchUploadFileBody;
 }
 
@@ -168,7 +168,11 @@ export interface FetchUploadFileBody {
 
 /**
  * @deprecated Use makeFileForFetch() with FormData and context.fetch() instead.
+ *
+ * @param input - configuration containing the upload URL, fetch function, HTTP method, and file body
+ * @returns a promise resolving to the fetch Response
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export function fetchUploadFile(input: FetchUploadFile) {
   const { fetch: inputFetch, url, body: inputBody } = input;
   const useFetch = inputFetch ?? fetch;

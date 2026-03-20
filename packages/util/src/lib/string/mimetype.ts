@@ -35,21 +35,37 @@ export type ContentTypeMimeType = string;
  */
 export type ImageFileExtension = 'jpeg' | 'jpg' | 'png' | 'webp' | 'gif' | 'svg' | 'raw' | 'heif' | 'tiff';
 
-/** MIME type for JPEG images. */
+/**
+ * MIME type for JPEG images.
+ */
 export const JPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpeg';
-/** MIME type for PNG images. */
+/**
+ * MIME type for PNG images.
+ */
 export const PNG_MIME_TYPE: MimeTypeWithoutParameters = 'image/png';
-/** MIME type for WebP images. */
+/**
+ * MIME type for WebP images.
+ */
 export const WEBP_MIME_TYPE: MimeTypeWithoutParameters = 'image/webp';
-/** MIME type for GIF images. */
+/**
+ * MIME type for GIF images.
+ */
 export const GIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/gif';
-/** MIME type for HEIF images. */
+/**
+ * MIME type for HEIF images.
+ */
 export const HEIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/heif';
-/** MIME type for TIFF images. */
+/**
+ * MIME type for TIFF images.
+ */
 export const TIFF_MIME_TYPE: MimeTypeWithoutParameters = 'image/tiff';
-/** MIME type for SVG images. */
+/**
+ * MIME type for SVG images.
+ */
 export const SVG_MIME_TYPE: MimeTypeWithoutParameters = 'image/svg+xml';
-/** MIME type for RAW images. */
+/**
+ * MIME type for RAW images.
+ */
 export const RAW_MIME_TYPE: MimeTypeWithoutParameters = 'image/raw';
 
 /**
@@ -100,25 +116,45 @@ export function imageFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutPar
  */
 export type DocumentFileExtension = 'pdf' | 'docx' | 'xlsx' | 'txt' | 'csv' | 'html' | 'xml' | 'json' | 'yaml' | 'md';
 
-/** MIME type for PDF documents. */
+/**
+ * MIME type for PDF documents.
+ */
 export const PDF_MIME_TYPE: MimeTypeWithoutParameters = 'application/pdf';
-/** MIME type for DOCX (Word) documents. */
+/**
+ * MIME type for DOCX (Word) documents.
+ */
 export const DOCX_MIME_TYPE: MimeTypeWithoutParameters = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-/** MIME type for XLSX (Excel) spreadsheets. */
+/**
+ * MIME type for XLSX (Excel) spreadsheets.
+ */
 export const XLSX_MIME_TYPE: MimeTypeWithoutParameters = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-/** MIME type for plain text files. */
+/**
+ * MIME type for plain text files.
+ */
 export const TXT_MIME_TYPE: MimeTypeWithoutParameters = 'text/plain';
-/** MIME type for CSV files. */
+/**
+ * MIME type for CSV files.
+ */
 export const CSV_MIME_TYPE: MimeTypeWithoutParameters = 'text/csv';
-/** MIME type for HTML files. */
+/**
+ * MIME type for HTML files.
+ */
 export const HTML_MIME_TYPE: MimeTypeWithoutParameters = 'text/html';
-/** MIME type for XML files. */
+/**
+ * MIME type for XML files.
+ */
 export const XML_MIME_TYPE: MimeTypeWithoutParameters = 'application/xml';
-/** MIME type for JSON files. */
+/**
+ * MIME type for JSON files.
+ */
 export const JSON_MIME_TYPE: MimeTypeWithoutParameters = 'application/json';
-/** MIME type for YAML files. */
+/**
+ * MIME type for YAML files.
+ */
 export const YAML_MIME_TYPE: MimeTypeWithoutParameters = 'application/yaml';
-/** MIME type for Markdown files. */
+/**
+ * MIME type for Markdown files.
+ */
 export const MARKDOWN_MIME_TYPE: MimeTypeWithoutParameters = 'text/markdown';
 
 /**
@@ -170,7 +206,9 @@ export function documentFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithout
  */
 export type ApplicationFileExtension = 'zip';
 
-/** MIME type for ZIP archive files. */
+/**
+ * MIME type for ZIP archive files.
+ */
 export const ZIP_FILE_MIME_TYPE: MimeTypeWithoutParameters = 'application/zip';
 
 /**

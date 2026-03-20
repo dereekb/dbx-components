@@ -45,7 +45,7 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
   if (treatStringAsIterable && typeof values === 'string') {
     iterable = [values];
   } else if (isIterable(values)) {
-    iterable = Array.from(values); // copy the array
+    iterable = [...values]; // copy the array
   } else {
     iterable = [values];
   }
@@ -74,8 +74,7 @@ export function iterableToSet<T = unknown>(values: IterableOrValue<T>, treatStri
  * @returns A Map with the extracted keys and their corresponding values
  */
 export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: IterableOrValue<T>, readKey: ReadKeyFunction<T, K>): Map<Maybe<K>, T> {
-  const map = new Map<Maybe<K>, T>(iterableToArray(values).map((value) => [readKey(value), value]));
-  return map;
+  return new Map<Maybe<K>, T>(iterableToArray(values).map((value) => [readKey(value), value]));
 }
 
 /**
@@ -87,11 +86,15 @@ export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: 
  * @returns True if the value is iterable
  */
 export function isIterable<T = unknown>(values: unknown, treatStringAsIterable = false): values is Iterable<T> {
-  if (values && (values as Iterable<T>)[Symbol.iterator] && (treatStringAsIterable || typeof values !== 'string')) {
-    return true;
-  } else {
-    return false;
+  if (typeof values === 'string') {
+    return treatStringAsIterable;
   }
+
+  if (values != null && typeof values === 'object' && Symbol.iterator in values) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -249,7 +252,7 @@ export function wrapTuples<T>(input: IterableOrValue<T>): T[] {
         const expectedLength = firstValueInPotentialTupleOrArray.length;
 
         // if it is an array of tuples, all values should be the same length and be arrays. If not an array, then we're looking at a tuple.
-        const firstNonUniformTupleValueIndex = input.findIndex((x: any) => {
+        const firstNonUniformTupleValueIndex = input.findIndex((x: unknown) => {
           if (Array.isArray(x)) {
             return x.length !== expectedLength;
           } else {

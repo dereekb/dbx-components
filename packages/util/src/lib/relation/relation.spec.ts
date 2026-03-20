@@ -204,7 +204,7 @@ describe('ModelRelationUtility', () => {
               expect(result).toBeDefined();
               expect(result.filter((x) => x.type === 'a').length).toBe(1);
               expect(result.filter((x) => x.type === 'b').length).toBe(1);
-              expect(result.filter((x) => x.type === 'a')[0].key).toBe('c');
+              expect(result.find((x) => x.type === 'a').key).toBe('c');
             });
           });
         });

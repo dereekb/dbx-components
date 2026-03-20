@@ -142,7 +142,7 @@ export async function useAsync<I, O = void>(input: Maybe<I>, use: UseValue<I, O>
   if (input != null) {
     result = (await use(input)) as Maybe<O>;
   } else {
-    result = await getValueFromGetter(defaultValue);
+    result = getValueFromGetter(defaultValue);
   }
 
   return result;

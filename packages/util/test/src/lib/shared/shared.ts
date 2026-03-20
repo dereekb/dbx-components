@@ -17,6 +17,7 @@ export type TestDoneCallback = ((...args: any[]) => any) & {
 
 /**
  * Passes the error to the TestDoneCallback.
+ *
  * @param done - the test framework's done callback to signal completion or failure
  * @param e - the error to pass to the callback; defaults to a generic error
  */

@@ -115,7 +115,9 @@ export type HandlerConfigurerFactory<C extends HandlerBindAccessor<T, K, R>, T, 
  * Configuration for {@link handlerConfigurerFactory}.
  */
 export interface HandlerConfigurerFactoryConfig<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> {
-  /** Creates a typed configurer from a bind accessor. */
+  /**
+   * Creates a typed configurer from a bind accessor.
+   */
   configurerForAccessor: (accessor: HandlerBindAccessor<T, K, R>) => C;
 }
 

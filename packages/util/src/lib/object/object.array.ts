@@ -25,6 +25,7 @@ export function objectFlatMergeMatrix<A extends object = object, B extends objec
  * @returns 2D array where result[i][j] is `{ ...a[i], ...b[j] }`
  */
 export function objectMergeMatrix<A extends object = object, B extends object = object>(a: ArrayOrValue<Partial<A>>, b: ArrayOrValue<Partial<B>>): (Partial<A> & Partial<B>)[][] {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (a && b) {
     const aNorm = convertToArray(a);
     const bNorm = convertToArray(b);
@@ -34,8 +35,10 @@ export function objectMergeMatrix<A extends object = object, B extends object = 
     });
 
     return results;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   } else if (a) {
     return [convertToArray(a) as []];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   } else if (b) {
     return [convertToArray(b) as []];
   } else {

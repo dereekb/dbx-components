@@ -25,7 +25,7 @@ export function fetchPageToPageNumber(defaultReturnAtPage = 3): FetchPageFactory
   return fetchPageFactory<TestFetchPageInput, TestFetchPage>({
     fetch: async function (input: TestFetchPageInput): Promise<TestFetchPage> {
       const items = randomNumbers(input.itemsPerPage ?? DEFAULT_ITEMS_PER_PAGE);
-      const hasNext = (input?.page ?? 0) < (input.returnAtPage ?? defaultReturnAtPage);
+      const hasNext = (input.page ?? 0) < (input.returnAtPage ?? defaultReturnAtPage);
 
       const result: TestFetchPage = {
         page: input.page ?? 0,

@@ -91,21 +91,6 @@ export type MultiModelKeyMap<T> = Map<string, T>;
 export const readUniqueModelKey = (model: UniqueModel) => model.id;
 
 /**
- * Abstract base class for models identified by a unique {@link ModelKey}.
- *
- * Copies the `id` from the provided template during construction.
- */
-export abstract class AbstractUniqueModel {
-  id?: ModelKey;
-
-  constructor(template: Partial<AbstractUniqueModel>) {
-    if (template) {
-      this.id = template.id;
-    }
-  }
-}
-
-/**
  * Deduplicates an array of model keys using a Set.
  *
  * @param keys - Array of model keys that may contain duplicates
@@ -118,7 +103,7 @@ export abstract class AbstractUniqueModel {
  * ```
  */
 export function uniqueKeys(keys: ModelKey[]): ModelKey[] {
-  return Array.from(new Set(keys));
+  return [...new Set(keys)];
 }
 
 /**
@@ -158,6 +143,7 @@ export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], requ
  * @param read - Function to extract keys from models
  * @returns Keys that appear in one array but not the other
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function symmetricDifferenceWithModels<T extends UniqueModel>(a: ModelOrKey<T>[], b: ModelOrKey<T>[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
   return symmetricDifferenceArray(readModelKeys(a, required, read), readModelKeys(b, required, read));
 }
@@ -204,10 +190,7 @@ export function makeModelMap<T>(input: T[], read: ReadModelKeyFunction<T>): Map<
 export function makeModelMap<T>(input: T[], read?: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T> {
   const map = new Map<Maybe<ModelKey>, T>();
 
-  if (input) {
-    input.forEach((x) => map.set(readModelKey<T>(x, { required: false, read: read as ReadModelKeyFunction<T> }), x));
-  }
-
+  input.forEach((x) => map.set(readModelKey<T>(x, { required: false, read: read as ReadModelKeyFunction<T> }), x));
   return map;
 }
 
@@ -224,6 +207,7 @@ export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFuncti
   const map = new Map<string, T>();
 
   input.forEach((x) => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     const keys = read(x) ?? [];
     keys.forEach((key) => map.set(key, x));
   });
@@ -238,12 +222,16 @@ export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFuncti
  *
  * @param input - A model object or a model key string
  * @param config - Handlers for model and key cases, plus whether input is required
+ * @param config.useModel - handler invoked when the input is a model object; if omitted, the model's key is passed to `useKey` instead
+ * @param config.useKey - handler invoked when the input is a model key string
+ * @param config.required - when true, throws an error if the input is nullish; defaults to false
  * @returns The result of the matched handler, or undefined if input is nullish and not required
  * @throws Error if `required` is true and input is nullish
  */
 export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { useModel, useKey, required = false }: { useModel?: (model: T) => O; useKey: (key: Maybe<ModelKey>) => O; required?: boolean }): Maybe<O> {
   let result: Maybe<O>;
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (input != null) {
     if (isModelKey(input)) {
       result = useKey(input);
@@ -251,7 +239,7 @@ export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { 
       result = useModel ? useModel(input) : useKey(readModelKey(input));
     }
   } else if (required) {
-    throwKeyIsRequired();
+    throw new Error('input is required');
   }
 
   return result;
@@ -294,6 +282,7 @@ export function readModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undef
 export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'string':
       key = input as ModelKey;
@@ -339,6 +328,7 @@ export function readModelKeyFromObject<T extends UniqueModel>(input: T, required
  * @returns `true` if the input is a string key
  */
 export function isModelKey<T extends UniqueModel>(input: ModelOrKey<T>): input is ModelKey {
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'string':
       return true;
@@ -422,4 +412,22 @@ export function modelTypeDataPairFactory<T, M extends ModelTypeString = ModelTyp
       data
     };
   };
+}
+
+// MARK: COMPAT
+/**
+ * Abstract base class for models identified by a unique {@link ModelKey}.
+ *
+ * Copies the `id` from the provided template during construction.
+ *
+ * @deprecated Use {@link UniqueModel} instead.
+ */
+export abstract class AbstractUniqueModel {
+  id?: ModelKey;
+
+  constructor(template: Partial<AbstractUniqueModel>) {
+    if (template) {
+      this.id = template.id;
+    }
+  }
 }

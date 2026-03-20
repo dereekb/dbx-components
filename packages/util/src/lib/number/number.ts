@@ -68,6 +68,7 @@ export type AsNumberInput = Maybe<NumberOrNumberString>;
 export function asNumber(input: AsNumberInput): number {
   let value: number;
 
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'number':
       value = input;
@@ -160,12 +161,15 @@ export function sumOfIntegersBetween(from: number, to: number): number {
   const totalNumbers = y - x + 1;
   const sum = x + y;
 
-  const sumOfIntegers = (sum / 2) * totalNumbers;
-  return sumOfIntegers;
+  return (sum / 2) * totalNumbers;
 }
 
 /**
  * A {@link SortCompareFunction} for numbers that sorts in ascending order.
+ *
+ * @param a - the first number to compare
+ * @param b - the second number to compare
+ * @returns a negative value if `a` is less than `b`, zero if equal, or a positive value if `a` is greater
  */
 export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => a - b;
 

@@ -76,12 +76,12 @@ describe('burstPromiseRateLimiter()', () => {
 
   it('should cooldown between executions faster with a higher cooldown rate', async () => {
     const limiter = exponentialPromiseRateLimiter({ cooldownRate: 2 });
-    limiter.waitForRateLimit();
+    void limiter.waitForRateLimit();
 
     const waitTimeA = limiter.getNextWaitTime();
     expect(waitTimeA).toBe(0);
 
-    limiter.waitForRateLimit();
+    void limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
     expect(waitTimeB).toBeGreaterThan(MS_IN_SECOND / 2);
     expect(waitTimeB).toBeLessThanOrEqual(2 * MS_IN_SECOND);

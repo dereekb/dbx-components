@@ -32,7 +32,7 @@ export type ISO8601DateString = string;
  *
  * TODO(FUTURE): Need to improve to support negative years.
  */
-export const ISO_8601_DATE_STRING_REGEX = /(\d{4,})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})(Z|[+-](\d{2})\:(\d{2}))?/;
+export const ISO_8601_DATE_STRING_REGEX = /(\d{4,})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-](\d{2}):(\d{2}))?/;
 
 /**
  * Determines if a string is a valid ISO8601 date string.
@@ -263,8 +263,7 @@ export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO
     year = `20${year}`;
   }
 
-  const result = `${year}-${month}-${day}`;
-  return result;
+  return `${year}-${month}-${day}`;
 }
 
 /**

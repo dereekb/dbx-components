@@ -119,9 +119,8 @@ export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeTyp
  * @param errorFn - function expected to throw an error (sync or async)
  * @param assertFailType - optional assertion to validate the type or content of the thrown error
  */
-export function expectFail(errorFn: () => void, assertFailType?: ExpectFailAssertionFunction): void;
-export function expectFail(errorFn: () => Promise<void>, assertFailType?: ExpectFailAssertionFunction): Promise<void>;
-export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, assertFailType?: ExpectFailAssertionFunction): PromiseOrValue<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: ExpectFailAssertionFunction): Promise<void> {
   function handleError(e: unknown) {
     if (e instanceof UnexpectedSuccessFailureError) {
       throw e;
@@ -140,13 +139,15 @@ export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, ass
     const result = errorFn();
 
     if (isPromise(result)) {
-      return result.then(failDueToSuccess).catch(handleError);
+      return result.then(failDueToSuccess).catch(handleError) as Promise<void>;
     } else {
       failDueToSuccess();
     }
   } catch (e) {
     handleError(e);
   }
+
+  return Promise.resolve();
 }
 
 /**
