@@ -15,7 +15,7 @@ export class ZohoAccountsApi {
     @Inject(ZohoAccountsServiceConfig) readonly config: ZohoAccountsServiceConfig,
     @Inject(ZohoAccountsAccessTokenCacheService) readonly cacheService: ZohoAccountsAccessTokenCacheService
   ) {
-    const accessTokenCache = config.zohoAccounts.accessTokenCache ? config.zohoAccounts.accessTokenCache : cacheService.loadZohoAccessTokenCache(config.zohoAccounts.serviceAccessTokenKey);
+    const accessTokenCache = config.zohoAccounts.accessTokenCache ?? cacheService.loadZohoAccessTokenCache(config.zohoAccounts.serviceAccessTokenKey);
     this.zohoAccounts = zohoAccountsFactory(config.factoryConfig ?? {})({
       accessTokenCache,
       ...config.zohoAccounts

@@ -227,12 +227,10 @@ export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAcces
         throw new ZohoAccountsAuthFailureError('Token Refresh Failed');
       }
 
-      if (currentToken) {
-        try {
-          await accessTokenCache?.updateCachedToken(currentToken);
-        } catch (e) {
-          // do nothing
-        }
+      try {
+        await accessTokenCache?.updateCachedToken(currentToken);
+      } catch {
+        // do nothing
       }
     }
 

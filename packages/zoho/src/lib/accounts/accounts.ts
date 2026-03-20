@@ -91,12 +91,15 @@ export type ZohoAccessTokenStringFactory = () => Promise<ZohoAccessTokenString>;
 
 /**
  * Generates a new ZohoAccessTokenStringFactory.
+ *
+ * @param zohoAccessTokenFactory - Factory that produces ZohoAccessToken instances
+ * @returns A factory function that resolves to the access token string
  */
 export function zohoAccessTokenStringFactory(zohoAccessTokenFactory: ZohoAccessTokenFactory): ZohoAccessTokenStringFactory {
   return async () => {
     const token = await zohoAccessTokenFactory();
 
-    if (!token?.accessToken) {
+    if (!token.accessToken) {
       throw new ZohoAccountsAuthFailureError();
     }
 

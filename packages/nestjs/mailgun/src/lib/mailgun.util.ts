@@ -77,6 +77,9 @@ export type MailgunRecipientBatchSendTargetFromReplyToBatchGroupKey = string;
 
 /**
  * Creates a composite key from the from/replyTo email addresses used to group MailgunRecipientBatchSendTarget values.
+ *
+ * @param recipient - the batch send target whose from/replyTo addresses are used as the grouping key
+ * @returns a string key in the form "f:{fromEmail}|r:{replyToEmail}" used to group recipients into batches
  */
 export function mailgunRecipientBatchSendTargetFromReplyToBatchGroupKey(recipient: MailgunRecipientBatchSendTarget): MailgunRecipientBatchSendTargetFromReplyToBatchGroupKey {
   const fromEmail = (recipient.from?.email ?? '').toLowerCase();
@@ -218,23 +221,14 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
 
       if (mailgunRecipientBatchSendTargetEntityKeyRecipientLookup) {
         // try the fromKey, otherwise use the baseRequest.from
-        if (!from) {
-          from = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.fromKey, baseRequest.from);
-        }
+        from ??= mailgunRecipientBatchSendTargetEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.fromKey, baseRequest.from);
 
         // try the replyToKey, otherwise use the baseRequest.replyTo
-        if (!replyTo) {
-          replyTo = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.replyToKey, baseRequest.replyTo);
-        }
+        replyTo ??= mailgunRecipientBatchSendTargetEntityKeyRecipientLookup.getRecipientOrDefaultForKey(recipient.replyToKey, baseRequest.replyTo);
       } else {
         // use defaults from base request
-        if (!from) {
-          from = baseRequest.from;
-        }
-
-        if (!replyTo) {
-          replyTo = baseRequest.replyTo;
-        }
+        from ??= baseRequest.from;
+        replyTo ??= baseRequest.replyTo;
       }
 
       const cc = determineCarbonCopyRecipients({
@@ -260,13 +254,13 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
       return result;
     });
 
-    const allowBatchSend = configAllowBatchSend && (allowSingleRecipientBatchSendRequests || recipients.length > 1);
+    const allowBatchSend = configAllowBatchSend && (allowSingleRecipientBatchSendRequests ?? recipients.length > 1);
 
     const nonBatchSendRequests: MailgunTemplateEmailRequest[] = [];
     const batchSendRequestRecipients: MailgunRecipientBatchSendTarget[] = [];
 
     recipients.forEach((recipient) => {
-      const recipientHasCarbonCopy = Boolean(recipient.cc?.length || recipient.bcc?.length);
+      const recipientHasCarbonCopy = Boolean(recipient.cc?.length ?? recipient.bcc?.length);
 
       if (allowBatchSend && !recipientHasCarbonCopy) {
         // add to batch send recipients
@@ -277,7 +271,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
         // use the subject from the recipient's user variables if available as a default
         const cc = recipient.cc;
         const bcc = recipient.bcc;
-        const subject = (useSubjectFromRecipientUserVariables ? recipient.userVariables?.['subject'] : undefined) ?? defaultSubject ?? recipient.userVariables?.['subject'];
+        const subject = ((useSubjectFromRecipientUserVariables ? recipient.userVariables?.['subject'] : undefined) ?? defaultSubject ?? recipient.userVariables?.['subject']) as string;
 
         const request = {
           ...baseRequest,

@@ -43,7 +43,8 @@ export interface ZoomAuthClientIdAndSecretPair {
   readonly clientSecret: ZoomOAuthClientSecret;
 }
 
-export interface ZoomConfig { }
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+export interface ZoomConfig {}
 
 /**
  * Secret token used for validating Zoom webhooks.

@@ -8,6 +8,15 @@ import { MailgunService } from './mailgun.service';
 
 const mailgunLogger = new Logger('MailgunServiceModule');
 
+/**
+ * Factory that creates a MailgunServiceConfig from environment variables.
+ *
+ * Automatically switches to sandbox credentials when USE_MAILGUN_SANDBOX is true or the environment is a test environment.
+ *
+ * @param configService - NestJS config service for reading environment variables
+ * @param serverEnvironmentService - service indicating the current server environment
+ * @returns a validated MailgunServiceConfig
+ */
 export function mailgunServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): MailgunServiceConfig {
   const isTestingEnv = serverEnvironmentService.isTestingEnv;
   const useSandbox = configService.get<string>('USE_MAILGUN_SANDBOX') === 'true' || isTestingEnv;
@@ -25,7 +34,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
     } else if (!serverEnvironmentService.isTestingEnv) {
       mailgunLogger.log(`Using Mailgun Sandbox Domain: ${domain}`);
     }
-  } else if (!serverEnvironmentService.isTestingEnv) {
+  } else {
     mailgunLogger.log(`Using Mailgun Production Domain: ${domain}`);
   }
 
@@ -66,6 +75,12 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
   return config;
 }
 
+/**
+ * NestJS module that provides the MailgunApi and MailgunService for sending emails.
+ *
+ * Reads Mailgun credentials and sender configuration from environment variables,
+ * with automatic fallback to sandbox settings in test environments.
+ */
 @Module({
   imports: [ConfigModule],
   providers: [

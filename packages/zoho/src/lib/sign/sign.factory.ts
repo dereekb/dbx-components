@@ -95,7 +95,7 @@ export function zohoSignFactory(factoryConfig: ZohoSignFactoryConfig): ZohoSignF
 
     const fetch: ConfiguredFetch = handleZohoSignErrorFetch(baseFetch, logZohoServerErrorFunction, (x) => {
       if (x instanceof ZohoInvalidTokenError) {
-        accountsContext.loadAccessToken.resetAccessToken();
+        void accountsContext.loadAccessToken.resetAccessToken();
       }
     });
 

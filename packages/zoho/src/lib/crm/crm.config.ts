@@ -26,6 +26,9 @@ export type ZohoCrmConfigApiUrlInput = ZohoCrmApiUrlKey | ZohoCrmApiUrl;
 
 /**
  * Resolves a CRM API URL input to its full base URL. Well-known keys ('sandbox', 'production') map to their respective Zoho CRM endpoints; custom URLs pass through unchanged.
+ *
+ * @param input - A well-known environment key or a custom CRM API URL
+ * @returns The resolved full Zoho CRM API base URL
  */
 export function zohoCrmConfigApiUrl(input: ZohoCrmConfigApiUrlInput): ZohoApiUrl {
   switch (input) {

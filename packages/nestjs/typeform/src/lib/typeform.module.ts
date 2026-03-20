@@ -4,6 +4,14 @@ import { TypeformApi } from './typeform.api';
 import { TYPEFORM_SECRET_TOKEN_ENV_VAR, TYPEFORM_BASE_URL_ENV_VAR, TypeformServiceConfig } from './typeform.config';
 import { type TypeformApiToken } from './typeform.type';
 
+/**
+ * Factory that creates a TypeformServiceConfig from environment variables.
+ *
+ * Reads the Typeform API token and optional base URL from environment variables.
+ *
+ * @param configService - NestJS config service for reading environment variables
+ * @returns a validated TypeformServiceConfig
+ */
 export function typeFormServiceConfigFactory(configService: ConfigService): TypeformServiceConfig {
   const config: TypeformServiceConfig = {
     typeform: {
@@ -18,6 +26,11 @@ export function typeFormServiceConfigFactory(configService: ConfigService): Type
   return config;
 }
 
+/**
+ * NestJS module that provides the TypeformApi service.
+ *
+ * Reads the Typeform API token and optional base URL from environment variables.
+ */
 @Module({
   imports: [ConfigModule],
   providers: [

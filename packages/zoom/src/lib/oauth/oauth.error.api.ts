@@ -34,8 +34,14 @@ export class ZoomOAuthAuthFailureError extends FetchRequestFactoryError {
 
 export const logZoomOAuthErrorToConsole = logZoomServerErrorFunction('ZoomOAuth');
 
+/**
+ * Parses a FetchResponseError into a typed Zoom OAuth error.
+ *
+ * @param responseError The fetch response error to parse
+ * @returns The parsed error, or undefined if parsing fails
+ */
 export async function parseZoomOAuthError(responseError: FetchResponseError) {
-  const data: ZoomServerErrorData | undefined = await responseError.response.json().catch((x) => undefined);
+  const data: ZoomServerErrorData | undefined = await responseError.response.json().catch(() => undefined);
   let result: ParsedZoomServerError | undefined;
 
   if (data) {
@@ -45,11 +51,18 @@ export async function parseZoomOAuthError(responseError: FetchResponseError) {
   return result;
 }
 
+/**
+ * Parses a ZoomServerErrorData into a Zoom OAuth-specific error.
+ *
+ * @param zoomServerError The raw error data from the Zoom API
+ * @param responseError The original fetch response error
+ * @returns A parsed error, or undefined if the error is unrecognized
+ */
 export function parseZoomOAuthServerErrorResponseData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError) {
   let result: ParsedZoomServerError | undefined;
 
-  if (zoomServerError) {
-    const potentialErrorStringCode = (zoomServerError as unknown as ZoomOauthInvalidGrantErrorData).error;
+  {
+    const potentialErrorStringCode = (zoomServerError as unknown as Partial<ZoomOauthInvalidGrantErrorData>).error;
     const errorCode = potentialErrorStringCode ?? zoomServerError.code;
 
     switch (errorCode) {

@@ -9,7 +9,7 @@ export abstract class ZoomServiceConfig {
   readonly zoom!: ZoomServiceApiConfig;
   readonly factoryConfig?: ZoomFactoryConfig;
 
-  static assertValidConfig(config: ZoomServiceConfig) {
+  static assertValidConfig(_config: ZoomServiceConfig) {
     // TODO?
   }
 }

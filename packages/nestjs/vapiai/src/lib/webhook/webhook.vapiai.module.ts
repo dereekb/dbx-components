@@ -5,6 +5,14 @@ import { VAPI_AI_WEBHOOK_HMAC_SECRET_TOKEN_ENV_VAR, VAPI_AI_WEBHOOK_SECRET_TOKEN
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { type VapiAiSecretToken, type VapiApiWebhookEventVerificationType } from '../vapiai.type';
 
+/**
+ * Factory that creates a VapiAiWebhookServiceConfig from environment variables.
+ *
+ * Reads the webhook secret, HMAC secret, verification type, and signature prefix from environment variables.
+ *
+ * @param configService - NestJS config service for reading environment variables
+ * @returns a validated VapiAiWebhookServiceConfig
+ */
 export function vapiaiWebhookServiceConfigFactory(configService: ConfigService): VapiAiWebhookServiceConfig {
   const config: VapiAiWebhookServiceConfig = {
     webhookConfig: {
@@ -19,6 +27,11 @@ export function vapiaiWebhookServiceConfigFactory(configService: ConfigService):
   return config;
 }
 
+/**
+ * NestJS module that handles incoming Vapi AI webhook events.
+ *
+ * Provides the VapiAiWebhookService and controller for verifying and processing Vapi AI webhook payloads.
+ */
 @Module({
   imports: [ConfigModule],
   controllers: [VapiAiWebhookController],

@@ -27,6 +27,12 @@ export interface ZoomFactoryConfig extends ZoomOAuthContextRef {
 
 export type ZoomFactory = (config: ZoomConfig) => Zoom;
 
+/**
+ * Creates a Zoom API factory from the given configuration.
+ *
+ * @param factoryConfig Configuration including OAuth context, rate limiting, and fetch settings
+ * @returns A factory function that creates a configured Zoom API instance
+ */
 export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
   const { oauthContext } = factoryConfig;
   const serverAccessTokenStringFactory = zoomAccessTokenStringFactory(oauthContext.loadAccessToken);

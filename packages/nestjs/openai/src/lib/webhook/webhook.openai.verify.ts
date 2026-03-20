@@ -42,7 +42,7 @@ export type OpenAIWebhookEventVerifier = (req: Request, rawBody: Buffer) => Prom
 export function openAIWebhookEventVerifier(config: OpenAIWebhookEventVerificationConfig): OpenAIWebhookEventVerifier {
   const { secret, client } = config;
 
-  return async (request: Request, rawBody: Buffer) => {
+  return async (request: Request, _rawBody: Buffer) => {
     const headers = request.headers;
     const requestBodyString = String(request.body);
 

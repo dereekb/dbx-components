@@ -92,30 +92,35 @@ export interface ZoomUser {
 
   /**
    * Returned if the user is enrolled in the Zoom United plan. See docs for enum values.
+   *
    * @example "1"
    */
   readonly plan_united_type?: ZoomUserPlanUnitedType;
 
   /**
    * The user's personal meeting ID (PMI).
+   *
    * @example 6589310093
    */
   readonly pmi: ZoomUserPersonalMeetingId;
 
   /**
    * The unique ID of the user's assigned role.
+   *
    * @example "0"
    */
   readonly role_id: ZoomUserRoleId;
 
   /**
    * The user's status: 'active', 'inactive', or 'pending'.
+   *
    * @example "active"
    */
   readonly status: ZoomUserStatus;
 
   /**
    * The user's timezone.
+   *
    * @example "Asia/Shanghai"
    */
   readonly timezone: TimezoneString;

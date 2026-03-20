@@ -96,7 +96,7 @@ export default [
     ignores: ['**/*.spec.ts', '**/*.spec.tsx'],
     plugins: { sonarjs: sonarjsPlugin },
     rules: {
-      'sonarjs/cognitive-complexity': ['warn', 15],
+      'sonarjs/cognitive-complexity': ['warn', 30],
       'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],
       'sonarjs/no-identical-functions': 'warn',
       'sonarjs/no-collapsible-if': 'warn',

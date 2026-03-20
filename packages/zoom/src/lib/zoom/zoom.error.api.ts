@@ -4,8 +4,14 @@ import { type ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErr
 // MARK: Parser
 export const logZoomErrorToConsole = logZoomServerErrorFunction('Zoom');
 
+/**
+ * Parses a FetchResponseError into a typed Zoom API error.
+ *
+ * @param responseError The fetch response error to parse
+ * @returns The parsed error, or undefined if parsing fails
+ */
 export async function parseZoomApiError(responseError: FetchResponseError) {
-  const data: ZoomServerErrorData | undefined = await responseError.response.json().catch((x) => undefined);
+  const data: ZoomServerErrorData | undefined = await responseError.response.json().catch(() => undefined);
   let result: ParsedZoomServerError | undefined;
 
   if (data) {
@@ -15,10 +21,17 @@ export async function parseZoomApiError(responseError: FetchResponseError) {
   return result;
 }
 
+/**
+ * Parses a ZoomServerErrorData into a Zoom API-specific error.
+ *
+ * @param zoomServerError The raw error data from the Zoom API
+ * @param responseError The original fetch response error
+ * @returns A parsed error, or undefined if the error is unrecognized
+ */
 export function parseZoomApiServerErrorResponseData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError) {
   let result: ParsedZoomServerError | undefined;
 
-  if (zoomServerError) {
+  {
     switch (zoomServerError.code) {
       default:
         result = parseZoomServerErrorData(zoomServerError, responseError);

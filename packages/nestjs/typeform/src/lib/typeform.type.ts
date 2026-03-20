@@ -50,7 +50,7 @@ export type TypeformFormResponseToken = string;
  *
  * The type has utm fields added for convenience.
  */
-export interface TypeformFormHiddenMetadata extends Partial<Record<string, any>> {
+export interface TypeformFormHiddenMetadata extends Partial<Record<string, unknown>> {
   readonly utm_campaign?: string;
   readonly utm_medium?: string;
   readonly utm_source?: string;

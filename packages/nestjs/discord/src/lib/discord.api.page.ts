@@ -118,8 +118,7 @@ export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilte
     fetch,
     readFetchPageResultInfo(result: DiscordMessagePageResult<T>): PromiseOrValue<ReadFetchPageResultInfo> {
       const count = result.data.length;
-      const lastMessage = lastValue(result.data);
-      const nextCursor = lastMessage ? readMessageId(lastMessage) : undefined;
+      const nextCursor = count > 0 ? readMessageId(lastValue(result.data)) : undefined;
 
       return {
         hasNext: count > 0,

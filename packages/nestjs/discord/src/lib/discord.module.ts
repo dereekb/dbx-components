@@ -6,6 +6,9 @@ import { type DiscordBotToken } from './discord.type';
 
 /**
  * Factory that creates a DiscordServiceConfig from environment variables.
+ *
+ * @param configService - the NestJS config service used to read Discord environment variables
+ * @returns a validated DiscordServiceConfig populated from environment variables
  */
 export function discordServiceConfigFactory(configService: ConfigService): DiscordServiceConfig {
   const config: DiscordServiceConfig = {

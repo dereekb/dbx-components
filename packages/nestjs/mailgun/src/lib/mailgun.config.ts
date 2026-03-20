@@ -44,8 +44,6 @@ export abstract class MailgunServiceConfig {
       throw new Error('No client url specified.');
     } else if (!config.sender) {
       throw new Error('No mailgun sender specified.');
-    } else if (!config.messages) {
-      throw new Error('No mailgun messages config specified.');
     }
   }
 }

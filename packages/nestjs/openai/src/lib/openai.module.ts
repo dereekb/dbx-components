@@ -4,6 +4,14 @@ import { OpenAIApi } from './openai.api';
 import { OPENAI_API_KEY_ENV_VAR, OPENAI_BASE_URL_ENV_VAR, OPENAI_ORGANIZATION_ID_ENV_VAR, OPENAI_PROJECT_ID_ENV_VAR, OpenAIServiceConfig } from './openai.config';
 import { type OpenAIApiKey, type OpenAIOrganizationId, type OpenAIProjectId } from './openai.type';
 
+/**
+ * Factory that creates an OpenAIServiceConfig from environment variables.
+ *
+ * Reads the API key, base URL, organization ID, and project ID from environment variables.
+ *
+ * @param configService - NestJS config service for reading environment variables
+ * @returns a validated OpenAIServiceConfig
+ */
 export function openAIServiceConfigFactory(configService: ConfigService): OpenAIServiceConfig {
   const config: OpenAIServiceConfig = {
     openai: {
@@ -20,6 +28,11 @@ export function openAIServiceConfigFactory(configService: ConfigService): OpenAI
   return config;
 }
 
+/**
+ * NestJS module that provides the OpenAIApi service.
+ *
+ * Reads the OpenAI API key, organization ID, and project ID from environment variables.
+ */
 @Module({
   imports: [ConfigModule],
   providers: [

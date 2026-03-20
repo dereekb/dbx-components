@@ -51,6 +51,13 @@ export function userAccessToken(context: ZoomOAuthContext): (input: ZoomOAuthUse
   };
 }
 
+/**
+ * Builds a FetchJsonInput for Zoom OAuth API calls with Basic auth.
+ *
+ * @param context The Zoom OAuth context
+ * @param input Optional override for client credentials
+ * @returns A configured FetchJsonInput for the OAuth API call
+ */
 export function zoomOAuthApiFetchJsonInput(context: ZoomOAuthContext, input?: Maybe<ZoomOAuthServerAccessTokenInput>): FetchJsonInput {
   const clientId = input?.client?.clientId ?? context.config.clientId;
   const clientSecret = input?.client?.clientSecret ?? context.config.clientSecret;
@@ -68,6 +75,13 @@ export function zoomOAuthApiFetchJsonInput(context: ZoomOAuthContext, input?: Ma
   return fetchJsonInput;
 }
 
+/**
+ * Generates a Basic Authorization header value for Zoom OAuth.
+ *
+ * @param input The client ID and secret pair
+ * @returns The Base64-encoded Basic auth header value
+ */
 export function zoomOAuthServerBasicAuthorizationHeaderValue(input: ZoomAuthClientIdAndSecretPair) {
-  return `Basic ${Buffer.from(`${input.clientId}:${input.clientSecret}`).toString('base64')}`;
+  const credentials = input.clientId + ':' + input.clientSecret;
+  return `Basic ${Buffer.from(credentials).toString('base64')}`;
 }

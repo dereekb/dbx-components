@@ -1723,7 +1723,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         expect(request.cc).not.toContainEqual(explicitCc);
         expect(request.cc).toContainEqual(ccRecipient);
         const cc = request.cc as any[];
-        expect(cc?.length).toBe(1);
+        expect(cc.length).toBe(1);
       });
 
       it('should resolve bccKeys and merge with existing bcc', () => {

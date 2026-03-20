@@ -153,6 +153,7 @@ export interface ZohoRecruitChangeObjectDetails {
 /**
  * Base Zoho Recruit field data type.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
 export interface ZohoRecruitRecordFieldsData {}
 
 export interface ZohoRecruitRecordDraftStateData {

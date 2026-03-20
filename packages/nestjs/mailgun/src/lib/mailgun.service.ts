@@ -31,7 +31,7 @@ export class MailgunService {
 
     let result: MailgunEmailMessageSendResult;
 
-    const shouldSend = !isTestingEnvironment || request.sendTestEmails || this.mailgunApi.config.messages.sendTestEmails;
+    const shouldSend = !isTestingEnvironment || (request.sendTestEmails ?? this.mailgunApi.config.messages.sendTestEmails);
 
     if (shouldSend) {
       try {

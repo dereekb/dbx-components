@@ -39,6 +39,9 @@ export type ZohoCrmCreateTagsFunction = (input: ZohoCrmCreateTagsRequest) => Pro
 
 /**
  * Creates one or more tags for a CRM module. Duplicate tag errors are separated from other errors in the result to simplify idempotent workflows.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that creates tags for a module
  */
 export function zohoCrmCreateTagsForModule(context: ZohoCrmContext) {
   return (input: ZohoCrmCreateTagsRequest) =>
@@ -114,8 +117,8 @@ export type ZohoCrmDeleteTagFunction = (input: ZohoCrmDeleteTagRequest) => Promi
  *
  * https://www.zoho.com/crm/developer/docs/api/v8/delete-tag.html
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that deletes a tag by ID
  */
 export function zohoCrmDeleteTag(context: ZohoCrmContext): ZohoCrmDeleteTagFunction {
   return (input: ZohoCrmDeleteTagRequest) => context.fetchJson<ZohoCrmDeleteTagResponse>(`/v8/settings/tags/${input.id}`, zohoCrmApiFetchJsonInput('DELETE')).then((x) => x.tags);
@@ -147,8 +150,8 @@ export type ZohoCrmGetTagsFunction = (input: ZohoCrmGetTagsRequest) => Promise<Z
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/get-tag-list.html
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that retrieves tags for a module
  */
 export function zohoCrmGetTagsForModule(context: ZohoCrmContext): ZohoCrmGetTagsFunction {
   return (input: ZohoCrmGetTagsRequest) =>
@@ -166,6 +169,9 @@ export type ZohoCrmGetTagsForModulePageFactory = (input: ZohoCrmGetTagsRequest, 
 
 /**
  * Creates a page factory for iterating through all tags in a module across multiple pages.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Page factory for paginating through tags in a module
  */
 export function zohoCrmGetTagsForModulePageFactory(context: ZohoCrmContext): ZohoCrmGetTagsForModulePageFactory {
   return zohoFetchPageFactory(zohoCrmGetTagsForModule(context));
@@ -242,8 +248,8 @@ export type ZohoCrmAddTagsToRecordsFunction = (input: ZohoCrmAddTagsToRecordsReq
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/add-tags.html
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that adds tags to records
  */
 export function zohoCrmAddTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTagsToRecordsFunction {
   return (input: ZohoCrmAddTagsToRecordsRequest) => {
@@ -256,6 +262,9 @@ export function zohoCrmAddTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTags
 
 /**
  * Builds the request body for the add/remove tags endpoints, merging `tag_names` into `tags` and enforcing the max ID limit.
+ *
+ * @param input - The add/remove tags request containing tag names, tag objects, and record IDs
+ * @returns The formatted request body with merged tags and record IDs
  */
 export function zohoCrmAddTagsToRecordsRequestBody(input: ZohoCrmAddTagsToRecordsRequest) {
   if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
@@ -328,8 +337,8 @@ export type ZohoCrmRemoveTagsFromRecordsFunction = (input: ZohoCrmRemoveTagsFrom
  *
  * https://www.zoho.com/crm/developer-guide/apiv2/remove-tags.html
  *
- * @param context
- * @returns
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that removes tags from records
  */
 export function zohoCrmRemoveTagsFromRecords(context: ZohoCrmContext): ZohoCrmRemoveTagsFromRecordsFunction {
   return (input: ZohoCrmRemoveTagsFromRecordsRequest) => {

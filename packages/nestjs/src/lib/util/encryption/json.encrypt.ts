@@ -19,6 +19,9 @@ export type AES256GCMEncryptionSecret = string;
 /**
  * Validates that the given secret is a 64-character hexadecimal string (32 bytes for AES-256).
  *
+ * @param secret - the hex-encoded secret key string to validate
+ * @returns true if the secret is exactly 64 valid hex characters, false otherwise
+ *
  * @example
  * ```typescript
  * isValidAES256GCMEncryptionSecret('a'.repeat(64)); // true

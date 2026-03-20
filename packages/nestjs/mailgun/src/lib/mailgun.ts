@@ -11,7 +11,7 @@ export type MailgunTemplateKey = string;
  *
  * Each value is converted to a JSON string before being sent to Mailgun server.
  */
-export type MailgunTemplateVariables = Record<string, any>;
+export type MailgunTemplateVariables = Record<string, unknown>;
 
 export interface MailgunRecipient extends NameEmailPair {
   readonly userVariables?: Maybe<MailgunTemplateVariables>;
@@ -163,7 +163,7 @@ export interface MailgunTemplateEmailRequestFinalizeRecipientVariablesFunctionIn
  *
  * Can directly modify the input object or return a new object to replace the recipient variables
  */
-export type MailgunTemplateEmailRequestFinalizeRecipientVariablesFunction = (recipientVariables: Record<EmailAddress, Record<string, any>>, input: MailgunTemplateEmailRequestFinalizeRecipientVariablesFunctionInput) => Maybe<Record<EmailAddress, Record<string, any>>>;
+export type MailgunTemplateEmailRequestFinalizeRecipientVariablesFunction = (recipientVariables: Record<EmailAddress, Record<string, unknown>>, input: MailgunTemplateEmailRequestFinalizeRecipientVariablesFunctionInput) => Maybe<Record<EmailAddress, Record<string, unknown>>>;
 
 export type MailgunEmailMessageSendResult = MessagesSendResult;
 export type MailgunAPIResponse = APIResponse;
@@ -188,6 +188,7 @@ export const MAX_BATCH_SEND_RECIPIENTS = 1000;
  * @param config
  * @returns
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
   const {
     request,
@@ -266,10 +267,10 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
     });
   }
 
-  const hasUserVariables = Boolean(data['recipient-variables']) || toInput.findIndex((x) => x.userVariables != null) !== -1;
+  const hasUserVariables = Boolean(data['recipient-variables']) || toInput.some((x) => x.userVariables != null);
 
   if (hasUserVariables) {
-    let recipientVariables: Record<EmailAddress, Record<string, any>> = {};
+    let recipientVariables: Record<EmailAddress, Record<string, unknown>> = {};
     const allRecipientVariableKeys: Set<string> = new Set();
 
     toInput.forEach(({ email, userVariables }) => {
@@ -287,7 +288,7 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
           const [recipientEmail, userVariables] = x;
           const email = (recipientEmail as string).toLowerCase();
 
-          if (recipientVariables[email] != null) {
+          if (email in recipientVariables) {
             overrideInObject(recipientVariables[email], { from: [userVariables], filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } });
           } else {
             recipientVariables[email] = userVariables;
@@ -311,7 +312,7 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
       // iterate all recipient variables and merge them into the global variables
       forEachKeyValue(recipientVariables, {
         forEach: (x) => {
-          const [email, userVariables] = x;
+          const [_email, userVariables] = x;
 
           forEachKeyValue(userVariables, {
             forEach: (y) => {
@@ -369,10 +370,26 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
   return data;
 }
 
+/**
+ * Converts an array of MailgunRecipient objects to formatted email address strings.
+ *
+ * Each recipient is formatted as "Name <email>" when a name is present, or just the email address.
+ *
+ * @param recipients - the recipients to convert
+ * @returns an array of formatted email address strings
+ */
 export function convertMailgunRecipientsToStrings(recipients: MailgunRecipient[]): EmailParticipantString[] {
   return recipients.map((x) => convertMailgunRecipientToString(x));
 }
 
+/**
+ * Converts a MailgunRecipient to a formatted email address string.
+ *
+ * Returns "Name <email>" when a name is present, or just the email address otherwise.
+ *
+ * @param recipient - the recipient to convert
+ * @returns a formatted email participant string
+ */
 export function convertMailgunRecipientToString(recipient: MailgunRecipient): EmailParticipantString {
   let address = recipient.email;
 
@@ -389,7 +406,7 @@ export function convertMailgunRecipientToString(recipient: MailgunRecipient): Em
  * @param value The value to encode.
  * @returns The encoded value, or undefined if the value is null or undefined.
  */
-export function encodeMailgunTemplateVariableValue(value: any): Maybe<string> {
+export function encodeMailgunTemplateVariableValue(value: unknown): Maybe<string> {
   let encodedValue: Maybe<string>;
 
   switch (typeof value) {
@@ -402,6 +419,10 @@ export function encodeMailgunTemplateVariableValue(value: any): Maybe<string> {
         }
       }
       break;
+    case 'symbol':
+    case 'function':
+    case 'undefined':
+      break;
     case 'bigint':
     case 'boolean':
     case 'number':
@@ -410,7 +431,7 @@ export function encodeMailgunTemplateVariableValue(value: any): Maybe<string> {
       break;
     default:
       if (value) {
-        throw new Error(`Invalid value "${value}" passed to encodeMailgunTemplateVariableValue().`);
+        throw new Error(`Invalid value "${String(value)}" passed to encodeMailgunTemplateVariableValue().`);
       }
   }
 

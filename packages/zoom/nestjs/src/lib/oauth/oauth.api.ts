@@ -15,7 +15,7 @@ export class ZoomOAuthApi {
     @Inject(ZoomOAuthServiceConfig) readonly config: ZoomOAuthServiceConfig,
     @Inject(ZoomOAuthAccessTokenCacheService) readonly cacheService: ZoomOAuthAccessTokenCacheService
   ) {
-    const accessTokenCache = config.zoomOAuth.accessTokenCache ? config.zoomOAuth.accessTokenCache : cacheService.loadZoomAccessTokenCache();
+    const accessTokenCache = config.zoomOAuth.accessTokenCache ?? cacheService.loadZoomAccessTokenCache();
     this.zoomOAuth = zoomOAuthFactory(config.factoryConfig ?? {})({
       accessTokenCache,
       ...config.zoomOAuth

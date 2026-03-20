@@ -95,7 +95,7 @@ export function zohoCrmFactory(factoryConfig: ZohoCrmFactoryConfig): ZohoCrmFact
 
     const fetch: ConfiguredFetch = handleZohoCrmErrorFetch(baseFetch, logZohoServerErrorFunction, (x) => {
       if (x instanceof ZohoInvalidTokenError) {
-        accountsContext.loadAccessToken.resetAccessToken();
+        void accountsContext.loadAccessToken.resetAccessToken();
       }
     });
 

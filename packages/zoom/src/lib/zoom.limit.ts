@@ -10,6 +10,10 @@ export interface ZoomRateLimiterRef {
  * Function to execute when too many requests is reached.
  *
  * Typically used for logging of some sort. Thrown errors are ignored.
+ *
+ * @param headers The parsed rate limit header details from the response
+ * @param response The raw HTTP response
+ * @param fetchResponseError Optional fetch response error, if available
  */
 export type ZoomRateLimitedTooManyRequestsLogFunction = (headers: ZoomRateLimitHeaderDetails, response: Response, fetchResponseError?: FetchResponseError) => PromiseOrValue<void>;
 
@@ -40,6 +44,12 @@ export interface ZoomRateLimitedFetchHandlerConfig {
 
 export type ZoomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPromiseRateLimiter>;
 
+/**
+ * Creates a rate-limited fetch handler configured for the Zoom API.
+ *
+ * @param config Optional configuration for rate limiting behavior
+ * @returns A configured rate-limited fetch handler
+ */
 export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchHandlerConfig>): ZoomRateLimitedFetchHandler {
   const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOOM_API_RATE_LIMIT;
@@ -73,14 +83,16 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
         if (headerDetails) {
           const { type, limit, retryAfterAt, remaining } = headerDetails;
 
-          if (response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
-            // For simple query-per-second rate limits, just schedule a retry
-            if (type === 'QPS') {
-              shouldRetry = true;
+          if (
+            response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE && // For simple query-per-second rate limits, just schedule a retry
+            type === 'QPS'
+          ) {
+            shouldRetry = true;
 
-              try {
-                onTooManyRequests?.(headerDetails, response, fetchResponseError);
-              } catch (e) {}
+            try {
+              void onTooManyRequests?.(headerDetails, response, fetchResponseError);
+            } catch {
+              // ignored: onTooManyRequests is for logging only
             }
           }
 

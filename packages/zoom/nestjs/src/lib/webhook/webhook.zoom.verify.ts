@@ -11,7 +11,7 @@ export interface ZoomWebhookEventVerificationResult {
 /**
  * Function that verifies a Zoom webhook event.
  */
-export type ZoomWebhookEventVerifier = (req: Request, rawBody: Buffer) => ZoomWebhookEventVerificationResult;
+export type ZoomWebhookEventVerifier = (req: Request, _rawBody: Buffer) => ZoomWebhookEventVerificationResult;
 
 /**
  * Verifies a Zoom webhook event header.
@@ -22,7 +22,7 @@ export type ZoomWebhookEventVerifier = (req: Request, rawBody: Buffer) => ZoomWe
  * @returns A function that verifies a Zoom webhook event.
  */
 export function zoomWebhookEventVerifier(zoomSecretToken: ZoomSecretToken): ZoomWebhookEventVerifier {
-  return (request: Request, rawBody: Buffer) => {
+  return (request: Request, _rawBody: Buffer) => {
     const requestBodyString = String(request.body);
     const message = `v0:${request.headers['x-zm-request-timestamp']}:${requestBodyString}`;
     const hashForVerify = createHmac('sha256', zoomSecretToken).update(message).digest('hex');

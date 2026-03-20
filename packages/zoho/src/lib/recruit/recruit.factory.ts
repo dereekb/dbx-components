@@ -95,7 +95,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
 
     const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction, (x) => {
       if (x instanceof ZohoInvalidTokenError) {
-        accountsContext.loadAccessToken.resetAccessToken();
+        void accountsContext.loadAccessToken.resetAccessToken();
       }
     });
 

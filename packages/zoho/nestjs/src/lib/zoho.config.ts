@@ -17,7 +17,9 @@ export type ZohoConfigServiceReaderFunction = (configKey: string) => string;
 
 /**
  * Creates a new ZohoConfigServiceReaderFunction that reads from the input ConfigService.
+ *
  * @param input
+ * @returns a function that reads config values for the given Zoho service
  */
 export function zohoConfigServiceReaderFunction(input: ZohoConfigServiceReaderConfig): ZohoConfigServiceReaderFunction;
 export function zohoConfigServiceReaderFunction(serviceAccessTokenKey: ZohoServiceAccessTokenKey, configService: ConfigService): ZohoConfigServiceReaderFunction;
@@ -27,7 +29,7 @@ export function zohoConfigServiceReaderFunction(inputOrKey: ZohoServiceAccessTok
 
   if (typeof inputOrKey === 'string') {
     serviceAccessTokenKey = inputOrKey;
-    configService = inputConfigService!;
+    configService = inputConfigService as ConfigService;
   } else {
     configService = inputOrKey.configService;
     serviceAccessTokenKey = inputOrKey.serviceAccessTokenKey;
@@ -54,11 +56,19 @@ export interface ReadZohoConfigFromConfigServiceConfig {
  * Reads the ZohoConfig config from the ConfigService.
  *
  * @param config - Configuration for reading from the config service
+ * @param configService - NestJS ConfigService to read environment variables from
+ * @param servicePrefix - optional prefix to scope config keys per service
+ * @param assertValid - whether to throw if required config values are missing
  * @returns ZohoConfig read from environment variables
  */
 export function readZohoConfigFromConfigService(config: ReadZohoConfigFromConfigServiceConfig): ZohoConfig;
 /**
  * @deprecated Use the config object overload instead.
+ *
+ * @param configService - NestJS ConfigService to read environment variables from
+ * @param servicePrefix - optional prefix to scope config keys per service
+ * @param assertValid - whether to throw if required config values are missing
+ * @returns ZohoConfig read from environment variables
  */
 export function readZohoConfigFromConfigService(configService: ConfigService, servicePrefix?: string, assertValid?: boolean): ZohoConfig;
 export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigFromConfigServiceConfig | ConfigService, servicePrefix?: string, assertValid = true): ZohoConfig {
@@ -79,15 +89,18 @@ export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigF
     apiUrl: configService.get<string>(apiUrlConfigKey) ?? (configService.get<string>(ZOHO_API_URL_CONFIG_KEY) as string)
   };
 
-  if (assertValid) {
-    if (!config.apiUrl) {
-      throw new Error(`No Zoho API url or type specified for key "${apiUrlConfigKey}".`);
-    }
+  if (assertValid && !config.apiUrl) {
+    throw new Error(`No Zoho API url or type specified for key "${apiUrlConfigKey}".`);
   }
 
   return config;
 }
 
+/**
+ * Asserts that the provided ZohoConfig has a valid API URL configured.
+ *
+ * @param config - the Zoho config to validate
+ */
 export function assertValidZohoConfig(config: ZohoConfig) {
   if (!config.apiUrl) {
     throw new Error(`No Zoho API url or type specified.`);

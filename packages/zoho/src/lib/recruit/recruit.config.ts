@@ -26,6 +26,9 @@ export type ZohoRecruitConfigApiUrlInput = ZohoRecruitApiUrlKey | ZohoRecruitApi
 
 /**
  * Resolves an environment key or passthrough URL to the full Zoho Recruit API URL.
+ *
+ * @param input - An environment key ('sandbox' or 'production') or a full API URL
+ * @returns The resolved Zoho Recruit API URL
  */
 export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): ZohoApiUrl {
   switch (input) {

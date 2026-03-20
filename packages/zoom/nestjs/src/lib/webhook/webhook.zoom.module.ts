@@ -4,6 +4,12 @@ import { ZoomWebhookService } from './webhook.zoom.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ZOOM_SECRET_TOKEN_ENV_VAR, ZoomWebhookServiceConfig } from './webhook.zoom.config';
 
+/**
+ * Factory function that creates ZoomWebhookServiceConfig from NestJS ConfigService.
+ *
+ * @param configService The NestJS ConfigService
+ * @returns A validated ZoomWebhookServiceConfig
+ */
 export function zoomWebhookServiceConfigFactory(configService: ConfigService): ZoomWebhookServiceConfig {
   const config: ZoomWebhookServiceConfig = {
     webhookConfig: {

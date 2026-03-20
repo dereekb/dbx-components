@@ -74,7 +74,7 @@ export class ZoomApi {
 }
 
 export class ZoomApiUserContext {
-  constructor(refreshToken: string) {
+  constructor(_refreshToken: string) {
     // TODO: ...
   }
 }

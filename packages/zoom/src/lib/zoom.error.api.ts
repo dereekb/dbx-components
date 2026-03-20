@@ -98,8 +98,9 @@ export type ParseZoomFetchResponseErrorFunction = (responseError: FetchResponseE
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
  *
- * @param fetch
- * @returns
+ * @param parseZoomError Function to parse fetch response errors into typed Zoom errors
+ * @param defaultLogError Default error logging function
+ * @returns A factory that wraps ConfiguredFetch with error handling
  */
 export function handleZoomErrorFetchFactory(parseZoomError: ParseZoomFetchResponseErrorFunction, defaultLogError: LogZoomServerErrorFunction): HandleZoomErrorFetchFactory {
   return (fetch: ConfiguredFetch, logError: LogZoomServerErrorFunction = defaultLogError) => {
@@ -176,6 +177,12 @@ export interface ZoomRateLimitHeaderDetails {
   readonly retryAfterAt?: Date;
 }
 
+/**
+ * Parses rate limit header details from a Zoom API response.
+ *
+ * @param headers The response headers to parse
+ * @returns Parsed rate limit details, or null if required headers are missing
+ */
 export function zoomRateLimitHeaderDetails(headers: Headers): Maybe<ZoomRateLimitHeaderDetails> {
   const limitHeader = headers.get(ZOOM_RATE_LIMIT_LIMIT_HEADER);
   const remainingHeader = headers.get(ZOOM_RATE_LIMIT_REMAINING_HEADER);
@@ -208,9 +215,9 @@ export class ZoomTooManyRequestsError extends ZoomServerFetchResponseError {
 /**
  * Function that parses/transforms a ZoomServerErrorData into a general ZoomServerError or other known error type.
  *
- * @param errorResponseData
- * @param responseError
- * @returns
+ * @param zoomServerError The error data from the Zoom API
+ * @param responseError The original fetch response error
+ * @returns A typed ZoomServerFetchResponseError, or undefined
  */
 export function parseZoomServerErrorData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError): ZoomServerFetchResponseError | undefined {
   let result: ZoomServerFetchResponseError | undefined;
@@ -223,7 +230,7 @@ export function parseZoomServerErrorData(zoomServerError: ZoomServerErrorData, r
       responseError,
       headerDetails: (result as ZoomTooManyRequestsError).headerDetails
     });
-  } else if (zoomServerError) {
+  } else {
     switch (zoomServerError.code) {
       default:
         result = new ZoomServerFetchResponseError(zoomServerError, responseError);
@@ -246,6 +253,9 @@ export interface SilenceZoomErrorConfig {
  * Returns a pre-configured MakeUrlSearchParamsOptions that omits the silenceError key.
  *
  * If other options are input, it merges those two options together and adds silenceError to the omitted keys.
+ *
+ * @param options Optional additional MakeUrlSearchParamsOptions to merge
+ * @returns A MakeUrlSearchParamsOptions that omits silenceError
  */
 export function omitSilenceZoomErrorKeys(options?: MakeUrlSearchParamsOptions): MakeUrlSearchParamsOptions {
   const omitKeys = ['silenceError'];
@@ -259,6 +269,12 @@ export type SilenceZoomErrorWithCodesFunction<T> = (silence?: boolean) => (reaso
  *
  * For example, when deleting a meeting that does not exist, the error code is 3001. This function can be used to silence that error.
  */
+/**
+ * Creates a function that silences Zoom errors with specific error codes.
+ *
+ * @param codes The error code(s) to silence
+ * @returns A function that creates catch handlers for silencing specified errors
+ */
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>): SilenceZoomErrorWithCodesFunction<void>;
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T>;
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn?: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T> {
@@ -266,10 +282,8 @@ export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomSer
 
   return (silence?: boolean) => {
     return (reason: unknown) => {
-      if (silence !== false && reason instanceof ZoomServerFetchResponseError) {
-        if (codesSet.has(reason.code)) {
-          return returnFn?.(reason) as any;
-        }
+      if (silence !== false && reason instanceof ZoomServerFetchResponseError && codesSet.has(reason.code)) {
+        return returnFn?.(reason) as T;
       }
 
       throw reason;

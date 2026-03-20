@@ -121,7 +121,9 @@ describe('mergeZoomOAuthAccessTokenCacheServices()', () => {
               expiresAt: new Date(Date.now() - 1000) // expired 1 second ago
             };
           },
-          updateCachedToken: async (x) => {}
+          updateCachedToken: async (_x) => {
+            // no-op: this mock intentionally discards the token
+          }
         })
       },
       memoryZoomOAuthAccessTokenCacheService(),

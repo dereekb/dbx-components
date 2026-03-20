@@ -7,6 +7,9 @@ import { type DiscordPublicKey } from '../discord.type';
 
 /**
  * Factory that creates a DiscordWebhookServiceConfig from environment variables.
+ *
+ * @param configService - the NestJS config service used to read the Discord public key environment variable
+ * @returns a validated DiscordWebhookServiceConfig populated from environment variables
  */
 export function discordWebhookServiceConfigFactory(configService: ConfigService): DiscordWebhookServiceConfig {
   const config: DiscordWebhookServiceConfig = {

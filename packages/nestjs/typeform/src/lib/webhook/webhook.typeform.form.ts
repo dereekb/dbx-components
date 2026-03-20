@@ -45,6 +45,11 @@ export interface ExpandedTypeformWebhookFormResponse {
 
 /**
  * Creates an ExpandedTypeformWebhookFormResponse from a TypeformWebhookFormResponse.
+ *
+ * Pairs each answer with its definition field and expands any field reference templates in question titles.
+ *
+ * @param formResponse - the raw Typeform webhook form response to expand
+ * @returns an ExpandedTypeformWebhookFormResponse with the original response and paired question/answer data
  */
 export function expandTypeformWebhookFormResponse(formResponse: TypeformWebhookFormResponse): ExpandedTypeformWebhookFormResponse {
   const { answers, definition } = formResponse;
@@ -71,7 +76,7 @@ export function expandTypeformWebhookFormResponse(formResponse: TypeformWebhookF
           const answer = answerValueFieldRefMap.get(ref);
           const answerValue = answer?.valueString;
 
-          const replacedTitle = (result as string).replaceAll(fullMatch, answerValue || '');
+          const replacedTitle = (result as string).replaceAll(fullMatch, answerValue ?? '');
           result = replacedTitle;
         });
       }
@@ -104,10 +109,15 @@ export function expandTypeformWebhookFormResponse(formResponse: TypeformWebhookF
 }
 
 /**
- * Creates a TypeformFormQuestionAnswerPair from a TypeformFormResponseAnswer.
+ * Creates a TypeformFormResponseAnswerValuePair from a raw TypeformFormResponseAnswer.
+ *
+ * Extracts the typed value and a string representation based on the answer type.
+ *
+ * @param answer - the raw Typeform form response answer to convert
+ * @returns a TypeformFormResponseAnswerValuePair containing the answer, its typed value, and a string representation
  */
 export function makeTypeformFormResponseAnswerValuePair(answer: TypeformFormResponseAnswer): TypeformFormResponseAnswerValuePair {
-  let value: any;
+  let value: unknown;
   let valueString: string;
 
   switch (answer.type) {
@@ -141,11 +151,11 @@ export function makeTypeformFormResponseAnswerValuePair(answer: TypeformFormResp
       break;
     case 'choices':
       value = answer.choices;
-      valueString = answer.choices.other || joinStringsWithCommas(answer.choices.labels);
+      valueString = answer.choices.other ?? joinStringsWithCommas(answer.choices.labels);
       break;
     case 'choice':
       value = answer.choice;
-      valueString = answer.choice.other || answer.choice.label || '';
+      valueString = answer.choice.other ?? answer.choice.label ?? '';
       break;
     case 'url':
       value = answer.url;

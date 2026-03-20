@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- generic defaults use any for maximum flexibility */
 import { type ArrayOrValue, type EmailAddress, type PrimativeKey, asArray } from '@dereekb/util';
 import { type ZohoSearchRecordsCriteriaEntryArray, type ZohoSearchRecordsCriteriaEntry } from './criteria';
 

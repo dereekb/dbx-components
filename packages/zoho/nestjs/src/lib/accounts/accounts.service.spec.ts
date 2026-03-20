@@ -126,8 +126,12 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
               expiresAt: new Date(Date.now() - 1000) // expired 1 second ago
             };
           },
-          updateCachedToken: async (x) => {},
-          clearCachedToken: async () => {}
+          updateCachedToken: async (_x) => {
+            /* noop */
+          },
+          clearCachedToken: async () => {
+            /* noop */
+          }
         })
       },
       memoryZohoAccountsAccessTokenCacheService(),
@@ -147,10 +151,12 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
         // always throw an error when updating the cache
         loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
           loadCachedToken: async () => undefined,
-          updateCachedToken: async (x) => {
+          updateCachedToken: async (_x) => {
             throw new Error('test test test');
           },
-          clearCachedToken: async () => {}
+          clearCachedToken: async () => {
+            /* noop */
+          }
         })
       }
     ]);

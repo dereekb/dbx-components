@@ -5,7 +5,13 @@ import { ZoomServiceConfig } from './zoom.config';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Provider Factories
-export function zoomServiceConfigFactory(configService: ConfigService): ZoomServiceConfig {
+/**
+ * Default factory function for creating ZoomServiceConfig from ConfigService.
+ *
+ * @param _configService The NestJS ConfigService (unused currently)
+ * @returns A validated ZoomServiceConfig
+ */
+export function zoomServiceConfigFactory(_configService: ConfigService): ZoomServiceConfig {
   const config: ZoomServiceConfig = {
     zoom: {}
   };
@@ -28,9 +34,8 @@ export interface ProvideAppZoomMetadataConfig extends Pick<ModuleMetadata, 'impo
 /**
  * Convenience function used to generate ModuleMetadata for an app's ZoomModule.
  *
- * @param provide
- * @param useFactory
- * @returns
+ * @param config The configuration for the module metadata
+ * @returns Module metadata for the Zoom module
  */
 export function appZoomModuleMetadata(config: ProvideAppZoomMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

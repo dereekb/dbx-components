@@ -216,12 +216,14 @@ export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccou
 
 /**
  * Constructs a standard {@link FetchJsonInput} for Zoho Accounts API calls with the given HTTP method and optional body.
+ *
+ * @param method - HTTP method to use for the request
+ * @param body - Optional request body to include
+ * @returns Configured fetch input for the Zoho Accounts API call
  */
 export function zohoAccountsApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
-  const result = {
+  return {
     method,
     body
   };
-
-  return result;
 }

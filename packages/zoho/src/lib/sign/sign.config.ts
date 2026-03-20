@@ -11,6 +11,12 @@ export type ZohoSignApiUrlKey = ZohoApiUrlKey;
 
 export type ZohoSignConfigApiUrlInput = ZohoSignApiUrlKey | ZohoSignApiUrl;
 
+/**
+ * Resolves an environment key or passthrough URL to the full Zoho Sign API URL.
+ *
+ * @param input - An environment key ('sandbox' or 'production') or a full API URL
+ * @returns The resolved Zoho Sign API URL
+ */
 export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiUrl {
   switch (input) {
     case 'sandbox':

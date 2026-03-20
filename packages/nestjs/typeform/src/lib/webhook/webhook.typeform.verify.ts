@@ -37,7 +37,7 @@ export type TypeformWebhookEventVerifier = (req: Request, rawBody: Buffer) => Pr
 export function typeFormWebhookEventVerifier(config: TypeformWebhookEventVerificationConfig): TypeformWebhookEventVerifier {
   const { secret } = config;
 
-  return async (request: Request, rawBody: Buffer) => {
+  return async (request: Request, _rawBody: Buffer) => {
     const requestBodyString = String(request.body);
 
     const headers = request.headers;

@@ -6,6 +6,8 @@ import { DISCORD_DEFAULT_INTENTS } from './discord.config';
  *
  * Includes Guilds, GuildMessages, and MessageContent intents.
  *
+ * @returns partial ClientOptions with the default bot intents set
+ *
  * @example
  * ```ts
  * const options = discordDefaultClientOptions();
@@ -22,6 +24,7 @@ export function discordDefaultClientOptions(): Partial<ClientOptions> {
  * Returns ClientOptions with additional intents merged with the defaults.
  *
  * @param additionalIntents - extra intents to include beyond the defaults
+ * @returns partial ClientOptions with the merged intent list
  *
  * @example
  * ```ts

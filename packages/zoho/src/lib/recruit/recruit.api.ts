@@ -134,6 +134,11 @@ export type ZohoRecruitUpsertSingleRecordFunction = <T>(input: ZohoRecruitUpsert
  *
  * When a single record is provided, the function returns the change details directly or throws on error.
  * When multiple records are provided, it returns a paired success/error result.
+ *
+ * @param context - Zoho Recruit API context providing fetch and authentication
+ * @param fetchUrlPrefix - URL path suffix for the endpoint (empty for insert/update, '/upsert' for upsert)
+ * @param fetchMethod - HTTP method to use for the request
+ * @returns Factory function that inserts, updates, or upserts records
  */
 function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoRecruitUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoRecruitUpdateRecordInput<T>) =>
@@ -146,6 +151,7 @@ function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '
       } else {
         const { successItems, errorItems } = result;
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array may be empty at runtime
         if (errorItems[0] != null) {
           throw zohoRecruitRecordCrudError(errorItems[0].result);
         } else {
@@ -537,14 +543,15 @@ export function zohoRecruitSearchRecords(context: ZohoRecruitContext): ZohoRecru
       baseInput.criteria = criteriaString;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
     if (!baseInput.word && !input.criteria && !input.email && !input.phone) {
       throw new Error('At least one of word, criteria, email, or phone must be provided');
     }
 
-    const urlParams = zohoRecruitUrlSearchParamsMinusModule(baseInput);
-    return urlParams;
+    return zohoRecruitUrlSearchParamsMinusModule(baseInput);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
   return (<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
 }
 
@@ -661,7 +668,8 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
 export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
   return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
-    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
+    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x)); // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
   };
 }
 
@@ -928,7 +936,7 @@ export function zohoRecruitUploadAttachmentForRecord(context: ZohoRecruitContext
       attachments_category: joinStringsWithCommas(attachmentCategoryName)
     };
 
-    if (!urlParams.attachments_category_id?.length && !urlParams.attachments_category?.length) {
+    if (!urlParams.attachments_category_id.length && !urlParams.attachments_category.length) {
       throw new Error('attachmentCategoryId or attachmentCategoryName must be provided and not empty.');
     }
 
@@ -1185,6 +1193,9 @@ export function zohoRecruitExecuteRestApiFunction(context: ZohoRecruitContext): 
 // MARK: Util
 /**
  * Builds URL search params from input objects, omitting the `module` key since it is used in the URL path rather than query string.
+ *
+ * @param input - One or more objects whose key-value pairs become query parameters
+ * @returns URLSearchParams with the `module` key excluded
  */
 export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: 'module' });
@@ -1192,6 +1203,9 @@ export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | R
 
 /**
  * Builds URL search params from input objects, omitting both `id` and `module` keys since they are used in the URL path.
+ *
+ * @param input - One or more objects whose key-value pairs become query parameters
+ * @returns URLSearchParams with `id` and `module` keys excluded
  */
 export function zohoRecruitUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
@@ -1204,14 +1218,16 @@ export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
 
 /**
  * Constructs a standard {@link FetchJsonInput} for Zoho Recruit API calls with the given HTTP method and optional body.
+ *
+ * @param method - HTTP method for the request
+ * @param body - Optional JSON body to include in the request
+ * @returns Configured fetch JSON input
  */
 export function zohoRecruitApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
-  const result = {
+  return {
     method,
     body: body ?? undefined
   };
-
-  return result;
 }
 
 // MARK: Results
