@@ -6,11 +6,17 @@ import { type DateQueryBuilder, type MakeFieldFilterInput } from './query.builde
  * used by {@link makeMongoDBLikeDateQueryBuilder} to produce query filters.
  */
 export interface TimeFieldsNameSet {
-  /** Field name storing the start (or combined start+end) timestamp. */
+  /**
+   * Field name storing the start (or combined start+end) timestamp.
+   */
   start: string;
-  /** Field name storing the end timestamp. Ignored when `singleFieldForStartAndEnd` is true. */
+  /**
+   * Field name storing the end timestamp. Ignored when `singleFieldForStartAndEnd` is true.
+   */
   end?: string;
-  /** When true, a single field represents both start and end so range bounds are merged. */
+  /**
+   * When true, a single field represents both start and end so range bounds are merged.
+   */
   singleFieldForStartAndEnd?: boolean;
 }
 
@@ -99,18 +105,16 @@ export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQuery
         // A single field that manages start/end will start and end at the same instant (end = start)
         // so we merge the gte/lte values.
         const merged: MongoDBLikeDateRangeFilter = mergeMongoDBLikeRangeFilters(startsAt, endsAt);
-        startsAtFilter = merged ? { [fields.start]: merged } : undefined;
+        startsAtFilter = { [fields.start]: merged };
       } else {
         startsAtFilter = startsAt ? { [fields.start]: startsAt } : undefined;
         endsAtFilter = endsAt && fields.end ? { [fields.end]: endsAt } : undefined;
       }
 
-      const filter = {
+      return {
         ...startsAtFilter,
         ...endsAtFilter
       };
-
-      return filter;
     }
   };
 }

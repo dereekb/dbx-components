@@ -3,7 +3,9 @@ import { tapLog } from './misc';
 
 describe('tapLog', () => {
   it('should pass through values unchanged', () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      // noop
+    });
 
     return new Promise<void>((resolve) => {
       of(42)
@@ -18,7 +20,9 @@ describe('tapLog', () => {
   });
 
   it('should support a message function', () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      // noop
+    });
 
     return new Promise<void>((resolve) => {
       of('hello')
@@ -35,7 +39,9 @@ describe('tapLog', () => {
   });
 
   it('should support warn log level', () => {
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      // noop
+    });
 
     return new Promise<void>((resolve) => {
       of(1)

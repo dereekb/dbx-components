@@ -16,6 +16,7 @@ export type DateCellDurationSpanFilterFunction<B extends DateCell = DateCell> = 
  * Useful for identifying events or blocks that have already begun relative to a point in time.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
+ * @returns a filter function that returns true for spans whose start time is at or before the reference time
  *
  * @example
  * ```ts
@@ -33,6 +34,7 @@ export function dateCellDurationSpanHasStartedFilterFunction<B extends DateCell 
  * The inverse of {@link dateCellDurationSpanHasStartedFilterFunction}. Useful for finding upcoming or future events.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
+ * @returns a filter function that returns true for spans whose start time is strictly after the reference time
  *
  * @example
  * ```ts
@@ -51,6 +53,7 @@ export function dateCellDurationSpanHasNotStartedFilterFunction<B extends DateCe
  * Useful for identifying completed events.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
+ * @returns a filter function that returns true for spans whose computed end time is at or before the reference time
  *
  * @example
  * ```ts
@@ -72,6 +75,7 @@ export function dateCellDurationSpanHasEndedFilterFunction<B extends DateCell = 
  * still in progress or have not yet occurred.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
+ * @returns a filter function that returns true for spans whose computed end time is strictly after the reference time
  *
  * @example
  * ```ts
@@ -102,6 +106,7 @@ export type ModifyDateCellsToFitRangeFunction = <B extends DateCell | DateCellRa
  * indices clamped to the range boundaries. Non-overlapping cells are excluded entirely.
  *
  * @param range - The target range to fit cells into.
+ * @returns a reusable function that clamps or filters date cells to the configured range
  *
  * @example
  * ```ts
@@ -151,6 +156,7 @@ export function modifyDateCellsToFitRangeFunction(range: DateCellRange): ModifyD
  *
  * @param range - The target range to fit cells into.
  * @param input - The date cells to clamp or filter.
+ * @returns an array of date cells clamped to the range, with non-overlapping cells removed
  *
  * @example
  * ```ts
@@ -167,6 +173,7 @@ export function modifyDateCellsToFitRange<B extends DateCell | DateCellRange | U
  *
  * @param range - The target range to fit the cell into.
  * @param input - The single date cell to clamp or exclude.
+ * @returns the clamped date cell, or `undefined` if it does not overlap the range
  *
  * @example
  * ```ts

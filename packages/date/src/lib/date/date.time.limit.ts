@@ -84,7 +84,7 @@ export class LimitDateTimeInstance {
   }
 
   get instant(): LogicalDate {
-    return this._config.instant || 'now';
+    return this._config.instant ?? 'now';
   }
 
   get minimumMinutesIntoFuture(): Maybe<Minutes> {
@@ -131,10 +131,8 @@ export class LimitDateTimeInstance {
 
     let limit: Maybe<LogicalDate> = max;
 
-    if (typeof max !== 'string' && isPast) {
-      if (!max || isBefore(max, instant)) {
-        limit = DATE_NOW_VALUE;
-      }
+    if (typeof max !== 'string' && isPast && (!max || isBefore(max, instant))) {
+      limit = DATE_NOW_VALUE;
     }
 
     return limit;
@@ -149,6 +147,8 @@ export class LimitDateTimeInstance {
    * const limiter = new LimitDateTimeInstance({ limits: { isFuture: true } });
    * const range = limiter.dateRange(); // { start: <now>, end: undefined }
    * ```
+   *
+   * @returns A partial {@link DateRange} with `start` and/or `end` derived from the limits.
    */
   dateRange(): Partial<DateRange> {
     const { instant = new Date() } = this._config;
@@ -160,6 +160,7 @@ export class LimitDateTimeInstance {
    * like "now" or relative future offsets to resolve against the given moment.
    *
    * @param instant - The reference point in time for resolving dynamic limits.
+   * @returns A partial {@link DateRange} resolved against the given instant.
    */
   dateRangeForInstant(instant: Date) {
     const { min, max } = this;
@@ -182,6 +183,8 @@ export class LimitDateTimeInstance {
    * });
    * const safe = limiter.clamp(new Date()); // at least 30 minutes from now
    * ```
+   *
+   * @returns The clamped date within the allowed range.
    */
   clamp(date: Date): Date {
     let result: Date = date;
@@ -224,6 +227,8 @@ export class LimitDateTimeInstance {
    * const clamped = limiter.clampDateRange({ start: pastDate, end: futureDate });
    * // clamped.start will be at least now
    * ```
+   *
+   * @returns The date range clamped to the allowed limits.
    */
   clampDateRange(dateRange: DateRange): DateRange {
     return clampDateRangeToDateRange(dateRange, this.dateRange()) as DateRange;
@@ -243,6 +248,8 @@ export class LimitDateTimeInstance {
  * });
  * const clamped = limiter.clamp(someDate);
  * ```
+ *
+ * @returns A new {@link LimitDateTimeInstance}.
  */
 export function limitDateTimeInstance(config: LimitDateTimeConfig): LimitDateTimeInstance {
   return new LimitDateTimeInstance(config);

@@ -140,7 +140,7 @@ wrapDateTests(() => {
             getNextDate: (x) => addDays(x, 1)
           });
 
-          expectFail(() => fn({ start: new Date(), end: addWeeks(new Date(), 20) }, (x) => x));
+          void expectFail(() => fn({ start: new Date(), end: addWeeks(new Date(), 20) }, (x) => x));
         });
       });
     });

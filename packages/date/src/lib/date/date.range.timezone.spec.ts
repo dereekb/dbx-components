@@ -24,7 +24,9 @@ wrapDateTests(() => {
             });
 
             describe('inactive to active', () => {
-              it(`should return the proper timing with new duration of the day after daylight savings goes active in ${timezone}`, () => {});
+              it(`should return the proper timing with new duration of the day after daylight savings goes active in ${timezone}`, () => {
+                /* no-op: test pending implementation */
+              });
             });
           });
         });

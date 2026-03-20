@@ -3,7 +3,7 @@ import { ValuesLoadingContext } from './loading.context.value';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('ValuesLoadingContext', () => {
-  let context: ValuesLoadingContext;
+  let context: ValuesLoadingContext | undefined;
 
   afterEach(() => {
     context?.destroy();

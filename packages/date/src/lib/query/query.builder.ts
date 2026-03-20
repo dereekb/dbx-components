@@ -142,6 +142,7 @@ export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): 
   const range = find.timezone ? { ...find.range, date: toZonedTime(find.range.date, find.timezone) } : find.range;
   const dates = dateRange(range);
 
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (range.type) {
     case DateRangeType.DAY:
     case DateRangeType.WEEK:

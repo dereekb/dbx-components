@@ -38,6 +38,8 @@ export class SimpleLoadingContext implements LoadingContext, Destroyable {
 
   /**
    * Whether the current state has a non-null error.
+   *
+   * @returns true if the current state contains an error
    */
   public hasError(): boolean {
     return isLoadingStateWithError(this._subject.value);

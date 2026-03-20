@@ -44,7 +44,7 @@ describe('iteration.rxjs', () => {
             }
           });
 
-        iteration.nextPage();
+        void iteration.nextPage();
       })
     );
 
@@ -53,7 +53,7 @@ describe('iteration.rxjs', () => {
       callbackTest((done) => {
         const testPagesToLoad = 10;
 
-        iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
+        void iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
           expect(page).toBe(testPagesToLoad - 1);
 
           const obs = flattenAccumulatorResultItemArray(accumulator);
@@ -80,7 +80,7 @@ describe('iteration.rxjs', () => {
       it(`should retain the wrapped accumulator's mapping function.`, (done) => {
         const testPagesToLoad = 10;
 
-        iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
+        void iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
           expect(page).toBe(testPagesToLoad - 1);
 
           const obs = flattenAccumulatorResultItemArray(accumulatorWithMapping);
@@ -101,7 +101,7 @@ describe('iteration.rxjs', () => {
       callbackTest((done) => {
         const testPagesToLoad = 10;
 
-        iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
+        void iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
           expect(page).toBe(testPagesToLoad - 1);
 
           const obs = accumulatorFlattenPageListLoadingState(accumulator);
@@ -125,7 +125,7 @@ describe('iteration.rxjs', () => {
     it(
       `should return all the values when loading.`,
       callbackTest((done) => {
-        iteratorNextPageUntilPage(iteration, 1).then(() => {
+        void iteratorNextPageUntilPage(iteration, 1).then(() => {
           const obs = accumulatorFlattenPageListLoadingState(accumulator);
 
           obs
@@ -144,7 +144,7 @@ describe('iteration.rxjs', () => {
               }
             });
 
-          iteration.next();
+          void iteration.next();
         });
       })
     );

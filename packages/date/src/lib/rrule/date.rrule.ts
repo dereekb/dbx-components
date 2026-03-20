@@ -175,7 +175,7 @@ export class DateRRuleInstance {
     const tzid = rrule.origOptions.tzid;
     let dtstart = rrule.origOptions.dtstart;
 
-    const timezone = tzid || options.timezone;
+    const timezone = tzid ?? options.timezone;
 
     /**
      * The normal instance for DateRRuleInstance is used backwards in most cases because DateRRule always
@@ -230,8 +230,7 @@ export class DateRRuleInstance {
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {
     const baseFrom = this.normalInstance.baseDateToTargetDate(from);
     const rawNext = this.rrule.next(baseFrom);
-    const next = rawNext ? this.normalInstance.targetDateToBaseDate(rawNext) : undefined;
-    return next;
+    return rawNext ? this.normalInstance.targetDateToBaseDate(rawNext) : undefined;
   }
 
   /**
@@ -363,11 +362,12 @@ export class DateRRuleInstance {
   /**
    * Returns `true` when the underlying RRule has neither a `count` nor an
    * `until` constraint, meaning it recurs indefinitely.
+   *
+   * @returns `true` if the rule recurs indefinitely.
    */
   hasForeverRange(): boolean {
     const options = this.rrule.options;
-    const forever = !options.count && !options.until;
-    return forever;
+    return !options.count && !options.until;
   }
 }
 

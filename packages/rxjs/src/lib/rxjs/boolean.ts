@@ -14,6 +14,8 @@ export function pipeIf<A>(usePipe: boolean, pipe: OperatorFunction<A, A>): Opera
 
 /**
  * RxJS operator that negates each emitted boolean value.
+ *
+ * @returns operator that maps each boolean emission to its negated value
  */
 export function isNot(): MonoTypeOperatorFunction<boolean> {
   return map((x) => !x);
@@ -21,6 +23,8 @@ export function isNot(): MonoTypeOperatorFunction<boolean> {
 
 /**
  * RxJS operator that only emits when a boolean stream transitions from `true` to `false`.
+ *
+ * @returns operator that filters to only true-to-false transition emissions
  */
 export function onTrueToFalse(): MonoTypeOperatorFunction<boolean> {
   return onMatchDelta({
@@ -32,6 +36,8 @@ export function onTrueToFalse(): MonoTypeOperatorFunction<boolean> {
 
 /**
  * RxJS operator that only emits when a boolean stream transitions from `false` to `true`.
+ *
+ * @returns operator that filters to only false-to-true transition emissions
  */
 export function onFalseToTrue(): MonoTypeOperatorFunction<boolean> {
   return onMatchDelta({

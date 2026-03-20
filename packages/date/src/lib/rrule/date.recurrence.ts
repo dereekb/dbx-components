@@ -8,9 +8,13 @@ import { type TimezoneString } from '@dereekb/util';
  * {@link ModelRecurrenceInfo} and a convenience boolean flag.
  */
 export interface RecurrenceModel {
-  /** Detailed recurrence metadata; undefined when the model does not recur. */
+  /**
+   * Detailed recurrence metadata; undefined when the model does not recur.
+   */
   recur?: ModelRecurrenceInfo;
-  /** Quick check for whether this model has active recurrence rules. */
+  /**
+   * Quick check for whether this model has active recurrence rules.
+   */
   recurs: boolean;
 }
 
@@ -21,15 +25,25 @@ export interface RecurrenceModel {
  * date-range utilities.
  */
 export interface ModelRecurrenceInfo extends DateRange {
-  /** Timezone the rule is a part of. Required for RRules that have timezone-sensitive implementations. */
+  /**
+   * Timezone the rule is a part of. Required for RRules that have timezone-sensitive implementations.
+   */
   timezone?: TimezoneString;
-  /** RRules for this recurrence. */
+  /**
+   * RRules for this recurrence.
+   */
   rrule: RRuleLines;
-  /** First instance of the recurrence. */
+  /**
+   * First instance of the recurrence.
+   */
   start: Date;
-  /** Final instance of the recurrence. */
+  /**
+   * Final instance of the recurrence.
+   */
   end: Date;
-  /** True if the recurrence has no end. */
+  /**
+   * True if the recurrence has no end.
+   */
   forever?: boolean;
 }
 

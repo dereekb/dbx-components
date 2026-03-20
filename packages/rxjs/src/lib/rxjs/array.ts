@@ -48,7 +48,7 @@ export function scanIntoArray<T>(config: { immutable?: boolean } = {}): Operator
   return scan((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
     if (next != null) {
       if (immutable) {
-        acc = acc.concat(next);
+        acc = [...acc, ...asArray(next)];
       } else {
         acc = pushItemOrArrayItemsIntoArray(acc, next);
       }

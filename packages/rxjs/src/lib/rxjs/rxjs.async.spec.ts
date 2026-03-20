@@ -4,7 +4,7 @@ import { asyncPusher, type AsyncPusher, asyncPusherCache } from './rxjs.async';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('async pusher', () => {
-  let pusher: AsyncPusher<number>;
+  let pusher: AsyncPusher<number> | undefined;
   let sub: SubscriptionObject;
 
   beforeEach(() => {

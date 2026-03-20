@@ -39,7 +39,7 @@ describe('DateRRuleParseUtility', () => {
       it('should parse the EXDATE values', () => {
         const results = DateRRuleParseUtility.separateRRuleStringSetValues(rruleStringLineSet);
 
-        const exdatesArray = Array.from(results.exdates);
+        const exdatesArray = [...results.exdates];
 
         expect(exdatesArray.length).toBe(1);
         expect(exdatesArray[0]).toBeSameSecondAs(exdateLineADate);

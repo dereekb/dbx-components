@@ -110,7 +110,7 @@ describe('ItemPageIterator', () => {
             callbackTest((done) => {
               const pagesToLoad = 2;
 
-              iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
+              void iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
                 arrayAccumulator.currentAllItems$.pipe(first()).subscribe((value) => {
                   expect(value.length).toBe(pagesToLoad);
                   expect(Array.isArray(value)).toBe(true);
@@ -127,14 +127,14 @@ describe('ItemPageIterator', () => {
             callbackTest((done) => {
               const pagesToLoad = 2;
 
-              iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
+              void iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
                 arrayAccumulator.currentAllItems$.pipe(first()).subscribe((value) => {
                   expect(value.length).toBe(pagesToLoad);
                   expect(Array.isArray(value)).toBe(true);
                   expect(Array.isArray(value[0])).toBe(true);
                   expect(Array.isArray(value[1])).toBe(true);
 
-                  iteratorNextPageUntilPage(arrayInstance, pagesToLoad + 1).then(() => {
+                  void iteratorNextPageUntilPage(arrayInstance, pagesToLoad + 1).then(() => {
                     arrayAccumulator.currentAllItems$.pipe(first()).subscribe((value) => {
                       expect(value.length).toBe(pagesToLoad + 1);
                       expect(Array.isArray(value)).toBe(true);
@@ -195,7 +195,7 @@ describe('ItemPageIterator', () => {
           callbackTest((done) => {
             const pagesToLoad = 5;
 
-            iteratorNextPageUntilPage(instance, pagesToLoad).then(() => {
+            void iteratorNextPageUntilPage(instance, pagesToLoad).then(() => {
               sub.subscription = instance.numberOfPagesLoaded$.subscribe((pagesLoaded) => {
                 expect(pagesLoaded).toBe(pagesToLoad);
 
@@ -253,7 +253,7 @@ describe('ItemPageIterator', () => {
             const page = 1;
 
             // Load more pages
-            iteratorNextPageUntilPage(instance, page).then(() => {
+            void iteratorNextPageUntilPage(instance, page).then(() => {
               expect(emissions).toBe(page);
               expect(latestAllItems.length).toBe(page);
               done();
@@ -321,7 +321,7 @@ describe('ItemPageIterator', () => {
             callbackTest((done) => {
               const pagesToLoad = 2;
 
-              iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
+              void iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
                 arrayAccumulator.allItems$.pipe(first()).subscribe((value) => {
                   expect(value.length).toBe(pagesToLoad);
                   expect(Array.isArray(value)).toBe(true);
@@ -338,14 +338,14 @@ describe('ItemPageIterator', () => {
             callbackTest((done) => {
               const pagesToLoad = 2;
 
-              iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
+              void iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
                 arrayAccumulator.allItems$.pipe(first()).subscribe((value) => {
                   expect(value.length).toBe(pagesToLoad);
                   expect(Array.isArray(value)).toBe(true);
                   expect(Array.isArray(value[0])).toBe(true);
                   expect(Array.isArray(value[1])).toBe(true);
 
-                  iteratorNextPageUntilPage(arrayInstance, pagesToLoad + 1).then(() => {
+                  void iteratorNextPageUntilPage(arrayInstance, pagesToLoad + 1).then(() => {
                     arrayAccumulator.allItems$.pipe(first()).subscribe((value) => {
                       expect(value.length).toBe(pagesToLoad + 1);
                       expect(Array.isArray(value)).toBe(true);
@@ -406,7 +406,7 @@ describe('ItemPageIterator', () => {
           callbackTest((done) => {
             const pagesToLoad = 5;
 
-            iteratorNextPageUntilPage(instance, pagesToLoad).then(() => {
+            void iteratorNextPageUntilPage(instance, pagesToLoad).then(() => {
               sub.subscription = instance.numberOfPagesLoaded$.subscribe((pagesLoaded) => {
                 expect(pagesLoaded).toBe(pagesToLoad);
 
@@ -458,7 +458,7 @@ describe('ItemPageIterator', () => {
             const page = 1;
 
             // Load more pages
-            iteratorNextPageUntilPage(instance, page).then(() => {
+            void iteratorNextPageUntilPage(instance, page).then(() => {
               expect(emissions).toBe(page);
               expect(latestAllItems.length).toBe(page);
               done();
@@ -493,7 +493,7 @@ describe('ItemPageIterator', () => {
           it(
             'should exit if the accumulator item instance is destroyed',
             callbackTest((done) => {
-              itemAccumulatorNextPageUntilResultsCount({
+              void itemAccumulatorNextPageUntilResultsCount({
                 accumulator,
                 maxResultsLimit: 10,
                 countResultsFunction: function (input: number[][]): number {
@@ -534,7 +534,7 @@ describe('ItemPageIterator', () => {
 
               instance.setMaxPageLoadLimit(1000);
 
-              itemAccumulatorNextPageUntilResultsCount({
+              void itemAccumulatorNextPageUntilResultsCount({
                 accumulator,
                 maxResultsLimit: 1000,
                 countResultsFunction: function (input: number[][]): number {
@@ -563,7 +563,7 @@ describe('ItemPageIterator', () => {
 
               instance.setMaxPageLoadLimit(1000);
 
-              itemAccumulatorNextPageUntilResultsCount({
+              void itemAccumulatorNextPageUntilResultsCount({
                 accumulator,
                 maxResultsLimit,
                 countResultsFunction: function (input: number[][]): number {

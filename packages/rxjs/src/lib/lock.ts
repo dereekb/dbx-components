@@ -25,13 +25,21 @@ export type RemoveLockFunction = () => void;
  * Configuration for {@link onLockSetNextUnlock} that specifies how to wait for a {@link LockSet} to unlock.
  */
 export interface OnLockSetUnlockedConfig {
-  /** The lock set to monitor for the next unlock event. */
+  /**
+   * The lock set to monitor for the next unlock event.
+   */
   readonly lockSet: LockSet;
-  /** Optional callback to invoke when the lock set unlocks or the timeout is reached. */
+  /**
+   * Optional callback to invoke when the lock set unlocks or the timeout is reached.
+   */
   readonly fn?: Maybe<OnLockSetUnlockedFunction>;
-  /** Maximum time in milliseconds to wait for unlock before timing out. Defaults to 50 seconds. */
+  /**
+   * Maximum time in milliseconds to wait for unlock before timing out. Defaults to 50 seconds.
+   */
   readonly timeout?: Maybe<Milliseconds>;
-  /** Optional delay in milliseconds after the unlock is detected before invoking the callback. */
+  /**
+   * Optional delay in milliseconds after the unlock is detected before invoking the callback.
+   */
   readonly delayTime?: Maybe<Milliseconds>;
 }
 
@@ -67,6 +75,10 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
  * Useful for deferring an action until all locks are released, with a safety timeout to avoid waiting indefinitely.
  *
  * @param config - configuration specifying the lock set, callback, timeout, and optional delay
+ * @param config.lockSet - the lock set to monitor for the next unlock event
+ * @param config.fn - optional callback to invoke when the lock set unlocks or the timeout is reached
+ * @param config.timeout - maximum time in milliseconds to wait before timing out
+ * @param config.delayTime - optional delay in milliseconds after unlock before invoking the callback
  * @returns subscription that can be unsubscribed to cancel the wait
  *
  * @example
@@ -179,7 +191,7 @@ export class LockSet implements Destroyable {
       lockedConfig = config as SetLockedConfig;
     } else {
       lockedConfig = {
-        locked: (config as boolean) ?? true,
+        locked: config ?? true,
         duration
       };
     }

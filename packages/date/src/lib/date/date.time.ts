@@ -71,6 +71,7 @@ export interface ValidDateFromTimestringResult extends Required<DateFromTimestri
  * guaranteeing that `raw` and `result` are defined.
  *
  * @param result - The parse result to check.
+ * @returns `true` if the result is valid, narrowing the type to {@link ValidDateFromTimestringResult}.
  *
  * @example
  * ```ts
@@ -117,6 +118,7 @@ export class DateTimeUtilityInstance {
    *
    * @param date - The date to check. Defaults to now.
    * @param timezone - Overrides the instance's configured timezone for this call.
+   * @returns {@link TimeAM.AM} or {@link TimeAM.PM} depending on the time of day.
    *
    * @example
    * ```ts
@@ -134,6 +136,7 @@ export class DateTimeUtilityInstance {
    *
    * @param date - The date to format.
    * @param timezone - Overrides the instance's configured timezone for this call.
+   * @returns The formatted time string (e.g., "1:30PM").
    *
    * @example
    * ```ts
@@ -230,8 +233,8 @@ export class DateTimeUtilityInstance {
       ];
 
       // tslint:disable-next-line: prefer-for-of
-      for (let i = 0; i < formats.length; i += 1) {
-        systemParsedDateTime = parse(input, formats[i], relativeDate);
+      for (const format of formats) {
+        systemParsedDateTime = parse(input, format, relativeDate);
 
         if (isValidDate(systemParsedDateTime)) {
           valid = true;
@@ -243,7 +246,7 @@ export class DateTimeUtilityInstance {
 
       function removeAmPm(inputString: string): string {
         inputString = inputString.toLowerCase();
-        removedPm = inputString.indexOf('pm') !== -1;
+        removedPm = inputString.includes('pm');
         inputString = inputString.replace(/am|pm/g, '');
         return inputString;
       }
@@ -280,6 +283,7 @@ export class DateTimeUtilityInstance {
             // 1212AM
             removeAmPm(input);
 
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- removedPm is set via closure side effect in removeAmPm()
             if (removedPm) {
               removedPm = input[0] !== '2'; // If 2, ignore the PM part.
             }
@@ -359,6 +363,8 @@ export class DateTimeUtilityInstance {
 /**
  * Creates a {@link DateTimeUtilityInstance} configured for UTC.
  *
+ * @returns A new {@link DateTimeUtilityInstance} using the UTC timezone.
+ *
  * @example
  * ```ts
  * const utcInstance = dateTimeInstanceUtc();
@@ -374,6 +380,7 @@ export function dateTimeInstanceUtc(): DateTimeUtilityInstance {
  * Defaults to UTC when no timezone is provided.
  *
  * @param timezone - The IANA timezone identifier (e.g., 'America/New_York').
+ * @returns A new {@link DateTimeUtilityInstance} for the specified timezone.
  *
  * @example
  * ```ts
@@ -390,6 +397,7 @@ export function dateTimeInstance(timezone?: Maybe<TimezoneString>): DateTimeUtil
  *
  * @param date - The date to check. Defaults to now.
  * @param timezone - The IANA timezone to evaluate in. Defaults to UTC.
+ * @returns {@link TimeAM.AM} or {@link TimeAM.PM} depending on the time of day.
  *
  * @example
  * ```ts
@@ -408,6 +416,7 @@ export function getTimeAM(date = new Date(), timezone?: Maybe<TimezoneString>): 
  * unlike {@link toReadableTimeString} which defaults to UTC.
  *
  * @param date - The date to format.
+ * @returns The formatted time string in the system's local timezone.
  *
  * @example
  * ```ts
@@ -423,6 +432,7 @@ export function toLocalReadableTimeString(date: Date): ReadableTimeString {
  *
  * @param date - The date to format.
  * @param timezone - The IANA timezone to format in. Defaults to UTC.
+ * @returns The formatted time string (e.g., "10:30AM").
  *
  * @example
  * ```ts
@@ -440,6 +450,7 @@ export function toReadableTimeString(date: Date, timezone?: Maybe<TimezoneString
  *
  * @param input - A time string such as "1:30PM", "13:30", or "1PM".
  * @param config - Optional configuration specifying the timezone and reference date.
+ * @returns The parsed time string result, or `undefined` if parsing failed.
  *
  * @example
  * ```ts
@@ -460,6 +471,7 @@ export function parseReadableTimeString(input: ReadableTimeString, config?: Pars
  *
  * @param input - A time string such as "1:30PM" or "13:30".
  * @param config - Optional configuration specifying the timezone and reference date.
+ * @returns The resolved date, or `undefined` if the input could not be parsed.
  *
  * @example
  * ```ts
@@ -475,6 +487,7 @@ export function readableTimeStringToDate(input: ReadableTimeString, config?: Par
  * Creates a {@link LimitDateTimeInstance} for clamping and constraining dates to a configured range.
  *
  * @param config - The limit configuration specifying min/max bounds, future requirements, etc.
+ * @returns A new {@link LimitDateTimeInstance} configured with the given bounds.
  *
  * @example
  * ```ts

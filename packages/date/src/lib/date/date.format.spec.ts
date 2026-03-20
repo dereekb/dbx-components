@@ -1,7 +1,7 @@
 import { isISO8601DateString, isISO8601DayString } from '@dereekb/util';
 import { addDays, addHours, addMinutes, isValid } from 'date-fns';
 import { type DateRange, formatDateRangeDistance } from '@dereekb/date';
-import { formatDateRangeFunction, formatToDayRangeString, formatToISO8601DayStringForUTC, formatToShortDateString, parseISO8601DayStringToDate } from './date.format';
+import { formatDateRangeFunction, formatToDayRangeString, formatToISO8601DayStringForUTC, formatToMonthDaySlashDate, parseISO8601DayStringToDate } from './date.format';
 import { wrapDateTests } from '../../test.spec';
 
 wrapDateTests(() => {
@@ -31,20 +31,20 @@ wrapDateTests(() => {
       });
 
       it('should format the input date range using the input function.', () => {
-        const formatFn = formatToShortDateString;
+        const formatFn = formatToMonthDaySlashDate;
         const fn = formatDateRangeFunction(formatFn);
 
         const result = fn(start, end);
-        expect(result).toBe(`${formatToShortDateString(start)} - ${formatToShortDateString(end)}`);
+        expect(result).toBe(`${formatToMonthDaySlashDate(start)} - ${formatToMonthDaySlashDate(end)}`);
       });
 
       it('should format the input date range using the input function.', () => {
-        const formatFn = formatToShortDateString;
+        const formatFn = formatToMonthDaySlashDate;
         const separator = '/';
         const fn = formatDateRangeFunction({ format: formatFn, separator });
 
         const result = fn({ start, end });
-        expect(result).toBe(`${formatToShortDateString(start)} ${separator} ${formatToShortDateString(end)}`);
+        expect(result).toBe(`${formatToMonthDaySlashDate(start)} ${separator} ${formatToMonthDaySlashDate(end)}`);
       });
     });
   });
@@ -202,7 +202,7 @@ wrapDateTests(() => {
     const end = new Date(`${endDate}T00:00`);
     const dateRange: DateRange = { start, end };
 
-    const expectedString = `${formatToShortDateString(start)} - ${formatToShortDateString(end)}`;
+    const expectedString = `${formatToMonthDaySlashDate(start)} - ${formatToMonthDaySlashDate(end)}`;
 
     it('should format a DateRange', () => {
       const result = formatToDayRangeString(start, end);
@@ -216,7 +216,7 @@ wrapDateTests(() => {
 
     it('should format a single Date', () => {
       const result = formatToDayRangeString(start);
-      expect(result).toBe(formatToShortDateString(start));
+      expect(result).toBe(formatToMonthDaySlashDate(start));
     });
   });
 

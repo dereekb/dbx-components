@@ -10,11 +10,17 @@ import { SubscriptionObject } from '../subscription';
  * Configuration for initializing a {@link FilterSourceInstance}.
  */
 export interface FilterSourceInstanceConfig<F> {
-  /** Observable used to initialize the filter value, taking priority over the default. */
+  /**
+   * Observable used to initialize the filter value, taking priority over the default.
+   */
   readonly initWithFilter?: Maybe<Observable<F>>;
-  /** Default filter value or observable, used as a fallback when no explicit filter is set. */
+  /**
+   * Default filter value or observable, used as a fallback when no explicit filter is set.
+   */
   readonly defaultFilter?: MaybeObservableOrValue<F>;
-  /** Explicit filter value to set immediately. */
+  /**
+   * Explicit filter value to set immediately.
+   */
   readonly filter?: Maybe<F>;
 }
 
@@ -145,29 +151,27 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
 
   // MARK: Init
   protected initFilterTakesPriority() {
-    if (!this._initialFilterSub.subscription) {
-      this._initialFilterSub.subscription = this._initialFilterTakesPriority
-        .pipe(
-          switchMap((clearFilterOnInitialFilterPush) => {
-            if (clearFilterOnInitialFilterPush) {
-              return this._initialFilter.pipe(
-                switchMap((x) => (x ? x : EMPTY)),
-                filterMaybe(),
-                map(() => true),
-                skip(1) // skip the first emission
-              );
-            } else {
-              return EMPTY;
-            }
-          }),
-          defaultIfEmpty(false)
-        )
-        .subscribe((clear) => {
-          if (clear) {
-            this.resetFilter();
+    this._initialFilterSub.subscription ??= this._initialFilterTakesPriority
+      .pipe(
+        switchMap((clearFilterOnInitialFilterPush) => {
+          if (clearFilterOnInitialFilterPush) {
+            return this._initialFilter.pipe(
+              switchMap((x) => x ?? EMPTY),
+              filterMaybe(),
+              map(() => true),
+              skip(1) // skip the first emission
+            );
+          } else {
+            return EMPTY;
           }
-        });
-    }
+        }),
+        defaultIfEmpty(false)
+      )
+      .subscribe((clear) => {
+        if (clear) {
+          this.resetFilter();
+        }
+      });
   }
 
   /**

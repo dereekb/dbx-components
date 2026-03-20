@@ -99,7 +99,7 @@ export function onMatchDelta<T>(config: OnMatchDeltaConfig<T>): MonoTypeOperator
             if (!acc.fromMatch || requireConsecutive) {
               fromMatch = isMatch(from, next);
               value = next;
-            } else if (!requireConsecutive) {
+            } else {
               value = acc.value;
             }
           }

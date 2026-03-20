@@ -19,7 +19,7 @@ import { loadingStateFromObs, valueFromFinishedLoadingState } from './loading.st
  * @returns true if the value is empty or absent
  */
 export function isListLoadingStateWithEmptyValue<T>(listLoadingState: ListLoadingState<T>): boolean {
-  return Boolean(!listLoadingState.value || !listLoadingState.value.length);
+  return Boolean(!listLoadingState.value?.length);
 }
 
 /**

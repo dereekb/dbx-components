@@ -3,7 +3,7 @@ import { SimpleLoadingContext } from './loading.context.simple';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('SimpleLoadingContext', () => {
-  let context: SimpleLoadingContext;
+  let context: SimpleLoadingContext | undefined;
 
   afterEach(() => {
     context?.destroy();

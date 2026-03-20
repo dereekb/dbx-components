@@ -50,8 +50,7 @@ export function dateCellIndexYearWeekCodeFactory(config: DateCellIndexYearWeekCo
 
   return (indexOrDate: DateCellIndex | Date) => {
     const dateInSystemTimezone = normalInstance.systemDateToTargetDate(startDateFactory(indexOrDate));
-    const yearWeekCode = yearWeekCodeFromDate(dateInSystemTimezone);
-    return yearWeekCode;
+    return yearWeekCodeFromDate(dateInSystemTimezone);
   };
 }
 
@@ -75,11 +74,9 @@ export function dateCellIndexYearWeekCodeGroupFactory<B>(config: DateCellIndexYe
   const { dateCellIndexReader, dateCellIndexYearWeekCodeFactory: inputDateCellIndexYearWeekCodeFactory } = config;
   const dateCellIndexYearWeekCode = typeof inputDateCellIndexYearWeekCodeFactory === 'function' ? inputDateCellIndexYearWeekCodeFactory : dateCellIndexYearWeekCodeFactory(inputDateCellIndexYearWeekCodeFactory);
 
-  const factory = yearWeekCodeGroupFactory<B>({
+  return yearWeekCodeGroupFactory<B>({
     yearWeekCodeFactory: dateCellIndexYearWeekCode as YearWeekCodeFactory,
     yearWeekCodeReader: dateCellIndexYearWeekCode as YearWeekCodeReader,
     dateReader: dateCellIndexReader as YearWeekCodeDateReader<B>
   });
-
-  return factory;
 }

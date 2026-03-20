@@ -95,6 +95,10 @@ export type LoadingEventForLoadingPairConfigInput = Pick<LoadingStateContextConf
  *
  * Determines the `loading` flag based on whether an error is present, whether the value is defined,
  * and the `showLoadingOnUndefinedValue` setting. Loading progress is only included while loading.
+ *
+ * @param state - the current loading state to convert into a context event
+ * @param input - configuration input controlling how the loading flag is derived
+ * @returns a loading state context event derived from the given state
  */
 export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(state: S, input: LoadingEventForLoadingPairConfigInput): LoadingStateContextEvent<T> => {
   const { showLoadingOnUndefinedValue } = input;
@@ -180,7 +184,7 @@ export function loadingStateContext<T = unknown, S extends LoadingState<T> = Loa
     shareReplay(1)
   );
 
-  const currentState$: Observable<Maybe<S>> = currentStateStream$.pipe(switchMap((x) => (x ? x : of(undefined))));
+  const currentState$: Observable<Maybe<S>> = currentStateStream$.pipe(switchMap((x) => x ?? of(undefined)));
   const state$: Observable<S> = currentState$.pipe(filterMaybe(), shareReplay(1));
 
   const loading$: Observable<boolean> = eventStream$.pipe(map(isLoadingStateLoading));

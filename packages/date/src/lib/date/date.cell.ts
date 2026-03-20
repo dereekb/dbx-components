@@ -300,6 +300,11 @@ export function isValidDateCellTimingStartDate(date: Date): boolean {
  * The end date is used just to determine the number of days, but a minimum of 1 day is always enforced as a DateCellTiming must contain atleast 1 day.
  *
  * The start date from the inputDate is considered to to have the offset noted in DateCell, and will be retained.
+ *
+ * @param durationInput - the duration span containing the startsAt time and event duration in minutes
+ * @param rangeInput - specifies the date range: a number of days, a DateRange, or a DateRangeDayDistanceInput
+ * @param timezoneInput - optional timezone configuration; defaults to the system timezone if omitted
+ * @returns a fully computed FullDateCellTiming with start, startsAt, end, duration, and timezone
  */
 export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: DateCellTimingRangeInput, timezoneInput?: DateCellTimingTimezoneInput): FullDateCellTiming {
   const { duration } = durationInput;
@@ -370,7 +375,7 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
   const start = normalInstance.startOfDayInTargetTimezone(utcDay);
 
   const safeMirror = isEqualDate(startsAtInUtc, startsAtInUtcInitial);
-  const { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target', safeMirror);
+  const { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate({ baseDate: startsAtInUtc, originalContextDate: inputStartsAt, contextType: 'target', safeConvert: safeMirror });
 
   // calculate end to be the ending date/time of the final duration span
   const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24 + daylightSavingsOffset); // use addHours instead of addDays, since addDays will take into account a daylight savings change if the system time changes
@@ -715,8 +720,8 @@ function _calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStar
   let startsAtInUtcNormal = normalInstance.baseDateToTargetDate(startsAt); // convert to UTC normal
   let endInUtcNormal = normalInstance.baseDateToTargetDate(end);
 
-  const { daylightSavingsOffset: startDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtcNormal, startsAt, 'target');
-  const { daylightSavingsOffset: endDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate(endInUtcNormal, end, 'target');
+  const { daylightSavingsOffset: startDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate({ baseDate: startsAtInUtcNormal, originalContextDate: startsAt, contextType: 'target' });
+  const { daylightSavingsOffset: endDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate({ baseDate: endInUtcNormal, originalContextDate: end, contextType: 'target' });
 
   if (startDaylightSavingsOffset) {
     startsAtInUtcNormal = addHours(startsAtInUtcNormal, startDaylightSavingsOffset);
@@ -838,7 +843,7 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
     isValid = isExpectedValidEnd;
   }
 
-  const result = {
+  return {
     isValid,
     endIsAfterTheStartsAtTime,
     durationGreaterThanZero,
@@ -847,8 +852,6 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
     isExpectedValidEnd,
     normalInstance
   };
-
-  return result;
 }
 
 /**

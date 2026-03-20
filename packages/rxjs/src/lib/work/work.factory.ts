@@ -58,6 +58,8 @@ export interface WorkFactoryConfig<T, O> {
  * ```
  *
  * @param config - work function and delegate configuration
+ * @param config.work - the work function to execute for each input value
+ * @param config.delegate - delegate that receives lifecycle callbacks (start, success, reject)
  * @returns a factory function that creates WorkInstance for each input
  */
 export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): WorkFactory<T, O> {
@@ -73,14 +75,12 @@ export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): 
       return;
     }
 
-    if (!handler.isComplete) {
-      if (fnResult && isObservable(fnResult)) {
-        if (handler.hasStarted) {
-          throw new Error('Work already marked as begun from returned result. Either return an observable or use the handler directly.');
-        }
-
-        handler.startWorkingWithObservable(fnResult);
+    if (!handler.isComplete && fnResult && isObservable(fnResult)) {
+      if (handler.hasStarted) {
+        throw new Error('Work already marked as begun from returned result. Either return an observable or use the handler directly.');
       }
+
+      handler.startWorkingWithObservable(fnResult);
     }
 
     return handler;

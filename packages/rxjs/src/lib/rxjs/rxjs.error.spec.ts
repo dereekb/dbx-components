@@ -39,7 +39,9 @@ describe('errorOnEmissionsInPeriod', () => {
       let caughtError: unknown;
 
       sub.subscription = subject.pipe(errorOnEmissionsInPeriod({ maxEmissionsPerPeriod: 2, period: 10000 })).subscribe({
-        next: () => {},
+        next: () => {
+          // noop
+        },
         error: (err) => {
           caughtError = err;
           expect((caughtError as Error).message).toContain('Too many emissions');

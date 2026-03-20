@@ -21,6 +21,7 @@ export interface DateCellRange extends DateCell {
  * Does not check validity. Use {@link isValidDateCellRange} for that.
  *
  * @param input - value to check
+ * @returns true if the input is a DateCellRange
  */
 export function isDateCellRange(input: unknown): input is DateCellRange {
   return typeof input === 'object' ? (Number.isInteger((input as DateCellRange).i) && (input as DateCellRange).to === undefined) || Number.isInteger((input as DateCellRange).to) : false;
@@ -38,6 +39,7 @@ export type DateCellOrDateCellIndexOrDateCellRange = DateCellIndex | DateCell | 
  * that is greater than or equal to `i`.
  *
  * @param input - range to validate
+ * @returns true if the range has valid non-negative indexes and `to` (when defined) is greater than or equal to `i`
  */
 export function isValidDateCellRange(input: DateCellRange): boolean {
   const { i, to } = input;
@@ -57,6 +59,7 @@ export function isValidDateCellRange(input: DateCellRange): boolean {
  * Validates that each range is individually valid and that no ranges overlap or appear out of order.
  *
  * @param input - array of ranges to validate as a non-overlapping ascending series
+ * @returns true if the array is sorted in ascending order with no overlapping or duplicate indexes
  */
 export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
   if (!Array.isArray(input)) {
@@ -71,13 +74,11 @@ export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
 
   let greatestIndex = -1;
 
-  for (let i = 0; i < input.length; i += 1) {
-    const range = input[i];
-
+  for (const range of input) {
     if (range.i <= greatestIndex) {
       return false;
     } else {
-      const nextGreatestIndex = range.to || range.i; // to is greater than or equal to i in a valid date block range.
+      const nextGreatestIndex = range.to ?? range.i; // to is greater than or equal to i in a valid date block range.
       greatestIndex = nextGreatestIndex;
     }
   }
@@ -91,6 +92,7 @@ export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
  * The input range is not expected to be sorted.
  *
  * @param input - unsorted array of date cell ranges to scan
+ * @returns the smallest starting index found, or 0 if the input is empty
  */
 export function getLeastDateCellIndexInDateCellRanges(input: (DateCell | DateCellRange)[]): DateCellIndex {
   return getLeastAndGreatestDateCellIndexInDateCellRanges(input)?.leastIndex ?? 0;
@@ -102,6 +104,7 @@ export function getLeastDateCellIndexInDateCellRanges(input: (DateCell | DateCel
  * The input range is not expected to be sorted.
  *
  * @param input - unsorted array of date cell ranges to scan
+ * @returns the largest ending index found, or 0 if the input is empty
  */
 export function getGreatestDateCellIndexInDateCellRanges(input: (DateCell | DateCellRange)[]): DateCellIndex {
   return getLeastAndGreatestDateCellIndexInDateCellRanges(input)?.greatestIndex ?? 0;
@@ -112,13 +115,21 @@ export function getGreatestDateCellIndexInDateCellRanges(input: (DateCell | Date
  * along with references to the items that contain those extreme indexes.
  */
 export interface LeastAndGreatestDateCellIndexResult<T> {
-  /** Smallest starting index found. */
+  /**
+   * Smallest starting index found.
+   */
   leastIndex: number;
-  /** The item containing the smallest starting index. */
+  /**
+   * The item containing the smallest starting index.
+   */
   leastIndexItem: T;
-  /** Largest ending index found (considers `to` values). */
+  /**
+   * Largest ending index found (considers `to` values).
+   */
   greatestIndex: number;
-  /** The item containing the largest ending index. */
+  /**
+   * The item containing the largest ending index.
+   */
   greatestIndexItem: T;
 }
 
@@ -128,6 +139,7 @@ export interface LeastAndGreatestDateCellIndexResult<T> {
  * The input range is not expected to be sorted.
  *
  * @param input - unsorted array of date cell ranges to scan
+ * @returns an object with the least and greatest indexes and their source items, or null if the input is empty
  */
 export function getLeastAndGreatestDateCellIndexInDateCellRanges<T extends DateCellRange>(input: T[]): Maybe<LeastAndGreatestDateCellIndexResult<T>> {
   if (!input.length) {
@@ -139,10 +151,9 @@ export function getLeastAndGreatestDateCellIndexInDateCellRanges<T extends DateC
   let leastIndexItem: T = input[0];
   let greatestIndexItem: T = input[0];
 
-  for (let i = 0; i < input.length; i += 1) {
-    const range = input[i];
+  for (const range of input) {
     const leastRangeIndex = range.i;
-    const greatestRangeIndex = (range as DateCellRange).to || range.i;
+    const greatestRangeIndex = (range as DateCellRange).to ?? range.i;
 
     if (leastRangeIndex < leastIndex) {
       leastIndex = leastRangeIndex;
@@ -187,6 +198,7 @@ export type DateOrDateRangeOrDateCellIndexOrDateCellRange = DateRange | DateOrDa
  *
  * @param i - starting cell index
  * @param to - ending cell index (inclusive); defaults to `i`
+ * @returns a DateCellRangeWithRange spanning from `i` to `to`
  */
 export function dateCellRange(i: number, to?: Maybe<number>): DateCellRangeWithRange {
   return { i, to: to ?? i };
@@ -196,6 +208,7 @@ export function dateCellRange(i: number, to?: Maybe<number>): DateCellRangeWithR
  * Creates a single-cell {@link DateCellRangeWithRange} where both `i` and `to` equal the given index.
  *
  * @param dateCellIndex - the index for both start and end of the range
+ * @returns a DateCellRangeWithRange where `i` and `to` both equal the given index
  */
 export function dateCellRangeWithRangeFromIndex(dateCellIndex: DateCellIndex): DateCellRangeWithRange {
   return dateCellRange(dateCellIndex, dateCellIndex);
@@ -206,6 +219,7 @@ export function dateCellRangeWithRangeFromIndex(dateCellIndex: DateCellIndex): D
  * ensuring the result always has an explicit `to` value.
  *
  * @param input - index, cell, or range to normalize
+ * @returns a DateCellRangeWithRange with an explicit `to` value
  */
 export function dateCellRangeWithRange(input: DateCellOrDateCellIndexOrDateCellRange): DateCellRangeWithRange {
   if (typeof input === 'number') {
@@ -225,12 +239,13 @@ export type DateCellRangeIncludedByRangeFunction = (range: DateCellOrDateCellInd
  * fully contains the configured `inputRange`.
  *
  * @param inputRange - the range that must be fully included
+ * @returns a function that returns true when its argument fully contains `inputRange`
  */
 export function dateCellRangeIncludedByRangeFunction(inputRange: DateCellOrDateCellIndexOrDateCellRange): DateCellRangeIncludedByRangeFunction {
   const { i, to } = dateCellRangeWithRange(inputRange);
   return (input) => {
     const range = dateCellRangeWithRange(input);
-    return range.i <= i && (range?.to ?? range.i) >= to;
+    return range.i <= i && range.to >= to;
   };
 }
 
@@ -244,12 +259,13 @@ export type DateCellRangeOverlapsRangeFunction = (range: DateCellOrDateCellIndex
  * has any overlap with the configured `inputRange`.
  *
  * @param inputRange - the range to test for overlap against
+ * @returns a function that returns true when its argument overlaps with `inputRange`
  */
 export function dateCellRangeOverlapsRangeFunction(inputRange: DateCellOrDateCellIndexOrDateCellRange): DateCellRangeOverlapsRangeFunction {
   const { i, to } = dateCellRangeWithRange(inputRange);
   return (input) => {
     const range = dateCellRangeWithRange(input);
-    return range.i <= to && (range?.to ?? range.i) >= i;
+    return range.i <= to && range.to >= i;
   };
 }
 
@@ -258,6 +274,7 @@ export function dateCellRangeOverlapsRangeFunction(inputRange: DateCellOrDateCel
  *
  * @param rangeA - first range to compare
  * @param rangeB - second range to compare
+ * @returns true if the two ranges share at least one common index
  */
 export function dateCellRangeOverlapsRange(rangeA: DateCellOrDateCellIndexOrDateCellRange, rangeB: DateCellOrDateCellIndexOrDateCellRange): boolean {
   return dateCellRangeOverlapsRangeFunction(rangeA)(rangeB);
@@ -267,6 +284,8 @@ export function dateCellRangeOverlapsRange(rangeA: DateCellOrDateCellIndexOrDate
  * Returns a sort comparator that orders ranges first by starting index (`i`), then by ending index (`to`).
  *
  * In many cases {@link sortAscendingIndexNumberRefFunction} may be preferential when `to` ordering is not needed.
+ *
+ * @returns a comparator function that sorts ranges by `i` then by `to`
  */
 export function sortDateCellRangeAndSizeFunction<T extends DateCellRange>(): SortCompareFunction<T> {
   return (a, b) => a.i - b.i || (a.to ?? a.i) - (b.to ?? b.i);
@@ -276,6 +295,7 @@ export function sortDateCellRangeAndSizeFunction<T extends DateCellRange>(): Sor
  * Sorts the input date ranges in-place by ascending index using {@link sortAscendingIndexNumberRefFunction}.
  *
  * @param input - array of ranges to sort (mutated in place)
+ * @returns the same array, sorted in ascending index order
  */
 export function sortDateCellRanges<T extends DateCellRange>(input: T[]): T[] {
   return input.sort(sortAscendingIndexNumberRefFunction());
@@ -293,6 +313,7 @@ export type DateCellRangeWithRange = Omit<DateCellRange, 'to'> & { to: DateCellI
  * The input is sorted internally before grouping.
  *
  * @param input - cells or ranges to merge into contiguous groups
+ * @returns an array of non-overlapping contiguous DateCellRangeWithRange values
  *
  * @example
  * ```ts
@@ -349,6 +370,7 @@ export function groupToDateCellRanges(input: (DateCell | DateCellRange)[]): Date
  * Returns an array containing every individual index in the given date cell range (inclusive of both `i` and `to`).
  *
  * @param input - range to expand into individual indexes
+ * @returns an array of every DateCellIndex from `i` to `to` inclusive
  */
 export function allIndexesInDateCellRange(input: DateCellRange): DateCellIndex[] {
   return input.to != null ? range((input as DateCellRange).i, input.to + 1) : [input.i];
@@ -358,6 +380,7 @@ export function allIndexesInDateCellRange(input: DateCellRange): DateCellIndex[]
  * Flattens an array of indexes and/or ranges into a single array of individual {@link DateCellIndex} values.
  *
  * @param input - mix of raw indexes and ranges to flatten
+ * @returns a flat array of all individual DateCellIndex values
  */
 export function allIndexesInDateCellRangesToArray(input: (DateCellIndex | DateCellRange)[]): DateCellIndex[] {
   const result: DateCellIndex[] = [];
@@ -378,6 +401,7 @@ export function allIndexesInDateCellRangesToArray(input: (DateCellIndex | DateCe
  * Returns a deduplicated {@link Set} of all indexes within the input ranges.
  *
  * @param input - mix of raw indexes and ranges to collect
+ * @returns a Set containing every unique DateCellIndex from the input
  */
 export function allIndexesInDateCellRanges(input: (DateCellIndex | DateCellRange)[]): Set<DateCellIndex> {
   return new Set<DateCellIndex>(allIndexesInDateCellRangesToArray(input));
@@ -388,6 +412,7 @@ export function allIndexesInDateCellRanges(input: (DateCellIndex | DateCellRange
  *
  * @param blocks - cells or ranges to filter
  * @param range - bounding range that blocks must fall within
+ * @returns only the blocks that fall entirely within the given range
  */
 export function filterDateCellsInDateCellRange<T extends DateCell | DateCellRange>(blocks: T[], range: DateCellRangeWithRange): T[] {
   const dateCellIsWithinDateCellRange = isDateCellWithinDateCellRangeFunction(range);
@@ -409,6 +434,7 @@ export type IsDateCellWithinDateCellRangeFunction = (input: IsDateCellWithinDate
  * is fully contained within `inputRange`.
  *
  * @param inputRange - the bounding range to test containment against
+ * @returns a function that returns true when its argument is fully contained within `inputRange`
  */
 export function isDateCellWithinDateCellRangeFunction(inputRange: IsDateCellWithinDateCellRangeInput): IsDateCellWithinDateCellRangeFunction {
   const range = dateCellRangeWithRange(inputRange);
@@ -431,6 +457,7 @@ export function isDateCellWithinDateCellRangeFunction(inputRange: IsDateCellWith
  *
  * @param range - the outer bounding range
  * @param contains - the cell or range to test for containment
+ * @returns true if `contains` is fully within `range`
  */
 export function isDateCellWithinDateCellRange(range: IsDateCellWithinDateCellRangeInput, contains: IsDateCellWithinDateCellRangeInput) {
   return isDateCellWithinDateCellRangeFunction(range)(dateCellRangeWithRange(contains));
@@ -460,6 +487,7 @@ export interface DateCellRangeBlockCountInfo {
  * Internally groups overlapping ranges before counting so each index is counted only once.
  *
  * @param inputDateCellRange - one or more cells/ranges to analyze
+ * @returns count, total, and average statistics for the given ranges
  */
 export function dateCellRangeBlocksCountInfo(inputDateCellRange: ArrayOrValue<DateCell | DateCellRange>): DateCellRangeBlockCountInfo {
   const group = groupToDateCellRanges(asArray(inputDateCellRange));
@@ -488,6 +516,7 @@ export function dateCellRangeBlocksCountInfo(inputDateCellRange: ArrayOrValue<Da
  * Shorthand for `dateCellRangeBlocksCountInfo(input).count`.
  *
  * @param inputDateCellRange - one or more cells/ranges to count
+ * @returns the total number of individual cell indexes
  *
  * @example
  * ```ts
@@ -509,13 +538,14 @@ export type DateCellRangesFullyCoverDateCellRangeFunction = (range: DateCellRang
  * grouped range from `ranges` fully covers a given input range.
  *
  * @param ranges - the covering ranges to test against
+ * @returns a function that returns true when any single grouped range fully covers the input range
  */
 export function dateCellRangesFullyCoverDateCellRangeFunction(ranges: ArrayOrValue<DateCellRange>): DateCellRangesFullyCoverDateCellRangeFunction {
   const groupedRanges = Array.isArray(ranges) ? groupToDateCellRanges(ranges) : [dateCellRangeWithRange(ranges)];
 
   return (inputRange: DateCellRange) => {
     const fn = dateCellRangeIncludedByRangeFunction(inputRange);
-    return groupedRanges.findIndex(fn) !== -1;
+    return groupedRanges.some(fn);
   };
 }
 
@@ -572,6 +602,7 @@ export interface GetNextDateCellTimingIndexResult<T extends DateCellRange> {
  * nearest future range's starting index is used.
  *
  * @param input - the current index and ranges to evaluate
+ * @returns classification of ranges as past/present/future and the next upcoming index
  *
  * @example
  * ```ts
@@ -635,6 +666,7 @@ export function getNextDateCellTimingIndex<T extends DateCellRange>(input: GetNe
  *
  * @param range - the date cell range to classify
  * @param nowIndex - the reference index representing "now"
+ * @returns 'past', 'present', or 'future' depending on the range's position relative to `nowIndex`
  */
 export function dateRelativeStateForDateCellRangeComparedToIndex(range: DateCellRange, nowIndex: DateCellIndex): DateRelativeState {
   const { i, to } = dateCellRange(range.i, range.to);
@@ -656,6 +688,7 @@ export function dateRelativeStateForDateCellRangeComparedToIndex(range: DateCell
  * from `i` to `to` (inclusive). Each copy retains all properties of the original block.
  *
  * @param block - the range to expand
+ * @returns an array of single-cell copies, one per index from `i` to `to`
  *
  * @example
  * ```ts
@@ -683,6 +716,7 @@ export interface UniqueDateCellRange extends UniqueDateCell, DateCellRange {}
  * Returns true if the input spans more than one cell (i.e., has a `to` value strictly greater than `i`).
  *
  * @param input - range or cell to check
+ * @returns true if `to` is defined and strictly greater than `i`
  */
 export function dateCellRangeHasRange(input: DateCellRange | UniqueDateCell): input is DateCellRangeWithRange {
   return (input as DateCellRange).to != null && ((input as DateCellRange).to as number) > input.i;
@@ -692,6 +726,7 @@ export function dateCellRangeHasRange(input: DateCellRange | UniqueDateCell): in
  * Returns the effective ending index of a range: `to` if defined, otherwise `i`.
  *
  * @param input - range or cell to read
+ * @returns the `to` index if defined, otherwise `i`
  */
 export function dateCellEndIndex(input: DateCellRange | UniqueDateCell): IndexNumber {
   return (input as DateCellRange).to ?? input.i;
@@ -713,6 +748,7 @@ export interface UniqueDateCellRangeGroup<B extends DateCellRange | UniqueDateCe
  * and `to` is the maximum ending index across all blocks.
  *
  * @param input - cells or ranges to group
+ * @returns a UniqueDateCellRangeGroup containing the sorted blocks with `i` at 0
  */
 export function groupUniqueDateCells<B extends DateCellRange | UniqueDateCell>(input: B[]): UniqueDateCellRangeGroup<B> {
   const blocks = sortDateCellRanges([...input]);
@@ -812,6 +848,7 @@ type DateCellRangePriorityPair<B extends DateCellRange | UniqueDateCell> = {
  * according to the provided configuration. Handles overlap resolution, gap filling, and boundary clamping.
  *
  * @param config - controls start/end bounds, fill strategy, and overlap retention behavior
+ * @returns a function that merges, fills, and resolves overlaps in date cell range arrays
  *
  * @example
  * ```ts
@@ -831,10 +868,11 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
   const maxAllowedIndex: IndexNumber = endAtIndex ?? Number.MAX_SAFE_INTEGER;
   const fillFactory = inputFillFactory as FactoryWithRequiredInput<B, DateCellRange>;
 
-  if (!fillFactory && fill === 'fill') {
+  if (!inputFillFactory && fill === 'fill') {
     throw new Error('fillFactory is required when fillOption is "fill".');
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   return (input: B[] | UniqueDateCellRangeGroup<B>, newBlocks?: B[] | UniqueDateCellRangeGroup<B>) => {
     const inputGroup = Array.isArray(input) ? groupUniqueDateCells(input) : input;
     const sorted: DateCellRangePriorityPair<B>[] = inputGroup.blocks.map((block) => ({ priority: 'current', block }));
@@ -905,7 +943,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
         };
 
         const block: B = fillFactory(dateCellRange);
-        addBlockWithRange(block, i, to ?? i);
+        addBlockWithRange(block, i, to);
       } else if (fill === 'empty') {
         // do not fill with anything
       } else if (blocks.length > 0) {
@@ -922,6 +960,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
       current = use != null ? ({ block: use, priority } as DateCellRangePriorityPair<B>) : sorted[i];
       next = sorted[i + 1];
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next may be undefined when sorted[i+1] is out of bounds
       if (next) {
         nextStartIndex = next.block.i;
 
@@ -959,6 +998,8 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
 
     /**
      * Used to determine how to handle two neighboring objects.
+     *
+     * @returns true if the current block should be retained over the next block
      */
     function shouldRetainCurrentOverNext() {
       if (current.priority === next.priority) {
@@ -1063,6 +1104,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- current may be undefined when sorted is empty
     if (current != null) {
       // if current != null, then atleast one block was input/remaining.
       const lastStartIndex = current.block.i;
@@ -1080,12 +1122,10 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
       completeBlocks();
     }
 
-    const result = {
+    return {
       i: 0,
       blocks,
       discarded
     };
-
-    return result;
   };
 }

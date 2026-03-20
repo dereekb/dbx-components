@@ -145,6 +145,8 @@ export function daysToMinutes(days: number = 1): Minutes {
  *
  * Useful as a default for "no expiration" comparisons.
  *
+ * @returns the MAX_FUTURE_DATE sentinel
+ *
  * @example
  * ```ts
  * const futureDate = maxFutureDate();
@@ -225,7 +227,7 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
  * ```
  */
 export function guessCurrentTimezone(): TimezoneString | undefined {
-  return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
 /**
@@ -421,7 +423,7 @@ export function isSameDate(a: Maybe<Date>, b: Maybe<Date>): boolean;
 export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
 export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean>): Maybe<boolean>;
 export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = null): Maybe<boolean> {
-  return a != null && b != null ? isEqualDate(a, b) : defaultValue != null ? defaultValue : a == b;
+  return a != null && b != null ? isEqualDate(a, b) : (defaultValue ?? a == b);
 }
 
 /**
@@ -445,7 +447,7 @@ export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>): boole
 export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
 export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean>): Maybe<boolean>;
 export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = null): Maybe<boolean> {
-  return a != null && b != null ? isEqualDate(roundDownToMinute(a), roundDownToMinute(b)) : defaultValue != null ? defaultValue : a == b;
+  return a != null && b != null ? isEqualDate(roundDownToMinute(a), roundDownToMinute(b)) : (defaultValue ?? a == b);
 }
 
 /**
@@ -470,7 +472,7 @@ export function isSameDateDay(a: Maybe<Date>, b: Maybe<Date>): boolean;
 export function isSameDateDay(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
 export function isSameDateDay(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean>): Maybe<boolean>;
 export function isSameDateDay(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = null): Maybe<boolean> {
-  return a != null && b != null ? isEqualDay(a, b) : defaultValue != null ? defaultValue : a == b;
+  return a != null && b != null ? isEqualDay(a, b) : (defaultValue ?? a == b);
 }
 
 // MARK: Unix Date/Time
@@ -519,6 +521,10 @@ export function copyHoursAndMinutesFromUTCDate(target: Date, fromDate: Date, rou
  * Sets the hours and optionally minutes on a target date (defaults to now), with optional rounding to strip seconds/milliseconds.
  *
  * @param config - hours, optional minutes, and rounding options
+ * @param config.hours - the hours value to set
+ * @param config.minutes - optional minutes value to set
+ * @param config.removeSeconds - whether to zero out seconds
+ * @param config.roundDownToMinute - whether to zero out seconds and milliseconds (defaults to true)
  * @param target - date to modify (defaults to the current date/time)
  * @returns a new Date with the specified time values applied
  *
@@ -785,7 +791,7 @@ export function readDaysOfWeek<T>(values: T[], readDate: ReadDateFunction<T>): S
  * ```
  */
 export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T>, nameFunction: DayOfWeekNameFunction): string[] {
-  return Array.from(readDaysOfWeek(values, readDate)).sort(sortNumbersAscendingFunction).map(nameFunction);
+  return [...readDaysOfWeek(values, readDate)].sort(sortNumbersAscendingFunction).map(nameFunction);
 }
 
 /**
