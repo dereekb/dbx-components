@@ -2,7 +2,7 @@ import { map, type Observable } from 'rxjs';
 import { ComponentStore } from '@ngrx/component-store';
 import { Inject, Optional, Injectable, type OnDestroy } from '@angular/core';
 import { LockSet, type ObservableOrValue, asObservable } from '@dereekb/rxjs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 
 /**
  * Component or service that exposes a {@link LockSet} for coordinating lock-based state.
@@ -48,8 +48,8 @@ export interface LockSetComponentStoreConfig {
 export abstract class LockSetComponentStore<S extends object> extends ComponentStore<S> implements OnDestroy {
   readonly lockSet = new LockSet();
 
-  protected lockSetDestroyDelayMs = 2000;
-  protected lockSetDestroyTimeoutMs: Maybe<number>;
+  protected lockSetDestroyDelayMs: Milliseconds = 2000;
+  protected lockSetDestroyTimeoutMs: Maybe<Milliseconds>;
 
   // NOTE: Injection does not occur here, but we need @Injectable to compile properly for Angular usage
   // eslint-disable-next-line @angular-eslint/prefer-inject

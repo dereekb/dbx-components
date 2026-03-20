@@ -1,6 +1,7 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns';
-import { Component, type OnDestroy, type OnInit } from '@angular/core';
+import { Component, type OnDestroy, type OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { type DbxTableColumn, type DbxTableContextData, type DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, type DbxTableItemGroup, DbxTableViewComponent, type DbxTableViewDelegate } from '@dereekb/dbx-web/table';
 import { beginLoadingPage, type ObservableOrValue, type PageListLoadingState, SubscriptionObject, successPageResult, successResult } from '@dereekb/rxjs';
@@ -12,7 +13,6 @@ import { type ExampleTableData, type ExampleTableGroupData } from '../component/
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { DocExtensionTableGroupHeaderExampleComponent } from '../component/table.group.header.example.component';
 import { DocExtensionTableGroupFooterExampleComponent } from '../component/table.group.footer.example.component';
@@ -32,7 +32,8 @@ const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ .
 @Component({
   templateUrl: './table.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton, AsyncPipe]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableComponent implements OnDestroy, OnInit {
   readonly exampleInput: DateRangeDayDistanceInput = {
@@ -51,6 +52,8 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  readonly isLoadingSignal = toSignal(this.isLoading$, { initialValue: true });
 
   readonly exampleViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     trackBy: (index, item) => item.key,

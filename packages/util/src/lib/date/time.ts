@@ -180,6 +180,9 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
       case 'paused':
         result = null;
         break;
+      case 'cancelled':
+        result = null;
+        break;
     }
 
     return result;
@@ -284,7 +287,7 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
  * @param toggleRun - If provided, forces the timer to run (true) or stop (false). Otherwise toggles the current state.
  */
 export function toggleTimerRunning(timer: Timer, toggleRun?: boolean): void {
-  toggleRun = toggleRun != null ? toggleRun : timer.state !== 'running';
+  toggleRun = toggleRun ?? timer.state !== 'running';
 
   if (toggleRun) {
     timer.start();
@@ -295,6 +298,9 @@ export function toggleTimerRunning(timer: Timer, toggleRun?: boolean): void {
 
 /**
  * Returns the approximate end date of the given timer. If a timer is already complete, it returns the time for now.
+ *
+ * @param timer - the timer whose end date to approximate
+ * @returns a Date representing the estimated end time, or null if no duration remains
  */
 export function approximateTimerEndDate(timer: Timer): Maybe<Date> {
   const durationRemaining = timer.durationRemaining;

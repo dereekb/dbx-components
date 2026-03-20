@@ -78,7 +78,11 @@ describe('iterateFilteredPages()', () => {
   });
 
   it('should return 0 when the first page is empty', async () => {
-    const count = await iterateFilteredPages(filteredPage(0), async () => [], { use: async () => {} });
+    const count = await iterateFilteredPages(filteredPage(0), async () => [], {
+      use: async () => {
+        /* noop */
+      }
+    });
 
     expect(count).toBe(0);
   });
@@ -93,7 +97,11 @@ describe('iterateFilteredPages()', () => {
         receivedFilters.push(page.filter);
         return [];
       },
-      { use: async () => {} }
+      {
+        use: async () => {
+          /* noop */
+        }
+      }
     );
 
     expect(receivedFilters.length).toBe(1);

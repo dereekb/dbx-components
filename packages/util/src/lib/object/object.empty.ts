@@ -13,8 +13,7 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
     const keys = Object.keys(obj);
 
     if (keys.length > 0) {
-      for (let i = 0; i < keys.length; i += 1) {
-        const key = keys[i];
+      for (const key of keys) {
         const value = (obj as T)[key as keyof T];
         const isEmpty = typeof value === 'object' ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
 

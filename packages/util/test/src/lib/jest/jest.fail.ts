@@ -5,26 +5,7 @@
  */
 
 import { type TestDoneCallback, failWithTestDoneCallback, type TestProvidesCallbackWithDone, type TestProvidesCallback } from '../shared';
-import {
-  ExpectedFailError,
-  failSuccessfullyError,
-  failSuccessfully,
-  UnexpectedSuccessFailureError,
-  failDueToSuccessError,
-  ExpectedErrorOfSpecificTypeError,
-  failTest,
-  failDueToSuccess,
-  EXPECT_ERROR_DEFAULT_HANDLER,
-  type ExpectFailAssertionFunction,
-  expectFailAssertErrorType,
-  expectFail,
-  expectSuccessfulFail,
-  type ShouldFailDoneCallback,
-  type ShouldFailProvidesCallbackWithDone,
-  type ShouldFailProvidesCallbackWithResult,
-  type ShouldFailProvidesCallback,
-  type FakeDoneHandler
-} from '../shared/shared.fail';
+import { ExpectedFailError, UnexpectedSuccessFailureError, failDueToSuccessError, ExpectedErrorOfSpecificTypeError, type ExpectFailAssertionFunction, expectFailAssertErrorType, type ShouldFailDoneCallback, type ShouldFailProvidesCallbackWithDone, type ShouldFailProvidesCallbackWithResult, type ShouldFailProvidesCallback, type FakeDoneHandler } from '../shared/shared.fail';
 
 // MARK: Types
 /**
@@ -65,13 +46,12 @@ export class JestExpectedErrorOfSpecificTypeError extends ExpectedErrorOfSpecifi
 
 /**
  * @deprecated Use failWithTestDoneCallback with failDueToSuccessError from shared instead. This is kept for backwards compatibility.
+ *
+ * @param done - the test done callback to invoke with the failure error
  */
 export function failWithDoneDueToSuccess(done: TestDoneCallback): void {
   failWithTestDoneCallback(done, failDueToSuccessError());
 }
-
-// Re-export shared functions and constants
-export { failSuccessfullyError, failSuccessfully, failDueToSuccessError, failTest, failDueToSuccess, EXPECT_ERROR_DEFAULT_HANDLER };
 
 // MARK: Expect Fail
 /**
@@ -83,9 +63,6 @@ export type JestExpectFailAssertionFunction = ExpectFailAssertionFunction;
  * @deprecated Use expectFailAssertErrorType from shared instead. This is kept for backwards compatibility.
  */
 export const jestExpectFailAssertErrorType = expectFailAssertErrorType;
-
-// Re-export shared functions
-export { expectFail, expectSuccessfulFail };
 
 // MARK: ShouldFail
 /**

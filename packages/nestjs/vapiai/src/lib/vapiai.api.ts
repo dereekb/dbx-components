@@ -1,7 +1,7 @@
 import { VapiClient } from '@vapi-ai/server-sdk';
 import { Inject, Injectable } from '@nestjs/common';
 import { VapiAiServiceConfig } from './vapiai.config';
-import { type VapiCallWithTranscript } from './vapiai.type';
+import { type VapiCallId, type VapiCallWithTranscript } from './vapiai.type';
 
 @Injectable()
 export class VapiAiApi {
@@ -18,7 +18,7 @@ export class VapiAiApi {
    * @param callId
    * @returns
    */
-  getCall(callId: string) {
+  getCall(callId: VapiCallId) {
     return this.vapiClient.calls.get({ id: callId }) as Promise<VapiCallWithTranscript>;
   }
 }

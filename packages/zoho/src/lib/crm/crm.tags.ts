@@ -27,15 +27,15 @@ export type ZohoCrmTagColorCode = HexColorCode;
  * The color and name of a Tag in Zoho Crm.
  */
 export interface ZohoCrmTagData {
-  color_code?: Maybe<ZohoCrmTagColorCode>;
-  name: ZohoCrmTagName;
+  readonly color_code?: Maybe<ZohoCrmTagColorCode>;
+  readonly name: ZohoCrmTagName;
 }
 
 /**
  * Includes the id of the Tag along with other tag data.
  */
 export interface ZohoCrmTag extends ZohoCrmTagData {
-  id: ZohoCrmTagId;
+  readonly id: ZohoCrmTagId;
 }
 
 /**

@@ -1,12 +1,13 @@
 import { addDays, startOfDay } from 'date-fns';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarScheduleSelectionStore, type DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
 import { type DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
 import { DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective } from '@dereekb/dbx-web';
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 
 const daysRangeInFilter = 14;
 
@@ -35,19 +36,20 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
         <dbx-button [raised]="true" text="Set No Days" (buttonClick)="setNoDays()"></dbx-button>
       </div>
       <dbx-content-pit>
-        <p>Days: {{ selectedDaysOfWeek$ | async }}</p>
-        <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
-        <p>currentSelectionValueDateCellDurationSpanExpansion$: {{ currentSelectionValueDateCellDurationSpanExpansion$ | async | json }}</p>
-        <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
-        <p>selectionValueSelectedDates$: {{ selectionValueSelectedDates$ | async | json }}</p>
-        <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansion$ | async | json }}</p>
-        <p>Output Timezone: {{ outputTimezone$ | async }}</p>
+        <p>Days: {{ selectedDaysOfWeekSignal() }}</p>
+        <p>currentSelectionValue$: {{ currentSelectionValueSignal() | json }}</p>
+        <p>currentSelectionValueDateCellDurationSpanExpansion$: {{ currentSelectionValueDateCellDurationSpanExpansionSignal() | json }}</p>
+        <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexesSignal() | json }}</p>
+        <p>selectionValueSelectedDates$: {{ selectionValueSelectedDatesSignal() | json }}</p>
+        <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansionSignal() | json }}</p>
+        <p>Output Timezone: {{ outputTimezoneSignal() }}</p>
       </dbx-content-pit>
     </dbx-content-border>
   `,
   providers: [DbxCalendarScheduleSelectionStore],
   standalone: true,
-  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, AsyncPipe, JsonPipe]
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
@@ -59,12 +61,19 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   };
 
   readonly outputTimezone$ = this.dbxCalendarScheduleSelectionStore.outputTimezone$;
+  readonly outputTimezoneSignal = toSignal(this.outputTimezone$, { initialValue: undefined });
   readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
+  readonly currentSelectionValueSignal = toSignal(this.currentSelectionValue$, { initialValue: undefined });
   readonly currentSelectionValueDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateCellDurationSpanExpansion$;
+  readonly currentSelectionValueDateCellDurationSpanExpansionSignal = toSignal(this.currentSelectionValueDateCellDurationSpanExpansion$, { initialValue: undefined });
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));
+  readonly selectionValueSelectedIndexesSignal = toSignal(this.selectionValueSelectedIndexes$, { initialValue: undefined });
   readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x)));
+  readonly selectionValueSelectedDatesSignal = toSignal(this.selectionValueSelectedDates$, { initialValue: undefined });
   readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
+  readonly selectionValueWithTimezoneDateCellDurationSpanExpansionSignal = toSignal(this.selectionValueWithTimezoneDateCellDurationSpanExpansion$, { initialValue: undefined });
   readonly selectedDaysOfWeek$ = this.currentSelectionValueDateCellDurationSpanExpansion$.pipe(map((x) => readDaysOfWeekNames(x, (y) => y.startsAt, daysOfWeekNameFunction({ abbreviation: true }))));
+  readonly selectedDaysOfWeekSignal = toSignal(this.selectedDaysOfWeek$, { initialValue: undefined });
 
   constructor() {
     this.dbxCalendarScheduleSelectionStore.setFilter(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER);

@@ -168,7 +168,7 @@ describe('performTasksInParallelFunction()', () => {
 
       const input = range(0, tasksToRun);
 
-      performTasksInParallel(input, {
+      void performTasksInParallel(input, {
         taskFactory: async () => {
           tasksStarted += 1;
         },
@@ -188,7 +188,7 @@ describe('performTasksInParallelFunction()', () => {
       const tasksToRun = 6;
       const maxParallel = 3;
 
-      performTasksInParallel([], {
+      void performTasksInParallel([], {
         taskFactory: async () => {
           tasksStarted += 1;
         },
@@ -208,7 +208,7 @@ describe('performTasksInParallelFunction()', () => {
       const tasksToRun = 6;
       const input = range(0, tasksToRun);
 
-      performTasksInParallel(input, {
+      void performTasksInParallel(input, {
         taskFactory: async () => {
           tasksStarted += 1;
 
@@ -240,7 +240,7 @@ describe('performTasksInParallelFunction()', () => {
         let wasRunningConcurrentTask = false;
         const currentTaskValues = new Set<number>();
 
-        performTasksInParallel(input, {
+        void performTasksInParallel(input, {
           maxParallelTasks: tasksToRun, // set to try to run then all in parallel
           nonConcurrentTaskKeyFactory: (x) => null, // based on if they're even or odd
           taskFactory: async (x, _, keys) => {
@@ -276,7 +276,7 @@ describe('performTasksInParallelFunction()', () => {
         let wasRunningConcurrentTask = false;
         const currentTaskKeys = new Set<'even' | 'odd'>();
 
-        performTasksInParallel(input, {
+        void performTasksInParallel(input, {
           maxParallelTasks: tasksToRun, // set to try to run then all in parallel
           nonConcurrentTaskKeyFactory: (x) => (isEvenNumber(x) ? 'even' : 'odd') as 'even' | 'odd', // based on if they're even or odd
           taskFactory: async (x, _, keys) => {
@@ -314,7 +314,7 @@ describe('performTasksInParallelFunction()', () => {
         let wasRunningConcurrentTask = false;
         const currentTaskKeys = new Set<'even' | 'odd'>();
 
-        performTasksInParallel(input, {
+        void performTasksInParallel(input, {
           maxParallelTasks: tasksToRun, // set to try to run then all in parallel
           nonConcurrentTaskKeyFactory: (x) => ['even', 'odd'], // each key will return 'even' and 'odd', so only one should be running at a time now
           taskFactory: async (x, _, keys) => {
@@ -353,7 +353,7 @@ describe('performTasksInParallelFunction()', () => {
         const randomNumber = randomNumberFactory(5, 'floor');
         const currentTaskKeys = new Set<0 | 1 | 2 | 3 | 4>();
 
-        performTasksInParallel(input, {
+        void performTasksInParallel(input, {
           maxParallelTasks: tasksToRun, // set to try to run then all in parallel
           nonConcurrentTaskKeyFactory: (x) => {
             const a = randomNumber();
@@ -395,7 +395,7 @@ describe('performTasksInParallelFunction()', () => {
         const input = range(0, tasksToRun);
         let success = false;
 
-        performTasksInParallel(input, {
+        void performTasksInParallel(input, {
           maxParallelTasks: 1, // sequential
           taskFactory: async () => {
             tasksStarted += 1;
@@ -407,7 +407,7 @@ describe('performTasksInParallelFunction()', () => {
           done();
         });
 
-        waitForMs(50).then(() => {
+        void waitForMs(50).then(() => {
           expect(tasksStarted).toBe(1); // should still be waiting for the next task
           success = true;
         });
@@ -428,7 +428,7 @@ describe('performTasksInParallelFunction()', () => {
 
         let success = false;
 
-        performTasksInParallel(input, {
+        void performTasksInParallel(input, {
           taskFactory: async () => {
             tasksStarted += 1;
             return waitForMs(100);
@@ -440,7 +440,7 @@ describe('performTasksInParallelFunction()', () => {
           done();
         });
 
-        waitForMs(50).then(() => {
+        void waitForMs(50).then(() => {
           expect(tasksStarted).toBe(maxParallel); // should have started only one of the tasks
           success = true;
         });
@@ -460,7 +460,7 @@ describe('performTasksInParallelFunction()', () => {
 
           let success = false;
 
-          performTasksInParallel(input, {
+          void performTasksInParallel(input, {
             taskFactory: async () => {
               tasksStarted += 1;
               return waitForMs(400);
@@ -471,7 +471,7 @@ describe('performTasksInParallelFunction()', () => {
             done();
           });
 
-          waitForMs(100).then(() => {
+          void waitForMs(100).then(() => {
             expect(tasksStarted).toBe(tasksToRun); // should have started them all immediately
             success = true;
           });
@@ -493,7 +493,7 @@ describe('performTasksInParallelFunction()', () => {
 
             let success = false;
 
-            performTasksInParallel(input, {
+            void performTasksInParallel(input, {
               taskFactory: async () => {
                 tasksStarted += 1;
                 return waitForMs(100);
@@ -506,7 +506,7 @@ describe('performTasksInParallelFunction()', () => {
               done();
             });
 
-            waitForMs(50).then(() => {
+            void waitForMs(50).then(() => {
               expect(tasksStarted).toBe(maxParallel); // should have started only three of the tasks
               success = true;
             });
@@ -526,7 +526,7 @@ describe('performTasksInParallelFunction()', () => {
 
           let success = false;
 
-          performTasksInParallel(input, {
+          void performTasksInParallel(input, {
             taskFactory: async () => {
               tasksStarted += 1;
               return waitForMs(100);
@@ -538,7 +538,7 @@ describe('performTasksInParallelFunction()', () => {
             done();
           });
 
-          waitForMs(50).then(() => {
+          void waitForMs(50).then(() => {
             expect(tasksStarted).toBe(maxParallel); // should have started only three of the tasks
             success = true;
           });
@@ -555,7 +555,7 @@ describe('performTasksInParallelFunction()', () => {
 
           const input = range(0, tasksToRun);
 
-          performTasksInParallel(input, {
+          void performTasksInParallel(input, {
             taskFactory: async () => {
               tasksStarted += 1;
               return waitForMs(100);
@@ -572,6 +572,26 @@ describe('performTasksInParallelFunction()', () => {
 });
 
 describe('performTasksFromFactoryInParallelFunction()', () => {
+  function makeSequentialTaskInputFactory(totalTasks: number) {
+    let currentIndex = 0;
+    let hasReachedEnd = false;
+
+    return async function taskInputFactory() {
+      if (hasReachedEnd) {
+        return null; // issue no more tasks
+      }
+
+      const i = currentIndex;
+      currentIndex += 1; // increase our current index
+
+      if (currentIndex >= totalTasks) {
+        hasReachedEnd = true;
+      }
+
+      return i;
+    };
+  }
+
   describe('maxParallelTasks===0', () => {
     it('should not run multiple tasks in parallel', async () => {
       const maxParallelTasks = 0;
@@ -593,24 +613,7 @@ describe('performTasksFromFactoryInParallelFunction()', () => {
         }
       });
 
-      let currentIndex = 0;
-      let hasReachedEnd = false;
-
-      async function taskInputFactory() {
-        if (hasReachedEnd) {
-          return null; // issue no more tasks
-        }
-
-        const i = currentIndex;
-        currentIndex += 1; // increase our current index
-
-        if (currentIndex >= totalTasks) {
-          hasReachedEnd = true;
-        }
-
-        return i;
-      }
-
+      const taskInputFactory = makeSequentialTaskInputFactory(totalTasks);
       await performTaskFn(taskInputFactory);
 
       expect(maxRunningTasks).toBe(expectedMaxParallelTasks);
@@ -637,24 +640,7 @@ describe('performTasksFromFactoryInParallelFunction()', () => {
         }
       });
 
-      let currentIndex = 0;
-      let hasReachedEnd = false;
-
-      async function taskInputFactory() {
-        if (hasReachedEnd) {
-          return null; // issue no more tasks
-        }
-
-        const i = currentIndex;
-        currentIndex += 1; // increase our current index
-
-        if (currentIndex >= totalTasks) {
-          hasReachedEnd = true;
-        }
-
-        return i;
-      }
-
+      const taskInputFactory = makeSequentialTaskInputFactory(totalTasks);
       await performTaskFn(taskInputFactory);
 
       expect(maxRunningTasks).toBe(maxParallelTasks);

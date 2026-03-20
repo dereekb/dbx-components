@@ -36,8 +36,8 @@ export interface StripeWebhookEvent<T> {
 /**
  * Creates a StripeWebhookEvent and treats the data as the input type.
  *
- * @param event
- * @returns
+ * @param event - the raw Stripe event
+ * @returns a typed StripeWebhookEvent
  */
 export function stripeWebhookEvent<T>(event: Stripe.Event): StripeWebhookEvent<T> {
   return {
@@ -46,6 +46,14 @@ export function stripeWebhookEvent<T>(event: Stripe.Event): StripeWebhookEvent<T
   };
 }
 
+/**
+ * Creates a mapper function that transforms a raw Stripe.Event into a StripeWebhookEvent using the provided mapping function.
+ *
+ * Use this when the event data object needs custom transformation before being wrapped in a StripeWebhookEvent.
+ *
+ * @param mapFn - function to transform the event data object
+ * @returns a function that converts a raw Stripe.Event into a StripeWebhookEvent
+ */
 export function stripeWebhookEventMapper<T>(mapFn: (object: Stripe.Event.Data.Object, event: Stripe.Event) => T): (event: Stripe.Event) => StripeWebhookEvent<T> {
   return (event: Stripe.Event) => ({
     event,

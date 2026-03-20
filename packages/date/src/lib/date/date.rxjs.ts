@@ -54,7 +54,7 @@ export function dateInterval(config: DateIntervalConfig): Observable<Date> {
   }
 
   const intervalPeriod = period ?? MS_IN_SECOND;
-  const factory = inputFactory ? inputFactory : protectedFactory(logicalDateStringCodeDateFactory(logicalDate as LogicalDateStringCode));
+  const factory = inputFactory ?? protectedFactory(logicalDateStringCodeDateFactory(logicalDate as LogicalDateStringCode));
   let obs = interval(intervalPeriod, scheduler).pipe(startWith(-1), map(factory));
 
   if (emitAll !== true) {

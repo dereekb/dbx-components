@@ -38,11 +38,11 @@ export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], exclu
   const unique = new Set(values);
   const exclude = readKeysFromFilterUniqueFunctionAdditionalKeysInput<T>(excludeInput, (x) => x) as T[];
 
-  if (exclude != null && exclude.length) {
+  if (exclude.length) {
     removeFromSet(unique, exclude);
   }
 
-  return Array.from(unique);
+  return [...unique];
 }
 
 /**
@@ -95,7 +95,7 @@ export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends Prim
     addToSet(keys, input.values.map(readKey));
   }
 
-  return Array.from(keys);
+  return [...keys];
 }
 
 /**
@@ -110,7 +110,7 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
 
   function calculateExclude(excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, K>): K[] {
     const newExcludeKeys = excludeInput ? (Array.isArray(excludeInput) ? excludeInput.map(readKey) : readKeysFromFilterUniqueFunctionAdditionalKeys(excludeInput, readKey)) : [];
-    return newExcludeKeys?.length ? mergeArrays([filterMaybeArrayValues(newExcludeKeys), baseKeys]) : baseKeys;
+    return newExcludeKeys.length ? mergeArrays([filterMaybeArrayValues(newExcludeKeys), baseKeys]) : baseKeys;
   }
 
   return (input: T[], excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, K>) => {
@@ -203,7 +203,7 @@ export function allowValueOnceFilter<T extends PrimativeKey = PrimativeKey>(): A
 export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(readKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K>;
 export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(inputReadKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K> {
   const visitedKeys = new Set<Maybe<K>>();
-  const readKey = inputReadKey || (MAP_IDENTITY as ReadKeyFunction<T, K>);
+  const readKey = inputReadKey ?? (MAP_IDENTITY as ReadKeyFunction<T, K>);
 
   const fn = ((x: T) => {
     const key: Maybe<K> = readKey(x);

@@ -40,15 +40,25 @@ export type ZipCodeString = string;
  * Basic US address with two address lines, city, state, and zip code.
  */
 export interface UnitedStatesAddress {
-  /** Primary street address line. */
+  /**
+   * Primary street address line.
+   */
   line1: AddressLineString;
-  /** Secondary address line (apartment, suite, etc.). */
+  /**
+   * Secondary address line (apartment, suite, etc.).
+   */
   line2?: AddressLineString;
-  /** City name. */
+  /**
+   * City name.
+   */
   city: CityString;
-  /** State name or two-letter state code. */
+  /**
+   * State name or two-letter state code.
+   */
   state: StateString | StateCodeString;
-  /** Postal/zip code. */
+  /**
+   * Postal/zip code.
+   */
   zip: ZipCodeString;
 }
 
@@ -57,9 +67,13 @@ export interface UnitedStatesAddress {
  * such as a recipient name and phone number.
  */
 export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
-  /** Contact name associated with this address. */
+  /**
+   * Contact name associated with this address.
+   */
   name?: string;
-  /** Phone number associated with this address. */
+  /**
+   * Phone number associated with this address.
+   */
   phone?: string;
 }
 
@@ -71,9 +85,10 @@ export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
  *
  * @param input - the address to format
  * @param addLinebreaks - whether to join parts with newlines (default `true`) or concatenate them directly
+ * @returns the formatted address string, or `undefined` if no meaningful parts are present
  */
 export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddress | UnitedStatesAddressWithContact>>, addLinebreaks = true): Maybe<string> {
-  const { name, phone, line1, line2, zip, state, city } = (input as UnitedStatesAddressWithContact) ?? {};
+  const { name, phone, line1, line2, zip, state, city } = (input ?? {}) as Partial<UnitedStatesAddressWithContact>;
 
   let address: Maybe<string>;
 
@@ -110,6 +125,7 @@ export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddre
  * Useful for validating an address before submission or display.
  *
  * @param input - the address to validate
+ * @returns `true` if all required fields (line1, city, state, zip) are populated
  *
  * @example
  * ```ts
@@ -141,6 +157,7 @@ export const US_STATE_CODE_STRING_REGEX = /^((A[LKSZR])|(C[AOT])|(D[EC])|(F[ML])
  * Only matches uppercase codes; lowercase input returns `false`.
  *
  * @param input - the string to test
+ * @returns `true` if the input matches a valid US state or territory code
  *
  * @example
  * ```ts

@@ -28,23 +28,23 @@ export interface ZohoAccountsAccessTokenResponse {
   /**
    * Short-lived OAuth access token for authenticating API calls.
    */
-  access_token: ZohoAccessTokenString;
+  readonly access_token: ZohoAccessTokenString;
   /**
    * Comma-separated list of OAuth scopes granted to this token.
    */
-  scope: ZohoAccessTokenScopesString;
+  readonly scope: ZohoAccessTokenScopesString;
   /**
    * The API domain to use for subsequent API calls (e.g. `'https://www.zohoapis.com'`).
    */
-  api_domain: ZohoAccessTokenApiDomain;
+  readonly api_domain: ZohoAccessTokenApiDomain;
   /**
    * Token type, always `'Bearer'`.
    */
-  token_type: 'Bearer';
+  readonly token_type: 'Bearer';
   /**
    * Number of seconds until the access token expires.
    */
-  expires_in: Seconds;
+  readonly expires_in: Seconds;
 }
 
 /**
@@ -216,12 +216,14 @@ export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccou
 
 /**
  * Constructs a standard {@link FetchJsonInput} for Zoho Accounts API calls with the given HTTP method and optional body.
+ *
+ * @param method - HTTP method to use for the request
+ * @param body - Optional request body to include
+ * @returns Configured fetch input for the Zoho Accounts API call
  */
 export function zohoAccountsApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
-  const result = {
+  return {
     method,
     body
   };
-
-  return result;
 }

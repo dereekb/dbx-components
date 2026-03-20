@@ -42,10 +42,12 @@ export interface VapiAiWebhookEventVerificationResult {
 export type VapiAiWebhookEventVerifier = (req: Request, rawBody: Buffer) => Promise<VapiAiWebhookEventVerificationResult>;
 
 /**
- * Verifies a VapiAi webhook event header.
+ * Creates a verifier for Vapi AI webhook events.
  *
- * @param vapiSecretTokenGetter The VapiAi secret token. The Vapi client allows for using an AsyncGetterOrValue type, so the verifier supports that as well.
- * @returns A function that verifies a VapiAi webhook event.
+ * Supports secret token, HMAC SHA-256, and no-op verification modes based on the provided configuration.
+ *
+ * @param config - the verification configuration including secret tokens, verification type, and signature prefix
+ * @returns a VapiAiWebhookEventVerifier function that validates incoming webhook requests
  */
 export function vapiAiWebhookEventVerifier(config: VapiApiWebhookEventVerificationConfig): VapiAiWebhookEventVerifier {
   const { verificationType: inputVerificationType, secret: inputSecret, hmacSecret: inputHmacSecret, signaturePrefix: inputSignaturePrefix } = config;
@@ -58,7 +60,7 @@ export function vapiAiWebhookEventVerifier(config: VapiApiWebhookEventVerificati
     readonly requestBodyString: string;
   }
 
-  function verifyNone(input: VerifyInput) {
+  function verifyNone(_input: VerifyInput) {
     return true;
   }
 
@@ -67,8 +69,7 @@ export function vapiAiWebhookEventVerifier(config: VapiApiWebhookEventVerificati
     const headers = request.headers;
     const vapiSecret = headers['x-vapi-secret'];
 
-    const valid = vapiSecret === secretToken;
-    return valid;
+    return vapiSecret === secretToken;
   }
 
   function verifyHmac(input: VerifyInput) {
@@ -81,13 +82,12 @@ export function vapiAiWebhookEventVerifier(config: VapiApiWebhookEventVerificati
     const hashForVerify = createHmac('sha256', secretToken).update(message).digest('hex');
     const signature = `${signaturePrefix}${hashForVerify}`;
 
-    const valid = vapiSignature === signature;
-    return valid;
+    return vapiSignature === signature;
   }
 
   const verify = verificationType === 'hmac' ? verifyHmac : verificationType === 'secret' ? verifySecret : verifyNone;
 
-  return async (request: Request, rawBody: Buffer) => {
+  return async (request: Request, _rawBody: Buffer) => {
     const requestBodyString = String(request.body);
     const valid = verify({ request, requestBodyString });
     const requestBody = JSON.parse(requestBodyString) as RawVapiAiWebhookEvent;

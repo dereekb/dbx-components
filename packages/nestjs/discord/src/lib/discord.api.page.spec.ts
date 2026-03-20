@@ -22,7 +22,7 @@ describe('discordFetchMessagePageFactory()', () => {
       })
     );
 
-    const factory = discordFetchMessagePageFactory(fetch);
+    const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ limit: 10 });
     const firstPage = await page.fetchNext();
 
@@ -56,7 +56,7 @@ describe('discordFetchMessagePageFactory()', () => {
       }
     });
 
-    const factory = discordFetchMessagePageFactory(fetch);
+    const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ limit: 10 });
 
     const firstPage = await page.fetchNext();
@@ -84,7 +84,7 @@ describe('discordFetchMessagePageFactory()', () => {
       })
     );
 
-    const factory = discordFetchMessagePageFactory(fetch);
+    const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ after: '50', limit: 10 });
 
     const firstPage = await page.fetchNext();
@@ -118,8 +118,9 @@ describe('discordFetchMessagePageFactory()', () => {
       })
     );
 
-    const factory = discordFetchMessagePageFactory(fetch, {
-      readMessageId: (msg) => msg.snowflake
+    const factory = discordFetchMessagePageFactory({
+      fetch,
+      config: { readMessageId: (msg) => msg.snowflake }
     });
 
     const page = factory({ limit: 2 });
@@ -136,7 +137,7 @@ describe('discordFetchMessagePageFactory()', () => {
       })
     );
 
-    const factory = discordFetchMessagePageFactory(fetch);
+    const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ limit: 10 });
     const firstPage = await page.fetchNext();
 
@@ -153,7 +154,7 @@ describe('discordFetchMessagePageFactory()', () => {
       })
     );
 
-    const factory = discordFetchMessagePageFactory(fetch);
+    const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({});
 
     const firstPage = await page.fetchNext();
@@ -176,7 +177,7 @@ describe('discordFetchMessagePageFactory()', () => {
     // fetchPageFactory uses 0-indexed pages (FIRST_PAGE = 0).
     // maxPage: 2 allows pages 0, 1, and 2 to be fetched. Page 2 has isAtMaxPage: true,
     // and calling fetchNext on it throws FetchPageLimitReachedError.
-    const factory = discordFetchMessagePageFactory(fetch, undefined, { defaultMaxPage: 2 });
+    const factory = discordFetchMessagePageFactory({ fetch, defaults: { defaultMaxPage: 2 } });
     const page = factory({ limit: 10 });
 
     const firstPage = await page.fetchNext(); // page 0

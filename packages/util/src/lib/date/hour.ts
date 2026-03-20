@@ -160,7 +160,7 @@ export function toMinuteOfDay(hour: Hours, minute: Minutes): MinuteOfDay {
  * @returns A Date with the time set to the specified minute of day
  */
 export function dateFromMinuteOfDay(minuteOfDay: Minutes | MinuteOfDay, day?: Date) {
-  const date = day || new Date();
+  const date = day ?? new Date();
   const { hour, minute } = minutesToHoursAndMinutes(asMinuteOfDay(minuteOfDay));
   date.setHours(hour, minute, 0, 0);
   return date;

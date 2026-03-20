@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { type DbxFirebaseLoginMode, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
 
 import { DbxLinkComponent } from '@dereekb/dbx-web';
@@ -7,8 +7,9 @@ import { DbxLinkComponent } from '@dereekb/dbx-web';
   selector: 'demo-login-view',
   templateUrl: './login.view.component.html',
   standalone: true,
-  imports: [DbxFirebaseLoginComponent, DbxLinkComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent]
+  imports: [DbxFirebaseLoginComponent, DbxLinkComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoAuthLoginViewComponent {
-  mode: DbxFirebaseLoginMode = 'login';
+  readonly mode = signal<DbxFirebaseLoginMode>('login');
 }

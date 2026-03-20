@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective, DbxFormlyComponent, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { map, type Observable } from 'rxjs';
@@ -19,7 +19,8 @@ import { JsonPipe } from '@angular/common';
   selector: 'doc-form-example-form',
   providers: [provideFormlyContext()],
   standalone: true,
-  imports: [DbxFormlyComponent, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe]
+  imports: [DbxFormlyComponent, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExampleComponent extends AbstractConfigAsyncFormlyFormDirective<any, FormlyFieldConfig[]> {
   value: any;

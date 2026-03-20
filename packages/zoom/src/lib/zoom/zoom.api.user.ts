@@ -45,6 +45,12 @@ export function listUsers(context: ZoomContext): ListUsersFunction {
 
 export type ListUsersPageFactory = FetchPageFactory<ListUsersInput, ListUsersResponse>;
 
+/**
+ * Creates a page factory for listing users.
+ *
+ * @param context The Zoom API context
+ * @returns A page factory for paginated user listing
+ */
 export function listUsersPageFactory(context: ZoomContext): ListUsersPageFactory {
   return zoomFetchPageFactory(listUsers(context));
 }

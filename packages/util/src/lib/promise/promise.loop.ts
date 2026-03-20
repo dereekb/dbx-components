@@ -6,9 +6,13 @@ import { type PromiseOrValue } from './promise.type';
  * Configuration for {@link performTaskLoop} without an initial value.
  */
 export interface PerformTaskLoopConfig<O> {
-  /** Produces the next value given the iteration index and the previous value. */
+  /**
+   * Produces the next value given the iteration index and the previous value.
+   */
   next: (i: number, prev: Maybe<O>) => Promise<O>;
-  /** Returns whether to continue looping. Called after each iteration with the current value and next index. */
+  /**
+   * Returns whether to continue looping. Called after each iteration with the current value and next index.
+   */
   checkContinue: (prev: Maybe<O>, i: number) => PromiseOrValue<boolean>;
 }
 
@@ -16,11 +20,17 @@ export interface PerformTaskLoopConfig<O> {
  * Configuration for {@link performTaskLoop} with a required initial value.
  */
 export interface PerformTaskLoopWithInitConfig<O> {
-  /** The initial value to start the loop with. */
+  /**
+   * The initial value to start the loop with.
+   */
   initValue: O;
-  /** Produces the next value given the iteration index and the previous value. */
+  /**
+   * Produces the next value given the iteration index and the previous value.
+   */
   next: (i: number, prev: O) => Promise<O>;
-  /** Returns whether to continue looping. Called after each iteration with the current value and next index. */
+  /**
+   * Returns whether to continue looping. Called after each iteration with the current value and next index.
+   */
   checkContinue: (prev: O, i: number) => PromiseOrValue<boolean>;
 }
 
@@ -65,7 +75,9 @@ export async function performTaskLoop<O>(config: PerformTaskLoopWithInitConfig<O
  * Configuration for {@link performTaskCountLoop} without an initial value.
  */
 export interface PerformTaskCountLoopConfig<O> extends Omit<PerformTaskLoopConfig<O>, 'checkContinue'> {
-  /** The number of iterations to perform. */
+  /**
+   * The number of iterations to perform.
+   */
   count: number;
 }
 
@@ -73,7 +85,9 @@ export interface PerformTaskCountLoopConfig<O> extends Omit<PerformTaskLoopConfi
  * Configuration for {@link performTaskCountLoop} with a required initial value.
  */
 export interface PerformTaskCountLoopWithInitConfig<O> extends Omit<PerformTaskLoopWithInitConfig<O>, 'checkContinue'> {
-  /** The number of iterations to perform. */
+  /**
+   * The number of iterations to perform.
+   */
   count: number;
 }
 
@@ -107,9 +121,13 @@ export type PerformMakeLoopFunction<O> = (i: number, made: O[]) => Promise<O>;
  * Configuration for {@link performMakeLoop}.
  */
 export interface PerformMakeLoopConfig<O> {
-  /** The factory function to create each item. */
+  /**
+   * The factory function to create each item.
+   */
   make: PerformMakeLoopFunction<O>;
-  /** The total number of items to create. */
+  /**
+   * The total number of items to create.
+   */
   count: number;
 }
 

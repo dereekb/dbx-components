@@ -148,6 +148,8 @@ export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, Filter
 
   /**
    * Sets the default filter observable for this key.
+   *
+   * @param filterObs - the observable to use as the default filter for this key
    */
   initWithFilter(filterObs: Observable<F>): void {
     this.dbxFilterMap.addDefaultFilterObs(this.key, filterObs);
@@ -155,6 +157,8 @@ export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, Filter
 
   /**
    * Connects a filter source, adding its filter observable to this key's merged filters.
+   *
+   * @param filterSource - the filter source whose filter$ will be added to this key's merged stream
    */
   connectWithSource(filterSource: FilterSource<F>): void {
     this.dbxFilterMap.addFilterObs(this.key, filterSource.filter$);

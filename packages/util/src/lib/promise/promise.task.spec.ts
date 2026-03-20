@@ -198,11 +198,28 @@ describe('runNamedAsyncTasksFunction()', () => {
         }
       });
 
-      const tasks1: RunNamedAsyncTasksInput<void> = [{ name: 'task1', run: async () => {} }];
+      const tasks1: RunNamedAsyncTasksInput<void> = [
+        {
+          name: 'task1',
+          run: async () => {
+            /* noop */
+          }
+        }
+      ];
 
       const tasks2: RunNamedAsyncTasksInput<void> = [
-        { name: 'task2', run: async () => {} },
-        { name: 'task3', run: async () => {} }
+        {
+          name: 'task2',
+          run: async () => {
+            /* noop */
+          }
+        },
+        {
+          name: 'task3',
+          run: async () => {
+            /* noop */
+          }
+        }
       ];
 
       await runTasks(tasks1);

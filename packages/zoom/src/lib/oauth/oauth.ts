@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Seconds } from '@dereekb/util';
 import { ZoomOAuthAuthFailureError } from './oauth.error.api';
 
 /**
@@ -31,9 +31,9 @@ export interface ZoomAccessToken {
    */
   readonly apiDomain: ZoomAccessTokenApiDomain;
   /**
-   * Length of time the token is valid for.
+   * Length of time the token is valid for, in seconds.
    */
-  readonly expiresIn: number;
+  readonly expiresIn: Seconds;
   /**
    * Date the token expires at.
    */
@@ -76,13 +76,16 @@ export type ZoomAccessTokenRefresher = ZoomAccessTokenFactory;
 export type ZoomAccessTokenStringFactory = () => Promise<ZoomAccessTokenString>;
 
 /**
- * Generates a new ZoomAccessTokenStringFactory.
+ * Generates a new ZoomAccessTokenStringFactory from a ZoomAccessTokenFactory.
+ *
+ * @param zoomAccessTokenFactory The factory to extract the token string from
+ * @returns A factory that returns the access token string
  */
 export function zoomAccessTokenStringFactory(zoomAccessTokenFactory: ZoomAccessTokenFactory): ZoomAccessTokenStringFactory {
   return async () => {
     const token = await zoomAccessTokenFactory();
 
-    if (!token?.accessToken) {
+    if (!token.accessToken) {
       throw new ZoomOAuthAuthFailureError();
     }
 

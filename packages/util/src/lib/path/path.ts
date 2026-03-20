@@ -354,7 +354,9 @@ export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}
  *
  * If the input is a file, the folder of the file is returned instead.
  *
- * @param input
+ * @param input - the string path to convert to a folder path
+ * @param config - optional configuration controlling path type inference and invalid-path handling
+ * @returns a valid slash path folder string with a trailing slash, or an empty string for relative root
  */
 export function slashPathFolder(input: string, config?: SlashPathFolderFactoryConfig): InferredSlashPathFolder {
   return slashPathFolderFactory({ ...config })(input);
@@ -443,7 +445,7 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceW
   return (input: SlashPath) => {
     const endsOnFileTypeSeparator = input[input.length - 1] === SLASH_PATH_FILE_TYPE_SEPARATOR;
     const inputToEvaluate = endsOnFileTypeSeparator ? removeTrailingFileTypeSeparators(input) : input;
-    const { first, last, occurences } = firstAndLastCharacterOccurrence(inputToEvaluate, SLASH_PATH_FILE_TYPE_SEPARATOR);
+    const { first: _first, last, occurences } = firstAndLastCharacterOccurrence(inputToEvaluate, SLASH_PATH_FILE_TYPE_SEPARATOR);
 
     let fixedPath: SlashPath;
 
@@ -518,19 +520,15 @@ export function slashPathValidationFactory(config?: SlashPathValidationFactoryCo
 
   const replaceIllegalCharacters = typeof inputReplaceIllegalCharacters === 'string' ? inputReplaceIllegalCharacters : DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT;
 
-  if (inputReplaceIllegalCharacters != null) {
-    fns.push(
-      replaceStringsFunction({
-        replace: illegalStrings,
-        replaceWith: replaceIllegalCharacters
-      })
-    );
-  }
+  fns.push(
+    replaceStringsFunction({
+      replace: illegalStrings,
+      replaceWith: replaceIllegalCharacters
+    })
+  );
 
-  if (inputReplaceIllegalDots != null) {
-    const replaceIllegalDotsWith = typeof inputReplaceIllegalDots === 'string' ? inputReplaceIllegalDots : replaceIllegalCharacters;
-    fns.push(replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceIllegalDotsWith));
-  }
+  const replaceIllegalDotsWith = typeof inputReplaceIllegalDots === 'string' ? inputReplaceIllegalDots : replaceIllegalCharacters;
+  fns.push(replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceIllegalDotsWith));
 
   if (throwError === true || !(inputReplaceIllegalCharacters || inputReplaceIllegalDots)) {
     fns.push((x) => {
@@ -848,32 +846,25 @@ export function expandSlashPathPathMatcherPartToDecisionFunctions(path: SlashPat
   const targetPathPartsInput = asArray(path);
   const indexMatchingDecisionFunctions: SlashPathPathMatcherFunction[] = [];
 
-  targetPathPartsInput.forEach((part, index) => {
+  targetPathPartsInput.forEach((part, _index) => {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (typeof part) {
-      case 'number':
-        let matchPartFunction: SlashPathPathMatcherFunction;
-
-        switch (part) {
-          case SlashPathPathMatcherPartCode.WILDCARD:
-            matchPartFunction = decisionFunction(true);
-            break;
-          default:
-            // all other unknown numbers are treated as invalid and should never match
-            matchPartFunction = decisionFunction(false);
-            break;
-        }
-
+      case 'number': {
+        // Currently only SlashPathPathMatcherPartCode.WILDCARD (0) exists; treat as wildcard
+        const matchPartFunction: SlashPathPathMatcherFunction = decisionFunction(true);
         indexMatchingDecisionFunctions.push(matchPartFunction);
         break;
-      case 'string':
+      }
+      case 'string': {
         // break parts of the path into parts
         const parts = slashPathParts(part);
 
-        parts.forEach((part, partIndex) => {
+        parts.forEach((part, _partIndex) => {
           const matchPartFunction = (inputPart: SlashPathPart) => inputPart === part;
           indexMatchingDecisionFunctions.push(matchPartFunction);
         });
         break;
+      }
       case 'function':
         indexMatchingDecisionFunctions.push(part);
         break;
@@ -970,6 +961,7 @@ export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeV
   if (Array.isArray(input)) {
     pathMatcherConfig = { targetPath: input };
   } else {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (typeof input) {
       case 'string':
         pathMatcherConfig = { targetPath: [input] };
@@ -988,7 +980,7 @@ export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeV
 /**
  * Creates a SlashPathPathMatcher.
  *
- * @param config The configuration for the matcher.
+ * @param input - the matcher configuration, which may be a target path string, an array of path parts, or a full config object
  * @returns The matcher.
  */
 export function slashPathPathMatcher<N extends PrimativeValue = PrimativeValue>(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcher<N> {

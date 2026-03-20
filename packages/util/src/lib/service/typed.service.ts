@@ -53,7 +53,9 @@ export class TypedServiceRegistryInstance<S, T extends string = string> implemen
  * Configuration for initializing a {@link TypedServiceRegistryInstance} with a set of services.
  */
 export interface TypedServiceRegistrySetupConfig<S, T extends string = string> {
-  /** A record mapping type keys to their service instances. */
+  /**
+   * A record mapping type keys to their service instances.
+   */
   services: {
     [K in T]: S;
   };

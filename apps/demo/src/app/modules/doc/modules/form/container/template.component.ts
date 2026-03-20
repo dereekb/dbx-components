@@ -1,5 +1,5 @@
 import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField } from '@dereekb/dbx-form';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -10,7 +10,8 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 @Component({
   templateUrl: './template.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent, DbxFormTimezoneStringFieldModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent, DbxFormTimezoneStringFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormTemplateComponent {
   readonly usernamePasswordLoginField: FormlyFieldConfig[] = usernamePasswordLoginFields({

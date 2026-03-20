@@ -4,7 +4,7 @@
     <h3>Functions</h3>
     <doc-feature-example header="dbxActionHandler" hint="Performs an action using the input when the action is in a valueReady state.">
       <p>dbxActionHandler takes in a WorkUsingObservable, which can be used to return either an observable that completes the loading and sets the result value of that observable, or can used the passed context to manage the state better.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
@@ -12,14 +12,14 @@
     <doc-feature-example header="dbxActionHandlerValue" hint="Synchronously passes a value to the success function for the instance.">
       <p>dbxActionHandlerValue takes in a value, getter, or factory that uses the readied value and synchronously returns a value.</p>
       <p>If no value is provided to dbxActionHandlerValue, then it will pass null to the action's success value.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandlerValue]="actionHandlerValue" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandlerValue]="actionHandlerValue" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionSuccessHandler" hint="Performs an action after the action reaches success.">
       <p>dbxActionHandler takes in a WorkUsingObservable, which can be used to return either an observable that completes the loading and sets the result value of that observable, or can used the passed context to manage the state better.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async" [dbxActionSuccessHandler]="onActionSuccess">
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()" [dbxActionSuccessHandler]="onActionSuccess">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </dbx-action-example-tools>
       <p>Success value: {{ successValue | json }}</p>
@@ -27,7 +27,7 @@
 
     <doc-feature-example header="dbxActionIdle" hint="Structural directive that shows template content when the action is idle. This does not reappear after working has completed.">
       <p>dbxActionIdle can be used just like ngIf.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
         <p *dbxActionIdle>Idle!</p>
         <p *dbxActionIdle="3000">Idle! (Disappears after 3 seconds.)</p>
@@ -36,7 +36,7 @@
 
     <doc-feature-example header="dbxActionIsWorking" hint="Structural directive that shows template content when the action is working. This does not reappear after working has completed.">
       <p>dbxActionIsWorking can be used just like ngIf.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
         <p *dbxActionIsWorking>Working!</p>
         <p *dbxActionIsWorking="3000">Working! (Disappears after 3 seconds.)</p>
@@ -54,7 +54,7 @@
 
     <doc-feature-example header="dbxActionHasSuccess" hint="Structural directive that shows template content when the action has success.">
       <p>dbxActionHasSuccess can be used just like ngIf.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
         <p *dbxActionHasSuccess>Success!</p>
         <p *dbxActionHasSuccess="3000">Success! (Dissapears after 3 seconds.)</p>
@@ -65,7 +65,7 @@
 
     <doc-feature-example header="dbxActionPreSuccess" hint="Structural directive that shows template content before the action has success.">
       <p>dbxActionPreSuccess can be used just like ngIf.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
         <p *dbxActionPreSuccess>No success yet!</p>
         <p *dbxActionPreSuccess="3000">No success yet! (Re-appears after 3 seconds.)</p>
@@ -73,7 +73,7 @@
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionDisabledOnSuccess" hint="Directive that disables the action after it succeeds.">
-      <dbx-action-example-tools dbxAction dbxActionDisabledOnSuccess [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction dbxActionDisabledOnSuccess [dbxActionHandler]="handleAction" [dbxActionValue]="valueSignal()">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
@@ -106,7 +106,7 @@
 
     <h3>Value</h3>
     <doc-feature-example header="dbxActionValue" hint="Passes a value to the action to ready a value.">
-      <dbx-action-example-tools dbxAction [dbxActionValue]="value$ | async" [dbxActionHandler]="handleAction">
+      <dbx-action-example-tools dbxAction [dbxActionValue]="valueSignal()" [dbxActionHandler]="handleAction">
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>

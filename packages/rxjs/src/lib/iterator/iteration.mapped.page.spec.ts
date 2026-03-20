@@ -30,7 +30,7 @@ describe('iteration.mapped.page', () => {
       it(
         'should map the loading state value through the mapping function',
         callbackTest((done) => {
-          instance.next();
+          void instance.next();
 
           mappedInstance.latestState$.pipe(first()).subscribe((state) => {
             expect(state.value).toBe('+0');
@@ -44,11 +44,11 @@ describe('iteration.mapped.page', () => {
       it(
         'should load the next page and return the page number',
         callbackTest((done) => {
-          instance.next(); // load first page
+          void instance.next(); // load first page
 
           instance.latestState$.pipe(first()).subscribe(() => {
             // first page loaded, now load the next
-            mappedInstance.nextPage().then((page) => {
+            void mappedInstance.nextPage().then((page) => {
               expect(page).toBe(1);
               done();
             });

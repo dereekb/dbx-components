@@ -1,4 +1,4 @@
-import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
+import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type Maybe, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -136,16 +136,16 @@ export type ZohoCrmDraftOrSaveState = 'draft' | 'save';
 export type ZohoCrmTrueFalseBoth = 'true' | 'false' | 'both';
 
 export interface ZohoCrmReferenceData {
-  name: string;
-  id: ZohoCrmId;
+  readonly name: string;
+  readonly id: ZohoCrmId;
 }
 
 /**
  * Reference pair of a Zoho Crm user name and id
  */
 export interface ZohoCrmUserReferenceData {
-  name: string;
-  id: ZohoCrmUserId;
+  readonly name: string;
+  readonly id: ZohoCrmUserId;
 }
 
 export interface ZohoCrmReferenceDataWithModule extends ZohoCrmReferenceData, ZohoCrmModuleNameRef {}
@@ -172,17 +172,18 @@ export type ZohoCrmValidUrl = WebsiteUrl;
  * Update details returned by the server for a created/updated object.
  */
 export interface ZohoCrmChangeObjectDetails {
-  id: ZohoCrmRecordId;
-  Modified_Time: ISO8601DateString;
-  Modified_By: ZohoCrmCreatedByData;
-  Created_Time: ISO8601DateString;
-  Created_By: ZohoCrmCreatedByData;
+  readonly id: ZohoCrmRecordId;
+  readonly Modified_Time: ISO8601DateString;
+  readonly Modified_By: ZohoCrmCreatedByData;
+  readonly Created_Time: ISO8601DateString;
+  readonly Created_By: ZohoCrmCreatedByData;
 }
 
 // MARK: Zoho Crm Record
 /**
  * Base Zoho Crm field data type.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
 export interface ZohoCrmRecordFieldsData {}
 
 export interface ZohoCrmRecordDraftStateData {
@@ -340,7 +341,7 @@ export interface ZohoCrmRecordAttachmentMetadata {
   /**
    * Direct URL to the attachment, when available
    */
-  Attachment_URL: string | null;
+  Attachment_URL: Maybe<WebsiteUrl>;
   /**
    * User who last modified this attachment
    */
@@ -364,7 +365,7 @@ export interface ZohoCrmRecordAttachmentMetadata {
   /**
    * Link URL when the attachment is a link
    */
-  $link_url?: string | null;
+  $link_url?: Maybe<WebsiteUrl>;
   /**
    * Number of linked documents
    */

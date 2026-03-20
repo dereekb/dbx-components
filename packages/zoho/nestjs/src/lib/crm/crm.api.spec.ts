@@ -998,7 +998,9 @@ describe('crm.api', () => {
                   name: TEST_TAG_NAME
                 }
               })
-              .catch(() => {});
+              .catch(() => {
+                /* ignore duplicate tag errors */
+              });
           });
 
           it('should return a duplicateErrorItems in the result when attempting to create a duplicate tag', async () => {
@@ -1041,7 +1043,9 @@ describe('crm.api', () => {
                     name: TEST_TAG_NAME
                   }
                 })
-                .catch(() => {});
+                .catch(() => {
+                  /* ignore duplicate tag errors */
+                });
             });
 
             it('should add a tag to a record', async () => {
@@ -1125,7 +1129,7 @@ describe('crm.api', () => {
             });
 
             const { successItems, duplicateErrorItems } = createTags;
-            deleteTagId = (successItems[0] ?? duplicateErrorItems[0])?.result.details.id;
+            deleteTagId = (successItems[0] ?? duplicateErrorItems[0]).result.details.id;
           });
 
           it('should delete a tag', async () => {

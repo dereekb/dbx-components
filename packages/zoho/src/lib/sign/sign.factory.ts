@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZohoSignConfig, type ZohoSignContext, type ZohoSignContextRef, type ZohoSignFetchFactory, type ZohoSignFetchFactoryInput, zohoSignConfigApiUrl } from './sign.config';
+import { type ZohoSignConfig, type ZohoSignContext, type ZohoSignContextRef, type ZohoSignFetchFactory, type ZohoSignFetchFactoryParams, zohoSignConfigApiUrl } from './sign.config';
 import { type LogZohoServerErrorFunction, ZohoInvalidTokenError } from '../zoho.error.api';
 import { handleZohoSignErrorFetch, interceptZohoSign200StatusWithErrorResponse } from './sign.error.api';
 import { type ZohoAccountsContextRef } from '../accounts/accounts.config';
@@ -20,16 +20,16 @@ export interface ZohoSignFactoryConfig extends ZohoAccountsContextRef {
   /**
    * Custom rate limiter configuration to control request concurrency and throttling.
    */
-  rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
+  readonly rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
    * Custom fetch factory for creating the underlying HTTP client.
    * Defaults to a standard fetch service with OAuth Bearer token headers and a 20-second timeout.
    */
-  fetchFactory?: ZohoSignFetchFactory;
+  readonly fetchFactory?: ZohoSignFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
-  logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
 /**
@@ -69,7 +69,7 @@ export function zohoSignFactory(factoryConfig: ZohoSignFactoryConfig): ZohoSignF
 
   const {
     logZohoServerErrorFunction,
-    fetchFactory = (input: ZohoSignFetchFactoryInput) =>
+    fetchFactory = (input: ZohoSignFetchFactoryParams) =>
       fetchApiFetchService.makeFetch({
         baseUrl: input.apiUrl,
         baseRequest: async () => ({
@@ -95,7 +95,7 @@ export function zohoSignFactory(factoryConfig: ZohoSignFactoryConfig): ZohoSignF
 
     const fetch: ConfiguredFetch = handleZohoSignErrorFetch(baseFetch, logZohoServerErrorFunction, (x) => {
       if (x instanceof ZohoInvalidTokenError) {
-        accountsContext.loadAccessToken.resetAccessToken();
+        void accountsContext.loadAccessToken.resetAccessToken();
       }
     });
 

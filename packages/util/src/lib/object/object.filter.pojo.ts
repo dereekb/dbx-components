@@ -90,6 +90,9 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
  * By default, `undefined` values in sources are excluded from the template.
  *
  * @param config - Configuration controlling filtering, copying, and caching behavior.
+ * @param config.filter - filter applied to source object values when building the template; by default, `undefined` values are excluded
+ * @param config.copy - when true, the target object is shallow-copied before applying overrides instead of being mutated in place
+ * @param config.dynamic - when true, the template is recalculated on each call instead of being cached; useful when source objects may change over time
  * @returns A factory function that accepts source objects and returns an override function.
  *
  * @example
@@ -353,6 +356,7 @@ export type GeneralFindPOJOKeysFunction = <T extends object>(obj: T) => (keyof T
 export function findPOJOKeysFunction<T extends object>(filter: FilterKeyValueTuplesInput<T>): FindPOJOKeysFunction<T> {
   const findEachMatchingKeyOnTarget = forEachKeyValueOnPOJOFunction<T, FindPOJOKeysContext<T>>({
     filter,
+    // eslint-disable-next-line @typescript-eslint/max-params
     forEach: ([key], i, obj, context: FindPOJOKeysContext<T>) => {
       context.keys.push(key);
     }
@@ -413,6 +417,7 @@ export function countPOJOKeysFunction<T extends object>(filter: FilterKeyValueTu
 
   const countEachMatchingKeyOnTarget = forEachKeyValueOnPOJOFunction<T, CountPOJOKeysContext>({
     filter,
+    // eslint-disable-next-line @typescript-eslint/max-params
     forEach: (x, i, obj, context: CountPOJOKeysContext) => {
       context.count += 1;
     }
@@ -488,6 +493,8 @@ export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) 
  * By default, removes `undefined` values (`KeyValueTypleValueFilter.UNDEFINED`) and does not copy (`copy: false`).
  *
  * @param config - Configuration for filtering and copying. Defaults to `{ copy: false, filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }`.
+ * @param config.copy - when true, returns a shallow copy with filtered keys removed instead of mutating the input; defaults to false
+ * @param config.filter - the filter criteria determining which key/value pairs to remove; defaults to removing `undefined` values
  * @returns A reusable filter function. The returned function also accepts a `copyOverride` argument to override the copy behavior per-call.
  *
  * @example
@@ -632,6 +639,7 @@ export function assignValuesToPOJOFunction<T extends object, K extends keyof T =
 
   const assignEachValueToTarget = forEachKeyValueOnPOJOFunction<T, T>({
     filter,
+    // eslint-disable-next-line @typescript-eslint/max-params
     forEach: ([key, value], i, object: T, target: T) => {
       target[key] = value;
     }
@@ -703,6 +711,7 @@ export type ValuesFromPOJOFunction<O = unknown, I extends object = object> = (ob
 export function valuesFromPOJOFunction<O = unknown, I extends object = object>(filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): ValuesFromPOJOFunction<O, I> {
   const addValuesFromObjectToContext = forEachKeyValueOnPOJOFunction<I, ValuesFromPOJOFunctionContext<O>>({
     filter,
+    // eslint-disable-next-line @typescript-eslint/max-params
     forEach: ([, value], i, obj, context: ValuesFromPOJOFunctionContext) => {
       context.values.push(value);
     }
@@ -774,10 +783,10 @@ export function filterTuplesOnPOJOFunction<T extends object>(filterTupleOnObject
   return ((input: T) => {
     const result: Partial<T> = {};
 
-    Object.entries<T>(input as any)
+    Object.entries<T>(input as unknown as Record<string, T>)
       .filter(filterTupleOnObject)
       .forEach((tuple) => {
-        (result as any)[tuple[0]] = tuple[1];
+        (result as unknown as Record<string, unknown>)[tuple[0]] = tuple[1];
       });
 
     return result;
@@ -793,6 +802,7 @@ export function filterTuplesOnPOJOFunction<T extends object>(filterTupleOnObject
  * @param object - The original object being iterated.
  * @param context - An optional context value passed through from the caller.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export type ForEachKeyValueOnPOJOTupleFunction<T extends object, C = unknown, K extends keyof T = keyof T> = (tuple: KeyValueTuple<T, K>, index: number, object: T, context: C) => void;
 
 /**
@@ -836,6 +846,8 @@ export type ForEachKeyValueOnPOJOConfig<T extends object, C = unknown, K extends
  * When no filter is provided, all key/value pairs are iterated.
  *
  * @param config - The filter and forEach callback configuration.
+ * @param config.forEach - callback invoked for each key/value pair that passes the filter
+ * @param config.filter - optional filter controlling which key/value pairs are iterated; when omitted, all pairs are visited
  * @returns A function that iterates matching key/value pairs on any input object.
  *
  * @example

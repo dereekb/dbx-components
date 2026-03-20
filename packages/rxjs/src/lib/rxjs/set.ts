@@ -34,6 +34,8 @@ export function setContainsNoValueFrom<T>(valuesObs: Observable<Maybe<Iterable<T
 
 /**
  * `distinctUntilChanged` variant for iterables that only emits when the contained values change.
+ *
+ * @returns operator that suppresses consecutive iterable emissions with the same set of values
  */
 export function distinctUntilHasDifferentValues<I extends Iterable<K>, K extends PrimativeKey>() {
   return distinctUntilChanged<I>(hasSameValues);
@@ -44,6 +46,7 @@ export function distinctUntilHasDifferentValues<I extends Iterable<K>, K extends
  * when the set of extracted values changes.
  *
  * @param readValues - function to extract the iterable of values to compare
+ * @returns operator that suppresses consecutive emissions whose extracted iterable values are the same
  */
 export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<I, V>): MonoTypeOperatorFunction<I>;
 export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<I, V>): MonoTypeOperatorFunction<Maybe<I>>;
@@ -57,6 +60,7 @@ export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<Prim
  *
  * @param readValues - function to extract the value to compare
  * @param isEqualComparator - custom equality function for the extracted values
+ * @returns operator that suppresses consecutive emissions whose extracted values are considered equal
  */
 export function distinctUntilItemsValueChanges<I, V>(readValues: ReadValueFunction<I, V>, isEqualComparator: EqualityComparatorFunction<V>): MonoTypeOperatorFunction<I>;
 export function distinctUntilItemsValueChanges<I, V>(readValues: ReadValueFunction<I, V>, isEqualComparator: EqualityComparatorFunction<V>): MonoTypeOperatorFunction<Maybe<I>>;

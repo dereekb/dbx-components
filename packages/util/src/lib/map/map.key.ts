@@ -55,6 +55,7 @@ export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey
     const map = new Map<K, T>();
 
     values.forEach((x) => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const keys = read(x) ?? [];
       keys.forEach((key) => map.set(key, x));
     });
@@ -190,7 +191,7 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
  * @param b - The second map
  * @returns true if the maps have the same keys, false otherwise
  */
-export function mapsHaveSameKeys<K>(a: Map<K, any>, b: Map<K, any>): boolean {
+export function mapsHaveSameKeys<K>(a: Map<K, unknown>, b: Map<K, unknown>): boolean {
   if (a.size !== b.size) {
     return false; // must be same size to have same keys
   }

@@ -78,8 +78,7 @@ export function wrapNumberFunction<T extends number = number>(wrapNumberFunction
     } else {
       // when fencePosts is true, we're wrapping to the nearest fence post, meaning wraps are one value longer increased on that side.
       const fencePostOffset = fencePosts ? (input < min ? 1 : -1) : 0;
-      const wrappedValue = ((((input - min) % distance) + distance) % distance) + min + fencePostOffset;
-      return wrappedValue;
+      return ((((input - min) % distance) + distance) % distance) + min + fencePostOffset;
     }
   }) as WrapNumberFunction<T>;
   fn._wrap = wrapNumberFunctionConfig;

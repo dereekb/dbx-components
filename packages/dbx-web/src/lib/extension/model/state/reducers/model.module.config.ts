@@ -10,12 +10,12 @@ export interface DbxModelModuleStateConfiguration {}
 /**
  * NgRx feature key for the model module configuration state slice.
  */
-export const stateFeatureKey = 'model.module.config';
+export const STATE_FEATURE_KEY = 'model.module.config';
 
 /**
  * Initial state for the model module configuration reducer.
  */
-export const initialState: DbxModelModuleStateConfiguration = {
+export const INITIAL_STATE: DbxModelModuleStateConfiguration = {
   types: {}
 };
 
@@ -23,6 +23,16 @@ export const initialState: DbxModelModuleStateConfiguration = {
  * NgRx reducer for model module configuration. Resets to initial state on {@link DbxModelStateActions.dbxModelResetState}.
  */
 export const reducer = createReducer(
-  initialState,
-  on(DbxModelStateActions.dbxModelResetState, () => initialState)
+  INITIAL_STATE,
+  on(DbxModelStateActions.dbxModelResetState, () => INITIAL_STATE)
 );
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated use STATE_FEATURE_KEY instead.
+ */
+export const stateFeatureKey = STATE_FEATURE_KEY;
+/**
+ * @deprecated use INITIAL_STATE instead.
+ */
+export const initialState = INITIAL_STATE;

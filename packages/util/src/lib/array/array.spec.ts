@@ -101,8 +101,8 @@ describe('mergeArraysIntoArray()', () => {
     expect(result.length).toBe(initial.length + second.length);
     expect(result[0]).toBe(initial[0]);
 
-    for (let i = 0; i < second.length; i += 1) {
-      expect(result[i + 1]).toBe(second[i]);
+    for (const [i, element] of second.entries()) {
+      expect(result[i + 1]).toBe(element);
     }
   });
 
@@ -116,8 +116,8 @@ describe('mergeArraysIntoArray()', () => {
     expect(result.length).toBe(initial.length + second.length * 2);
     expect(result[0]).toBe(initial[0]);
 
-    for (let i = 0; i < second.length; i += 1) {
-      expect(result[i + 1]).toBe(second[i]);
+    for (const [i, element] of second.entries()) {
+      expect(result[i + 1]).toBe(element);
     }
 
     for (let i = 0; i < second.length; i += 1) {

@@ -1,5 +1,5 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { nameField, textAreaField, textField, toggleField, valueSelectionField, type ValueSelectionOption, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -21,7 +21,8 @@ export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
 @Component({
   templateUrl: './expression.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExpressionComponent {
   readonly hideExpressionField: FormlyFieldConfig[] = [

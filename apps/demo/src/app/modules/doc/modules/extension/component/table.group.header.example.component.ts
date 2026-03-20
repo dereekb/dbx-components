@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type ExampleTableData, type ExampleTableGroupData } from './table.item';
 import { type DbxTableItemGroup } from '@dereekb/dbx-web/table';
 
@@ -7,7 +7,8 @@ import { type DbxTableItemGroup } from '@dereekb/dbx-web/table';
     <div>{{ name }} - {{ group.items.length }} Items</div>
     <div class="dbx-small dbx-hint">This group header spans across the entire table. It is a custom component that is configured to inject any other component in your app.</div>
   `,
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableGroupHeaderExampleComponent {
   group!: DbxTableItemGroup<ExampleTableData, ExampleTableGroupData>;

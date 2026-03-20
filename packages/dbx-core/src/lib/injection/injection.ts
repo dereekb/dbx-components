@@ -1,5 +1,5 @@
 import { InjectionToken, type Injector, type NgModuleRef, type StaticProvider, type TemplateRef, type Type, type ViewRef } from '@angular/core';
-import { type Configurable, type FactoryWithRequiredInput, filterMaybeArrayValues, type Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
+import { type Configurable, type EqualityComparatorFunction, type FactoryWithRequiredInput, filterMaybeArrayValues, type Maybe, mergeArrays, mergeObjects, safeEqualityComparatorFunction } from '@dereekb/util';
 
 /**
  * Injection token used to provide arbitrary data to dynamically created components.
@@ -126,6 +126,19 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
  * @param configs - An array of partial configs (may contain `undefined`/`null` entries which are filtered out).
  * @returns A single merged partial configuration.
  */
+/**
+ * Compares two {@link DbxInjectionComponentConfig} values for structural equality, safely handling nullish values.
+ *
+ * Compares `componentClass`, `data`, `init`, and `injector` by reference. Does NOT compare
+ * `providers` or `ngModuleRef`, as provider arrays typically change on every list data update
+ * (e.g., with new `DBX_VALUE_LIST_VIEW_ITEM` values) without requiring component recreation.
+ *
+ * When both values are nullish, uses strict equality (`null === null` is `true`,
+ * `null === undefined` is `false`). The comparator is only invoked when both are non-nullish.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const dbxInjectionComponentConfigIsEqual: EqualityComparatorFunction<Maybe<DbxInjectionComponentConfig<any>>> = safeEqualityComparatorFunction((a, b) => a.componentClass === b.componentClass && a.data === b.data && a.init === b.init && a.injector === b.injector);
+
 export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
   const providers = mergeArrays(filterMaybeArrayValues(configs).map((x) => x.providers));
   const result = mergeObjects(configs) as Configurable<DbxInjectionComponentConfig<T>>;

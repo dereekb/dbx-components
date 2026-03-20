@@ -26,6 +26,9 @@ export type ZohoRecruitConfigApiUrlInput = ZohoRecruitApiUrlKey | ZohoRecruitApi
 
 /**
  * Resolves an environment key or passthrough URL to the full Zoho Recruit API URL.
+ *
+ * @param input - An environment key ('sandbox' or 'production') or a full API URL
+ * @returns The resolved Zoho Recruit API URL
  */
 export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): ZohoApiUrl {
   switch (input) {
@@ -46,14 +49,14 @@ export type ZohoRecruitConfig = ZohoConfig;
 /**
  * Input provided to a fetch factory so it can construct an HTTP client bound to the given Recruit API URL.
  */
-export interface ZohoRecruitFetchFactoryInput {
+export interface ZohoRecruitFetchFactoryParams {
   readonly apiUrl: ZohoRecruitApiUrl;
 }
 
 /**
  * Factory that produces a configured fetch client for a specific Zoho Recruit API endpoint.
  */
-export type ZohoRecruitFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoRecruitFetchFactoryInput>;
+export type ZohoRecruitFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoRecruitFetchFactoryParams>;
 
 /**
  * Core context required for all Zoho Recruit API calls, bundling the HTTP client, JSON fetcher, authentication, configuration, and rate limiting.
@@ -71,3 +74,9 @@ export interface ZohoRecruitContext extends ZohoRateLimiterRef {
 export interface ZohoRecruitContextRef {
   readonly recruitContext: ZohoRecruitContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZohoRecruitFetchFactoryParams instead.
+ */
+export type ZohoRecruitFetchFactoryInput = ZohoRecruitFetchFactoryParams;

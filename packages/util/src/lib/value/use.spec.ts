@@ -217,11 +217,11 @@ describe('mappedUsePromiseFunction()', () => {
         expect(result).toBe(defaultValue);
       });
 
-      it('should return the default value if null or undefined returned from the mapped value', async () => {
+      it('should return the default value if null or undefined returned from the mapped value', () => {
         const mappedUseWithNullGetterForMap = mappedUseFunction(() => null);
         const defaultValue = 'hello';
 
-        const result = await mappedUseWithNullGetterForMap(undefined, () => 'hello', defaultValue);
+        const result = mappedUseWithNullGetterForMap(undefined, () => 'hello', defaultValue);
 
         expect(result).toBe(defaultValue);
       });

@@ -205,7 +205,7 @@ export function breadthFirstExploreTreeTraversalFactoryFunction<N extends TreeNo
         isProcessing = true;
 
         while (queue.length > 0) {
-          const node = queue.shift()!;
+          const node = queue.shift() as (typeof queue)[number];
           continueTraversal(node);
         }
 

@@ -24,6 +24,8 @@ export abstract class ZohoRecruitServiceConfig {
 
   /**
    * Validates that the required Zoho Recruit connection fields are present and well-formed.
+   *
+   * @param config - the Recruit service config to validate
    */
   static assertValidConfig(config: ZohoRecruitServiceConfig) {
     assertValidZohoConfig(config.zohoRecruit);

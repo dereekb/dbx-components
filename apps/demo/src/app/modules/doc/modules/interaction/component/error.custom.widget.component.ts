@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { type ReadableErrorWithCode } from '@dereekb/util';
 import { JsonPipe } from '@angular/common';
@@ -6,13 +6,14 @@ import { JsonPipe } from '@angular/common';
 export const CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE = 'CUSTOM_ERROR_WIDGET_TEST_ERROR';
 
 @Component({
-    template: `
+  template: `
     <p class="mat-header">Custom widget content</p>
     <div>Error Data: {{ data | json }}</div>
   `,
-    standalone: true,
-    imports: [JsonPipe]
+  standalone: true,
+  imports: [JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionCustomErrorWidgetComponent {
-  constructor(@Inject(DBX_INJECTION_COMPONENT_DATA) readonly data: ReadableErrorWithCode) {}
+  readonly data = inject<ReadableErrorWithCode>(DBX_INJECTION_COMPONENT_DATA);
 }

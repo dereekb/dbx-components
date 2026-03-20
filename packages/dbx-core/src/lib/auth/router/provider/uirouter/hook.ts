@@ -64,13 +64,13 @@ export interface AuthTransitionHookOptions {
   /**
    * The UIRouter state name to redirect the user to when their auth check fails.
    */
-  defaultRedirectTarget: string;
+  readonly defaultRedirectTarget: string;
 
   /**
    * The UIRouter state name to redirect to when an error occurs during the auth check.
    * Defaults to {@link defaultRedirectTarget} if not specified.
    */
-  errorRedirectTarget?: string;
+  readonly errorRedirectTarget?: string;
 
   /**
    * Maximum time in milliseconds to wait for the decision observable to emit.
@@ -94,7 +94,7 @@ export interface AuthTransitionHookConfig extends AuthTransitionHookOptions {
    * `true` to allow, `false` to redirect to the default target, or a route reference
    * to redirect to a specific location.
    */
-  makeDecisionsObs: (transition: Transition, authService: DbxAuthService, injector: UIInjector) => Observable<AuthTransitionDecision>;
+  readonly makeDecisionsObs: (transition: Transition, authService: DbxAuthService, injector: UIInjector) => Observable<AuthTransitionDecision>;
 }
 
 /**

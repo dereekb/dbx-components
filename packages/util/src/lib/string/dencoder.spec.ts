@@ -39,8 +39,8 @@ describe('primativeKeyDencoderMap()', () => {
     expect(result.has('testc'));
   });
 
-  itShouldFail('if a key or value has the same value as another key or value.', () => {
-    expectFail(() =>
+  itShouldFail('if a key or value has the same value as another key or value.', async () => {
+    await expectFail(() =>
       primativeKeyDencoderMap({
         a: 'b',
         b: 'c'
@@ -53,8 +53,8 @@ describe('primativeKeyDencoder()', () => {
   describe('function', () => {
     const fn = primativeKeyDencoder({ values: TEST_ENCODED_VALUES_SHORT });
 
-    itShouldFail('if an unknown key or value is input alone', () => {
-      expectFail(() => fn('unknown_Value'));
+    itShouldFail('if an unknown key or value is input alone', async () => {
+      await expectFail(() => fn('unknown_Value'));
     });
 
     it('should skip any unknown inputs for arrays', () => {
@@ -91,8 +91,8 @@ describe('primativeKeyDencoder()', () => {
 
 describe('primativeKeyStringDencoder()', () => {
   describe('no splitter', () => {
-    itShouldFail('if any keys have more than 1 character', () => {
-      expectFail(() => primativeKeyStringDencoder({ dencoder: { values: TEST_ENCODED_VALUES_LONG } }));
+    itShouldFail('if any keys have more than 1 character', async () => {
+      await expectFail(() => primativeKeyStringDencoder({ dencoder: { values: TEST_ENCODED_VALUES_LONG } }));
     });
 
     describe('function', () => {
@@ -137,8 +137,8 @@ describe('primativeKeyStringDencoder()', () => {
       expect(result).toBeDefined();
     });
 
-    itShouldFail('if any keys contain the splitter', () => {
-      expectFail(() => primativeKeyStringDencoder({ dencoder: { values: TEST_ENCODED_VALUES_LONG }, splitter: 'a' }));
+    itShouldFail('if any keys contain the splitter', async () => {
+      await expectFail(() => primativeKeyStringDencoder({ dencoder: { values: TEST_ENCODED_VALUES_LONG }, splitter: 'a' }));
     });
 
     describe('function', () => {

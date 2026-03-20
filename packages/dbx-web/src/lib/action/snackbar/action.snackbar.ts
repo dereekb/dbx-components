@@ -1,7 +1,7 @@
 import { type MatSnackBarConfig } from '@angular/material/snack-bar';
 import { type DbxActionContextSourceReference } from '@dereekb/dbx-core';
 import { type LoadingState, type LoadingStateType } from '@dereekb/rxjs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 
 /**
  * Identifies the snackbar category, used to select the appropriate default messages.
@@ -18,7 +18,7 @@ export type DbxActionSnackbarKnownType = 'none' | 'create' | 'save' | 'delete' |
  * Contains the loading state type and, depending on the outcome, either the result value or an error.
  */
 export interface DbxActionSnackbarEvent<O = unknown> extends Omit<LoadingState<O>, 'loading'> {
-  type: LoadingStateType;
+  readonly type: LoadingStateType;
 }
 
 /**
@@ -28,19 +28,19 @@ export interface DbxActionSnackbarDisplayConfig<T = unknown, O = unknown> {
   /**
    * Text to be shown on the close button. If action is defined, this is ignored and the action text is used.
    */
-  button?: string;
+  readonly button?: string;
   /**
    * Message to show in the snackbar.
    */
-  message?: Maybe<string>;
+  readonly message?: Maybe<string>;
   /**
    * Additional action that can occur.
    */
-  action?: DbxActionSnackbarActionConfig<T, O>;
+  readonly action?: DbxActionSnackbarActionConfig<T, O>;
   /**
    * MatSnackBar configuration
    */
-  snackbar?: MatSnackBarConfig;
+  readonly snackbar?: MatSnackBarConfig;
 }
 
 /**
@@ -50,15 +50,15 @@ export interface DbxActionSnackbarActionConfig<T = unknown, O = unknown> {
   /**
    * Action label to display on the button.
    */
-  button: string;
+  readonly button: string;
   /**
    * Action reference to use.
    *
    * The referred to action is used for triggering and lifecycle.
    */
-  reference: DbxActionContextSourceReference<T, O>;
+  readonly reference: DbxActionContextSourceReference<T, O>;
   /**
    * Duration to show the action.
    */
-  duration?: number;
+  readonly duration?: Milliseconds;
 }

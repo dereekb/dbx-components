@@ -30,8 +30,14 @@ export class ZohoAccountsAuthFailureError extends FetchRequestFactoryError {
 
 export const logZohoAccountsErrorToConsole = logZohoServerErrorFunction('ZohoAccounts');
 
+/**
+ * Parses a fetch response error into a typed Zoho Accounts server error by extracting and interpreting the JSON error body.
+ *
+ * @param responseError - The fetch response error to parse
+ * @returns The parsed Zoho server error, or undefined if the response could not be parsed
+ */
 export async function parseZohoAccountsError(responseError: FetchResponseError) {
-  const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
+  const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch(() => undefined);
   let result: ParsedZohoServerError | undefined;
 
   if (data) {
@@ -41,6 +47,13 @@ export async function parseZohoAccountsError(responseError: FetchResponseError) 
   return result;
 }
 
+/**
+ * Parses a Zoho Accounts error response body into a typed error. Handles account-specific error codes before falling back to the generic Zoho error parser.
+ *
+ * @param errorResponseData - The raw error response data from the Zoho Accounts API
+ * @param responseError - The original fetch response error for context
+ * @returns The parsed Zoho server error, or undefined if the error could not be classified
+ */
 export function parseZohoAccountsServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;
   const error = errorResponseData.error;

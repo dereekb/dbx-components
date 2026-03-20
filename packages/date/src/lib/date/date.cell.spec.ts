@@ -105,7 +105,7 @@ wrapDateTests(() => {
           expect(isValidDateCellTimingStartDate(start)).toBe(false);
 
           const dateRange: DateRange = { start: start, end: start };
-          expectFail(() => dateCellTiming({ startsAt, duration: minutes }, dateRange));
+          void expectFail(() => dateCellTiming({ startsAt, duration: minutes }, dateRange));
         });
 
         it('should create a timing that starts at the input start time with a start before the startsAt time (same day)', () => {

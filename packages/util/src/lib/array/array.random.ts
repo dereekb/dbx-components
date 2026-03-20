@@ -42,8 +42,7 @@ export function randomArrayIndex<T>(values: T[]): IndexNumber {
     return 0;
   } else {
     const random = Math.random();
-    const index = Math.round(random * (values.length - 1));
-    return index;
+    return Math.round(random * (values.length - 1));
   }
 }
 

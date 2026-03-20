@@ -20,6 +20,7 @@ export interface LabeledValue<T> extends LabelRef {
  * Enables fast lookup of labeled items by their value key.
  *
  * @param values - array of labeled values to index
+ * @returns a Map keyed by each item's value for fast lookup
  *
  * @example
  * ```ts

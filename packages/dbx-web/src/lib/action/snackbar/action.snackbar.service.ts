@@ -93,11 +93,16 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
     const duration = config.action?.duration ?? matSnackbarConfig.duration ?? defaultDuration ?? DEFAULT_SNACKBAR_DIRECTIVE_DURATION;
 
     if (config.action) {
-      // Set the duration on the action
-      config.action = {
-        ...config.action,
-        duration
+      // Set the duration on the action and create an updated config for the snackbar data
+      const updatedConfig: DbxActionSnackbarDisplayConfig<T, O> = {
+        ...config,
+        action: {
+          ...config.action,
+          duration
+        }
       };
+
+      matSnackbarConfig.data = updatedConfig;
     } else {
       // The snackbar does not close here. The duration is passed to the component and it will close it.
       matSnackbarConfig.duration = duration;

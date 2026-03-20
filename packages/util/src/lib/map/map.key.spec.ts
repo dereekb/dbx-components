@@ -57,17 +57,6 @@ describe('keyValueMapFactory()', () => {
     const factory = keyValueMapFactory(readKeyWithNulls);
     const result = factory(values.filter((x) => x != null) as number[]); // factory expects T[], ensure correct type
 
-    // Create a map from values that will have keys
-    const expectedMap = new Map<string, number>();
-    values.forEach((x) => {
-      if (x != null) {
-        const key = readKeyWithNulls(x);
-        if (key != null) {
-          expectedMap.set(key, x);
-        }
-      }
-    });
-
     // test values manually to ensure it is ignoring the values with null/undefined keys
     const testFactory = keyValueMapFactory<number | null | undefined, string>(readKeyWithNulls);
     const testResult = testFactory(values as (number | null | undefined)[]);

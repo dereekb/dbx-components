@@ -1,6 +1,6 @@
 import { BehaviorSubject, delay, of, tap } from 'rxjs';
 import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from './../component/action.example.form.component';
-import { Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 import { DbxContentContainerDirective, DbxActionSnackbarDirective, DbxButtonComponent } from '@dereekb/dbx-web';
@@ -34,7 +34,8 @@ import { AsyncPipe } from '@angular/common';
     DbxActionButtonDirective,
     DbxActionValueDirective,
     AsyncPipe
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionMapComponent implements OnDestroy {
   private _value = new BehaviorSubject<Maybe<DocActionFormExampleValue>>({

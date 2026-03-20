@@ -50,7 +50,7 @@ export class PropertyDescriptorUtility {
     };
 
     return this.makeSetPropertyDescriptorInterceptor<T>(({ target, propertyKey, setValue }) => {
-      const map = options?.map || ((x) => x);
+      const map = options.map ?? ((x) => x);
 
       return function (this: unknown, value: T) {
         if (assertValueFn(value)) {

@@ -41,6 +41,7 @@ export function fitDateRangeToDayPeriodFunction(timezone: DateTimezoneUtcNormalF
  *
  * @param dateRange - the range to fit
  * @param timezone - the timezone for day boundary calculation
+ * @returns the date range fitted to a single day period
  */
 export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T, timezone: DateTimezoneUtcNormalFunctionInput): T {
   return fitDateRangeToDayPeriodFunction(timezone)(dateRange);

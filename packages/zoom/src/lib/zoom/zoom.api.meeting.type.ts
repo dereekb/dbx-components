@@ -18,7 +18,7 @@ export type ZoomMeetingTemplateId = string;
  */
 export type ZoomMeetingTopic = string;
 
-export type ZoomMeetingOccurrenceDuration = number;
+export type ZoomMeetingOccurrenceDuration = Minutes;
 
 /**
  * URL for participants to join the meeting.
@@ -122,6 +122,7 @@ export interface ZoomMeeting {
 
   /**
    * The meeting's agenda. This value has a maximum length of 2,000 characters.
+   *
    * @example "My Meeting"
    */
   readonly agenda?: ZoomMeetingAgenda;
@@ -295,11 +296,17 @@ export enum ZoomMonthlyWeekDay {
  * Options for Continuous Meeting Chat linking between a meeting and a Zoom Team Chat channel.
  */
 export interface ZoomMeetingSettingsContinuousMeetingChat {
-  /** Enable or disable Continuous Meeting Chat. */
+  /**
+   * Enable or disable Continuous Meeting Chat.
+   */
   readonly enable?: boolean;
-  /** Auto-add invited external users to the linked channel. */
+  /**
+   * Auto-add invited external users to the linked channel.
+   */
   readonly auto_add_invited_external_users?: boolean;
-  /** Auto-add all meeting participants to the linked channel. */
+  /**
+   * Auto-add all meeting participants to the linked channel.
+   */
   readonly auto_add_meeting_participants?: boolean;
   /**
    * Rule describing which users are auto-added.
@@ -308,42 +315,64 @@ export interface ZoomMeetingSettingsContinuousMeetingChat {
    * • `org_invitees` – internal invited users only.
    */
   readonly who_is_added?: 'all_users' | 'org_invitees_and_participants' | 'org_invitees';
-  /** Identifier of the chat channel to link. */
+  /**
+   * Identifier of the chat channel to link.
+   */
   readonly channel_id?: string;
 }
 
-/** A pre-provisioned whiteboard resource shared at meeting start. */
+/**
+ * A pre-provisioned whiteboard resource shared at meeting start.
+ */
 export interface ZoomMeetingSettingsWhiteboardResource {
-  /** Resource type – currently only `whiteboard`. */
+  /**
+   * Resource type – currently only `whiteboard`.
+   */
   readonly resource_type: 'whiteboard';
-  /** Unique whiteboard identifier. */
+  /**
+   * Unique whiteboard identifier.
+   */
   readonly resource_id: string;
-  /** Initial permission granted to participants. */
+  /**
+   * Initial permission granted to participants.
+   */
   readonly permission_level?: 'editor' | 'commenter' | 'viewer';
 }
 
-/** Additional email invitee outside the standard Zoom invitation. */
+/**
+ * Additional email invitee outside the standard Zoom invitation.
+ */
 export interface ZoomMeetingSettingsInvitee {
   readonly email: EmailAddress;
-  /** Indicates whether the invitee belongs to the owner’s account. */
+  /**
+   * Indicates whether the invitee belongs to the owner’s account.
+   */
   readonly internal_user?: boolean;
 }
 
-/** User allowed to bypass meeting authentication. */
+/**
+ * User allowed to bypass meeting authentication.
+ */
 export interface ZoomMeetingSettingsAuthenticationException {
   readonly email: EmailAddress;
   readonly name?: string;
-  /** Unique join link generated for the exception user. */
+  /**
+   * Unique join link generated for the exception user.
+   */
   readonly join_url?: string;
 }
 
-/** Custom tracking field key–value pair. */
+/**
+ * Custom tracking field key–value pair.
+ */
 export interface ZoomMeetingSettingsCustomKey {
   readonly key: string;
   readonly value: string;
 }
 
-/** International dial-in number exposed in invitations. */
+/**
+ * International dial-in number exposed in invitations.
+ */
 export interface ZoomMeetingSettingsGlobalDialInNumber {
   readonly city?: string;
   readonly country?: string;
@@ -352,7 +381,9 @@ export interface ZoomMeetingSettingsGlobalDialInNumber {
   readonly type: 'toll' | 'tollfree';
 }
 
-/** Webinar Q&A configuration block. */
+/**
+ * Webinar Q&A configuration block.
+ */
 export interface ZoomMeetingSettingsQnA {
   readonly enable?: boolean;
   readonly allow_submit_questions?: boolean;
@@ -362,10 +393,14 @@ export interface ZoomMeetingSettingsQnA {
   readonly attendees_can_upvote?: boolean;
 }
 
-/** Interpreter mapping for language interpretation. */
+/**
+ * Interpreter mapping for language interpretation.
+ */
 export interface ZoomMeetingSettingsInterpreter {
   readonly email: EmailAddress;
-  /** BCP-47 language list in the form `"<source>-<target>"`, e.g., "en-US:es-ES". */
+  /**
+   * BCP-47 language list in the form `"<source>-<target>"`, e.g., "en-US:es-ES".
+   */
   readonly languages: string;
 }
 

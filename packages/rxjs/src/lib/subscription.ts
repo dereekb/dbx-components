@@ -33,6 +33,8 @@ export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> imple
 
   /**
    * Whether a subscription is currently being managed.
+   *
+   * @returns true if a subscription is currently active
    */
   public get hasSubscription(): boolean {
     return Boolean(this._subscription);
@@ -109,6 +111,8 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
 
   /**
    * Whether any subscriptions are currently being managed.
+   *
+   * @returns true if one or more subscriptions are currently active
    */
   public get hasSubscription(): boolean {
     return Boolean(this._subscriptions?.length);

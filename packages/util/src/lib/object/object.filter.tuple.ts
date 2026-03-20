@@ -21,6 +21,8 @@ export interface ForEachKeyValue<T extends object = object, K extends keyof T = 
  *
  * @param obj - Object to iterate
  * @param config - Configuration with a forEach callback and optional filter
+ * @param config.forEach - callback invoked for each key/value tuple that passes the filter
+ * @param config.filter - optional filter controlling which key/value tuples are iterated; when omitted, all tuples are visited
  *
  * @example
  * ```ts

@@ -1,4 +1,5 @@
-import { Component, type OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, BehaviorSubject } from 'rxjs';
 import { DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
@@ -27,7 +28,7 @@ import {
 import { MatButton } from '@angular/material/button';
 import { DocActionFormExampleFormComponent } from '../component/action.example.form.component';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './directives.component.html',
@@ -58,9 +59,9 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
     DbxActionFormDirective,
     DbxActionTriggeredDirective,
     DbxActionIsWorkingDirective,
-    AsyncPipe,
     JsonPipe
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionDirectivesComponent implements OnDestroy {
   successValue: any;
@@ -68,6 +69,7 @@ export class DocActionDirectivesComponent implements OnDestroy {
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
   readonly value$ = this._value.asObservable();
+  readonly valueSignal = toSignal(this.value$, { initialValue: { test: 0 } });
 
   constructor() {}
 

@@ -22,7 +22,7 @@ export type IteratePageFn<T> = (values: T[]) => void | Promise<void>;
  * ```
  */
 export async function iterate<T>(values: T[], useFn: IterateFn<T>): Promise<void> {
-  for (let i = 0; i < values.length; i += 1) {
-    await useFn(values[i]);
+  for (const value of values) {
+    await useFn(value);
   }
 }

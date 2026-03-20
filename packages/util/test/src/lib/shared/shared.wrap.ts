@@ -54,6 +54,7 @@ export interface WrapTestContextConfig<W, F, E = any> {
 /**
  * Wraps the input TestContextFactory to emit another type of Fixture for tests.
  *
+ * @param config - configuration specifying how to wrap fixtures and optional setup/teardown hooks
  * @returns a function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
  */
 export function wrapTestContextFactory<W, F, E = any>(config: WrapTestContextConfig<W, F, E>): (factory: TestContextFactory<F>) => TestContextFactory<W> {
@@ -64,9 +65,11 @@ export function wrapTestContextFactory<W, F, E = any>(config: WrapTestContextCon
         let effect: E;
 
         // add before each
-        if (config.setupWrap != null) {
+        const { setupWrap, teardownWrap } = config;
+
+        if (setupWrap != null) {
           beforeEach(async () => {
-            effect = await config.setupWrap!(wrap);
+            effect = await setupWrap(wrap);
           });
         }
 
@@ -74,9 +77,9 @@ export function wrapTestContextFactory<W, F, E = any>(config: WrapTestContextCon
         buildTests(wrap);
 
         // add after each
-        if (config.teardownWrap != null) {
+        if (teardownWrap != null) {
           afterEach(async () => {
-            await config.teardownWrap!(wrap, effect);
+            await teardownWrap(wrap, effect);
           });
         }
       });
@@ -129,7 +132,7 @@ export function instanceWrapTestContextFactory<I, W extends AbstractWrappedFixtu
       return effect;
     },
     teardownWrap: async (wrap: W, deleteInstanceEffect: TestContextFixtureClearInstanceFunction) => {
-      deleteInstanceEffect?.();
+      deleteInstanceEffect();
 
       if (config.teardownInstance) {
         await config.teardownInstance(wrap.instance);

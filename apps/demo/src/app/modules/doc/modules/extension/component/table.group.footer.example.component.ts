@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type ExampleTableData, type ExampleTableGroupData } from './table.item';
 import { type DbxTableItemGroup } from '@dereekb/dbx-web/table';
 
@@ -6,7 +6,8 @@ import { type DbxTableItemGroup } from '@dereekb/dbx-web/table';
   template: `
     <div>Footer View For: {{ name }}</div>
   `,
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableGroupFooterExampleComponent {
   group!: DbxTableItemGroup<ExampleTableData, ExampleTableGroupData>;

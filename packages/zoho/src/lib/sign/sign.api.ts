@@ -7,6 +7,10 @@ import { type ZohoSignPageFilter, type ZohoSignPageResult, type ZohoSignSearchCo
 // MARK: Utility
 /**
  * Builds a {@link FetchJsonInput} for Zoho Sign API calls.
+ *
+ * @param method - HTTP method for the request
+ * @param body - Optional JSON body to include in the request
+ * @returns Configured fetch JSON input
  */
 function zohoSignApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   return {
@@ -261,7 +265,8 @@ export function zohoSignDownloadPdf(context: ZohoSignContext): ZohoSignDownloadP
   return ({ requestId, ...params }: ZohoSignDownloadPdfInput) => {
     const searchParams = makeUrlSearchParams(params);
     const queryString = searchParams.toString();
-    const url = `/requests/${requestId}/pdf${queryString ? `?${queryString}` : ''}`;
+    const suffix = queryString ? `?${queryString}` : '';
+    const url = `/requests/${requestId}/pdf${suffix}`;
     return context.fetch(url, { method: 'GET' });
   };
 }

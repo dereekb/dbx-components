@@ -267,7 +267,7 @@ export function resetPeriodPromiseRateLimiter(initialConfig: ResetPeriodPromiseR
   setConfig(initialConfig, true);
 
   function _checkRemainingReset() {
-    if (nextResetAt && isPast(nextResetAt)) {
+    if (isPast(nextResetAt)) {
       reset();
     }
   }

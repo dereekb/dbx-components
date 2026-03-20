@@ -11,6 +11,12 @@ export type ZohoSignApiUrlKey = ZohoApiUrlKey;
 
 export type ZohoSignConfigApiUrlInput = ZohoSignApiUrlKey | ZohoSignApiUrl;
 
+/**
+ * Resolves an environment key or passthrough URL to the full Zoho Sign API URL.
+ *
+ * @param input - An environment key ('sandbox' or 'production') or a full API URL
+ * @returns The resolved Zoho Sign API URL
+ */
 export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiUrl {
   switch (input) {
     case 'sandbox':
@@ -24,11 +30,11 @@ export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiU
 
 export type ZohoSignConfig = ZohoConfig;
 
-export interface ZohoSignFetchFactoryInput {
+export interface ZohoSignFetchFactoryParams {
   readonly apiUrl: ZohoSignApiUrl;
 }
 
-export type ZohoSignFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoSignFetchFactoryInput>;
+export type ZohoSignFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoSignFetchFactoryParams>;
 
 export interface ZohoSignContext extends ZohoRateLimiterRef {
   readonly fetch: ConfiguredFetch;
@@ -40,3 +46,9 @@ export interface ZohoSignContext extends ZohoRateLimiterRef {
 export interface ZohoSignContextRef {
   readonly signContext: ZohoSignContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZohoSignFetchFactoryParams instead.
+ */
+export type ZohoSignFetchFactoryInput = ZohoSignFetchFactoryParams;

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { provideFormlyContext, AbstractSyncFormlyFormDirective, nameField, dateTimeField, DbxFormFormlyTextFieldModule, DbxFormFormlyDateFieldModule, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 
@@ -14,7 +14,8 @@ export interface DocActionFormExampleValue {
   selector: 'doc-action-form-example-form',
   providers: [provideFormlyContext()],
   standalone: true,
-  imports: [DbxFormlyComponent, DbxFormFormlyTextFieldModule, DbxFormFormlyDateFieldModule]
+  imports: [DbxFormlyComponent, DbxFormFormlyTextFieldModule, DbxFormFormlyDateFieldModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionFormExampleFormComponent extends AbstractSyncFormlyFormDirective<DocActionFormExampleValue> {
   readonly fields: FormlyFieldConfig[] = [nameField({ required: true }), dateTimeField({ key: 'date' })];

@@ -1,5 +1,5 @@
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './example.calendar.schedule.selection.popover.component';
-import { Component, ElementRef, Injector, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, Injector, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { DbxPopoverService, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
 
@@ -9,7 +9,8 @@ import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
     <dbx-button #buttonPopoverOrigin icon="date_range" [raised]="true" color="accent" text="Custom Button" (buttonClick)="openPopover()"></dbx-button>
   `,
   standalone: true,
-  imports: [DbxButtonComponent]
+  imports: [DbxButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly popoverService = inject(DbxPopoverService);

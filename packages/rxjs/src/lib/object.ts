@@ -27,7 +27,7 @@ export function distinctUntilObjectValuesChanged<T>(): MonoTypeOperatorFunction<
  * Accepts either a static reference value or an observable of reference values. When given an observable,
  * each emission is compared against the latest reference value. Uses {@link areEqualPOJOValues} for comparison.
  *
- * @param input - static reference value or observable of reference values to compare against
+ * @param inputFilter - static reference value or observable of reference values to compare against
  * @returns operator that only passes through values that differ from the reference
  *
  * @example

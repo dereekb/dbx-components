@@ -569,11 +569,15 @@ export type IndexRefRangeCheckFunction<T> = (value: T) => boolean;
  * within the specified range. For IndexRef types, the index is read from `i` automatically.
  *
  * @param input - the range or range config to check against
+ * @returns a function that checks whether an item's index is within the range
  */
 export function indexRangeCheckReaderFunction<T extends IndexRef>(input: IndexRangeFunctionInput): IndexRefRangeCheckFunction<T>;
 /**
+ * Creates an {@link IndexRefRangeCheckFunction} that reads an item's index using a custom reader and checks whether it falls within the specified range.
+ *
  * @param input - the range or range config to check against
  * @param read - custom function to extract the index from the item
+ * @returns a function that checks whether an item's index is within the range
  */
 export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
 export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
@@ -600,7 +604,7 @@ export interface IndexRangeFunctionConfig {
 function indexRangeCheckFunctionConfigToIndexRange({ indexRange, inclusiveMaxIndex }: IndexRangeFunctionConfig): IndexRange {
   if (inclusiveMaxIndex) {
     const { minIndex, maxIndex: maxIndexInput } = indexRange;
-    const maxIndex = inclusiveMaxIndex ? maxIndexInput + 1 : maxIndexInput;
+    const maxIndex = maxIndexInput + 1;
     return { minIndex, maxIndex };
   } else {
     return indexRange;
@@ -823,6 +827,7 @@ export function stepsFromIndexFunction(config: StepsFromIndexFunctionConfig): St
  * @param wrapAround - whether to wrap out-of-bound results; defaults to false
  * @returns the resulting index, or undefined if out of bounds without wrapping
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function stepsFromIndex(range: IndexRange, startIndex: number, step = 1, wrapAround = false): Maybe<number> {
   return stepsFromIndexFunction({ range })(startIndex, wrapAround, step);
 }

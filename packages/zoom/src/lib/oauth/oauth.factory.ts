@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { ZOOM_OAUTH_API_URL, type ZoomOAuthConfig, type ZoomOAuthContext, type ZoomOAuthContextRef, type ZoomOAuthFetchFactory, type ZoomOAuthFetchFactoryInput, type ZoomOAuthMakeUserAccessTokenFactory, type ZoomOAuthMakeUserAccessTokenFactoryInput } from './oauth.config';
+import { ZOOM_OAUTH_API_URL, type ZoomOAuthConfig, type ZoomOAuthContext, type ZoomOAuthContextRef, type ZoomOAuthFetchFactory, type ZoomOAuthMakeUserAccessTokenFactory, type ZoomOAuthMakeUserAccessTokenFactoryParams } from './oauth.config';
 import { type LogZoomServerErrorFunction } from '../zoom.error.api';
 import { ZoomOAuthAuthFailureError, handleZoomOAuthErrorFetch } from './oauth.error.api';
 import { type ZoomAccessToken, type ZoomAccessTokenCache, type ZoomAccessTokenFactory, type ZoomAccessTokenRefresher } from './oauth';
@@ -13,21 +13,27 @@ export interface ZoomOAuthFactoryConfig {
   /**
    * Creates a new fetch instance to use when making calls.
    */
-  fetchFactory?: ZoomOAuthFetchFactory;
+  readonly fetchFactory?: ZoomOAuthFetchFactory;
   /**
    * Custom log error function.
    */
-  logZoomServerErrorFunction?: LogZoomServerErrorFunction;
+  readonly logZoomServerErrorFunction?: LogZoomServerErrorFunction;
 }
 
 export type ZoomOAuthFactory = (config: ZoomOAuthConfig) => ZoomOAuth;
 
+/**
+ * Creates a ZoomOAuth instance factory from the given configuration.
+ *
+ * @param factoryConfig Configuration for the OAuth factory
+ * @returns A factory that creates configured ZoomOAuth instances
+ */
 export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAuthFactory {
   const fetchHandler = zoomRateLimitedFetchHandler();
 
   const {
     logZoomServerErrorFunction,
-    fetchFactory = (_?: ZoomOAuthFetchFactoryInput) =>
+    fetchFactory = () =>
       fetchApiFetchService.makeFetch({
         baseUrl: ZOOM_OAUTH_API_URL,
         baseRequest: {
@@ -84,7 +90,7 @@ export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAu
     });
 
     // User Access Token
-    const makeUserAccessTokenFactory: ZoomOAuthMakeUserAccessTokenFactory = (input: ZoomOAuthMakeUserAccessTokenFactoryInput) => {
+    const makeUserAccessTokenFactory: ZoomOAuthMakeUserAccessTokenFactory = (input: ZoomOAuthMakeUserAccessTokenFactoryParams) => {
       const userTokenRefresher = async () => {
         const accessToken: ZoomOAuthAccessTokenResponse = await userAccessToken(oauthContext)(input);
         return accessTokenFromTokenResponse(accessToken);
@@ -166,12 +172,10 @@ export function zoomOAuthZoomAccessTokenFactory(config: ZoomOAuthZoomAccessToken
         throw new ZoomOAuthAuthFailureError('Token Refresh Failed');
       }
 
-      if (currentToken) {
-        try {
-          await accessTokenCache?.updateCachedToken(currentToken);
-        } catch (e) {
-          // do nothing
-        }
+      try {
+        await accessTokenCache?.updateCachedToken(currentToken);
+      } catch {
+        // do nothing
       }
     }
 

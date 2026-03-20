@@ -21,7 +21,7 @@ describe('fetchPageFactory()', () => {
   describe('instance', () => {
     const factory = fetchPageFactory<FetchPageTestRequestObject, FetchPageTestResultObject>({
       fetch: async function (input: FetchPageTestRequestObject): Promise<FetchPageTestResultObject> {
-        const page = input.page ? input.page : 0;
+        const page = input.page ?? 0;
         return {
           data: [randomNumber(100), randomNumber(100)],
           info: {
@@ -35,7 +35,7 @@ describe('fetchPageFactory()', () => {
       },
       buildInputForNextPage: function (pageResult: Partial<FetchPageResult<FetchPageTestResultObject>>, input: FetchPageTestRequestObject): PromiseOrValue<Maybe<Partial<FetchPageTestRequestObject>>> {
         return {
-          page: pageResult?.page != null ? pageResult.page + 1 : 0
+          page: pageResult.page != null ? pageResult.page + 1 : 0
         };
       }
     });

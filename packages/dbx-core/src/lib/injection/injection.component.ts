@@ -1,4 +1,4 @@
-import { Component, ViewContainerRef, input, viewChild, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewContainerRef, input, viewChild, effect } from '@angular/core';
 import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';
@@ -38,6 +38,7 @@ import { type ObservableOrValueGetter } from '@dereekb/rxjs';
     <ng-template #content></ng-template>
   `,
   imports: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {

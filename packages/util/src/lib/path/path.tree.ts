@@ -77,9 +77,7 @@ export function slashPathDirectoryTree<T, V extends SlashPathDirectoryTreeNodeVa
       const parent = nodeMap.get(parentKey);
 
       if (parent) {
-        if (!parent.children) {
-          parent.children = [];
-        }
+        parent.children ??= [];
 
         parent.children.push(node);
         node.parent = parent;

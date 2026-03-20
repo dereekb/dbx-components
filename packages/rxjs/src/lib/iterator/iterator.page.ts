@@ -256,8 +256,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
             state = { ...inputState, hasNextPage: invertMaybeBoolean(end) };
           }
 
-          const result = { n: request.n, state };
-          return result;
+          return { n: request.n, state };
         })
       )
     ),
@@ -275,22 +274,16 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         };
 
         // If it was a replay of the previous result, change nothing.
-        if (acc.current !== curr) {
-          if (isLoadingStateFinishedLoading(curr)) {
-            // only set first finished once
-            if (!next.firstFinished) {
-              next.firstFinished = curr;
-            }
+        if (acc.current !== curr && isLoadingStateFinishedLoading(curr)) {
+          // only set first finished once
+          next.firstFinished ??= curr;
 
-            next.latestFinished = curr;
+          next.latestFinished = curr;
 
-            if (!isLoadingStateWithError(curr)) {
-              next.lastSuccessful = curr;
+          if (!isLoadingStateWithError(curr)) {
+            next.lastSuccessful = curr;
 
-              if (!next.firstSuccessful) {
-                next.firstSuccessful = curr;
-              }
-            }
+            next.firstSuccessful ??= curr;
           }
         }
 

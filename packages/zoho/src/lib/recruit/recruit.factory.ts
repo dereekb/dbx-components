@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZohoRecruitConfig, type ZohoRecruitContext, type ZohoRecruitContextRef, type ZohoRecruitFetchFactory, type ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
+import { type ZohoRecruitConfig, type ZohoRecruitContext, type ZohoRecruitContextRef, type ZohoRecruitFetchFactory, type ZohoRecruitFetchFactoryParams, zohoRecruitConfigApiUrl } from './recruit.config';
 import { type LogZohoServerErrorFunction, ZohoInvalidTokenError } from '../zoho.error.api';
 import { handleZohoRecruitErrorFetch, interceptZohoRecruit200StatusWithErrorResponse } from './recruit.error.api';
 import { type ZohoAccountsContextRef } from '../accounts/accounts.config';
@@ -20,16 +20,16 @@ export interface ZohoRecruitFactoryConfig extends ZohoAccountsContextRef {
   /**
    * Custom rate limiter configuration to control request concurrency and throttling.
    */
-  rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
+  readonly rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
    * Custom fetch factory for creating the underlying HTTP client.
    * Defaults to a standard fetch service with OAuth Bearer token headers and a 20-second timeout.
    */
-  fetchFactory?: ZohoRecruitFetchFactory;
+  readonly fetchFactory?: ZohoRecruitFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
-  logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
 }
 
 /**
@@ -69,7 +69,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
 
   const {
     logZohoServerErrorFunction,
-    fetchFactory = (input: ZohoRecruitFetchFactoryInput) =>
+    fetchFactory = (input: ZohoRecruitFetchFactoryParams) =>
       fetchApiFetchService.makeFetch({
         baseUrl: input.apiUrl,
         baseRequest: async () => ({
@@ -95,7 +95,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
 
     const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction, (x) => {
       if (x instanceof ZohoInvalidTokenError) {
-        accountsContext.loadAccessToken.resetAccessToken();
+        void accountsContext.loadAccessToken.resetAccessToken();
       }
     });
 

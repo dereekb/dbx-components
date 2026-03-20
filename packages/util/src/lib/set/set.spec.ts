@@ -238,7 +238,7 @@ describe('containsNoneOfValue()', () => {
     const value = 'a';
     const array = [value];
 
-    expect(array.indexOf(value) !== -1);
+    expect(array.includes(value));
     expect(containsNoneOfValue(array, [value])).toBe(false);
   });
 
@@ -306,7 +306,7 @@ describe('containsAnyValue()', () => {
     const value = 'a';
     const array = [value];
 
-    expect(array.indexOf(value) !== -1);
+    expect(array.includes(value));
     expect(containsAnyValue(array, [value])).toBe(true);
   });
 
@@ -412,7 +412,7 @@ describe('setContainsAllValues', () => {
 
   it('should return false if the set does not contain all values from the input array.', () => {
     const array = ['a', 'b'];
-    const set = new Set([...array]);
+    const set = new Set(array);
 
     array.push('c'); // add c
 

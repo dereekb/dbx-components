@@ -42,7 +42,7 @@ export type CachedFactoryWithInput<T, A = unknown> = CachedGetter<T> &
  * The value is retrieved once on first call and cached permanently.
  * Use `reset()` to clear the cache and `init()` to reload.
  *
- * @param factory - The factory function to cache
+ * @param getter - the factory or getter function whose result will be cached
  * @returns A CachedFactoryWithInput that caches the first result
  */
 export function cachedGetter<T>(getter: Getter<T>): CachedFactoryWithInput<T>;

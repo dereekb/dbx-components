@@ -28,6 +28,7 @@ export const ZOHO_DATA_ARRAY_BLANK_ERROR_CODE = '__internal_data_array_blank_err
  * @returns
  */
 export function isZohoServerErrorResponseDataArrayRef(value: unknown): value is ZohoServerErrorResponseDataArrayRef {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- value is unknown at runtime, optional chain needed for safety
   return Array.isArray((value as ZohoServerErrorResponseDataArrayRef)?.data);
 }
 
@@ -93,6 +94,12 @@ export type ZohoServerSuccessData<T = unknown> = Omit<ZohoServerErrorData<T>, 'c
  */
 export type ZohoServerErrorDataWithDetails<T = unknown> = Required<ZohoServerErrorData<T>>;
 
+/**
+ * Normalizes a Zoho error response entry into a consistent {@link ZohoServerErrorData} shape, handling both object and string error formats.
+ *
+ * @param error - The raw error entry, either a structured object or a plain error code string
+ * @returns Normalized error data with code and message fields
+ */
 export function zohoServerErrorData(error: ZohoServerErrorResponseDataError): ZohoServerErrorData {
   const errorType = typeof error;
   let errorData: ZohoServerErrorData;
@@ -166,8 +173,9 @@ export interface LogZohoServerErrorFunctionConfig {
 /**
  * Creates a logZohoServerErrorFunction that logs the error to console.
  *
- * @param zohoApiNamePrefix Prefix to use when logging. I.E. ZohoRecruitError, etc.
- * @returns
+ * @param zohoApiNamePrefix - Prefix to use when logging (e.g. 'ZohoRecruit', 'ZohoSign')
+ * @param options - Optional configuration for controlling which error types are logged
+ * @returns A function that logs Zoho server errors to the console
  */
 export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: LogZohoServerErrorFunctionConfig): LogZohoServerErrorFunction {
   const { logDataArrayErrors = false } = options ?? {};
@@ -192,14 +200,15 @@ export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: 
  */
 export type HandleZohoErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZohoServerErrorFunction, onError?: (error: ParsedZohoServerError) => void) => ConfiguredFetch;
 
-export type ParsedZohoServerError = FetchRequestFactoryError | ZohoServerError | undefined;
+export type ParsedZohoServerError = Maybe<FetchRequestFactoryError | ZohoServerError>;
 export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ParsedZohoServerError>;
 
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
  *
- * @param fetch
- * @returns
+ * @param parseZohoError - Function that parses a fetch response error into a Zoho-specific error
+ * @param defaultLogError - Default error logging function used when no custom logger is provided
+ * @returns Factory that wraps a ConfiguredFetch with Zoho error handling
  */
 export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchResponseErrorFunction, defaultLogError: LogZohoServerErrorFunction): HandleZohoErrorFetchFactory {
   return (fetch: ConfiguredFetch, logError: LogZohoServerErrorFunction = defaultLogError, onError?: (error: ParsedZohoServerError) => void) => {
@@ -227,20 +236,22 @@ export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: Zoh
 
 /**
  * FetchJsonInterceptJsonResponseFunction that intercepts a 200 response that actually contains a ZohoServerError and throws a ZohoServerError for the error handling to catch.
+ *
+ * @param parseZohoServerErrorResponseData - Function that parses raw error response data into a structured error
+ * @returns Interceptor function that detects and throws hidden errors in 200 responses
  */
 export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
   return (json: ZohoServerErrorResponseData | unknown, response: Response) => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- json is typed as unknown union, optional chain needed for runtime safety
     const error = (json as ZohoServerErrorResponseData)?.error;
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- error may be undefined at runtime despite cast
     if (error != null) {
       const responseError = new FetchResponseError(response);
+      const parsedError = parseZohoServerErrorResponseData(json as ZohoServerErrorResponseData, responseError);
 
-      if (responseError) {
-        const parsedError = parseZohoServerErrorResponseData(json as ZohoServerErrorResponseData, responseError);
-
-        if (parsedError) {
-          throw parsedError;
-        }
+      if (parsedError) {
+        throw parsedError;
       }
     }
 
@@ -353,6 +364,12 @@ export interface ZohoRateLimitHeaderDetails {
   readonly resetAt: Date;
 }
 
+/**
+ * Extracts rate limit details from Zoho API response headers, returning null if the headers are absent.
+ *
+ * @param headers - HTTP response headers from a Zoho API call
+ * @returns Parsed rate limit details, or null if rate limit headers are missing
+ */
 export function zohoRateLimitHeaderDetails(headers: Headers): Maybe<ZohoRateLimitHeaderDetails> {
   const limitHeader = headers.get(ZOHO_RATE_LIMIT_LIMIT_HEADER);
   const remainingHeader = headers.get(ZOHO_RATE_LIMIT_REMAINING_HEADER);
@@ -381,9 +398,9 @@ export class ZohoTooManyRequestsError extends ZohoServerFetchResponseError {
 /**
  * Function that parses/transforms a ZohoServerErrorResponseData into a general ZohoServerError or other known error type.
  *
- * @param errorResponseData
- * @param responseError
- * @returns
+ * @param errorResponseData - Raw error response data from the Zoho API
+ * @param responseError - The underlying fetch response error
+ * @returns A typed Zoho server error, or undefined if no error is found
  */
 export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
   let result: ZohoServerFetchResponseError | undefined;
@@ -433,6 +450,6 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
  * @returns
  */
 export function tryFindZohoServerErrorData(errorResponseData: ZohoServerErrorResponseDataArrayRef | ZohoServerErrorResponseData | ZohoServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZohoServerErrorResponseDataError> {
-  const error = (errorResponseData as ZohoServerErrorResponseData).error ?? (errorResponseData as ZohoServerErrorResponseDataArrayRef).data?.[0] ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
-  return error;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- errorResponseData shape is unknown at runtime, fallthrough chain needed
+  return (errorResponseData as ZohoServerErrorResponseData).error ?? (errorResponseData as ZohoServerErrorResponseDataArrayRef).data?.[0] ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
 }

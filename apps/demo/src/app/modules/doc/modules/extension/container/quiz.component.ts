@@ -1,4 +1,4 @@
-import { Component, viewChild } from '@angular/core';
+import { Component, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective, DbxContentPitDirective } from '@dereekb/dbx-web';
 import { type Quiz, QuizComponent, QuizPreQuizIntroComponent, QuizQuestionTextComponent, QuizAnswerNumberComponent, QuizAnswerMultipleChoiceComponent, quizAgreementPrompt, quizFrequencyPrompt } from '@dereekb/dbx-form/quiz';
@@ -12,7 +12,8 @@ import { combineLatest, map, of, switchMap } from 'rxjs';
 @Component({
   templateUrl: './quiz.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxContentPitDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, QuizComponent, JsonPipe]
+  imports: [DbxContentContainerDirective, DbxContentPitDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, QuizComponent, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionQuizComponent {
   readonly quizComponentRef = viewChild(QuizComponent);

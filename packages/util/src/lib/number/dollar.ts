@@ -10,6 +10,17 @@ export type WholeDollarAmount = number;
  * Dollar amount number.
  */
 export type DollarAmount = number;
+
+/**
+ * Dollars amount number per hour.
+ */
+export type DollarAmountPerHour = number;
+
+/**
+ * Dollars amount number per day.
+ */
+export type DollarAmountPerDay = number;
+
 export type CentsAmount = number;
 
 export interface DollarsPair {

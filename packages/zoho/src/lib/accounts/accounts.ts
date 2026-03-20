@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Seconds } from '@dereekb/util';
 import { ZohoAccountsAuthFailureError } from './accounts.error.api';
 import { type ZohoApiServiceName } from '../zoho.config';
 
@@ -36,9 +36,9 @@ export interface ZohoAccessToken {
   readonly scope: ZohoAccessTokenScopesString;
   readonly apiDomain: ZohoAccessTokenApiDomain;
   /**
-   * Length of time the token is valid for.
+   * Length of time the token is valid for, in seconds.
    */
-  readonly expiresIn: number;
+  readonly expiresIn: Seconds;
   /**
    * Date the token expires at.
    */
@@ -91,12 +91,15 @@ export type ZohoAccessTokenStringFactory = () => Promise<ZohoAccessTokenString>;
 
 /**
  * Generates a new ZohoAccessTokenStringFactory.
+ *
+ * @param zohoAccessTokenFactory - Factory that produces ZohoAccessToken instances
+ * @returns A factory function that resolves to the access token string
  */
 export function zohoAccessTokenStringFactory(zohoAccessTokenFactory: ZohoAccessTokenFactory): ZohoAccessTokenStringFactory {
   return async () => {
     const token = await zohoAccessTokenFactory();
 
-    if (!token?.accessToken) {
+    if (!token.accessToken) {
       throw new ZohoAccountsAuthFailureError();
     }
 

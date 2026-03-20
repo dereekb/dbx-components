@@ -99,7 +99,7 @@ export function weekendDateCellScheduleDayCodes() {
  * @returns an EnabledDays object with boolean flags for each day
  */
 export function enabledDaysFromDateCellScheduleDayCodes(input: Maybe<Iterable<DateCellScheduleDayCode>>): EnabledDays {
-  const days = expandDateCellScheduleDayCodesToDayOfWeekSet(Array.from(new Set(input)));
+  const days = expandDateCellScheduleDayCodesToDayOfWeekSet([...new Set(input)]);
   return enabledDaysFromDaysOfWeek(days);
 }
 
@@ -190,6 +190,7 @@ export function dateCellScheduleEncodedWeek(codes: Iterable<DateCellScheduleDayC
  * // Returns [DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.WEDNESDAY]  // [2, 4]
  * ```
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export function simplifyDateCellScheduleDayCodes(codes: Iterable<DateCellScheduleDayCode>): DateCellScheduleDayCode[] {
   const codesSet = new Set(codes);
   const result: DateCellScheduleDayCode[] = [];
@@ -284,7 +285,7 @@ export function dateCellScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfW
  * @returns sorted array of individual day codes (1-7 only, no shorthand)
  */
 export function expandDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
-  return Array.from(expandDateCellScheduleDayCodesToDayCodesSet(input)).sort(sortNumbersAscendingFunction);
+  return [...expandDateCellScheduleDayCodesToDayCodesSet(input)].sort(sortNumbersAscendingFunction);
 }
 
 /**
@@ -298,6 +299,7 @@ export function expandDateCellScheduleDayCodesToDayCodesSet(input: DateCellSched
   const days = new Set<DateCellScheduleDayCode>();
 
   codes.forEach((code) => {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (code) {
       case 0:
         // do nothing
@@ -328,15 +330,16 @@ export function expandDateCellScheduleDayCodesToDayCodesSet(input: DateCellSched
 export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
   let dayCodes: DateCellScheduleDayCode[];
 
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'string':
-      dayCodes = Array.from(new Set(input)).map((x) => Number(x)) as DateCellScheduleDayCode[];
+      dayCodes = [...new Set(input)].map((x) => Number(x)) as DateCellScheduleDayCode[];
       break;
     case 'number':
       dayCodes = [input];
       break;
     default:
-      dayCodes = Array.from(input);
+      dayCodes = [...input];
       break;
   }
 
@@ -515,7 +518,6 @@ export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput)
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
   let start: Date;
-  let end: Date;
 
   // either start or startsAt is provided
   if (inputStart != null) {
@@ -534,7 +536,7 @@ export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput)
   }
 
   // set the end value
-  end = inputEnd ?? addMinutes(start, 1); // default the end to one minute after the start
+  const end = inputEnd ?? addMinutes(start, 1); // default the end to one minute after the start
 
   return {
     w,
@@ -849,7 +851,7 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
   // derive the startsAt time for the range. If not provided, defaults to inputStart, or midnight today in the target timezone.
-  const startsAt: Date = inputStartsAt != null ? inputStartsAt : (inputStart ?? normalInstance.startOfDayInTargetTimezone());
+  const startsAt: Date = inputStartsAt ?? inputStart ?? normalInstance.startOfDayInTargetTimezone();
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);
 
   const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt); // convert to the system date
@@ -874,7 +876,6 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
 
   const fn = ((input: DateCellScheduleDateFilterInput) => {
     let i: DateCellIndex;
-    let day: DayOfWeek;
 
     if (typeof input === 'number') {
       i = input;
@@ -882,9 +883,8 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
       i = _dateCellTimingRelativeIndexFactory(input);
     }
 
-    day = dayForIndex(i);
-    const result = (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
-    return result;
+    const day = dayForIndex(i);
+    return (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   }) as Building<DateCellScheduleDateFilter>;
 
   fn._dateCellTimingRelativeIndexFactory = _dateCellTimingRelativeIndexFactory;
@@ -1029,6 +1029,8 @@ export interface DateCellScheduleDateCellTimingFilterConfig {
  * Creates a DateCellScheduleDateCellTimingFilter that tests whether a DateCell block's index is allowed by the schedule within the given timing.
  *
  * @param config - timing and schedule to build the filter from
+ * @param config.timing - the DateCellTiming that defines the date range and event times for the filter
+ * @param config.schedule - the DateCellSchedule that controls which day codes and indices are included or excluded
  * @returns a decision function returning true for allowed blocks
  */
 export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCell>({ timing, schedule }: DateCellScheduleDateCellTimingFilterConfig): DateCellScheduleDateCellTimingFilter<B> {
@@ -1055,7 +1057,6 @@ export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCe
  */
 export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(config: DateCellScheduleDateCellTimingFilterConfig): DateCellTimingExpansionFactory<B> {
   const { invertSchedule = false, now, onlyBlocksThatHaveEnded, onlyBlocksThatHaveStarted, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateCellsToReturn, durationSpanFilter: inputDurationSpanFilter } = config;
-  let durationSpanFilter: FilterFunction<DateCellDurationSpan<DateCell>> | undefined;
   const durationSpanFilters: FilterFunction<DateCellDurationSpan<DateCell>>[] = [];
 
   if (inputDurationSpanFilter) {
@@ -1076,16 +1077,14 @@ export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(con
     }
   }
 
-  durationSpanFilter = mergeFilterFunctions(...durationSpanFilters);
+  const durationSpanFilter = mergeFilterFunctions(...durationSpanFilters);
 
-  const expansionFactory = dateCellTimingExpansionFactory<B>({
+  return dateCellTimingExpansionFactory<B>({
     timing: config.timing,
     filter: invertFilter(dateCellScheduleDateCellTimingFilter(config) as FilterFunction, invertSchedule), // TODO: Use invertDecision
     durationSpanFilter,
     maxDateCellsToReturn
   });
-
-  return expansionFactory;
 }
 
 /**

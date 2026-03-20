@@ -14,7 +14,7 @@ import { type MonoTypeOperatorFunction, tap, delayWhen, timer, type SchedulerLik
  * // logs "Value: <emitted value>" for each emission
  * ```
  *
- * @param messageOrFunction - static label or function returning log arguments
+ * @param message - static label or function returning log arguments
  * @param consoleLogFn - which console method to use (defaults to 'log')
  * @returns a tap operator that logs emissions
  */

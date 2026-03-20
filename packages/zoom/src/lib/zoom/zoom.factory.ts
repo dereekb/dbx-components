@@ -1,5 +1,5 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryInput, type ZoomUserContext, type ZoomUserContextFactory, type ZoomUserContextFactoryInput } from './zoom.config';
+import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryParams, type ZoomUserContext, type ZoomUserContextFactory, type ZoomUserContextFactoryParams } from './zoom.config';
 import { type LogZoomServerErrorFunction } from '../zoom.error.api';
 import { handleZoomErrorFetch } from './zoom.error.api';
 import { type ZoomOAuthContextRef } from '../oauth/oauth.config';
@@ -27,6 +27,12 @@ export interface ZoomFactoryConfig extends ZoomOAuthContextRef {
 
 export type ZoomFactory = (config: ZoomConfig) => Zoom;
 
+/**
+ * Creates a Zoom API factory from the given configuration.
+ *
+ * @param factoryConfig Configuration including OAuth context, rate limiting, and fetch settings
+ * @returns A factory function that creates a configured Zoom API instance
+ */
 export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
   const { oauthContext } = factoryConfig;
   const serverAccessTokenStringFactory = zoomAccessTokenStringFactory(oauthContext.loadAccessToken);
@@ -34,7 +40,7 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
 
   const {
     logZoomServerErrorFunction,
-    fetchFactory = (input: ZoomFetchFactoryInput) =>
+    fetchFactory = (input: ZoomFetchFactoryParams) =>
       fetchApiFetchService.makeFetch({
         baseUrl: ZOOM_API_URL,
         baseRequest: async () => ({
@@ -61,7 +67,7 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
     });
 
     // MARK: Make User Context
-    const makeUserContext: ZoomUserContextFactory = (input: ZoomUserContextFactoryInput) => {
+    const makeUserContext: ZoomUserContextFactory = (input: ZoomUserContextFactoryParams) => {
       const userAccessTokenFactory = oauthContext.makeUserAccessTokenFactory({
         refreshToken: input.refreshToken,
         userAccessTokenCache: input.accessTokenCache

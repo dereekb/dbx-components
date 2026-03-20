@@ -97,9 +97,9 @@ export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError
   let error: Maybe<ReadableErrorWithCode>;
 
   if (inputError) {
-    if ((inputError as CodedError).code) {
+    if ('code' in inputError && (inputError as CodedError).code) {
       error = inputError as CodedError;
-    } else if ((inputError as ErrorWrapper).data) {
+    } else if ('data' in inputError) {
       error = {
         code: DEFAULT_READABLE_ERROR_CODE,
         ...(inputError as ErrorWrapper).data
@@ -113,7 +113,7 @@ export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError
     } else {
       error = {
         code: DEFAULT_READABLE_ERROR_CODE,
-        message: (inputError as ReadableError).message || '',
+        message: (inputError as ReadableError).message ?? '',
         _error: inputError
       };
     }
@@ -160,5 +160,5 @@ export function errorMessageContainsStringFunction(target: string): ErrorMessage
  * @returns The error message string, or null/undefined if not available
  */
 export function messageFromError(input: Maybe<ErrorInput | string>): Maybe<string> {
-  return (typeof input === 'object' ? (input as ReadableError).message : input) || (input as string | undefined | null);
+  return (typeof input === 'object' ? (input as ReadableError).message : input) ?? (input as string | undefined | null);
 }

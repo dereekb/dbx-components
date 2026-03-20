@@ -1,4 +1,4 @@
-import type { ExpectationResult, MatcherState } from '@vitest/expect';
+import type { MatcherState, SyncExpectationResult } from '@vitest/expect';
 import { isBefore, isAfter, isSameSecond, isSameMinute, isSameHour, isSameDay, isSameWeek, isSameMonth, isSameQuarter, isSameYear, getDay } from 'date-fns';
 
 // Vitest implemenation of matchers from the jest-date package.
@@ -8,14 +8,14 @@ import { isBefore, isAfter, isSameSecond, isSameMinute, isSameHour, isSameDay, i
  *
  * Used by {@link AllDateMatchers} to map internal matcher implementations to their public `expect().toBe*()` signatures.
  */
-export type DateMatcherTypeWithExpected<T extends (this: MatcherState, input: Date, expected: Date) => ExpectationResult> = T extends (this: MatcherState, input: any, expected: infer B) => ExpectationResult ? (expected: B) => ExpectationResult : never;
+export type DateMatcherTypeWithExpected<T extends (this: MatcherState, input: Date, expected: Date) => SyncExpectationResult> = T extends (this: MatcherState, input: any, expected: infer B) => SyncExpectationResult ? (expected: B) => SyncExpectationResult : never;
 
 /**
  * Utility type that strips the `input` parameter from a date matcher function, producing a zero-argument consumer-facing matcher signature.
  *
  * Used by {@link AllDateMatchers} for day-of-week matchers like `toBeMonday()`.
  */
-export type DateMatcherTypeWithoutExpected<T extends (this: MatcherState, input: Date) => ExpectationResult> = T extends (this: MatcherState, input: any) => ExpectationResult ? () => ExpectationResult : never;
+export type DateMatcherTypeWithoutExpected<T extends (this: MatcherState, input: Date) => SyncExpectationResult> = T extends (this: MatcherState, input: any) => SyncExpectationResult ? () => SyncExpectationResult : never;
 
 /**
  * Augmented matcher interface providing date comparison and day-of-week assertion methods for Vitest.
@@ -51,7 +51,7 @@ interface AllDateMatchers {
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeBefore(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeBefore(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isBefore(received, expected);
 
@@ -70,7 +70,7 @@ function toBeBefore(this: MatcherState, received: Date, expected: Date): Expecta
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeAfter(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeAfter(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isAfter(received, expected);
 
@@ -89,7 +89,7 @@ function toBeAfter(this: MatcherState, received: Date, expected: Date): Expectat
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameSecond(received, expected);
 
@@ -108,7 +108,7 @@ function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): E
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameMinute(received, expected);
 
@@ -127,7 +127,7 @@ function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): E
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameHour(received, expected);
 
@@ -146,7 +146,7 @@ function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): Exp
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameDay(received, expected);
 
@@ -165,7 +165,7 @@ function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): Expe
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameWeek(received, expected);
 
@@ -184,7 +184,7 @@ function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): Exp
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameMonth(received, expected);
 
@@ -203,7 +203,7 @@ function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): Ex
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameQuarter(received, expected);
 
@@ -222,7 +222,7 @@ function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): 
  * @param expected - The date to compare against
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): ExpectationResult {
+function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = isSameYear(received, expected);
 
@@ -240,7 +240,7 @@ function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): Exp
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeMonday(this: MatcherState, received: Date): ExpectationResult {
+function toBeMonday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 1;
 
@@ -257,7 +257,7 @@ function toBeMonday(this: MatcherState, received: Date): ExpectationResult {
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeTuesday(this: MatcherState, received: Date): ExpectationResult {
+function toBeTuesday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 2;
 
@@ -274,7 +274,7 @@ function toBeTuesday(this: MatcherState, received: Date): ExpectationResult {
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeWednesday(this: MatcherState, received: Date): ExpectationResult {
+function toBeWednesday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 3;
 
@@ -291,7 +291,7 @@ function toBeWednesday(this: MatcherState, received: Date): ExpectationResult {
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeThursday(this: MatcherState, received: Date): ExpectationResult {
+function toBeThursday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 4;
 
@@ -308,7 +308,7 @@ function toBeThursday(this: MatcherState, received: Date): ExpectationResult {
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeFriday(this: MatcherState, received: Date): ExpectationResult {
+function toBeFriday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 5;
 
@@ -325,7 +325,7 @@ function toBeFriday(this: MatcherState, received: Date): ExpectationResult {
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSaturday(this: MatcherState, received: Date): ExpectationResult {
+function toBeSaturday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 6;
 
@@ -342,7 +342,7 @@ function toBeSaturday(this: MatcherState, received: Date): ExpectationResult {
  * @param received - The date under test
  * @returns Matcher result with a descriptive message on failure
  */
-function toBeSunday(this: MatcherState, received: Date): ExpectationResult {
+function toBeSunday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
   const pass = getDay(received) === 0;
 

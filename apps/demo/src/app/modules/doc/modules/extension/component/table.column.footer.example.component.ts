@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type DbxTableColumn } from '@dereekb/dbx-web/table';
 import { DatePipe } from '@angular/common';
 
@@ -10,7 +10,8 @@ import { DatePipe } from '@angular/common';
     </div>
   `,
   imports: [DatePipe],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableColumnFooterExampleComponent {
   column!: DbxTableColumn<Date>;

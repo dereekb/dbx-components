@@ -1,5 +1,5 @@
 import { DocInteractionExamplePopupComponent } from './../component/interaction.popup.component';
-import { Component, type AfterViewInit, inject } from '@angular/core';
+import { Component, type AfterViewInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DbxPopupService, type PopupPosition, DbxContentContainerDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -8,7 +8,8 @@ import { MatButton } from '@angular/material/button';
 @Component({
   templateUrl: './popup.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxButtonSpacerDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxButtonSpacerDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionPopupComponent implements AfterViewInit {
   readonly popupService = inject(DbxPopupService);

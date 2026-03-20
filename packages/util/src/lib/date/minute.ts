@@ -1,4 +1,20 @@
-import { type Milliseconds, MS_IN_SECOND, type Seconds } from './date';
+import { type Milliseconds, type Minutes, MS_IN_MINUTE, MS_IN_SECOND, type Seconds } from './date';
+
+/**
+ * Converts the input number of milliseconds to whole minutes by flooring the result.
+ *
+ * @param milliseconds - The number of milliseconds to convert.
+ * @returns The equivalent whole minutes, rounded down.
+ *
+ * @example
+ * ```ts
+ * millisecondsToMinutes(180000); // 3
+ * millisecondsToMinutes(90000);  // 1
+ * ```
+ */
+export function millisecondsToMinutes(milliseconds: Milliseconds): Minutes {
+  return Math.floor(milliseconds / MS_IN_MINUTE);
+}
 
 /**
  * A pair of minutes and seconds.
@@ -19,14 +35,6 @@ export interface MinutesAndSeconds {
 export function millisecondsToMinutesAndSeconds(milliseconds: Milliseconds): MinutesAndSeconds {
   const seconds = Math.floor(milliseconds / MS_IN_SECOND);
   return secondsToMinutesAndSeconds(seconds);
-}
-
-/**
- * A pair of minutes and seconds.
- */
-export interface MinutesAndSeconds {
-  readonly minute: number;
-  readonly second: number;
 }
 
 /**

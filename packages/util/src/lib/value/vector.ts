@@ -21,6 +21,7 @@ export type VectorTuple = [number, number];
  *
  * @param a - first vector
  * @param b - second vector
+ * @returns `true` if both vectors are equal or both are nullish
  */
 export function isSameVector(a: Maybe<Partial<Vector>>, b: Maybe<Partial<Vector>>): boolean {
   return a && b ? vectorsAreEqual(a, b) : a === b;
@@ -31,6 +32,7 @@ export function isSameVector(a: Maybe<Partial<Vector>>, b: Maybe<Partial<Vector>
  *
  * @param a - first vector
  * @param b - second vector
+ * @returns `true` if both vectors have identical `x` and `y` values
  */
 export function vectorsAreEqual(a: Partial<Vector>, b: Partial<Vector>): boolean {
   return a.x === b.x && a.y === b.y;
@@ -48,6 +50,7 @@ export type VectorResizeFunction = (input: Vector) => Vector;
  * If a minimum is not specified for an axis, the input value is passed through unchanged.
  *
  * @param minSize - the minimum dimensions to enforce
+ * @returns a resize function that clamps each axis to the specified minimum
  *
  * @example
  * ```ts
@@ -101,6 +104,7 @@ export interface Rectangle {
  *
  * @param a - first rectangle
  * @param b - second rectangle
+ * @returns `true` if the rectangles share any interior area
  *
  * @example
  * ```ts
@@ -137,6 +141,7 @@ export function rectangleOverlapsRectangle(a: Rectangle, b: Rectangle): boolean 
  *
  * @param a - first rectangle
  * @param b - second rectangle
+ * @returns the overlapping {@link Rectangle}, or `undefined` if the rectangles do not intersect
  */
 export function getOverlappingRectangle(a: Rectangle, b: Rectangle): Maybe<Rectangle> {
   const xl = Math.max(a.bl.x, b.bl.x);

@@ -5,7 +5,9 @@ import { type Maybe } from '../value/maybe.type';
  * Configuration for a {@link HashSet}, providing the key extraction function.
  */
 export interface HashSetConfig<K extends PrimativeKey, T> {
-  /** Extracts the unique key used for equality comparison from each value. */
+  /**
+   * Extracts the unique key used for equality comparison from each value.
+   */
   readKey: ReadKeyFunction<T, K>;
 }
 
@@ -155,7 +157,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
    * @returns An array of all stored values.
    */
   valuesArray(): T[] {
-    return Array.from(this._map.values());
+    return [...this._map.values()];
   }
 
   get [Symbol.toStringTag](): string {

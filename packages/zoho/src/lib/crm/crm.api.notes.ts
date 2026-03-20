@@ -33,6 +33,9 @@ export type ZohoCrmCreateNotesFunction = (input: ZohoCrmCreateNotesRequest) => P
  * Creates notes directly in the CRM Notes module. Each note must include the parent record reference and module name.
  *
  * For creating notes associated with a specific record, prefer {@link zohoCrmCreateNotesForRecord} which handles parent binding automatically.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that creates notes in the CRM Notes module
  */
 export function zohoCrmCreateNotes(context: ZohoCrmContext) {
   return (input: ZohoCrmCreateNotesRequest) =>
@@ -61,6 +64,9 @@ export type ZohoCrmDeleteNotesFunction = (input: ZohoCrmDeleteNotesRequest) => P
 
 /**
  * Deletes one or more notes from the CRM Notes module by their IDs.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that deletes notes by their IDs
  */
 export function zohoCrmDeleteNotes(context: ZohoCrmContext) {
   return (input: ZohoCrmDeleteNotesRequest) =>
@@ -81,6 +87,9 @@ export type ZohoCrmGetNotesForRecordFunction = (input: ZohoCrmGetNotesForRecordR
 
 /**
  * Retrieves paginated notes associated with a specific CRM record using the related records API.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that retrieves notes for a specific record
  */
 export function zohoCrmGetNotesForRecord(context: ZohoCrmContext): ZohoCrmGetNotesForRecordFunction {
   return zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordNote>({ targetModule: ZOHO_CRM_NOTES_MODULE });
@@ -90,6 +99,9 @@ export type ZohoCrmGetNotesForRecordPageFactory = FetchPageFactory<ZohoCrmGetNot
 
 /**
  * Creates a page factory for iterating through all notes for a record across multiple pages.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Page factory for paginating through notes for a record
  */
 export function zohoCrmGetNotesForRecordPageFactory(context: ZohoCrmContext): ZohoCrmGetNotesForRecordPageFactory {
   return zohoFetchPageFactory(zohoCrmGetNotesForRecord(context));
@@ -109,6 +121,9 @@ export type ZohoCrmCreateNotesForRecordFunction = (input: ZohoCrmCreateNotesForR
  * Creates notes for a specific record, automatically binding the parent module and record ID to each note entry.
  *
  * https://www.zoho.com/crm/developer/docs/api/v8/create-notes.html
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @returns Function that creates notes bound to a specific record
  */
 export function zohoCrmCreateNotesForRecord(context: ZohoCrmContext): ZohoCrmCreateNotesForRecordFunction {
   const createNotesInstance = zohoCrmCreateNotes(context);

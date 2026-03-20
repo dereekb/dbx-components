@@ -1,5 +1,7 @@
+import { type EmailParticipantString, type WebsiteUrl } from '@dereekb/util';
 import { Inject, Injectable } from '@nestjs/common';
 import { MailgunServiceConfig } from './mailgun.config';
+import { type MailgunSenderDomainString } from './mailgun';
 import { type MailgunClient, type MailgunMessagesClient } from './mailgun.type';
 import Mailgun from 'mailgun.js';
 import FormData from 'form-data';
@@ -18,15 +20,15 @@ export class MailgunApi {
     return this.client.messages;
   }
 
-  get clientUrl(): string {
+  get clientUrl(): WebsiteUrl {
     return this.config.clientUrl;
   }
 
-  get domain(): string {
+  get domain(): MailgunSenderDomainString {
     return this.config.domain;
   }
 
-  get sender(): string {
+  get sender(): EmailParticipantString {
     return this.config.sender;
   }
 }

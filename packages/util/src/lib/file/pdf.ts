@@ -12,6 +12,6 @@
  * @param buffer - Buffer-like object to check. Only requires the `lastIndexOf` method.
  * @returns true if both PDF markers are found in the expected positions.
  */
-export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'lastIndexOf'>) {
-  return buffer.lastIndexOf('%PDF-') === 0 && buffer.lastIndexOf('%%EOF') > -1;
+export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'lastIndexOf' | 'includes'>) {
+  return buffer.lastIndexOf('%PDF-') === 0 && buffer.includes('%%EOF');
 }

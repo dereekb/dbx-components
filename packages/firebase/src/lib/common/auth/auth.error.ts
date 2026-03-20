@@ -18,6 +18,12 @@ export const FIREBASE_AUTH_WRONG_PASSWORD = 'auth/wrong-password';
 export const FIREBASE_AUTH_NETWORK_REQUEST_ERROR = 'auth/network-request-error';
 /** Error code for a failed network request (client SDK). */
 export const FIREBASE_AUTH_NETWORK_REQUEST_FAILED = 'auth/network-request-failed';
+/** Error code when a phone number is already associated with another account. */
+export const FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR = 'auth/phone-number-already-exists';
+/** Error code when an email is already associated with another account. */
+export const FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR = 'auth/email-already-exists';
+/** Error code when the provided phone number is not a valid E.164 string. */
+export const FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR = 'auth/invalid-phone-number';
 
 /**
  * Converts a {@link FirebaseAuthError} into a user-friendly {@link ReadableError} with a human-readable message.

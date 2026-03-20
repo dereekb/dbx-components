@@ -86,6 +86,9 @@ export type DateCellRangeOfTimingFactory = (input?: Maybe<DateCellRangeOfTimingI
  * When `limitToCompletedIndexes` is true, only indexes whose timing duration has fully elapsed are included,
  * with the max boundary lazily refreshed as time passes.
  *
+ * @param config - Configuration specifying the timing, range fit, and completion constraints.
+ * @returns A factory function that produces a clamped {@link DateCellRangeWithRange} from optional start/end input.
+ *
  * @example
  * ```ts
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
@@ -166,6 +169,10 @@ export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDates
  * Computes a {@link DateCellRangeWithRange} from a timing and optional start/end input.
  *
  * Shorthand for creating a {@link dateCellRangeOfTimingFactory} and immediately invoking it.
+ *
+ * @param config - A {@link DateCellTiming} or full factory configuration.
+ * @param input - Optional start/end boundaries for the range.
+ * @returns A clamped {@link DateCellRangeWithRange} derived from the timing and input.
  */
 export function dateCellRangeOfTiming(config: DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig, input?: Maybe<DateCellRangeOfTimingInput>): DateCellRangeWithRange {
   return dateCellRangeOfTimingFactory(isDateCellTiming(config) ? { timing: config } : config)(input);
@@ -181,6 +188,10 @@ export type DateCellTimingCompleteTimeRangeConfig = Pick<DateCallIndexRangeFromD
  * of the timing schedule. Useful for determining which days have already finished.
  *
  * By default fitToTimingRange is true.
+ *
+ * @param timing - The timing schedule to evaluate.
+ * @param config - Optional configuration for the current time reference and range fitting.
+ * @returns A {@link DateCellRangeWithRange} covering only the completed day indexes.
  */
 export function dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?: DateCellTimingCompleteTimeRangeConfig): DateCellRangeWithRange {
   return dateCellRangeOfTiming({
@@ -195,6 +206,10 @@ export function dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?
  * Returns the latest completed day index for a {@link DateCellTiming}.
  *
  * Returns -1 if no days have been completed yet.
+ *
+ * @param timing - The timing schedule to evaluate.
+ * @param now - Optional reference time; defaults to the current time.
+ * @returns The zero-based index of the last fully completed day, or -1 if none.
  */
 export function dateCellTimingLatestCompletedIndex(timing: DateCellTiming, now?: Date): IndexNumber {
   return dateCellTimingCompletedTimeRange(timing, { now }).to;
@@ -210,6 +225,9 @@ export type DateCellIndexRange = IndexRange;
 
 /**
  * Converts a {@link DateCellRange} (inclusive `to`) to a {@link DateCellIndexRange} (exclusive `maxIndex`).
+ *
+ * @param range - The inclusive date cell range to convert.
+ * @returns A {@link DateCellIndexRange} with exclusive `maxIndex`.
  */
 export function dateCellRangeToDateCellIndexRange(range: DateCellRange): DateCellIndexRange {
   return { minIndex: range.i, maxIndex: (range.to ?? range.i) + 1 };
@@ -217,6 +235,9 @@ export function dateCellRangeToDateCellIndexRange(range: DateCellRange): DateCel
 
 /**
  * Converts a {@link DateCellIndexRange} (exclusive `maxIndex`) back to a {@link DateCellRangeWithRange} (inclusive `to`).
+ *
+ * @param range - The exclusive date cell index range to convert.
+ * @returns A {@link DateCellRangeWithRange} with inclusive `to`.
  */
 export function dateCellIndexRangeToDateCellRange(range: DateCellIndexRange): DateCellRangeWithRange {
   return { i: range.minIndex, to: range.maxIndex - 1 };
@@ -227,6 +248,11 @@ export function dateCellIndexRangeToDateCellRange(range: DateCellIndexRange): Da
  *
  * An arbitrary limit can also be applied. When `fitToTimingRange` is true (default),
  * the limit is intersected with the timing's own range; otherwise the limit is used as-is.
+ *
+ * @param timing - The timing schedule to derive the range from.
+ * @param limit - Optional range input to constrain the output.
+ * @param fitToTimingRange - Whether to intersect the limit with the timing's own range. Defaults to true.
+ * @returns A {@link DateCellIndexRange} representing the computed index bounds.
  */
 export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimingRangeInput, fitToTimingRange = true): DateCellIndexRange {
   const indexFactory = dateCellTimingRelativeIndexFactory(timing);
@@ -257,6 +283,9 @@ export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimin
  * by combining its timing and blocks.
  *
  * Shorthand for calling {@link expandDateCellTiming} with `collection.timing` and `collection.blocks`.
+ *
+ * @param collection - The date cell collection containing timing and blocks to expand.
+ * @returns An array of {@link DateCellDurationSpan} values with concrete start times and durations.
  */
 export function expandDateCellCollection<B extends DateCell = DateCell>(collection: DateCellCollection<B>): DateCellDurationSpan<B>[] {
   return expandDateCellTiming(collection.timing, collection.blocks);
@@ -266,6 +295,10 @@ export function expandDateCellCollection<B extends DateCell = DateCell>(collecti
  * Expands the given blocks into {@link DateCellDurationSpan} values using the provided timing.
  *
  * Shorthand for creating a {@link dateCellTimingExpansionFactory} and immediately invoking it.
+ *
+ * @param timing - The timing schedule providing start times and duration.
+ * @param blocks - The date cell blocks to expand into duration spans.
+ * @returns An array of {@link DateCellDurationSpan} values with concrete start times.
  */
 export function expandDateCellTiming<B extends DateCell = DateCell>(timing: DateCellTiming, blocks: B[]): DateCellDurationSpan<B>[] {
   return dateCellTimingExpansionFactory<B>({ timing })(blocks);
@@ -327,6 +360,9 @@ export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateC
  * Blocks with a range (`i` to `to`) are expanded into individual single-index entries.
  * Filtering is applied both at the block level and at the computed duration span level,
  * and evaluation can be capped for performance with large datasets.
+ *
+ * @param config - Configuration specifying the timing, range limits, filters, and output caps.
+ * @returns A factory function that expands date cell blocks into {@link DateCellDurationSpan} arrays.
  *
  * @example
  * ```ts
@@ -516,6 +552,9 @@ export type DateCellDayTimingInfoFactory = ((date: DateOrDateCellIndex, now?: Da
  * const dateInfo = infoFactory(someDate);
  * console.log(dateInfo.dayIndex);    // which day index this date falls on
  * ```
+ *
+ * @param config - Configuration providing the timing and optional range limit.
+ * @returns A factory that computes {@link DateCellDayTimingInfo} for any date or day index.
  */
 export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactoryConfig): DateCellDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
@@ -611,9 +650,12 @@ export type DateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt 
  * Type guard that returns true if the input is a {@link DateCellTimingRelativeIndexFactory}.
  *
  * Checks for the presence of `_timing` and `_normalInstance` properties on a function.
+ *
+ * @param input - The value to check.
+ * @returns True if the input is a {@link DateCellTimingRelativeIndexFactory}.
  */
 export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: unknown): input is DateCellTimingRelativeIndexFactory<T> {
-  return typeof input === 'function' && (input as DateCellTimingRelativeIndexFactory)._timing != null && (input as DateCellTimingRelativeIndexFactory)._normalInstance != null;
+  return typeof input === 'function' && '_timing' in input && '_normalInstance' in input;
 }
 
 /**
@@ -642,6 +684,9 @@ export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingSta
  * indexFactory._timing;         // the original timing
  * indexFactory._normalInstance;  // timezone normalizer
  * ```
+ *
+ * @param input - A timing configuration or an existing factory (returned as-is).
+ * @returns A factory that converts dates, ISO8601 day strings, or indexes to zero-based day offsets.
  */
 export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexFactory<T> {
   if (isDateCellTimingRelativeIndexFactory(input)) {
@@ -692,6 +737,9 @@ export type DateCellTimingRelativeIndexArrayFactory<T extends DateCellTimingStar
  * dates, date ranges, and cell ranges into a flat array of day indexes.
  *
  * Date ranges and cell ranges are expanded to include every index within the range.
+ *
+ * @param indexFactory - The relative index factory used for date-to-index conversion.
+ * @returns A factory that flattens mixed date/range arrays into day index arrays.
  */
 export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(indexFactory: DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexArrayFactory<T> {
   const factory = ((input: ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>) => {
@@ -736,6 +784,10 @@ export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTiming
  * // Get the index for a specific date
  * const index = getRelativeIndexForDateCellTiming(timing, someDate);
  * ```
+ *
+ * @param timing - The timing providing the start date and timezone context.
+ * @param date - A date or index to convert; defaults to the current date/time.
+ * @returns The zero-based day index relative to the timing's start.
  */
 export function getRelativeIndexForDateCellTiming(timing: DateCellTimingStartsAt, date: DateOrDateCellIndex = new Date()): DateCellIndex {
   return dateCellTimingRelativeIndexFactory(timing)(date);
@@ -773,6 +825,9 @@ export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCel
  * // Convert index 3 to a date with a specific reference time
  * const dateForDay3AtNoon = dateFactory(3, noonDate);
  * ```
+ *
+ * @param timing - The timing providing the start date and timezone context.
+ * @returns A factory that maps day indexes to calendar dates preserving the current time-of-day.
  */
 export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(timing: T): DateCellTimingDateFactory<T> {
   const { start, normalInstance } = dateCellTimingStartPair(timing);
@@ -792,8 +847,8 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
         input += 1;
       }
 
-      const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY); // add days to apply the correct offset to the target index
-      return nowWithDateForIndex;
+      // add days to apply the correct offset to the target index
+      return addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
     }
   }) as Building<DateCellTimingDateFactory>;
   factory._timing = timing;
@@ -811,6 +866,9 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
  * const lastIndex = dateCellTimingEndIndex(timing); // 4 (zero-based, 5 days)
  * ```
+ *
+ * @param input - A timing or an existing relative index factory.
+ * @returns The zero-based index of the last day in the schedule.
  */
 export function dateCellTimingEndIndex(input: DateCellTiming | DateCellTimingRelativeIndexFactory<DateCellTiming>): IndexNumber {
   const factory = dateCellTimingRelativeIndexFactory(input);
@@ -842,6 +900,9 @@ export type DateCellTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversion
  * for any day index relative to the timing's start.
  *
  * The returned date represents the beginning of the day in the timing's timezone context.
+ *
+ * @param input - A timing or an existing relative index factory.
+ * @returns A factory that maps day indexes to the start-of-day date in the timing's timezone.
  */
 export function dateCellTimingStartDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartDateFactory<T> {
   const indexFactory = dateCellTimingRelativeIndexFactory<T>(input);
@@ -887,6 +948,9 @@ export type DateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt =
  * // Also works with dates
  * const startForDate = startsAtFactory(someDate);
  * ```
+ *
+ * @param input - A timing or an existing relative index factory.
+ * @returns A factory that computes the concrete event start time for any day index.
  */
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T>;
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T> {
@@ -925,6 +989,9 @@ export type DateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTimi
  * // Get the end time for day 2 (startsAt time + 60 minutes on day 2)
  * const day2End = endFactory(2);
  * ```
+ *
+ * @param input - A timing or an existing relative index factory.
+ * @returns A factory that computes the end time (startsAt + duration) for any day index.
  */
 export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T>;
 export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T> {
@@ -942,6 +1009,10 @@ export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCell
 /**
  * Convenience function that returns the calendar date for a given day index or date
  * relative to the timing. Shorthand for creating a {@link dateCellTimingDateFactory} and invoking it.
+ *
+ * @param timing - The timing providing the start date and timezone context.
+ * @param input - A date or day index to convert.
+ * @returns The calendar date corresponding to the input, preserving current time-of-day.
  */
 export function getRelativeDateForDateCellTiming(timing: DateCellTimingStartsAt, input: DateOrDateCellIndex): Date {
   return dateCellTimingDateFactory(timing)(input);
@@ -1014,6 +1085,9 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
  * });
  * // result has the same start day and end day, but new time-of-day and 90-minute duration
  * ```
+ *
+ * @param input - Configuration specifying the timing to update, the event source, and which aspects to replace.
+ * @returns A new {@link FullDateCellTiming} with the requested aspects replaced.
  */
 export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): FullDateCellTiming {
   const { timing, event, replaceStartDay, replaceStartsAt, startDayDate: startDateDay, endOnEvent, replaceDuration } = input;
@@ -1030,7 +1104,8 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
       startsAt = event.startsAt; // use the new startsAt as-is
     } else if (replaceStartDay) {
       // keep the same time, but use the day
-      let { start: eventStartDate, normalInstance } = dateCellTimingStartPair({ startsAt: event.startsAt, timezone });
+      const { start: initialEventStartDate, normalInstance } = dateCellTimingStartPair({ startsAt: event.startsAt, timezone });
+      let eventStartDate = initialEventStartDate;
 
       if (startDateDay != null) {
         const startDateFactory = dateCellTimingStartDateFactory(timing);
@@ -1128,6 +1203,9 @@ export interface IsDateWithinDateCellRangeConfig {
  * isInRange(6);        // false - index 6 is outside [2, 5]
  * isInRange(someDate); // converts date to index, then checks containment
  * ```
+ *
+ * @param config - Configuration specifying the reference range and optional timezone context.
+ * @returns A predicate function that checks containment within the configured range.
  */
 export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRangeConfig): IsDateWithinDateCellRangeFunction {
   const { startsAt: inputStartsAt, range: inputRange } = config;
@@ -1148,10 +1226,8 @@ export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRa
     rangeInput = inputRange as DateCell | DateCellRange;
   }
 
-  if (!inputStartsAt) {
-    if (dateRange && isDateInput) {
-      startsAt = { startsAt: inputRange as Date, timezone: guessCurrentTimezone() as string };
-    }
+  if (!inputStartsAt && dateRange && isDateInput) {
+    startsAt = { startsAt: inputRange as Date, timezone: guessCurrentTimezone() as string };
   }
 
   if (!startsAt) {
@@ -1162,7 +1238,7 @@ export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRa
 
   function convertDateRangeToIndexRange(range: DateRangeStart & Partial<DateRange>) {
     const i = indexFactory(range.start);
-    const end: Maybe<Date> = (range as DateRange).end;
+    const end = (range as Partial<DateRange>).end;
     const to: Maybe<number> = end != null ? indexFactory(end) : undefined;
     return { i, to };
   }

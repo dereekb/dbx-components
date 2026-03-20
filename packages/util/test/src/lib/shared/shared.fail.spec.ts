@@ -86,7 +86,7 @@ describe('expectFail', () => {
   describe('sync', () => {
     it('should throw an UnexpectedSuccessFailureError if an error is not thrown.', () => {
       try {
-        expectFail(() => {
+        void expectFail(() => {
           //no error thrown
         });
       } catch (e) {
@@ -96,7 +96,7 @@ describe('expectFail', () => {
 
     it('should resolve successfully if any exception is thrown.', () => {
       try {
-        expectFail(() => {
+        void expectFail(() => {
           throw new Error('success');
         });
       } catch (e) {
@@ -214,7 +214,7 @@ describe('expectSuccessfulFail', () => {
         expectSuccessfulFail(() => {
           failSuccessfully(); // fail successfully.
         });
-      } catch (e) {
+      } catch {
         failDueToSuccess();
       }
     });
@@ -223,6 +223,7 @@ describe('expectSuccessfulFail', () => {
   describe('async', () => {
     it('should throw an UnexpectedSuccessFailureError if ExpectedFailError is not thrown.', async () => {
       try {
+        // eslint-disable-next-line @typescript-eslint/await-thenable
         await expectSuccessfulFail(async () => {
           //no error thrown in async
         });
@@ -233,22 +234,24 @@ describe('expectSuccessfulFail', () => {
 
     it('should resolve successfully if ExpectedFailError is thrown.', async () => {
       try {
+        // eslint-disable-next-line @typescript-eslint/await-thenable
         await expectSuccessfulFail(async () => {
           failSuccessfully(); // fail successfully.
         });
-      } catch (e) {
+      } catch {
         failDueToSuccess();
       }
     });
 
     it('should resolve successfully if ExpectedFailError is thrown in chain.', async () => {
       try {
+        // eslint-disable-next-line @typescript-eslint/await-thenable
         await expectSuccessfulFail(async () => {
           await Promise.resolve(0).then(() => {
             failSuccessfully(); // fail successfully in chain.
           });
         });
-      } catch (e) {
+      } catch {
         failDueToSuccess();
       }
     });

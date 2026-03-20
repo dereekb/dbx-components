@@ -209,7 +209,7 @@ export function isLoadingStateFinishedLoading<L extends LoadingState>(state: May
     if (loading === true) {
       result = false;
     } else {
-      result = loading === false || Boolean(state.value || state.error) || state.value === null;
+      result = loading === false || Boolean(state.value ?? state.error) || state.value === null;
     }
   }
 
@@ -226,6 +226,8 @@ export function isLoadingStateFinishedLoading<L extends LoadingState>(state: May
  * // { loading: false }
  * loadingStateType(state); // LoadingStateType.IDLE
  * ```
+ *
+ * @returns a loading state with `loading: false` and no value or error
  */
 export function idleLoadingState<T>(): LoadingState<T> {
   return { loading: false };
@@ -363,8 +365,7 @@ export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): bool
 export function isLoadingStateWithStateType(type: LoadingStateType) {
   const defaultResult = type === LoadingStateType.IDLE ? true : false;
   return <L extends LoadingState>(state: Maybe<L>) => {
-    const result = state ? loadingStateType(state) === type : defaultResult;
-    return result;
+    return state ? loadingStateType(state) === type : defaultResult;
   };
 }
 
@@ -419,8 +420,7 @@ export const isLoadingStateInErrorState = isLoadingStateWithStateType(LoadingSta
  * @returns true if the state has a defined (non-undefined) value
  */
 export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
-  const result = state ? state.value !== undefined : false;
-  return result;
+  return state ? state.value !== undefined : false;
 }
 
 /**
@@ -436,8 +436,7 @@ export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Ma
  * @returns true if the state has an error
  */
 export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
-  const result = state ? state.error != null : false;
-  return result;
+  return state ? state.error != null : false;
 }
 
 /**
@@ -447,8 +446,7 @@ export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> 
  * @returns true if finished loading with a non-undefined value
  */
 export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
-  const result = state ? isLoadingStateFinishedLoading(state) && state.value !== undefined : false;
-  return result;
+  return state ? isLoadingStateFinishedLoading(state) && state.value !== undefined : false;
 }
 
 /**
@@ -458,8 +456,7 @@ export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingS
  * @returns true if finished loading with an error
  */
 export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
-  const result = state ? isLoadingStateFinishedLoading(state) && state.error != null : false;
-  return result;
+  return state ? isLoadingStateFinishedLoading(state) && state.error != null : false;
 }
 
 /**
@@ -518,7 +515,12 @@ export function isPageLoadingStateMetadataEqual(a: Partial<PageLoadingState>, b:
  * const merged = mergeLoadingStates(beginLoading(), successResult({ a: 1 }));
  * // { loading: true }
  * ```
+ *
+ * @param a - the first loading state to merge
+ * @param b - the second loading state to merge
+ * @returns the combined loading state reflecting the merged values, errors, and loading flags
  */
+/* eslint-disable @typescript-eslint/max-params, @typescript-eslint/no-explicit-any -- variadic overload signatures */
 export function mergeLoadingStates<A extends object, B extends object>(a: LoadingState<A>, b: LoadingState<B>): LoadingState<A & B>;
 export function mergeLoadingStates<A extends object, B extends object, O>(a: LoadingState<A>, b: LoadingState<B>, mergeFn: (a: A, b: B) => O): LoadingState<O>;
 export function mergeLoadingStates<A extends object, B extends object, C extends object>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>): LoadingState<A & B & C>;
@@ -529,17 +531,19 @@ export function mergeLoadingStates<A extends object, B extends object, C extends
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
+  // eslint-disable-line jsdoc/require-jsdoc -- JSDoc is on the overload signatures above
+  /* eslint-enable @typescript-eslint/max-params, @typescript-eslint/no-explicit-any */
   const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
   const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
-  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
-  const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs);
+  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const error = loadingStates.find((x) => x.error)?.error; // find the first error
   let result: LoadingState<O>;
 
   if (error) {
     // ignore all loading states, except for any error-prone item that is still loading
-    const currentLoadings: Maybe<boolean>[] = loadingStates.map((x) => (x?.error ? x.loading : false));
+    const currentLoadings: Maybe<boolean>[] = loadingStates.map((x) => (x.error ? x.loading : false));
     const nonMaybeLoadings = currentLoadings.filter((x) => x != null) as boolean[];
     const loading = nonMaybeLoadings.length > 0 ? reduceBooleansWithOr(nonMaybeLoadings) : undefined;
 
@@ -641,7 +645,7 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
 export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
   const { mapValues, mapState } = config;
   const loading = isAnyLoadingStateInLoadingState(input);
-  const error = input.map((x) => x?.error).filter((x) => Boolean(x))[0];
+  const error = input.map((x) => x.error).find((x) => Boolean(x));
   let result: Maybe<R>;
 
   if (!error && !loading) {
@@ -694,7 +698,7 @@ export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = Pag
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O {
   const { mapValue, mapState, alwaysMapValue = false } = config;
-  const inputValue = input?.value;
+  const inputValue = input.value;
   let value: B;
 
   if ((inputValue != null || alwaysMapValue) && mapValue) {

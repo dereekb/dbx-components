@@ -1,6 +1,6 @@
 import { DbxAnchorComponent, DbxBodyDirective, DbxButtonSpacerDirective, DbxStyleBodyDirective, DbxStyleService } from '@dereekb/dbx-web';
 import { type ClickableAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxFirebaseDevelopmentDirective, DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { UIView } from '@uirouter/angular';
@@ -13,7 +13,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
   imports: [UIView, DbxStyleBodyDirective, DbxFirebaseDevelopmentDirective, DbxBodyDirective, MatToolbar, DbxAnchorComponent, MatButtonModule, DbxButtonSpacerDirective, MatIconModule],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppLayoutComponent {
   readonly dbxStyleService = inject(DbxStyleService);

@@ -57,7 +57,7 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait 
       }),
       finalize(() => {
         if (currentInstance) {
-          destroy(currentInstance);
+          void destroy(currentInstance);
         }
       })
     );

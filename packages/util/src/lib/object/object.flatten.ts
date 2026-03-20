@@ -74,6 +74,9 @@ export function flattenObject(input: Maybe<Record<string, unknown>>, config?: Fl
 
 /**
  * Returns true if the value is a plain object (not an array, Date, RegExp, null, etc.).
+ *
+ * @param value - the value to check
+ * @returns true if the value is a plain object with an Object or null prototype
  */
 function _isPlainObject(value: unknown): value is Record<string, unknown> {
   let result = false;

@@ -11,7 +11,7 @@ export type ZohoCrmNoteId = string;
  * Metadata describing whether the note action was triggered by the system.
  */
 export interface ZohoCrmNoteAction {
-  $is_system_action: boolean;
+  readonly $is_system_action: boolean;
 }
 
 /**
@@ -27,8 +27,8 @@ export type ZohoCrmNoteSourceType = number;
  * Describes the origin of a note, including who or what created it.
  */
 export interface ZohoCrmNoteSource {
-  name: ZohoCrmNoteSourceName;
-  type: ZohoCrmNoteSourceType;
+  readonly name: ZohoCrmNoteSourceName;
+  readonly type: ZohoCrmNoteSourceType;
 }
 
 /**
@@ -40,26 +40,26 @@ export type ZohoCrmNoteOwnerData = ZohoCrmReferenceData;
  * Full data shape for a CRM note as returned by the API, including metadata fields like permissions, source, and timestamps.
  */
 export interface ZohoCrmNoteData {
-  Note_Title: string;
-  Note_Content: string;
-  Parent_Id: ZohoCrmParentReferenceData;
-  Created_Time: ISO8601DateString;
-  Modified_Time: ISO8601DateString;
-  $attachments: null;
-  $is_edit_allowed: boolean;
-  $editable: boolean;
-  $type_id: ZohoCrmTypeId;
-  $is_delete_allowed: boolean;
-  $note_action: ZohoCrmNoteAction;
-  $source: ZohoCrmNoteSource;
-  $se_module: ZohoCrmModuleName;
-  $is_shared_to_client: boolean;
-  Note_Owner: ZohoCrmNoteOwnerData;
-  Created_By: ZohoCrmCreatedByData;
-  Modified_By: ZohoCrmModifiedByData;
-  $size: ZohoCrmNoteFileSize | null;
-  $voice_note: boolean;
-  $status: ZohoCrmNoteStatus;
+  readonly Note_Title: string;
+  readonly Note_Content: string;
+  readonly Parent_Id: ZohoCrmParentReferenceData;
+  readonly Created_Time: ISO8601DateString;
+  readonly Modified_Time: ISO8601DateString;
+  readonly $attachments: null;
+  readonly $is_edit_allowed: boolean;
+  readonly $editable: boolean;
+  readonly $type_id: ZohoCrmTypeId;
+  readonly $is_delete_allowed: boolean;
+  readonly $note_action: ZohoCrmNoteAction;
+  readonly $source: ZohoCrmNoteSource;
+  readonly $se_module: ZohoCrmModuleName;
+  readonly $is_shared_to_client: boolean;
+  readonly Note_Owner: ZohoCrmNoteOwnerData;
+  readonly Created_By: ZohoCrmCreatedByData;
+  readonly Modified_By: ZohoCrmModifiedByData;
+  readonly $size: ZohoCrmNoteFileSize | null;
+  readonly $voice_note: boolean;
+  readonly $status: ZohoCrmNoteStatus;
 }
 
 /**

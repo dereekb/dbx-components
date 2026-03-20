@@ -83,7 +83,7 @@ export function expandTreeFunction<T, N extends TreeNode<T, N>>(config: ExpandTr
  * @returns An ExpandTreeFunction<T, N> that takes a root value and returns its corresponding tree structure.
  */
 export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any>>(config: ExpandTree<T> | ExpandTreeWithNodeBuilder<T, N>): ExpandTreeFunction<T, N> {
-  const makeNodeFromConfig: (node: TreeNodeWithoutChildren<T, N>) => Omit<N, 'children'> = (config as ExpandTreeWithNodeBuilder<T, N>).makeNode ?? ((basicNode) => basicNode as unknown as Omit<N, 'children'>);
+  const makeNodeFromConfig: (node: TreeNodeWithoutChildren<T, N>) => Omit<N, 'children'> = (config as Partial<ExpandTreeWithNodeBuilder<T, N>>).makeNode ?? ((basicNode) => basicNode as unknown as Omit<N, 'children'>);
 
   const expandFn = (value: T, parent?: N): N => {
     const depth = parent ? parent.depth + 1 : 0;

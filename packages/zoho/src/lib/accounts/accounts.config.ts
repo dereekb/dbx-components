@@ -21,6 +21,12 @@ export type ZohoAccountsApiUrlKey = 'us';
 
 export type ZohoAccountsConfigApiUrlInput = ZohoAccountsApiUrlKey | ZohoAccountsApiUrl;
 
+/**
+ * Resolves a Zoho Accounts API URL input to the full base URL. The 'us' key maps to the US datacenter; custom URLs pass through unchanged.
+ *
+ * @param input - A well-known datacenter key or a custom Zoho Accounts API URL
+ * @returns The resolved full Zoho Accounts API base URL
+ */
 export function zohoAccountsConfigApiUrl(input: ZohoAccountsConfigApiUrlInput): ZohoApiUrl {
   switch (input) {
     case 'us':
@@ -44,11 +50,11 @@ export interface ZohoAccountsConfig extends ZohoConfig, ZohoAuthClientIdAndSecre
   readonly accessTokenCache?: Maybe<ZohoAccessTokenCache>;
 }
 
-export interface ZohoAccountsFetchFactoryInput {
+export interface ZohoAccountsFetchFactoryParams {
   readonly apiUrl: ZohoApiUrl;
 }
 
-export type ZohoAccountsFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoAccountsFetchFactoryInput>;
+export type ZohoAccountsFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoAccountsFetchFactoryParams>;
 
 export interface ZohoAccountsContext {
   readonly fetch: ConfiguredFetch;
@@ -60,3 +66,9 @@ export interface ZohoAccountsContext {
 export interface ZohoAccountsContextRef {
   readonly accountsContext: ZohoAccountsContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZohoAccountsFetchFactoryParams instead.
+ */
+export type ZohoAccountsFetchFactoryInput = ZohoAccountsFetchFactoryParams;

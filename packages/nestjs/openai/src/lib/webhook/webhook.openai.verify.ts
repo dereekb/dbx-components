@@ -34,15 +34,15 @@ export interface OpenAIWebhookEventVerificationErrorResult {
 export type OpenAIWebhookEventVerifier = (req: Request, rawBody: Buffer) => Promise<OpenAIWebhookEventVerificationResult>;
 
 /**
- * Verifies a OpenAI webhook event header.
+ * Verifies an OpenAI webhook event header using the OpenAI client's built-in signature verification.
  *
- * @param vapiSecretTokenGetter The OpenAI secret token. The Vapi client allows for using an AsyncGetterOrValue type, so the verifier supports that as well.
- * @returns A function that verifies a OpenAI webhook event.
+ * @param config - The verification config containing the OpenAI webhook secret and client.
+ * @returns A function that verifies an OpenAI webhook event.
  */
 export function openAIWebhookEventVerifier(config: OpenAIWebhookEventVerificationConfig): OpenAIWebhookEventVerifier {
   const { secret, client } = config;
 
-  return async (request: Request, rawBody: Buffer) => {
+  return async (request: Request, _rawBody: Buffer) => {
     const headers = request.headers;
     const requestBodyString = String(request.body);
 

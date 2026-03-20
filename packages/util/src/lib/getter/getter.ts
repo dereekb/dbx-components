@@ -79,7 +79,7 @@ export function getValueFromGetter<T, A>(this: unknown, input: GetterOrFactoryWi
 export function getValueFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A): T {
   if (isNonClassFunction(input)) {
-    return (input as Function)(args);
+    return (input as (...fnArgs: unknown[]) => T)(args);
   } else {
     return input as T;
   }

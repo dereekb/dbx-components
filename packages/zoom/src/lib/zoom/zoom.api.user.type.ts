@@ -1,4 +1,4 @@
-import { type EmailAddress, type ISO8601DateStringUTCFull, type TimezoneString } from '@dereekb/util';
+import { type EmailAddress, type ISO8601DateStringUTCFull, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
 import { type ZoomClientVersion, type ZoomUserId } from '../zoom.type';
 
 /**
@@ -92,30 +92,35 @@ export interface ZoomUser {
 
   /**
    * Returned if the user is enrolled in the Zoom United plan. See docs for enum values.
+   *
    * @example "1"
    */
   readonly plan_united_type?: ZoomUserPlanUnitedType;
 
   /**
    * The user's personal meeting ID (PMI).
+   *
    * @example 6589310093
    */
   readonly pmi: ZoomUserPersonalMeetingId;
 
   /**
    * The unique ID of the user's assigned role.
+   *
    * @example "0"
    */
   readonly role_id: ZoomUserRoleId;
 
   /**
    * The user's status: 'active', 'inactive', or 'pending'.
+   *
    * @example "active"
    */
   readonly status: ZoomUserStatus;
 
   /**
    * The user's timezone.
+   *
    * @example "Asia/Shanghai"
    */
   readonly timezone: TimezoneString;
@@ -156,12 +161,12 @@ export interface ZoomUser {
   /**
    * The user's personal meeting URL.
    */
-  readonly personal_meeting_url: string;
+  readonly personal_meeting_url: WebsiteUrl;
 
   /**
    * The user's profile picture URL.
    */
-  readonly pic_url: string;
+  readonly pic_url: WebsiteUrl;
 
   /**
    * The user's CMS user ID (may be empty).
@@ -221,7 +226,7 @@ export interface ZoomUser {
   /**
    * The user's manager (email address).
    */
-  readonly manager?: string;
+  readonly manager?: EmailAddress;
 
   /**
    * The user's phone numbers (new format, array of objects).

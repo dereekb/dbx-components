@@ -22,7 +22,6 @@ parameters:
 
 orbs:
   nx: nrwl/nx@1.7.0
-  node: circleci/node@7.2.1
   snyk: snyk/snyk@2.3.0
 
 jobs:
@@ -37,12 +36,25 @@ jobs:
         default: true
     environment:
       CYPRESS_INSTALL_BINARY: 0
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
-      # install node packages
-      - node/install-packages
+      # NOTE: We cache node_modules directly instead of using the circleci/node orb's install-packages command
+      # because the orb defaults to npm ci, which always deletes node_modules and reinstalls from scratch,
+      # making its with-cache option effectively a no-op. This approach skips install entirely on cache hit.
+      - restore_cache:
+          keys:
+            - node-modules-v1-{{ checksum "package-lock.json" }}
+      - run:
+          name: install packages
+          command: |
+            if [ ! -d node_modules ]; then
+              npm ci
+            fi
+      - save_cache:
+          key: node-modules-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
       # scan vulnerabilities with snyk if enabled
       - when:
           condition: << parameters.scan_with_snyk >>
@@ -67,11 +79,11 @@ jobs:
                 paths:
                   - node_modules
                   - dist
+                  - .nx/cache
   # Runs tests for the projects that do not require the firebase emulators and are more basic
   test-with-node-basic:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -104,7 +116,6 @@ jobs:
   test-with-node-complex:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -128,7 +139,6 @@ jobs:
   test-with-node-nestjs:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -159,7 +169,6 @@ jobs:
       GCE_METADATA_HOST: 0.0.0.0
       DETECT_GCP_RETRIES: 0
       METADATA_SERVER_DETECTION: none
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -167,26 +176,19 @@ jobs:
           at: ~/code
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
-          key: firebase-cache-
+          keys:
+            - firebase-cache-v1-{{ checksum "package-lock.json" }}
+            - firebase-cache-v1-
       # Skip tests if run_tests is false
       - unless:
           condition:
             equal: [false, << pipeline.parameters.run_tests >>]
           steps:
             - run:
-                name: run firebase tests
-                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase'
-            - run:
-                name: run firebase-server tests
-                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase-server'
-            - run:
-                name: run dbx-firebase tests
-                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
-            - run:
-                name: run demo-api tests
-                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
+                name: run all firebase tests
+                command: npx nx run workspace:ci-test-firebase-all-with-emulators
       - save_cache:
-          key: firebase-cache-
+          key: firebase-cache-v1-{{ checksum "package-lock.json" }}
           paths:
             - ~/.cache/firebase
       - store_test_results:
@@ -195,7 +197,6 @@ jobs:
   test-setup-script:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -203,7 +204,14 @@ jobs:
           at: ~/code
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
       - restore_cache:
-          key: firebase-cache-
+          keys:
+            - firebase-cache-v1-{{ checksum "package-lock.json" }}
+            - firebase-cache-v1-
+      # Restore npm download cache to speed up the many npm install calls in setup-project.sh
+      - restore_cache:
+          keys:
+            - npm-cache-v1-{{ checksum "package-lock.json" }}
+            - npm-cache-v1-
       # Skip setup test if run_setup_test is false
       - unless:
           condition:
@@ -236,6 +244,10 @@ jobs:
             - run:
                 name: Run tests
                 command: cd ~/setup-test/myproject && npx nx test myproject-components && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-firebase' && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
+      - save_cache:
+          key: npm-cache-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/.npm
     # todo: add checks, etc.
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
@@ -245,7 +257,6 @@ jobs:
         type: boolean
         default: false
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -259,7 +270,19 @@ jobs:
       - when:
           condition: << parameters.skip_build >>
           steps:
-            - node/install-packages
+            - restore_cache:
+                keys:
+                  - node-modules-v1-{{ checksum "package-lock.json" }}
+            - run:
+                name: install packages
+                command: |
+                  if [ ! -d node_modules ]; then
+                    npm ci
+                  fi
+            - save_cache:
+                key: node-modules-v1-{{ checksum "package-lock.json" }}
+                paths:
+                  - node_modules
       - add_ssh_keys:
           fingerprints:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
@@ -289,7 +312,6 @@ jobs:
     <<: *defaults
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -312,7 +334,6 @@ jobs:
   publish-to-npm:
     <<: *defaults
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
       NX_NO_CLOUD: "true"
     steps:
       - checkout
@@ -321,9 +342,6 @@ jobs:
       - run:
           name: configure npmrc / npm login
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-      - run:
-          name: Run lint fix to update any npm dependencies in the projects before building
-          command: ./lint-fix-all.sh || true # ignore error
       # - run: npx nx run-many -t publish-npmjs --all
       # npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
       # since these dependencies rely on eachother, they should be published in dependency order

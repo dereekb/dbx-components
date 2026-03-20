@@ -20,7 +20,7 @@ import { ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
  * const result = knownTimezoneType('America/Denver');
  * ```
  */
-export const knownTimezoneType = type('string > 0').narrow((val, ctx) => (val != null && isKnownTimezone(val)) || ctx.mustBe('a known timezone'));
+export const knownTimezoneType = type('string > 0').narrow((val, ctx) => isKnownTimezone(val) || ctx.mustBe('a known timezone'));
 
 // MARK: DateDurationSpan
 /**
@@ -148,18 +148,18 @@ export const modelRecurrenceInfoType = type({
  * Accepts both Date objects and date strings (parsed via `string.date.parse`), then validates the resulting timing
  * using {@link isValidDateCellTiming}.
  */
-export const validDateCellTimingType = dateCellTimingType.narrow((val, ctx) => (val != null && isValidDateCellTiming(val)) || ctx.mustBe('a valid DateCellTiming'));
+export const validDateCellTimingType = dateCellTimingType.narrow((val, ctx) => isValidDateCellTiming(val) || ctx.mustBe('a valid DateCellTiming'));
 
 /**
  * ArkType DTO schema that validates a value is a valid {@link DateCellRange} (non-negative indexes, `to >= i`).
  *
  * Validates cell range data from JSON/DTO input.
  */
-export const validDateCellRangeType = dateCellRangeType.narrow((val, ctx) => (val != null && isValidDateCellRange(val)) || ctx.mustBe('a valid DateCellRange'));
+export const validDateCellRangeType = dateCellRangeType.narrow((val, ctx) => isValidDateCellRange(val) || ctx.mustBe('a valid DateCellRange'));
 
 /**
  * ArkType DTO schema that validates a value is a sorted array of non-overlapping {@link DateCellRange} values.
  *
  * Validates cell range series data from JSON/DTO input.
  */
-export const validDateCellRangeSeriesType = type(dateCellRangeType.array()).narrow((val, ctx) => (val != null && isValidDateCellRangeSeries(val)) || ctx.mustBe('a valid DateCellRange series with items sorted in ascending order and no repeat indexes'));
+export const validDateCellRangeSeriesType = type(dateCellRangeType.array()).narrow((val, ctx) => isValidDateCellRangeSeries(val) || ctx.mustBe('a valid DateCellRange series with items sorted in ascending order and no repeat indexes'));

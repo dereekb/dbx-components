@@ -5,7 +5,7 @@ import { BaseError } from 'make-error';
  */
 export class FetchRequestFactoryError extends BaseError {
   constructor(readonly error: Error | string | unknown) {
-    super(`Fetch request failed to build due to an unexpected error: ${typeof error === 'object' ? (error as Error).message ?? '' : error}`);
+    super(`Fetch request failed to build due to an unexpected error: ${typeof error === 'object' ? (error as Error).message : error}`);
   }
 }
 
@@ -25,6 +25,12 @@ export class FetchResponseError extends BaseError {
   }
 }
 
+/**
+ * Asserts that the fetch response has an ok status code, throwing a FetchResponseError if it does not.
+ *
+ * @param responsePromise - promise resolving to the fetch Response to validate
+ * @returns a promise resolving to the Response if the status is ok
+ */
 export function requireOkResponse(responsePromise: Promise<Response>): Promise<Response> {
   return responsePromise.then((response) => {
     if (!response.ok) {

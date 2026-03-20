@@ -10,7 +10,7 @@ export interface ZoomWebhookEvent<T, ET extends ZoomWebhookEventTypeString = Zoo
   readonly payload: T;
 }
 
-export type UntypedZoomWebhookEvent = ZoomWebhookEvent<any>;
+export type UntypedZoomWebhookEvent = ZoomWebhookEvent<unknown>;
 
 export interface ZoomWebhookAccountIdAndObjectPayloadData<T = unknown> {
   readonly account_id: ZoomAccountId;

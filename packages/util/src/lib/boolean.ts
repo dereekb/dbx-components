@@ -25,6 +25,9 @@ export type TrueOrFalseString = 'true' | 'false';
 // MARK: Maybe
 /**
  * If a non-null boolean value is provided, returns the opposite.
+ *
+ * @param x - the boolean value to invert, or a nullish value
+ * @returns the inverted boolean, or the original nullish value if input was null/undefined
  */
 export function invertMaybeBoolean(x: true): false;
 export function invertMaybeBoolean(x: false): true;
@@ -169,8 +172,7 @@ export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
   const chance = inputChance / 100;
   return () => {
     const roll = Math.random();
-    const result = roll <= chance;
-    return result;
+    return roll <= chance;
   };
 }
 

@@ -15,7 +15,7 @@ describe('makePromiseFullRef', () => {
 
       const expectedValue = 0;
 
-      result.promise.then((value) => {
+      void result.promise.then((value) => {
         expect(value).toBe(expectedValue);
         done();
       });

@@ -17,8 +17,11 @@ export abstract class ZoomOAuthServiceConfig {
     const { zoomOAuth } = config;
 
     if (!zoomOAuth) {
+      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- runtime validation
       throw new Error('ZoomOAuthServiceConfig.zoomOAuth is required');
-    } else {
+    }
+
+    {
       if (!zoomOAuth.accountId) {
         throw new Error('ZoomOAuthServiceConfig.zoomOAuth.accountId is required');
       } else if (!zoomOAuth.clientSecret) {
@@ -30,6 +33,13 @@ export abstract class ZoomOAuthServiceConfig {
   }
 }
 
+/**
+ * Reads a ZoomOAuthServiceConfig from the NestJS ConfigService using environment variables.
+ *
+ * @param configService The NestJS ConfigService to read from
+ * @param prefix Optional prefix for environment variable names
+ * @returns A validated ZoomOAuthServiceConfig
+ */
 export function readZoomOAuthServiceConfigFromConfigService(configService: ConfigService, prefix?: string): ZoomOAuthServiceConfig {
   const prefixString = characterPrefixSuffixInstance({ suffix: '_', suffixEmptyString: false }).prefixSuffixString(prefix ?? '');
 

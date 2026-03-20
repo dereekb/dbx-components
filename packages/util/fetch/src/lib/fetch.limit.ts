@@ -33,6 +33,13 @@ export interface RateLimitedFetchHandlerConfig<T extends PromiseRateLimiter> {
   updateWithResponse(response: Response, fetchResponseError?: Maybe<FetchResponseError>): PromiseOrValue<boolean>;
 }
 
+/**
+ * Creates a FetchHandler that enforces rate limiting via the provided PromiseRateLimiter and supports
+ * automatic retry when the server signals throttling.
+ *
+ * @param config - configuration containing the rate limiter, retry settings, and response handler
+ * @returns a RateLimitedFetchHandler that rate-limits outgoing requests and retries on throttle responses
+ */
 export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: RateLimitedFetchHandlerConfig<T>): RateLimitedFetchHandler<T> {
   const { updateWithResponse, maxRetries: inputMaxRetries } = config;
   const maxRetries = inputMaxRetries ?? 1;
@@ -54,8 +61,7 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
         response = fetchResponseError.response;
       }
 
-      // response could be null in some cases
-      const shouldRetry = response ? await updateWithResponse(response, fetchResponseError) : false;
+      const shouldRetry = await updateWithResponse(response, fetchResponseError);
 
       if (shouldRetry && retriesAttempted < maxRetries) {
         response = await tryFetch(retriesAttempted + 1);
@@ -64,11 +70,6 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
         if (fetchResponseError != null) {
           throw fetchResponseError;
         }
-      }
-
-      // if response is null at this point but fetchResponseError is not, rethrow the error
-      if (response == null && fetchResponseError != null) {
-        throw fetchResponseError;
       }
 
       return response;

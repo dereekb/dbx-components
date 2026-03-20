@@ -11,48 +11,48 @@
       <h3>Date Pipes</h3>
       <dbx-detail-block icon="event" header="dateDayRange(Date,string)">
         <p class="dbx-hint">Formats the input dateRange to the dates using formatToDayRangeString().</p>
-        <p class="dbx-ok">{{ dateRange$ | async | dateDayRange }}</p>
+        <p class="dbx-ok">{{ dateRangeSignal() | dateDayRange }}</p>
       </dbx-detail-block>
 
       <dbx-detail-block icon="event" header="dateDayTimeRange(Date,string)">
         <p class="dbx-hint">Formats the input dateRange to the times using formatToDayTimeRangeString().</p>
-        <p class="dbx-ok">{{ dateRange$ | async | dateDayTimeRange }}</p>
+        <p class="dbx-ok">{{ dateRangeSignal() | dateDayTimeRange }}</p>
       </dbx-detail-block>
 
       <dbx-detail-block icon="event" header="dateDistance(DateOrDateString,Date)">
         <p class="dbx-hint">Formats the input date to show the distance between the date and the other input.</p>
         <p class="dbx-ok">
-          {{ date$ | async | dateDistance: (date$ | async) }}
+          {{ dateSignal() | dateDistance: dateSignal() }}
           <span class="dbx-hint">(Date to Date)</span>
         </p>
         <p class="dbx-ok">
-          {{ date$ | async | dateDistance: (end$ | async) }}
+          {{ dateSignal() | dateDistance: endSignal() }}
           <span class="dbx-hint">(Date to End)</span>
         </p>
         <p class="dbx-ok">
-          {{ end$ | async | dateDistance: (date$ | async) }}
+          {{ endSignal() | dateDistance: dateSignal() }}
           <span class="dbx-hint">(End to Date)</span>
         </p>
         <p class="dbx-ok">
-          {{ date$ | async | dateDistance }}
+          {{ dateSignal() | dateDistance }}
           <span class="dbx-hint">(Same Day Example)</span>
         </p>
         <p class="dbx-ok">
-          {{ end$ | async | dateDistance }}
+          {{ endSignal() | dateDistance }}
           <span class="dbx-hint">(Same Day In Future Example)</span>
         </p>
       </dbx-detail-block>
 
       <dbx-detail-block icon="event" header="dateRangeDistance(DateRange)">
         <p class="dbx-hint">Formats the input date to show the distance between the start and end dates in DateRange.</p>
-        <p class="dbx-ok">{{ dateRange$ | async | dateRangeDistance }}</p>
+        <p class="dbx-ok">{{ dateRangeSignal() | dateRangeDistance }}</p>
       </dbx-detail-block>
 
       <dbx-detail-block icon="event" header="dateTimeRangeOnlyDistance(DateRange,FormatDateRangeDistanceFunctionConfig,string)">
         <p class="dbx-hint">Configurable date range format pipe for formatDateRangeDistance().</p>
-        <p class="dbx-ok">{{ dateRange$ | async | dateTimeRangeOnlyDistance }}</p>
+        <p class="dbx-ok">{{ dateRangeSignal() | dateTimeRangeOnlyDistance }}</p>
         <p class="dbx-ok">
-          {{ zeroDayDateRange$ | async | dateTimeRangeOnlyDistance }}
+          {{ zeroDayDateRangeSignal() | dateTimeRangeOnlyDistance }}
           <span class="dbx-hint">(Same Day Example)</span>
         </p>
       </dbx-detail-block>
@@ -60,35 +60,35 @@
       <h3>Time Pipes</h3>
       <dbx-detail-block icon="event" header="dateTimeRange(DateRange,string)">
         <p class="dbx-hint">Formats the input dates with their times. If the date range is on the same day, then it only prints the times.</p>
-        <p class="dbx-ok">{{ dateRange$ | async | dateTimeRange }}</p>
+        <p class="dbx-ok">{{ dateRangeSignal() | dateTimeRange }}</p>
         <p class="dbx-ok">
-          {{ zeroDayDateRange$ | async | dateTimeRange }}
+          {{ zeroDayDateRangeSignal() | dateTimeRange }}
           <span class="dbx-hint">(Same Day Example)</span>
         </p>
       </dbx-detail-block>
       <dbx-detail-block icon="event" header="dateTimeRangeOnly(DateRange,string)">
         <p class="dbx-hint">Formats the input dates with only their times, regardless of the dates.</p>
-        <p class="dbx-ok">{{ dateRange$ | async | dateTimeRangeOnly }}</p>
+        <p class="dbx-ok">{{ dateRangeSignal() | dateTimeRangeOnly }}</p>
         <p class="dbx-ok">
-          {{ zeroDayDateRange$ | async | dateTimeRangeOnly }}
+          {{ zeroDayDateRangeSignal() | dateTimeRangeOnly }}
           <span class="dbx-hint">(Same Day Example)</span>
         </p>
       </dbx-detail-block>
 
       <dbx-detail-block icon="event" header="timeCountdownDistance(DateOrDateString,string,string)">
         <p class="dbx-hint">Formats a countdown between the input date and now.</p>
-        <p class="dbx-ok">{{ end$ | async | timeCountdownDistance }}</p>
+        <p class="dbx-ok">{{ endSignal() | timeCountdownDistance }}</p>
         <p class="dbx-ok">
-          {{ date$ | async | timeCountdownDistance }}
+          {{ dateSignal() | timeCountdownDistance }}
           <span class="dbx-hint">(Now Example)</span>
         </p>
       </dbx-detail-block>
 
       <dbx-detail-block icon="event" header="timeDistance(DateOrDateString,Date,string)">
         <p class="dbx-hint">Formats the time distance between two dates or now.</p>
-        <p class="dbx-ok">{{ end$ | async | timeDistance: (date$ | async) }}</p>
+        <p class="dbx-ok">{{ endSignal() | timeDistance: dateSignal() }}</p>
         <p class="dbx-ok">
-          {{ date$ | async | timeDistance }}
+          {{ dateSignal() | timeDistance }}
           <span class="dbx-hint">(Now Example)</span>
         </p>
       </dbx-detail-block>
@@ -104,27 +104,27 @@
           Shows the timezone abbreviation for the given timezone, with respect to the input date.
           <u>The date is important for timezones that experience daylight savings.</u>
         </p>
-        <p class="dbx-ok">{{ timezone$ | async | timezoneAbbreviation: (date$ | async) }}</p>
+        <p class="dbx-ok">{{ timezoneSignal() | timezoneAbbreviation: dateSignal() }}</p>
         <p class="dbx-ok">
-          {{ timezone$ | async | timezoneAbbreviation }}
+          {{ timezoneSignal() | timezoneAbbreviation }}
           <span class="dbx-hint">(No Date)</span>
         </p>
         <p class="dbx-ok">
-          {{ timezone$ | async | timezoneAbbreviation: daylightSavingsDate }}
+          {{ timezoneSignal() | timezoneAbbreviation: daylightSavingsDate }}
           <span class="dbx-hint">(Daylight Savings Date Example - {{ daylightSavingsDate | date: 'short' }})</span>
         </p>
         <p class="dbx-ok">
-          {{ timezone$ | async | timezoneAbbreviation: nonDaylightSavingsDate }}
+          {{ timezoneSignal() | timezoneAbbreviation: nonDaylightSavingsDate }}
           <span class="dbx-hint">(Non-Daylight Savings Date - {{ nonDaylightSavingsDate | date: 'short' }})</span>
         </p>
       </dbx-detail-block>
       <dbx-detail-block icon="schedule" header="systemDateToTargetDate:(Date,TimezoneString)">
         <p class="dbx-hint">"Converts" the system date to the equivalent target date representation. Useful for having a local time that is equivalent in hours/minutes to the date in the target timezone. I.E. 6PM local time will "become" 6PM UTC. Requires a timezone value. See dateTimezoneUtcNormal() for more info.</p>
-        <p class="dbx-ok">{{ date$ | async | systemDateToTargetDate: (timezone$ | async) | date: 'full' }}</p>
+        <p class="dbx-ok">{{ dateSignal() | systemDateToTargetDate: timezoneSignal() | date: 'full' }}</p>
       </dbx-detail-block>
       <dbx-detail-block icon="schedule" header="targetDateToSystemDate:(Date,TimezoneString)">
         <p class="dbx-hint">"Converts" the target date to the system date. I.E. 6PM UTC will become 6PM local time. Requires a timezone value. See dateTimezoneUtcNormal() for more info.</p>
-        <p class="dbx-ok">{{ date$ | async | targetDateToSystemDate: (timezone$ | async) | date: 'full' }}</p>
+        <p class="dbx-ok">{{ dateSignal() | targetDateToSystemDate: timezoneSignal() | date: 'full' }}</p>
       </dbx-detail-block>
     </doc-feature-example>
   </doc-feature-layout>

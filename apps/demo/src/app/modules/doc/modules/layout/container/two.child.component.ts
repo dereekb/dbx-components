@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 
 @Component({
@@ -8,6 +8,7 @@ import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
     </dbx-two-column-right>
   `,
   standalone: true,
-  imports: [DbxTwoColumnRightComponent]
+  imports: [DbxTwoColumnRightComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocLayoutTwoColumnsChildComponent {}

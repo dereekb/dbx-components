@@ -1,11 +1,11 @@
 <div class="demo-login-view">
-  @switch (mode) {
+  @switch (mode()) {
     @case ('login') {
       <h3>Login</h3>
       <dbx-firebase-login></dbx-firebase-login>
       <p>
         Need an account? Register
-        <dbx-link (click)="mode = 'register'">here</dbx-link>
+        <dbx-link (click)="mode.set('register')">here</dbx-link>
         .
       </p>
       <dbx-firebase-login-terms></dbx-firebase-login-terms>
@@ -15,7 +15,7 @@
       <dbx-firebase-register></dbx-firebase-register>
       <p>
         Have an account? Log in
-        <dbx-link (click)="mode = 'login'">here</dbx-link>
+        <dbx-link (click)="mode.set('login')">here</dbx-link>
         .
       </p>
       <dbx-firebase-login-terms></dbx-firebase-login-terms>

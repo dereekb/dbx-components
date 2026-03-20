@@ -91,7 +91,7 @@ export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFet
     iteratePageItems: async (items, fetchPageResult, startIndex) => {
       const itemIndexPairs = items.map((x, i) => [x, i + startIndex] as const);
 
-      const performTasksResults = await performAsyncTasks(
+      return performAsyncTasks(
         itemIndexPairs,
         ([item, i]) => {
           return iterateEachPageItem(item, i, fetchPageResult);
@@ -101,8 +101,6 @@ export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFet
           ...iteratePerformTasksConfig
         }
       );
-
-      return performTasksResults;
     }
   });
 }

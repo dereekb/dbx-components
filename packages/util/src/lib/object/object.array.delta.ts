@@ -61,7 +61,7 @@ export interface ObjectDeltaArrayCompressor<T extends object> {
  */
 export function objectDeltaArrayCompressor<T extends object>(config: ObjectDeltaArrayCompressorConfig<T>): ObjectDeltaArrayCompressor<T> {
   const { equalityChecker: _equalityChecker } = config;
-  const assignKnownValuesToCopy = assignValuesToPOJOFunction<T, keyof T>({ keysFilter: Array.from(_equalityChecker._fields.keys()), valueFilter: KeyValueTypleValueFilter.NULL });
+  const assignKnownValuesToCopy = assignValuesToPOJOFunction<T, keyof T>({ keysFilter: [..._equalityChecker._fields.keys()], valueFilter: KeyValueTypleValueFilter.NULL });
 
   function compress(uncompressed: T[]) {
     // return an empty array if there is nothing to compress
@@ -94,7 +94,7 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
           saveValue = nextValue;
         }
 
-        (compressed as any)[field] = saveValue;
+        (compressed as unknown as Record<string, unknown>)[field as string] = saveValue;
       });
 
       result.push(compressed as CompressedObjectDeltaArrayDeltaEntry<T>);
@@ -104,7 +104,7 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
     return result;
   }
 
-  const allKeys = Array.from(_equalityChecker._fields.keys());
+  const allKeys = [..._equalityChecker._fields.keys()];
 
   function expand(compressed: CompressedObjectDeltaArray<T>): T[] {
     if (compressed.length === 0) {
@@ -118,10 +118,10 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
       const uncompressed = {} as Building<T>;
 
       allKeys.forEach((key) => {
-        let setValue: any;
+        let setValue: unknown;
 
         if (objectHasKey(next as T, key)) {
-          const nextValue = (next as CompressedObjectDeltaArrayDeltaEntry<T> as any)[key];
+          const nextValue = (next as CompressedObjectDeltaArrayDeltaEntry<T> as unknown as Record<string, unknown>)[key as string];
 
           if (nextValue === null) {
             // do nothing, since the value should be "undefined"
@@ -133,7 +133,7 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
           setValue = current[key];
         }
 
-        (uncompressed as any)[key] = setValue;
+        (uncompressed as unknown as Record<string, unknown>)[key as string] = setValue;
       });
 
       result.push(uncompressed as T);

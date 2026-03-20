@@ -21,9 +21,14 @@ export abstract class ZohoAccountsAccessTokenCacheService {
 
 export type LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) => void;
 
+/**
+ * Default error logging function for merged Zoho access token cache services.
+ *
+ * @param failedUpdates - array of cache/error tuples that failed during update
+ */
 export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) {
   console.warn(`mergeZohoAccountsAccessTokenCacheServices(): failed updating ${failedUpdates.length} caches.`);
-  failedUpdates.forEach(([x, e], i) => {
+  failedUpdates.forEach(([_x, e], i) => {
     console.warn(`Cache update failure ${i + 1}: - ${e}`);
   });
 }
@@ -36,6 +41,9 @@ export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedU
  * When updating a cached token, it will update the token across all services.
  *
  * @param servicesToMerge Must include atleast one service. Empty arrays will throw an error.
+ * @param inputServicesToMerge - cache services to merge in priority order
+ * @param logError - optional error logging toggle or custom logging function
+ * @returns a merged ZohoAccountsAccessTokenCacheService that delegates across all inputs
  */
 export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: ZohoAccountsAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction>): ZohoAccountsAccessTokenCacheService {
   const services = [...inputServicesToMerge];
@@ -85,6 +93,7 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
           ).then((x) => {
             // only find the failures if we're logging
             if (logErrorFunction != null) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- PromiseSettledResult requires any for generic access
               const failedUpdates = filterMaybeArrayValues(x.map((y) => (y as PromiseFulfilledResult<any>).value)) as unknown as (readonly [ZohoAccessTokenCache, unknown])[];
 
               if (failedUpdates.length) {
@@ -109,7 +118,9 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
 /**
  * Creates a ZohoAccountsAccessTokenCacheService that uses in-memory storage.
  *
- * @returns
+ * @param existingCache - optional pre-populated token cache record to use as initial state
+ * @param logAccessToConsole - whether to log cache reads and writes to the console
+ * @returns a ZohoAccountsAccessTokenCacheService backed by in-memory storage
  */
 export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAccountsAccessTokenCacheRecord, logAccessToConsole?: boolean): ZohoAccountsAccessTokenCacheService {
   const tokens: ZohoAccountsAccessTokenCacheRecord = existingCache ?? {};
@@ -161,7 +172,9 @@ export const DEFAULT_FILE_ZOHO_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH = '.tmp/
  *
  * Useful for testing.
  *
- * @returns
+ * @param filename - path to the JSON file used for token persistence
+ * @param useMemoryCache - whether to also cache tokens in memory for faster reads
+ * @returns a FileSystemZohoAccountsAccessTokenCacheService backed by file storage
  */
 export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAULT_FILE_ZOHO_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH, useMemoryCache = true): FileSystemZohoAccountsAccessTokenCacheService {
   let loadedTokens: Maybe<ZohoAccountsAccessTokenCacheRecord> = null;
@@ -238,13 +251,13 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
     const accessTokenCache: ZohoAccessTokenCache = {
       loadCachedToken: async function (): Promise<Maybe<ZohoAccessToken>> {
         const tokens = await loadTokens();
-        const token = tokens[service];
         // console.log('retrieving access token from file: ', { token, service });
-        return token;
+        return tokens[service];
       },
       updateCachedToken: async function (accessToken: ZohoAccessToken): Promise<void> {
         const tokens = await loadTokens();
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard in case loadTokens() changes
         if (tokens) {
           tokens[service] = accessToken;
         }

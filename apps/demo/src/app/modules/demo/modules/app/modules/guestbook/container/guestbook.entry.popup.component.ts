@@ -1,11 +1,11 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractDialogDirective, DbxActionModule, DbxButtonModule, DbxDialogModule, DbxErrorComponent } from '@dereekb/dbx-web';
 import { type MatDialog } from '@angular/material/dialog';
 import { type WorkUsingContext, switchMapWhileTrue, type IsEqualFunction } from '@dereekb/rxjs';
 import { DemoGuestbookEntryFormComponent, type DemoGuestbookEntryFormValue, type GuestbookEntryDocumentStore } from 'demo-components';
 import { map } from 'rxjs';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface DemoGuestbookEntryPopupComponentConfig {
   guestbookEntryDocumentStore: GuestbookEntryDocumentStore;
@@ -18,13 +18,14 @@ export interface DemoGuestbookEntryPopupComponentConfig {
       <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateEntry">
         <demo-guestbook-entry-form dbxActionForm [dbxFormSource]="data$" [dbxActionFormIsEqual]="isFormSame"></demo-guestbook-entry-form>
         <p></p>
-        <dbx-button [raised]="true" [text]="(exists$ | async) ? 'Save Changes' : 'Create Guestbook Entry'" dbxActionButton></dbx-button>
+        <dbx-button [raised]="true" [text]="existsSignal() ? 'Save Changes' : 'Create Guestbook Entry'" dbxActionButton></dbx-button>
         <dbx-error dbxActionError></dbx-error>
       </div>
     </dbx-dialog-content>
   `,
-  imports: [AsyncPipe, DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent],
-  standalone: true
+  imports: [DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {
   get guestbookEntryDocumentStore(): GuestbookEntryDocumentStore {
@@ -38,6 +39,8 @@ export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<un
   get exists$() {
     return this.guestbookEntryDocumentStore.exists$;
   }
+
+  readonly existsSignal = toSignal(this.exists$);
 
   static openPopup(matDialog: MatDialog, config: DemoGuestbookEntryPopupComponentConfig) {
     return matDialog.open(DemoGuestbookEntryPopupComponent, {

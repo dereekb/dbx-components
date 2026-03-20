@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- generic defaults use any for maximum flexibility */
 import { type Maybe, type ArrayOrValue, filterMaybeArrayValues, asArray, type PrimativeKey, escapeStringCharactersFunction } from '@dereekb/util';
 
 /**
@@ -52,11 +53,12 @@ export function zohoSearchRecordsCriteriaString<T = any>(input: Maybe<ZohoSearch
   let result: Maybe<ZohoSearchRecordsCriteriaString>;
 
   if (input != null) {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- only string and object are valid for criteria input
     switch (typeof input) {
       case 'string':
         result = input;
         break;
-      case 'object':
+      case 'object': {
         let tree: ZohoSearchRecordsCriteriaTree<T>;
 
         if (Array.isArray(input)) {
@@ -66,6 +68,9 @@ export function zohoSearchRecordsCriteriaString<T = any>(input: Maybe<ZohoSearch
         }
 
         result = zohoSearchRecordsCriteriaStringForTree(tree);
+        break;
+      }
+      default:
         break;
     }
   }

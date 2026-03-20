@@ -75,6 +75,7 @@ export function makeIsModifiedFunctionObservable<T>(config: MakeIsModifiedFuncti
  *
  * @param isCheckFunction - optional check function
  * @param defaultValueOnMaybe - default result for null/undefined values
+ * @returns a function that evaluates each value against the check function and returns it or undefined
  */
 export function makeReturnIfIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<Maybe<T>> {
   return (value) => returnIfIs(isCheckFunction, value, defaultValueOnMaybe);
@@ -86,6 +87,7 @@ export function makeReturnIfIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunct
  * @param isCheckFunction - optional check function
  * @param value - the value to check
  * @param defaultValueOnMaybe - default result for null/undefined values
+ * @returns an observable that emits the value if the check passes, or undefined otherwise
  */
 export function returnIfIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value: Maybe<T>, defaultValueOnMaybe?: boolean): Observable<Maybe<T>> {
   return checkIs<T>(isCheckFunction, value, defaultValueOnMaybe).pipe(map((x) => (x ? value : undefined)));
@@ -96,6 +98,7 @@ export function returnIfIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, val
  *
  * @param isCheckFunction - optional check function
  * @param defaultValueOnMaybe - default result for null/undefined values
+ * @returns a function that evaluates each value against the check function and returns an observable boolean
  */
 export function makeCheckIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<boolean> {
   return (value) => checkIs(isCheckFunction, value, defaultValueOnMaybe);
@@ -109,6 +112,7 @@ export function makeCheckIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction
  * @param isCheckFunction - optional check function
  * @param value - the value to check
  * @param defaultValueOnMaybe - default result for null/undefined values (defaults to false)
+ * @returns an observable boolean indicating whether the value passes the check
  */
 export function checkIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value: Maybe<T>, defaultValueOnMaybe = false): Observable<boolean> {
   const is: Observable<boolean> = isCheckFunction ? (value != null ? isCheckFunction(value) : of(defaultValueOnMaybe)) : of(true);
@@ -118,6 +122,8 @@ export function checkIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value:
 // MARK: Filter
 /**
  * RxJS operator that filters out null and undefined values, only passing through defined values.
+ *
+ * @returns operator that filters out null and undefined emissions
  */
 export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
   return filter(isMaybeSo);
@@ -130,6 +136,8 @@ export const filterMaybeStrict = filterMaybe as <T>() => OperatorFunction<Maybe<
 
 /**
  * RxJS operator that filters out null/undefined elements from an emitted array, keeping only defined values.
+ *
+ * @returns operator that maps each emitted array to a version with null/undefined elements removed
  */
 export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
   return map(filterMaybeArrayValues) as OperatorFunction<Maybe<T>[], T[]>;
@@ -137,6 +145,8 @@ export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
 
 /**
  * RxJS operator that skips all leading null/undefined emissions, then passes all subsequent values through.
+ *
+ * @returns operator that skips all null/undefined emissions at the start of the stream
  */
 export function skipAllInitialMaybe<T>(): MonoTypeOperatorFunction<T> {
   return skipWhile((x: T) => x == null);
@@ -144,6 +154,8 @@ export function skipAllInitialMaybe<T>(): MonoTypeOperatorFunction<T> {
 
 /**
  * RxJS operator that skips only the first emission if it is null/undefined, then passes all subsequent values.
+ *
+ * @returns operator that skips the first null/undefined emission if it occurs at the start of the stream
  */
 export function skipInitialMaybe<T>(): MonoTypeOperatorFunction<T> {
   return skipMaybes(1);
@@ -153,6 +165,7 @@ export function skipInitialMaybe<T>(): MonoTypeOperatorFunction<T> {
  * RxJS operator that skips up to `maxToSkip` null/undefined emissions, then passes all subsequent values.
  *
  * @param maxToSkip - maximum number of null/undefined emissions to skip
+ * @returns operator that skips the first N null/undefined emissions from the stream
  */
 export function skipMaybes<T>(maxToSkip: number): MonoTypeOperatorFunction<T> {
   return skipWhile((x: T, i: number) => x == null && i < maxToSkip);
@@ -191,7 +204,7 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
 export function switchMapToDefault<T = unknown>(defaultObs: ObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, T>;
 export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>, useDefault?: SwitchMapToDefaultFilterFunction<T>): OperatorFunction<Maybe<T>, Maybe<T>>;
 export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>, useDefault?: SwitchMapToDefaultFilterFunction<T>): OperatorFunction<Maybe<T>, Maybe<T>> {
-  const useDefaultFn = useDefault ? useDefault : (x: Maybe<T>) => of(x == null);
+  const useDefaultFn = useDefault ?? ((x: Maybe<T>) => of(x == null));
   return switchMap((x: Maybe<T>) =>
     useDefaultFn(x).pipe(
       switchMap((useDefault) => {
@@ -212,6 +225,9 @@ export interface SwitchMapObjectConfig<T> {
 /**
  * RxJS operator that resolves an observable/getter config input into a value, applying defaults
  * for `null`/`undefined`/`true` inputs and emitting `null` for `false`.
+ *
+ * @param config - configuration providing an optional default getter for null/undefined/true inputs
+ * @returns operator that resolves each emitted getter into a value, using the default for nullish or true inputs
  */
 export function switchMapObject<T extends object>(config: SwitchMapObjectConfig<T>): OperatorFunction<Maybe<ObservableOrValueGetter<Maybe<T | boolean>>>, Maybe<T>> {
   const { defaultGetter } = config;
@@ -237,6 +253,9 @@ export function switchMapObject<T extends object>(config: SwitchMapObjectConfig<
 /**
  * RxJS operator that emits from the given observable/getter when the source boolean is `true`,
  * otherwise emits from the `otherwise` source or `EMPTY`.
+ *
+ * @param obs - observable or getter to subscribe to when the source emits `true`
+ * @returns operator that switches to the given source when the boolean is true
  */
 export function switchMapWhileTrue<T = unknown>(obs: ObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
 export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
@@ -249,6 +268,9 @@ export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGette
 /**
  * RxJS operator that emits from the given observable/getter when the source boolean is `false`,
  * otherwise emits from the `otherwise` source or `EMPTY`.
+ *
+ * @param obs - observable or getter to subscribe to when the source emits `false`
+ * @returns operator that switches to the given source when the boolean is false
  */
 export function switchMapWhileFalse<T = unknown>(obs: ObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
 export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
@@ -265,6 +287,7 @@ export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGett
  * @param switchOnValue - the boolean value that triggers emitting from `obs`
  * @param obs - observable/getter to emit from when matched
  * @param otherwise - optional observable/getter for the non-matching case
+ * @returns operator that switches to the appropriate source based on the emitted boolean value
  */
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>>;
@@ -282,6 +305,8 @@ export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: May
  * RxJS operator that filters out null/undefined observables and then switches to the remaining ones.
  *
  * Combines {@link filterMaybe} and `switchMap` to only subscribe to non-nullish observables.
+ *
+ * @returns operator that filters nullish observables and subscribes to the non-nullish ones
  */
 export function switchMapFilterMaybe<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, T> {
   return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
@@ -296,10 +321,12 @@ export function switchMapFilterMaybe<T = unknown>(): OperatorFunction<Maybe<Obse
 
 /**
  * RxJS operator that switches to the emitted observable if defined, or emits `undefined` when the observable is nullish.
+ *
+ * @returns operator that switches to the emitted observable or emits undefined for null/undefined inputs
  */
 export function switchMapMaybe<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
   return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
-    const subscriber: Observable<Maybe<T>> = source.pipe(switchMap((x) => (x != null ? x : of(undefined)))) as Observable<Maybe<T>>;
+    const subscriber: Observable<Maybe<T>> = source.pipe(switchMap((x) => x ?? of(undefined))) as Observable<Maybe<T>>;
     return subscriber;
   };
 }
@@ -326,11 +353,11 @@ export function mapIf<A, B>(mapFn: MapFunction<Maybe<A>, Maybe<B>>, decision: De
 }
 
 /**
- * Combines both combineLatest with map values to an other value.
+ * Combines the source observable with another observable via `combineLatest`, then maps the pair to a result.
  *
- * @param combineObs
- * @param mapFn
- * @returns
+ * @param combineObs - the secondary observable to combine with the source
+ * @param mapFn - function that maps the source value and combined value to the output
+ * @returns operator that combines the source with `combineObs` and maps each pair using `mapFn`
  */
 export function combineLatestMapFrom<A, B, C>(combineObs: Observable<B>, mapFn: (a: A, b: B) => C): OperatorFunction<A, C> {
   return (obs: Observable<A>) => combineLatest([obs, combineObs]).pipe(map(([a, b]) => mapFn(a, b)));
@@ -340,6 +367,11 @@ export function combineLatestMapFrom<A, B, C>(combineObs: Observable<B>, mapFn: 
  * Creates an observable that emits a starting value, then a second value after a delay.
  *
  * If the delay is not provided, or is falsy, then the second value is never emitted.
+ *
+ * @param startWith - the value to emit immediately
+ * @param endWith - the value to emit after the delay
+ * @param delayTime - optional delay in milliseconds before emitting the second value
+ * @returns an observable that emits `startWith` immediately and `endWith` after the delay (if provided)
  */
 export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<Milliseconds>): Observable<T> {
   let obs = of(startWith);
@@ -353,6 +385,10 @@ export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<Milli
 
 /**
  * Emits a value after a given delay after every new emission.
+ *
+ * @param value - the value to emit after the delay
+ * @param delayTime - duration in milliseconds before emitting the value
+ * @returns operator that appends the given value after each source emission with the specified delay
  */
 export function emitAfterDelay<T>(value: T, delayTime: Milliseconds): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => obs.pipe(switchMap((x) => of(value).pipe(delay(delayTime), startWith(x))));

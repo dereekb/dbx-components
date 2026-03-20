@@ -52,7 +52,7 @@ describe('DiscordApi', () => {
   }, 15000);
 
   afterAll(async () => {
-    discordApi.client.destroy();
+    void discordApi.client.destroy();
   });
 
   describe('sendMessage()', () => {

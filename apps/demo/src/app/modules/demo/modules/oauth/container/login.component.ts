@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxFirebaseOAuthLoginComponent } from '@dereekb/dbx-firebase/oidc';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.component';
@@ -18,6 +18,7 @@ import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.comp
     </dbx-content-box>
   `,
   standalone: true,
-  imports: [DbxContentBoxDirective, DbxFirebaseOAuthLoginComponent, DemoAuthLoginViewComponent]
+  imports: [DbxContentBoxDirective, DbxFirebaseOAuthLoginComponent, DemoAuthLoginViewComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoOAuthLoginComponent {}

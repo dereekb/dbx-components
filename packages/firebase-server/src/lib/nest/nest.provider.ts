@@ -43,14 +43,21 @@ export type MakeNestContext<C> = (nest: INestApplicationContext) => C;
  * Abstract class that wraps an INestApplicationContext value.
  */
 export abstract class AbstractNestContext {
-  private readonly _nest: INestApplicationContext;
+  private readonly _nestApplication: INestApplicationContext;
 
-  constructor(nest: INestApplicationContext) {
-    this._nest = nest;
+  constructor(nestApplication: INestApplicationContext) {
+    this._nestApplication = nestApplication;
   }
 
+  /**
+   * @deprecated use nestApplication instead.
+   */
   get nest(): INestApplicationContext {
-    return this._nest;
+    return this._nestApplication;
+  }
+
+  get nestApplication(): INestApplicationContext {
+    return this._nestApplication;
   }
 }
 

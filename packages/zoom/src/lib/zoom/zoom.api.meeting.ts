@@ -1,4 +1,4 @@
-import { type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type ISO8601DateString, type Maybe, type TimezoneString } from '@dereekb/util';
 import { type ZoomMeetingType, type ZoomRecurrenceInfo, type ZoomMeetingSettings, type ZoomMeetingAgenda, type ZoomMeetingDuration, type ZoomMeetingTrackingField, type ZoomMeetingTemplateId, type ZoomMeetingPassword, type ZoomMeeting, type ZoomMeetingId, type PastZoomMeeting, type ZoomMeetingOccurrenceId } from './zoom.api.meeting.type';
 import { type ZoomContext } from './zoom.config';
 import { mapToZoomPageResult, zoomFetchPageFactory, type ZoomPageFilter, type ZoomPageResult } from '../zoom.api.page';
@@ -17,6 +17,9 @@ export type GetMeetingFunction = (input: GetMeetingInput) => Promise<GetMeetingR
 
 /**
  * https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meeting
+ *
+ * @param context The Zoom API context
+ * @returns A function that retrieves a meeting by ID
  */
 export function getMeeting(context: ZoomContext): GetMeetingFunction {
   return (input) => context.fetchJson(`/meetings/${input.meetingId}`, 'GET');
@@ -33,6 +36,9 @@ export type ListMeetingsForUserFunction = (input: ListMeetingsForUserInput) => P
 
 /**
  * https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetings
+ *
+ * @param context The Zoom API context
+ * @returns A function that lists meetings for a user
  */
 export function listMeetingsForUser(context: ZoomContext): ListMeetingsForUserFunction {
   return (input) => context.fetchJson(`/users/${input.user}/meetings`, 'GET').then(mapToZoomPageResult('meetings'));
@@ -40,6 +46,12 @@ export function listMeetingsForUser(context: ZoomContext): ListMeetingsForUserFu
 
 export type ListMeetingsForUserPageFactory = FetchPageFactory<ListMeetingsForUserInput, ListMeetingsForUserResponse>;
 
+/**
+ * Creates a page factory for listing meetings for a user.
+ *
+ * @param context The Zoom API context
+ * @returns A page factory for paginated meeting listing
+ */
 export function listMeetingsForUserPageFactory(context: ZoomContext): ListMeetingsForUserPageFactory {
   return zoomFetchPageFactory(listMeetingsForUser(context));
 }
@@ -51,6 +63,7 @@ export function listMeetingsForUserPageFactory(context: ZoomContext): ListMeetin
 export interface CreateMeetingForUserTemplate {
   /**
    * The meeting's agenda. This value has a maximum length of 2,000 characters.
+   *
    * @example "My Meeting"
    */
   readonly agenda?: ZoomMeetingAgenda;
@@ -59,6 +72,7 @@ export interface CreateMeetingForUserTemplate {
    * Whether to generate a default passcode using the user's settings. This value defaults to `false`.
    *
    * If this value is `true` and the user has the PMI setting enabled with a passcode, then the user's meetings will use the PMI passcode. It will **not** use a default passcode.
+   *
    * @default false
    * @example false
    */
@@ -66,6 +80,7 @@ export interface CreateMeetingForUserTemplate {
 
   /**
    * The meeting's scheduled duration, in minutes. This field is only used for scheduled meetings (`2`).
+   *
    * @example 60
    */
   readonly duration?: ZoomMeetingDuration;
@@ -77,6 +92,7 @@ export interface CreateMeetingForUserTemplate {
    * - If the account owner or administrator has configured [minimum passcode requirement settings](https://support.zoom.us/hc/en-us/articles/360033559832-Meeting-and-webinar-passwords#h_a427384b-e383-4f80-864d-794bf0a37604), the passcode **must** meet those requirements.
    * - If passcode requirements are enabled, use the [**Get user settings**](/docs/api/users/#tag/users/GET/users/{userId}/settings) API or the [**Get account settings**](/docs/api/accounts/#tag/accounts/GET/accounts/{accountId}/settings) API to get the requirements.
    * - If the **Require a passcode when scheduling new meetings** account setting is enabled and locked, a passcode will be automatically generated if one is not provided.
+   *
    * @example "123456"
    */
   readonly password?: ZoomMeetingPassword;
@@ -85,6 +101,7 @@ export interface CreateMeetingForUserTemplate {
    * Whether to create a prescheduled meeting via the [GSuite app](https://support.zoom.us/hc/en-us/articles/360020187492-Zoom-for-GSuite-add-on). This **only** supports the meeting `type` value of `2` (scheduled meetings) and `3` (recurring meetings with no fixed time).
    * - `true` - Create a prescheduled meeting.
    * - `false` - Create a regular meeting.
+   *
    * @default false
    * @example false
    */
@@ -97,6 +114,7 @@ export interface CreateMeetingForUserTemplate {
 
   /**
    * The email address or user ID of the user to schedule a meeting for.
+   *
    * @example "jchill@example.com"
    */
   readonly schedule_for?: string;
@@ -119,7 +137,7 @@ export interface CreateMeetingForUserTemplate {
   /**
    * The time zone to use for the meeting.
    */
-  readonly timezone?: string;
+  readonly timezone?: TimezoneString;
 
   /**
    * The meeting type.
@@ -150,6 +168,9 @@ export type CreateMeetingForUserResponse = ZoomMeeting;
 
 /**
  * https://developers.zoom.us/docs/api/meetings/#tag/meetings/POST/users/{userId}/meetings
+ *
+ * @param context The Zoom API context
+ * @returns A function that creates a meeting for a user
  */
 export function createMeetingForUser(context: ZoomContext): (input: CreateMeetingForUserInput) => Promise<CreateMeetingForUserResponse> {
   return (input) => {
@@ -184,6 +205,9 @@ export type UpdateMeetingFunction = (input: UpdateMeetingInput) => Promise<Updat
 
 /**
  * https://developers.zoom.us/docs/api/meetings/#tag/meetings/PUT/meetings/{meetingId}
+ *
+ * @param context The Zoom API context
+ * @returns A function that updates a meeting
  */
 export function updateMeeting(context: ZoomContext): UpdateMeetingFunction {
   return (input) =>
@@ -222,6 +246,9 @@ export const DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE = 3001;
 
 /**
  * https://developers.zoom.us/docs/api/meetings/#tag/meetings/DELETE/meetings/{meetingId}
+ *
+ * @param context The Zoom API context
+ * @returns A function that deletes a meeting (silences 3001 "not found" errors by default)
  */
 export function deleteMeeting(context: ZoomContext): DeleteMeetingFunction {
   const silenceDoesNotExistError = silenceZoomErrorWithCodesFunction(DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE);
@@ -239,6 +266,9 @@ export type GetPastMeetingFunction = (input: GetPastMeetingInput) => Promise<Get
 
 /**
  * https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}
+ *
+ * @param context The Zoom API context
+ * @returns A function that retrieves a past meeting
  */
 export function getPastMeeting(context: ZoomContext): GetPastMeetingFunction {
   return (input) => context.fetchJson(`/past_meetings/${input.meetingId}`, 'GET');
@@ -255,6 +285,9 @@ export type GetPastMeetingParticipantsFunction = (input: GetPastMeetingParticipa
 
 /**
  * https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}/participants
+ *
+ * @param context The Zoom API context
+ * @returns A function that retrieves participants from a past meeting
  */
 export function getPastMeetingParticipants(context: ZoomContext): GetPastMeetingParticipantsFunction {
   return (input) => context.fetchJson(`/past_meetings/${input.meetingId}/participants`, 'GET').then(mapToZoomPageResult('participants'));
@@ -262,6 +295,12 @@ export function getPastMeetingParticipants(context: ZoomContext): GetPastMeeting
 
 export type GetPastMeetingParticipantsPageFactory = FetchPageFactory<GetPastMeetingParticipantsInput, GetPastMeetingParticipantsResponse>;
 
+/**
+ * Creates a page factory for listing past meeting participants.
+ *
+ * @param context The Zoom API context
+ * @returns A page factory for paginated participant listing
+ */
 export function getPastMeetingParticipantsPageFactory(context: ZoomContext): GetPastMeetingParticipantsPageFactory {
   return zoomFetchPageFactory(getPastMeetingParticipants(context));
 }

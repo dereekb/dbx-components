@@ -1,5 +1,5 @@
 import { type AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { type NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
@@ -8,12 +8,13 @@ import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { type LoadingState, type WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
 import { ProfileDocumentStore } from 'demo-components';
 import { UIView } from '@uirouter/angular';
-import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [UIView, AsyncPipe, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule],
-  standalone: true
+  imports: [UIView, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoNotificationListPageComponent {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
@@ -42,6 +43,8 @@ export class DemoNotificationListPageComponent {
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  readonly reachedTestLimitSignal = toSignal(this.reachedTestLimit$, { initialValue: false });
 
   readonly notificationItemListRef = this.demoAppRouterService.userNotificationListRef();
   readonly makeNotificationItemAnchor: AnchorForValueFunction<NotificationItem> = (doc) => this.demoAppRouterService.userNotificationListNotificationRef(doc.id);

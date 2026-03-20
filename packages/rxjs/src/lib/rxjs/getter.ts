@@ -9,6 +9,9 @@ export type MaybeObservableOrValue<T> = Maybe<ObservableOrValue<Maybe<T>>>;
 
 /**
  * Wraps a value as an observable using `of()`, or returns it directly if it is already an observable.
+ *
+ * @param valueOrObs - the value or observable to wrap
+ * @returns an observable that emits the given value, or the original observable if already one
  */
 export function asObservable<T>(valueOrObs: ObservableOrValue<T>): Observable<T>;
 export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observable<Maybe<T>>;
@@ -60,7 +63,7 @@ export function asObservableFromGetter<T>(this: unknown, input: ObservableOrValu
 export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableFactoryWithRequiredInput<T, A>, args: A): Observable<T>;
 export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableOrValueFactoryWithInput<T, A>, args?: A): Observable<T>;
 export function asObservableFromGetter<T, A>(this: unknown, input: ObservableOrValueGetter<T>, args?: A): Observable<T> {
-  const obs = getValueFromGetter<any, any>(input, args);
+  const obs = getValueFromGetter<any, any>(input, args); // eslint-disable-line @typescript-eslint/no-explicit-any
   return asObservable(obs);
 }
 
@@ -76,6 +79,8 @@ export function valueFromObservableOrValueGetter<T>(): OperatorFunction<Observab
 /**
  * RxJS operator that flattens an emitted Maybe<{@link ObservableOrValueGetter}> into its resolved value,
  * emitting `undefined` when the input is nullish.
+ *
+ * @returns an operator that unwraps Maybe<ObservableOrValueGetter> emissions, emitting undefined for nullish inputs
  */
 export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<MaybeObservableOrValueGetter<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservableFromGetter(x) : of(undefined)));
@@ -85,8 +90,8 @@ export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<May
  * Subscribes to an {@link ObservableOrValue} and calls the observer/next function with each emitted value.
  *
  * @param input - the observable or value to subscribe to
- * @param observer - callback or partial observer
- * @returns the subscription
+ * @param next - callback function or partial observer to handle each emitted value
+ * @returns the resulting subscription
  */
 export function useAsObservable<T>(input: ObservableOrValue<T>, next: (value: T) => void): Subscription;
 export function useAsObservable<T>(input: ObservableOrValue<T>, observer: Partial<Observer<T>>): Subscription;

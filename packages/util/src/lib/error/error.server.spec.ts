@@ -21,6 +21,10 @@ describe('isServerError', () => {
   it('should return false for a string', () => {
     expect(isServerError('error')).toBe(false);
   });
+
+  it('should return true for an object with null-valued status and code properties', () => {
+    expect(isServerError({ status: null, code: null })).toBe(true);
+  });
 });
 
 describe('partialServerError', () => {

@@ -35,6 +35,7 @@ export interface Modifier<T> extends ModifierFunctionRef<T> {
  *
  * @param key - unique identifier for the modifier
  * @param modify - function that mutates the target value
+ * @returns a new {@link Modifier} pairing the key with the modify function
  *
  * @example
  * ```ts
@@ -53,6 +54,8 @@ export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<
 
 /**
  * A no-operation modifier that does nothing to the input. Useful as a default/fallback.
+ *
+ * @returns undefined (no mutation is performed)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NOOP_MODIFIER: ModifierFunction<any> = () => undefined;
@@ -69,6 +72,7 @@ export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
  *
  * @param modifiers - modifier(s) to add
  * @param map - existing map to add to, or undefined to create a new one
+ * @returns the modifier map with the new modifiers added
  *
  * @example
  * ```ts
@@ -78,9 +82,7 @@ export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
  * ```
  */
 export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Maybe<ModifierMap<T>>): ModifierMap<T> {
-  if (!map) {
-    map = new Map();
-  }
+  map ??= new Map();
 
   forEachWithArray(modifiers, (modifier) => (map as ModifierMap<T>).set(modifier.key, modifier));
 
@@ -92,6 +94,7 @@ export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Mayb
  *
  * @param modifiers - modifier(s) whose keys should be removed
  * @param map - the map to remove from
+ * @returns the modifier map with the specified modifiers removed
  *
  * @example
  * ```ts
@@ -117,6 +120,7 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
  * Returns {@link NOOP_MODIFIER} if the map is nullish or empty.
  *
  * @param map - the modifier map to convert
+ * @returns a single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER} if empty
  *
  * @example
  * ```ts
@@ -138,6 +142,7 @@ export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFu
  * Returns undefined if no map is provided, allowing callers to distinguish "no modifiers" from "empty modifiers".
  *
  * @param map - the modifier map to convert
+ * @returns a composed modifier function, or `undefined` if no map is provided
  */
 export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe<ModifierFunction<T>> {
   let fn: Maybe<ModifierFunction<T>>;
@@ -157,6 +162,7 @@ export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe
  * Returns {@link NOOP_MODIFIER} if the array is empty or nullish.
  *
  * @param modifiers - array of modifier functions to merge
+ * @returns a single modifier function that applies all provided modifiers, or {@link NOOP_MODIFIER} if empty
  *
  * @example
  * ```ts
@@ -178,6 +184,7 @@ export function mergeModifiers<T>(modifiers: ModifierFunction<T>[]): ModifierFun
  * If only one modifier is provided, returns it directly without wrapping.
  *
  * @param modifiers - array of modifier functions to merge, or undefined
+ * @returns a composed modifier function, the single modifier if only one provided, or `undefined` if input is nullish
  */
 export function maybeMergeModifiers<T>(modifiers: Maybe<ModifierFunction<T>[]>): Maybe<ModifierFunction<T>> {
   let result: Maybe<ModifierFunction<T>> = undefined;

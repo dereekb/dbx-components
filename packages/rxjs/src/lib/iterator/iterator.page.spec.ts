@@ -314,7 +314,7 @@ describe('ItemPageIterator', () => {
             .subscribe((state) => {
               expect(state.page).toBe(FIRST_PAGE);
 
-              instance.nextPage().then((loadedPage) => {
+              void instance.nextPage().then((loadedPage) => {
                 expect(loadedPage).toBe(FIRST_PAGE + 1);
 
                 instance.currentPageResultState$
@@ -365,7 +365,7 @@ describe('ItemPageIterator', () => {
           instance.latestLoadedPage$.pipe(first()).subscribe((page) => {
             expect(page).toBe(FIRST_PAGE);
 
-            instance.nextPage().then((nextPage) => {
+            void instance.nextPage().then((nextPage) => {
               expect(nextPage).toBe(1);
               done();
             });

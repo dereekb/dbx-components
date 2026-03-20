@@ -1,4 +1,25 @@
+import { type Maybe } from '@dereekb/util';
 import { type type, type Type } from 'arktype';
+
+/**
+ * A value that can be set to a value of `T`, or cleared by setting to `null` or `undefined`.
+ *
+ * Structurally equivalent to {@link Maybe}, but semantically distinct:
+ * - `Maybe<T>` — the value might not exist (absence is passive)
+ * - `Clearable<T>` — `null` actively signals "clear/reset this field", while `undefined` means "leave unchanged"
+ *
+ * Used in API update params where `null` tells the server to delete/reset a field.
+ * See {@link clearable} for the ArkType schema equivalent.
+ *
+ * @example
+ * ```typescript
+ * interface UpdateUserParams {
+ *   name?: string;              // required when present
+ *   phone?: Clearable<string>;  // can be set, or cleared with null
+ * }
+ * ```
+ */
+export type Clearable<T> = Maybe<T>;
 
 /**
  * Creates an ArkType schema that accepts the given ArkType definition OR null/undefined.

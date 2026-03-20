@@ -60,9 +60,9 @@ export function tryWithPromiseFactoriesFunction<I, O>(config: TryWithPromiseFact
 
     let result: Maybe<O>;
 
-    for (let i = 0; i < promiseFactories.length; i += 1) {
+    for (const factory of promiseFactories) {
       try {
-        const nextPromise = promiseFactories[i](input);
+        const nextPromise = factory(input);
         result = await nextPromise;
 
         if (result != null || successOnMaybe) {

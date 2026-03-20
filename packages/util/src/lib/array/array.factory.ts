@@ -63,7 +63,7 @@ export function terminatingFactoryFromArray<T>(array: T[]): Factory<T | null>;
 export function terminatingFactoryFromArray<T, E>(array: T[], terminatingValue: E): Factory<T | E>;
 export function terminatingFactoryFromArray<T, E>(array: T[], terminatingValue?: E): Factory<T | E> {
   if (arguments.length === 1) {
-    terminatingValue = null as any;
+    terminatingValue = null as unknown as E;
   }
 
   let index = 0;

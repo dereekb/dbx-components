@@ -21,17 +21,17 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
   /**
    * Whether or not the machine should clean itself up after being triggered once.
    */
-  oneTimeUse: boolean;
+  readonly oneTimeUse: boolean;
   /**
    * Function to handle any valueReady events.
    *
    * If false, will not subscribe/handle valueReady$ events.
    */
-  handleValueReady: Work<T, O> | false;
+  readonly handleValueReady: Work<T, O> | false;
   /**
    * Optional function to execute after the action has succeeded.
    */
-  onSuccess?: (value: Maybe<O>) => void;
+  readonly onSuccess?: (value: Maybe<O>) => void;
 }
 
 /**

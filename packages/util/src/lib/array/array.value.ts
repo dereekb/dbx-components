@@ -19,11 +19,15 @@ export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<Maybe<T>[]>) =
  */
 export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>['filter']>[0]): FilterMaybeArrayFunction<T> {
   return ((values: Maybe<Maybe<T[]>>) => {
+    let result: T[];
+
     if (values != null) {
-      return values.filter(filterFn);
+      result = values.filter(filterFn);
     } else {
-      return [];
+      result = [];
     }
+
+    return result;
   }) as FilterMaybeArrayFunction<T>;
 }
 
@@ -50,7 +54,7 @@ export const filterEmptyArrayValues = filterMaybeArrayFunction(hasValueOrNotEmpt
  * @returns `true` if every value in the array is null or undefined.
  */
 export function allValuesAreMaybeNot<T>(values: Maybe<T>[]): values is MaybeNot[] {
-  return values.findIndex((x) => x != null) === -1;
+  return !values.some((x) => x != null);
 }
 
 /**
@@ -60,5 +64,5 @@ export function allValuesAreMaybeNot<T>(values: Maybe<T>[]): values is MaybeNot[
  * @returns `true` if every value in the array is non-null and non-undefined.
  */
 export function allValuesAreNotMaybe<T>(values: Maybe<T>[]): values is T[] {
-  return values.findIndex((x) => x == null) === -1;
+  return !values.some((x) => x == null);
 }

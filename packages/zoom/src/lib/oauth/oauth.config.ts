@@ -25,16 +25,17 @@ export interface ZoomOAuthConfig extends ZoomAuthClientIdAndSecretPair, ZoomAcco
   readonly accessTokenCache?: Maybe<ZoomAccessTokenCache>;
 }
 
-export interface ZoomOAuthFetchFactoryInput {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+export interface ZoomOAuthFetchFactoryParams {}
 
-export type ZoomOAuthFetchFactory = FactoryWithInput<ConfiguredFetch, ZoomOAuthFetchFactoryInput>;
+export type ZoomOAuthFetchFactory = FactoryWithInput<ConfiguredFetch, ZoomOAuthFetchFactoryParams>;
 
-export type ZoomOAuthMakeUserAccessTokenFactoryInput = {
+export type ZoomOAuthMakeUserAccessTokenFactoryParams = {
   readonly refreshToken: ZoomRefreshToken;
   readonly userAccessTokenCache?: Maybe<ZoomAccessTokenCache>;
 };
 
-export type ZoomOAuthMakeUserAccessTokenFactory = FactoryWithRequiredInput<ZoomAccessTokenFactory, ZoomOAuthMakeUserAccessTokenFactoryInput>;
+export type ZoomOAuthMakeUserAccessTokenFactory = FactoryWithRequiredInput<ZoomAccessTokenFactory, ZoomOAuthMakeUserAccessTokenFactoryParams>;
 
 /**
  * Context used for performing fetch() and fetchJson() calls with a configured fetch instance.
@@ -50,3 +51,14 @@ export interface ZoomOAuthContext {
 export interface ZoomOAuthContextRef {
   readonly oauthContext: ZoomOAuthContext;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use ZoomOAuthFetchFactoryParams instead.
+ */
+export type ZoomOAuthFetchFactoryInput = ZoomOAuthFetchFactoryParams;
+
+/**
+ * @deprecated use ZoomOAuthMakeUserAccessTokenFactoryParams instead.
+ */
+export type ZoomOAuthMakeUserAccessTokenFactoryInput = ZoomOAuthMakeUserAccessTokenFactoryParams;

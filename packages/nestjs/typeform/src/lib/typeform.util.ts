@@ -19,6 +19,14 @@ export interface TypeformTemplateRef {
   readonly ref: string;
 }
 
+/**
+ * Finds all Typeform field template references (e.g., `{{field:uuid}}`) within a string.
+ *
+ * Returns an array of TypeformTemplateRef objects describing each match, its type, and its ref value.
+ *
+ * @param input - the string to search for template references
+ * @returns an array of TypeformTemplateRef objects for each match found
+ */
 export function findTypeformTemplateRefsInString(input: string): TypeformTemplateRef[] {
   /**
    * Used to search the input string to find field refs like the following:

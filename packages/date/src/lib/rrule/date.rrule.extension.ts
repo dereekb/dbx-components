@@ -45,6 +45,8 @@ export class DateRRule extends RRule {
    * const rule = new DateRRule({ freq: RRule.DAILY, count: 5, dtstart: startDate });
    * const lastDate = rule.last(); // fifth occurrence
    * ```
+   *
+   * @returns The last occurrence date, or `undefined` if there are none.
    */
   last(): Maybe<Date> {
     return this._iter(new LastIterResult());
@@ -58,6 +60,9 @@ export class DateRRule extends RRule {
    * const rule = new DateRRule({ freq: RRule.WEEKLY, dtstart: startDate });
    * const nextDate = rule.next(new Date());
    * ```
+   *
+   * @param minDate - The earliest date to consider.
+   * @returns The first occurrence on or after `minDate`, or `undefined` if none.
    */
   next(minDate: Date): Maybe<Date> {
     return this._iter(new NextIterResult(minDate));
@@ -71,6 +76,11 @@ export class DateRRule extends RRule {
    * const rule = new DateRRule({ freq: RRule.DAILY, dtstart: startDate });
    * const exists = rule.any({ minDate: rangeStart, maxDate: rangeEnd });
    * ```
+   *
+   * @param filter - Optional date bounds with `minDate` and `maxDate`.
+   * @param filter.minDate - Optional minimum date bound.
+   * @param filter.maxDate - Optional maximum date bound.
+   * @returns `true` if at least one recurrence falls within the bounds.
    */
   any(filter: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> } = {}): boolean {
     return this._iter(new AnyIterResult(filter)) != null;

@@ -59,12 +59,15 @@ export class ZohoRecruitRecordCrudNoMatchingRecordError extends ZohoRecruitRecor
 
 /**
  * Creates a typed CRUD error subclass based on the error code returned by the Zoho Recruit API, enabling callers to catch specific failure modes.
+ *
+ * @param error - Structured error data from the Zoho Recruit API response
+ * @returns A specific CRUD error subclass matching the error code
  */
 export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoRecruitRecordCrudError {
   let result: ZohoRecruitRecordCrudError;
 
   switch (error.code) {
-    case ZOHO_INVALID_DATA_ERROR_CODE:
+    case ZOHO_INVALID_DATA_ERROR_CODE: {
       const invalidDataError = new ZohoRecruitRecordCrudInvalidDataError(error);
 
       if (invalidDataError.invalidFieldDetails['id']) {
@@ -73,6 +76,7 @@ export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails
         result = invalidDataError;
       }
       break;
+    }
     case ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE:
       result = new ZohoRecruitRecordCrudMandatoryFieldNotFoundError(error);
       break;
@@ -89,9 +93,14 @@ export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails
 
 /**
  * Returns an assertion function that throws {@link ZohoRecruitRecordNoContentError} when the data array result is empty or null, indicating the requested record does not exist.
+ *
+ * @param moduleName - Optional module name for the error context
+ * @param recordId - Optional record ID for the error context
+ * @returns Assertion function that validates the data array is non-empty
  */
 export function assertZohoRecruitRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecruitModuleName, recordId?: ZohoRecruitRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
+    // eslint-disable-next-line eqeqeq -- fetchJson may return null for empty results despite type
     if (x == null || !x.data?.length) {
       throw new ZohoRecruitRecordNoContentError(moduleName, recordId);
     } else {
@@ -107,9 +116,12 @@ export const logZohoRecruitErrorToConsole = logZohoServerErrorFunction('ZohoRecr
 
 /**
  * Parses the JSON body of a failed Zoho Recruit fetch response into a structured error, returning undefined if the body cannot be parsed.
+ *
+ * @param responseError - The fetch response error to parse
+ * @returns Parsed Zoho server error, or undefined if parsing fails
  */
 export async function parseZohoRecruitError(responseError: FetchResponseError) {
-  const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
+  const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch(() => undefined);
   let result: ParsedZohoServerError | undefined;
 
   if (data) {
@@ -121,6 +133,10 @@ export async function parseZohoRecruitError(responseError: FetchResponseError) {
 
 /**
  * Converts raw Zoho Recruit error response data into a parsed error, delegating to Recruit-specific handlers for known error codes and falling back to the shared Zoho parser.
+ *
+ * @param errorResponseData - Raw error response data from the Zoho Recruit API
+ * @param responseError - The underlying fetch response error
+ * @returns Parsed Zoho server error, or undefined if the data contains no recognizable error
  */
 export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;

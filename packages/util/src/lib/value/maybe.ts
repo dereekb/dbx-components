@@ -6,6 +6,7 @@ import { type Maybe, type MaybeNot, type MaybeSo } from './maybe.type';
  * Type guard that returns `true` if the value is not `null` or `undefined`.
  *
  * @param value - the value to check
+ * @returns `true` if the value is not `null` or `undefined`
  */
 export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   return value != null;
@@ -21,6 +22,7 @@ export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<
  * NaN has undefined behavior.
  *
  * @param value - the value to check
+ * @returns `true` if the value is non-nullish and not empty
  */
 export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   if (isIterable(value, false)) {
@@ -39,6 +41,7 @@ export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is Maybe
  * NaN has undefined behavior.
  *
  * @param value - the value to check
+ * @returns `true` if the value is non-nullish, non-empty, and not an empty object
  */
 export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   if (isIterable(value, true)) {
@@ -54,8 +57,10 @@ export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is
  * Returns `true` if the input value is a non-empty string or is `true`.
  *
  * @param value - the value to check
+ * @returns `true` if the value is a non-empty string or is `true`
  */
 export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   return Boolean(value || value !== '');
 }
 
@@ -65,6 +70,7 @@ export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
  * Useful for filtering out both nullish values and empty strings in a single check.
  *
  * @param value - the value to check
+ * @returns `true` if the value is not nullish and not an empty string
  */
 export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): value is MaybeSo<T> {
   return value != null && value !== '';
@@ -74,6 +80,7 @@ export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): valu
  * Type guard that returns `true` if the input is `null` or `undefined`.
  *
  * @param value - the value to check
+ * @returns `true` if the value is `null` or `undefined`
  */
 export function isMaybeNot<T = unknown>(value: Maybe<T>): value is MaybeNot {
   return value == null;
@@ -85,6 +92,7 @@ export function isMaybeNot<T = unknown>(value: Maybe<T>): value is MaybeNot {
  * Equivalent to {@link hasNonNullValue} but with the `MaybeSo` narrowing type.
  *
  * @param value - the value to check
+ * @returns `true` if the value is neither `null` nor `undefined`
  */
 export function isMaybeSo<T>(value: Maybe<T>): value is MaybeSo<T> {
   return value != null;
@@ -96,6 +104,7 @@ export function isMaybeSo<T>(value: Maybe<T>): value is MaybeSo<T> {
  * Useful for optional boolean flags where both absence and `true` indicate the same behavior.
  *
  * @param value - the value to check
+ * @returns `true` if the value is nullish or strictly `true`
  */
 export function isMaybeNotOrTrue<T = unknown>(value: Maybe<T | true>): value is MaybeNot | true {
   return value == null || value === true;
@@ -105,6 +114,7 @@ export function isMaybeNotOrTrue<T = unknown>(value: Maybe<T | true>): value is 
  * Returns `true` if the input is not `null`, `undefined`, or `false`.
  *
  * @param value - the value to check
+ * @returns `true` if the value is not `null`, `undefined`, or `false`
  */
 export function isDefinedAndNotFalse<T = unknown>(value: Maybe<T>): boolean {
   return value != null && value !== false;
@@ -114,6 +124,7 @@ export function isDefinedAndNotFalse<T = unknown>(value: Maybe<T>): boolean {
  * Returns `true` if the input is not strictly `false`. Nullish values return `true`.
  *
  * @param value - the value to check
+ * @returns `true` if the value is not strictly `false`
  */
 export function isNotFalse<T = unknown>(value: Maybe<T>): boolean {
   return value !== false;
@@ -124,6 +135,7 @@ export function isNotFalse<T = unknown>(value: Maybe<T>): boolean {
  *
  * @param a - first value
  * @param b - second value
+ * @returns `true` if both values are non-nullish and strictly equal
  */
 export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullable<T> {
   return a === b && a != null;
@@ -136,6 +148,7 @@ export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullabl
  *
  * @param a - first value
  * @param b - second value
+ * @returns `true` if both are nullish or both are the same value
  */
 export function valuesAreBothNullishOrEquivalent<T>(a: Maybe<T>, b: Maybe<T>): boolean {
   return a != null && b != null ? a === b : a == b;
@@ -150,6 +163,7 @@ export function valuesAreBothNullishOrEquivalent<T>(a: Maybe<T>, b: Maybe<T>): b
  *
  * @param a - the current value
  * @param b - the update value
+ * @returns `a` if `b` is undefined, otherwise `b`
  */
 export function updateMaybeValue<T>(a: Maybe<T>, b: Maybe<T>): Maybe<T> {
   return b === undefined ? a : b;

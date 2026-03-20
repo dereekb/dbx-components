@@ -1,5 +1,5 @@
 import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from './action.example.form.component';
-import { Component, type ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type ElementRef } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
@@ -26,7 +26,8 @@ export interface DocInteractionPopoverConfig {
     </dbx-popover-content>
   `,
   standalone: true,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective]
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionExamplePopoverComponent extends AbstractPopoverDirective<DocActionFormExampleValue> {
   static openPopover(popoverService: DbxPopoverService, { origin }: DocInteractionPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, DocActionFormExampleValue> {

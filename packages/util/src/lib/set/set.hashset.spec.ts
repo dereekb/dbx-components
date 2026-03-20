@@ -6,7 +6,7 @@ describe('HashSet', () => {
 
     beforeEach(() => {
       hashSet = new HashSet<number, Date>({
-        readKey: (x) => x?.getTime()
+        readKey: (x) => x.getTime()
       });
     });
 

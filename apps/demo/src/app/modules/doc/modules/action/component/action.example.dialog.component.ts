@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
@@ -17,7 +17,8 @@ import { MatButton } from '@angular/material/button';
     </dbx-dialog-content>
   `,
   standalone: true,
-  imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective]
+  imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionExampleDialogComponent extends AbstractDialogDirective<number> {
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {

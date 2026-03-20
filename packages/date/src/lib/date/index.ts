@@ -4,7 +4,6 @@ export * from './date.cell.index';
 export * from './date.cell.schedule';
 export * from './date.cell.schedule.day';
 export * from './date.cell';
-export * from './date.cell.validator';
 export * from './date.cell.week';
 export * from './date.calendar';
 export * from './date.duration';

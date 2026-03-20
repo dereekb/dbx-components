@@ -4,7 +4,7 @@
     <doc-feature-example header="dbx-firebase-login" hint="Component that displays all the login options for an app. Has an optional input to show only specific providers.">
       <dbx-content-border>
         <h4>Auth User</h4>
-        <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
+        <p class="prettyjson">{{ authUserInfoSignal() | prettyjson }}</p>
         <button mat-flat-button color="warn" (click)="logOut()">Log Out</button>
       </dbx-content-border>
 
@@ -28,7 +28,7 @@
     <doc-feature-example header="dbx-firebase-register" hint="Component that displays all the login options for an app in registration mode. Has an optional input to show only specific providers.">
       <dbx-content-border>
         <h4>Auth User</h4>
-        <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
+        <p class="prettyjson">{{ authUserInfoSignal() | prettyjson }}</p>
         <button mat-flat-button color="warn" (click)="logOut()">Log Out</button>
       </dbx-content-border>
 

@@ -73,7 +73,9 @@ export type SplitStringTreeRoot<M = unknown> = Pick<SplitStringTree<M>, 'childre
  * @template M - The type of metadata attached to tree nodes.
  */
 export interface SplitStringTreeFactoryInput<M = unknown> extends Pick<AddToSplitStringTreeInputValueWithMeta<M>, 'leafMeta' | 'nodeMeta'> {
-  /** One or more string values to split and add to the tree. */
+  /**
+   * One or more string values to split and add to the tree.
+   */
   readonly values: ArrayOrValue<SplitStringTreeNodeString>;
 }
 
@@ -128,11 +130,17 @@ export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFacto
  * @template M - The type of metadata attached to tree nodes.
  */
 export interface ApplySplitStringTreeWithMultipleValuesInput<M = unknown> {
-  /** The entries to add to the tree, each potentially with different metadata. */
+  /**
+   * The entries to add to the tree, each potentially with different metadata.
+   */
   readonly entries: SplitStringTreeFactoryInput<M>[];
-  /** The factory to use for building the tree. */
+  /**
+   * The factory to use for building the tree.
+   */
   readonly factory: SplitStringTreeFactory<M>;
-  /** An optional existing tree to extend rather than creating a new one. */
+  /**
+   * An optional existing tree to extend rather than creating a new one.
+   */
   readonly existing?: SplitStringTree<M>;
 }
 
@@ -150,9 +158,7 @@ export function applySplitStringTreeWithMultipleValues<M = unknown>(input: Apply
     result = factory(entry, result);
   });
 
-  if (!result) {
-    result = factory({ values: [] });
-  }
+  result ??= factory({ values: [] });
 
   return result;
 }
@@ -163,7 +169,9 @@ export function applySplitStringTreeWithMultipleValues<M = unknown>(input: Apply
  * @template M - The type of metadata attached to tree nodes.
  */
 export interface AddToSplitStringTreeInputValueWithMeta<M = unknown> {
-  /** The string value to split and insert into the tree. */
+  /**
+   * The string value to split and insert into the tree.
+   */
   readonly value: SplitStringTreeNodeString;
   /**
    * The meta value to merge/attach to each node in the tree
@@ -181,7 +189,9 @@ export interface AddToSplitStringTreeInputValueWithMeta<M = unknown> {
  * @template M - The type of metadata attached to tree nodes.
  */
 export interface AddToSplitStringTreeInputConfig<M = unknown> {
-  /** The separator character used to split string values into tree path segments. */
+  /**
+   * The separator character used to split string values into tree path segments.
+   */
   readonly separator: string;
   /**
    * Used for merging the meta values of two nodes.
@@ -217,7 +227,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   let currentNode: Configurable<SplitStringTree<M>> = tree;
 
   parts.forEach((nodeValue) => {
-    const existingChildNode = currentNode.children[nodeValue];
+    const existingChildNode = currentNode.children[nodeValue] as SplitStringTree<M> | undefined; // may be undefined for new paths
     const childNode = (existingChildNode ?? { nodeValue, children: {} }) as Configurable<SplitStringTree<M>>; // use the existing node or create a new node
 
     if (!existingChildNode) {

@@ -20,6 +20,7 @@ export type BooleanKeyArray<T = string> = Maybe<T[]>;
 
 /**
  * Wraps a key reading function to ensure that empty string keys are not used in boolean key arrays.
+ *
  * @param readKey - The key reading function to wrap
  * @returns A wrapped key reading function that throws an error if an empty string is used as a key
  */
@@ -37,6 +38,7 @@ export function readBooleanKeySafetyWrap<T>(readKey: ReadModelKeyFunction<T>): R
 
 /**
  * Checks if a boolean key array evaluates to false (empty or undefined).
+ *
  * @param value - The boolean key array to check
  * @returns True if the array is empty or undefined, false otherwise
  */
@@ -46,6 +48,7 @@ export function isFalseBooleanKeyArray(value: BooleanKeyArray): boolean {
 
 /**
  * Checks if a boolean key array evaluates to true (has at least one value).
+ *
  * @param value - The boolean key array to check
  * @returns True if the array has at least one value, false otherwise
  */
@@ -55,6 +58,7 @@ export function isTrueBooleanKeyArray(value: BooleanKeyArray): boolean {
 
 /**
  * Inserts a value into a boolean key array, removing any existing values with the same key.
+ *
  * @param array - The boolean key array to insert into
  * @param value - The value to insert
  * @param readKey - Function to extract the key from a value
@@ -66,6 +70,7 @@ export function insertIntoBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T
 
 /**
  * Removes a value from a boolean key array based on its key.
+ *
  * @param array - The boolean key array to remove from
  * @param value - The value to remove
  * @param readKey - Function to extract the key from a value
@@ -77,6 +82,7 @@ export function removeFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T
 
 /**
  * Removes values from a boolean key array that match the specified key.
+ *
  * @param array - The boolean key array to remove from
  * @param key - The key to match for removal
  * @param readKey - Function to extract the key from a value
@@ -93,6 +99,7 @@ export type BooleanKeyArrayUtility<T> = ReturnType<typeof booleanKeyArrayUtility
 
 /**
  * Creates a utility object with functions for working with boolean key arrays.
+ *
  * @param readKey - Function to extract the key from a value
  * @returns An object with utility functions for boolean key arrays
  */

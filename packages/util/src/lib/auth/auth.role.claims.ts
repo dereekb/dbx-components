@@ -154,17 +154,17 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
  * @returns A service with `toClaims` and `toRoles` conversion functions
  */
 export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRoleClaimsFactoryConfig<T>, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
-  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults?.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
-  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults?.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
+  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
+  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function isSimpleOptions(entry: AuthRoleClaimsFactoryConfigEntry<any>): entry is AuthRoleClaimsFactoryConfigEntrySimpleOptions {
-    return (entry as AuthRoleClaimsFactoryConfigEntrySimpleOptions).roles != null;
+    return 'roles' in entry;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry>(config as any)
-    .filter(([, entry]) => entry != null) // skip any ignored/null values
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic config object needs cast for Object.entries
+  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry | IgnoreAuthRoleClaimsEntry>(config as any)
+    .filter((x): x is [string, AuthRoleClaimsFactoryConfigEntry] => x[1] != null) // skip any ignored/null values
     .map((x) => {
       const inputEntry = x[1];
       let entry: AuthRoleClaimsFactoryConfigEntryEncodeOptions;
@@ -249,6 +249,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
   };
 
   const forEachKeyValueAddToSet = forEachKeyValueOnPOJOFunction<AuthClaimsUpdate<T>, Set<string>>({
+    // eslint-disable-next-line @typescript-eslint/max-params
     forEach: ([claimsKey, value], i, claims, roles: Set<string>) => {
       const entry = authRoleMap.get(claimsKey as string);
 

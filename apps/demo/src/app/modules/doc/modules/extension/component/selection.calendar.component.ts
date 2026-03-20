@@ -1,9 +1,10 @@
-import { Component, Input, inject, input } from '@angular/core';
+import { Component, effect, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, type DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateDaysComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateRangeComponent } from '@dereekb/dbx-form/calendar';
 import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent } from '@dereekb/dbx-web';
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'doc-extension-calendar-schedule-example',
@@ -11,11 +12,11 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
     <dbx-schedule-selection-calendar [config]="config()"></dbx-schedule-selection-calendar>
     <dbx-content-border>
       <dbx-content-pit>
-        <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
-        <p>currentSelectionValueDateCellDurationSpanExpansion$: {{ currentSelectionValueDateCellDurationSpanExpansion$ | async | json }}</p>
-        <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
-        <p>selectionValueSelectedDates$: {{ selectionValueSelectedDates$ | async | json }}</p>
-        <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansion$ | async | json }}</p>
+        <p>currentSelectionValue$: {{ currentSelectionValueSignal() | json }}</p>
+        <p>currentSelectionValueDateCellDurationSpanExpansion$: {{ currentSelectionValueDateCellDurationSpanExpansionSignal() | json }}</p>
+        <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexesSignal() | json }}</p>
+        <p>selectionValueSelectedDates$: {{ selectionValueSelectedDatesSignal() | json }}</p>
+        <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansionSignal() | json }}</p>
       </dbx-content-pit>
     </dbx-content-border>
     @if (!config()) {
@@ -33,7 +34,8 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
   `,
   providers: [DbxCalendarScheduleSelectionStore],
   standalone: true,
-  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateDaysComponent, AsyncPipe, JsonPipe]
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateDaysComponent, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionCalendarScheduleSelectionComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
@@ -41,13 +43,22 @@ export class DocExtensionCalendarScheduleSelectionComponent {
   readonly config = input<Maybe<DbxScheduleSelectionCalendarComponentConfig>>();
 
   readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
+  readonly currentSelectionValueSignal = toSignal(this.currentSelectionValue$, { initialValue: undefined });
   readonly currentSelectionValueDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateCellDurationSpanExpansion$;
+  readonly currentSelectionValueDateCellDurationSpanExpansionSignal = toSignal(this.currentSelectionValueDateCellDurationSpanExpansion$, { initialValue: undefined });
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));
+  readonly selectionValueSelectedIndexesSignal = toSignal(this.selectionValueSelectedIndexes$, { initialValue: undefined });
   readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x)));
+  readonly selectionValueSelectedDatesSignal = toSignal(this.selectionValueSelectedDates$, { initialValue: undefined });
   readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
+  readonly selectionValueWithTimezoneDateCellDurationSpanExpansionSignal = toSignal(this.selectionValueWithTimezoneDateCellDurationSpanExpansion$, { initialValue: undefined });
 
-  @Input()
-  set selectionMode(selectionMode: DbxCalendarScheduleSelectionStoreSelectionMode) {
-    this.dbxCalendarScheduleSelectionStore.setSelectionMode(selectionMode);
-  }
+  readonly selectionMode = input<DbxCalendarScheduleSelectionStoreSelectionMode>();
+
+  protected readonly _selectionModeEffect = effect(() => {
+    const mode = this.selectionMode();
+    if (mode) {
+      this.dbxCalendarScheduleSelectionStore.setSelectionMode(mode);
+    }
+  });
 }

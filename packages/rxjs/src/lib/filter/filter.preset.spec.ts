@@ -1,4 +1,4 @@
-import { lastValueFrom, of, toArray } from 'rxjs';
+import { lastValueFrom, from, toArray } from 'rxjs';
 import { type FilterWithPreset } from './filter';
 import { makeMapFilterWithPresetFn, mapFilterWithPreset } from './filter.preset';
 
@@ -35,7 +35,7 @@ describe('makeMapFilterWithPresetFn()', () => {
 
 describe('mapFilterWithPreset()', () => {
   it('should resolve presets in a stream of filter values', async () => {
-    const results = await lastValueFrom(of<TestFilter>({ preset: 'active' }, { active: false, name: 'custom' }).pipe(mapFilterWithPreset<TestFilter>(testPresetMapFn), toArray()));
+    const results = await lastValueFrom(from<TestFilter[]>([{ preset: 'active' }, { active: false, name: 'custom' }]).pipe(mapFilterWithPreset<TestFilter>(testPresetMapFn), toArray()));
 
     expect(results.length).toBe(2);
     expect(results[0].active).toBe(true);

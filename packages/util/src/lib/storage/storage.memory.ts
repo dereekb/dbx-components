@@ -12,6 +12,8 @@ export class MemoryStorageInstance implements StorageObject {
 
   /**
    * The number of items stored.
+   *
+   * @returns the current count of stored key-value pairs
    */
   get length(): number {
     return this._length;
@@ -19,6 +21,7 @@ export class MemoryStorageInstance implements StorageObject {
 
   /**
    * Returns the key at the given index.
+   *
    * @param index The index of the key to retrieve.
    * @returns The key string if found, otherwise null.
    */
@@ -28,6 +31,7 @@ export class MemoryStorageInstance implements StorageObject {
 
   /**
    * Checks if a key exists in the storage.
+   *
    * @param key The key to check.
    * @returns True if the key exists, false otherwise.
    */
@@ -37,6 +41,7 @@ export class MemoryStorageInstance implements StorageObject {
 
   /**
    * Retrieves an item from storage.
+   *
    * @param key The key of the item to retrieve.
    * @returns The item string if found, otherwise null or undefined.
    */
@@ -47,6 +52,7 @@ export class MemoryStorageInstance implements StorageObject {
   /**
    * Sets an item in storage.
    * If the item is null or undefined, the key will be removed.
+   *
    * @param key The key of the item to set.
    * @param item The item string to store.
    */
@@ -64,6 +70,7 @@ export class MemoryStorageInstance implements StorageObject {
 
   /**
    * Removes an item from storage.
+   *
    * @param key The key of the item to remove.
    */
   removeItem(key: string): void {

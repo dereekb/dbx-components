@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractSyncFormlyFormDirective, fixedDateRangeField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { type DateRange, DateRangeType } from '@dereekb/date';
@@ -15,7 +15,8 @@ export type DocInteractionTestDateFilterFormValue = {
   selector: 'doc-interaction-test-date-filter-form',
   providers: provideFormlyContext(),
   standalone: true,
-  imports: [DbxFormlyComponent]
+  imports: [DbxFormlyComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestDateFilterFormComponent extends AbstractSyncFormlyFormDirective<DocInteractionTestFilterFormValue> {
   readonly fields: FormlyFieldConfig[] = [

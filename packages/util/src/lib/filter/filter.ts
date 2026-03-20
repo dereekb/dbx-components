@@ -39,7 +39,7 @@ export function mergeFilterFunctions<T>(...inputFilters: Maybe<FilterFunction<T>
       filter = filters[0];
       break;
     default:
-      filter = (value, i) => filters.findIndex((filter) => !filter(value, i)) === -1;
+      filter = (value, i) => !filters.some((filter) => !filter(value, i));
       break;
   }
 

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, type OnDestroy, inject, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, inject, type OnInit } from '@angular/core';
 import { filterWithSearchString, type ListLoadingState, mapLoadingStateValueWithOperator, successResult } from '@dereekb/rxjs';
 import { takeFront } from '@dereekb/util';
 import { type Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
@@ -12,7 +12,8 @@ import { DocSelectionItemListComponent } from '../component/item.list.selection.
 @Component({
   templateUrl: './section.page.two.component.html',
   standalone: true,
-  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent]
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocLayoutSectionPageTwoComponent implements OnDestroy, OnInit {
   readonly cdRef = inject(ChangeDetectorRef);

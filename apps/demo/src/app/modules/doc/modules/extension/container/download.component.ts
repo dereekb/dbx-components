@@ -1,11 +1,11 @@
 import { type DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent, type DbxDownloadBlobButtonConfig, DbxDownloadBlobButtonComponent } from '@dereekb/dbx-web';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { randomNumberFactory, randomPhoneNumberFactory, range, waitForMs } from '@dereekb/util';
 import { type Observable, delay, map, of } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { AsyncPipe } from '@angular/common';
 
 function createRandomData() {
   const randomNumber = randomNumberFactory({ min: 100000, max: 10000000 - 1, round: 'round' });
@@ -38,7 +38,8 @@ function createRandomCsvFile() {
 @Component({
   templateUrl: './download.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, DbxDownloadBlobButtonComponent, AsyncPipe]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, DbxDownloadBlobButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionDownloadComponent {
   readonly csvContent: DownloadTextContent = {
@@ -60,6 +61,7 @@ export class DocExtensionDownloadComponent {
   );
 
   readonly jsonContentState$ = loadingStateFromObs(this.jsonContent$);
+  readonly jsonContentStateSignal = toSignal(this.jsonContentState$, { initialValue: undefined });
 
   readonly blobDownloadConfig: DbxDownloadBlobButtonConfig = {
     loadBlob: () => new Blob([createRandomCsvFile()], { type: 'application/csv' }),

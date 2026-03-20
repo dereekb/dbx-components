@@ -1,5 +1,5 @@
 import { type DbxActionDirective, DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -11,7 +11,8 @@ import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 @Component({
   templateUrl: './context.component.html',
   standalone: true,
-  imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe]
+  imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocActionContextComponent {
   beginWorking(action: DbxActionDirective) {

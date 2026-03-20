@@ -10,10 +10,14 @@ export interface ZoomRateLimiterRef {
  * Function to execute when too many requests is reached.
  *
  * Typically used for logging of some sort. Thrown errors are ignored.
+ *
+ * @param headers The parsed rate limit header details from the response
+ * @param response The raw HTTP response
+ * @param fetchResponseError Optional fetch response error, if available
  */
 export type ZoomRateLimitedTooManyRequestsLogFunction = (headers: ZoomRateLimitHeaderDetails, response: Response, fetchResponseError?: FetchResponseError) => PromiseOrValue<void>;
 
-export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = (headers: ZoomRateLimitHeaderDetails) => {
+export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION = (headers: ZoomRateLimitHeaderDetails) => {
   console.warn(`zoomRateLimitedFetchHandler(): Too many requests made. The limit is ${headers.limit} requests per reset period. RetryAt is set for ${headers.retryAfterAt}.`);
 };
 
@@ -40,8 +44,14 @@ export interface ZoomRateLimitedFetchHandlerConfig {
 
 export type ZoomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPromiseRateLimiter>;
 
+/**
+ * Creates a rate-limited fetch handler configured for the Zoom API.
+ *
+ * @param config Optional configuration for rate limiting behavior
+ * @returns A configured rate-limited fetch handler
+ */
 export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchHandlerConfig>): ZoomRateLimitedFetchHandler {
-  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION) : undefined;
+  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOOM_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD;
 
@@ -73,14 +83,16 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
         if (headerDetails) {
           const { type, limit, retryAfterAt, remaining } = headerDetails;
 
-          if (response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
-            // For simple query-per-second rate limits, just schedule a retry
-            if (type === 'QPS') {
-              shouldRetry = true;
+          if (
+            response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE && // For simple query-per-second rate limits, just schedule a retry
+            type === 'QPS'
+          ) {
+            shouldRetry = true;
 
-              try {
-                onTooManyRequests?.(headerDetails, response, fetchResponseError);
-              } catch (e) {}
+            try {
+              void onTooManyRequests?.(headerDetails, response, fetchResponseError);
+            } catch {
+              // ignored: onTooManyRequests is for logging only
             }
           }
 
@@ -104,3 +116,9 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
     }
   });
 }
+
+// MARK: Compat
+/**
+ * @deprecated use DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION instead.
+ */
+export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION;

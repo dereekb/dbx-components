@@ -58,7 +58,7 @@ export interface ErrorOnEmissionsInPeriodConfig<T> {
 export function errorOnEmissionsInPeriod<T>(config: ErrorOnEmissionsInPeriodConfig<T>): MonoTypeOperatorFunction<T> {
   const { period = 1000, maxEmissionsPerPeriod, onError, errorFactory: inputErrorFactory, errorMessage: inputErrorMessage, switchToObs } = config;
   const errorMessage = inputErrorMessage ?? 'errorOnEmissionsInPeriod(): Too many emissions in time period.';
-  const errorFactory = inputErrorFactory ? inputErrorFactory : !switchToObs ? () => new Error(errorMessage) : undefined;
+  const errorFactory = inputErrorFactory ?? (!switchToObs ? () => new Error(errorMessage) : undefined);
 
   return (source: Observable<T>) => {
     const counter = timePeriodCounter(period);

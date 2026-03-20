@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationItemStore, DbxFirebaseNotificationItemStorePopoverButtonComponent, DbxFirebaseNotificationSummaryDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { type AnchorForValueFunction, DbxContentLayoutModule, DbxSectionPageComponent, DbxSpacerDirective } from '@dereekb/dbx-web';
 import { type NotificationItem } from '@dereekb/firebase';
@@ -11,7 +11,8 @@ import { UIView } from '@uirouter/angular';
   templateUrl: './layout.component.html',
   providers: [DbxFirebaseNotificationItemStore],
   imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DemoProfileDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationSummaryDocumentStoreDirective, DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxSectionPageComponent, DbxSpacerDirective, DbxFirebaseNotificationItemStorePopoverButtonComponent],
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoNotificationLayoutComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);

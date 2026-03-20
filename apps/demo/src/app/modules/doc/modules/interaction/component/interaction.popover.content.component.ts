@@ -1,35 +1,28 @@
-import { Component, EventEmitter, Output, type OnDestroy } from '@angular/core';
+import { Component, output, ChangeDetectionStrategy } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 
 @Component({
-    selector: 'dbx-interaction-example-popover-content',
-    template: `
+  selector: 'dbx-interaction-example-popover-content',
+  template: `
     <div>
       <p>Popover Content</p>
       <button mat-raised-button (click)="returnNumberValue()">Return Value</button>
       <button mat-raised-button color="warn" (click)="closeWithoutValue()">Close</button>
     </div>
   `,
-    standalone: true,
-    imports: [MatButton]
+  standalone: true,
+  imports: [MatButton],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocInteractionExamplePopoverContentComponent implements OnDestroy {
-  @Output()
-  readonly return = new EventEmitter<number>();
-
-  @Output()
-  readonly close = new EventEmitter<void>();
-
-  ngOnDestroy(): void {
-    this.return.complete();
-    this.close.complete();
-  }
+export class DocInteractionExamplePopoverContentComponent {
+  readonly return = output<number>();
+  readonly close = output<void>();
 
   returnNumberValue() {
-    this.return.next(Math.random() * 1000);
+    this.return.emit(Math.random() * 1000);
   }
 
   closeWithoutValue() {
-    this.close.next();
+    this.close.emit();
   }
 }

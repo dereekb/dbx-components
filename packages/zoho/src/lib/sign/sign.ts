@@ -1,4 +1,4 @@
-import { type EmailAddress } from '@dereekb/util';
+import { type EmailAddress, type FileSize, type HexColorCode, type PageNumber, type Pixels, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -82,8 +82,8 @@ export interface ZohoSignFieldType {
  * Text styling properties for a field.
  */
 export interface ZohoSignTextProperty {
-  readonly font_size?: number;
-  readonly font_color?: string;
+  readonly font_size?: Pixels;
+  readonly font_color?: HexColorCode;
   readonly font?: string;
   readonly is_italic?: boolean;
   readonly is_underline?: boolean;
@@ -116,11 +116,11 @@ export interface ZohoSignField {
   readonly document_id?: ZohoSignDocumentId;
   readonly action_id?: ZohoSignActionId;
   readonly is_mandatory?: boolean;
-  readonly x_coord?: number;
-  readonly y_coord?: number;
-  readonly abs_width?: number;
-  readonly abs_height?: number;
-  readonly page_no?: number;
+  readonly x_coord?: Pixels;
+  readonly y_coord?: Pixels;
+  readonly abs_width?: Pixels;
+  readonly abs_height?: Pixels;
+  readonly page_no?: PageNumber;
   readonly default_value?: string;
   readonly is_read_only?: boolean;
   readonly name_format?: ZohoSignNameFormat;
@@ -165,7 +165,7 @@ export interface ZohoSignActionFields {
 export interface ZohoSignDocument {
   readonly document_id: ZohoSignDocumentId;
   readonly document_name?: string;
-  readonly document_size?: number;
+  readonly document_size?: FileSize;
   readonly total_pages?: number;
   readonly document_order?: string;
 }
@@ -186,11 +186,11 @@ export interface ZohoSignRequest {
   readonly owner_last_name?: string;
   readonly description?: string;
   readonly notes?: string;
-  readonly created_time?: number;
-  readonly modified_time?: number;
-  readonly action_time?: number;
-  readonly sign_submitted_time?: number;
-  readonly expire_by?: number;
+  readonly created_time?: UnixDateTimeMillisecondsNumber;
+  readonly modified_time?: UnixDateTimeMillisecondsNumber;
+  readonly action_time?: UnixDateTimeMillisecondsNumber;
+  readonly sign_submitted_time?: UnixDateTimeMillisecondsNumber;
+  readonly expire_by?: UnixDateTimeMillisecondsNumber;
   readonly expiration_days?: number;
   readonly sign_percentage?: number;
   readonly email_reminders?: boolean;

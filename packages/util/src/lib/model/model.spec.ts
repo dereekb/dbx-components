@@ -192,6 +192,31 @@ describe('useModelOrKey()', () => {
     });
     expect(result).toBe('key:1');
   });
+
+  it('should return undefined for null input with required=false', () => {
+    const result = useModelOrKey<string, UniqueModel>(null as any, {
+      useKey: (key) => `key:${key}`,
+      required: false
+    });
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined for undefined input with required=false', () => {
+    const result = useModelOrKey<string, UniqueModel>(undefined as any, {
+      useKey: (key) => `key:${key}`,
+      required: false
+    });
+    expect(result).toBeUndefined();
+  });
+
+  it('should throw for null input with required=true', () => {
+    expect(() =>
+      useModelOrKey<string, UniqueModel>(null as any, {
+        useKey: (key) => `key:${key}`,
+        required: true
+      })
+    ).toThrow('input is required');
+  });
 });
 
 describe('encodeModelKeyTypePair()', () => {

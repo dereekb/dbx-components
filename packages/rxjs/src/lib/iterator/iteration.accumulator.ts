@@ -76,13 +76,21 @@ export interface ItemAccumulatorValuePair<O, I = unknown> extends MapFunctionOut
  * and successful states.
  */
 export interface ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> extends ItemAccumulator<O, I, N>, Destroyable {
-  /** Emits `true` once the first load has completed. */
+  /**
+   * Emits `true` once the first load has completed.
+   */
   readonly hasCompletedInitialLoad$: Observable<boolean>;
-  /** The most recent loading state that completed without an error. */
+  /**
+   * The most recent loading state that completed without an error.
+   */
   readonly latestSuccessfulState$: Observable<LoadingState<I>>;
-  /** All successful loading states accumulated in order. */
+  /**
+   * All successful loading states accumulated in order.
+   */
   readonly allSuccessfulStates$: Observable<LoadingState<I>[]>;
-  /** Count of successfully loaded pages so far. */
+  /**
+   * Count of successfully loaded pages so far.
+   */
   readonly successfulLoadCount$: Observable<number>;
 }
 
@@ -203,11 +211,17 @@ export type ItemAccumulatorNextPageUntilResultsCountFunction<O> = MapFunction<O[
  * Configuration for {@link itemAccumulatorNextPageUntilResultsCount}.
  */
 export interface ItemAccumulatorNextPageUntilResultsCountConfig<O> {
-  /** The accumulator whose iteration will be advanced. */
-  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>;
-  /** Target number of results to accumulate before stopping. */
+  /**
+   * The accumulator whose iteration will be advanced.
+   */
+  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /**
+   * Target number of results to accumulate before stopping.
+   */
   readonly maxResultsLimit: GetterOrValue<number>;
-  /** Function to count how many meaningful results exist in the accumulated items. */
+  /**
+   * Function to count how many meaningful results exist in the accumulated items.
+   */
   readonly countResultsFunction: ItemAccumulatorNextPageUntilResultsCountFunction<O>;
 }
 
@@ -257,10 +271,10 @@ export function itemAccumulatorNextPageUntilResultsCount<O>(config: ItemAccumula
         switchMap((allItems) => from(asPromise(countResults(allItems))))
       )
       .subscribe({
-        next: async (currentResultsCount: number) => {
+        next: (currentResultsCount: number) => {
           performTaskLoop<PageNumber>({
             initValue: currentResultsCount,
-            checkContinue: async (x, i) => {
+            checkContinue: async (_x, _i) => {
               const result = await checkResultsLimit();
               currentResultsCount = result.currentCount;
               return result.shouldContinue;

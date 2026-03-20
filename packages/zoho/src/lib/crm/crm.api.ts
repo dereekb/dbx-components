@@ -152,6 +152,11 @@ export type ZohoCrmUpsertSingleRecordFunction = <T>(input: ZohoCrmUpsertSingleRe
  *
  * When a single record is provided, the function returns the change details directly or throws on error.
  * When multiple records are provided, it returns a paired success/error result.
+ *
+ * @param context - Authenticated Zoho CRM context for making API calls
+ * @param fetchUrlPrefix - URL path segment appended after the module name (empty string for insert/update, '/upsert' for upsert)
+ * @param fetchMethod - HTTP method to use for the request (POST for insert/upsert, PUT for update)
+ * @returns Overloaded function handling both single and multi-record operations
  */
 function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoCrmUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoCrmUpdateRecordInput<T>) =>
@@ -167,6 +172,7 @@ function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | 
         } else {
           const { successItems, errorItems } = result;
 
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array may be empty at runtime
           if (errorItems[0] != null) {
             throw zohoCrmRecordCrudError(errorItems[0].result);
           } else {
@@ -550,10 +556,10 @@ export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchReco
       throw new Error('At least one of word, cvid, criteria, email, or phone must be provided');
     }
 
-    const urlParams = zohoCrmUrlSearchParamsMinusModule(baseInput);
-    return urlParams;
+    return zohoCrmUrlSearchParamsMinusModule(baseInput);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
   return (<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoCrmSearchRecordsFunction;
 }
 
@@ -656,7 +662,8 @@ export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCr
 export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
-    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
+    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x)); // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
   };
 }
 
@@ -716,6 +723,7 @@ export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEm
   const getEmailsFactory = zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
   return (input: ZohoCrmGetEmailsForRecordRequest) =>
     getEmailsFactory(input).then((x) => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Zoho API may return Emails instead of data
       const data = x.data ?? (x as unknown as ZohoCrmGetEmailsForRecordRawApiResponse).Emails;
       return { ...x, data };
     });
@@ -1109,6 +1117,9 @@ export function zohoCrmExecuteRestApiFunction(context: ZohoCrmContext): ZohoCrmE
 // MARK: Util
 /**
  * Builds URL search params from the input objects, omitting the `module` key since it is used in the URL path rather than as a query parameter.
+ *
+ * @param input - One or more objects to convert into URL search parameters
+ * @returns URL search params string with the `module` key excluded
  */
 export function zohoCrmUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: 'module' });
@@ -1116,6 +1127,9 @@ export function zohoCrmUrlSearchParamsMinusModule(...input: Maybe<object | Recor
 
 /**
  * Builds URL search params from the input objects, omitting both `id` and `module` keys since they are used in the URL path.
+ *
+ * @param input - One or more objects to convert into URL search parameters
+ * @returns URL search params string with `id` and `module` keys excluded
  */
 export function zohoCrmUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
@@ -1128,14 +1142,16 @@ export const zohoCrmUrlSearchParams = makeUrlSearchParams;
 
 /**
  * Constructs the standard FetchJsonInput used by CRM API calls, pairing the HTTP method with an optional body.
+ *
+ * @param method - HTTP method to use for the request
+ * @param body - Optional request body to include
+ * @returns Configured fetch input for the Zoho CRM API call
  */
 export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
-  const result = {
+  return {
     method,
     body: body ?? undefined
   };
-
-  return result;
 }
 
 // MARK: Results
@@ -1143,7 +1159,11 @@ export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonB
  * Catches ZohoServerFetchResponseDataArrayError and returns the error data array as the response data, as each data element will have the error details.
  *
  * Use to catch errors from functions that return ZohoCrmChangeObjectLikeResponse and pass the result to zohoCrmChangeObjectLikeResponseSuccessAndErrorPairs.
+ *
+ * @param e - The error to catch and potentially convert
+ * @returns The error data array wrapped as a change object response
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint requires any
 export function zohoCrmCatchZohoCrmChangeObjectLikeResponseError<R extends ZohoCrmChangeObjectLikeResponse<any>>(e: unknown): R {
   let result: R;
 

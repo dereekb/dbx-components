@@ -168,12 +168,14 @@ export interface YearWeekCodeConfig {
  * @returns the resolved normal instance
  */
 export function yearWeekCodeDateTimezoneInstance(input: YearWeekCodeDateTimezoneInput): DateTimezoneUtcNormalInstance {
-  const normal = input ? (input instanceof DateTimezoneUtcNormalInstance ? input : dateTimezoneUtcNormal(input)) : SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
-  return normal;
+  return input ? (input instanceof DateTimezoneUtcNormalInstance ? input : dateTimezoneUtcNormal(input)) : SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
 }
 
 /**
  * Computes the {@link YearWeekCode} from a Date (using system timezone) or from explicit year and week values.
+ *
+ * @param date - the date to compute the week code for
+ * @returns the encoded year+week code
  *
  * @example
  * ```ts
@@ -245,6 +247,7 @@ export function yearWeekCodeForDateRange(dateRange: DateRange): YearWeekCode[] {
  *
  * @param dateRange - the range to compute week codes for
  * @param dateRangeTimezone - the timezone context for accurate week boundary calculation
+ * @returns an array of YearWeekCode values covering the range
  */
 export function yearWeekCodeForDateRangeInTimezone(dateRange: DateRange, dateRangeTimezone: YearWeekCodeDateTimezoneInput): YearWeekCode[] {
   return yearWeekCodeForDateRangeFactory(yearWeekCodeFactory({ timezone: dateRangeTimezone }))(dateRange);
@@ -289,6 +292,7 @@ export type YearWeekCodeForCalendarMonthFactory = (date: Date) => YearWeekCode[]
  * Returns all {@link YearWeekCode} values for the calendar month containing the given date, using the system timezone.
  *
  * @param date - a date within the target month
+ * @returns an array of YearWeekCode values for the month
  */
 export function yearWeekCodeForCalendarMonth(date: Date): YearWeekCode[] {
   return yearWeekCodeForCalendarMonthFactory(yearWeekCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(date);
@@ -340,8 +344,8 @@ export function yearWeekCodeDateFactory(config?: YearWeekCodeDateConfig): YearWe
     const utcYearDate = new Date(Date.UTC(pair.year, 0, 1, 0, 0, 0, 0));
     const systemYearDate = normal.systemDateToBaseDate(utcYearDate); // convert to system before using system date functions
     const date = startOfWeek(setWeek(systemYearDate, pair.week));
-    const fixed = normal.targetDateToSystemDate(date); // back to timezone
-    return fixed;
+    // back to timezone
+    return normal.targetDateToSystemDate(date);
   };
 }
 
@@ -424,9 +428,9 @@ export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConf
       return yearWeekCode;
     });
 
-    const groups: YearWeekCodeGroup<B>[] = Array.from(map.entries()).map(([week, items]) => {
+    const groups: YearWeekCodeGroup<B>[] = [...map.entries()].map(([week, items]) => {
       return {
-        week: week || 0,
+        week: week ?? 0,
         items
       };
     });

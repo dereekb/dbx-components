@@ -75,7 +75,7 @@ export function parseOpenAIJsonResponse(response: string | OpenAI.Responses.Resp
   try {
     jsonResponse = JSON.parse(output_text) as OpenAIJsonResponse;
     jsonResponseFieldMap = openAIJsonResponseFieldsMap(jsonResponse);
-  } catch (e) {
+  } catch {
     // ignore
   }
 

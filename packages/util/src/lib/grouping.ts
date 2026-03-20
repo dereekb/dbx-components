@@ -41,9 +41,13 @@ export interface PairsGroupingResult<T> {
  * Configuration for comparing two arrays to determine if their contents differ.
  */
 export interface ArrayContentsDifferentParams<T, K extends PrimativeKey = PrimativeKey> {
-  /** Extracts a unique key from each item for pairing items across arrays. */
+  /**
+   * Extracts a unique key from each item for pairing items across arrays.
+   */
   groupKeyFn: ReadKeyFunction<T, K>;
-  /** Compares two paired items for equality. */
+  /**
+   * Compares two paired items for equality.
+   */
   isEqual: EqualityComparatorFunction<T>;
 }
 
@@ -185,6 +189,9 @@ export function restoreOrderWithValues<T, K extends PrimativeKey = PrimativeKey>
  * @param orderKeys - Keys defining the desired order.
  * @param values - Values to reorder.
  * @param params - Configuration including key reader, duplicate handling, and new-item behavior.
+ * @param params.readKey - function that extracts the grouping key from each value
+ * @param params.chooseRetainedValue - function that selects which value to keep when duplicates share the same key; defaults to keeping the first
+ * @param params.excludeNewItems - when true, values whose keys are not in `orderKeys` are omitted from the result; defaults to false
  * @returns The reordered values array.
  *
  * @example
@@ -216,8 +223,7 @@ export function restoreOrder<T, K extends PrimativeKey = PrimativeKey>(orderKeys
     }
   });
 
-  const result = [...restoredOrder, ...newItems].filter((x) => x !== undefined); // Allow null to be passed.
-  return result;
+  return [...restoredOrder, ...newItems].filter((x) => x !== undefined); // Allow null to be passed.
 }
 
 /**
@@ -227,6 +233,8 @@ export function restoreOrder<T, K extends PrimativeKey = PrimativeKey>(orderKeys
  * @param a - First array to compare.
  * @param b - Second array to compare.
  * @param params - Key extraction and equality functions.
+ * @param params.groupKeyFn - function that extracts a grouping key from each element for pairing
+ * @param params.isEqual - predicate that returns true when two paired elements are considered equal
  * @returns `true` if the array contents differ.
  */
 export function arrayContentsDiffer<T, K extends PrimativeKey = PrimativeKey>(a: T[] = [], b: T[] = [], { groupKeyFn, isEqual }: ArrayContentsDifferentParams<T, K>): boolean {
@@ -235,7 +243,7 @@ export function arrayContentsDiffer<T, K extends PrimativeKey = PrimativeKey>(a:
   if (a.length === b.length) {
     const pairs = pairGroupValues([...a, ...b], groupKeyFn);
 
-    if (pairs.unpaired) {
+    if (pairs.unpaired.length > 0) {
       // Any unpaired items means there is a difference.
       areDifferent = true;
     } else {
@@ -299,13 +307,13 @@ export function makeKeyPairs<T, K extends string | number = string | number>(val
  * @returns A {@link SeparateResult} with included and excluded arrays.
  */
 export function separateValues<T>(values: T[], checkInclusion: DecisionFunction<T>): SeparateResult<T> {
-  const result: KeyedGroupingResult<T, { in: unknown; out: unknown }> = groupValues(values, (x) => {
+  const result: Partial<KeyedGroupingResult<T, { in: unknown; out: unknown }>> = groupValues(values, (x) => {
     return checkInclusion(x) ? 'in' : 'out';
   });
 
   return {
-    included: result.in || [],
-    excluded: result.out || []
+    included: result.in ?? [],
+    excluded: result.out ?? []
   };
 }
 

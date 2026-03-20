@@ -925,7 +925,7 @@ wrapDateTests(() => {
           const fillOptionExpand = expandUniqueDateCellsFunction<UniqueDataDateCell>({ fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
 
           itShouldFail('if fillFactory is not provided.', () => {
-            expectFail(() => expandUniqueDateCellsFunction({ fillOption: 'fill' }));
+            void expectFail(() => expandUniqueDateCellsFunction({ fillOption: 'fill' }));
           });
 
           it('should create a gap block for middle gaps', () => {

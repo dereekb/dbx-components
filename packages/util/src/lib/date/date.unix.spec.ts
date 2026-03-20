@@ -100,15 +100,15 @@ describe('dateFromDateOrTimeSecondsNumber()', () => {
   it('should return the same Date object if a Date is passed', () => {
     const result = dateFromDateOrTimeSecondsNumber(baseDate);
     expect(result).toBe(baseDate); // Should be the same instance
-    expect(result?.getTime()).toBe(baseDate.getTime());
+    expect(result.getTime()).toBe(baseDate.getTime());
   });
 
   it('should convert a UnixDateTimeSecondsNumber to a Date object', () => {
     const result = dateFromDateOrTimeSecondsNumber(baseUnixTime);
     expect(result).toBeInstanceOf(Date);
     // The function unixDateTimeSecondsNumberToDate multiplies by 1000, so direct comparison of getTime()
-    expect(result?.getTime()).toBe(baseUnixTime * 1000);
-    expect(result?.toISOString()).toBe('2023-01-01T12:00:00.000Z');
+    expect(result.getTime()).toBe(baseUnixTime * 1000);
+    expect(result.toISOString()).toBe('2023-01-01T12:00:00.000Z');
   });
 
   it('should return null if null is passed', () => {
@@ -128,8 +128,8 @@ describe('dateFromDateOrTimeSecondsNumber()', () => {
 
     const result = dateFromDateOrTimeSecondsNumber(unixTimeForDateWithMs);
     expect(result).toBeInstanceOf(Date);
-    expect(result?.getTime()).toBe(unixTimeForDateWithMs * 1000); // Back to milliseconds
-    expect(result?.toISOString()).toBe('2023-10-26T10:20:30.000Z'); // Milliseconds are 000 when converted from Unix seconds
+    expect(result.getTime()).toBe(unixTimeForDateWithMs * 1000); // Back to milliseconds
+    expect(result.toISOString()).toBe('2023-10-26T10:20:30.000Z'); // Milliseconds are 000 when converted from Unix seconds
   });
 });
 

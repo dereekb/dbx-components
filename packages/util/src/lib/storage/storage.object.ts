@@ -9,6 +9,7 @@ import { hasNonNullValue } from '../value/maybe';
 export abstract class SimpleStorageObject {
   /**
    * Retrieves an item from storage.
+   *
    * @param key The key of the item to retrieve.
    * @returns The item string if found, otherwise null or undefined.
    */
@@ -16,6 +17,7 @@ export abstract class SimpleStorageObject {
 
   /**
    * Sets an item in storage.
+   *
    * @param key The key of the item to set.
    * @param item The item string to store. If null or undefined, the item may be removed depending on implementation.
    */
@@ -23,6 +25,7 @@ export abstract class SimpleStorageObject {
 
   /**
    * Removes an item from storage.
+   *
    * @param key The key of the item to remove.
    */
   abstract removeItem(key: StoredDataStorageKey): void;
@@ -43,6 +46,7 @@ export abstract class StorageObject extends SimpleStorageObject {
    * Returns the string key for the index.
    *
    * Returns null if no key available.
+   *
    * @param index The index of the key to retrieve.
    * @returns The key string if found, otherwise null.
    */
@@ -65,6 +69,7 @@ export abstract class FullStorageObject extends StorageObject {
 
   /**
    * Removes all items from storage.
+   *
    * @returns An array of keys that were removed.
    */
   abstract removeAll(): string[];

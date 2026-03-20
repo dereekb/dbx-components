@@ -1,4 +1,4 @@
-<dbx-sidenav color="primary" [anchors]="navAnchors$ | async" dbxSetStyle="demo-app" dbxFirebaseDocumentStoreContextStore>
+<dbx-sidenav color="primary" [anchors]="navAnchorsSignal()" dbxSetStyle="demo-app" dbxFirebaseDocumentStoreContextStore>
   <ng-container top *dbxIfSidenavDisplayMode="['mobile', 'full']">
     <dbx-content-border>
       <p class="mat-h2">dbx-components</p>
@@ -12,6 +12,6 @@
     <ui-view></ui-view>
   </dbx-sidenav-page>
   <div bottom>
-    <dbx-anchor-list [anchors]="bottomNavAnchors$ | async"></dbx-anchor-list>
+    <dbx-anchor-list [anchors]="bottomNavAnchorsSignal()"></dbx-anchor-list>
   </div>
 </dbx-sidenav>

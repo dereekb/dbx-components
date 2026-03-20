@@ -34,7 +34,7 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
     if (autoLogin) {
       result = this.client
         .login(botToken)
-        .then(() => {})
+        .then(() => undefined)
         .catch((e) => {
           this.logger.error('Failed to log in to Discord', e);
         });
@@ -61,6 +61,14 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
    * ```ts
    * const message = await discordApi.sendMessage('123456789', 'Hello from the bot!');
    * ```
+   */
+  /**
+   * Sends a text message to the specified Discord channel.
+   *
+   * @param channelId - target channel's snowflake ID
+   * @param content - message text to send
+   * @returns the sent Discord Message
+   * @throws {Error} when the channel is not found or is not a text channel
    */
   async sendMessage(channelId: DiscordChannelId, content: string): Promise<Message> {
     const channel = await this.client.channels.fetch(channelId);
@@ -90,6 +98,12 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
    * // Later, to stop listening:
    * unsubscribe();
    * ```
+   */
+  /**
+   * Registers a handler for incoming Discord messages (MessageCreate event).
+   *
+   * @param handler - callback invoked for each incoming Message
+   * @returns an unsubscribe function that removes the registered handler
    */
   onMessage(handler: (message: Message) => void): () => void {
     this.client.on(Events.MessageCreate, handler);

@@ -19,12 +19,10 @@ export type ForwardFunction<I extends (...args: any[]) => O, O = unknown> = I;
  * @returns A forwarding function with the same signature as the target
  */
 export function forwardFunction<I extends (...args: any[]) => O, O = unknown>(getter: Getter<I>): ForwardFunction<I> {
-  const fn = ((...args: unknown[]) => {
+  return ((...args: unknown[]) => {
     const forwardFn = getter();
     return forwardFn(...args);
   }) as ForwardFunction<I, O>;
-
-  return fn;
 }
 
 /**

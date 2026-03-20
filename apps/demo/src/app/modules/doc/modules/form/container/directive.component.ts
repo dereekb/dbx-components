@@ -1,5 +1,5 @@
 import { incrementingNumberTimer, SubscriptionObject, successResult } from '@dereekb/rxjs';
-import { type OnDestroy, Component, type OnInit } from '@angular/core';
+import { type OnDestroy, Component, type OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { BehaviorSubject, map } from 'rxjs';
 import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, textField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
@@ -13,7 +13,8 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './directive.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDirectiveComponent implements OnInit, OnDestroy {
   private _sub = new SubscriptionObject();
