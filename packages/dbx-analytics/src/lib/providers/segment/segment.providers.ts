@@ -12,9 +12,13 @@ export type DbxAnalyticsSegmentApiServiceConfigFactory = (injector: Injector) =>
  * Configuration for {@link provideDbxAnalyticsSegmentApiService}.
  */
 export interface ProvideDbxAnalyticsSegmentModuleConfig {
-  /** Whether to preload the Segment script token. */
+  /**
+   * Whether to preload the Segment script token.
+   */
   readonly preloadSegmentToken?: boolean;
-  /** Factory function that produces the Segment API service configuration. */
+  /**
+   * Factory function that produces the Segment API service configuration.
+   */
   readonly dbxAnalyticsSegmentApiServiceConfigFactory: DbxAnalyticsSegmentApiServiceConfigFactory;
 }
 

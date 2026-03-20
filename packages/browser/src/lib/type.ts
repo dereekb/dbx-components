@@ -26,7 +26,9 @@ export interface BrowserObjectURLRef extends Destroyable {
 }
 
 /**
- * Creatse a new BrowserObjectURLRef.
+ * Creates a new BrowserObjectURLRef.
+ *
+ * @returns A new BrowserObjectURLRef instance that manages browser object URL lifecycle
  */
 export function browserObjectUrlRef(): BrowserObjectURLRef {
   let browserUrl: Maybe<BrowserObjectURL>;

@@ -28,7 +28,6 @@ export const ZOHO_DATA_ARRAY_BLANK_ERROR_CODE = '__internal_data_array_blank_err
  * @returns
  */
 export function isZohoServerErrorResponseDataArrayRef(value: unknown): value is ZohoServerErrorResponseDataArrayRef {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- value is unknown at runtime, optional chain needed for safety
   return Array.isArray((value as ZohoServerErrorResponseDataArrayRef)?.data);
 }
 
@@ -242,10 +241,8 @@ export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: Zoh
  */
 export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
   return (json: ZohoServerErrorResponseData | unknown, response: Response) => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- json is typed as unknown union, optional chain needed for runtime safety
     const error = (json as ZohoServerErrorResponseData)?.error;
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- error may be undefined at runtime despite cast
     if (error != null) {
       const responseError = new FetchResponseError(response);
       const parsedError = parseZohoServerErrorResponseData(json as ZohoServerErrorResponseData, responseError);
@@ -450,6 +447,5 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
  * @returns
  */
 export function tryFindZohoServerErrorData(errorResponseData: ZohoServerErrorResponseDataArrayRef | ZohoServerErrorResponseData | ZohoServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZohoServerErrorResponseDataError> {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- errorResponseData shape is unknown at runtime, fallthrough chain needed
   return (errorResponseData as ZohoServerErrorResponseData).error ?? (errorResponseData as ZohoServerErrorResponseDataArrayRef).data?.[0] ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
 }

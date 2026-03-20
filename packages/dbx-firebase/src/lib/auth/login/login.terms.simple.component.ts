@@ -3,7 +3,9 @@ import { Component, inject } from '@angular/core';
 import { DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG } from './login.terms';
 import { DbxLinkComponent } from '@dereekb/dbx-web';
 
-/** Default terms of service display component with links to Terms and Privacy Policy URLs. */
+/**
+ * Default terms of service display component with links to Terms and Privacy Policy URLs.
+ */
 @Component({
   template: `
     <div class="dbx-firebase-login-terms-view">

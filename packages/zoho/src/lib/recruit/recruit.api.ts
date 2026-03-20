@@ -151,7 +151,6 @@ function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '
       } else {
         const { successItems, errorItems } = result;
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array may be empty at runtime
         if (errorItems[0] != null) {
           throw zohoRecruitRecordCrudError(errorItems[0].result);
         } else {
@@ -551,7 +550,6 @@ export function zohoRecruitSearchRecords(context: ZohoRecruitContext): ZohoRecru
     return zohoRecruitUrlSearchParamsMinusModule(baseInput);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
   return (<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
 }
 
@@ -669,7 +667,7 @@ export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruit
   return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
-    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x)); // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
+    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
   };
 }
 

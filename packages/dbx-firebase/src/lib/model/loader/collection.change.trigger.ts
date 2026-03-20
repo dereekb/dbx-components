@@ -109,6 +109,13 @@ export function dbxFirebaseCollectionChangeTriggerForStore<S extends DbxFirebase
   });
 }
 
+/**
+ * Creates a {@link DbxFirebaseCollectionChangeTriggerInstance} for an existing watcher without taking ownership of its lifecycle.
+ *
+ * @param watcher - The collection change watcher to attach the trigger to.
+ * @param triggerFunction - Optional custom trigger function. Defaults to restarting the store.
+ * @returns A new trigger instance bound to the given watcher.
+ */
 export function dbxFirebaseCollectionChangeTriggerForWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>>(watcher: DbxFirebaseCollectionChangeWatcher<S>, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>): DbxFirebaseCollectionChangeTriggerInstance<S> {
   return dbxFirebaseCollectionChangeTrigger<S>({
     watcher,
@@ -117,6 +124,12 @@ export function dbxFirebaseCollectionChangeTriggerForWatcher<S extends DbxFireba
   });
 }
 
+/**
+ * Creates a new {@link DbxFirebaseCollectionChangeTriggerInstance} from the provided configuration.
+ *
+ * @param config - Configuration specifying the watcher, lifecycle options, and trigger function.
+ * @returns A new trigger instance ready to be initialized.
+ */
 export function dbxFirebaseCollectionChangeTrigger<S extends DbxFirebaseCollectionLoaderAccessor<any>>(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>): DbxFirebaseCollectionChangeTriggerInstance<S> {
   return new DbxFirebaseCollectionChangeTriggerInstance(config);
 }

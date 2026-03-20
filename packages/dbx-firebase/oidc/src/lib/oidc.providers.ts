@@ -5,6 +5,9 @@ import { DbxFirebaseOidcConfig, DbxFirebaseOidcConfigService } from './service/o
 
 /**
  * Provider factory for the {@link OidcModelFirestoreCollections}.
+ *
+ * @param appCollection - The application's Firestore collection that must implement {@link OidcModelFirestoreCollections}.
+ * @returns The validated OidcModelFirestoreCollections instance.
  */
 export function provideOidcModelFirestoreCollections(appCollection: OidcModelFirestoreCollections): OidcModelFirestoreCollections {
   if (!appCollection.oidcEntryCollection) {
@@ -44,6 +47,9 @@ export interface ProvideDbxFirebaseOidcConfig {
  * When `oauthInteractionRoute` is configured in {@link DbxFirebaseOidcConfig}, an app initializer
  * is registered that adds that route to the {@link DbxAppAuthRouterService} ignored routes set,
  * preventing auth effects from redirecting away during the OIDC interaction flow.
+ *
+ * @param config - Configuration specifying the app collection class, OIDC settings, and provider options.
+ * @returns EnvironmentProviders for the OIDC module.
  */
 export function provideDbxFirebaseOidc(config: ProvideDbxFirebaseOidcConfig): EnvironmentProviders {
   const providers: (Provider | EnvironmentProviders)[] = [{ provide: DbxFirebaseOidcConfig, useValue: config.oidcConfig }, DbxFirebaseOidcConfigService];

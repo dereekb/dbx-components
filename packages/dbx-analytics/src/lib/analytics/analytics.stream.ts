@@ -8,7 +8,9 @@ import { type AnalyticsUser, type UserAnalyticsEvent, type AnalyticsUserId } fro
  * (e.g., Segment `track()`, `identify()`, `page()`).
  */
 export enum DbxAnalyticsStreamEventType {
-  /** A page/screen view event, typically sent on route transitions. */
+  /**
+   * A page/screen view event, typically sent on route transitions.
+   */
   PageView,
   /**
    * Emitted any time the user value changes, including when transitioning from defined to undefined.
@@ -24,17 +26,27 @@ export enum DbxAnalyticsStreamEventType {
   UserIdChange,
 
   // User Events
-  /** A new user registration event. */
+  /**
+   * A new user registration event.
+   */
   NewUserEvent,
-  /** A returning user login event. */
+  /**
+   * A returning user login event.
+   */
   UserLoginEvent,
-  /** A user logout event. */
+  /**
+   * A user logout event.
+   */
   UserLogoutEvent,
-  /** An update to user profile properties/traits. */
+  /**
+   * An update to user profile properties/traits.
+   */
   UserPropertiesEvent,
 
   // Events
-  /** A generic custom analytics event. */
+  /**
+   * A generic custom analytics event.
+   */
   Event
 }
 

@@ -41,7 +41,7 @@ export class DbxFirebaseDevelopmentPopupContentComponent {
 
   readonly entries$ = this.isLoggedIn$.pipe(
     distinctUntilChanged(),
-    map((isLoggedIn) => this.entries),
+    map((_isLoggedIn) => this.entries),
     shareReplay(1)
   );
 

@@ -1,5 +1,5 @@
 import { iterableToArray } from '@dereekb/util';
-import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { DbxWidgetService, type DbxWidgetType } from '@dereekb/dbx-web';
 import { type DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 
@@ -18,18 +18,20 @@ export class DbxFirebaseDevelopmentWidgetService {
   readonly dbxWidgetService = inject(DbxWidgetService);
 
   private readonly _entries = new Map<DbxWidgetType, DbxFirebaseDevelopmentWidgetEntry>();
+  private readonly _defaultEntries = inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN, { optional: true });
 
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN) defaultEntries: DbxFirebaseDevelopmentWidgetEntry[]) {
-    if (defaultEntries) {
-      defaultEntries.forEach((x) => this.register(x, false));
+  constructor() {
+    if (this._defaultEntries) {
+      this._defaultEntries.forEach((x) => this.register(x, false));
     }
   }
 
   /**
    * Used to register a provider. If a provider is already registered, this will override it by default.
    *
-   * @param provider
-   * @param override
+   * @param provider - The development widget entry to register.
+   * @param override - Whether to override an existing entry of the same type. Defaults to true.
+   * @returns True if the entry was registered, false if it already existed and override was false.
    */
   register(provider: DbxFirebaseDevelopmentWidgetEntry, override: boolean = true): boolean {
     const type = provider.widget.type;
@@ -44,7 +46,7 @@ export class DbxFirebaseDevelopmentWidgetService {
   }
 
   getEntryWidgetIdentifiers(): DbxWidgetType[] {
-    return Array.from(this._entries.keys());
+    return [...this._entries.keys()];
   }
 
   getEntries(): DbxFirebaseDevelopmentWidgetEntry[] {

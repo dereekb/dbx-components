@@ -318,21 +318,21 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
    *
    * Ref is set with the FirestoreCollection
    */
-  override readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  override readonly setId = this.updater((state, _id: Maybe<FirestoreModelId>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Does nothing on a AbstractRootSingleItemDbxFirebaseDocument.
    *
    * Ref is set with the FirestoreCollection
    */
-  override readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  override readonly setKey = this.updater((state, _key: Maybe<FirestoreModelKey>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Does nothing on a AbstractRootSingleItemDbxFirebaseDocument.
    *
    * Ref is set with the FirestoreCollection
    */
-  override readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => state) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
+  override readonly setRef = this.updater((state, _ref: Maybe<DocumentReference<T>>) => state) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
 
   override readonly clearRefs = this.updater((state) => state);
 }

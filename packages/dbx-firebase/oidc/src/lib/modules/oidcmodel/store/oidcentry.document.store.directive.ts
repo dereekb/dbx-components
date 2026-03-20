@@ -3,7 +3,9 @@ import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirec
 import { OidcEntryDocumentStore } from './oidcentry.document.store';
 import { type OidcEntry, type OidcEntryDocument } from '@dereekb/firebase';
 
-/** Directive providing a {@link OidcEntryDocumentStore} for accessing a single {@link OidcEntry} document. */
+/**
+ * Directive providing a {@link OidcEntryDocumentStore} for accessing a single {@link OidcEntry} document.
+ */
 @Directive({
   selector: '[dbxOidcEntryDocument]',
   providers: provideDbxFirebaseDocumentStoreDirective(OidcEntryDocumentStoreDirective, OidcEntryDocumentStore),

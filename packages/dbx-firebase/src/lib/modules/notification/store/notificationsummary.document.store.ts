@@ -6,7 +6,9 @@ import { type LoadingState, type ObservableOrValue, asObservable, mapLoadingStat
 import { type Maybe } from '@dereekb/util';
 import { map, shareReplay, distinctUntilChanged, type Observable, combineLatest } from 'rxjs';
 
-/** Document store for a single NotificationSummary, providing derived observables for items, timestamps, sync state, and update functions. */
+/**
+ * Document store for a single NotificationSummary, providing derived observables for items, timestamps, sync state, and update functions.
+ */
 @Injectable()
 export class NotificationSummaryDocumentStore extends AbstractDbxFirebaseDocumentStore<NotificationSummary, NotificationSummaryDocument> {
   readonly notificationFunctions = inject(NotificationFunctions);

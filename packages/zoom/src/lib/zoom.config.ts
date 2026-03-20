@@ -43,7 +43,7 @@ export interface ZoomAuthClientIdAndSecretPair {
   readonly clientSecret: ZoomOAuthClientSecret;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ZoomConfig {}
 
 /**

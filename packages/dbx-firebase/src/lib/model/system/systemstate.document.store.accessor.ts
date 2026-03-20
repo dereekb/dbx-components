@@ -2,7 +2,7 @@ import { type SystemState, type SystemStateStoredData, type SystemStateTypeIdent
 import { type LoadingState, mapLoadingState } from '@dereekb/rxjs';
 import { map, type Observable, shareReplay } from 'rxjs';
 import { SystemStateDocumentStore } from './systemstate.document.store';
-import { Inject, Injectable, Injector, Optional, inject } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import { newWithInjector } from '@dereekb/dbx-core';
 
 /**
@@ -23,7 +23,8 @@ export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemS
 
   readonly type$: Observable<SystemStateTypeIdentifier> = this.systemStateDocumentStore.id$;
 
-  constructor(@Inject(null) @Optional() type: SystemStateTypeIdentifier) {
+  // eslint-disable-next-line @angular-eslint/prefer-inject -- abstract class receives type identifier from subclass constructors
+  constructor(type: SystemStateTypeIdentifier) {
     this.systemStateDocumentStore.setId(type);
   }
 }

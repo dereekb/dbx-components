@@ -16,6 +16,7 @@ export abstract class DbxFirebaseCollectionWithParentStoreDirective<T, PT, D ext
 
   private readonly _sourceMode$ = toObservable(this.sourceMode).pipe(skipInitialMaybe());
 
+  // eslint-disable-next-line @angular-eslint/prefer-inject -- abstract class receives store from subclass constructors
   constructor(store: S) {
     super(store);
 
@@ -33,7 +34,6 @@ export abstract class DbxFirebaseCollectionWithParentStoreDirective<T, PT, D ext
   }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety; we want to simply match that the Store type S is used in the Directive type C to provide it.
 
 /**
@@ -41,7 +41,8 @@ export abstract class DbxFirebaseCollectionWithParentStoreDirective<T, PT, D ext
  *
  * Can optionally also provide the actual store type to include in the providers array so it is instantiated by Angular.
  *
- * @param sourceType
+ * @param sourceType - The directive type to register as the provider.
+ * @returns Array of Angular providers for the subcollection directive and its parent collection directive.
  */
 export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, any>>(sourceType: Type<S>): Provider[];
 export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStore<any, any, any, any>, C extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S> = DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S>>(sourceType: Type<C>, storeType?: Type<S>): Provider[];

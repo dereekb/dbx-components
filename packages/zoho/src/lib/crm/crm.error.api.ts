@@ -118,8 +118,7 @@ export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): Z
  */
 export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: ZohoCrmModuleName, recordId?: ZohoCrmRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
-    // eslint-disable-next-line eqeqeq -- fetchJson may return null for empty results despite type
-    if (x == null || !x.data?.length) {
+    if (!x?.data?.length) {
       throw new ZohoCrmRecordNoContentError(moduleName, recordId);
     } else {
       return x;

@@ -35,8 +35,8 @@ export class DbxFirebaseOAuthConsentScopeDefaultViewComponent extends AbstractDb
 
     return [
       ...knownScopes.map((name) => {
-        const details = availableScopes.find((s) => s.value === name)!;
-        return { name, description: details.description ?? '' };
+        const details = availableScopes.find((s) => s.value === name);
+        return { name, description: details?.description ?? '' };
       }),
       ...unknownScopes.map((name) => ({ name, description: 'unknown' }))
     ];

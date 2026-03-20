@@ -32,13 +32,21 @@ import { toObservable } from '@angular/core/rxjs-interop';
  * ```
  */
 export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
-  /** Called when the action is triggered (button pressed). */
+  /**
+   * Called when the action is triggered (button pressed).
+   */
   readonly onTriggered?: (service: DbxAnalyticsService) => void;
-  /** Called when the action value is ready and about to be processed. */
+  /**
+   * Called when the action value is ready and about to be processed.
+   */
   readonly onReady?: (service: DbxAnalyticsService, value: T) => void;
-  /** Called when the action completes successfully. */
+  /**
+   * Called when the action completes successfully.
+   */
   readonly onSuccess?: (service: DbxAnalyticsService, result: Maybe<O>, value: T) => void;
-  /** Called when the action encounters an error. */
+  /**
+   * Called when the action encounters an error.
+   */
   readonly onError?: (service: DbxAnalyticsService, error: Maybe<ReadableError>) => void;
 }
 

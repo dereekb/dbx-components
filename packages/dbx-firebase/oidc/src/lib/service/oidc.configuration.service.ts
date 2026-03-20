@@ -20,11 +20,17 @@ export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMeth
  * Apps provide a concrete implementation via `provideDbxFirebaseOidc()`.
  */
 export abstract class DbxFirebaseOidcConfig {
-  /** Available scopes for the OIDC provider. Used in scope picker fields. */
+  /**
+   * Available scopes for the OIDC provider. Used in scope picker fields.
+   */
   abstract readonly availableScopes: OidcScopeDetails[];
-  /** Path to the authorization endpoint. Defaults to '/oidc/auth'. */
+  /**
+   * Path to the authorization endpoint. Defaults to '/oidc/auth'.
+   */
   readonly oidcAuthorizationEndpointApiPath?: Maybe<string>;
-  /** Base path for interaction endpoints. Defaults to '/interaction'. */
+  /**
+   * Base path for interaction endpoints. Defaults to '/interaction'.
+   */
   readonly oidcInteractionEndpointApiPath?: Maybe<string>;
   /**
    * Supported token endpoint authentication methods.

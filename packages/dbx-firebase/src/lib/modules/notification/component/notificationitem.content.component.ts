@@ -2,7 +2,9 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
-/** Presentational component for notification item content, displaying subject, message, and date. */
+/**
+ * Presentational component for notification item content, displaying subject, message, and date.
+ */
 @Component({
   selector: 'dbx-firebase-notificationitem-content',
   templateUrl: './notificationitem.content.component.html',

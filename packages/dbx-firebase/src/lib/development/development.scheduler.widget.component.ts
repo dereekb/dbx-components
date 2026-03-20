@@ -6,6 +6,11 @@ import { DbxFirebaseDevelopmentSchedulerListComponent } from './development.sche
 
 export const DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY = 'DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET';
 
+/**
+ * Creates a development widget entry for the Firebase server scheduler, allowing scheduled tasks to be triggered from the development UI.
+ *
+ * @returns A DbxFirebaseDevelopmentWidgetEntry for the scheduler widget.
+ */
 export function developmentFirebaseServerSchedulerWidgetEntry(): DbxFirebaseDevelopmentWidgetEntry {
   return {
     label: 'Run Scheduled Task',

@@ -8,6 +8,9 @@ export abstract class DbxFirebaseDocumentStoreTwoWayKeyProvider {
 
 /**
  * Configures Providers for a DbxFirebaseDocumentStoreTwoWayKeyProvider.
+ *
+ * @param sourceType - The type to register as the DbxFirebaseDocumentStoreTwoWayKeyProvider.
+ * @returns Array of Angular providers for the two-way key provider.
  */
 export function provideDbxFirebaseDocumentStoreTwoWayKeyProvider<S extends DbxFirebaseDocumentStoreTwoWayKeyProvider>(sourceType: Type<S>): Provider[] {
   const providers: Provider[] = [

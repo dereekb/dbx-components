@@ -4,7 +4,9 @@ import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction }
 import { NotificationFirestoreCollections, NotificationFunctions, type NotificationBox, type NotificationBoxDocument } from '@dereekb/firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
-/** Document store for a single NotificationBox, providing derived observables for creation date, recipients, and update functions. */
+/**
+ * Document store for a single NotificationBox, providing derived observables for creation date, recipients, and update functions.
+ */
 @Injectable()
 export class NotificationBoxDocumentStore extends AbstractDbxFirebaseDocumentStore<NotificationBox, NotificationBoxDocument> {
   readonly notificationFunctions = inject(NotificationFunctions);

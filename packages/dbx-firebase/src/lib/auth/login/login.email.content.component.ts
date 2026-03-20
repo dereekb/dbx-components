@@ -14,12 +14,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
-/** Configuration for the email login content component, specifying mode and password rules. */
+/**
+ * Configuration for the email login content component, specifying mode and password rules.
+ */
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
 }
 
-/** UI state of the email login content: login form, password recovery form, or recovery sent confirmation. */
+/**
+ * UI state of the email login content: login form, password recovery form, or recovery sent confirmation.
+ */
 export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversent';
 
 /**
@@ -119,7 +123,7 @@ export class DbxFirebaseLoginEmailContentComponent {
   };
 
   // MARK: Recovering
-  readonly handleRecoverySuccess: DbxActionSuccessHandlerFunction = (x) => {
+  readonly handleRecoverySuccess: DbxActionSuccessHandlerFunction = (_x) => {
     this._emailModeSignal.set('recoversent');
   };
 

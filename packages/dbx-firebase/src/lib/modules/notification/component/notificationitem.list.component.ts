@@ -7,10 +7,14 @@ import { DbxFirebaseNotificationTemplateService } from '../service/notification.
 import { DatePipe } from '@angular/common';
 import { CutTextPipe } from '@dereekb/dbx-core';
 
-/** A notification item wrapped with list selection state. */
+/**
+ * A notification item wrapped with list selection state.
+ */
 export type NotificationItemWithSelection = DbxValueAsListItem<NotificationItem>;
 
-/** Selection list wrapper for notification items with view-only default selection mode. */
+/**
+ * Selection list wrapper for notification items with view-only default selection mode.
+ */
 @Component({
   selector: 'dbx-firebase-notificationitem-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
@@ -28,7 +32,9 @@ export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelecti
   }
 }
 
-/** List view component that renders notification items using the selection list pattern. */
+/**
+ * List view component that renders notification items using the selection list pattern.
+ */
 @Component({
   selector: 'dbx-firebase-notificationitem-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
@@ -44,7 +50,9 @@ export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSel
   };
 }
 
-/** Individual list view item component rendering a notification's subject, message, and date. */
+/**
+ * Individual list view item component rendering a notification's subject, message, and date.
+ */
 @Component({
   template: `
     <div class="dbx-list-item-padded dbx-list-two-line-item dbx-firebase-notificationitem-list-view-item">

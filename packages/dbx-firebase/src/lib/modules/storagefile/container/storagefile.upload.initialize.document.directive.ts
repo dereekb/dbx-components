@@ -26,7 +26,7 @@ export class DbxFirebaseStorageFileUploadInitializeDocumentDirective {
   constructor() {
     // set the trigger
     cleanSubscription(
-      this.uploadStore.uploadResult$.subscribe(async (result) => {
+      this.uploadStore.uploadResult$.subscribe((result) => {
         const successFileResult = result.successFileResults.find((x) => x.fileRef != null);
         const fileRef = successFileResult?.fileRef;
 

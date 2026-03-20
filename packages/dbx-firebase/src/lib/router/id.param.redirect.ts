@@ -45,10 +45,24 @@ export interface DbxFirebaseIdRouteParamRedirectInstance extends DbxFirebaseIdRo
   setParamValue(value: MaybeObservableOrValueGetter<string>): void;
 }
 
+/**
+ * Creates a {@link DbxFirebaseIdRouteParamRedirectInstance} configured to read a model key from route params.
+ *
+ * @param dbxRouterService - The router service used to read route parameters.
+ * @param defaultParamKey - The route parameter key to read. Defaults to 'key'.
+ * @returns A new route param redirect instance for model keys.
+ */
 export function dbxFirebaseKeyRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_KEY_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
   return dbxFirebaseIdRouteParamRedirect(dbxRouterService, defaultParamKey);
 }
 
+/**
+ * Creates a {@link DbxFirebaseIdRouteParamRedirectInstance} that reads a model ID from route params and optionally redirects to a default value.
+ *
+ * @param dbxRouterService - The router service used to read route parameters.
+ * @param defaultParamKey - The route parameter key to read. Defaults to 'id'.
+ * @returns A new route param redirect instance for model IDs with configurable redirect behavior.
+ */
 export function dbxFirebaseIdRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
   const _paramReader = dbxRouteParamReaderInstance<ModelKey>(dbxRouterService, defaultParamKey);
   const _paramRedirect = new DbxRouteParamDefaultRedirectInstance<ModelKey>(_paramReader);

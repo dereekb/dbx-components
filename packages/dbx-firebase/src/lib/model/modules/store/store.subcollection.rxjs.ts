@@ -25,6 +25,12 @@ export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreD
   readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<A>>) => Subscription);
 }
 
+/**
+ * Creates a component store effect that links a parent document store to a subcollection store, propagating the parent document and lock set.
+ *
+ * @param store - The subcollection component store to connect to a parent store.
+ * @returns An effect function that accepts an observable parent document store and manages the subscription lifecycle.
+ */
 export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, A extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD, A>): DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> {
   return store.effect((input: Observable<Maybe<DbxFirebaseDocumentStore<PT, PD>>>) => {
     return input.pipe(

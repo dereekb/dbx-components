@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { type Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, type Subscription } from 'rxjs';
 import { type FirestoreDocument, type FirestoreCollectionWithParentFactory, type FirestoreCollection, type DocumentReference, type FirestoreModelId, type FirestoreModelKey, type SingleItemFirestoreCollection, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { AbstractDbxFirebaseDocumentStore , type DbxFirebaseDocumentStoreContextState } from './store.document';
+import { AbstractDbxFirebaseDocumentStore, type DbxFirebaseDocumentStoreContextState } from './store.document';
 import { type DbxFirebaseDocumentStore } from './store';
 import { type DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, type DbxFirebaseComponentStoreWithParent, type DbxFirebaseComponentStoreWithParentContextState, type DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
 
@@ -114,20 +114,20 @@ export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDoc
    *
    * Ref is set with the FirestoreCollection
    */
-  override readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  override readonly setId = this.updater((state, _id: Maybe<FirestoreModelId>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Does nothing on a AbstractSingleItemDbxFirebaseDocument.
    *
    * Ref is set with the FirestoreCollection
    */
-  override readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  override readonly setKey = this.updater((state, _key: Maybe<FirestoreModelKey>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Does nothing on a AbstractSingleItemDbxFirebaseDocument.
    *
    * Ref is set with the FirestoreCollection
    */
-  override readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => state) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
+  override readonly setRef = this.updater((state, _ref: Maybe<DocumentReference<T>>) => state) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
   override readonly clearRefs = this.updater((state) => state);
 }

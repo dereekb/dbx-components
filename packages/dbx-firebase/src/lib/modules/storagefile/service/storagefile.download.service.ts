@@ -20,6 +20,12 @@ export interface DbxFirebaseStorageFileDownloadServiceCustomSource {
   downloadStorageFileResult: DbxFirebaseStorageFileDownloadServiceCustomSourceDownloadFunction;
 }
 
+/**
+ * Creates a {@link DbxFirebaseStorageFileDownloadServiceCustomSource} from a function that returns a LoadingState observable.
+ *
+ * @param obsForInput - Function that produces a LoadingState observable for the given download params and storage file ID.
+ * @returns A custom source adapter that bridges observable-based downloads to the promise-based interface.
+ */
 export function dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs(obsForInput: (params: DownloadStorageFileParams, storageFileId: StorageFileId) => Observable<LoadingState<DownloadStorageFileResult>>): DbxFirebaseStorageFileDownloadServiceCustomSource {
   return {
     downloadStorageFileResult: (params: DownloadStorageFileParams, storageFileId: StorageFileId) => firstValueFrom(obsForInput(params, storageFileId).pipe(throwErrorFromLoadingStateError(), valueFromFinishedLoadingState())) as Promise<DownloadStorageFileResult>
@@ -124,8 +130,9 @@ export class DbxFirebaseStorageFileDownloadService {
    *
    * These URLs are cached locally to prevent extra/redundant calls to the server.
    *
-   * @param storageFileIdOrKey
-   * @returns
+   * @param storageFileIdOrKey - The storage file ID or key to download.
+   * @param source - Optional custom download source. Falls back to the default internal source if not provided.
+   * @returns Observable that emits the cached or freshly downloaded URL pair.
    */
   downloadPairForStorageFileUsingSource(storageFileIdOrKey: StorageFileId | StorageFileKey, source: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
     const storageFileId = firestoreModelId(storageFileIdOrKey);
@@ -158,6 +165,8 @@ export class DbxFirebaseStorageFileDownloadService {
 
   /**
    * Adds the given download URL pair to the cache.
+   *
+   * @param downloadUrlPair - The download URL pair to store in the local cache.
    */
   addPairForStorageFileToCache(downloadUrlPair: DbxFirebaseStorageFileDownloadUrlPair): void {
     this.storageFileDownloadStorage.addDownloadUrl(downloadUrlPair).pipe(first()).subscribe();

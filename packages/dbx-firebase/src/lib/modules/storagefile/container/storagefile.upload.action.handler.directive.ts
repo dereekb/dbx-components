@@ -53,7 +53,7 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective {
 
     if (uploadHandler) {
       handlerFunction = (files, context) => {
-        const { upload, cancel } = storageFileUploadFiles({
+        const { upload, cancel: _cancel } = storageFileUploadFiles({
           files,
           uploadHandler
         });

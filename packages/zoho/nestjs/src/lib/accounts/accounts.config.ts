@@ -16,7 +16,6 @@ export abstract class ZohoAccountsServiceConfig {
     const { zohoAccounts } = config;
 
     if (!zohoAccounts) {
-      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- runtime guard for consumers passing invalid config
       throw new Error('ZohoAccountsServiceConfig.zohoAccounts is required');
     } else {
       if (!zohoAccounts.serviceAccessTokenKey) {

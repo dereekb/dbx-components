@@ -23,6 +23,8 @@ export class DbxFirebaseOidcInteractionService {
 
   /**
    * Base URL for the interaction API, derived from the OIDC config service.
+   *
+   * @returns The base URL string for the OIDC interaction endpoint.
    */
   get baseUrl(): string {
     return this._oidcConfig.oidcInteractionEndpointApiPath;
@@ -33,6 +35,7 @@ export class DbxFirebaseOidcInteractionService {
    *
    * Automatically attaches the current user's Firebase ID token.
    *
+   * @param uid - The OIDC interaction UID identifying the current login interaction.
    * @returns Observable that emits the redirect URL from the server response.
    */
   submitLogin(uid: OidcInteractionUid): Observable<OAuthInteractionLoginResponse> {
@@ -47,6 +50,8 @@ export class DbxFirebaseOidcInteractionService {
    *
    * Automatically attaches the current user's Firebase ID token.
    *
+   * @param uid - The OIDC interaction UID identifying the current consent interaction.
+   * @param approved - Whether the user approved or denied the consent request.
    * @returns Observable that emits the redirect URL from the server response.
    */
   submitConsent(uid: OidcInteractionUid, approved: boolean): Observable<OAuthInteractionConsentResponse> {

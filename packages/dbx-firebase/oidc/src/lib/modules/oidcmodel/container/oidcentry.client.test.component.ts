@@ -51,10 +51,14 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   private readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);
   private readonly oidcConfigService = inject(DbxFirebaseOidcConfigService);
 
-  /** Scopes the user can pick from. Overrides the service default when provided. */
+  /**
+   * Scopes the user can pick from. Overrides the service default when provided.
+   */
   readonly availableScopes = input<Maybe<OidcScopeDetails[]>>(undefined);
 
-  /** Path to the authorization endpoint. Overrides the service default when provided. */
+  /**
+   * Path to the authorization endpoint. Overrides the service default when provided.
+   */
   readonly oidcAuthorizationEndpointApiPath = input<Maybe<string>>(undefined);
 
   readonly resolvedAvailableScopes = computed<OidcScopeDetails[]>(() => this.availableScopes() ?? this.oidcConfigService.availableScopes);
@@ -95,7 +99,9 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   readonly state = signal<string>(generateRandomString());
   readonly nonce = signal<string>(generateRandomString());
 
-  /** The current form value, updated by the form via dbxFormValueChange. */
+  /**
+   * The current form value, updated by the form via dbxFormValueChange.
+   */
   readonly formValue = signal<Maybe<DbxFirebaseOidcModelClientTestFormValue>>(undefined);
 
   readonly authorizationUrlSignal = computed(() => {
@@ -147,7 +153,7 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   }
 
   private _updateCodeChallenge(): void {
-    generatePkceCodeChallenge(this.codeVerifier()).then((challenge) => {
+    void generatePkceCodeChallenge(this.codeVerifier()).then((challenge) => {
       this.codeChallenge.set(challenge);
     });
   }

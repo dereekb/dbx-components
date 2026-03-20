@@ -87,7 +87,7 @@ export interface ZohoPageResultInfoRef {
  * A fetch function that accepts paginated input and returns a {@link ZohoPageResult}.
  * Used as the underlying data source for {@link zohoFetchPageFactory}.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint requires any
+
 export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoPageResult<any>> = (input: I) => Promise<R>;
 
 /**
@@ -112,14 +112,12 @@ export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoP
  * }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint requires any
 export function zohoFetchPageFactory<I extends ZohoPageFilter, R extends ZohoPageResult<any>>(fetch: ZohoFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({
     ...defaults,
     fetch,
     readFetchPageResultInfo: function (result: R): PromiseOrValue<ReadFetchPageResultInfo> {
       return {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- info may be missing in malformed responses
         hasNext: result.info?.more_records ?? false // if no info is returned, assume something wrong and there are no more records
       };
     },

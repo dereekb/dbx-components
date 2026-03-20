@@ -4,20 +4,21 @@ import { DBX_FIREBASE_STORAGEFILE_DOWNLOAD_STORAGE_ACCESSOR_TOKEN, DbxFirebaseSt
 import { DbxFirebaseStorageFileDownloadService } from './service/storagefile.download.service';
 
 /**
- * Factory function for creating a StorageAccessor for the model view tracker.
+ * Factory function for creating a StorageAccessor for the storage file download cache.
+ *
+ * @param storageAccessorFactory - The factory used to create prefixed storage accessors.
+ * @returns A StorageAccessor scoped to the storage file download cache.
  */
 export function defaultDbxFirebaseStorageFileDownloadStorageAccessorFactory(storageAccessorFactory: SimpleStorageAccessorFactory): StorageAccessor<DbxFirebaseStorageFileDownloadUserCache> {
-  const accessor = storageAccessorFactory.createStorageAccessor<DbxFirebaseStorageFileDownloadUserCache>({
+  return storageAccessorFactory.createStorageAccessor<DbxFirebaseStorageFileDownloadUserCache>({
     prefix: 'sfds'
   });
-
-  return accessor;
 }
 
 /**
- * Creates EnvironmentProviders for providing DbxModelTrackerService, DbxModelObjectStateService and sets up the NgRx store for DbxModelTrackerEffects.
+ * Creates EnvironmentProviders for the storage file download service and its dependencies.
  *
- * @returns EnvironmentProviders
+ * @returns EnvironmentProviders that register the storage file download storage accessor, storage, and service.
  */
 export function provideDbxFirebaseStorageFileService(): EnvironmentProviders {
   const providers: (Provider | EnvironmentProviders)[] = [

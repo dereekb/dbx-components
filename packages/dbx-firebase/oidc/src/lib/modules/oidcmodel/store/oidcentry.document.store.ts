@@ -5,7 +5,9 @@ import { OidcModelFirestoreCollections, OidcModelFunctions, type CreateOidcClien
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 
-/** Document store for a single {@link OidcEntry}. */
+/**
+ * Document store for a single {@link OidcEntry}.
+ */
 @Injectable()
 export class OidcEntryDocumentStore extends AbstractDbxFirebaseDocumentStore<OidcEntry, OidcEntryDocument> {
   readonly oidcModelFunctions = inject(OidcModelFunctions);

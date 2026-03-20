@@ -39,7 +39,9 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * Observable that emits the loading promise. Subscribing triggers the initial load if not already started.
    */
   readonly loading$: Observable<Promise<T>> = this._loading.pipe(
-    tapFirst(() => this.loadService()),
+    tapFirst(() => {
+      void this.loadService();
+    }),
     filterMaybe(),
     shareReplay(1)
   );
@@ -58,6 +60,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * @param serviceName - Human-readable name for logging; defaults to `windowKey`
    * @param preload - When truthy, begins loading the service immediately on construction
    */
+  // eslint-disable-next-line @typescript-eslint/max-params -- abstract class constructor with well-defined parameters
   constructor(windowKey: string, callbackKey?: string, serviceName?: Maybe<string>, preload?: Maybe<boolean | string>) {
     this._windowKey = windowKey;
     this._callbackKey = callbackKey;
@@ -80,6 +83,8 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * Returns a promise that resolves with the loaded service instance.
    *
    * Triggers loading if not already started.
+   *
+   * @returns Promise that resolves with the loaded service instance
    */
   getService(): Promise<T> {
     return firstValueFrom(this.service$);
@@ -165,6 +170,8 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
   /**
    * Hook called before completing the service load. Subclasses can override to perform
    * additional async setup before the service reference is read from `window`.
+   *
+   * @returns Promise that resolves when pre-load setup is complete
    */
   protected _prepareCompleteLoadingService(): Promise<unknown> {
     return Promise.resolve();

@@ -74,7 +74,6 @@ describe('zoom.api', () => {
 
       // only load the user once for all tests
       if (!meUser) {
-        // eslint-disable-line @typescript-eslint/no-unnecessary-condition
         meUser = await api.getUser({ userId: 'me' });
       }
     });
@@ -151,7 +150,6 @@ describe('zoom.api', () => {
 
         afterEach(async () => {
           if (cleanupMeeting != null) {
-            // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             await api
               .deleteMeeting({
                 meetingId: cleanupMeeting.id,

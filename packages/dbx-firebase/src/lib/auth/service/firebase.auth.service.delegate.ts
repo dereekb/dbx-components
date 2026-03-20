@@ -22,6 +22,14 @@ export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject>
   readonly addAuthUserStateToRoles?: boolean;
 }
 
+/**
+ * Creates a function that derives an {@link AuthRoleSet} observable from the current user's ID token claims using the configured claims service.
+ *
+ * Optionally adds the current AuthUserState to the role set.
+ *
+ * @param config - Configuration specifying the claims service and optional auth user state inclusion.
+ * @returns A function that, given a DbxFirebaseAuthService, returns an Observable of the decoded AuthRoleSet.
+ */
 export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config: AuthRolesObsWithClaimsServiceConfig<T>): (dbxFirebaseAuthService: DbxFirebaseAuthService) => Observable<AuthRoleSet> {
   const { addAuthUserStateToRoles: addAuthUserState, claimsService } = config;
 
@@ -38,6 +46,14 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
 
 export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> = AuthRolesObsWithClaimsServiceConfig<T>;
 
+/**
+ * Creates a {@link DbxFirebaseAuthServiceDelegate} that derives auth roles and user state from the given claims service configuration.
+ *
+ * Only one of `stateForLoggedInUser`, `stateForLoggedInUserToken`, or `authUserStateObs` may be specified.
+ *
+ * @param config - Configuration with the claims service and optional auth state customization.
+ * @returns A DbxFirebaseAuthServiceDelegate configured for claims-based auth.
+ */
 export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends AuthClaimsObject>(config: DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T>): DbxFirebaseAuthServiceDelegate {
   if (filterMaybeArrayValues([config.stateForLoggedInUser, config.stateForLoggedInUserToken, config.authUserStateObs]).length > 1) {
     throw new Error('Cannot specify a combination of "stateForLoggedInUserToken", "stateForLoggedInUser" and "authUserStateObs". Must specify one at max.');

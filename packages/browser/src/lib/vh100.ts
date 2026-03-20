@@ -30,6 +30,8 @@ export function refreshVh100Function(cssVariableName = DEFAULT_VH100_VARIABLE_NA
 
 /**
  * Adds window event listeners to populate the css variable `vh100`, or another input variable name, with the current window height.
+ *
+ * @param cssVariableName - Name of the CSS custom property to update; defaults to `vh100`
  */
 export function watchWindowAndUpdateVh100StyleProperty(cssVariableName?: string) {
   const refreshPropertyValue = refreshVh100Function(cssVariableName);

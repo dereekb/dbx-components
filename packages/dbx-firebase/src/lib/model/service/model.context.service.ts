@@ -24,6 +24,12 @@ export interface DbxFirebaseModelContextServiceInfoInstanceFactoryConfig<S exten
   readonly entityMap$: Observable<FirestoreModelIdentityTypeMap>;
 }
 
+/**
+ * Creates a factory that resolves model info instances by looking up the collection type from a model key and delegating to the model service.
+ *
+ * @param config - Configuration providing the model service factory and entity map observable.
+ * @returns A factory function that creates model info instances from observable model keys.
+ */
 export function dbxFirebaseModelContextServiceInfoInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext>(config: DbxFirebaseModelContextServiceInfoInstanceFactoryConfig<S, C>): DbxFirebaseModelContextServiceInfoInstanceFactory {
   const { modelService, entityMap$ } = config;
   return <D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole>(keyObs: ObservableOrValue<string>) => {
