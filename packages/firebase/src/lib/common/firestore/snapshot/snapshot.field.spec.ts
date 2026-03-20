@@ -142,7 +142,7 @@ describe('firestoreDate()', () => {
 
     const converted = dateField.from!.convert!(dateString);
     expect(converted).toBeDefined();
-    expect(converted?.getTime()).toBe(value.getTime());
+    expect(converted!.getTime()).toBe(value.getTime());
     expect(isValid(converted)).toBe(true);
   });
 
@@ -174,7 +174,7 @@ describe('firestoreUnixDateTimeSecondsNumber()', () => {
 
     const converted = dateField.from!.convert!(unixDateTimeSecondsNumber);
     expect(converted).toBeDefined();
-    expect(converted?.getTime()).toBe(value.getTime());
+    expect(converted!.getTime()).toBe(value.getTime());
     expect(isValid(converted)).toBe(true);
   });
 

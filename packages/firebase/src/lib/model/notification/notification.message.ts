@@ -42,14 +42,14 @@ export type NotificationSendMessageTemplateName = string;
  *
  * This info is used by the sending service to configure the template, but is not passed directly to the template itself.
  */
-export type NotificationMessageTemplateConfiguration = Record<string, any>;
+export type NotificationMessageTemplateConfiguration = Record<string, unknown>;
 
 /**
  * Template variables for a notification message.
  *
  * These variables may be directly passed to the template.
  */
-export type NotificationMessageTemplateVariables = Record<string, any>;
+export type NotificationMessageTemplateVariables = Record<string, unknown>;
 
 /**
  * Generic notification message content.
@@ -275,6 +275,7 @@ export type NotificationMessageFunction = NotificationMessageFunctionWithoutExtr
  *
  * @param fn - base function that generates message content per recipient
  * @param extras - optional delivery customization (global recipients, send callbacks)
+ * @returns a {@link NotificationMessageFunction} with the extras attached
  *
  * @example
  * ```ts
@@ -304,6 +305,8 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
  *
  * Useful as a placeholder factory for template types that should not produce deliverable content.
  *
+ * @returns a factory that produces no-content message functions
+ *
  * @example
  * ```ts
  * const factory = noContentNotificationMessageFunctionFactory();
@@ -312,8 +315,8 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
  * // msg.flag === NotificationMessageFlag.NO_CONTENT
  * ```
  */
-export function noContentNotificationMessageFunctionFactory<D extends NotificationItemMetadata = any>(): NotificationMessageFunctionFactory<D> {
-  return async (config: NotificationMessageFunctionFactoryConfig<D>) => {
+export function noContentNotificationMessageFunctionFactory<D extends NotificationItemMetadata = {}>(): NotificationMessageFunctionFactory<D> {
+  return async (_config: NotificationMessageFunctionFactoryConfig<D>) => {
     // const { item } = config;
     return async (inputContext: NotificationMessageInputContext) => {
       const result: NotificationMessage = {

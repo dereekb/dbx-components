@@ -177,6 +177,7 @@ export type CreateStorageFileDocumentPairFactory = <M extends StorageFileMetadat
  * initial state setup.
  *
  * @param config - optional defaults for creation type, subgroup, and processing state
+ * @returns a factory function that creates StorageFile document pairs
  * @throws {Error} When neither accessor nor context is provided
  * @throws {Error} When no storage path can be resolved from the input
  * @throws {Error} When FOR_STORAGE_FILE_GROUP is used without parentStorageFileGroup or purpose
@@ -276,6 +277,9 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
  * Convenience function for creating a StorageFileDocumentPair.
  *
  * Calls createStorageFileDocumentPairFactory() with no arguments, then passes the input to the factory and returns the result.
+ *
+ * @param input - the creation input specifying the storage path, purpose, and context
+ * @returns a promise resolving to the created StorageFileDocument and StorageFile data
  */
 export async function createStorageFileDocumentPair<M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>): Promise<CreateStorageFileDocumentPairResult<M>> {
   return createStorageFileDocumentPairFactory()(input);

@@ -88,7 +88,7 @@ export async function verifyAppCheckInRequest(req: Request): Promise<Maybe<Error
     // verify the token
     try {
       await admin.appCheck().verifyToken(appCheckToken);
-    } catch (e) {
+    } catch {
       error = new ForbiddenException();
     }
   }

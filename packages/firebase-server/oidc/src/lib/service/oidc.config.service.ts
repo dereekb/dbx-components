@@ -129,6 +129,7 @@ export class OidcProviderConfigService {
    *
    * @param jwksUri - Optional override for the JWKS URI (e.g., from cloud storage).
    *   Falls back to `{issuer}{routes.jwks}`.
+   * @returns the fully constructed OIDC discovery metadata
    */
   buildDiscoveryMetadata(jwksUri?: string): OidcDiscoveryMetadata {
     const issuer = this.config.issuer;

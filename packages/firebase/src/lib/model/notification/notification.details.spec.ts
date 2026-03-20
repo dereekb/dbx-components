@@ -1,4 +1,4 @@
-import { expectFail, itShouldFail } from '@dereekb/util/test';
+import { itShouldFail } from '@dereekb/util/test';
 import { type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, appNotificationTemplateTypeInfoRecordService } from './notification.details';
 import { firestoreModelIdentity, firestoreModelKey } from '../../common';
 
@@ -11,7 +11,7 @@ describe('notificationTemplateTypeInfoRecord()', () => {
       notificationModelIdentity: firestoreModelIdentity('test')
     };
 
-    expectFail(() => notificationTemplateTypeInfoRecord([detail, detail]));
+    expect(() => notificationTemplateTypeInfoRecord([detail, detail])).toThrow();
   });
 });
 

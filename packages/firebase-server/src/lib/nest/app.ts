@@ -46,7 +46,9 @@ export interface NestServerInstance<T> {
   removeNestServer(firebaseApp: admin.app.App): Promise<boolean>;
 }
 
-/** @deprecated Use `FirebaseNestServerRootModule` from `./app.module` instead. */
+/**
+ * @deprecated Use `FirebaseNestServerRootModule` from `./app.module` instead.
+ */
 export { FirebaseNestServerRootModule } from './app.module';
 
 /**
@@ -120,7 +122,9 @@ export interface NestFirebaseServerEnvironmentConfig {
 }
 
 // COMPAT: Deprecated alias for NestFirebaseServerEnvironmentConfig.
-/** @deprecated Use NestFirebaseServerEnvironmentConfig instead. */
+/**
+ * @deprecated Use NestFirebaseServerEnvironmentConfig instead.
+ */
 export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
 
 /**
@@ -129,6 +133,9 @@ export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
  * The returned instance caches servers by Firebase app name, so calling `initNestServer` multiple
  * times with the same app reuses the existing server. The factory wires up Firebase Admin,
  * environment config, storage, AppCheck middleware, and webhook routes based on the config.
+ *
+ * @param config - Configuration for the NestJS server instance including the root module, providers, and middleware options.
+ * @returns A NestServerInstance that manages server lifecycle for the given module class.
  *
  * @example
  * ```typescript
@@ -171,7 +178,11 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
         }
 
         if (configureNestServerInstance) {
-          nestApp = configureNestServerInstance(nestApp) || nestApp;
+          const configured = configureNestServerInstance(nestApp);
+
+          if (configured) {
+            nestApp = configured;
+          }
         }
 
         return nestApp.init();

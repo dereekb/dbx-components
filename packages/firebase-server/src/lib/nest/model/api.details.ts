@@ -116,28 +116,43 @@ export interface OnCallApiDetailsRef {
 // MARK: Type Guards
 /**
  * Whether the details are specifier-level (has specifiers map).
+ *
+ * @param details - The API details to check.
+ * @returns True if the details contain a specifiers map.
  */
 export function isOnCallModelTypeApiDetails(details: OnCallApiDetails): details is OnCallModelTypeApiDetails {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return details != null && 'specifiers' in details;
 }
 
 /**
  * Whether the details are CRUD-model-level (has modelTypes map).
+ *
+ * @param details - The API details to check.
+ * @returns True if the details contain a modelTypes map.
  */
 export function isOnCallCrudModelApiDetails(details: OnCallApiDetails): details is OnCallCrudModelApiDetails {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return details != null && 'modelTypes' in details;
 }
 
 /**
  * Whether the details are handler-level (leaf node — no specifiers or modelTypes).
+ *
+ * @param details - The API details to check.
+ * @returns True if the details are handler-level (no specifiers or modelTypes).
  */
 export function isOnCallHandlerApiDetails(details: OnCallApiDetails): details is OnCallModelFunctionApiDetails {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return details != null && !('specifiers' in details) && !('modelTypes' in details);
 }
 
 /**
  * Whether the specifier-level details represent a true specifier (multiple sub-operations)
  * vs a wrapped direct handler (`isSpecifier: false`, details under `_`).
+ *
+ * @param details - The specifier-level API details to check.
+ * @returns True if the details represent a true specifier with multiple sub-operations.
  */
 export function isActualSpecifier(details: OnCallModelTypeApiDetails): boolean {
   return details.isSpecifier;
@@ -149,6 +164,7 @@ export function isActualSpecifier(details: OnCallModelTypeApiDetails): boolean {
  *
  * Combines API metadata, auth configuration, and the handler function into a single config object.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends OnCallModelFunctionApiDetails {
   /**
    * When true, marks the handler as not requiring auth (equivalent to optionalAuthContext).
@@ -201,13 +217,17 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  *   fn: async (request) => { ... }
  * });
  * ```
+ *
+ * @param config - The API details configuration including the handler function.
+ * @returns The handler function with _apiDetails attached.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
   const { optionalAuth, fn, ...apiDetails } = config;
   (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails;
 
   if (optionalAuth) {
-    (fn as any)._requireAuth = false;
+    (fn as Configurable<OnCallModelFunctionApiDetailsRef & { _requireAuth?: boolean }>)._requireAuth = false;
   }
 
   return fn as F & OnCallModelFunctionApiDetailsRef;
@@ -216,6 +236,9 @@ export function withApiDetails<F extends (...args: any[]) => any>(config: WithAp
 // MARK: Aggregation Utilities
 /**
  * Reads _apiDetails from a function if present.
+ *
+ * @param fn - The function or object that may carry _apiDetails.
+ * @returns The API details if present, otherwise undefined.
  */
 export function readApiDetails(fn: Maybe<OnCallApiDetailsRef>): Maybe<OnCallApiDetails> {
   return fn?._apiDetails;
@@ -225,6 +248,9 @@ export function readApiDetails(fn: Maybe<OnCallApiDetailsRef>): Maybe<OnCallApiD
  * Aggregates _apiDetails from a specifier handler config object.
  *
  * Returns OnCallModelTypeApiDetails if any handlers have _apiDetails, otherwise undefined.
+ *
+ * @param config - Map of specifier keys to handler functions.
+ * @returns Aggregated specifier-level API details, or undefined if no handlers have _apiDetails.
  */
 export function aggregateSpecifierApiDetails(config: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): Maybe<OnCallModelTypeApiDetails> {
   const specifiers: { [key: string]: OnCallModelFunctionApiDetails | undefined } = {};
@@ -247,6 +273,9 @@ export function aggregateSpecifierApiDetails(config: { readonly [key: string]: M
  * Aggregates _apiDetails from a model type map (used by onCallCreateModel, etc.).
  *
  * Returns OnCallCrudModelApiDetails if any handlers have _apiDetails, otherwise undefined.
+ *
+ * @param map - Map of model type strings to handler functions.
+ * @returns Aggregated CRUD-model-level API details, or undefined if no handlers have _apiDetails.
  */
 export function aggregateCrudModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): Maybe<OnCallCrudModelApiDetails> {
   const modelTypes: { [key: string]: OnCallModelTypeApiDetails | undefined } = {};
@@ -275,6 +304,9 @@ export function aggregateCrudModelApiDetails(map: { readonly [key: string]: Mayb
  * Aggregates _apiDetails from the top-level call model map.
  *
  * Returns OnCallModelApiDetails if any CRUD handlers have _apiDetails, otherwise undefined.
+ *
+ * @param map - Map of call type strings to CRUD handler functions.
+ * @returns Aggregated model-level API details, or undefined if no handlers have _apiDetails.
  */
 export function aggregateModelApiDetails(map: { readonly [key: string]: Maybe<OnCallApiDetailsRef> }): Maybe<OnCallModelApiDetails> {
   const result: { [call: string]: OnCallCrudModelApiDetails | undefined } = {};
@@ -379,7 +411,7 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
         continue;
       }
 
-      if (!models[modelType]) {
+      if (!(modelType in models)) {
         models[modelType] = { calls: {} };
       }
 
@@ -394,9 +426,16 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
 /**
  * Resolves leaf-level analytics details from the aggregated _apiDetails tree.
  *
- * Walks: call → modelType → specifier (if specifier-level), then reads the `analytics`
+ * Walks: call -> modelType -> specifier (if specifier-level), then reads the `analytics`
  * field from the handler-level {@link OnCallModelFunctionApiDetails}.
+ *
+ * @param apiDetails - The top-level aggregated API details.
+ * @param call - The CRUD operation type to look up.
+ * @param modelType - The Firestore model type to look up.
+ * @param specifier - Optional specifier key for variant handlers.
+ * @returns The analytics details for the resolved handler, or undefined.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OnCallModelFunctionAnalyticsDetails> {
   const modelDetails = apiDetails[call]?.modelTypes[modelType];
 

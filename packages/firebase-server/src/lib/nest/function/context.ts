@@ -58,6 +58,8 @@ export type FirebaseServerActionsTransformFactoryLogErrorFunctionInput = Firebas
 /**
  * Default error logger that writes validation error details to the console.
  * Used when `logError` is `true` or omitted in the factory options.
+ *
+ * @param details - the validation error details to log.
  */
 export const defaultFirebaseServerActionsTransformFactoryLogErrorFunction: FirebaseServerActionsTransformFactoryLogErrorFunction = (details) => {
   console.log('firebaseServerActionsTransformFactory() encountered validation error: ', details);

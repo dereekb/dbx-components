@@ -33,7 +33,7 @@ export interface NotificationTemplateServiceTypeConfig {
   /**
    * Factory that creates {@link NotificationMessageFunction} instances for this type.
    */
-  readonly factory: NotificationMessageFunctionFactory<any>;
+  readonly factory: NotificationMessageFunctionFactory;
 }
 
 /**

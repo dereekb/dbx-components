@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- generic constraints require `any` for covariant document data types */
 import { type Observable, combineLatest, map, type OperatorFunction, of } from 'rxjs';
 import { type DocumentDataWithIdAndKey, type DocumentSnapshot } from '../types';
 import { type FirestoreDocument, type FirestoreDocumentData } from './document';

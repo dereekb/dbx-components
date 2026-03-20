@@ -9,6 +9,7 @@ import { type UpdateData, type FirestoreAccessorIncrementUpdate } from '@dereekb
  * Each field in the input maps to an atomic increment operation. Null/undefined values default to 0.
  *
  * @param input - The increment specification mapping field names to numeric deltas.
+ * @returns Firestore {@link UpdateData} with atomic increment operations.
  *
  * @example
  * ```typescript

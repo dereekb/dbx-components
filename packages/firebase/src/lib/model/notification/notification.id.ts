@@ -111,6 +111,7 @@ export type NotificationSummaryIdForUidFunction = FactoryWithRequiredInput<Notif
  * by combining the given user model identity with the provided UID.
  *
  * @param userModelIdentity - the root identity for user models (e.g., `profileIdentity`)
+ * @returns a function that generates a {@link NotificationSummaryId} for a given user UID
  *
  * @example
  * ```ts
@@ -204,9 +205,9 @@ export interface NotificationTaskKeyRef {
 /**
  * Creates a NotificationTaskUniqueId from the input model id and task type.
  *
- * @param input model id input
- * @param taskType task type
- * @returns NotificationTaskUniqueId
+ * @param input - model id input
+ * @param taskType - task type
+ * @returns the unique notification task id combining the model id and task type
  */
 export function notificationTaskUniqueId(input: FirestoreModelIdInput, taskType: NotificationTaskType): NotificationTaskUniqueId {
   return `${firestoreModelId(input)}_${taskType}`; // combineation of model id and template type

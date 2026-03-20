@@ -52,6 +52,7 @@ export type FirestoreNotificationSummarySendService = NotificationSummarySendSer
  * Each summary update runs in a Firestore transaction to prevent concurrent write conflicts.
  *
  * @param config - service configuration including Firestore context and collection references
+ * @returns a {@link NotificationSummarySendService} backed by Firestore
  *
  * @example
  * ```ts
@@ -108,29 +109,28 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
 
               if (messagesToSend.length > 0) {
                 // add the new items to existing n, then keep the last 1000
-                const sortedN = existingMessages
-                  .concat(
-                    messagesToSend.map((x) => {
-                      let message: string = '';
+                const sortedN = [
+                  ...existingMessages,
+                  ...messagesToSend.map((x) => {
+                    let message: string = '';
 
-                      if (x.content.openingMessage) {
-                        message = x.content.openingMessage;
-                      }
+                    if (x.content.openingMessage) {
+                      message = x.content.openingMessage;
+                    }
 
-                      if (x.content.closingMessage) {
-                        message = (message ? message + '\n\n' : message) + x.content.closingMessage;
-                      }
+                    if (x.content.closingMessage) {
+                      message = (message ? message + '\n\n' : message) + x.content.closingMessage;
+                    }
 
-                      const item: NotificationItem = {
-                        ...(x.item as NotificationItem),
-                        s: cutSubject(x.content.title),
-                        g: cutMessage(message)
-                      };
+                    const item: NotificationItem = {
+                      ...(x.item as NotificationItem),
+                      s: cutSubject(x.content.title),
+                      g: cutMessage(message)
+                    };
 
-                      return item;
-                    })
-                  )
-                  .sort(sortNotificationItemsFunction);
+                    return item;
+                  })
+                ].sort(sortNotificationItemsFunction);
 
                 const n = takeLast(sortedN, NOTIFICATION_SUMMARY_ITEM_LIMIT);
 
@@ -142,7 +142,7 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
 
               if (updateTemplate != null) {
                 if (notificationSummary != null) {
-                  await notificationSummaryDocument.update(updateTemplate!);
+                  await notificationSummaryDocument.update(updateTemplate);
                   updated = true;
                 } else if (allowCreateNotificationSummaries) {
                   // if it does not exist, and we are allowed to create new summaries, create it and add the new notifications

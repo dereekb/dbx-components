@@ -188,16 +188,19 @@ export interface StorageUploadTask<R = unknown> {
   readonly taskRef: R;
   /**
    * Cancels a running task. Has no effect on a complete or failed task.
+   *
    * @returns True if the cancel had an effect.
    */
   cancel(): boolean;
   /**
    * Pauses a currently running task. Has no effect on a paused or failed task.
+   *
    * @returns True if the operation took effect, false if ignored.
    */
   pause(): boolean;
   /**
    * Resumes a paused task. Has no effect on a currently running or failed task.
+   *
    * @returns True if the operation took effect, false if ignored.
    */
   resume(): boolean;

@@ -26,6 +26,7 @@ import {
 /**
  * Server-side query builder type, aliasing the Google Cloud Firestore {@link Query}.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- GoogleCloudQuery default type parameter requires any
 export type FirestoreServerQueryBuilder<T = any> = GoogleCloudQuery<T>;
 
 /**
@@ -53,6 +54,8 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
  * Creates a {@link FirestoreQueryConstraintFunctionsDriver} for the Google Cloud Firestore server SDK.
  *
  * Translates abstract query constraints into Google Cloud Firestore query builder calls.
+ *
+ * @returns A {@link FirestoreQueryConstraintFunctionsDriver} for the server SDK.
  */
 export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryConstraintFunctionsDriver {
   return makeFirestoreQueryConstraintFunctionsDriver<FirestoreServerQueryBuilder>({
@@ -69,6 +72,8 @@ export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryC
  * Supports query execution (getDocs), document counting (countDocs), and real-time
  * streaming (streamDocs) via `onSnapshot`. Transaction-aware reads are supported
  * through the optional transaction parameter in `getDocs`.
+ *
+ * @returns A complete {@link FirestoreQueryDriver} for the Google Cloud Admin SDK.
  *
  * @example
  * ```typescript

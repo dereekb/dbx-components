@@ -1,5 +1,19 @@
 import type * as admin from 'firebase-admin';
-import { type FirebaseAuthContextInfo, type FirebaseAuthDetails, type FirebaseAuthUserId, type FirebaseAuthNewUserClaimsData, type FirebaseAuthSetupPassword, type FirebaseAuthResetUserPasswordClaimsData, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY } from '@dereekb/firebase';
+import {
+  type FirebaseAuthContextInfo,
+  type FirebaseAuthDetails,
+  type FirebaseAuthUserId,
+  type FirebaseAuthNewUserClaimsData,
+  type FirebaseAuthSetupPassword,
+  type FirebaseAuthResetUserPasswordClaimsData,
+  FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY,
+  FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY,
+  FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY,
+  FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY,
+  FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR,
+  FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR,
+  FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR
+} from '@dereekb/firebase';
 import { type Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, type AuthClaims, type AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, type ArrayOrValue, type AuthRole, forEachKeyValue, type ObjectMap, type AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, type AuthClaimsObject, type Maybe, AUTH_TOS_SIGNED_ROLE, type EmailAddress, type E164PhoneNumber, randomNumberFactory, type PasswordString, isThrottled } from '@dereekb/util';
 import { assertIsContextWithAuthData, type CallableContextWithAuthData } from '../function/context';
 import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
@@ -7,7 +21,6 @@ import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from './auth.service.error';
-import { FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR, FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR, FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR } from '@dereekb/firebase';
 import { type CallableContext } from '../type';
 
 /**
@@ -218,6 +231,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   /**
    * Generates a random numeric string for use as a temporary reset password.
+   *
+   * @returns A random numeric string suitable as a temporary password.
    */
   protected _generateResetPasswordKey(): string {
     return String(DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR());
@@ -241,6 +256,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   async loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>> {
     const claims = await this.loadClaims<T>();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- claims are cast from raw custom claims which may not have resetPassword at runtime
     const result: Maybe<T> = claims.resetPassword != null ? claims : undefined;
     return result;
   }
@@ -293,6 +309,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
    *
    * @param roles - The complete set of roles to assign.
    * @param claimsToRetain - Additional claims to merge in alongside the role-derived claims.
+   * @returns Resolves when the claims have been replaced.
    *
    * @example
    * ```typescript
@@ -303,7 +320,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   async setRoles<T extends AuthClaimsObject = AuthClaimsObject>(roles: AuthRole[] | AuthRoleSet, claimsToRetain?: Partial<T>): Promise<void> {
     const claims = {
       ...claimsToRetain,
-      ...this._claimsForRolesChange(Array.from(roles))
+      ...this._claimsForRolesChange([...roles])
     };
 
     return this.setClaims(claims);
@@ -312,6 +329,9 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   /**
    * Converts roles to their corresponding claim keys, filtering out null/undefined entries
    * that represent unrelated claims in the service's {@link FirebaseServerAuthService.claimsForRoles} output.
+   *
+   * @param roles - The roles to convert to claims.
+   * @returns Filtered claims object with only the relevant role-based entries.
    */
   protected _claimsForRolesChange(roles: ArrayOrValue<AuthRole>) {
     return filterNullAndUndefinedValues(this.service.claimsForRoles(asSet(roles)));
@@ -324,18 +344,12 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   async updateClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaimsUpdate<T>): Promise<void> {
     const currentClaims = await this.loadClaims();
 
-    let newClaims: AuthClaimsUpdate<T>;
+    let newClaims: AuthClaimsUpdate<T> = {
+      ...currentClaims,
+      ...filterUndefinedValues(claims, false)
+    };
 
-    if (currentClaims) {
-      newClaims = {
-        ...currentClaims,
-        ...filterUndefinedValues(claims, false)
-      };
-
-      newClaims = filterNullAndUndefinedValues(newClaims);
-    } else {
-      newClaims = claims;
-    }
+    newClaims = filterNullAndUndefinedValues(newClaims);
 
     return this.setClaims(newClaims);
   }
@@ -684,6 +698,7 @@ export type UserContextOrUid<U extends FirebaseServerAuthUserContext = FirebaseS
  *
  * @param authService - The auth service to create a context from if needed.
  * @param userContextOrUid - A user context or UID string.
+ * @returns The resolved user context instance.
  *
  * @example
  * ```typescript
@@ -799,12 +814,13 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     let sentContent = false;
 
     if (setupDetails) {
-      const { setupCommunicationAt } = setupDetails.claims;
+      // Cast to string | undefined because claims are cast from raw custom claims which may not have this field at runtime
+      const setupCommunicationAt = setupDetails.claims.setupCommunicationAt as string | undefined;
       const hasSentCommunication = Boolean(setupCommunicationAt);
 
       if (config?.sendSetupDetailsOnce && hasSentCommunication) {
         // do not send.
-        if (config?.throwErrors) {
+        if (config.throwErrors) {
           throw new FirebaseServerAuthNewUserSendSetupDetailsSendOnceError();
         }
       } else {
@@ -859,6 +875,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
   /**
    * Records the current timestamp as the last setup content communication date in the user's claims.
+   *
+   * @param details - The user's setup details containing the user context.
    */
   protected async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void> {
     const setupCommunicationAt = toISODateString(new Date());
@@ -884,6 +902,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
    *
    * Generates a random setup password if none is provided. Override to customize user creation behavior.
    *
+   * @param input - The initialization configuration for the new user.
+   * @returns The created user record and the setup password used.
    * @throws Throws if the Firebase Admin SDK rejects the user creation.
    */
   protected async createNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<FirebaseServerAuthCreateNewUserResult> {
@@ -902,7 +922,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       });
     } catch (e: unknown) {
       const firebaseError = e as { code?: string };
-      const errorCode = firebaseError?.code;
+      const errorCode = firebaseError.code;
 
       if (errorCode === FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR && phoneNumber) {
         throw new FirebaseServerAuthUserExistsError(errorCode, 'phone', phoneNumber);
@@ -936,6 +956,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
   /**
    * Clears setup-related claims (setup password and last communication date) from the user.
+   *
+   * @param userContext - The user context to clear setup claims from.
    */
   protected async updateClaimsToClearUser(userContext: U): Promise<void> {
     await userContext.updateClaims<FirebaseServerAuthNewUserClaims>({

@@ -7,6 +7,7 @@ import { type UpdateData, type FirestoreAccessorArrayUpdate } from '@dereekb/fir
  * Google Cloud Firestore's {@link FieldValue.arrayUnion} and {@link FieldValue.arrayRemove}.
  *
  * @param input - The array update specification with `union` and/or `remove` field maps.
+ * @returns Firestore {@link UpdateData} with array union/remove operations.
  *
  * @example
  * ```typescript
@@ -17,8 +18,8 @@ import { type UpdateData, type FirestoreAccessorArrayUpdate } from '@dereekb/fir
  * ```
  */
 export function firestoreServerArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {
-  const union = input?.union;
-  const remove = input?.remove;
+  const union = input.union;
+  const remove = input.remove;
 
   function createUpdatesWithArrayFunction(fieldUpdate: FirestoreAccessorArrayUpdate<T>['union' | 'remove'], arrayUpdateFunction: typeof FieldValue.arrayUnion | typeof FieldValue.arrayRemove): Maybe<UpdateData<T>> {
     let result: UpdateData<T> | undefined;

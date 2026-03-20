@@ -220,11 +220,14 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
   return (firestore: F) => {
     const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => {
-      const queryLike = (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike;
+      const collection = (config as Partial<FirestoreContextFirestoreCollectionConfig<T, D>>).collection;
+      const queryLike = collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike;
 
       return {
         ...config,
-        collection: config.converter ? (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection?.withConverter(config.converter) : (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection,
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- collection can be undefined for collection group configs
+        collection: config.converter ? collection?.withConverter(config.converter) : collection,
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- converter is optional at runtime via union type
         queryLike: config.converter ? queryLike.withConverter(config.converter) : queryLike,
         firestoreContext: context,
         firestoreDriverIdentifier: drivers.firestoreDriverIdentifier,

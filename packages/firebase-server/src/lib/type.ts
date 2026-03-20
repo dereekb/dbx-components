@@ -13,4 +13,5 @@ export type AuthData = NonNullable<CallableRequest['auth']>;
  * Used throughout `@dereekb/firebase-server` as the standard callable context type
  * passed to auth services and function handlers.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CallableRequest generic requires `any` to omit only the non-payload fields
 export type CallableContext = Omit<CallableRequest<any>, 'data' | 'acceptsStreaming'>;

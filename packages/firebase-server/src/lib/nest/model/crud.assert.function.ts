@@ -20,13 +20,21 @@ export type AssertModelCrudRequestFunctionContextCrudType = 'call' | 'create' | 
  * @typeParam I - The input data type of the request.
  */
 export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
-  /** The original callable request including the NestJS context and caller data. */
+  /**
+   * The original callable request including the NestJS context and caller data.
+   */
   readonly request: NestContextCallableRequest<N, I>;
-  /** The CRUD call type string (e.g., 'create', 'read'). */
+  /**
+   * The CRUD call type string (e.g., 'create', 'read').
+   */
   readonly call: OnCallFunctionType;
-  /** The Firestore model type being targeted (e.g., 'profile', 'guestbook'). */
+  /**
+   * The Firestore model type being targeted (e.g., 'profile', 'guestbook').
+   */
   readonly modelType: FirestoreModelType;
-  /** The optional sub-operation specifier (e.g., 'username', 'fromUpload'). */
+  /**
+   * The optional sub-operation specifier (e.g., 'username', 'fromUpload').
+   */
   readonly specifier: Maybe<string>;
 }
 

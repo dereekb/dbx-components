@@ -18,6 +18,10 @@ export type JsonSerializableObject = Record<PrimativeKey, any>;
  * String key of an object.
  */
 export type ObjectKey = string;
+
+/**
+ * An object with no keys.
+ */
 export type EmptyObject = Record<string, never>;
 
 /**

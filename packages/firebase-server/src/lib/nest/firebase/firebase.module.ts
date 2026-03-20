@@ -14,6 +14,7 @@ export const FIREBASE_APP_TOKEN: InjectionToken = 'FIREBASE_APP_TOKEN';
  * Creates a NestJS {@link FactoryProvider} that binds a Firebase Admin app getter to {@link FIREBASE_APP_TOKEN}.
  *
  * @param useFactory - Factory function returning the Firebase Admin app instance.
+ * @returns A NestJS factory provider for the Firebase Admin app.
  *
  * @example
  * ```typescript

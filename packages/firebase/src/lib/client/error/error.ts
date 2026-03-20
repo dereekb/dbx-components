@@ -21,6 +21,6 @@ import { type FirebaseError } from 'firebase/app';
  * }
  * ```
  */
-export function isClientFirebaseError(error: any): error is FirebaseError {
+export function isClientFirebaseError(error: unknown): error is FirebaseError {
   return typeof error === 'object' && (error as FirebaseError).name === 'FirebaseError' && typeof (error as FirebaseError).code === 'string';
 }

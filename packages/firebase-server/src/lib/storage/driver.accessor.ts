@@ -9,6 +9,7 @@ import {
   type StorageDeleteFileOptions,
   type StorageListFilesOptions,
   storageListFilesResultFactory,
+  type StorageListFilesResultFactoryInput,
   type StorageListItemResult,
   type StorageListFilesResult,
   type StorageMetadata,
@@ -28,6 +29,10 @@ import { isArrayBuffer, isUint8Array } from 'util/types';
 
 /**
  * Resolves a Google Cloud Storage {@link Bucket} from a {@link StoragePath}.
+ *
+ * @param storage - the Google Cloud Storage client instance.
+ * @param path - the storage path containing the bucket ID.
+ * @returns The resolved Google Cloud Storage bucket.
  */
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
   return storage.bucket(path.bucketId);
@@ -35,6 +40,10 @@ export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudS
 
 /**
  * Resolves a Google Cloud Storage {@link GoogleCloudFile} from a {@link StoragePath}.
+ *
+ * @param storage - the Google Cloud Storage client instance.
+ * @param path - the storage path containing bucket ID and file path.
+ * @returns The resolved Google Cloud Storage file reference.
  */
 export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): GoogleCloudFile {
   return googleCloudStorageBucketForStorageFilePath(storage, path).file(path.pathString);
@@ -47,6 +56,10 @@ export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleC
 
 /**
  * Converts Google Cloud Storage {@link FileMetadata} into the normalized {@link StorageMetadata} format.
+ *
+ * @param file - the Google Cloud Storage file reference.
+ * @param metadata - the raw file metadata from the Google Cloud SDK.
+ * @returns Normalized storage metadata.
  */
 export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, metadata: FileMetadata): StorageMetadata {
   const fullPath = file.name;
@@ -79,6 +92,10 @@ export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, 
  * and ACL operations for a single file in Google Cloud Storage.
  *
  * Handles emulator-specific edge cases (e.g., signing errors, atomic move fallback).
+ *
+ * @param storage - the Google Cloud Storage client instance.
+ * @param storagePath - the storage path identifying the file's bucket and path.
+ * @returns A file accessor with CRUD, streaming, and ACL operations.
  */
 export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFile {
   const file = googleCloudStorageFileForStorageFilePath(storage, storagePath);
@@ -102,7 +119,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
   function _configureMetadata(options: ConfigureMetadataOptions): FileMetadata {
     const customMetadata = filterUndefinedValues({
       ...options.metadata?.customMetadata,
-      ...options?.customMetadata
+      ...options.customMetadata
     }) as { [key: string]: string };
 
     return filterUndefinedValues({
@@ -204,12 +221,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
         .catch((e) => {
           let publicUrlBackup: string;
 
-          interface SigningError {
-            name: 'SigningError';
-            message: string;
-          }
-
-          if (e && (e as SigningError).name === 'SigningError' && (isTestNodeEnv() || process.env.FIREBASE_STORAGE_EMULATOR_HOST)) {
+          if (e instanceof Error && e.name === 'SigningError' && (isTestNodeEnv() || process.env.FIREBASE_STORAGE_EMULATOR_HOST)) {
             // NOTE: Signing does not behave properly in the emulator as it is not supported.
             // https://github.com/firebase/firebase-tools/issues/3400
 
@@ -283,7 +295,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
       return newFile;
     },
     copy,
-    delete: (options: StorageDeleteFileOptions) => file.delete(options).then((x) => undefined),
+    delete: (options: StorageDeleteFileOptions) => file.delete(options).then(() => undefined),
     isPublic: () => file.isPublic().then((x) => x[0]),
     makePublic: (setPublic) => (setPublic !== false ? file.acl.add(PUBLIC_ACL) : file.acl.delete({ entity: PUBLIC_ACL.entity })).then(() => undefined),
     makePrivate: (options) => file.makePrivate(options).then(() => undefined),
@@ -320,7 +332,7 @@ export interface GoogleCloudStorageListApiResponseItem extends Pick<StorageMetad
 
 export const googleCloudStorageListFilesResultFactory = storageListFilesResultFactory({
   hasItems(result: GoogleCloudListResult): boolean {
-    return Boolean(result.apiResponse.items || result.apiResponse.prefixes);
+    return Boolean(result.apiResponse.items ?? result.apiResponse.prefixes);
   },
   hasNext: (result: GoogleCloudListResult) => {
     return result.nextQuery != null;
@@ -328,7 +340,7 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
   nextPageTokenFromResult(result: GoogleCloudListResult): Maybe<StorageListFilesPageToken> {
     return result.nextQuery?.pageToken;
   },
-  next(storage: GoogleCloudStorage, options: Maybe<StorageListFilesOptions>, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
+  next({ options, folder }: StorageListFilesResultFactoryInput<GoogleCloudStorage>, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
     return folder.list({ ...options, ...result.nextQuery });
   },
   file(storage: GoogleCloudStorage, fileResult: StorageListItemResult): FirebaseStorageAccessorFile {
@@ -338,11 +350,11 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
     return googleCloudStorageAccessorFolder(storage, folderResult.storagePath);
   },
   filesFromResult(result: GoogleCloudListResult): StorageListItemResult[] {
-    const items = result.apiResponse?.items ?? [];
+    const items = result.apiResponse.items ?? [];
     return items.map((x) => ({ raw: x, name: slashPathName(x.name), storagePath: { bucketId: x.bucket, pathString: x.name } }));
   },
   foldersFromResult(result: GoogleCloudListResult, folder: FirebaseStorageAccessorFolder): StorageListItemResult[] {
-    const items = result.apiResponse?.prefixes ?? [];
+    const items = result.apiResponse.prefixes ?? [];
     return items.map((prefix) => ({ raw: prefix, name: slashPathName(prefix), storagePath: { bucketId: folder.storagePath.bucketId, pathString: prefix } }));
   }
 });
@@ -350,6 +362,10 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
 /**
  * Creates a {@link GoogleCloudStorageAccessorFolder} that supports checking folder existence
  * and listing files/subfolders with pagination.
+ *
+ * @param storage - the Google Cloud Storage client instance.
+ * @param storagePath - the storage path identifying the folder's bucket and prefix.
+ * @returns A folder accessor with existence checking and listing operations.
  */
 export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFolder {
   const bucket = googleCloudStorageBucketForStorageFilePath(storage, storagePath);
@@ -389,7 +405,7 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
           apiResponse: apiResponse as object
         };
 
-        return googleCloudStorageListFilesResultFactory(storage, folder, options, result);
+        return googleCloudStorageListFilesResultFactory({ storage, folder, options }, result);
       });
     }
   };
@@ -399,6 +415,8 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
 
 /**
  * Creates a {@link FirebaseStorageAccessorDriver} for Google Cloud Storage (Admin SDK).
+ *
+ * @returns A server-side storage accessor driver for Google Cloud Storage.
  *
  * @example
  * ```typescript

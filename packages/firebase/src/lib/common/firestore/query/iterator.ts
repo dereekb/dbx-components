@@ -541,7 +541,7 @@ export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPag
             const time = new Date();
             const itemsForThisPage: DocumentReference<T>[] = items.slice(startAtIndex, startAtIndex + limitCount);
 
-            const lastItemForThisPage = lastValue(itemsForThisPage);
+            const lastItemForThisPage = lastValue(itemsForThisPage) as Maybe<DocumentReference<T>>;
             let end = false;
 
             if (lastItemForThisPage) {
@@ -582,7 +582,7 @@ export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPag
               });
             };
 
-            const resultPromise = _loadFakeQuerySnapshot().then((snapshot: QuerySnapshot<T>) => {
+            return _loadFakeQuerySnapshot().then((snapshot: QuerySnapshot<T>) => {
               const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
                 value: {
                   time,
@@ -591,7 +591,7 @@ export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPag
                   reload() {
                     return _loadFakeQuerySnapshot();
                   },
-                  stream(options?: FirestoreItemPageQueryResultStreamOptions) {
+                  stream(_options?: FirestoreItemPageQueryResultStreamOptions) {
                     // TODO: Count potentially stream to fully implement, but might not be used anyways.
                     return of(snapshot);
                   }
@@ -601,8 +601,6 @@ export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPag
 
               return result;
             });
-
-            return resultPromise;
           }
         })
       );

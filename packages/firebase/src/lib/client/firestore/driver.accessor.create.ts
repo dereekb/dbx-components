@@ -8,6 +8,7 @@ import { type WithFieldValue, type WriteResult } from '../../common/firestore/ty
  * Checks for document existence first, then calls `set()` if the document is absent.
  *
  * @param accessor - the accessor to perform the existence check and set operation on
+ * @returns a function that creates the document if it does not exist, or throws if it does
  * @throws {Error} When the document already exists at the reference path
  *
  * @example

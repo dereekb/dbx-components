@@ -69,6 +69,7 @@ import {
   loadDocumentsForIds,
   type NotificationBoxId,
   type AppNotificationTemplateTypeInfoRecordServiceRef,
+  type NotificationTemplateTypeInfo,
   type NotificationUserNotificationBoxRecipientConfig,
   iterateFirestoreDocumentSnapshotPairs,
   notificationUsersFlaggedForNeedsSyncQuery,
@@ -166,6 +167,7 @@ export abstract class NotificationServerActions {
  * to its factory function using the provided context.
  *
  * @param context - the fully assembled notification server actions context
+ * @returns a fully wired {@link NotificationServerActions} instance
  *
  * @example
  * ```ts
@@ -197,6 +199,9 @@ export function notificationServerActions(context: NotificationServerActionsCont
  *
  * Validates the UID exists in Firebase Auth, then creates a new {@link NotificationUser} document
  * with empty default and global configs. Throws if the UID is not found in Auth.
+ *
+ * @param context - the notification server actions context with auth and collection access
+ * @returns a transform-and-validate function that creates a new notification user document
  */
 export function createNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
@@ -240,6 +245,9 @@ export function createNotificationUserFactory(context: NotificationServerActions
  * Updates a {@link NotificationUser}'s default config (`dc`), global config (`gc`), and/or
  * box configs (`bc`). When the global config changes, iterates all box configs to propagate
  * effective recipient changes and marks affected entries for sync.
+ *
+ * @param context - the notification server actions context with Firestore and collection access
+ * @returns a transform-and-validate function that updates an existing notification user document
  */
 export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
@@ -331,6 +339,9 @@ const MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH = 50;
  * entries flagged with `ns=true` (needs-sync), loading the corresponding {@link NotificationBox},
  * and merging the user's preferences back into the box's recipient list. Handles removed entries
  * and cleans up stale box references.
+ *
+ * @param context - the notification server actions context with Firestore and collection access
+ * @returns a transform-and-validate function that resyncs a notification user's box configurations
  */
 export function resyncNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
@@ -365,7 +376,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
           if (notificationBoxConfigsToSyncInThisBatch.length > 0) {
             const notificationBoxConfigsToSyncInThisBatchMap = makeModelMap(notificationBoxConfigsToSyncInThisBatch, (x) => x.nb);
 
-            const notificationBoxIdsToSyncInThisBatch = Array.from(notificationBoxConfigsToSyncInThisBatchMap.keys()) as string[];
+            const notificationBoxIdsToSyncInThisBatch = [...notificationBoxConfigsToSyncInThisBatchMap.keys()] as string[];
 
             const notificationBoxDocuments = loadDocumentsForIds(notificationBoxCollection.documentAccessorForTransaction(transaction), notificationBoxIdsToSyncInThisBatch);
             const notificationBoxDocumentSnapshotDataPairs = await getDocumentSnapshotDataPairs(notificationBoxDocuments);
@@ -459,7 +470,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
                     ...existingConfig,
                     nb,
                     rm: false, // mark as not removed
-                    i: updatedRecipient.i ?? UNSET_INDEX_NUMBER
+                    i: updatedRecipient.i
                   };
                 }
               }
@@ -502,6 +513,9 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
  * Batch-processes all {@link NotificationUser} documents flagged for sync by querying
  * for entries with `ns=true`, then calling the resync logic for each in parallel
  * (up to 5 concurrent tasks). Loops until no more flagged users are found.
+ *
+ * @param context - the notification server actions context with collection access
+ * @returns an async function that resyncs all flagged notification users and returns aggregate results
  */
 export function resyncAllNotificationUsersFactory(context: NotificationServerActionsContext) {
   const { notificationUserCollection } = context;
@@ -553,6 +567,9 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
  *
  * Creates a new {@link NotificationSummary} document for a model, generating the summary ID
  * from the model key and initializing it with a blank template.
+ *
+ * @param context - the notification server actions context with collection access
+ * @returns a transform-and-validate function that creates a new notification summary document
  */
 export function createNotificationSummaryFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
@@ -576,6 +593,9 @@ export function createNotificationSummaryFactory(context: NotificationServerActi
  *
  * Updates an existing {@link NotificationSummary} document's owner or setup flag.
  * Runs within a Firestore transaction to ensure consistency.
+ *
+ * @param context - the notification server actions context
+ * @returns a transform-and-validate function that updates an existing notification summary document
  */
 export function updateNotificationSummaryFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
@@ -622,6 +642,9 @@ export interface CreateNotificationBoxInTransactionInput extends NotificationBox
  *
  * Checks for existing boxes and throws if one already exists for the model.
  * Also syncs initial recipients with their corresponding {@link NotificationUser} documents.
+ *
+ * @param context - the base notification server actions context with collection access
+ * @returns an async function that creates a notification box within a transaction and returns the document and template
  */
 export function createNotificationBoxInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { notificationBoxCollection } = context;
@@ -657,6 +680,9 @@ export function createNotificationBoxInTransactionFactory(context: BaseNotificat
  *
  * Wraps {@link createNotificationBoxInTransactionFactory} in a Firestore transaction
  * and follows the transform-and-validate pattern.
+ *
+ * @param context - the notification server actions context with Firestore and collection access
+ * @returns a transform-and-validate function that creates a new notification box document
  */
 export function createNotificationBoxFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, notificationBoxCollection, firebaseServerActionTransformFunctionFactory } = context;
@@ -676,7 +702,17 @@ export function createNotificationBoxFactory(context: NotificationServerActionsC
   });
 }
 
-export function updateNotificationBoxFactory({ firebaseServerActionTransformFunctionFactory }: NotificationServerActionsContext) {
+/**
+ * Factory for the `updateNotificationBox` action.
+ *
+ * Currently a no-op placeholder that returns the document unchanged.
+ * Reserved for future box-level update logic.
+ *
+ * @param context - the notification server actions context (destructured for the transform factory)
+ * @returns a transform-and-validate function that returns the notification box document unchanged
+ */
+export function updateNotificationBoxFactory(context: NotificationServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
   return firebaseServerActionTransformFunctionFactory(updateNotificationBoxParamsType, async () => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       // does nothing currently.
@@ -699,6 +735,9 @@ export interface UpdateNotificationBoxRecipientExclusionInTransactionResult {
  *
  * Manages the exclusion list (`x`) on both the box recipient and the corresponding
  * {@link NotificationUser}'s send exclusion array, keeping them in sync.
+ *
+ * @param context - the base notification server actions context with collection access
+ * @returns an async function that updates recipient exclusions within a transaction
  */
 export function updateNotificationBoxRecipientExclusionInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { notificationBoxCollection, notificationUserCollection } = context;
@@ -724,7 +763,7 @@ export function updateNotificationBoxRecipientExclusionInTransactionFactory(cont
 
       const targetRecipient = notificationBox.r.find((x) => x.i === i);
 
-      if (!targetRecipient || !targetRecipient.uid) {
+      if (!targetRecipient?.uid) {
         throw notificationBoxExclusionTargetInvalidError();
       } else {
         targetUid = targetRecipient.uid;
@@ -735,7 +774,7 @@ export function updateNotificationBoxRecipientExclusionInTransactionFactory(cont
       throw notificationBoxExclusionTargetInvalidError();
     }
 
-    const notificationUserDocument = await notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(targetUid);
+    const notificationUserDocument = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(targetUid);
     const notificationUser = await notificationUserDocument.snapshotData();
 
     if (notificationUser) {
@@ -788,6 +827,9 @@ export interface UpdateNotificationBoxRecipientInTransactionResult {
  * Handles inserting new recipients, updating existing ones, and removing recipients.
  * Syncs changes with the recipient's {@link NotificationUser} document and manages
  * recipient index assignment via a sorted-values free-index calculator.
+ *
+ * @param context - the base notification server actions context with auth and collection access
+ * @returns an async function that updates a recipient on a notification box within a transaction
  */
 export function updateNotificationBoxRecipientInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { authService, notificationBoxCollection, notificationUserCollection } = context;
@@ -836,7 +878,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
       let nextRecipient: Maybe<NotificationBoxRecipient>;
 
       if (remove) {
-        if (targetRecipientIndex != null) {
+        if (targetRecipientIndex !== -1) {
           r = [...notificationBox.r]; // remove if they exist.
           delete r[targetRecipientIndex];
         }
@@ -877,7 +919,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
         // sync with the notification user's document, if it exists
         if (notificationUserId != null) {
           const notificationBoxId = notificationBoxDocument.id;
-          const notificationUserDocument = await notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationUserId);
+          const notificationUserDocument = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationUserId);
 
           let notificationUser = await notificationUserDocument.snapshotData();
           const createNotificationUser = !notificationUser && !remove && insert;
@@ -935,7 +977,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
             }
 
             // Set if nextRecipient is updated/influence from existing configuration
-            if (targetRecipientIndex != null && updatedNotificationBoxRecipient && !remove) {
+            if (targetRecipientIndex !== -1 && updatedNotificationBoxRecipient && !remove) {
               r[targetRecipientIndex] = updatedNotificationBoxRecipient; // set the updated value in r
             }
           }
@@ -971,6 +1013,9 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
  *
  * Wraps the in-transaction recipient update logic, handling both recipient changes
  * and send exclusion updates in a single Firestore transaction.
+ *
+ * @param context - the notification server actions context with Firestore and collection access
+ * @returns a transform-and-validate function that updates a recipient on a notification box
  */
 export function updateNotificationBoxRecipientFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
@@ -1038,6 +1083,9 @@ export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIF
  *
  * Supports throttling via `sendAt` time, configurable send flags, and task-based
  * async workflows for notifications that require multi-step processing.
+ *
+ * @param context - the notification server actions context with template, send, and task services
+ * @returns a transform-and-validate function that processes and sends a notification document
  */
 export function sendNotificationFactory(context: NotificationServerActionsContext) {
   const { appNotificationTemplateTypeInfoRecordService, notificationSendService, notificationTaskService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
@@ -1057,7 +1105,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 
-        let [notificationBox, notification] = await Promise.all([getDocumentSnapshotData(notificationBoxDocument), getDocumentSnapshotData(notificationDocumentInTransaction)]);
+        const [initialNotificationBox, notification] = await Promise.all([getDocumentSnapshotData(notificationBoxDocument), getDocumentSnapshotData(notificationDocumentInTransaction)]);
+        let notificationBox = initialNotificationBox;
 
         const model = inferKeyFromTwoWayFlatFirestoreModelKey(notificationBoxDocument.id);
         const isNotificationTask = notification?.st === NotificationSendType.TASK_NOTIFICATION;
@@ -1138,7 +1187,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             templateInstance = notificationTemplateService.templateInstanceForType(t);
             isConfiguredTemplateType = templateInstance.isConfiguredType;
 
-            const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
+            const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t] as NotificationTemplateTypeInfo | undefined;
 
             isKnownTemplateType = templateTypeInfo != null;
             onlySendToExplicitlyEnabledRecipients = notification.ois ?? templateTypeInfo?.onlySendToExplicitlyEnabledRecipients;
@@ -1151,7 +1200,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
               if (notification.a < retryAttempts) {
                 if (isKnownTemplateType) {
-                  console.warn(`Unconfigured but known template type of "${t}" (${templateTypeInfo.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
+                  console.warn(`Unconfigured but known template type of "${t}" (${templateTypeInfo?.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
                 } else {
                   console.warn(`Unknown template type of "${t}" was found in a Notification. Send is being delayed by ${delay} hours.`);
                 }
@@ -1182,6 +1231,9 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 case NotificationSendType.SEND_WITHOUT_CREATING_BOX:
                   // continue with current tryRun
                   break;
+                case NotificationSendType.TASK_NOTIFICATION:
+                  // task notifications do not require a notification box; continue with current tryRun
+                  break;
               }
             }
 
@@ -1195,6 +1247,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         }
 
         // update the notification send at time and attempt count
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- notification may be undefined when snapshot data is missing
         if (notification != null && nextSat != null && !deletedNotification) {
           const isAtMaxAttempts = notification.a >= NOTIFICATION_MAX_SEND_ATTEMPTS;
 
@@ -1203,6 +1256,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           }
 
           // check if it was just deleted
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- deleteNotification() mutates this variable via closure
           if (!deletedNotification) {
             const a = isNotificationTask && tryRun ? notification.a : notification.a + 1; // do not update a notification task's attempt count here, unless tryRun fails
 
@@ -1358,7 +1412,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               // if the tpr has not changed, then it is also considered a reversal
               if (tryRunNextPart) {
                 const tprChanged = !iterablesAreSetEquivalent(notification.tpr, notificationTemplate.tpr);
-                partTprReversal = !tprChanged || (tprChanged && notificationTemplate.tpr.length <= notification.tpr.length);
+                partTprReversal = !tprChanged || notificationTemplate.tpr.length <= notification.tpr.length;
 
                 if (allCompletedSubTasks != null) {
                   switch (allCompletedSubTasks) {
@@ -1371,7 +1425,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                       // check subtask tpr changes
                       nextCompleteSubTasks = asArray(allCompletedSubTasks);
                       const subtaskTprChanged = !iterablesAreSetEquivalent(previouslyCompleteSubTasks, nextCompleteSubTasks);
-                      partTprReversal = !subtaskTprChanged || (subtaskTprChanged && nextCompleteSubTasks.length <= previouslyCompleteSubTasks.length);
+                      partTprReversal = !subtaskTprChanged || nextCompleteSubTasks.length <= previouslyCompleteSubTasks.length;
                       break;
                   }
                 }
@@ -1496,7 +1550,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               });
 
             if (messageFunction) {
-              function filterOutNoContentNotificationMessages(messages: NotificationMessage<any>[]) {
+              function filterOutNoContentNotificationMessages(messages: NotificationMessage[]) {
                 return messages.filter((x) => !x.flag);
               }
 
@@ -1571,7 +1625,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
                   if (sendEmailsResult != null) {
                     const { success, failed } = sendEmailsResult;
-                    esr = success.length ? currentEsr.concat(success.map((x) => x.toLowerCase())) : undefined;
+                    esr = success.length ? [...currentEsr, ...success.map((x) => x.toLowerCase())] : undefined;
 
                     if (failed.length > 0) {
                       es = NotificationSendState.SENT_PARTIAL;
@@ -1637,7 +1691,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
                   if (sendTextsResult != null) {
                     const { success, failed } = sendTextsResult;
-                    tsr = success.length ? currentTsr.concat(success) : undefined;
+                    tsr = success.length ? [...currentTsr, ...success] : undefined;
 
                     if (failed.length > 0) {
                       ts = NotificationSendState.SENT_PARTIAL;
@@ -1760,6 +1814,11 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 // deleted successfully
                 success = deletedNotification;
                 break;
+              case NotificationSendType.INIT_BOX_AND_SEND:
+              case NotificationSendType.SEND_WITHOUT_CREATING_BOX:
+              case NotificationSendType.TASK_NOTIFICATION:
+                // no additional handling needed for these send types when notification box is absent
+                break;
             }
           }
         }
@@ -1821,6 +1880,9 @@ export interface SendQueuedNotificationsInput {
  * and an optional {@link NotificationExpediteService} for immediate delivery.
  * Continues processing batches until no more queued notifications are found
  * or the time budget is exhausted.
+ *
+ * @param context - the notification server actions context with collection group and send factory access
+ * @returns a transform-and-validate function that processes all queued notifications and returns aggregate results
  */
 export function sendQueuedNotificationsFactory(context: NotificationServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationCollectionGroup } = context;
@@ -1857,7 +1919,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
         const query = notificationCollectionGroup.queryDocument(notificationsPastSendAtTimeQuery());
         const notificationDocuments = await query.getDocs();
 
-        const result = await performAsyncTasks(
+        return await performAsyncTasks(
           notificationDocuments,
           async (notificationDocument) => {
             const result = await sendNotificationInstance(notificationDocument);
@@ -1868,8 +1930,6 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
             maxParallelTasks
           }
         );
-
-        return result;
       };
 
       // iterate through all notification items that need to be synced
@@ -1944,6 +2004,9 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
  * Queries for {@link Notification} documents that are ready for cleanup (fully sent,
  * past the retention window) and deletes them in batches. Continues until no more
  * cleanup-eligible notifications are found.
+ *
+ * @param context - the notification server actions context with Firestore and collection access
+ * @returns a transform-and-validate function that cleans up sent notification documents and returns aggregate results
  */
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory } = context;
@@ -1958,6 +2021,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
       // iterate through all Notification items that need to be cleaned up
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
       while (true) {
         const cleanupSentNotificationsResults = await cleanupSentNotifications();
 
@@ -1980,9 +2044,9 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
       async function cleanupSentNotifications() {
         const query = notificationCollectionGroup.queryDocument(notificationsReadyForCleanupQuery());
         const notificationDocuments = await query.getDocs();
-        const notificationDocumentsGroupedByNotificationBox = Array.from(makeValuesGroupMap(notificationDocuments, (x) => x.parent.id).values());
+        const notificationDocumentsGroupedByNotificationBox = [...makeValuesGroupMap(notificationDocuments, (x) => x.parent.id).values()];
 
-        const result = await performAsyncTasks(
+        return await performAsyncTasks(
           notificationDocumentsGroupedByNotificationBox,
           async (notificationDocumentsInSameBox) => {
             const allPairs = await getDocumentSnapshotDataPairs(notificationDocumentsInSameBox);
@@ -1991,17 +2055,15 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
             const { included: taskPairsWithDataAndMarkedDeleted, excluded: normalPairsWithDataAndMarkedDeleted } = separateValues(allPairsWithDataAndMarkedDeleted, (x) => x.data?.st === NotificationSendType.TASK_NOTIFICATION);
 
-            const pairsGroupedByWeek = Array.from(makeValuesGroupMap(normalPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries());
+            const pairsGroupedByWeek = [...makeValuesGroupMap(normalPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries()];
 
             // batch incase there are a lot of new notifications to move to week
-            const pairsGroupedByWeekInBatches = pairsGroupedByWeek
-              .map((x) => {
-                const batches = batch(x[1], 40);
-                return batches.map((batch) => [x[0], batch] as [number, FirestoreDocumentSnapshotDataPair<NotificationDocument>[]]);
-              })
-              .flat();
+            const pairsGroupedByWeekInBatches = pairsGroupedByWeek.flatMap((x) => {
+              const batches = batch(x[1], 40);
+              return batches.map((batch) => [x[0], batch] as [number, FirestoreDocumentSnapshotDataPair<NotificationDocument>[]]);
+            });
 
-            const notificationBoxDocument = await notificationBoxCollection.documentAccessor().loadDocument(notificationDocumentsInSameBox[0].parent);
+            const notificationBoxDocument = notificationBoxCollection.documentAccessor().loadDocument(notificationDocumentsInSameBox[0].parent);
 
             // create/update the NotificationWeek
             const notificationWeekResults = await performAsyncTasks(pairsGroupedByWeekInBatches, async ([yearWeekCode, notificationDocumentsInSameWeek]) => {
@@ -2061,21 +2123,17 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
               }
             });
 
-            const result = {
+            return {
               weeksCreated,
               weeksUpdated,
               itemsDeleted: allPairsWithDataAndMarkedDeleted.length,
               tasksDeleted
             };
-
-            return result;
           },
           {
             maxParallelTasks: 10
           }
         );
-
-        return result;
       }
 
       const result: CleanupSentNotificationsResult = {

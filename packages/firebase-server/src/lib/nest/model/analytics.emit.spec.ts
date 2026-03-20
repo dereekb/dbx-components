@@ -202,6 +202,7 @@ describe('analytics.emit', () => {
     it('should call onComplete after error', async () => {
       const testError = new Error('fail');
       const details: OnCallModelFunctionAnalyticsDetails = {
+        // eslint-disable-next-line @typescript-eslint/max-params
         onComplete: (emitter, _request, _result, error) => {
           emitter.sendEvent('Completed', { hadError: error != null });
         }

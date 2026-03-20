@@ -61,6 +61,7 @@ export const zohoAccessTokenSystemStateDataConverter: SystemStateStoredDataField
       tokens: firestoreObjectArray({
         firestoreField: zohoAccessTokenSystemStateEmbeddedTokenConverter,
         filterUnique: filterUniqueFunction((x) => x.key), // only one token per key is allowed
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- expiresAt may be absent from Firestore data at runtime
         filter: (x) => (x?.expiresAt ? !isPast(x.expiresAt) : true) // filter out expired values or values that have no expiration
       }),
       lat: firestoreDate({ saveDefaultAsNow: true })
@@ -72,7 +73,8 @@ export const zohoAccessTokenSystemStateDataConverter: SystemStateStoredDataField
  * Loads the {@link SystemStateDocument} that stores {@link ZohoAccessTokenSystemStateData},
  * using {@link ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE} as the document ID.
  *
- * @param accessor - the document accessor for the SystemState collection
+ * @param accessor - the document accessor for the SystemState collection.
+ * @returns The SystemState document for the Zoho access token data.
  *
  * @example
  * ```ts

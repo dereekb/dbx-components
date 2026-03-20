@@ -54,6 +54,10 @@ export interface NotificationBoxRecipientTemplateConfig {
 /**
  * Merges two {@link NotificationBoxRecipientTemplateConfig} objects, preferring values from `a` over `b`.
  *
+ * @param a - primary config whose defined values take precedence
+ * @param b - fallback config supplying values when `a` fields are undefined
+ * @returns the merged template config with values from `a` preferred over `b`
+ *
  * @example
  * ```ts
  * const merged = mergeNotificationBoxRecipientTemplateConfigs(
@@ -80,6 +84,9 @@ export function mergeNotificationBoxRecipientTemplateConfigs(a?: Maybe<Notificat
  * Resolves a {@link NotificationBoxRecipientTemplateConfig} by filling in undefined channel flags with the `sd` (send default) value.
  *
  * This produces the "effective" configuration used at send time, where each channel has a definite boolean.
+ *
+ * @param a - the template config to resolve
+ * @returns the effective config with each channel flag filled in using the send-default fallback
  *
  * @example
  * ```ts
@@ -140,6 +147,10 @@ export interface NotificationRecipient {
  * Updates a {@link NotificationRecipient} with partial values, preserving existing fields where the update is undefined.
  *
  * Automatically clears the summary ID (`s`) when a `uid` is present.
+ *
+ * @param a - existing recipient to update
+ * @param b - partial values to apply on top of the existing recipient
+ * @returns the updated recipient with merged values
  */
 export function updateNotificationRecipient(a: NotificationRecipient, b: Partial<NotificationRecipient>): NotificationRecipient {
   const { uid: inputUid, n: inputN, e: inputE, t: inputT, s: inputS } = b;
@@ -242,6 +253,7 @@ export interface NotificationBoxRecipient extends NotificationRecipient, IndexRe
  *
  * @param uid - the user's Firebase auth UID
  * @param i - the recipient's index position in the box's recipient array
+ * @returns a new recipient entry with the given uid and index and an empty template config record
  */
 export function newNotificationBoxRecipientForUid(uid: FirebaseAuthUserId, i: number): NotificationBoxRecipient {
   return {
@@ -274,6 +286,10 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
 
 /**
  * Merges two {@link NotificationUserDefaultNotificationBoxRecipientConfig} objects, preferring defined values from `a` over `b`.
+ *
+ * @param a - primary config whose defined values take precedence
+ * @param b - fallback config supplying values when `a` fields are undefined
+ * @returns the merged config
  */
 export function mergeNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: NotificationUserDefaultNotificationBoxRecipientConfig): NotificationUserDefaultNotificationBoxRecipientConfig {
   const c = mergeNotificationBoxRecipientTemplateConfigRecords(a.c, b.c);
@@ -360,6 +376,10 @@ export type NotificationBoxRecipientTemplateConfigRecord = Record<NotificationTe
 
 /**
  * Merges two {@link NotificationBoxRecipientTemplateConfigRecord} objects, preferring defined values from `a`.
+ *
+ * @param a - primary record whose defined values take precedence
+ * @param b - fallback record supplying values when `a` entries are undefined
+ * @returns the merged template config record
  */
 export function mergeNotificationBoxRecipientTemplateConfigRecords(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigRecord): NotificationBoxRecipientTemplateConfigRecord {
   const mergeConfigs = mergeObjectsFunction<NotificationBoxRecipientTemplateConfigRecord>(KeyValueTypleValueFilter.UNDEFINED);
@@ -439,6 +459,8 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
 /**
  * Creates a Firestore field converter for {@link NotificationBoxRecipientTemplateConfigRecord},
  * using bitwise encoding for compact storage.
+ *
+ * @returns a Firestore field converter that encodes and decodes template config records using bitwise encoding
  */
 export function firestoreNotificationBoxRecipientTemplateConfigRecord() {
   return firestoreBitwiseObjectMap<NotificationBoxRecipientTemplateConfig, NotificationTemplateType>({
@@ -525,6 +547,9 @@ export type NotificationBoxRecipientTemplateConfigArray = NotificationBoxRecipie
 /**
  * Converts a {@link NotificationBoxRecipientTemplateConfigRecord} to an array of entries with their type keys.
  *
+ * @param input - the template config record to convert
+ * @returns an array of entries each containing a type key and the corresponding channel config
+ *
  * @example
  * ```ts
  * const array = notificationBoxRecipientTemplateConfigRecordToArray({ 'comment': { se: true } });
@@ -548,6 +573,9 @@ export function notificationBoxRecipientTemplateConfigRecordToArray(input: Notif
 
 /**
  * Converts a {@link NotificationBoxRecipientTemplateConfigArray} back to a {@link NotificationBoxRecipientTemplateConfigRecord}.
+ *
+ * @param input - the array of typed config entries to convert
+ * @returns a record keyed by template type
  */
 export function notificationBoxRecipientTemplateConfigArrayToRecord(input: NotificationBoxRecipientTemplateConfigArray): NotificationBoxRecipientTemplateConfigRecord {
   const map: NotificationBoxRecipientTemplateConfigRecord = {};

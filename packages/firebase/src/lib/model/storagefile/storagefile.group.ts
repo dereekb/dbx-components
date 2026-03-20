@@ -13,6 +13,7 @@ export const STORAGE_FILE_GROUP_ROOT_FOLDER_PATH: SlashPathFolder = '/sfg/';
  *
  * @param storageFileGroupId - the group's document ID
  * @param subPath - optional sub-paths to append
+ * @returns the folder path as a SlashPathFolder string
  *
  * @example
  * ```ts
@@ -34,6 +35,9 @@ export const STORAGE_FILE_GROUP_ZIP_FILE_PATH: SlashPathFile = 'z.zip';
 
 /**
  * Returns the full storage path for a StorageFileGroup's zip file.
+ *
+ * @param storageFileGroupId - the group's document ID
+ * @returns the full SlashPath to the group's zip archive
  *
  * @example
  * ```ts

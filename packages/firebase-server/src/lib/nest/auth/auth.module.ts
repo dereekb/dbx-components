@@ -45,6 +45,9 @@ export type ProvideFirebaseServerAuthService<T extends FirebaseServerAuthService
  * Returns two providers: the concrete service and an alias that maps
  * `FirebaseServerAuthService` to the concrete token, enabling injection by the abstract type.
  *
+ * @param provider - The factory provider configuration for the auth service.
+ * @returns A tuple containing the configured provider and an alias provider.
+ *
  * @example
  * ```typescript
  * const providers = provideFirebaseServerAuthService({
@@ -74,6 +77,9 @@ export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServer
 /**
  * Generates NestJS {@link ModuleMetadata} for an app's auth module, including the {@link FirebaseServerAuthModule}
  * import and the custom {@link FirebaseServerAuthService} provider.
+ *
+ * @param config - The module metadata configuration including the service provider.
+ * @returns The merged NestJS module metadata.
  *
  * @example
  * ```typescript

@@ -48,6 +48,8 @@ export abstract class FirebaseServerAnalyticsServiceListener {
  * Creates a default no-op {@link FirebaseServerAnalyticsServiceListener}.
  *
  * Used when no analytics provider is configured. All methods are no-ops.
+ *
+ * @returns A no-op listener that silently discards all analytics events.
  */
 export function noopFirebaseServerAnalyticsServiceListener(): FirebaseServerAnalyticsServiceListener {
   const noop = () => {};

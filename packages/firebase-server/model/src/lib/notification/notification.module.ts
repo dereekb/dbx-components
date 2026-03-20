@@ -10,23 +10,62 @@ import { exportMutableNotificationExpediteService, MutableNotificationExpediteSe
 
 // MARK: Provider Factories
 /**
+ * Configuration for assembling a {@link NotificationServerActionsContext}.
+ */
+export interface NotificationServerActionsContextFactoryConfig {
+  readonly context: BaseNotificationServerActionsContext;
+  readonly notificationTemplateService: NotificationTemplateService;
+  readonly notificationSendService: NotificationSendService;
+  readonly notificationTaskService: NotificationTaskService;
+  readonly notificationsExpediteService: NotificationExpediteService;
+}
+
+/**
+ * Positional argument tuple matching the NestJS inject order for {@link notificationServerActionsContextFactory}.
+ */
+export type NotificationServerActionsContextFactoryArgs = [BaseNotificationServerActionsContext, NotificationTemplateService, NotificationSendService, NotificationTaskService, NotificationExpediteService];
+
+/**
+ * Converts positional NestJS inject arguments into a {@link NotificationServerActionsContextFactoryConfig}.
+ *
+ * @param args - the positional argument tuple from NestJS injection
+ * @returns the assembled factory configuration object
+ */
+export function notificationServerActionsContextFactoryConfigFromArgs(args: NotificationServerActionsContextFactoryArgs): NotificationServerActionsContextFactoryConfig {
+  const [context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService] = args;
+  return { context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService };
+}
+
+/**
  * Factory that assembles the full {@link NotificationServerActionsContext} by combining
  * the base context with the template, send, task, and expedite services.
+ *
+ * @param config - the factory configuration with base context and all required services
+ * @returns the fully assembled {@link NotificationServerActionsContext}
  */
-export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService, notificationsExpediteService: NotificationExpediteService) {
+export function notificationServerActionsContextFactory(config: NotificationServerActionsContextFactoryConfig) {
+  const { context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService } = config;
   return { ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService };
 }
 
 /**
  * Factory that creates a {@link NotificationServerActions} instance from the assembled context.
+ *
+ * @param context - the fully assembled notification server actions context
+ * @param _mutableNotificationExpediteService - injected for DI wiring; not used directly
+ * @returns a new {@link NotificationServerActions} instance
  */
-export function notificationServerActionsFactory(context: NotificationServerActionsContext, mutableNotificationExpediteService: MutableNotificationExpediteService) {
+export function notificationServerActionsFactory(context: NotificationServerActionsContext, _mutableNotificationExpediteService: MutableNotificationExpediteService) {
   return notificationServerActions(context);
 }
 
 /**
  * Factory that creates a {@link NotificationInitServerActions} instance by merging the
  * server actions context with the init-specific configuration.
+ *
+ * @param context - the fully assembled notification server actions context
+ * @param notificationInitServerActionsContextConfig - additional configuration specific to initialization actions
+ * @returns a new {@link NotificationInitServerActions} instance
  */
 export function notificationInitServerActionsFactory(context: NotificationServerActionsContext, notificationInitServerActionsContextConfig: NotificationInitServerActionsContextConfig) {
   return notificationInitServerActions({
@@ -63,9 +102,8 @@ export interface ProvideAppNotificationMetadataConfig extends Pick<ModuleMetadat
  *
  * Be sure the class that delares the module using this function also extends AbstractAppNotificationModule.
  *
- * @param provide
- * @param useFactory
- * @returns
+ * @param config - the module configuration including optional dependency module, imports, exports, and providers
+ * @returns the assembled {@link ModuleMetadata} for the notification module
  */
 export function appNotificationModuleMetadata(config: ProvideAppNotificationMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;
@@ -81,7 +119,7 @@ export function appNotificationModuleMetadata(config: ProvideAppNotificationMeta
       },
       {
         provide: NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN,
-        useFactory: notificationServerActionsContextFactory,
+        useFactory: (...args: NotificationServerActionsContextFactoryArgs) => notificationServerActionsContextFactory(notificationServerActionsContextFactoryConfigFromArgs(args)),
         inject: [BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationTemplateService, NotificationSendService, NotificationTaskService, NotificationExpediteService]
       },
       {

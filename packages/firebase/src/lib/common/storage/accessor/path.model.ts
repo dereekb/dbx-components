@@ -39,6 +39,7 @@ export type ModelStorageSlashPathFactory<T extends object = object> = (input: Re
  * The generated paths follow the convention `/model/[basePath/]<modelKey>/[path]`.
  *
  * @param config - optional base path to nest under
+ * @returns a {@link ModelStorageSlashPathFactory} that maps Firestore model keys to storage paths
  *
  * @example
  * ```ts

@@ -121,6 +121,7 @@ export interface OnCallWithAuthAwareNestRequireAuthRef {
  * @param fn
  * @param request
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts any nest context and input type for generic auth assertion
 export function assertRequestRequiresAuthForFunction(fn: OnCallWithAuthAwareNestRequireAuthRef, request: OnCallWithNestContextRequest<any, any>) {
   if (fn._requireAuth !== false) {
     assertIsContextWithAuthData(request);

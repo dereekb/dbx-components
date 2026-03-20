@@ -23,7 +23,7 @@ export async function getAuthUserOrUndefined(promise: Promise<admin.auth.UserRec
   try {
     return await promise;
   } catch (error: unknown) {
-    if ((error as FirebaseAuthError)?.code === FIREBASE_AUTH_USER_NOT_FOUND_ERROR) {
+    if ((error as FirebaseAuthError).code === FIREBASE_AUTH_USER_NOT_FOUND_ERROR) {
       return undefined;
     } else {
       throw error;

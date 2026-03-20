@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type Provider from 'oidc-provider';
-import { type Interaction, type Configuration } from 'oidc-provider';
+import type { default as Provider, Interaction, Configuration } from 'oidc-provider';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
@@ -24,6 +23,7 @@ import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
 export class OidcService {
   private readonly _getProvider = cachedGetter(() => this._buildProvider());
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
   constructor(
     @Inject(OidcModuleConfig) private readonly config: OidcModuleConfig,
     @Inject(OidcProviderConfigService) private readonly providerConfigService: OidcProviderConfigService,
@@ -35,6 +35,8 @@ export class OidcService {
 
   /**
    * Returns the oidc-provider instance, initializing it on first access.
+   *
+   * @returns the lazily-initialized oidc-provider instance
    */
   getProvider(): Promise<Provider> {
     return this._getProvider();
@@ -47,7 +49,7 @@ export class OidcService {
    * Uses the provider's `AccessToken` model to look up the token and extract
    * the account ID, scope, and client ID.
    *
-   * @param token - The opaque access token string.
+   * @param rawToken - The opaque access token string.
    * @returns The auth context, or `undefined` if the token is invalid or expired.
    */
   async verifyAccessToken(rawToken: string): Promise<OidcAuthData | undefined> {
@@ -60,7 +62,7 @@ export class OidcService {
 
     const token: DecodedIdToken = {
       // Standard JWT claims — sourced from the access token
-      aud: firstValue(accessToken.aud) ?? accessToken.clientId,
+      aud: firstValue(accessToken.aud),
       iss: this.config.issuer,
       sub: accessToken.accountId,
       iat: accessToken.iat,
@@ -98,6 +100,7 @@ export class OidcService {
    */
   async findClientPayload(clientId: OidcEntryClientId): Promise<Maybe<OidcEntryOAuthClientPayloadData>> {
     const provider = await this.getProvider();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 
@@ -126,6 +129,9 @@ export class OidcService {
    *
    * Does NOT include `adapter`, `findAccount`, or `jwks` — those require async
    * setup and are handled by {@link OidcService}.
+   *
+   * @param cookieKeys - the signing keys for oidc-provider session cookies
+   * @returns the oidc-provider configuration options
    */
   buildProviderConfiguration(cookieKeys: string[]): Configuration {
     const config = this.config;
@@ -190,8 +196,7 @@ export class OidcService {
           }
 
           const paramsString = makeUrlSearchParamsString(paramsToEncode, { useUrlSearchSpaceHandling: true });
-          const redirectUrl = `${baseUrl}?${paramsString}`;
-          return redirectUrl;
+          return `${baseUrl}?${paramsString}`;
         }
       },
       cookies: {
@@ -226,7 +231,9 @@ export class OidcService {
     const provider = new ProviderClass(config.issuer, {
       ...providerConfiguration,
       adapter: adapterFactory,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider findAccount signature is more specific than our wrapper
       findAccount: findAccount as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider expects JOSE JWK type which differs from Node.js JsonWebKey
       jwks: { keys: [signingKey] as any[] }
     });
 

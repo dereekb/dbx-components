@@ -71,7 +71,8 @@ export default [
     // Override or add rules here
     rules: {
       '@typescript-eslint/no-inferrable-types': 'off',
-      '@typescript-eslint/no-unnecessary-condition': 'off' // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
+      '@typescript-eslint/no-unnecessary-condition': 'off', // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
+      '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: 'always' }]
     }
   },
   {

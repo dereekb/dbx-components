@@ -112,8 +112,8 @@ describe('firestoreEncryptedField()', () => {
 
     it(
       'should throw if key is wrong length',
-      shouldFail(() => {
-        expectFail(() => firestoreEncryptedField<string>({ secret: 'tooshort', default: '' }));
+      shouldFail(async () => {
+        await expectFail(() => firestoreEncryptedField<string>({ secret: 'tooshort', default: '' }));
       })
     );
   });

@@ -94,6 +94,8 @@ export class OidcAccountServiceUserContext<S extends OidcScope = OidcScope, U ex
    *
    * Returns an {@link OidcAccount} compatible with oidc-provider's `findAccount` interface,
    * or `undefined` if the user does not exist in Firebase Auth.
+   *
+   * @returns the OIDC account for this user, or undefined if the user does not exist
    */
   async findAccount(): Promise<OidcAccount | undefined> {
     const authUserContext = this.authUserContext;
@@ -132,6 +134,8 @@ export class OidcAccountService<S extends OidcScope = OidcScope, U extends Fireb
 
   /**
    * The provider config from the delegate.
+   *
+   * @returns the OIDC provider configuration from the delegate
    */
   get providerConfig(): OidcProviderConfig<S> {
     return this.delegate.providerConfig;
@@ -139,6 +143,9 @@ export class OidcAccountService<S extends OidcScope = OidcScope, U extends Fireb
 
   /**
    * Creates a user context for the given user ID.
+   *
+   * @param uid - the Firebase Auth user ID
+   * @returns a new user context bound to the given user
    */
   userContext(uid: string): OidcAccountServiceUserContext<S, U> {
     return new OidcAccountServiceUserContext<S, U>(this, uid);

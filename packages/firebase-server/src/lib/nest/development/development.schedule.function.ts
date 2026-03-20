@@ -1,14 +1,16 @@
-import { type ScheduledFunctionDevelopmentFirebaseFunctionListEntry, type ScheduledFunctionDevelopmentFirebaseFunctionParams, type ScheduledFunctionDevelopmentFirebaseFunctionResult } from '@dereekb/firebase';
+import { type ScheduledFunctionDevelopmentFirebaseFunctionListEntry, type ScheduledFunctionDevelopmentFirebaseFunctionParams, type ScheduledFunctionDevelopmentFirebaseFunctionResult, ScheduledFunctionDevelopmentFunctionTypeEnum } from '@dereekb/firebase';
 import { forEachKeyValue, cachedGetter } from '@dereekb/util';
 import { type NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule';
 import { type OnCallDevelopmentFunction } from './development.function';
-import { noRunNameSpecifiedForScheduledFunctionDevelopmentFunction, unknownScheduledFunctionDevelopmentFunctionName, unknownScheduledFunctionDevelopmentFunctionType } from './development.schedule.function.error';
+import { noRunNameSpecifiedForScheduledFunctionDevelopmentFunction, unknownScheduledFunctionDevelopmentFunctionName } from './development.schedule.function.error';
 
 /**
  * Configuration for {@link makeScheduledFunctionDevelopmentFunction}.
  */
 export interface MakeScheduledFunctionDevelopmentFunctionConfig {
-  /** The complete map of registered scheduled functions that can be triggered manually. */
+  /**
+   * The complete map of registered scheduled functions that can be triggered manually.
+   */
   readonly allScheduledFunctions: NestApplicationScheduleConfiguredFunctionMap;
 }
 
@@ -44,7 +46,7 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
 
     forEachKeyValue(allScheduledFunctions, {
       forEach: (x) => {
-        const [functionName, config] = x;
+        const [functionName] = x;
 
         result.push({
           name: functionName.toString()
@@ -60,7 +62,7 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
     const { type } = data;
 
     switch (type) {
-      case 'run':
+      case ScheduledFunctionDevelopmentFunctionTypeEnum.RUN: {
         const targetRunName = data.run;
 
         if (!targetRunName) {
@@ -70,6 +72,7 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
         const targetFunction = allScheduledFunctions[targetRunName];
 
         if (!targetFunction) {
+          // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- runtime guard: function name may not exist in map
           throw unknownScheduledFunctionDevelopmentFunctionName(targetRunName);
         }
 
@@ -84,13 +87,12 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
           type: 'run',
           success: true
         };
-      case 'list':
+      }
+      case ScheduledFunctionDevelopmentFunctionTypeEnum.LIST:
         return {
           type: 'list',
           list: getListValues()
         };
-      default:
-        throw unknownScheduledFunctionDevelopmentFunctionType(type);
     }
   };
 }

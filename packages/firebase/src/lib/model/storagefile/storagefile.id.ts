@@ -69,6 +69,7 @@ export type StorageFileGroupRelatedStorageFilePurpose = StorageFilePurpose;
  *
  * Is serialized directly to/from Firestore, so be mindful of what is stored.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- values are arbitrary Firestore-compatible data
 export type StorageFileMetadata = Readonly<Record<string, any>>;
 
 // MARK: StorageFileGroup

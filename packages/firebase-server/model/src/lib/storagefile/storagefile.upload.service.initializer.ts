@@ -98,6 +98,7 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
  *
  * @param error - the error that caused the permanent failure
  * @param createdFile - optional path to a file that was created before the error and should be deleted
+ * @returns a permanent failure result with the error and optional created file reference
  */
 export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown, createdFile?: Maybe<StoragePathRef>): StorageFileInitializeFromUploadServiceInitializerResult {
   return {
@@ -182,6 +183,7 @@ export interface StorageFileInitializeFromUploadServiceConfig {
  * 4. Optionally, previous files for the same purpose/user are flagged for deletion
  *
  * @param config - service configuration including determiners, initializers, and storage references
+ * @returns a {@link StorageFileInitializeFromUploadService} with type detection and upload initialization
  *
  * @example
  * ```ts
@@ -226,10 +228,9 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
   const determiner = combineUploadFileTypeDeterminers({
     determiners: allDeterminers,
-    ...{
-      completeSearchOnFirstMatch: true,
-      ...config.combineDeterminersConfig
-    }
+
+    completeSearchOnFirstMatch: true,
+    ...config.combineDeterminersConfig
   });
 
   // validate initializers
@@ -270,6 +271,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
         const initializer = initializers[determinerResult.type];
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- record access may return undefined at runtime
         if (initializer) {
           try {
             const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });
@@ -295,6 +297,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
             } else {
               let flagPreviousForDelete: Maybe<StorageFilePurposeAndUserQueryInput>;
 
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- discriminating union variant via type assertion
               if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult).createStorageFileResult) {
                 const { createStorageFileResult, flagPreviousForDelete: flagPreviousForDeleteResult } = initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult;
 
@@ -325,6 +328,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
               }
 
               // sanitize the returned value, incase the result comes from a transaction
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive check; type assertions above may not hold at runtime
               if (storageFileDocument) {
                 storageFileDocument = storageFileCollection.documentAccessor().loadDocumentFrom(storageFileDocument);
               }

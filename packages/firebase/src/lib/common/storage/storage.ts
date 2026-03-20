@@ -46,6 +46,7 @@ export interface StoragePath extends StorageBucketIdRef, StorageSlashPathRef {}
  * Useful when you need an independent reference that won't be affected by mutations to the original.
  *
  * @param path - the storage path to copy
+ * @returns a new {@link StoragePath} with the same `bucketId` and `pathString`
  *
  * @example
  * ```ts
@@ -88,6 +89,7 @@ export interface StoragePathFactoryConfig extends StorageBucketIdRef {
  * with a consistent bucket assignment.
  *
  * @param config - bucket and replacement behavior
+ * @returns a {@link StoragePathFactory} that normalizes path inputs with the configured bucket
  *
  * @example
  * ```ts
@@ -109,7 +111,7 @@ export function storagePathFactory(config: StoragePathFactoryConfig): StoragePat
     } else {
       return {
         pathString,
-        bucketId: inputBucketId || bucketId
+        bucketId: inputBucketId ?? bucketId
       };
     }
   };
@@ -150,6 +152,7 @@ export type GoogleCloudStorageFilePath<P extends StorageSlashPath = StorageSlash
  * (implying the default bucket).
  *
  * @param path - the storage path to convert
+ * @returns a {@link GoogleCloudStorageFilePath} string (`gs://bucket/path` or a relative path)
  *
  * @example
  * ```ts
@@ -176,6 +179,7 @@ export function firebaseStorageFilePathFromStorageFilePath(path: StoragePath): G
  * Returns the `gs://` bucket prefix URI for the given bucket identifier or ref.
  *
  * @param storage - bucket ID string or a {@link StorageBucketIdRef}
+ * @returns the `gs://bucket` prefix URI as a {@link GoogleCloudStorageBucketPrefix}
  *
  * @example
  * ```ts

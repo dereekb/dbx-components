@@ -16,9 +16,13 @@ import { isClientFirebaseError } from '../error/error';
  * @template B - the internal output type (what the callable returns)
  */
 export interface MapHttpsCallable<I, O, A, B> {
-  /** Transforms the caller's input into the format expected by the underlying callable. */
+  /**
+   * Transforms the caller's input into the format expected by the underlying callable.
+   */
   readonly mapInput?: FactoryWithInput<PromiseOrValue<A>, Maybe<I>>;
-  /** Transforms the callable's raw output into the format returned to callers. */
+  /**
+   * Transforms the callable's raw output into the format returned to callers.
+   */
   readonly mapOutput?: FactoryWithInput<PromiseOrValue<O>, Maybe<B>>;
 }
 
@@ -32,6 +36,7 @@ export interface MapHttpsCallable<I, O, A, B> {
  * @param callable - the underlying Firebase `HttpsCallable` to wrap
  * @param wrap - input/output mapping functions
  * @param directData - when `true`, returns the unwrapped data instead of `HttpsCallableResult`
+ * @returns a wrapped callable that applies input/output transformations and converts errors to readable forms
  *
  * @example
  * ```ts
@@ -83,6 +88,7 @@ export type DirectDataHttpsCallable<C extends HttpsCallable<any, any>> = C exten
  * Errors are converted to readable errors via {@link convertHttpsCallableErrorToReadableError}.
  *
  * @param callable - the `HttpsCallable` to wrap
+ * @returns a {@link DirectDataHttpsCallable} that resolves to the response data directly
  *
  * @example
  * ```ts
@@ -104,6 +110,7 @@ export function directDataHttpsCallable<I, O, C extends HttpsCallable<I, O> = Ht
  * to preserve server-side error context. Otherwise, converts it to a generic readable error via `toReadableError`.
  *
  * @param error - the caught error from an `HttpsCallable` invocation
+ * @returns a {@link FirebaseServerError} if the error has structured details, or a generic readable error otherwise
  */
 export function convertHttpsCallableErrorToReadableError(error: unknown) {
   let result: unknown;

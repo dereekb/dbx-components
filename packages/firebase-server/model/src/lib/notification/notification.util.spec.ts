@@ -101,8 +101,8 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         });
 
         describe('notificationUser is blocked from adding', () => {
-          itShouldFail('to insert the user', () => {
-            expectFail(
+          itShouldFail('to insert the user', async () => {
+            await expectFail(
               () =>
                 updateNotificationUserNotificationBoxRecipientConfig({
                   notificationBoxId: nb,
@@ -194,8 +194,8 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         });
 
         describe('notificationUser is locked', () => {
-          itShouldFail('to update the locked field', () => {
-            expectFail(
+          itShouldFail('to update the locked field', async () => {
+            await expectFail(
               () =>
                 updateNotificationUserNotificationBoxRecipientConfig({
                   notificationBoxId: nb,

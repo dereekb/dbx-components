@@ -21,6 +21,7 @@ export interface OnCallAnalyticsEmitter {
    * Send a named event with optional properties.
    * Context (call, modelType, specifier, uid, lifecycle) is auto-filled from the dispatch context.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendEvent(event: string, properties?: Record<string, any>): void;
   /**
    * Send a named event type with no properties.
@@ -39,6 +40,7 @@ export interface OnCallAnalyticsEmitter {
  * @typeParam R - The request type passed to the handler function.
  * @typeParam O - The output/return type of the handler function.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface OnCallModelFunctionAnalyticsDetails<R = any, O = any> {
   /**
    * Called before handler executes.
@@ -67,20 +69,35 @@ export interface OnCallModelFunctionAnalyticsDetails<R = any, O = any> {
  *
  * @typeParam I - The input/request data type.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface OnCallAnalyticsContext<I = any> {
-  /** The CRUD operation type (e.g., `'create'`, `'update'`). */
+  /**
+   * The CRUD operation type (e.g., `'create'`, `'update'`).
+   */
   readonly call: OnCallFunctionType;
-  /** The model type being operated on (e.g., `'guestbook'`). */
+  /**
+   * The model type being operated on (e.g., `'guestbook'`).
+   */
   readonly modelType: FirestoreModelType;
-  /** Optional operation specifier for variant handlers. */
+  /**
+   * Optional operation specifier for variant handlers.
+   */
   readonly specifier: Maybe<ModelFirebaseCrudFunctionSpecifier>;
-  /** The Firebase Auth UID of the calling user. */
+  /**
+   * The Firebase Auth UID of the calling user.
+   */
   readonly uid?: FirebaseAuthUserId;
-  /** The full Firebase Auth context. */
+  /**
+   * The full Firebase Auth context.
+   */
   readonly auth?: AuthData;
-  /** The typed request data. */
+  /**
+   * The typed request data.
+   */
   readonly data?: I;
-  /** The full NestContext callable request with auth and specifier. */
+  /**
+   * The full NestContext callable request with auth and specifier.
+   */
   readonly request: NestContextCallableRequestWithAuth<unknown, I> & ModelFirebaseCrudFunctionSpecifierRef;
 }
 
@@ -100,4 +117,5 @@ export type OnCallAnalyticsErrorFn<R> = (emitter: OnCallAnalyticsEmitter, reques
 /**
  * Lifecycle function for onComplete.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export type OnCallAnalyticsCompleteFn<R, O> = (emitter: OnCallAnalyticsEmitter, request: R, result?: O, error?: unknown) => void;

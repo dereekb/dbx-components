@@ -99,6 +99,10 @@ export type StorageFileGroupCreatedStorageFileKey<P extends StorageFileGroupRela
 
 /**
  * Creates a StorageFileGroupCreatedStorageFileKey from the input StorageFileGroupId and purpose.
+ *
+ * @param purpose - the purpose identifying the type of file within the group
+ * @param storageFileGroupId - the ID of the parent StorageFileGroup
+ * @returns a deterministic FirestoreCollectionModelKey for the storage file
  */
 export function storageFileGroupCreatedStorageFileKey<P extends StorageFileGroupRelatedStorageFilePurpose>(purpose: P, storageFileGroupId: StorageFileGroupId): StorageFileGroupCreatedStorageFileKey<P> {
   return firestoreModelKey(storageFileIdentity, `${purpose}_${storageFileGroupId}`);
@@ -466,6 +470,9 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
  * ```ts
  * const colRef = storageFileCollectionReference(firestoreContext);
  * ```
+ *
+ * @param context - the Firestore context to use
+ * @returns the CollectionReference for StorageFile documents
  */
 export function storageFileCollectionReference(context: FirestoreContext): CollectionReference<StorageFile> {
   return context.collection(storageFileIdentity.collectionName);
@@ -484,6 +491,9 @@ export type StorageFileFirestoreCollection = FirestoreCollection<StorageFile, St
  * const collection = storageFileFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().newDocument();
  * ```
+ *
+ * @param firestoreContext - the Firestore context to use
+ * @returns a configured StorageFileFirestoreCollection
  */
 export function storageFileFirestoreCollection(firestoreContext: FirestoreContext): StorageFileFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -643,6 +653,9 @@ export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileG
  * ```ts
  * const colRef = storageFileGroupCollectionReference(firestoreContext);
  * ```
+ *
+ * @param context - the Firestore context to use
+ * @returns the CollectionReference for StorageFileGroup documents
  */
 export function storageFileGroupCollectionReference(context: FirestoreContext): CollectionReference<StorageFileGroup> {
   return context.collection(storageFileGroupIdentity.collectionName);
@@ -661,6 +674,9 @@ export type StorageFileGroupFirestoreCollection = FirestoreCollection<StorageFil
  * const collection = storageFileGroupFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().loadDocumentForId(groupId);
  * ```
+ *
+ * @param firestoreContext - the Firestore context to use
+ * @returns a configured StorageFileGroupFirestoreCollection
  */
 export function storageFileGroupFirestoreCollection(firestoreContext: FirestoreContext): StorageFileGroupFirestoreCollection {
   return firestoreContext.firestoreCollection({

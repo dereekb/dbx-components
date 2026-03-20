@@ -11,6 +11,9 @@ export type CallableContextWithAuthData<R extends CallableContext = CallableCont
 /**
  * Type guard that checks whether the given callable context contains authenticated user data (non-null auth with a uid).
  *
+ * @param context - The callable context to check.
+ * @returns `true` if the context has authenticated user data with a valid UID.
+ *
  * @example
  * ```typescript
  * if (isContextWithAuthData(context)) {
@@ -19,12 +22,13 @@ export type CallableContextWithAuthData<R extends CallableContext = CallableCont
  * ```
  */
 export function isContextWithAuthData<R extends CallableContext>(context: CallableContext): context is CallableContextWithAuthData<R> {
-  return Boolean(context.auth !== null && context.auth?.uid);
+  return Boolean(context.auth?.uid);
 }
 
 /**
  * Asserts that the callable context contains authenticated user data.
  *
+ * @param context - The callable context to assert on.
  * @throws {HttpsError} Throws an unauthenticated error if auth data is missing.
  *
  * @example

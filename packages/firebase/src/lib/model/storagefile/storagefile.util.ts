@@ -29,6 +29,9 @@ export interface StorageFileGroupDocumentReferencePair {
  * If a document is provided directly, it is returned as-is. Otherwise, the related model key
  * is converted to a group ID via {@link storageFileGroupIdForModel} and loaded from the accessor.
  *
+ * @param input - reference pair containing either a document or a related model key
+ * @param accessor - document accessor used to load the group document by ID
+ * @returns the resolved StorageFileGroupDocument
  * @throws {Error} When neither storageFileGroupDocument nor storageFileGroupRelatedModelKey is provided
  *
  * @example
@@ -109,7 +112,7 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
     merge: (a, b) => mergeFunction([a, b]) as StorageFileGroupEmbeddedFile
   });
 
-  let re = currentRe || oneOrMoreItemsWereRemoved; // flag removed if any items were removed
+  let re = currentRe ?? oneOrMoreItemsWereRemoved; // flag removed if any items were removed
 
   // recalculate re if it is false or the retain flag is false
   if (!re || allowRecalculateRegenerateFlag) {
@@ -154,6 +157,7 @@ export interface CalculateStorageFileGroupRegenerationResult {
  * - Any embedded file has never been included in the zip (`zat` is unset on the entry)
  *
  * @param input - group state and optional force flag
+ * @returns the regeneration result indicating whether the zip or other derived files need to be regenerated
  *
  * @example
  * ```ts

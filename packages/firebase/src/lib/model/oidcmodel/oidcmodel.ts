@@ -136,6 +136,9 @@ export interface OidcEntryFirestoreCollectionConfig {
 
 /**
  * Returns the Firestore {@link CollectionReference} for {@link OidcEntry} documents.
+ *
+ * @param context - the Firestore context to use
+ * @returns the CollectionReference for OidcEntry documents
  */
 export function oidcEntryCollectionReference(context: FirestoreContext): CollectionReference<OidcEntry> {
   return context.collection(oidcEntryIdentity.collectionName);
@@ -143,6 +146,9 @@ export function oidcEntryCollectionReference(context: FirestoreContext): Collect
 
 /**
  * Creates an {@link OidcEntryFirestoreCollection} from the given configuration.
+ *
+ * @param config - the Firestore context and collection configuration
+ * @returns a configured OidcEntryFirestoreCollection
  */
 export function oidcEntryFirestoreCollection(config: OidcEntryFirestoreCollectionConfig): OidcEntryFirestoreCollection {
   const { firestoreContext } = config;

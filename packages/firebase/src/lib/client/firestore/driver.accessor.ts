@@ -16,6 +16,8 @@ import { type WriteBatchFirestoreDocumentContextFactory } from '../../common/fir
  * - Transaction and write batch context factories for atomic operations
  * - A default (non-transactional) document context
  *
+ * @returns a {@link FirestoreAccessorDriver} backed by the `firebase/firestore` client SDK
+ *
  * @example
  * ```ts
  * const driver = firestoreClientAccessorDriver();

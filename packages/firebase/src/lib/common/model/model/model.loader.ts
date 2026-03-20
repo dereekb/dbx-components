@@ -43,6 +43,7 @@ export interface FirebaseModelLoader<C extends FirebaseModelLoaderContext, T, D 
  * Automatically uses a transaction accessor when the context has an active transaction.
  *
  * @param getFirestoreCollection - function to retrieve the Firestore collection from context
+ * @returns a {@link FirebaseModelLoader} that loads document wrappers for given keys
  *
  * @example
  * ```ts
@@ -62,8 +63,7 @@ export function firebaseModelLoader<C extends FirebaseModelLoaderContext, T, D e
         documentAccessor = firestoreCollection.documentAccessor();
       }
 
-      const document = documentAccessor.loadDocumentForKey(key);
-      return document;
+      return documentAccessor.loadDocumentForKey(key);
     }
   };
 }

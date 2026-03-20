@@ -21,6 +21,7 @@ export const FIREBASE_SERVER_ENV_TOKEN: InjectionToken = 'FIREBASE_SERVER_ENV_TO
  * Creates a NestJS provider that binds the given config to the {@link FIREBASE_SERVER_ENV_TOKEN} injection token.
  *
  * @param env - The Firebase server environment configuration.
+ * @returns A NestJS provider binding the config to the {@link FIREBASE_SERVER_ENV_TOKEN} token.
  *
  * @example
  * ```typescript
@@ -41,6 +42,7 @@ export function firebaseServerEnvTokenProvider<T extends FirebaseServerEnvironme
  * Use this when the NestJS app needs the config accessible via either token.
  *
  * @param env - The Firebase server environment configuration.
+ * @returns An array of providers binding the config to both Firebase and base server env tokens.
  *
  * @example
  * ```typescript

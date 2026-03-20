@@ -23,8 +23,8 @@ import { type UpdateData } from '../../common/firestore/types';
  * ```
  */
 export function firestoreClientArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {
-  const union = input?.union;
-  const remove = input?.remove;
+  const union = input.union;
+  const remove = input.remove;
 
   function createUpdatesWithArrayFunction(fieldUpdate: FirestoreAccessorArrayUpdate<T>['union' | 'remove'], arrayUpdateFunction: typeof arrayUnion | typeof arrayRemove): Maybe<UpdateData<T>> {
     let result: UpdateData<T> | undefined;

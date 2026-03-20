@@ -15,12 +15,13 @@ import { sortByDateFunction } from '@dereekb/date';
  *
  * Stored directly in Firestore, so values must be Firestore-compatible (no class instances, functions, etc.).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- values are arbitrary Firestore-compatible data
 export type NotificationItemMetadata = Readonly<Record<string, any>>;
 
 /**
  * Pairs a {@link NotificationItem} with its resolved subject and message strings for display.
  */
-export interface NotificationItemSubjectMessagePair<D extends NotificationItemMetadata = {}> {
+export interface NotificationItemSubjectMessagePair<D extends NotificationItemMetadata = NotificationItemMetadata> {
   readonly item: NotificationItem<D>;
   readonly subject: string;
   readonly message: string;
@@ -43,7 +44,7 @@ export interface NotificationItemSubjectMessagePair<D extends NotificationItemMe
  * - `d` — metadata payload
  * - `v` — viewed/read flag
  */
-export interface NotificationItem<D extends NotificationItemMetadata = {}> {
+export interface NotificationItem<D extends NotificationItemMetadata = NotificationItemMetadata> {
   /**
    * Unique notification item identifier.
    */
@@ -105,7 +106,7 @@ export const firestoreNotificationItem = firestoreSubObject<NotificationItem>({
 /**
  * Result of splitting {@link NotificationItem} entries into read and unread groups.
  */
-export interface UnreadNotificationItemsResult<D extends NotificationItemMetadata = {}> {
+export interface UnreadNotificationItemsResult<D extends NotificationItemMetadata = NotificationItemMetadata> {
   readonly items: NotificationItem<D>[];
   readonly considerReadIfCreatedBefore?: Maybe<Date>;
   readonly read: NotificationItem<D>[];
@@ -121,6 +122,7 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  *
  * @param items - notification items to classify
  * @param considerReadIfCreatedBefore - optional cutoff date; items created at or before this date are treated as read
+ * @returns an object containing both the read and unread item arrays along with the input cutoff date
  *
  * @example
  * ```ts
@@ -128,8 +130,8 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  * console.log(result.unread.length); // number of unread items
  * ```
  */
-export function unreadNotificationItems<D extends NotificationItemMetadata = {}>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
-  const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v || !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
+export function unreadNotificationItems<D extends NotificationItemMetadata = NotificationItemMetadata>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
+  const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v ?? !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
   const { included: read, excluded: unread } = separateValues<NotificationItem<D>>(items, checkIsRead);
 
   return {
@@ -143,4 +145,4 @@ export function unreadNotificationItems<D extends NotificationItemMetadata = {}>
 /**
  * Sort comparator for {@link NotificationItem} arrays. Sorts ascending by creation date (`cat`).
  */
-export const sortNotificationItemsFunction = sortByDateFunction<NotificationItem<any>>((x) => x.cat);
+export const sortNotificationItemsFunction = sortByDateFunction<NotificationItem>((x) => x.cat);

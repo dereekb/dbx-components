@@ -70,7 +70,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<void> {
     if (params?.precondition) {
-      this.transaction.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>, params?.precondition);
+      this.transaction.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>, params.precondition);
     } else {
       this.transaction.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>);
     }
@@ -86,6 +86,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  * atomic operation.
  *
  * @param transaction - The Google Cloud Transaction to execute operations within.
+ * @returns A factory that creates transaction-backed accessors sharing the given transaction.
  *
  * @example
  * ```typescript
@@ -127,6 +128,9 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
 
 /**
  * Creates a {@link TransactionFirestoreDocumentContext} wrapping the given transaction.
+ *
+ * @param transaction - The Google Cloud Transaction to use.
+ * @returns A new {@link TransactionFirestoreDocumentContext} for the given transaction.
  */
 export function transactionDocumentContext<T>(transaction: GoogleCloudTransaction): TransactionFirestoreDocumentContext<T> {
   return new TransactionFirestoreDocumentContext<T>(transaction);

@@ -18,7 +18,7 @@ const OIDC_PROVIDER_BODY_PARSER_WARNING = 'oidc-provider WARNING: already parsed
  *
  * This function intercepts that specific warning and silences it. All other warnings pass through.
  */
-function suppressOidcProviderBodyParserWarning(): void {
+function _suppressOidcProviderBodyParserWarning(): void {
   const originalWarn = console.warn;
 
   console.warn = (...args: unknown[]) => {
@@ -45,6 +45,10 @@ export class OidcInteractionService {
    * Loads the interaction details for a given request/response pair.
    *
    * Requires the oidc-provider interaction cookie to be present on the request.
+   *
+   * @param req - the Express request containing the interaction cookie
+   * @param res - the Express response
+   * @returns the oidc-provider interaction details
    */
   async getInteractionDetails(req: Request, res: Response): Promise<Interaction> {
     const provider = await this.oidcService.getProvider();
@@ -58,6 +62,8 @@ export class OidcInteractionService {
    * This is necessary when the interaction cookie is scoped to a different path
    * (e.g., the frontend) and is not sent with backend API requests.
    *
+   * @param uid - the interaction UID to look up
+   * @returns the interaction details for the given UID
    * @throws {Error} When the interaction is not found or has expired.
    */
   async findInteractionByUid(uid: OidcInteractionUid): Promise<Interaction> {
@@ -77,6 +83,10 @@ export class OidcInteractionService {
    * Looks up the interaction directly by UID, applies the result, saves it,
    * and returns the `returnTo` URL for the client to redirect to.
    *
+   * @param uid - the interaction UID to complete
+   * @param result - the interaction results to apply
+   * @param options - optional settings for merging with the last submission
+   * @param options.mergeWithLastSubmission - whether to merge with the last submission (defaults to true)
    * @returns The `returnTo` URL that the client should redirect to.
    */
   async finishInteractionByUid(uid: OidcInteractionUid, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<string> {
@@ -95,13 +105,24 @@ export class OidcInteractionService {
 
   /**
    * Finds an existing grant by ID, or creates a new one.
+   *
+   * @param grantId - the existing grant ID to look up, or undefined to create a new grant
+   * @param accountId - the account ID for creating a new grant
+   * @param clientId - the client ID for creating a new grant
+   * @returns the found or newly created grant
    */
   async findOrCreateGrant(grantId: string | undefined, accountId: string, clientId: string): Promise<Grant> {
     const provider = await this.oidcService.getProvider();
     let grant: Grant;
 
     if (grantId) {
-      grant = (await provider.Grant.find(grantId))!;
+      const found = await provider.Grant.find(grantId);
+
+      if (!found) {
+        throw new Error(`Grant not found for grantId: ${grantId}`);
+      }
+
+      grant = found;
     } else {
       grant = new provider.Grant({ accountId, clientId });
     }

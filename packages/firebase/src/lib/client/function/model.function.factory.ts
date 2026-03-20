@@ -35,13 +35,19 @@ export type ModelFirebaseCrudFunction<I, O = void> = FirebaseFunction<I, O>;
  */
 export type ModelFirebaseCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = ModelFirebaseCrudFunction<I, O>;
 
-/** Read function for a model, returning the read data. */
+/**
+ * Read function for a model, returning the read data.
+ */
 export type ModelFirebaseReadFunction<I, O> = ModelFirebaseCrudFunction<I, O>;
 
-/** Update function for a model. Returns void by default. */
+/**
+ * Update function for a model. Returns void by default.
+ */
 export type ModelFirebaseUpdateFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
-/** Delete function for a model. Returns void by default. */
+/**
+ * Delete function for a model. Returns void by default.
+ */
 export type ModelFirebaseDeleteFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
 /**
@@ -132,7 +138,7 @@ export type ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL extends string, CRU
   [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : ModelFirebaseCrudFunctionWithSpecifierName<MODEL, CRUD, SPECIFIER>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
-export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL extends string, CRUD extends string, M extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig> = {
+export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<_MODEL extends string, CRUD extends string, M extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig> = {
   [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? CRUD : SPECIFIER) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
@@ -161,6 +167,7 @@ export type ModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U
  *
  * @param configMap - configuration for custom (non-CRUD) functions
  * @param crudConfigMap - configuration for model CRUD functions with optional specifiers
+ * @returns a {@link ModelFirebaseFunctionMapFactory} that creates a combined custom and CRUD function map for a given `Functions` instance
  *
  * @example
  * ```ts
@@ -181,34 +188,34 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
 
     const _callFn = cachedGetter(() => httpsCallable(functionsInstance, CALL_MODEL_APP_FUNCTION_KEY));
 
-    function makeCallFunction(call: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifier?: string) {
-      return mapHttpsCallable(fn(), { mapInput: (data) => onCallTypedModelParamsFunction(call)(modelType, data, specifier) }, true);
+    function makeCallFunction(callFn: { call: string; fn: Getter<HttpsCallable<unknown, unknown>> }, modelType: string, specifier?: string) {
+      return mapHttpsCallable(callFn.fn(), { mapInput: (data) => onCallTypedModelParamsFunction(callFn.call)(modelType, data, specifier) }, true);
     }
 
-    function makeCallSpecifiers(call: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifierKeys: string[]): { [key: string]: HttpsCallable<unknown, unknown> } {
+    function makeCallSpecifiers(callFn: { call: string; fn: Getter<HttpsCallable<unknown, unknown>> }, modelType: string, specifierKeys: string[]): { [key: string]: HttpsCallable<unknown, unknown> } {
       const modelTypeSuffix = capitalizeFirstLetter(modelType);
       const specifiers: Record<string, HttpsCallable<unknown, unknown>> = {};
 
       specifierKeys.forEach((inputSpecifier) => {
         const specifier = inputSpecifier === MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT ? '' : inputSpecifier;
-        const specifierFn = makeCallFunction(call, fn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
+        const specifierFn = makeCallFunction(callFn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
 
-        const fullSpecifierName = `${call}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;
+        const fullSpecifierName = `${callFn.call}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;
         specifiers[fullSpecifierName] = specifierFn;
 
-        const shortSpecifierName = lowercaseFirstLetter(specifier) || call;
+        const shortSpecifierName = lowercaseFirstLetter(specifier) || callFn.call;
         specifiers[shortSpecifierName] = specifierFn;
       });
 
       return specifiers;
     }
 
-    const result = build<ModelFirebaseFunctionMap<M, U>>({
+    return build<ModelFirebaseFunctionMap<M, U>>({
       base: functionMap as unknown as ModelFirebaseFunctionMap<M, U>,
       build: (x) => {
         Object.entries(crudConfigMap).forEach(([modelType, config]) => {
           const modelTypeSuffix = capitalizeFirstLetter(modelType);
-          const { included: crudFunctionKeys, excluded: specifiedCallFunctionKeys } = separateValues(config as string[], (x) => x.indexOf(':') === -1);
+          const { included: crudFunctionKeys, excluded: specifiedCallFunctionKeys } = separateValues(config as string[], (x) => !x.includes(':'));
 
           const crudFunctions = new Set(crudFunctionKeys);
           const specifiedCallFunctionTuples = specifiedCallFunctionKeys.map((x) => {
@@ -236,11 +243,12 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
 
           function addCallFunctions(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string): void {
             let crudFns: unknown;
+            const callFn = { call: crud, fn };
 
             if (crudFunctions.has(crud)) {
-              crudFns = makeCallFunction(crud, fn, modelType);
+              crudFns = makeCallFunction(callFn, modelType);
             } else if (specifierFunctions.has(crud)) {
-              crudFns = makeCallSpecifiers(crud, fn, modelType, specifierFunctions.get(crud) as string[]);
+              crudFns = makeCallSpecifiers(callFn, modelType, specifierFunctions.get(crud) as string[]);
             }
 
             if (crudFns) {
@@ -261,7 +269,5 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
         });
       }
     });
-
-    return result;
   };
 }

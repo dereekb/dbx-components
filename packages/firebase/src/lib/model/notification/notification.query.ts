@@ -15,6 +15,8 @@ import { type ArrayOrValue } from '@dereekb/util';
  * Query constraints for finding {@link NotificationUser} documents that have pending config syncs (`ns == true`).
  *
  * Used by the server to discover users whose configs need to be synced to their NotificationBox recipients.
+ *
+ * @returns array of Firestore query constraints filtering for users needing sync
  */
 export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('ns', '==', true)];
@@ -24,6 +26,7 @@ export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConst
  * Query constraints for finding {@link NotificationUser} documents that have any of the given exclusion IDs in their `x` array.
  *
  * @param exclusionId - one or more box IDs or collection name prefixes to match against
+ * @returns array of Firestore query constraints filtering for users with matching exclusions
  */
 export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<NotificationBoxSendExclusion>): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('x', 'array-contains-any', exclusionId)];
@@ -32,6 +35,8 @@ export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<Noti
 // MARK: NotificationSummary
 /**
  * Query constraints for finding {@link NotificationSummary} documents that need server-side initialization (`s == true`).
+ *
+ * @returns array of Firestore query constraints filtering for summaries needing initialization
  */
 export function notificationSummariesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationSummary>('s', '==', true)];
@@ -42,6 +47,8 @@ export function notificationSummariesFlaggedForNeedsInitializationQuery(): Fires
 // MARK: NotificationBox
 /**
  * Query constraints for finding {@link NotificationBox} documents that need server-side initialization (`s == true`).
+ *
+ * @returns array of Firestore query constraints filtering for boxes needing initialization
  */
 export function notificationBoxesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('s', '==', true)];
@@ -51,6 +58,8 @@ export function notificationBoxesFlaggedForNeedsInitializationQuery(): Firestore
  * Query constraints for finding {@link NotificationBox} documents flagged as invalid (`fi == true`).
  *
  * Used by the server to clean up boxes that could not be initialized.
+ *
+ * @returns array of Firestore query constraints filtering for boxes flagged as invalid
  */
 export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('fi', '==', true)];
@@ -64,6 +73,7 @@ export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint
  * This is the primary query used by the send queue processor.
  *
  * @param now - reference time for the `sat` comparison (defaults to current time)
+ * @returns array of Firestore query constraints filtering for notifications past their scheduled send time
  */
 export function notificationsPastSendAtTimeQuery(now = new Date()): FirestoreQueryConstraint[] {
   return [where<Notification>('d', '==', false), where<Notification>('sat', '<=', toISODateString(now))];
@@ -72,6 +82,8 @@ export function notificationsPastSendAtTimeQuery(now = new Date()): FirestoreQue
 /**
  * Query constraints for finding {@link Notification} documents marked as done (`d == true`)
  * and ready to be archived to {@link NotificationWeek} and then deleted.
+ *
+ * @returns array of Firestore query constraints filtering for completed notifications ready to archive
  */
 export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] {
   return [

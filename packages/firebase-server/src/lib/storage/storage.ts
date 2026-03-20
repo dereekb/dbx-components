@@ -19,6 +19,7 @@ interface FirebaseAdminStorageRefLike {
  * Storage wrapper and the raw Google Cloud Storage SDK.
  *
  * @param storage - The Firebase Admin Storage instance.
+ * @returns The underlying Google Cloud Storage client.
  *
  * @example
  * ```typescript

@@ -309,6 +309,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type assertion needed for complex CRUD config type
   storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download'],
   storageFileGroup: ['update:_,regenerateContent']
 };

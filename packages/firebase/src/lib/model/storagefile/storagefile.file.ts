@@ -64,6 +64,8 @@ export interface StoredFileReader {
  *
  * Should only be used server-side, as `copy` may not be available on the client.
  *
+ * @returns a factory function that wraps FirebaseStorageAccessorFile instances into StoredFileReader accessors
+ *
  * @example
  * ```ts
  * const factory = storedFileReaderFactory();
@@ -90,7 +92,8 @@ export function storedFileReaderFactory(): StoredFileReaderFactory {
       loadFileStream: file.getStream,
       loadFileMetadata,
       loadCustomMetadata,
-      copy: file.copy! // copy is always available on the server-side
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- copy is always available on the server-side
+      copy: file.copy!
     };
 
     return accessor;

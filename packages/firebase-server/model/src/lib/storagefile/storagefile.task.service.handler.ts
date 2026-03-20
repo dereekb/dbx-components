@@ -45,7 +45,7 @@ import archiver from 'archiver';
  * Extends the generic subtask input with storage-file-specific context: the document reference,
  * a lazy loader for the current file data, and a file reader for accessing the stored file's content.
  */
-export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> extends NotificationTaskSubtaskInput<StorageFileProcessingNotificationTaskData<M, S>, M, S> {
+export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> extends NotificationTaskSubtaskInput<StorageFileProcessingNotificationTaskData<M, S>, M, S> {
   /**
    * The associated StorageFileDocument.
    */
@@ -65,17 +65,17 @@ export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileP
 /**
  * Result of a StorageFileProcessingPurposeSubtask.
  */
-export type StorageFileProcessingPurposeSubtaskResult<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskServiceHandleNotificationTaskResult<M, S>;
+export type StorageFileProcessingPurposeSubtaskResult<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskServiceHandleNotificationTaskResult<M, S>;
 
 /**
  * A StorageFileProcessingPurposeSubtask is a function that handles a specific StorageFilePurpose subtask.
  */
-export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = (input: StorageFileProcessingPurposeSubtaskInput<M>) => Promise<StorageFileProcessingPurposeSubtaskResult<M, S>>;
+export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = (input: StorageFileProcessingPurposeSubtaskInput<M>) => Promise<StorageFileProcessingPurposeSubtaskResult<M, S>>;
 
 /**
  * Similar to NotificationTaskServiceTaskHandlerFlowEntry, but used in StorageFileProcessingPurposeTaskProcessorConfig as part of the flow.
  */
-export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>;
+export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>;
 
 /**
  * The output cleanup configuration.
@@ -103,14 +103,14 @@ export interface StorageFileProcessingPurposeSubtaskCleanupOutput extends Notifi
   readonly flagResyncWithStorageFileGroups?: boolean;
 }
 
-export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>;
+export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>;
 
 /**
  * Similar to NotificationTaskServiceTaskHandlerConfig, but instead targets a specific StorageFilePurpose.
  *
  * The flows behave the same way.
  */
-export type StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M, S>;
+export type StorageFileProcessingPurposeSubtaskProcessorConfig<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M, S>;
 
 export interface StorageFileProcessingNotificationTaskHandlerConfig extends Omit<NotificationTaskSubtaskNotificationTaskHandlerConfig<StorageFileProcessingPurposeSubtaskInput, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData>, 'processors'> {
   /**
@@ -143,6 +143,13 @@ export const storageFileProcessingNotificationTaskHandlerDefaultCleanup = (): St
 
 /**
  * Creates a NotificationTaskServiceTaskHandlerConfig that handles the StorageFileProcessingNotificationTask.
+ *
+ * Builds a subtask-based notification handler that loads the storage file document,
+ * determines its purpose, and dispatches to the appropriate purpose-specific processor.
+ * Includes optional StorageFileGroup processors (e.g., ZIP generation) by default.
+ *
+ * @param config - handler configuration including processors, storage accessor, and Firestore collections
+ * @returns a NotificationTaskServiceTaskHandlerConfig wired for storage file processing
  */
 export function storageFileProcessingNotificationTaskHandler(config: StorageFileProcessingNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData> {
   const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, allStorageFileGroupProcessorConfig } = config;
@@ -165,7 +172,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
     taskType: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
     subtaskHandlerFunctionName: 'storageFileProcessingNotificationTaskHandler',
     inputFunction: async (data: StorageFileProcessingNotificationTaskData) => {
-      const storageFileDocument = await storageFileDocumentAccessor.loadDocumentForId(data.storageFile);
+      const storageFileDocument = storageFileDocumentAccessor.loadDocumentForId(data.storageFile);
 
       const loadStorageFile = cachedGetter(async () => {
         const storageFile = await getDocumentSnapshotData(storageFileDocument, true);
@@ -177,12 +184,10 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
         return storageFile;
       });
 
-      let purpose = data?.p;
+      let purpose = data.p;
 
-      if (!purpose) {
-        // attempt to load the purpose from the storage file, if it exists.
-        purpose = (await loadStorageFile().then((x) => x.p)) as string;
-      }
+      // attempt to load the purpose from the storage file, if it exists.
+      purpose ??= (await loadStorageFile().then((x) => x.p)) as string;
 
       let storagePath: StoragePath;
 
@@ -195,14 +200,12 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       const file = storageAccessor.file(storagePath);
       const fileDetailsAccessor = makeFileDetailsAccessor(file);
 
-      const input = {
+      return {
         target: purpose,
         loadStorageFile,
         fileDetailsAccessor,
         storageFileDocument
       };
-
-      return input;
     },
     buildUpdateMetadata: (baseUpdateMetadata, input) => {
       const { target } = input;
@@ -257,6 +260,12 @@ export interface AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessor
   readonly excludeZipProcessing?: boolean;
 }
 
+/**
+ * Assembles all built-in StorageFileGroup subtask processors, such as ZIP generation.
+ *
+ * @param config - configuration controlling which group processors to include
+ * @returns an array of subtask processor configs for StorageFileGroup processing purposes
+ */
 export function allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors(config: AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] {
   const { excludeZipProcessing } = config;
 
@@ -336,13 +345,22 @@ export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsCo
    *
    * The function should return an object that can be serialized to JSON.
    */
-  readonly configureZipInfoJson?: false | ((baseInfoJson: StorageFileGroupStorageFileZipInfoJson) => PromiseOrValue<Maybe<any>>);
+  readonly configureZipInfoJson?: false | ((baseInfoJson: StorageFileGroupStorageFileZipInfoJson) => PromiseOrValue<Maybe<unknown>>);
   /**
    * Optional function to hook into the finalization of the target zip archive.
    */
   readonly finalizeZipArchive?: StorageFileGroupStorageFileZipFinalizeArchiveFunction;
 }
 
+/**
+ * Creates the ZIP subtask processor for {@link StorageFileGroup} processing.
+ *
+ * This processor streams all files in the group into a ZIP archive, attaches an info JSON
+ * manifest, and uploads the result to the group's designated storage path.
+ *
+ * @param config - configuration providing Firestore collections, storage accessor, and ZIP options
+ * @returns a subtask processor config targeting the StorageFileGroup ZIP purpose
+ */
 export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
   const { storageFileFirestoreCollections, storageAccessor, zip } = config;
   const { storageFileCollection, storageFileGroupCollection } = storageFileFirestoreCollections;
@@ -364,7 +382,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
           const { storageFileDocument, fileDetailsAccessor } = input;
 
           const storageFile = await input.loadStorageFile();
-          const storageFileMetadata = storageFile.d as StorageFileGroupZipStorageFileMetadata;
+          const storageFileMetadata = storageFile.d as Maybe<StorageFileGroupZipStorageFileMetadata>;
           const storageFileGroupId = storageFileMetadata?.sfg;
 
           let result: NotificationTaskSubtaskResult<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask>;
@@ -413,7 +431,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                       const { n: storageFileDisplayName } = storageFile;
 
                       // make sure it references the storage file group
-                      const referencesStorageFileGroup = storageFile.g.some((x) => x === storageFileGroupId);
+                      const referencesStorageFileGroup = storageFile.g.includes(storageFileGroupId);
 
                       if (referencesStorageFileGroup) {
                         const fileAccessor: FirebaseStorageAccessorFile = storageAccessor.file(storageFile);
@@ -427,7 +445,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 
                           const nameFromFactory = await zipFileDisplayNameFunction({ metadata, fileAccessor, storageFile, storageFileDocument, storageFileGroupEmbeddedFile });
 
-                          let untypedName: Maybe<string> = nameFromFactory || storageFileDisplayName || embeddedFileNameOverride || fileSlashPathDetails.fileName;
+                          let untypedName: Maybe<string> = nameFromFactory ?? storageFileDisplayName ?? embeddedFileNameOverride ?? fileSlashPathDetails.fileName;
                           let extension: Maybe<string>;
 
                           if (fileSlashPathDetails.typedFileExtension) {
@@ -437,10 +455,15 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                           }
 
                           // set the default name if still unset
-                          untypedName = untypedName || `sf_${storageFile.id}`;
+                          untypedName = untypedName ?? `sf_${storageFile.id}`;
 
                           const name = extension ? `${untypedName}.${extension}` : untypedName;
-                          const fileStream = fileAccessor.getStream!();
+
+                          if (!fileAccessor.getStream) {
+                            return; // skip files where getStream is not available
+                          }
+
+                          const fileStream = fileAccessor.getStream();
 
                           await useCallback((x) => {
                             // append the file to the archive

@@ -57,6 +57,7 @@ export class FirebaseServerStorageContextModule {}
  * Creates a NestJS provider that configures the default storage bucket ID.
  *
  * @param input - A bucket ID string or full factory config object.
+ * @returns A NestJS provider for the storage context factory config token.
  * @throws Error if `defaultBucketId` is empty.
  *
  * @example
@@ -87,6 +88,8 @@ export type ProvideFirebaseServerStorageServiceSimple<T extends FirebaseServerSt
 
 /**
  * Returns the default provider config that creates a standard {@link FirebaseServerStorageService}.
+ *
+ * @returns The default provider configuration for FirebaseServerStorageService.
  */
 export function defaultProvideFirebaseServerStorageServiceSimple(): ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> {
   return {
@@ -102,6 +105,9 @@ export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageS
  *
  * If the provider token differs from `FirebaseServerStorageService`, an alias provider is added
  * so the service can also be injected by the abstract type.
+ *
+ * @param provider - The storage service provider configuration.
+ * @returns An array of NestJS providers for the storage service.
  */
 export function provideFirebaseServerStorageService<T extends FirebaseServerStorageService = FirebaseServerStorageService>(provider: ProvideFirebaseServerStorageService<T>): Provider<T>[] {
   const providers: Provider<T>[] = [
@@ -130,6 +136,9 @@ export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseSer
  * Generates NestJS {@link ModuleMetadata} for an app's storage module, including the
  * {@link FirebaseServerStorageContextModule} import and the storage service provider.
  *
+ * @param config - Optional configuration including a custom service provider and additional module metadata.
+ * @returns NestJS module metadata ready to be passed to the `@Module()` decorator.
+ *
  * @example
  * ```typescript
  * @Module(firebaseServerStorageModuleMetadata())
@@ -137,7 +146,7 @@ export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseSer
  * ```
  */
 export function firebaseServerStorageModuleMetadata<T extends FirebaseServerStorageService = FirebaseServerStorageService>(config?: FirebaseServerStorageModuleMetadataConfig<T>): ModuleMetadata {
-  const serviceProvider = config && config.serviceProvider ? config.serviceProvider : defaultProvideFirebaseServerStorageServiceSimple();
+  const serviceProvider = config?.serviceProvider ?? defaultProvideFirebaseServerStorageServiceSimple();
   const providers = provideFirebaseServerStorageService(serviceProvider);
   const tokensToExport = injectionTokensFromProviders(providers);
 

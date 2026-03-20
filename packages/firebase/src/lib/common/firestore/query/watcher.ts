@@ -192,7 +192,7 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
     map((event) => {
       const changes = event.docChanges();
 
-      const results = build({
+      return build({
         base: groupValues(changes, (x) => x.type) as Building<IterationQueryDocChangeWatcherEvent<T>>,
         build: (x) => {
           x.time = new Date();
@@ -203,8 +203,6 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
           x.type = iterationQueryDocChangeWatcherChangeTypeForGroup(x as IterationQueryDocChangeWatcherEvent<T>);
         }
       });
-
-      return results;
     }),
     shareReplay(1)
   );

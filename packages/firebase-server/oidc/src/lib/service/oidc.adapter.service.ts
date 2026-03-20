@@ -25,6 +25,7 @@ const GRANTABLE_MODELS = new Set(['AccessToken', 'AuthorizationCode', 'RefreshTo
  *
  * @param collections - Firestore collection access for adapter entries.
  * @param encryptionService - Encryption service for sensitive payload fields.
+ * @returns an oidc-provider adapter constructor backed by Firestore
  */
 export function createAdapterFactory(collections: OidcServerFirestoreCollections, encryptionService: OidcEncryptionService): AdapterConstructor {
   class FirestoreAdapter implements Adapter {
@@ -51,14 +52,14 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
       };
 
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
-      await doc.accessor.set(data as any, { merge: true });
+      await doc.accessor.set(data as Partial<OidcEntry>, { merge: true });
     }
 
     async find(id: OidcEntryId): Promise<AdapterPayload | undefined> {
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
       const snapshot = await doc.accessor.get();
       const data = snapshot.data();
-      return data && data.type === this.name ? this._toPayload(data) : undefined;
+      return data?.type === this.name ? this._toPayload(data) : undefined;
     }
 
     async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
@@ -81,7 +82,7 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
         const payload = encryptionService.decryptAdapterPayload(data.payload);
         payload.consumed = now;
 
-        await doc.accessor.set({ consumed: now, payload: encryptionService.encryptAdapterPayload(payload) } as Partial<OidcEntry> as any, { merge: true });
+        await doc.accessor.set({ consumed: now, payload: encryptionService.encryptAdapterPayload(payload) } as Partial<OidcEntry>, { merge: true });
       }
     }
 
@@ -108,9 +109,12 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
     /**
      * Converts a Firestore document into an oidc-provider payload,
      * returning `undefined` if the entry has expired.
+     *
+     * @param data - the Firestore document data to convert
+     * @returns the decrypted adapter payload, or undefined if the entry has expired
      */
     private _toPayload(data: OidcEntry): AdapterPayload | undefined {
-      const expiresDate = data.expiresAt ? (data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as any).toDate()) : undefined;
+      const expiresDate = data.expiresAt ? (data.expiresAt instanceof Date ? data.expiresAt : (data.expiresAt as { toDate(): Date }).toDate()) : undefined;
       const isExpired = expiresDate != null && expiresDate < new Date();
       return isExpired ? undefined : encryptionService.decryptAdapterPayload(data.payload);
     }

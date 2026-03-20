@@ -244,6 +244,7 @@ export interface WhereQueryConstraintData {
 export function where<T>(fieldPath: StringKeyPropertyKeys<T>, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- only specific operators need validation
   switch (opStr) {
     case 'array-contains':
       if (Array.isArray(value)) {
@@ -258,6 +259,8 @@ export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldP
 
       // ensure the value is passed as an array.
       value = convertToArray(value);
+      break;
+    default:
       break;
   }
 
@@ -612,7 +615,7 @@ export type FullFirestoreQueryConstraintHandlersMapping<B> = {
  * const newConstraints = withLastLimit10(existingConstraints);
  */
 export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
-  const replace = replaceConstraints(
+  return replaceConstraints(
     (constraints) => {
       let type: FirestoreQueryConstraintType;
 
@@ -631,8 +634,6 @@ export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: ty
     },
     [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]
   );
-
-  return replace;
 }
 
 /**
@@ -688,7 +689,7 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
   return (constraints) => {
     const separated = separateFn(constraints);
     const replacements = asArray(replaceFn(separated.excluded));
-    return replacements ? pushItemOrArrayItemsIntoArray(separated.included, replacements) : separated.included;
+    return pushItemOrArrayItemsIntoArray(separated.included, replacements);
   };
 }
 
@@ -712,7 +713,6 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
 export function separateConstraints(...types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => SeparateResult<FirestoreQueryConstraint> {
   return (constraints) => {
     const typesToFilterOut = new Set(types);
-    const separated = separateValues(constraints, (x) => !typesToFilterOut.has(x.type));
-    return separated;
+    return separateValues(constraints, (x) => !typesToFilterOut.has(x.type));
   };
 }

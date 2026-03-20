@@ -11,11 +11,17 @@ import { type FirestoreQueryConstraintFunctionsDriver, type FirestoreQueryDriver
  * @template B - The platform-specific query builder type (e.g., the Firestore Query itself)
  */
 export interface MakeFirestoreQueryConstraintFunctionsDriver<B> extends Omit<FirestoreQueryConstraintFunctionsDriver, 'query' | 'availableConstraintTypes'> {
-  /** Maps constraint type names to handler functions that apply them to the builder. */
+  /**
+   * Maps constraint type names to handler functions that apply them to the builder.
+   */
   mapping: FirestoreQueryConstraintHandlerMap<B>;
-  /** Initializes a builder from a base query. */
+  /**
+   * Initializes a builder from a base query.
+   */
   init: <T>(query: Query<T>) => B;
-  /** Converts the finalized builder back to a query. */
+  /**
+   * Converts the finalized builder back to a query.
+   */
   build: <T>(builder: B) => Query<T>;
 }
 

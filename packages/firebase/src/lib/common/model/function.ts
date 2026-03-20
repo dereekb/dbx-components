@@ -46,6 +46,7 @@ export type OnCallTypeModelParamsFunction = <T>(modelTypeInput: FirestoreModelTy
  * The returned function builds {@link OnCallTypedModelParams} for any model type.
  *
  * @param call - the CRUD call type to embed in generated params
+ * @returns an {@link OnCallTypeModelParamsFunction} pre-configured with the given call type
  * @throws {Error} When `modelType` is not provided or empty.
  *
  * @example
@@ -84,10 +85,13 @@ export function onCallTypedModelParamsFunction(call?: Maybe<OnCallFunctionType>)
  *
  * @deprecated Move towards using onCallTypedModelParamsFunction directly with the call type instead of using this function. Will not be removed in the future.
  *
- * @param modelType
- * @param data
- * @returns
+ * @param modelTypeInput - the model type string or ref
+ * @param data - the call payload
+ * @param specifier - optional sub-function specifier
+ * @param call - the CRUD call type
+ * @returns the constructed {@link OnCallTypedModelParams}
  */
+// eslint-disable-next-line @typescript-eslint/max-params -- deprecated function, not worth refactoring
 export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string, call?: OnCallFunctionType): OnCallTypedModelParams<T> {
   return onCallTypedModelParamsFunction(call)(modelTypeInput, data, specifier);
 }
@@ -152,6 +156,7 @@ export interface OnCallCreateModelResult {
  * Creates an {@link OnCallCreateModelResult} from document references by extracting their paths as model keys.
  *
  * @param result - document reference(s) from a create operation
+ * @returns an {@link OnCallCreateModelResult} with model keys extracted from document paths
  *
  * @example
  * ```ts
@@ -167,6 +172,7 @@ export function onCallCreateModelResultWithDocs(result: ArrayOrValue<DocumentRef
  * Creates an {@link OnCallCreateModelResult} from model key(s), normalizing to an array.
  *
  * @param modelKeys - the model key(s) of the created document(s)
+ * @returns an {@link OnCallCreateModelResult} containing the keys as an array
  */
 export function onCallCreateModelResult(modelKeys: ArrayOrValue<FirestoreModelKey>): OnCallCreateModelResult {
   return {

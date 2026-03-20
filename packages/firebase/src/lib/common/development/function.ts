@@ -29,6 +29,7 @@ export interface OnCallDevelopmentParams<T = unknown> {
  *
  * @param specifier - the development function to invoke
  * @param data - the call payload
+ * @returns an {@link OnCallDevelopmentParams} envelope ready to send to the dev endpoint
  *
  * @example
  * ```ts

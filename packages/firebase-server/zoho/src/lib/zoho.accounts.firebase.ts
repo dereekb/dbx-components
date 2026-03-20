@@ -11,7 +11,8 @@ import { type ZohoAccessTokenSystemStateData, loadZohoAccessTokenSystemState } f
  * Tokens are stored in a single {@link SystemState} document (type {@link ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE})
  * and token updates/clears use Firestore transactions for concurrency safety.
  *
- * @param systemStateCollection - the Firestore collection for system state documents
+ * @param systemStateCollection - the Firestore collection for system state documents.
+ * @returns A cache service backed by Firestore system state documents.
  *
  * @example
  * ```ts
@@ -33,7 +34,7 @@ export function firebaseZohoAccountsAccessTokenCacheService(systemStateCollectio
           let result: Maybe<ZohoAccessToken> = null;
 
           if (existingData != null) {
-            const tokensArray = existingData?.data?.tokens ?? [];
+            const tokensArray = existingData.data.tokens;
             result = tokensArray.find((x) => x.key === serviceKey);
           }
 
@@ -44,7 +45,7 @@ export function firebaseZohoAccountsAccessTokenCacheService(systemStateCollectio
           await systemStateCollection.firestoreContext.runTransaction(async (transaction) => {
             const documentInTransaction = loadZohoAccessTokenSystemState(systemStateCollection.documentAccessorForTransaction(transaction));
             const existingData = await documentInTransaction.snapshotData();
-            const existingTokens = existingData?.data?.tokens ?? [];
+            const existingTokens = existingData?.data.tokens ?? [];
 
             const tokens = [
               // filter any potential old token for this service key

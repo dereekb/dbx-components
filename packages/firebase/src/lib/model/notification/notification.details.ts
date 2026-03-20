@@ -104,6 +104,8 @@ export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType
 /**
  * Creates a {@link NotificationTemplateTypeInfoRecord} from an array of template type info entries.
  *
+ * @param infoArray - array of template type info entries to index
+ * @returns a record keyed by template type
  * @throws {Error} When duplicate template types are found in the input array.
  *
  * @example
@@ -120,7 +122,8 @@ export function notificationTemplateTypeInfoRecord(infoArray: NotificationTempla
   infoArray.forEach((x) => {
     const { type } = x;
 
-    if (record[type]) {
+    if (record[type] != null) {
+      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- record is mutated inside loop
       throw new Error(`notificationTemplateTypeInfoRecord(): duplicate NotificationTemplateType in record: ${type}`);
     }
 
@@ -217,6 +220,7 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  * Handles alternative model identities defined in {@link NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair}.
  *
  * @param appNotificationTemplateTypeInfoRecord - the complete template type registry for the application
+ * @returns a fully initialized service with indexed lookups for fast template type discovery
  *
  * @example
  * ```ts
@@ -259,13 +263,13 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
     allKnownTemplateTypes.push(info.type);
   });
 
-  const allNotificationModelIdentityValues = Array.from(allNotificationModelIdentityValuesSet);
+  const allNotificationModelIdentityValues = [...allNotificationModelIdentityValuesSet];
 
   const notificationModelTemplateInfoMap = notificationModelTypeInfoMapBuilder.map();
   const targetModelTemplateInfoMap = targetModelTypeInfoMapBuilder.map();
 
-  const notificationModelTemplateTypesMap = new Map(Array.from(notificationModelTemplateInfoMap.entries()).map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
-  const targetModelTemplateTypesMap = new Map(Array.from(targetModelTemplateInfoMap.entries()).map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
+  const notificationModelTemplateTypesMap = new Map([...notificationModelTemplateInfoMap.entries()].map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
+  const targetModelTemplateTypesMap = new Map([...targetModelTemplateInfoMap.entries()].map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
 
   const service: AppNotificationTemplateTypeInfoRecordService = {
     appNotificationTemplateTypeInfoRecord,
