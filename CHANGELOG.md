@@ -1,3 +1,45 @@
+## [13.4.1](https://github.com/dereekb/dbx-components/compare/v13.4.0-dev...v13.4.1) (2026-03-20)
+
+
+### Bug Fixes
+
+- restored runtime null guards removed by lint ([d9b38b8f](https://github.com/dereekb/dbx-components/commit/d9b38b8fac9f1ee121a01a239ecef02122281590))
+
+
+### Build System
+
+- expanded eslint rules and plugins ([1503450d](https://github.com/dereekb/dbx-components/commit/1503450d388db10599657a2a1e25e65590e3777c))
+- lint fixes and test coverage for util ([5203111a](https://github.com/dereekb/dbx-components/commit/5203111aacc79691f0fdcd8229eacad3e2b34783))
+- resolved all lint warnings in nestjs, zoom, zoho ([48d47463](https://github.com/dereekb/dbx-components/commit/48d4746343db7ccb50af60de84e27d8421f269a5))
+- resolved all lint warnings in util ([007c20c8](https://github.com/dereekb/dbx-components/commit/007c20c8446e5436d19b81c181be6d4cac1b63f6))
+
+
+### Code Refactoring
+
+-  nx.json update ([f8357192](https://github.com/dereekb/dbx-components/commit/f835719266d463d0ff6e90cafee904f51e32de2b))
+- added sonar-project.properties ([a825e232](https://github.com/dereekb/dbx-components/commit/a825e2328caa610eba1dfe38372666da4a255c41))
+- added typed auth error classes and nestApplication alias ([bef853e3](https://github.com/dereekb/dbx-components/commit/bef853e3c681f9318e8bea540c5dfe5f24668a71))
+- circleci cache fix ([6c0390dc](https://github.com/dereekb/dbx-components/commit/6c0390dcce6dbc034e01a99ea8a022f21f45a14c))
+- convention fixes for dbx-core and dbx-web ([5e514368](https://github.com/dereekb/dbx-components/commit/5e514368fc44e00df9db5efed837d46bd888bca8))
+- convention fixes for zoom and zoho packages ([bd43391d](https://github.com/dereekb/dbx-components/commit/bd43391d87216fb74bad02373d7afe1a5bdb92f7))
+- injection and list view improvements ([cbcb8c8f](https://github.com/dereekb/dbx-components/commit/cbcb8c8f61492333635da18e3a0c28aced7c2fe1))
+- lint-fix ([4e50bdfc](https://github.com/dereekb/dbx-components/commit/4e50bdfc7a643a319a5fa957cd02b4998e568ca7))
+- nestjs convention fixes across all sub-libraries ([2d0c57c3](https://github.com/dereekb/dbx-components/commit/2d0c57c3ac717dff025dc19f3ff3f4656ddaf559))
+
+
+### Continuous Integration
+
+- improve circleci caching and cleanup ([9de7abba](https://github.com/dereekb/dbx-components/commit/9de7abba99383f35a629816acb4c0e48a338cf90))
+- staged builds, single emulator session, cache inputs ([327ef42e](https://github.com/dereekb/dbx-components/commit/327ef42e37a0a3b6a9c61c3362c4461019964362))
+
+
+### Demo
+
+- angular 21 convention updates ([42e44f97](https://github.com/dereekb/dbx-components/commit/42e44f97a52b88ab4e88339457a87a1042fe2999))
+
+
+
+
 # [13.4.0](https://github.com/dereekb/dbx-components/compare/v13.3.1-dev...v13.4.0) (2026-03-18)
 
 
