@@ -55,7 +55,9 @@ export type OnCallSpecifierHandlerConfig<N> = {
   /**
    * The default handler function, invoked when the specifier is `_` or omitted.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly _?: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
 };
 
@@ -82,6 +84,7 @@ export type OnCallSpecifierHandlerConfig<N> = {
  * });
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef & OnCallApiDetailsRef {
   const map = objectToMap(config);
 
@@ -91,6 +94,7 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
 
     if (handler != null) {
       assertRequestRequiresAuthForFunction(handler, request);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return handler(request as any) as PromiseOrValue<O>;
     } else {
       throw unknownModelCrudFunctionSpecifierError(specifier);
@@ -112,6 +116,9 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
 /**
  * Creates a bad-request error indicating the provided specifier is not recognized
  * by the current model CRUD handler.
+ *
+ * @param specifier - The unrecognized specifier string.
+ * @returns A bad-request error with UNKNOWN_SPECIFIER_ERROR code.
  */
 export function unknownModelCrudFunctionSpecifierError(specifier: ModelFirebaseCrudFunctionSpecifier) {
   return badRequestError(

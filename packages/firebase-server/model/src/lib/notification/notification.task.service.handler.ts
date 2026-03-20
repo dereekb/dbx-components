@@ -5,6 +5,7 @@ import { type Configurable, separateValues } from '@dereekb/util';
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**
    * Checkpoint this flow entry represents.
@@ -16,6 +17,7 @@ export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends Notificat
   readonly fn: NotificationTaskServiceTaskHandlerFunction<D>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   readonly type: NotificationTaskType;
   /**
@@ -41,6 +43,7 @@ export interface NotificationTaskServiceConfig {
   /**
    * Handler configurations that define the checkpoint-based flow for each task type.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly handlers: NotificationTaskServiceTaskHandlerConfig<any, any>[];
 }
 
@@ -52,6 +55,7 @@ export interface NotificationTaskServiceConfig {
  * If all checkpoints are complete, the task is marked as done.
  *
  * @param config - handler configurations and optional validation list
+ * @returns a {@link NotificationTaskService} that dispatches tasks to the registered handlers
  *
  * @example
  * ```ts
@@ -78,6 +82,7 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
     handlers[type] = handlerForConfig(handlerConfig);
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handlerForConfig(handlerConfig: NotificationTaskServiceTaskHandlerConfig<any, any>): NotificationTaskServiceTaskHandler {
     const { flow: inputFlows, allowRunMultipleParts } = handlerConfig;
     const { included: checkpointFlows, excluded: nonCheckpointFlows } = separateValues(inputFlows, (x) => x.checkpoint != null);
@@ -97,7 +102,7 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
           case 0:
             fn = (nonCheckpointFlows[0] ?? checkpointFlows[0])?.fn;
             break;
-          default:
+          default: {
             const completedCheckpointsSet = new Set(completedCheckpoints);
             /**
              * Find the next flow function that hasn't had its checkpoint completed yet.
@@ -105,6 +110,7 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
             const nextCheckpoint = checkpointFlows.find((x) => !completedCheckpointsSet.has(x.checkpoint as string));
             fn = nextCheckpoint?.fn;
             break;
+          }
         }
 
         let result: NotificationTaskServiceHandleNotificationTaskResult;

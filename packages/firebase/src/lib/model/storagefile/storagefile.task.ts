@@ -76,6 +76,7 @@ export interface StorageFileProcessingNotificationTaskInput<M extends StorageFil
  * The created task is unique per StorageFile (only one processing task at a time).
  *
  * @param input - the target StorageFileDocument and optional subtask data
+ * @returns a CreateNotificationTaskTemplate for the StorageFile processing task
  *
  * @example
  * ```ts

@@ -33,7 +33,8 @@ export type CleanLockSet = LockSet & { readonly _cleanDestroy: () => void };
  *
  * Must be run within an Angular injection context.
  *
- * @param config Optional configuration for destruction behavior and callbacks.
+ * @param config - Optional configuration for destruction behavior and callbacks.
+ * @returns A CleanLockSet that is automatically destroyed when the context is destroyed.
  *
  * @example
  * // Create a simple lockset:
@@ -121,6 +122,9 @@ export interface CleanSubscriptionWithLockSetConfig<T extends Unsubscribable = U
  * // Create first, then set the subscription later:
  * readonly _sub = cleanSubscriptionWithLockSet({ lockSet: this.lockSet });
  * this._sub.subscription = obs$.subscribe(handler);
+ *
+ * @param input - Configuration specifying the lock set and optional initial subscription.
+ * @returns A SubscriptionObject that is destroyed when the context is destroyed and the lock set unlocks.
  */
 export function cleanSubscriptionWithLockSet<T extends Unsubscribable = Unsubscribable>(input: CleanSubscriptionWithLockSetConfig<T>): SubscriptionObject<T> {
   const subscription = getValueFromGetter(input.sub);

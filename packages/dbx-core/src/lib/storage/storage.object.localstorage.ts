@@ -34,7 +34,7 @@ export class FullLocalStorageObject implements FullStorageObject {
       this._localStorage.setItem(test, test);
       this._localStorage.removeItem(test);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }

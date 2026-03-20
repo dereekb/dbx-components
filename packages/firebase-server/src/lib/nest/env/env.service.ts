@@ -15,6 +15,8 @@ export class DefaultFirebaseServerEnvService extends ServerEnvironmentService im
 
   /**
    * Enabled when not in production and not in a testing environment.
+   *
+   * @returns True if the development scheduler should be enabled.
    */
   get developmentSchedulerEnabled() {
     return !this.isProduction && !this.isTestingEnv;

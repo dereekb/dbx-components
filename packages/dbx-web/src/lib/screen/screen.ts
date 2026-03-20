@@ -41,6 +41,8 @@ export type ScreenMediaHeightType = 'tiny' | 'normal';
  * screenMediaWidthTypeIsActive('tablet', 'small'); // true
  * screenMediaWidthTypeIsActive('micro', 'tablet'); // false
  * ```
+ *
+ * @returns `true` if the current width type meets or exceeds the breakpoint
  */
 export function screenMediaWidthTypeIsActive(current: ScreenMediaWidthType, breakpoint: ScreenMediaWidthType) {
   return compareScreenMediaWidthTypes(current, breakpoint, (a, b) => a >= b);
@@ -48,6 +50,11 @@ export function screenMediaWidthTypeIsActive(current: ScreenMediaWidthType, brea
 
 /**
  * Compares two {@link ScreenMediaWidthType} values using a custom comparator on their numeric sizes.
+ *
+ * @param a - the first screen width type
+ * @param b - the second screen width type
+ * @param compare - a comparator function applied to the numeric size values of `a` and `b`
+ * @returns the result of applying the comparator to the mapped numeric sizes
  */
 export function compareScreenMediaWidthTypes(a: ScreenMediaWidthType, b: ScreenMediaWidthType, compare: (a: number, b: number) => boolean) {
   return compare(SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP[a], SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP[b]);

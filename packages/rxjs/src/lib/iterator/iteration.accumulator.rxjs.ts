@@ -18,7 +18,7 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
     scanBuildArray<ItemAccumulatorValuePair<T[], I>[], T>((allItems: ItemAccumulatorValuePair<T[], I>[]) => {
       const pairs: ItemAccumulatorValuePair<T[], I>[] = allItems;
       const firstLatestItemPair = lastValue(allItems);
-      const skipValue = firstLatestItemPair?.input; // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- lastValue() can return undefined at runtime for empty arrays
+      const skipValue = firstLatestItemPair?.input;
       const seed: T[] = flattenArray(pairs.map((x) => x.output));
 
       const mapStateToItem = mapLoadingStateValueFunction(accumulator.mapItemFunction);
@@ -90,6 +90,5 @@ export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulat
  * @returns observable emitting the most recently loaded page number
  */
 export function pageItemAccumulatorCurrentPage(pageItemAccumulator: PageItemAccumulator<any, any>): Observable<number> {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
   return pageItemAccumulator.itemIteration.latestLoadedPage$;
 }

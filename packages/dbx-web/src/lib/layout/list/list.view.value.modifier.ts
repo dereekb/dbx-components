@@ -24,6 +24,9 @@ export abstract class DbxValueListItemModifier<T = unknown, I extends DbxValueLi
  * })
  * export class MyModifierDirective extends DbxValueListItemModifier<MyItem> { ... }
  * ```
+ *
+ * @param sourceType - the directive class to register as the DbxValueListItemModifier provider
+ * @returns an array of Angular providers that wire up the directive as a DbxValueListItemModifier
  */
 export function provideDbxValueListViewModifier<V extends DbxValueListItemModifier>(sourceType: Type<V>): Provider[] {
   return [
@@ -49,6 +52,10 @@ export type ListItemModifier<T, I extends DbxValueListItem<T> = DbxValueListItem
  *   item.selected = item.itemValue.isImportant;
  * });
  * ```
+ *
+ * @param key - a unique string identifier for this modifier in the modifier map
+ * @param modify - the function that mutates list item properties during rendering
+ * @returns a new ListItemModifier with the given key and modification function
  */
 export function listItemModifier<T, I extends DbxValueListItem<T> = DbxValueListItem<T>>(key: string, modify: ModifierFunction<I>): ListItemModifier<T, I> {
   return modifier(key, modify);

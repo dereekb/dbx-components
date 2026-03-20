@@ -62,6 +62,7 @@ export class ConfigureFirebaseAppCheckMiddlewareModule {
     }
 
     builder.forRoutes(...forRoutes);
-    this.logger.debug(`Configured AppCheck middleware for routes: ${forRoutes.join(', ')}${excludePatterns.length > 0 ? ` (excluding: ${excludePatterns.join(', ')})` : ''}`);
+    const excludeInfo = excludePatterns.length > 0 ? ` (excluding: ${excludePatterns.join(', ')})` : '';
+    this.logger.debug(`Configured AppCheck middleware for routes: ${forRoutes.join(', ')}${excludeInfo}`);
   }
 }

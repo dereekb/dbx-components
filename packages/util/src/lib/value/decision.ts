@@ -51,7 +51,6 @@ export function decisionFunction<I>(decision: boolean): DecisionFunction<I> {
  * isNotPositive(5); // false
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint needs `any` to match all DecisionFunction variants
 export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: boolean) => F = invertBooleanReturnFunction;
 
 /**

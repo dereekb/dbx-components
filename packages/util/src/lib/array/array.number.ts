@@ -141,9 +141,7 @@ export function range(input: RangeInput, inputEnd?: RangeInputEndValue): number[
       end = input;
     }
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     start = (input as RangeInputObject).start ?? (input as IndexRange).minIndex ?? 0;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     end = (input as RangeInputObject).end ?? (input as IndexRange).maxIndex;
   }
 

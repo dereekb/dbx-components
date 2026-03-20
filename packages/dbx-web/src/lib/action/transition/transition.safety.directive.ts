@@ -140,11 +140,11 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
         delay(20), // Prevent racing with auto-trigger.
         first(),
         mergeMap((state) => {
-          if (isIdleActionState(state.actionState)) {
-            // If we're in an idle state, get ready to trigger it.
-            if (canTriggerAction(state)) {
-              store.trigger(); // Try and trigger it.
-            }
+          if (
+            isIdleActionState(state.actionState) && // If we're in an idle state, get ready to trigger it.
+            canTriggerAction(state)
+          ) {
+            store.trigger(); // Try and trigger it.
           }
 
           // Watch for errors. If an error occurs, show the dialog.
@@ -158,7 +158,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
     );
   }
 
-  private _showDialog(transition: Transition): Observable<HookResult> {
+  private _showDialog(_transition: Transition): Observable<HookResult> {
     if (this.checkIsDestroyed()) {
       return of(true);
     }

@@ -21,6 +21,9 @@ export interface ProvideDbxStyleServiceConfig {
  * ```ts
  * provideDbxStyleService({ dbxStyleConfig: { style: 'my-app', suffixes: new Set(['dark']) } });
  * ```
+ *
+ * @param config - configuration specifying the default style and its allowed suffixes
+ * @returns environment providers for the DbxStyleService and its default config token
  */
 export function provideDbxStyleService(config: ProvideDbxStyleServiceConfig): EnvironmentProviders {
   const { dbxStyleConfig } = config;

@@ -17,6 +17,7 @@ import { callWithAnalytics } from './analytics.emit';
  * Used by {@link onCallModel} to dispatch incoming requests to the correct CRUD handler.
  */
 export type OnCallModelMap = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [call: OnCallFunctionType]: OnCallWithNestContext<any, OnCallTypedModelParams>;
 };
 
@@ -81,7 +82,7 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
   }
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
-    const call = request.data?.call;
+    const call = request.data.call;
 
     if (!call) {
       throw onCallModelMissingCallTypeError();
@@ -94,11 +95,14 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
     }
 
     const { specifier, modelType } = request.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const auth = (request as any).auth;
-    const context: OnCallAnalyticsContext = { call, modelType, specifier, uid: auth?.uid, auth, data: request.data?.data, request: request as any };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context: OnCallAnalyticsContext = { call, modelType, specifier, uid: auth?.uid, auth, data: request.data.data, request: request as any };
 
     preAssert(context);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: PromiseOrValue<any>;
 
     // Resolve analytics from _apiDetails tree — callWithAnalytics handles undefined details
@@ -123,6 +127,8 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
 
 /**
  * Creates a bad-request error indicating the `call` field was missing from the request payload.
+ *
+ * @returns A bad-request error with CALL_TYPE_MISSING_ERROR code.
  */
 export function onCallModelMissingCallTypeError() {
   return badRequestError(
@@ -136,6 +142,9 @@ export function onCallModelMissingCallTypeError() {
 
 /**
  * Creates a bad-request error indicating the provided `call` type is not recognized.
+ *
+ * @param call - The unrecognized call type string.
+ * @returns A bad-request error with UNKNOWN_CALL_TYPE_ERROR code.
  */
 export function onCallModelUnknownCallTypeError(call: OnCallFunctionType) {
   return badRequestError(
@@ -161,6 +170,7 @@ export function onCallModelUnknownCallTypeError(call: OnCallFunctionType) {
  * @typeParam T - The Firestore model identity constraining which model type keys are valid.
  */
 export type OnCallWithCallTypeModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: ((request: NestContextCallableRequest<N, any> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<any>) & OnCallWithAuthAwareNestRequireAuthRef;
 };
 
@@ -173,13 +183,21 @@ export type OnCallWithCallTypeModelMap<N, T extends FirestoreModelIdentity = Fir
  * @typeParam N - The NestJS context type.
  */
 export interface OnCallWithCallTypeModelConfig<N> {
-  /** The call type string (e.g., 'create', 'read') passed through to assertions. */
+  /**
+   * The call type string (e.g., 'create', 'read') passed through to assertions.
+   */
   readonly callType: string;
-  /** The CRUD category used by {@link AssertModelCrudRequestFunction}. */
+  /**
+   * The CRUD category used by {@link AssertModelCrudRequestFunction}.
+   */
   readonly crudType: AssertModelCrudRequestFunctionContextCrudType;
-  /** Optional assertion run before the model handler; throw to reject. */
+  /**
+   * Optional assertion run before the model handler; throw to reject.
+   */
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallTypedModelParams>;
-  /** Error factory invoked when the requested model type has no handler in the map. */
+  /**
+   * Error factory invoked when the requested model type has no handler in the map.
+   */
   readonly throwOnUnknownModelType: (modelType: FirestoreModelType) => Error;
 }
 
@@ -189,13 +207,16 @@ export interface OnCallWithCallTypeModelConfig<N> {
  * Dispatches to the correct model-type handler from the map, enforces auth requirements,
  * runs pre-assertions, and aggregates API details from all handlers for MCP introspection.
  *
+ * @param map - Maps model type strings to their handler functions.
+ * @param config - Configuration including call type, crud type, and error factory.
+ * @returns A callable function that dispatches to the correct model-type handler.
  * @internal Not intended for direct use outside the model CRUD module.
  */
 export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N>, config: OnCallWithCallTypeModelConfig<N>): OnCallWithAuthAwareNestContext<N, OnCallTypedModelParams, unknown> & OnCallApiDetailsRef {
-  const { callType, crudType, preAssert = () => undefined, throwOnUnknownModelType } = config;
+  const { callType, preAssert = () => undefined, throwOnUnknownModelType } = config;
 
   const fn = (request: OnCallWithNestContextRequest<N, OnCallTypedModelParams>) => {
-    const modelType = request.data?.modelType;
+    const modelType = request.data.modelType;
     const crudFn = map[modelType];
 
     if (crudFn) {

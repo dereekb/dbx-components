@@ -32,8 +32,8 @@ export function onRouterTransitionSuccessEvent(events$: Observable<DbxRouterTran
 /**
  * Creates an observable that returns true when the route for the input segueRef is active.
  *
- * @param dbxRouterService
- * @param segueRef
+ * @param config - Configuration specifying the router service, segue ref, and matching options.
+ * @returns An observable that emits `true` when the segue ref's route is active.
  */
 export function isSegueRefActiveOnTransitionSuccess(config: IsSegueRefActiveFunctionConfig): Observable<boolean> {
   const isActiveFn = isSegueRefActiveFunction(config);
@@ -58,8 +58,8 @@ export interface IsSegueRefActiveConfig extends Pick<IsSegueRefActiveFunctionCon
 /**
  * Operator function that maps the input segueRef to a boolean depending on the current route state.
  *
- * @param dbxRouterService
- * @param segueRef
+ * @param config - Configuration specifying the router service and default behavior for null refs.
+ * @returns An RxJS operator that maps a segue ref to whether it is currently active.
  */
 export function isSegueRefActive(config: IsSegueRefActiveConfig): OperatorFunction<Maybe<SegueRefOrSegueRefRouterLink>, boolean> {
   const { defaultIfNull = false } = config;

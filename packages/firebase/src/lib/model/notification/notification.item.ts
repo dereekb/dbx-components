@@ -121,6 +121,7 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  *
  * @param items - notification items to classify
  * @param considerReadIfCreatedBefore - optional cutoff date; items created at or before this date are treated as read
+ * @returns an object containing both the read and unread item arrays along with the input cutoff date
  *
  * @example
  * ```ts
@@ -143,4 +144,4 @@ export function unreadNotificationItems<D extends NotificationItemMetadata = {}>
 /**
  * Sort comparator for {@link NotificationItem} arrays. Sorts ascending by creation date (`cat`).
  */
-export const sortNotificationItemsFunction = sortByDateFunction<NotificationItem<any>>((x) => x.cat);
+export const sortNotificationItemsFunction = sortByDateFunction<NotificationItem>((x) => x.cat);

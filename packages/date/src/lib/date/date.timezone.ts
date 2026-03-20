@@ -751,7 +751,6 @@ export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput
   } else {
     const type = typeof config;
 
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (type) {
       case 'object':
         instance = new DateTimezoneUtcNormalInstance(config as DateTimezoneUtcNormalInstanceInput);
@@ -1124,7 +1123,6 @@ export type SetOnDateWithTimezoneNormalFunction = ((input: SetOnDateWithTimezone
 export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNormalFunctionInput): SetOnDateWithTimezoneNormalFunction {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
 
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   const fn = (input: SetOnDateWithTimezoneNormalFunctionInput) => {
     const { date: inputDate, copyFrom: copyFromInput, copyHours, copyMinutes, inputType: inputInputType, outputType, hours: inputHours, minutes: inputMinutes, roundDownToMinute } = input;
     const DEFAULT_TYPE = 'target';

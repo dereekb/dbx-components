@@ -106,9 +106,13 @@ export function getDocumentSnapshots<D extends FirestoreDocument<any>>(documents
  * when you need both the document's methods (e.g. `update`, `create`) and its current data state.
  */
 export type FirestoreDocumentSnapshotPair<D extends FirestoreDocument<any>> = {
-  /** The document instance used to fetch the snapshot. */
+  /**
+   * The document instance used to fetch the snapshot.
+   */
   readonly document: D;
-  /** The fetched snapshot reflecting the document's current state in Firestore. */
+  /**
+   * The fetched snapshot reflecting the document's current state in Firestore.
+   */
   readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
 };
 
@@ -140,11 +144,17 @@ export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(docum
  * in Firestore, `data` will be `undefined`.
  */
 export interface FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> {
-  /** The document instance used to fetch the snapshot. */
+  /**
+   * The document instance used to fetch the snapshot.
+   */
   readonly document: D;
-  /** The fetched snapshot reflecting the document's current state in Firestore. */
+  /**
+   * The fetched snapshot reflecting the document's current state in Firestore.
+   */
   readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
-  /** The snapshot's data with `id` and `key` fields injected, or `undefined` if the document does not exist. */
+  /**
+   * The snapshot's data with `id` and `key` fields injected, or `undefined` if the document does not exist.
+   */
   readonly data: Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>;
 }
 
@@ -154,7 +164,9 @@ export interface FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<a
  * Used by functions like {@link getDocumentSnapshotDataPairsWithData} that filter out non-existent documents.
  */
 export interface FirestoreDocumentSnapshotDataPairWithData<D extends FirestoreDocument<any>> extends Omit<FirestoreDocumentSnapshotDataPair<D>, 'data'> {
-  /** The snapshot's data with `id` and `key` fields injected (guaranteed to exist). */
+  /**
+   * The snapshot's data with `id` and `key` fields injected (guaranteed to exist).
+   */
   readonly data: DocumentDataWithIdAndKey<FirestoreDocumentData<D>>;
 }
 
@@ -233,7 +245,7 @@ export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(docume
 export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId: false): Promise<Maybe<FirestoreDocumentData<D>>>;
 export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId?: boolean): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>> | FirestoreDocumentData<D>>>;
 export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId = true): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>> | FirestoreDocumentData<D>>> {
-  return document.accessor.get().then((x: DocumentSnapshot<any>) => documentDataFunction<FirestoreDocumentData<D>>(withId)(x));
+  return document.accessor.get().then((x) => documentDataFunction<FirestoreDocumentData<D>>(withId)(x as DocumentSnapshot<FirestoreDocumentData<D>>));
 }
 
 /**
@@ -252,7 +264,7 @@ export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(docum
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: false): Promise<FirestoreDocumentData<D>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId?: boolean): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId = true): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]> {
-  return getDocumentSnapshots<D>(documents).then((x: DocumentSnapshot<any>[]) => getDataFromDocumentSnapshots<FirestoreDocumentData<D>>(x, withId));
+  return getDocumentSnapshots<D>(documents).then((x) => getDataFromDocumentSnapshots<FirestoreDocumentData<D>>(x as DocumentSnapshot<FirestoreDocumentData<D>>[], withId));
 }
 
 /**
@@ -508,8 +520,7 @@ export function documentData<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDa
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: true): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: false): Maybe<T>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId = false): Maybe<T> | Maybe<DocumentDataWithIdAndKey<T>> {
-  const result = withId ? documentDataWithIdAndKey(snapshot) : snapshot.data();
-  return result;
+  return withId ? documentDataWithIdAndKey(snapshot) : snapshot.data();
 }
 
 /**
@@ -557,7 +568,7 @@ export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndK
 export function documentDataWithIdAndKey<T>(snapshot: QueryDocumentSnapshot<T>): DocumentDataWithIdAndKey<T>;
 export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>> {
-  const data = snapshot.data() as DocumentDataWithIdAndKey<T>;
+  const data = snapshot.data() as Maybe<DocumentDataWithIdAndKey<T>>;
 
   if (data) {
     setIdAndKeyFromSnapshotOnDocumentData(data, snapshot);

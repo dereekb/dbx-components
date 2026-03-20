@@ -65,6 +65,7 @@ export abstract class AbstractMailgunContentFirebaseServerNewUserService<U exten
           uid
         }
       },
+
       sendTestEmails: baseRequest.sendTestEmails || user.sendDetailsInTestEnvironment || undefined
     });
   }

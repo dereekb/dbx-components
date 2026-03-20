@@ -22,6 +22,9 @@ export interface OidcEntryClientFormFieldsConfig {
  * Creates fields for the OAuth client create form.
  *
  * Includes `token_endpoint_auth_method` which is immutable after creation.
+ *
+ * @param config - Optional configuration for field generation, including mode and allowed auth methods.
+ * @returns Array of FormlyFieldConfig for the client creation form.
  */
 export function oidcEntryClientFormFields(config?: OidcEntryClientFormFieldsConfig): FormlyFieldConfig[] {
   const fields = [];
@@ -35,6 +38,12 @@ export function oidcEntryClientFormFields(config?: OidcEntryClientFormFieldsConf
   return fields;
 }
 
+/**
+ * Creates a value selection field for choosing the token endpoint authentication method.
+ *
+ * @param config - Optional configuration to filter the available auth method options.
+ * @returns A FormlyFieldConfig for the token endpoint auth method selector.
+ */
 export function oidcClientTokenEndpointAuthMethodField(config?: OidcEntryClientFormFieldsConfig): FormlyFieldConfig {
   const allowedAuthMethods = config?.tokenEndpointAuthMethods;
   const options = allowedAuthMethods?.length ? ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS.filter((o) => allowedAuthMethods.includes(o.value)) : ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS;
@@ -52,11 +61,18 @@ export function oidcClientTokenEndpointAuthMethodField(config?: OidcEntryClientF
  * Creates fields for updating an existing OAuth client.
  *
  * Excludes `token_endpoint_auth_method` (immutable after creation).
+ *
+ * @returns Array of FormlyFieldConfig for the client update form.
  */
 export function oidcEntryClientUpdateFormFields(): FormlyFieldConfig[] {
   return [oidcClientNameField(), oidcClientRedirectUrisField(), oidcClientJwksUriField(), oidcClientLogoUriField(), oidcClientHomepageUriField()];
 }
 
+/**
+ * Creates a text field for the OAuth client display name.
+ *
+ * @returns A FormlyFieldConfig for the client name input.
+ */
 export function oidcClientNameField(): FormlyFieldConfig {
   return textField({
     key: 'client_name',
@@ -67,6 +83,11 @@ export function oidcClientNameField(): FormlyFieldConfig {
   });
 }
 
+/**
+ * Creates a searchable chip field for entering redirect URIs.
+ *
+ * @returns A FormlyFieldConfig for the redirect URIs input.
+ */
 export function oidcClientRedirectUrisField(): FormlyFieldConfig {
   return searchableStringChipField({
     key: 'redirect_uris',
@@ -80,6 +101,11 @@ export function oidcClientRedirectUrisField(): FormlyFieldConfig {
   });
 }
 
+/**
+ * Creates a text field for the client's JWKS URI. Only visible when using private_key_jwt authentication.
+ *
+ * @returns A FormlyFieldConfig for the JWKS URI input.
+ */
 export function oidcClientJwksUriField(): FormlyFieldConfig {
   return textField({
     key: 'jwks_uri',
@@ -92,6 +118,11 @@ export function oidcClientJwksUriField(): FormlyFieldConfig {
   });
 }
 
+/**
+ * Creates a text field for the optional client logo URL.
+ *
+ * @returns A FormlyFieldConfig for the logo URI input.
+ */
 export function oidcClientLogoUriField(): FormlyFieldConfig {
   return textField({
     key: 'logo_uri',
@@ -101,6 +132,11 @@ export function oidcClientLogoUriField(): FormlyFieldConfig {
   });
 }
 
+/**
+ * Creates a text field for the optional client homepage URL.
+ *
+ * @returns A FormlyFieldConfig for the homepage URL input.
+ */
 export function oidcClientHomepageUriField(): FormlyFieldConfig {
   return textField({
     key: 'client_uri',
@@ -119,11 +155,19 @@ export interface OidcEntryClientTestFormFieldsConfig {
 
 /**
  * Assembles the form fields for the OAuth test client form.
+ *
+ * @param config - Configuration providing available redirect URIs and scopes for the test form.
+ * @returns Array of FormlyFieldConfig for the test client form.
  */
 export function oidcEntryClientTestFormFields(config: OidcEntryClientTestFormFieldsConfig): FormlyFieldConfig[] {
   return [oidcClientTestClientIdField(), oidcClientTestRedirectUriField(config.redirectUris), oidcClientTestScopesField(config.availableScopes)];
 }
 
+/**
+ * Creates a read-only text field displaying the OAuth client ID.
+ *
+ * @returns A FormlyFieldConfig for the client ID display.
+ */
 export function oidcClientTestClientIdField(): FormlyFieldConfig {
   return textField({
     key: 'client_id',
@@ -132,6 +176,12 @@ export function oidcClientTestClientIdField(): FormlyFieldConfig {
   });
 }
 
+/**
+ * Creates a selection field for choosing one of the client's registered redirect URIs for testing.
+ *
+ * @param redirectUris - The registered redirect URIs to display as options.
+ * @returns A FormlyFieldConfig for the redirect URI selector.
+ */
 export function oidcClientTestRedirectUriField(redirectUris: OidcRedirectUri[]): FormlyFieldConfig {
   const options = redirectUris.map((uri) => ({ label: uri, value: uri }));
 
@@ -144,6 +194,12 @@ export function oidcClientTestRedirectUriField(redirectUris: OidcRedirectUri[]):
   });
 }
 
+/**
+ * Creates a pickable chip field for selecting scopes to request during the test flow.
+ *
+ * @param availableScopes - The available scopes to display as selectable options.
+ * @returns A FormlyFieldConfig for the scopes selector.
+ */
 export function oidcClientTestScopesField(availableScopes: OidcScopeDetails[]): FormlyFieldConfig {
   return pickableItemChipField({
     key: 'scopes',

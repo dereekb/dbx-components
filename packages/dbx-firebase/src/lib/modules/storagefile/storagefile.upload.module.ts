@@ -4,7 +4,7 @@ import { NgModule } from '@angular/core';
 import { DbxFirebaseStorageFileDocumentStoreDirective } from './store/storagefile.document.store.directive';
 import { DbxFirebaseStorageFileCollectionStoreDirective } from './store';
 
-export const importsAndExports = [
+export const IMPORTS_AND_EXPORTS = [
   // dbx-core/dbx-web modules/components
   DbxActionModule,
   DbxLoadingComponent,
@@ -34,7 +34,7 @@ export const importsAndExports = [
  * - DbxFirebaseStorageFileUploadStore
  */
 @NgModule({
-  imports: importsAndExports,
-  exports: importsAndExports
+  imports: IMPORTS_AND_EXPORTS,
+  exports: IMPORTS_AND_EXPORTS
 })
 export class DbxFirebaseStorageFileUploadModule {}

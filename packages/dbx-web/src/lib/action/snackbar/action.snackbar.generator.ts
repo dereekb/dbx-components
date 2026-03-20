@@ -7,9 +7,13 @@ import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarEvent } from
  * action event and optional undo configuration.
  */
 export interface DbxActionSnackbarGeneratorInput<T = unknown, O = unknown> {
-  /** The action snackbar event that triggered the generator. */
+  /**
+   * The action snackbar event that triggered the generator.
+   */
   readonly event: DbxActionSnackbarEvent<O>;
-  /** Optional undo action configuration, only applied on success events. */
+  /**
+   * Optional undo action configuration, only applied on success events.
+   */
   readonly undo?: Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>;
 }
 
@@ -24,9 +28,13 @@ export type DbxActionSnackbarGeneratorUndoInput<T = unknown, O = unknown> = Gett
  * and how to obtain the undo action source reference.
  */
 export interface DbxActionSnackbarGeneratorUndoInputConfig<T = unknown, O = unknown> {
-  /** How long the undo button remains visible in the snackbar. */
+  /**
+   * How long the undo button remains visible in the snackbar.
+   */
   readonly duration?: Milliseconds;
-  /** Factory that returns the action context source reference to trigger for undo. */
+  /**
+   * Factory that returns the action context source reference to trigger for undo.
+   */
   readonly getUndoAction: Getter<DbxActionContextSourceReference<T, O>>;
 }
 
@@ -41,13 +49,21 @@ export type DbxActionSnackbarDisplayConfigGeneratorFunction = <T = unknown, O = 
  * Each property maps a loading state (idle, loading, success, error) to its message configuration.
  */
 export interface DbxMakeActionSnackbarGeneratorConfiguration {
-  /** Configuration shown when the action is idle. */
+  /**
+   * Configuration shown when the action is idle.
+   */
   readonly idle?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  /** Configuration shown while the action is loading. */
+  /**
+   * Configuration shown while the action is loading.
+   */
   readonly loading?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  /** Configuration shown when the action succeeds. */
+  /**
+   * Configuration shown when the action succeeds.
+   */
   readonly success?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  /** Configuration shown when the action fails. */
+  /**
+   * Configuration shown when the action fails.
+   */
   readonly error?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
 }
 

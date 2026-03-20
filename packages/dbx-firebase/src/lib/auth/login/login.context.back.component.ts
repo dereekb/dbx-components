@@ -2,7 +2,9 @@ import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { Component, output } from '@angular/core';
 import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
 
-/** Navigation component that allows users to return to the login method selection list. */
+/**
+ * Navigation component that allows users to return to the login method selection list.
+ */
 @Component({
   selector: 'dbx-firebase-login-context-back-button',
   standalone: true,

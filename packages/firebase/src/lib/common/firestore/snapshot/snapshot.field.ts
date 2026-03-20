@@ -390,7 +390,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
   // NOTE: Typings for this function internally is weird due to the support for both the one and two type transforms.
 
   if (config) {
-    const inputConfig = (config ?? {}) as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
+    const inputConfig = config as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
     const { dontStoreDefaultReadValue, dontStoreValueIf: inputDontStoreValueIf, transformData: inputTransformData } = inputConfig; // might be defined.
     const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf, transformFromData, transformToData } = inputConfig as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
 
@@ -444,8 +444,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       toData = ((x: Maybe<V>) => {
         if (x != null) {
           const transformedValue = transformTo(x) as D | null;
-          const finalValue = transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
-          return finalValue;
+          return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
         } else {
           return x;
         }
@@ -1003,8 +1002,7 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
   const filterUniqueValuesFn: Maybe<MapSameFunction<T[]>> =
     inputFilterUnique != null
       ? (x) => {
-          const result = inputFilterUnique(x);
-          return result;
+          return inputFilterUnique(x);
         }
       : undefined;
 
@@ -1150,6 +1148,7 @@ export type FirestoreUniqueNumberArrayFieldConfig<S extends number = number> = O
  * @param config - Configuration for the unique number array field
  * @returns A field mapping configuration for unique number array values
  */
+// eslint-disable-next-line sonarjs/no-identical-functions -- intentionally separate for distinct type constraints (number vs string|number)
 export function firestoreUniqueNumberArray<S extends number = number>(config?: FirestoreUniqueNumberArrayFieldConfig<S>) {
   return firestoreUniqueArray<S, S>({
     ...config,
@@ -1338,6 +1337,8 @@ export function firestoreMap<T, K extends string = string>(config: FirestoreMapF
  * FirestoreField configuration for a map of granted roles, keyed by model keys.
  *
  * Filters out models with no/null roles by default.
+ *
+ * @returns A field mapping configuration for a map of granted roles keyed by FirestoreModelKey
  */
 export function firestoreModelKeyGrantedRoleMap<R extends GrantedRole>() {
   return firestoreMap<R, FirestoreModelKey>({
@@ -1397,13 +1398,11 @@ export function firestoreEncodedObjectMap<T, E, S extends string = string>(confi
     default: config.default ?? ((() => ({})) as Getter<FirestoreEncodedObjectMapFieldValueType<T, S>>),
     fromData: (input: FirestoreMapFieldType<E, S>) => {
       const copy = copyObject(input);
-      const result = mapObjectMap<FirestoreMapFieldType<E, S>, E, T>(copy, decoder);
-      return result;
+      return mapObjectMap<FirestoreMapFieldType<E, S>, E, T>(copy, decoder);
     },
     toData: (input: FirestoreEncodedObjectMapFieldValueType<T, S>) => {
       const encodedMap: FirestoreMapFieldType<E, S> = mapObjectMap<FirestoreMapFieldType<T, S>, T, E>(input, encoder);
-      const result = filterFinalMapValuesFn(encodedMap);
-      return result;
+      return filterFinalMapValuesFn(encodedMap);
     }
   });
 }
@@ -1441,6 +1440,9 @@ export function firestoreDencoderMap<D extends PrimativeKey, E extends Primative
  * FirestoreField configuration for a map of encoded granted roles, keyed by model keys.
  *
  * Filters out models with empty/no roles by default.
+ *
+ * @param dencoder - The dencoder function used to encode and decode the role values
+ * @returns A field mapping configuration for an encoded granted role map keyed by FirestoreModelKey
  */
 export function firestoreModelKeyEncodedGrantedRoleMap<D extends GrantedRole, E extends string>(dencoder: PrimativeKeyStringDencoderFunction<D, E>) {
   return firestoreDencoderMap<D, E, FirestoreModelKey>({
@@ -1476,6 +1478,8 @@ export function firestoreArrayMap<T, K extends string = string>(config: Firestor
  * FirestoreField configuration for a map of granted roles, keyed by models keys.
  *
  * Filters empty roles/arrays by default.
+ *
+ * @returns A field mapping configuration for a map of granted role arrays keyed by FirestoreModelKey
  */
 export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
   return firestoreArrayMap<R, FirestoreModelKey>({
@@ -1525,6 +1529,9 @@ export type FirestoreObjectArrayFieldConfigFirestoreFieldInput<T extends object,
  *
  * Used internally by {@link firestoreObjectArray} to adapt field configs into the map functions
  * format needed for array element conversion.
+ *
+ * @param config - The FirestoreModelFieldMapFunctionsConfig to convert
+ * @returns A ModelMapFunctionsRef wrapping the derived map functions
  */
 export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreModelFieldMapFunctionsConfig<T, O>): ModelMapFunctionsRef<T, O> {
   const mapFunctions = modelFieldMapFunctions(config);
@@ -1585,8 +1592,7 @@ export function firestoreObjectArray<T extends object, O extends object = Firest
   const to: ModelMapToFunction<T, O> = (x) => {
     // remove null/undefined values from each field when converting to in order to mirror firestore usage (undefined is treated like null)
     const base = baseTo(x);
-    const nullishfilteredOut = filterNullAndUndefinedValues(base) as O;
-    return nullishfilteredOut;
+    return filterNullAndUndefinedValues(base) as O;
   };
 
   return firestoreField<T[], O[]>({
@@ -1646,7 +1652,7 @@ export function firestoreSubObject<T extends object, O extends object = Firestor
   const defaultWithFields: Getter<T> = () => fromData({} as O);
   const defaultBeforeSave = config.defaultBeforeSave ?? (config.saveDefaultObject ? () => toData({} as T) : null);
 
-  const mapFunctionsConfig = build<FirestoreSubObjectFieldMapFunctionsConfig<T, O>>({
+  return build<FirestoreSubObjectFieldMapFunctionsConfig<T, O>>({
     base: firestoreField<T, O>({
       default: config.default ?? defaultWithFields,
       defaultBeforeSave,
@@ -1657,8 +1663,6 @@ export function firestoreSubObject<T extends object, O extends object = Firestor
       x.mapFunctions = mapFunctions;
     }
   });
-
-  return mapFunctionsConfig;
 }
 
 export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFirestoreFieldConfig<LatLngString, LatLngString> {
@@ -1694,7 +1698,10 @@ export type FirestoreTimezoneStringConfig = DefaultMapConfiguredFirestoreFieldCo
 /**
  * Default configuration for a TimezoneString.
  *
- * The value defaults to UTC
+ * The value defaults to UTC.
+ *
+ * @param config - Optional configuration for the timezone string field, including default value and pre-save default.
+ * @returns A configured Firestore field that stores a TimezoneString value.
  */
 export function firestoreTimezoneString(config?: FirestoreTimezoneStringConfig) {
   const { default: defaultValue, defaultBeforeSave } = config ?? {};
@@ -1713,8 +1720,7 @@ export const DEFAULT_WEBSITE_LINK: WebsiteLink = {
 
 export const assignWebsiteLinkFunction = assignValuesToPOJOFunction<WebsiteLink>({ keysFilter: ['t', 'd'], valueFilter: KeyValueTypleValueFilter.EMPTY });
 export const firestoreWebsiteLinkAssignFn: MapFunction<WebsiteLink, WebsiteLink> = (input) => {
-  const behavior = assignWebsiteLinkFunction(DEFAULT_WEBSITE_LINK, input);
-  return behavior;
+  return assignWebsiteLinkFunction(DEFAULT_WEBSITE_LINK, input);
 };
 
 /**
@@ -1731,6 +1737,11 @@ export function firestoreWebsiteLink() {
 }
 
 // MARK: WebsiteLink Array
+/**
+ * Creates a field mapping configuration for Firestore arrays of WebsiteLink values.
+ *
+ * @returns A field mapping configuration for WebsiteLink array values
+ */
 export function firestoreWebsiteLinkArray() {
   return firestoreObjectArray({
     firestoreField: firestoreWebsiteLink()
@@ -1744,8 +1755,7 @@ export const DEFAULT_FIRESTORE_WEBSITE_FILE_LINK_VALUE: WebsiteFileLink = {
 
 export const assignWebsiteFileLinkFunction = assignValuesToPOJOFunction<WebsiteFileLink>({ keysFilter: ['type', 'name', 'mime'], valueFilter: KeyValueTypleValueFilter.EMPTY });
 export const firestoreWebsiteFileLinkAssignFn: MapFunction<WebsiteFileLink, WebsiteFileLink> = (input) => {
-  const behavior = assignWebsiteFileLinkFunction(DEFAULT_FIRESTORE_WEBSITE_FILE_LINK_VALUE, input);
-  return behavior;
+  return assignWebsiteFileLinkFunction(DEFAULT_FIRESTORE_WEBSITE_FILE_LINK_VALUE, input);
 };
 
 /**
@@ -1764,6 +1774,8 @@ export function firestoreWebsiteFileLink() {
 // MARK: WebsiteFileLink Array
 /**
  * Stores the array of WebsiteFileLink values as an array of objects.
+ *
+ * @returns A field mapping configuration for WebsiteFileLink array values stored as objects
  */
 export function firestoreWebsiteFileLinkObjectArray() {
   return firestoreObjectArray({
@@ -1773,6 +1785,8 @@ export function firestoreWebsiteFileLinkObjectArray() {
 
 /**
  * Stores the array of WebsiteFileLink values as an array of EncodedWebsiteFileLink values.
+ *
+ * @returns A field mapping configuration for WebsiteFileLink array values stored in encoded form
  */
 export function firestoreWebsiteFileLinkEncodedArray() {
   return firestoreEncodedArray<WebsiteFileLink, EncodedWebsiteFileLink>({
@@ -1813,6 +1827,12 @@ export function firestoreDateCellRange() {
 }
 
 // MARK: DateCellRange Array
+/**
+ * Creates a field mapping configuration for Firestore arrays of DateCellRange values.
+ *
+ * @param sort - Whether to sort the array by index number; defaults to true
+ * @returns A field mapping configuration for DateCellRange array values
+ */
 export function firestoreDateCellRangeArray(sort: boolean = true) {
   return firestoreObjectArray({
     sortWith: sort ? sortAscendingIndexNumberRefFunction() : undefined,
@@ -1827,8 +1847,7 @@ export const DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE: DateCellSchedule = {
 
 export const assignDateCellScheduleFunction = assignValuesToPOJOFunction<DateCellSchedule>({ keysFilter: ['w', 'd', 'ex'], valueFilter: KeyValueTypleValueFilter.NULL });
 export const firestoreDateCellScheduleAssignFn: MapFunction<DateCellSchedule, DateCellSchedule> = (input) => {
-  const block = assignDateCellScheduleFunction(DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE, input);
-  return block;
+  return assignDateCellScheduleFunction(DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE, input);
 };
 
 /**
@@ -1859,6 +1878,9 @@ export const assignUnitedStatesAddressFunction = assignValuesToPOJOFunction<Unit
 
 /**
  * Function to assign values from an input UnitedStatesAddress to a default UnitedStatesAddress.
+ *
+ * @param input - The source UnitedStatesAddress to copy values from
+ * @returns A new UnitedStatesAddress with values assigned from the input
  */
 export const firestoreUnitedStatesAddressAssignFn: MapFunction<UnitedStatesAddress, UnitedStatesAddress> = (input) => assignUnitedStatesAddressFunction(DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE, input);
 

@@ -84,6 +84,8 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
         case 'full':
           mode = SideNavDisplayMode.FULL;
           break;
+        default:
+          break;
       }
 
       return mode;
@@ -110,6 +112,8 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
         case SideNavDisplayMode.FULL:
           drawer = 'side';
           open = true; // always show
+          break;
+        default:
           break;
       }
 
@@ -165,6 +169,8 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
         case SideNavDisplayMode.FULL:
           // Do nothing. Should be always open.
           break;
+        default:
+          break;
       }
     } else {
       open = toggleOpen;
@@ -172,9 +178,9 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
     if (open != null) {
       if (open) {
-        this.sidenav().open();
+        void this.sidenav().open();
       } else {
-        this.sidenav().close();
+        void this.sidenav().close();
       }
     }
   }

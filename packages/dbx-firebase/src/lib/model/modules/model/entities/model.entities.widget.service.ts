@@ -106,7 +106,7 @@ export class DbxFirebaseModelEntitiesWidgetService {
 
   // MARK: Get
   getAllRegisteredWidgetIdentities(): FirestoreModelIdentity[] {
-    return Array.from(this._entries.keys());
+    return [...this._entries.keys()];
   }
 
   getWidgetEntry(identity: FirestoreModelIdentity): DbxFirebaseModelEntitiesWidgetEntry {

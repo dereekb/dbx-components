@@ -75,7 +75,7 @@ export function snapshotConverterFunctions<T extends object, O extends object = 
     let toOptions: Maybe<ModelConversionOptions<T>>;
 
     if (options) {
-      const mergeFields = (options as SetOptionsMergeFields).mergeFields;
+      const mergeFields = (options as Partial<SetOptionsMergeFields>).mergeFields;
 
       // If merge is true, only include defined fields in the output
       if ((options as SetOptionsMerge).merge) {
@@ -110,12 +110,20 @@ export function snapshotConverterFunctions<T extends object, O extends object = 
     /**
      * Implementation of FirestoreDataConverter.fromFirestore
      * Converts Firestore data to the application model type
+     *
+     * @param snapshot - The DocumentSnapshot containing raw Firestore data
+     * @param options - Optional SnapshotOptions for reading data
+     * @returns The converted application model instance
      */
     fromFirestore: (snapshot: DocumentSnapshot<O>, options?: SnapshotOptions) => from(snapshot, undefined, options),
 
     /**
      * Implementation of FirestoreDataConverter.toFirestore
      * Converts the application model to Firestore data format
+     *
+     * @param modelObject - The model object to convert to Firestore data
+     * @param options - Optional SetOptions controlling how data is written
+     * @returns The converted Firestore data object
      */
     toFirestore: (modelObject: WithFieldValue<T> | PartialWithFieldValue<T>, options?: SetOptions) => to(modelObject as T, undefined, options)
   };

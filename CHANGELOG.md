@@ -1,3 +1,21 @@
+## [13.4.2](https://github.com/dereekb/dbx-components/compare/v13.4.1-dev...v13.4.2) (2026-03-20)
+
+
+### Build System
+
+- added return-await rule and lint fixes ([b77e288b](https://github.com/dereekb/dbx-components/commit/b77e288b9bfdde8761c99c05f816d6470e3f8439))
+- resolved all lint warnings in firebase-server ([1f83bc06](https://github.com/dereekb/dbx-components/commit/1f83bc0625795f57e200a95ecf1ae70329cd8324))
+
+
+### Code Refactoring
+
+- lint-fix ([5cd64869](https://github.com/dereekb/dbx-components/commit/5cd648694652bfde63ab0cd4ea2c171650247ecf))
+- lint-fix analytics, browser, dbx-firebase ([07c8f7d9](https://github.com/dereekb/dbx-components/commit/07c8f7d9e988a3b8181f02fc5412c40d8e631399))
+- lint-fix firebase-server, dbx-core, dbx-web ([de170163](https://github.com/dereekb/dbx-components/commit/de170163304f0a4317e57cb1a3b22023934f7be4))
+
+
+
+
 ## [13.4.1](https://github.com/dereekb/dbx-components/compare/v13.4.0-dev...v13.4.1) (2026-03-20)
 
 

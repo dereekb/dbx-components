@@ -107,8 +107,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
 
     factory = (input) => {
       const date = originalFactory(input);
-      const result = date ? timezoneInstance.systemDateToTargetDate(date) : date;
-      return result;
+      return date ? timezoneInstance.systemDateToTargetDate(date) : date;
     };
   }
 
@@ -165,8 +164,7 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
 
     factory = (input) => {
       const date = input ? timezoneInstance.targetDateToSystemDate(input) : input;
-      const result = originalFactory(date);
-      return result;
+      return originalFactory(date);
     };
   }
 

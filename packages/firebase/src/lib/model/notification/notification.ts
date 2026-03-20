@@ -179,6 +179,9 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
 
 /**
  * Creates a Firestore collection reference for {@link NotificationUser} documents.
+ *
+ * @param context - Firestore context to create the collection reference from
+ * @returns a typed collection reference for NotificationUser documents
  */
 export function notificationUserCollectionReference(context: FirestoreContext): CollectionReference<NotificationUser> {
   return context.collection(notificationUserIdentity.collectionName);
@@ -191,6 +194,9 @@ export type NotificationUserFirestoreCollection = FirestoreCollection<Notificati
 
 /**
  * Creates a typed {@link NotificationUserFirestoreCollection} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection to
+ * @returns a typed Firestore collection for NotificationUser documents
  */
 export function notificationUserFirestoreCollection(firestoreContext: FirestoreContext): NotificationUserFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -294,6 +300,9 @@ export const notificationSummaryConverter = snapshotConverterFunctions<Notificat
 
 /**
  * Creates a Firestore collection reference for {@link NotificationSummary} documents.
+ *
+ * @param context - Firestore context to create the collection reference from
+ * @returns a typed collection reference for NotificationSummary documents
  */
 export function notificationSummaryCollectionReference(context: FirestoreContext): CollectionReference<NotificationSummary> {
   return context.collection(notificationSummaryIdentity.collectionName);
@@ -306,6 +315,9 @@ export type NotificationSummaryFirestoreCollection = FirestoreCollection<Notific
 
 /**
  * Creates a typed {@link NotificationSummaryFirestoreCollection} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection to
+ * @returns a typed Firestore collection for NotificationSummary documents
  */
 export function notificationSummaryFirestoreCollection(firestoreContext: FirestoreContext): NotificationSummaryFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -411,6 +423,9 @@ export const notificationBoxConverter = snapshotConverterFunctions<NotificationB
 
 /**
  * Creates a Firestore collection reference for {@link NotificationBox} documents.
+ *
+ * @param context - Firestore context to create the collection reference from
+ * @returns a typed collection reference for NotificationBox documents
  */
 export function notificationBoxCollectionReference(context: FirestoreContext): CollectionReference<NotificationBox> {
   return context.collection(notificationBoxIdentity.collectionName);
@@ -423,6 +438,9 @@ export type NotificationBoxFirestoreCollection = FirestoreCollection<Notificatio
 
 /**
  * Creates a typed {@link NotificationBoxFirestoreCollection} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection to
+ * @returns a typed Firestore collection for NotificationBox documents
  */
 export function notificationBoxFirestoreCollection(firestoreContext: FirestoreContext): NotificationBoxFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -719,6 +737,9 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
 
 /**
  * Creates a factory that produces {@link Notification} subcollection references for a given {@link NotificationBoxDocument} parent.
+ *
+ * @param context - Firestore context to create subcollection references from
+ * @returns a factory function that creates collection references for a given NotificationBox parent
  */
 export function notificationCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<Notification> {
   return (notificationBox: NotificationBoxDocument) => {
@@ -738,6 +759,9 @@ export type NotificationFirestoreCollectionFactory = (parent: NotificationBoxDoc
 
 /**
  * Creates a {@link NotificationFirestoreCollectionFactory} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection factory to
+ * @returns a factory that creates typed Firestore subcollections for Notification documents
  */
 export function notificationFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationFirestoreCollectionFactory {
   const factory = notificationCollectionReferenceFactory(firestoreContext);
@@ -756,6 +780,9 @@ export function notificationFirestoreCollectionFactory(firestoreContext: Firesto
 
 /**
  * Creates a collection group reference for querying all {@link Notification} documents across all {@link NotificationBox} parents.
+ *
+ * @param context - Firestore context to create the collection group reference from
+ * @returns a typed collection group for querying Notification documents across all parents
  */
 export function notificationCollectionReference(context: FirestoreContext): CollectionGroup<Notification> {
   return context.collectionGroup(notificationIdentity.collectionName);
@@ -768,6 +795,9 @@ export type NotificationFirestoreCollectionGroup = FirestoreCollectionGroup<Noti
 
 /**
  * Creates a typed {@link NotificationFirestoreCollectionGroup} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection group to
+ * @returns a typed Firestore collection group for querying Notification documents across all parents
  */
 export function notificationFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -831,6 +861,9 @@ export const notificationWeekConverter = snapshotConverterFunctions<Notification
 
 /**
  * Creates a factory that produces {@link NotificationWeek} subcollection references for a given {@link NotificationBoxDocument} parent.
+ *
+ * @param context - Firestore context to create subcollection references from
+ * @returns a factory function that creates collection references for a given NotificationBox parent
  */
 export function notificationWeekCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationWeek> {
   return (notificationBox: NotificationBoxDocument) => {
@@ -850,6 +883,9 @@ export type NotificationWeekFirestoreCollectionFactory = (parent: NotificationBo
 
 /**
  * Creates a {@link NotificationWeekFirestoreCollectionFactory} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection factory to
+ * @returns a factory that creates typed Firestore subcollections for NotificationWeek documents
  */
 export function notificationWeekFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionFactory {
   const factory = notificationWeekCollectionReferenceFactory(firestoreContext);
@@ -868,6 +904,9 @@ export function notificationWeekFirestoreCollectionFactory(firestoreContext: Fir
 
 /**
  * Creates a collection group reference for querying all {@link NotificationWeek} documents across all {@link NotificationBox} parents.
+ *
+ * @param context - Firestore context to create the collection group reference from
+ * @returns a typed collection group for querying NotificationWeek documents across all parents
  */
 export function notificationWeekCollectionReference(context: FirestoreContext): CollectionGroup<NotificationWeek> {
   return context.collectionGroup(notificationWeekIdentity.collectionName);
@@ -880,6 +919,9 @@ export type NotificationWeekFirestoreCollectionGroup = FirestoreCollectionGroup<
 
 /**
  * Creates a typed {@link NotificationWeekFirestoreCollectionGroup} bound to the given Firestore context.
+ *
+ * @param firestoreContext - Firestore context to bind the collection group to
+ * @returns a typed Firestore collection group for querying NotificationWeek documents across all parents
  */
 export function notificationWeekFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({

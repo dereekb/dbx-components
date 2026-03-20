@@ -259,6 +259,8 @@ export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldP
       // ensure the value is passed as an array.
       value = convertToArray(value);
       break;
+    default:
+      break;
   }
 
   return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as string, opStr, value });
@@ -546,7 +548,6 @@ export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: 
  * indicate unsupported constraint types.
  */
 export type FirestoreQueryConstraintHandlerMap<B> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>;
 };
 
@@ -612,7 +613,7 @@ export type FullFirestoreQueryConstraintHandlersMapping<B> = {
  * const newConstraints = withLastLimit10(existingConstraints);
  */
 export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
-  const replace = replaceConstraints(
+  return replaceConstraints(
     (constraints) => {
       let type: FirestoreQueryConstraintType;
 
@@ -631,8 +632,6 @@ export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: ty
     },
     [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]
   );
-
-  return replace;
 }
 
 /**
@@ -688,7 +687,7 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
   return (constraints) => {
     const separated = separateFn(constraints);
     const replacements = asArray(replaceFn(separated.excluded));
-    return replacements ? pushItemOrArrayItemsIntoArray(separated.included, replacements) : separated.included;
+    return pushItemOrArrayItemsIntoArray(separated.included, replacements);
   };
 }
 
@@ -712,7 +711,6 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
 export function separateConstraints(...types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => SeparateResult<FirestoreQueryConstraint> {
   return (constraints) => {
     const typesToFilterOut = new Set(types);
-    const separated = separateValues(constraints, (x) => !typesToFilterOut.has(x.type));
-    return separated;
+    return separateValues(constraints, (x) => !typesToFilterOut.has(x.type));
   };
 }

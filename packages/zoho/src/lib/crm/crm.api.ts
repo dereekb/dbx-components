@@ -172,7 +172,6 @@ function updateRecordLikeFunction(context: ZohoCrmContext, fetchUrlPrefix: '' | 
         } else {
           const { successItems, errorItems } = result;
 
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array may be empty at runtime
           if (errorItems[0] != null) {
             throw zohoCrmRecordCrudError(errorItems[0].result);
           } else {
@@ -559,7 +558,6 @@ export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchReco
     return zohoCrmUrlSearchParamsMinusModule(baseInput);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
   return (<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoCrmSearchRecordsFunction;
 }
 
@@ -663,7 +661,7 @@ export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext)
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
-    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x)); // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- fetchJson may return null for empty results
+    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
   };
 }
 
@@ -723,7 +721,6 @@ export function zohoCrmGetEmailsForRecord(context: ZohoCrmContext): ZohoCrmGetEm
   const getEmailsFactory = zohoCrmGetRelatedRecordsFunctionFactory(context)<ZohoCrmRecordEmailMetadata>({ targetModule: ZOHO_CRM_EMAILS_MODULE });
   return (input: ZohoCrmGetEmailsForRecordRequest) =>
     getEmailsFactory(input).then((x) => {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Zoho API may return Emails instead of data
       const data = x.data ?? (x as unknown as ZohoCrmGetEmailsForRecordRawApiResponse).Emails;
       return { ...x, data };
     });
@@ -1163,7 +1160,6 @@ export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonB
  * @param e - The error to catch and potentially convert
  * @returns The error data array wrapped as a change object response
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint requires any
 export function zohoCrmCatchZohoCrmChangeObjectLikeResponseError<R extends ZohoCrmChangeObjectLikeResponse<any>>(e: unknown): R {
   let result: R;
 

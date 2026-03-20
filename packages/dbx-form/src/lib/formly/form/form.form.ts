@@ -11,6 +11,12 @@ export interface DbxFormSearchFormFieldsConfig extends MaterialFormFieldConfig {
   readonly placeholder?: string;
 }
 
+/**
+ * Creates a Formly field array for a simple search form with a single text input.
+ *
+ * @param config - Optional search field configuration with label and placeholder
+ * @returns An array of Formly field configs for the search form
+ */
 export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsConfig>): FormlyFieldConfig[] {
   const { label, placeholder = 'Search', materialFormField } = config || {};
 

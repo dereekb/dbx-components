@@ -11,9 +11,13 @@ import { type NestContextCallableRequest } from '../function/nest';
  * @typeParam I - The input data type of the request.
  */
 export interface AssertDevelopmentRequestFunctionContext<N, I = unknown> {
-  /** The original callable request including the NestJS context and caller data. */
+  /**
+   * The original callable request including the NestJS context and caller data.
+   */
   readonly request: NestContextCallableRequest<N, I>;
-  /** The development function specifier string identifying which dev operation was requested. */
+  /**
+   * The development function specifier string identifying which dev operation was requested.
+   */
   readonly specifier: string;
 }
 

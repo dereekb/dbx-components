@@ -40,10 +40,22 @@ export interface DbxTableViewItemElement<T, G> {
 
 export type DbxTableViewElement<T, G> = DbxTableViewGroupElement<T, G> | DbxTableViewItemElement<T, G>;
 
+/**
+ * Type guard that checks whether a table view element is a group element (header or footer).
+ *
+ * @param element - the table view element to check
+ * @returns `true` if the element represents a group header or footer row
+ */
 export function isDbxTableViewGroupElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewGroupElement<T, G> {
   return element.type === 'group';
 }
 
+/**
+ * Type guard that checks whether a table view element is an item data element.
+ *
+ * @param element - the table view element to check
+ * @returns `true` if the element represents an item data row
+ */
 export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewItemElement<T, G> {
   return element.type === 'item';
 }
@@ -87,7 +99,7 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly tableStore = inject(DbxTableStore<I, C, T, G>);
   readonly table = viewChild.required<MatTable<DbxTableViewElement<T, G>>>(MatTable);
 
-  readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
+  readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<unknown> = (index) => {
     return index;
   };
 
@@ -115,47 +127,45 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
             const hasGroupHeader = inputGroupHeader != null ? (group: DbxTableItemGroup<T, G>) => inputGroupHeader(group) != null : () => false;
             const hasGroupFooter = inputGroupFooter != null ? (group: DbxTableItemGroup<T, G>) => inputGroupFooter(group) != null : () => false;
 
-            return groups
-              .map((group) => {
-                const { items } = group;
+            return groups.flatMap((group) => {
+              const { items } = group;
 
-                const itemElements: DbxTableViewItemElement<T, G>[] = items.map((item) => ({
-                  type: 'item',
-                  item
-                }));
+              const itemElements: DbxTableViewItemElement<T, G>[] = items.map((item) => ({
+                type: 'item',
+                item
+              }));
 
-                let elements: DbxTableViewElement<T, G>[];
+              let elements: DbxTableViewElement<T, G>[];
 
-                if ((group as DefaultDbxTableItemGroup<T, G>).default) {
-                  elements = itemElements;
-                } else {
-                  const header = hasGroupHeader(group);
-                  const footer = hasGroupFooter(group);
+              if ((group as DefaultDbxTableItemGroup<T, G>).default) {
+                elements = itemElements;
+              } else {
+                const header = hasGroupHeader(group);
+                const footer = hasGroupFooter(group);
 
-                  elements = [];
+                elements = [];
 
-                  if (header) {
-                    elements.push({
-                      type: 'group',
-                      location: 'header',
-                      group
-                    });
-                  }
-
-                  pushArrayItemsIntoArray(elements, itemElements);
-
-                  if (footer) {
-                    elements.push({
-                      type: 'group',
-                      location: 'footer',
-                      group
-                    });
-                  }
+                if (header) {
+                  elements.push({
+                    type: 'group',
+                    location: 'header',
+                    group
+                  });
                 }
 
-                return elements;
-              })
-              .flat();
+                pushArrayItemsIntoArray(elements, itemElements);
+
+                if (footer) {
+                  elements.push({
+                    type: 'group',
+                    location: 'footer',
+                    group
+                  });
+                }
+              }
+
+              return elements;
+            });
           })
         );
       })
@@ -230,8 +240,7 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
 
   readonly showFooterRowSignal = computed(() => {
     const viewDelegate = this.viewDelegateSignal();
-    const showFooterRow = viewDelegate && (viewDelegate.summaryRowHeader != null || viewDelegate.columnFooter != null || viewDelegate.summaryRowEnd != null);
-    return showFooterRow;
+    return viewDelegate && (viewDelegate.summaryRowHeader != null || viewDelegate.columnFooter != null || viewDelegate.summaryRowEnd != null);
   });
 
   readonly showFullSummaryRowSignal = computed(() => {

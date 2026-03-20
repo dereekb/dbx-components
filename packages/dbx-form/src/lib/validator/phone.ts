@@ -3,10 +3,10 @@ import { e164PhoneNumberExtensionPair, isE164PhoneNumber as isE164PhoneNumberFun
 import { INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE } from '../formly/config/validation';
 
 /**
- * Angular Form ValidationFn for checking isE164PhoneNumber the input divisor.
+ * Angular form validator that checks whether the control value is a valid E.164 phone number.
  *
- * @param divisor
- * @returns
+ * @param allowExtension - Whether to allow phone number extensions in the value
+ * @returns A ValidatorFn that validates E.164 phone numbers
  */
 export function isE164PhoneNumber(allowExtension: boolean): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -25,8 +25,7 @@ export function isE164PhoneNumber(allowExtension: boolean): ValidatorFn {
 /**
  * Angular Form ValidationFn for checking the input is a valid phone extension. Empty values return true.
  *
- * @param divisor
- * @returns
+ * @returns A ValidatorFn that validates phone extension numbers
  */
 export function isPhoneExtension(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -46,6 +45,11 @@ export function isPhoneExtension(): ValidatorFn {
   };
 }
 
+/**
+ * Angular form validator that checks the value is a valid E.164 phone number with a valid extension (if present).
+ *
+ * @returns A ValidatorFn that validates E.164 phone numbers with optional extensions
+ */
 export function isE164PhoneNumberWithValidExtension(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value: string | undefined = control.value;

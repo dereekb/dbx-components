@@ -33,8 +33,9 @@ export class DbxWidgetService {
   /**
    * Used to register an entry. If an entry with the same type is already registered, this will override it by default.
    *
-   * @param entry
-   * @param override
+   * @param entry - The widget entry mapping a type identifier to its component class
+   * @param override - Whether to replace an existing entry with the same type. Defaults to true.
+   * @returns True if the entry was registered, false if an entry with the same type already exists and override is false
    */
   register(entry: DbxWidgetEntry, override: boolean = true): boolean {
     if (override || !this._entries.has(entry.type)) {
@@ -47,7 +48,7 @@ export class DbxWidgetService {
 
   // MARK: Get
   getWidgetIdentifiers(): DbxWidgetType[] {
-    return Array.from(this._entries.keys());
+    return [...this._entries.keys()];
   }
 
   getWidgetEntry(type: DbxWidgetType): Maybe<DbxWidgetEntry> {

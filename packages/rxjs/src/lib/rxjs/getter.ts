@@ -63,7 +63,7 @@ export function asObservableFromGetter<T>(this: unknown, input: ObservableOrValu
 export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableFactoryWithRequiredInput<T, A>, args: A): Observable<T>;
 export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableOrValueFactoryWithInput<T, A>, args?: A): Observable<T>;
 export function asObservableFromGetter<T, A>(this: unknown, input: ObservableOrValueGetter<T>, args?: A): Observable<T> {
-  const obs = getValueFromGetter<any, any>(input, args); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const obs = getValueFromGetter<any, any>(input, args);
   return asObservable(obs);
 }
 

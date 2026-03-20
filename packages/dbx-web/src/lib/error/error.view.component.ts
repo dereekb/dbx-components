@@ -7,7 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
  * Event emitted when the error icon button is clicked, containing the button's element reference for popover anchoring.
  */
 export interface DbxErrorViewButtonEvent {
-  /** The element reference of the clicked button, used as the popover origin. */
+  /**
+   * The element reference of the clicked button, used as the popover origin.
+   */
   readonly origin: ElementRef;
 }
 

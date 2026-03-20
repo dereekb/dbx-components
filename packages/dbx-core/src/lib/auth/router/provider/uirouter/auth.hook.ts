@@ -57,8 +57,7 @@ export function enableIsLoggedInHook(transitionService: TransitionService, confi
   const isSecureCriteria: HookMatchCriteria = {
     entering: (state) => {
       const data = state?.data as Maybe<Partial<IsLoggedInStateData>>;
-      const match = Boolean(data?.requiredLogIn);
-      return match;
+      return Boolean(data?.requiredLogIn);
     }
   };
 

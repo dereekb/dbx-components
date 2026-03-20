@@ -42,7 +42,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>).get();
   }
 
-  delete(params: FirestoreDocumentDeleteParams): Promise<GoogleCloudWriteResult> {
+  delete(params?: FirestoreDocumentDeleteParams): Promise<GoogleCloudWriteResult> {
     return this.documentRef.delete(params?.precondition);
   }
 
@@ -66,6 +66,8 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 /**
  * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces default (non-batched, non-transactional) accessors.
  *
+ * @returns A factory that creates default (non-batched, non-transactional) accessors.
+ *
  * @example
  * ```typescript
  * const factory = defaultFirestoreAccessorFactory<User>();
@@ -83,6 +85,8 @@ export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAcces
  * Creates a {@link FirestoreDocumentContext} with no special execution context (no batch, no transaction).
  *
  * Operations performed through this context execute immediately against Firestore.
+ *
+ * @returns A {@link FirestoreDocumentContext} for direct Firestore operations.
  */
 export function defaultFirestoreDocumentContext<T>(): FirestoreDocumentContext<T> {
   return {

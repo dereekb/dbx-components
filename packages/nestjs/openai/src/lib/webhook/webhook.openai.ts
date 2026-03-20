@@ -71,7 +71,6 @@ export interface OpenAIEventHandlerConfigurer extends HandlerBindAccessor<Untype
 
 export const openaiEventHandlerConfigurerFactory = handlerConfigurerFactory<OpenAIEventHandlerConfigurer, UntypedOpenAIWebhookEvent, OpenAIWebhookEventType>({
   configurerForAccessor: (accessor: HandlerBindAccessor<UntypedOpenAIWebhookEvent, OpenAIWebhookEventType>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<OpenAIWebhookEvent<any>, any, OpenAIWebhookEventType>(accessor, openAIWebhookEvent);
 
     const configurer: OpenAIEventHandlerConfigurer = {

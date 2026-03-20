@@ -139,7 +139,7 @@ const TEST_CONTENT = 'Content';
   template: `
     <dbx-loading [context]="context" [text]="text()" [show]="show()">
       <div>
-        <p id="test-content">${TEST_CONTENT}</p>
+        <p id="test-content">Content</p>
       </div>
     </dbx-loading>
   `,

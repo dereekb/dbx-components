@@ -7,7 +7,9 @@ import { type LoadingState } from '@dereekb/rxjs';
 import { type DbxFirebaseModelEntity } from './model.entities';
 import { type Maybe } from '@dereekb/util';
 
-/** Configuration for the model entities popover, specifying display options and data source. */
+/**
+ * Configuration for the model entities popover, specifying display options and data source.
+ */
 export interface DbxFirebaseModelEntitiesPopoverConfig {
   /**
    * Custom icon
@@ -58,7 +60,9 @@ export type DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin = Omit<DbxFirebas
 
 export const DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY = 'entities';
 
-/** Popover component that displays model entities in a scrollable panel with configurable header and empty text. */
+/**
+ * Popover component that displays model entities in a scrollable panel with configurable header and empty text.
+ */
 @Component({
   templateUrl: './model.entities.popover.component.html',
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent],

@@ -8,7 +8,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 
-/** Configuration for a login button's appearance and action handler. */
+/**
+ * Configuration for a login button's appearance and action handler.
+ */
 export interface DbxFirebaseLoginButtonConfig {
   text: string;
   iconUrl?: string;
@@ -31,7 +33,7 @@ export interface DbxFirebaseLoginButtonConfig {
         <div class="dbx-firebase-login-button-content">
           <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
             @if (iconUrlSignal()) {
-              <img [src]="iconUrlSignal()" />
+              <img [src]="iconUrlSignal()" alt="" />
             }
             @if (iconSignal()) {
               <mat-icon>{{ iconSignal() }}</mat-icon>
@@ -78,7 +80,9 @@ export class DbxFirebaseLoginButtonComponent {
   };
 }
 
-/** Container component that wraps login button content with consistent spacing. */
+/**
+ * Container component that wraps login button content with consistent spacing.
+ */
 @Component({
   selector: 'dbx-firebase-login-button-container',
   template: `
@@ -90,14 +94,18 @@ export class DbxFirebaseLoginButtonComponent {
 })
 export class DbxFirebaseLoginButtonContainerComponent {}
 
-/** Default template for configured login button components. */
+/**
+ * Default template for configured login button components.
+ */
 export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
   <dbx-firebase-login-button-container>
     <dbx-firebase-login-button [config]="configSignal()"></dbx-firebase-login-button>
   </dbx-firebase-login-button-container>
 `;
 
-/** Shared component configuration for OAuth-style login button components. */
+/**
+ * Shared component configuration for OAuth-style login button components.
+ */
 export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE,
   imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent],

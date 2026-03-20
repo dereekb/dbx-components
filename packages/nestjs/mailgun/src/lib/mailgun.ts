@@ -183,12 +183,12 @@ export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig ex
 export const MAX_BATCH_SEND_RECIPIENTS = 1000;
 
 /**
- * Converts a MailgunTemplateEmailRequest to a MailgunMessageData.
+ * Converts a {@link MailgunTemplateEmailRequest} into Mailgun-compatible {@link MailgunMessageData},
+ * applying sender defaults, recipient variable prefixing, and test environment overrides.
  *
- * @param config
- * @returns
+ * @param config - The conversion configuration containing the email request, default sender, and recipient variable settings.
+ * @returns The constructed {@link MailgunMessageData} ready to be sent via the Mailgun API.
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
   const {
     request,

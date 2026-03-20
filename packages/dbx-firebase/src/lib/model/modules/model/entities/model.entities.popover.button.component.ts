@@ -6,7 +6,9 @@ import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseModelEntitiesSource } from './model.entities';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 
-/** Configuration for the entities popover button, combining popover config with button display options. */
+/**
+ * Configuration for the entities popover button, combining popover config with button display options.
+ */
 export interface DbxFirebaseModelEntitiesPopoverButtonConfig extends DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin {
   /**
    * The display configuration for the button.
@@ -18,7 +20,9 @@ export interface DbxFirebaseModelEntitiesPopoverButtonConfig extends DbxFirebase
   readonly buttonStyle?: Maybe<DbxButtonStyle>;
 }
 
-/** Button component that opens an entities popover showing model entities from the injected source. */
+/**
+ * Button component that opens an entities popover showing model entities from the injected source.
+ */
 @Component({
   selector: 'dbx-firebase-model-entities-popover-button',
   template: `

@@ -16,13 +16,14 @@ import { DbxModelObjectStateService } from './model.state.service';
  * ```typescript
  * const accessor = defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory);
  * ```
+ *
+ * @param storageAccessorFactory - The factory used to create typed storage accessors
+ * @returns A storage accessor configured with the `mtvs` prefix for model view tracker events
  */
 export function defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory: SimpleStorageAccessorFactory): StorageAccessor<DbxModelViewTrackerEventSet> {
-  const accessor = storageAccessorFactory.createStorageAccessor<DbxModelViewTrackerEventSet>({
+  return storageAccessorFactory.createStorageAccessor<DbxModelViewTrackerEventSet>({
     prefix: 'mtvs'
   });
-
-  return accessor;
 }
 
 /**
@@ -44,7 +45,7 @@ export function provideDbxModelService(): EnvironmentProviders {
     DbxModelObjectStateService,
     // NgRx
     provideEffects([DbxModelTrackerEffects]),
-    provideState(fromDbxModel.featureKey, fromDbxModel.reducers)
+    provideState(fromDbxModel.FEATURE_KEY, fromDbxModel.reducers)
   ];
 
   return makeEnvironmentProviders(providers);

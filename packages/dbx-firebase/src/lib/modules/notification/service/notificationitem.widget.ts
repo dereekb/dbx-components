@@ -10,6 +10,12 @@ export const FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE_PREFIX: string = 'dbxFirebas
 
 export const DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE: DbxWidgetType = `${FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE_PREFIX}Default`;
 
+/**
+ * Derives the widget type string for a given notification template type by prepending the standard prefix.
+ *
+ * @param notificationTemplateType - The notification template type to generate a widget type for.
+ * @returns The prefixed widget type string.
+ */
 export function dbxWidgetTypeForNotificationTemplateType(notificationTemplateType: NotificationTemplateType): DbxWidgetType {
   return `${FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE_PREFIX}-${notificationTemplateType}`;
 }

@@ -5,6 +5,12 @@ import { type DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.comp
 
 export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime' | 'setCenterOnLocationSet' | 'showCenterButton' | 'selectLocationOnMapDrag' | 'selectLocationOnMapClick' | 'markerConfig'> {}
 
+/**
+ * Creates a Formly field configuration for a Mapbox-powered latitude/longitude picker with optional map display.
+ *
+ * @param config - Optional field configuration overrides
+ * @returns A validated Formly field configuration for the Mapbox lat/lng picker
+ */
 export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyFieldConfig {
   const { key = 'latLng', latLngConfig, showMap, zoom, recenterTime, showCenterButton, setCenterOnLocationSet, selectLocationOnMapDrag, selectLocationOnMapClick, markerConfig } = config;
 

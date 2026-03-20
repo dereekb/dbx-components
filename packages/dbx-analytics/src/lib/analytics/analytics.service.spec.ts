@@ -36,8 +36,8 @@ describe('DbxAnalyticsService', () => {
     return config;
   }
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [
         provideDbxAnalyticsService({
           dbxAnalyticsServiceConfigurationFactory: analyticsServiceConfigurationFactory

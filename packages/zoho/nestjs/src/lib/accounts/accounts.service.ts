@@ -93,7 +93,6 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
           ).then((x) => {
             // only find the failures if we're logging
             if (logErrorFunction != null) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- PromiseSettledResult requires any for generic access
               const failedUpdates = filterMaybeArrayValues(x.map((y) => (y as PromiseFulfilledResult<any>).value)) as unknown as (readonly [ZohoAccessTokenCache, unknown])[];
 
               if (failedUpdates.length) {
@@ -257,7 +256,6 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
       updateCachedToken: async function (accessToken: ZohoAccessToken): Promise<void> {
         const tokens = await loadTokens();
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard in case loadTokens() changes
         if (tokens) {
           tokens[service] = accessToken;
         }

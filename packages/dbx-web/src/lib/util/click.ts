@@ -39,6 +39,9 @@ export interface OverrideClickElementEffectConfig {
  *   childClickTarget: this.buttonElementRef
  * });
  * ```
+ *
+ * @param config - configuration specifying the click target, child element to intercept, and optional disabled signal
+ * @returns the created Angular effect reference
  */
 export function overrideClickElementEffect(config: OverrideClickElementEffectConfig) {
   const { clickTarget, childClickTarget, disabledSignal } = config;
@@ -61,31 +64,29 @@ export function overrideClickElementEffect(config: OverrideClickElementEffectCon
       _cleanupClickOverride();
     }
 
-    if (childClickElement) {
-      if (!anchorDisabled) {
-        const clickOverride = (event: MouseEvent) => {
-          // Allow ctrl+click, cmd+click, shift+click, and middle-click for new tab/window
-          // Don't preventDefault or stopPropagation - let browser handle it naturally
-          if (event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) {
-            return; // Browser will open in new tab/window
-          } else {
-            // otherwise, also trigger a click on the uiSref anchor element
-            clickTargetElement?.nativeElement.click();
-            // Prevents the default behavior of the anchor element's href from being triggered
-            event.preventDefault();
-            event.stopPropagation();
-          }
-        };
+    if (childClickElement && !anchorDisabled) {
+      const clickOverride = (event: MouseEvent) => {
+        // Allow ctrl+click, cmd+click, shift+click, and middle-click for new tab/window
+        // Don't preventDefault or stopPropagation - let browser handle it naturally
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) {
+          return; // Browser will open in new tab/window
+        } else {
+          // otherwise, also trigger a click on the uiSref anchor element
+          clickTargetElement?.nativeElement.click();
+          // Prevents the default behavior of the anchor element's href from being triggered
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      };
 
-        _cleanupClickOverride = () => {
-          childClickElement.nativeElement.removeEventListener('click', clickOverride);
-          _cleanupClickOverride = null;
-        };
+      _cleanupClickOverride = () => {
+        childClickElement.nativeElement.removeEventListener('click', clickOverride);
+        _cleanupClickOverride = null;
+      };
 
-        childClickElement.nativeElement.addEventListener('click', clickOverride, {
-          capture: true // Use capture to ensure this event listener is called before any nested child's event listeners
-        });
-      }
+      childClickElement.nativeElement.addEventListener('click', clickOverride, {
+        capture: true // Use capture to ensure this event listener is called before any nested child's event listeners
+      });
     }
   });
 }

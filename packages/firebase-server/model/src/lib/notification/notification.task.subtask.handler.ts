@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   type NotificationTaskSubtaskTarget,
   type NotificationTask,
@@ -264,6 +265,7 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<I extends 
  * such as storage file processing or other async workflows.
  *
  * @param factoryConfig - shared configuration including the input function, cleanup logic, and task type
+ * @returns a factory function that produces {@link NotificationTaskServiceTaskHandlerConfig} entries
  *
  * @example
  * ```ts
@@ -310,6 +312,9 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
 
     /**
      * Structure is similar to notificationTaskService(), but contained to handle the subtasks.
+     *
+     * @param processorConfig - the processor configuration with target, flow, and cleanup
+     * @returns a processor with process and optional cleanup functions
      */
     function processorFunctionForConfig(processorConfig: NotificationTaskSubtaskProcessorConfig<I, CUI, D, M, S>): NotificationTaskSubtaskProcessor<I, CUI, D, M, S> {
       const { flow: inputFlows, cleanup, allowRunMultipleParts: processorAllowRunMultipleParts } = processorConfig;
@@ -334,7 +339,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
             case 0:
               fn = (nonSubtaskFlows[0] ?? subtaskFlows[0])?.fn as Maybe<NotificationTaskSubtask<I, D, M, S>>;
               break;
-            default:
+            default: {
               const completedSubtasksSet = new Set(completedSubtasks);
               /**
                * Find the next flow function that hasn't had its checkpoint completed yet.
@@ -342,6 +347,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
               const nextSubtask = subtaskFlows.find((x) => !completedSubtasksSet.has(x.subtask));
               fn = nextSubtask?.fn as Maybe<NotificationTaskSubtask<I, D, M, S>>;
               break;
+            }
           }
 
           let result: NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>;
@@ -368,7 +374,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
                 // remove any completions, if applicable
                 sfps = removeFromCompletionsArrayWithTaskResult(sfps, subtaskResult);
                 break;
-              default:
+              default: {
                 sfps = unique([
                   ...removeFromCompletionsArrayWithTaskResult(sfps, subtaskResult), // remove any completions, if applicable
                   ...asArray(subtaskCompletion)
@@ -379,6 +385,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
 
                 allSubtasksDone = incompleteSubtasks.length === 0;
                 break;
+              }
             }
 
             // configure the update metadata result
@@ -516,7 +523,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
             if (target) {
               const processor = processors[target];
 
-              if (processor && processor.cleanup) {
+              if (processor?.cleanup) {
                 const { sd: subtaskData, sfps: completedSubtasks } = data;
 
                 const input: I = {
@@ -566,6 +573,8 @@ export class NotificationTaskSubTaskMissingRequiredDataTermination extends BaseE
 
 /**
  * Creates a NotificationTaskSubTaskMissingRequiredDataTermination.
+ *
+ * @returns a new {@link NotificationTaskSubTaskMissingRequiredDataTermination} error instance
  */
 export function notificationTaskSubTaskMissingRequiredDataTermination() {
   return new NotificationTaskSubTaskMissingRequiredDataTermination();

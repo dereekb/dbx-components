@@ -46,10 +46,8 @@ export class DbxWindowKeyDownListenerDirective {
     const keysFilter = this.keysFilterSignal();
     const enabled = this.isEnabledSignal();
 
-    if (enabled !== false) {
-      if (!keysFilter || keysFilter.has(event.key)) {
-        this.dbxWindowKeyDownListener.emit(event);
-      }
+    if (enabled !== false && (!keysFilter || keysFilter.has(event.key))) {
+      this.dbxWindowKeyDownListener.emit(event);
     }
   }
 }

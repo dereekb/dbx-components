@@ -63,7 +63,7 @@ export class DbxClickToCopyTextDirective extends AbstractDbxClipboardDirective {
     }
 
     if (copyText) {
-      this._copyToClipboard(copyText);
+      void this._copyToClipboard(copyText);
     }
 
     return copyText;

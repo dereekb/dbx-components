@@ -33,7 +33,7 @@ export class DbxActionKeyTriggerDirective<T = unknown, O = unknown> {
 
   @HostListener('document:keyup', ['$event'])
   onKeyupHandler(event: KeyboardEvent): void {
-    if (event.key && event.key.toLowerCase() === this.key()) {
+    if (event.key?.toLowerCase() === this.key()) {
       this.source.trigger();
     }
   }

@@ -5,12 +5,18 @@ import { type LabeledFieldConfig, type DescriptionFieldConfig, validatorsForFiel
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 
-/** Maximum character length for a phone label field. */
+/**
+ * Maximum character length for a phone label field.
+ */
 export const PHONE_LABEL_MAX_LENGTH = 100;
 
-/** Maximum character length for a generic label string field. */
+/**
+ * Maximum character length for a generic label string field.
+ */
 export const LABEL_STRING_MAX_LENGTH = 100;
-/** Maximum character length for a search string field. */
+/**
+ * Maximum character length for a search string field.
+ */
 export const SEARCH_STRING_MAX_LENGTH = 100;
 
 // MARK: Name Field
@@ -80,7 +86,9 @@ export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
 }
 
 // MARK: City Field
-/** Configuration for a city input field. */
+/**
+ * Configuration for a city input field.
+ */
 export type CityFieldConfig = Partial<TextFieldConfig>;
 
 /**
@@ -112,7 +120,9 @@ export function cityField(config: CityFieldConfig = {}): FormlyFieldConfig {
  * Configuration for a US state input field.
  */
 export interface StateFieldConfig extends Partial<TextFieldConfig> {
-  /** When true, validates and formats as a 2-letter state code (e.g., `'CA'`). */
+  /**
+   * When true, validates and formats as a 2-letter state code (e.g., `'CA'`).
+   */
   readonly asCode?: boolean;
 }
 
@@ -148,7 +158,9 @@ export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
 }
 
 // MARK: Country Field
-/** Configuration for a country input field. */
+/**
+ * Configuration for a country input field.
+ */
 export type CountryFieldConfig = Partial<TextFieldConfig>;
 
 /**
@@ -176,7 +188,9 @@ export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig
 }
 
 // MARK: Zip Code Field
-/** Configuration for a zip/postal code input field. */
+/**
+ * Configuration for a zip/postal code input field.
+ */
 export type ZipCodeFieldConfig = Partial<TextFieldConfig>;
 
 /**
@@ -205,15 +219,20 @@ export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig
 }
 
 // MARK: LatLng Text Field
-/** Default placeholder text for a latitude/longitude text field. */
+/**
+ * Default placeholder text for a latitude/longitude text field.
+ */
 export const DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
-/** Default validation error message for invalid coordinate input. */
+/**
+ * Default validation error message for invalid coordinate input.
+ */
 export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coordinates`;
 
 /**
  * Creates a text field pre-configured for latitude/longitude coordinate input with pattern validation.
  *
  * @param config - Optional overrides; defaults to key `'latLng'`
+ * @param config.key - The form model key; defaults to `'latLng'`
  * @returns A {@link FormlyFieldConfig} for coordinate input
  *
  * @example
@@ -222,7 +241,7 @@ export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coord
  * ```
  */
 export function latLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
-  const field = {
+  return {
     ...textField({
       key,
       label: 'Coordinates',
@@ -236,6 +255,4 @@ export function latLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {
       }
     })
   };
-
-  return field;
 }

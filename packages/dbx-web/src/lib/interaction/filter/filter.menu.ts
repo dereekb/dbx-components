@@ -23,6 +23,11 @@ export interface DbxPresetFilterMenuConfig {
 /**
  * Creates an observable that emits the button text for a preset filter menu based on the current selection.
  *
+ * @param config$ - Observable of the preset filter menu configuration
+ * @param selection$ - Observable of the currently selected preset, used to derive the display title
+ * @param defaultText - Fallback text when no selection or unknownSelectionText is configured. Defaults to 'Filter'.
+ * @returns An observable emitting the resolved button text string
+ *
  * @example
  * ```ts
  * const text$ = dbxPresetFilterMenuButtonTextObservable(config$, selectedPreset$);
@@ -38,6 +43,11 @@ export function dbxPresetFilterMenuButtonTextObservable(config$: Observable<DbxP
 
 /**
  * Creates an observable that emits the button icon for a preset filter menu based on the current selection and config.
+ *
+ * @param config$ - Observable of the preset filter menu configuration controlling icon behavior
+ * @param selection$ - Observable of the currently selected preset, used to derive the display icon
+ * @param defaultIcon - Fallback icon when no filterIcon is configured. Defaults to 'arrow_drop_down'.
+ * @returns An observable emitting the resolved icon string, or undefined when no icon should be shown
  *
  * @example
  * ```ts

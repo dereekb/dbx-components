@@ -17,7 +17,6 @@ export abstract class ZoomOAuthServiceConfig {
     const { zoomOAuth } = config;
 
     if (!zoomOAuth) {
-      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- runtime validation
       throw new Error('ZoomOAuthServiceConfig.zoomOAuth is required');
     }
 

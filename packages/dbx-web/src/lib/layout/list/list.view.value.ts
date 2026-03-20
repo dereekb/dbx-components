@@ -61,6 +61,7 @@ export type DbxValueListItemDecisionFunction<T> = DecisionFunction<DbxValueListI
 
 /**
  * Convenience function for mapping a DecisionFunction for a value to a DecisionFunction for a DbxValueListItem with the same value type.
+ *
  * @param decisionFunction
  * @returns
  */
@@ -81,11 +82,15 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
   /**
    * @see DbxListViewMetaIconComponent.metaConfig()
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaConfig?: DbxInjectionComponentConfig<any>;
 }
 
 /**
  * Default mapping function that wraps each raw value into a {@link DbxValueListItem} with only the `itemValue` property set.
+ *
+ * @param itemValues The raw values to wrap as list items
+ * @returns An observable emitting the values wrapped in {@link DbxValueListItem} objects
  */
 export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueListItem<T>>(itemValues: T[]) => of(itemValues.map((itemValue) => ({ itemValue })) as I[]);
 
@@ -94,11 +99,16 @@ export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueLi
  */
 export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> = I & {
   config: DbxInjectionComponentConfig<V>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaConfig?: DbxInjectionComponentConfig<any>;
 };
 
 /**
  * Maps raw values into an observable of {@link DbxValueListItemConfig} items, applying the list view config's mapping function and attaching injection configuration.
+ *
+ * @param listViewConfig The list view configuration containing the component and optional mapping function
+ * @param itemValues The raw values to map into configured list items
+ * @returns An observable emitting the mapped and configured list item configs
  *
  * @example
  * ```ts
@@ -116,11 +126,11 @@ export function mapValuesToValuesListItemConfigObs<T, I extends DbxValueListItem
 }
 
 /**
- * Adds config to the input value list items.
+ * Adds injection component configuration and meta configuration to each list item, producing fully configured {@link DbxValueListItemConfig} entries ready for rendering.
  *
- * @param listViewConfig
- * @param listItems
- * @returns
+ * @param listViewConfig The list view configuration providing injection component config and optional meta config
+ * @param listItems The list items to augment with configuration
+ * @returns The list items extended with injection component configuration attached
  */
 export function addConfigToValueListItems<T, I extends DbxValueListItem<T>, V = unknown>(listViewConfig: AbstractDbxValueListViewConfig<T, I, V>, listItems: I[]): DbxValueListItemConfig<T, I, V>[] {
   const itemConfigs: DbxValueListItemConfig<T, I, V>[] = listItems.map((listItem: I) => {
@@ -167,6 +177,9 @@ export abstract class DbxValueListView<T, I extends DbxValueListItem<T> = DbxVal
 
 /**
  * Registers a component as a {@link DbxValueListView} provider for dependency injection.
+ *
+ * @param sourceType The component class type to register as the list view provider
+ * @returns An array of Angular providers that bind the given component to {@link DbxValueListView}
  *
  * @example
  * ```ts

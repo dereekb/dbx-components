@@ -81,6 +81,9 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
  * })
  * export class MyCustomListViewComponent extends DbxListView<MyItem> { ... }
  * ```
+ *
+ * @param sourceType - the component class to register as the DbxListView provider
+ * @returns an array of Angular providers that wire up the component as a DbxListView
  */
 // eslint-disable-next-line
 export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {

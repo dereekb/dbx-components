@@ -10,6 +10,8 @@ export const PHONE_NUMBER_ALREADY_EXISTS_ERROR_CODE = 'PHONE_NUMBER_ALREADY_EXIS
 
 /**
  * Creates a precondition conflict (409) error indicating the phone number already exists.
+ *
+ * @returns A new precondition-conflict (409) {@link HttpsError} with the phone-number-exists code.
  */
 export function phoneNumberAlreadyExistsError() {
   return preconditionConflictError({

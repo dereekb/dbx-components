@@ -29,6 +29,10 @@ export class OidcInteractionController {
    *
    * Detects the interaction type and redirects to the appropriate frontend page.
    *
+   * @param uid - the interaction UID from the URL path
+   * @param req - the incoming Express request
+   * @param res - the Express response used for redirecting
+   * @returns a redirect response to the appropriate frontend page
    * @throws {HttpException} 404 when the interaction UID is not found or has expired.
    */
   @Get(':uid')
@@ -53,6 +57,9 @@ export class OidcInteractionController {
    * Verifies the Firebase Auth ID token sent by the frontend, extracts the
    * user's UID, and completes the oidc-provider login interaction.
    *
+   * @param uid - the interaction UID from the URL path
+   * @param body - the login request containing the Firebase ID token
+   * @param res - the Express response used for sending JSON
    * @throws {HttpException} 401 when the Firebase ID token is invalid.
    * @throws {HttpException} 400 when the login interaction cannot be completed.
    */
@@ -82,6 +89,9 @@ export class OidcInteractionController {
    * Receives consent decision from frontend. Grants missing OIDC scopes and claims
    * when approved, or returns `access_denied` when rejected.
    *
+   * @param uid - the interaction UID from the URL path
+   * @param body - the consent request containing approval decision and Firebase ID token
+   * @param res - the Express response used for sending JSON
    * @throws {HttpException} 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
@@ -108,15 +118,15 @@ export class OidcInteractionController {
       const { prompt, params, session } = interaction;
       const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', params.client_id as string);
 
-      if (prompt.details?.missingOIDCScope) {
+      if (prompt.details.missingOIDCScope) {
         grant.addOIDCScope((prompt.details.missingOIDCScope as string[]).join(' '));
       }
 
-      if (prompt.details?.missingOIDCClaims) {
+      if (prompt.details.missingOIDCClaims) {
         grant.addOIDCClaims(prompt.details.missingOIDCClaims as string[]);
       }
 
-      if (prompt.details?.missingResourceScopes) {
+      if (prompt.details.missingResourceScopes) {
         for (const [indicator, scopes] of Object.entries(prompt.details.missingResourceScopes as Record<string, string[]>)) {
           grant.addResourceScope(indicator, scopes.join(' '));
         }
@@ -142,6 +152,8 @@ export class OidcInteractionController {
   /**
    * Verifies a Firebase Auth ID token and returns the user's UID.
    *
+   * @param idToken - the Firebase Auth ID token to verify
+   * @returns the user's UID extracted from the decoded token
    * @throws {HttpException} 401 when the token is invalid or expired.
    */
   private async _verifyIdToken(idToken: string): Promise<string> {

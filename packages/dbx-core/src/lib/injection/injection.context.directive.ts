@@ -88,6 +88,9 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
   /**
    * {@inheritDoc DbxInjectionContext.showContext}
+   *
+   * @param config - The injection context configuration describing the component and its usage.
+   * @returns A promise that resolves with the output of the injected component's usage.
    */
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {
     // clear the current context before showing something new.
@@ -100,9 +103,11 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
     // wait for the promise to resolve and use to finish using that instance.
     try {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       promiseRef = promiseReference(async (resolve, reject) => {
         const injectionConfig: DbxInjectionComponentConfig<T> = {
           ...config.config,
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           init: async (instance: T) => {
             // init if available in the base config.
             if (config.config.init) {
@@ -147,6 +152,8 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
   /**
    * {@inheritDoc DbxInjectionContext.resetContext}
+   *
+   * @returns `true` if an active context was cleared, `false` otherwise.
    */
   resetContext(): boolean {
     let clearedValue = false;

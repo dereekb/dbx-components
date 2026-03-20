@@ -154,6 +154,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
   /**
    * Loads the relevant sources for the given entity and context.
    *
+   * @param entityCommonTypeIdPair The common type/id pair identifying the entity.
    * @param entitySourceContext The contextual information for the entity.
    * @returns The relevant sources for the entity.
    */
@@ -263,10 +264,13 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
     }
 
     /**
-     * Performs the synchonization
+     * Performs the synchronization for this entity instance.
+     *
+     * @param context Optional synchronization context with additional configuration.
+     * @returns The result of the synchronization operation.
      */
     const synchronize: SyncEntityCommonTypeSynchronizerInstance['synchronize'] = async (context?: Maybe<SyncEntityCommonTypeSynchronizerFunctionContext>) => {
-      const {} = context ?? {};
+      const _contextValue = context ?? {};
       const relevantSources = await loadRelevantSources();
 
       const syncEntityInstances = await Promise.all(relevantSources.map((x) => x.source.syncEntityInstance(x).then((y) => [x, y] as const)));

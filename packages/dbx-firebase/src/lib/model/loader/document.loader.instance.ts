@@ -99,10 +99,22 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   }
 }
 
+/**
+ * Creates a new {@link DbxLimitedFirebaseDocumentLoaderInstance} from the given configuration.
+ *
+ * @param config - Configuration providing the limited document accessor.
+ * @returns A new limited document loader instance.
+ */
 export function dbxLimitedFirebaseDocumentLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>(config: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>): DbxLimitedFirebaseDocumentLoaderInstance<T, D, A> {
   return new DbxLimitedFirebaseDocumentLoaderInstance<T, D, A>(config);
 }
 
+/**
+ * Convenience function that creates a {@link DbxLimitedFirebaseDocumentLoaderInstance} initialized with the given accessor.
+ *
+ * @param accessor - The limited Firestore document accessor to use.
+ * @returns A new limited document loader instance.
+ */
 export function dbxLimitedFirebaseDocumentLoaderInstanceWithAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>(accessor: A): DbxLimitedFirebaseDocumentLoaderInstance<T, D, A> {
   return new DbxLimitedFirebaseDocumentLoaderInstance<T, D, A>({ accessor });
 }
@@ -114,10 +126,22 @@ export class DbxFirebaseDocumentLoaderInstance<T = unknown, D extends FirestoreD
   }
 }
 
+/**
+ * Creates a new {@link DbxFirebaseDocumentLoaderInstance} from the given configuration.
+ *
+ * @param config - Configuration providing the full document accessor.
+ * @returns A new document loader instance with full accessor capabilities.
+ */
 export function dbxFirebaseDocumentLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends FirestoreDocumentAccessor<T, D> = FirestoreDocumentAccessor<T, D>>(config: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>): DbxFirebaseDocumentLoaderInstance<T, D, A> {
   return new DbxFirebaseDocumentLoaderInstance<T, D, A>(config);
 }
 
+/**
+ * Convenience function that creates a {@link DbxFirebaseDocumentLoaderInstance} initialized with the given accessor.
+ *
+ * @param accessor - The full Firestore document accessor to use.
+ * @returns A new document loader instance.
+ */
 export function dbxFirebaseDocumentLoaderInstanceWithAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends FirestoreDocumentAccessor<T, D> = FirestoreDocumentAccessor<T, D>>(accessor: A): DbxFirebaseDocumentLoaderInstance<T, D, A> {
   return new DbxFirebaseDocumentLoaderInstance<T, D, A>({ accessor });
 }

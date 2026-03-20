@@ -67,7 +67,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 
   update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<void> {
     if (params?.precondition != null) {
-      this.batch.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>, params?.precondition);
+      this.batch.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>, params.precondition);
     } else {
       this.batch.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>);
     }
@@ -83,6 +83,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
  * the batch applies all queued writes atomically.
  *
  * @param writeBatch - The Google Cloud WriteBatch to queue operations into.
+ * @returns A factory that creates batch-backed accessors sharing the given WriteBatch.
  *
  * @example
  * ```typescript
@@ -123,6 +124,9 @@ export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentC
 
 /**
  * Creates a {@link WriteBatchFirestoreDocumentContext} wrapping the given batch.
+ *
+ * @param batch - The Google Cloud WriteBatch to use.
+ * @returns A new {@link WriteBatchFirestoreDocumentContext} for the given batch.
  */
 export function writeBatchDocumentContext<T>(batch: GoogleCloudWriteBatch): WriteBatchFirestoreDocumentContext<T> {
   return new WriteBatchFirestoreDocumentContext<T>(batch);

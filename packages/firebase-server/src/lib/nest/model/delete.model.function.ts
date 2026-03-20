@@ -54,6 +54,7 @@ export type OnCallDeleteModelFunctionAuthAware<N, I = unknown, O = void> = OnCal
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallDeleteModelFunctionAuthAware<N, any, any>;
 };
 
@@ -61,7 +62,9 @@ export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = Firestore
  * Configuration for {@link onCallDeleteModel}.
  */
 export interface OnCallDeleteModelConfig<N> {
-  /** Optional assertion run before the delete handler; throw to reject. */
+  /**
+   * Optional assertion run before the delete handler; throw to reject.
+   */
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallDeleteModelParams>;
 }
 
@@ -86,6 +89,7 @@ export interface OnCallDeleteModelConfig<N> {
 export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>, config: OnCallDeleteModelConfig<N> = {}): OnCallWithNestContext<N, OnCallDeleteModelParams, unknown> {
   const { preAssert } = config;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'delete',
     crudType: 'delete',
@@ -96,6 +100,9 @@ export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>, config: OnCal
 
 /**
  * Creates a bad-request error indicating the requested model type is not valid for deletion.
+ *
+ * @param modelType - The unrecognized model type string.
+ * @returns A bad-request error with UNKNOWN_TYPE_ERROR code.
  */
 export function deleteModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(

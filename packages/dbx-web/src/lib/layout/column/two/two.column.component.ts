@@ -113,7 +113,7 @@ export class DbxTwoColumnComponent {
     }
   });
 
-  viewResized(event: ResizedEvent): void {
+  viewResized(_event: ResizedEvent): void {
     const totalWidth = (this._elementRef.nativeElement as HTMLElement).clientWidth;
     this.twoColumnsContextStore.setTotalWidth(totalWidth);
   }

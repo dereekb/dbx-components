@@ -81,6 +81,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  * instances bound to the given transaction. All operations from these accessors participate in the same transaction.
  *
  * @param transaction - the Firestore `Transaction` to bind operations to
+ * @returns a factory that creates transaction-backed document data accessors for any document reference
  *
  * @example
  * ```ts
@@ -125,6 +126,7 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
  * Factory function that creates a {@link TransactionFirestoreDocumentContext} for the given transaction.
  *
  * @param transaction - the Firestore `Transaction` to use for all document operations
+ * @returns a new {@link TransactionFirestoreDocumentContext} bound to the given transaction
  *
  * @example
  * ```ts

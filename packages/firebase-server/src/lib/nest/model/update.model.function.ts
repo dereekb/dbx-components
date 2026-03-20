@@ -54,6 +54,7 @@ export type OnCallUpdateModelFunctionAuthAware<N, I = unknown, O = void> = OnCal
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallUpdateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallUpdateModelFunctionAuthAware<N, any, any>;
 };
 
@@ -61,7 +62,9 @@ export type OnCallUpdateModelMap<N, T extends FirestoreModelIdentity = Firestore
  * Configuration for {@link onCallUpdateModel}.
  */
 export interface OnCallUpdateModelConfig<N> {
-  /** Optional assertion run before the update handler; throw to reject. */
+  /**
+   * Optional assertion run before the update handler; throw to reject.
+   */
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallUpdateModelParams>;
 }
 
@@ -89,6 +92,7 @@ export interface OnCallUpdateModelConfig<N> {
 export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCallUpdateModelConfig<N> = {}): OnCallWithNestContext<N, OnCallUpdateModelParams, unknown> {
   const { preAssert } = config;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'update',
     crudType: 'update',
@@ -99,6 +103,9 @@ export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCal
 
 /**
  * Creates a bad-request error indicating the requested model type is not valid for updating.
+ *
+ * @param modelType - The unrecognized model type string.
+ * @returns A bad-request error with UNKNOWN_TYPE_ERROR code.
  */
 export function updateModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(

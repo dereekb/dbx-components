@@ -137,7 +137,6 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     }
 
     const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
-    const active = exactly ? this.state.is(targetRef, refParams) : this.state.includes(targetRef, refParams);
-    return active;
+    return exactly ? this.state.is(targetRef, refParams) : this.state.includes(targetRef, refParams);
   }
 }

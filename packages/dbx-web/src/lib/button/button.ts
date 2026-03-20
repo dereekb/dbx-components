@@ -12,20 +12,36 @@ export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'tonal' | 
  * over button type, colors, spinner appearance, and floating action button mode.
  */
 export interface DbxButtonStyle {
-  /** Material button variant. */
+  /**
+   * Material button variant.
+   */
   readonly type?: DbxButtonType;
-  /** Progress spinner mode (determinate or indeterminate). */
+  /**
+   * Progress spinner mode (determinate or indeterminate).
+   */
   readonly mode?: ProgressSpinnerMode;
-  /** Material theme palette or custom theme color for the button. */
+  /**
+   * Material theme palette or custom theme color for the button.
+   */
   readonly color?: ThemePalette | DbxThemeColor;
-  /** Material theme palette or custom theme color for the loading spinner. */
+  /**
+   * Material theme palette or custom theme color for the loading spinner.
+   */
   readonly spinnerColor?: ThemePalette | DbxThemeColor;
-  /** Custom CSS background color for the button. */
+  /**
+   * Custom CSS background color for the button.
+   */
   readonly customButtonColor?: string;
-  /** Custom CSS text color for the button label. */
+  /**
+   * Custom CSS text color for the button label.
+   */
   readonly customTextColor?: string;
-  /** Custom CSS color for the spinner stroke. */
+  /**
+   * Custom CSS color for the spinner stroke.
+   */
   readonly customSpinnerColor?: string;
-  /** Whether to render as a floating action button (FAB). */
+  /**
+   * Whether to render as a floating action button (FAB).
+   */
   readonly fab?: boolean;
 }

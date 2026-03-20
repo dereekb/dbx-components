@@ -74,6 +74,7 @@ describe('asAnalyticsEventData', () => {
     });
 
     it('should filter out functions', () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const input = { a: 'ok', b: () => {} };
 
       expect(asAnalyticsEventData(input)).toEqual({ a: 'ok' });
@@ -128,7 +129,7 @@ describe('asAnalyticsEventData', () => {
         },
         tags: ['a', 'b'],
         meta: null,
-        callback: () => {},
+        callback: () => undefined,
         score: NaN,
         timestamp: new Date()
       };

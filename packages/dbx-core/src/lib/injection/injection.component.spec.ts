@@ -9,9 +9,7 @@ const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';
 
 @Component({
-  template: `
-    <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
-  `
+  template: '<span id="custom-content">Custom Content</span>'
 })
 class TestInjectionComponentContent implements OnDestroy {
   destroyed = false;
@@ -48,8 +46,8 @@ class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<
 class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> {}
 
 describe('DbxInjectionComponent', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [BrowserModule, DbxInjectionComponent]
     }).compileComponents();
   });

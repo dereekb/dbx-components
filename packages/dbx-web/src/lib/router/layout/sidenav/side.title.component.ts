@@ -12,11 +12,12 @@ import { type Maybe } from '@dereekb/util';
  * ```
  */
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'app-side-nav-bar-title',
   template: `
     <div class="app-side-nav-bar-title">
       <div class="app-side-nav-bar-title-header">
-        <img src="assets/brand/icon.png" />
+        <img src="assets/brand/icon.png" alt="" />
         <span>{{ header() }}</span>
       </div>
       <ng-content></ng-content>

@@ -9,7 +9,7 @@ import { type Maybe } from '@dereekb/util';
 
 describe('DbxFormLoadingPairSourceDirective', () => {
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS]
     }).compileComponents();
   }));

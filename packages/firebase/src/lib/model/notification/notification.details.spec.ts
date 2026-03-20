@@ -11,7 +11,7 @@ describe('notificationTemplateTypeInfoRecord()', () => {
       notificationModelIdentity: firestoreModelIdentity('test')
     };
 
-    expectFail(() => notificationTemplateTypeInfoRecord([detail, detail]));
+    void expectFail(() => notificationTemplateTypeInfoRecord([detail, detail]));
   });
 });
 

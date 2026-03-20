@@ -10,7 +10,6 @@ export interface ZoomPageFilter {
   readonly next_page_token?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MapToZoomPageResultFunction<T> = (data: any) => ZoomPageResult<T>;
 
 /**
@@ -22,7 +21,6 @@ export type MapToZoomPageResultFunction<T> = (data: any) => ZoomPageResult<T>;
  * @returns 
  */
 export function mapToZoomPageResult<T>(dataTypeKey: string): MapToZoomPageResultFunction<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data: any) => {
     const { next_page_token, page_count, page_number, page_size, total_records } = data;
 
@@ -85,17 +83,15 @@ export interface ZoomPageResultInfo {
 }
 
 // MARK: Page Factory
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZoomFetchPageFetchFunction<I extends ZoomPageFilter, R extends ZoomPageResult<any>> = (input: I) => Promise<R>;
 
 /**
  * Creates a FetchPageFactory using the input ZoomFetchPageFetchFunction.
  *
- * @param fetch
- * @param defaults
- * @returns
+ * @param fetch - function that fetches a single page of results from the Zoom API
+ * @param defaults - optional default pagination configuration
+ * @returns a configured FetchPageFactory that handles Zoom's cursor-based pagination using `next_page_token`
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function zoomFetchPageFactory<I extends ZoomPageFilter, R extends ZoomPageResult<any>>(fetch: ZoomFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({
     ...defaults,

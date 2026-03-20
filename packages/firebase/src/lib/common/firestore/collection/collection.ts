@@ -40,7 +40,6 @@ export type FirestoreModelType = ModelTypeString;
  * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections
  * with the same name to be returned regardless of their location in the document hierarchy.
  *
- *
  * @example 'u', 'ps', 'or'
  */
 export type FirestoreCollectionName = string;
@@ -188,7 +187,7 @@ export function firestoreModelIdentity<M extends FirestoreModelType, C extends F
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parent: P, modelName: M, collectionName: C): FirestoreModelIdentityWithParent<P, M, C>;
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, inputCollectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
   if (typeof parentOrModelName === 'object') {
-    const collectionName = (inputCollectionName as C) ?? ((collectionNameOrModelName as M).toLowerCase() as C);
+    const collectionName = (inputCollectionName ?? (collectionNameOrModelName as M).toLowerCase()) as C;
     const collectionType = `${parentOrModelName.collectionType}/${collectionName}`;
     return {
       type: 'nested',
@@ -198,7 +197,7 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
       collectionType
     };
   } else {
-    const collectionName = (collectionNameOrModelName as C) ?? (parentOrModelName.toLowerCase() as C);
+    const collectionName = (collectionNameOrModelName ?? parentOrModelName.toLowerCase()) as C;
     const collectionType = collectionName;
     return {
       type: 'root',
@@ -216,6 +215,7 @@ export type FirestoreModelIdentityTypeMap = Map<FirestoreModelType | FirestoreCo
 
 /**
  * Creates a FirestoreModelIdentityTypeMap from the input identities.
+ *
  * @param identities
  * @returns
  */
@@ -304,7 +304,7 @@ export type FirestoreModelId = string;
 /**
  * Input for firestoreModelId()
  */
-export type FirestoreModelIdInput = FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<any> | FirestoreModelKeyRef | FirestoreModelIdRef;
+export type FirestoreModelIdInput = FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<object> | FirestoreModelKeyRef | FirestoreModelIdRef;
 
 /**
  * Reads a firestoreModelId from the input.
@@ -321,15 +321,14 @@ export function firestoreModelId(input: FirestoreModelIdInput): FirestoreModelId
       id = (input as FirestoreModelIdRef).id;
     } else if ((input as FirestoreModelKeyRef).key) {
       key = (input as FirestoreModelKeyRef).key;
-    } else if ((input as DocumentReferenceRef<unknown>).documentRef != null) {
+    } else if ((input as Partial<DocumentReferenceRef<unknown>>).documentRef != null) {
       id = (input as DocumentReferenceRef<unknown>).documentRef.id;
     }
   } else {
     key = input;
   }
 
-  const result = id ? id : lastValue(key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR));
-  return result;
+  return id ?? lastValue(key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR));
 }
 
 /**
@@ -393,7 +392,7 @@ export function twoWayFlatFirestoreModelKey(key: FirestoreModelKey): TwoWayFlatF
  * @returns
  */
 export function inferKeyFromTwoWayFlatFirestoreModelKey(key: TwoWayFlatFirestoreModelKey): FirestoreModelKey {
-  return key.replace(/\_/g, FIRESTORE_COLLECTION_NAME_SEPARATOR);
+  return key.replace(/_/g, FIRESTORE_COLLECTION_NAME_SEPARATOR);
 }
 
 /**
@@ -406,7 +405,8 @@ export const FIRESTORE_MODEL_ID_REGEX = /^(?!\.\.?$)(?!.*__.*__)([^\s/]{1,1500})
 /**
  * Returns true if the input string is a FirestoreModelId.
  *
- * @param input
+ * @param input - The string to test
+ * @returns True if the input is a valid FirestoreModelId
  */
 export function isFirestoreModelId(input: string | FirestoreModelId): input is FirestoreModelId {
   return FIRESTORE_MODEL_ID_REGEX.test(input);
@@ -459,16 +459,18 @@ export const FIRESTORE_MODEL_KEY_REGEX_STRICT = /^(?:(?:(?!\.\.?$)(?!.*__.*__)([
 /**
  * Returns true if the input string is a FirestoreModelKey.
  *
- * @param input
+ * @param input - The string to test
+ * @returns True if the input is a valid FirestoreModelKey
  */
 export function isFirestoreModelKey(input: string | FirestoreModelKey): input is FirestoreModelKey {
   return FIRESTORE_MODEL_KEY_REGEX.test(input);
 }
 
 /**
- * Returns true if the input string is a FirestoreModelId.
+ * Returns true if the input string is a FirestoreModelId or a FirestoreModelKey.
  *
- * @param input
+ * @param input - The string to test
+ * @returns True if the input is a valid FirestoreModelId or FirestoreModelKey
  */
 export function isFirestoreModelIdOrKey(input: string | FirestoreModelId | FirestoreModelKey): input is FirestoreModelId | FirestoreModelKey {
   return stringContains(input, '/') ? FIRESTORE_MODEL_KEY_REGEX.test(input) : FIRESTORE_MODEL_ID_REGEX.test(input);
@@ -512,6 +514,9 @@ export type FirestoreModelKeyFactory<I extends RootFirestoreModelIdentity, K ext
 
 /**
  * Creates a FirestoreModelKeyFactory for the input root identity.
+ *
+ * @param identity - The root FirestoreModelIdentity to bind the factory to
+ * @returns A factory function that creates FirestoreModelKey values for the given identity and a provided id
  */
 export function firestoreModelKeyFactory<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I) {
   return (id: K) => firestoreModelKey<I, K>(identity, id);
@@ -576,6 +581,12 @@ export function childFirestoreModelKeyPath(parent: FirestoreModelKeyPart, childr
 
 export type FirestoreModelCollectionAndIdPairObject = Record<FirestoreCollectionName, FirestoreModelId>;
 
+/**
+ * Converts a FirestoreModelKey or reference into a record mapping each collection name to its document id.
+ *
+ * @param input - The FirestoreModelKey, DocumentReferenceRef, or FirestoreModelKeyRef to convert
+ * @returns An object mapping collection names to document ids, or undefined if the key is unavailable
+ */
 export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelCollectionAndIdPairObject> {
   const pairs = firestoreModelKeyPartPairs(input);
   let object: Maybe<FirestoreModelCollectionAndIdPairObject>;
@@ -598,26 +609,52 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
  */
 export type FirestoreModelCollectionTypeArrayName = string;
 
+/**
+ * Returns the FirestoreCollectionType derived from the input FirestoreModelKey.
+ *
+ * @param input - The key or reference to extract the collection type from
+ * @returns The FirestoreCollectionType string, or undefined if the key is unavailable
+ */
 export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreCollectionType> {
   return firestoreModelKeyCollectionTypeArrayName(input, FIRESTORE_COLLECTION_NAME_SEPARATOR);
 }
 
+/**
+ * Returns the collection type array name string derived from the input key, joined by the given separator.
+ *
+ * @param input - The key or reference to extract collection names from
+ * @param separator - The separator to join collection names with; defaults to the Firestore collection name separator
+ * @returns The joined collection type array name string, or undefined if the key is unavailable
+ */
 export function firestoreModelKeyCollectionTypeArrayName<T = unknown>(input: ReadFirestoreModelKeyInput<T>, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
   return firestoreModelKeyCollectionTypeArray(input)?.join(separator);
 }
 
+/**
+ * Returns the collection type array name string derived from a FirestoreModelIdentity, joined by the given separator.
+ *
+ * @param input - The FirestoreModelIdentity to derive collection names from
+ * @param separator - The separator to join collection names with; defaults to the Firestore collection name separator
+ * @returns The joined collection type array name string
+ */
 export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): FirestoreModelCollectionTypeArrayName {
   return firestoreIdentityTypeArray(input).join(separator);
 }
 
 export type FirestoreModelCollectionTypeArray = FirestoreCollectionName[];
 
+/**
+ * Returns an ordered array of collection names derived from a FirestoreModelIdentity, from root to leaf.
+ *
+ * @param input - The FirestoreModelIdentity to traverse
+ * @returns An array of FirestoreCollectionName values ordered from root to leaf
+ */
 export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): FirestoreModelCollectionTypeArray {
   const array: FirestoreCollectionName[] = [];
 
   let current = input;
 
-  while (true) {
+  for (;;) {
     array.push(current.collectionName);
 
     if (current.type === 'nested') {
@@ -630,12 +667,18 @@ export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): Fires
   return array.reverse();
 }
 
+/**
+ * Returns an ordered array of collection names derived from the input FirestoreModelKey.
+ *
+ * @param input - The key or reference to extract collection names from
+ * @returns An array of FirestoreCollectionName values, or undefined if the key is unavailable
+ */
 export function firestoreModelKeyCollectionTypeArray<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionTypeArray> {
   const key = readFirestoreModelKey<T>(input);
   let array: Maybe<FirestoreCollectionName[]>;
 
   if (key) {
-    const pieces = key?.split(FIRESTORE_COLLECTION_NAME_SEPARATOR);
+    const pieces = key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR);
 
     if (isOddNumber(pieces.length)) {
       throw new Error('input key source was a collection ref or unavailable.');
@@ -657,8 +700,8 @@ export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, 
 /**
  * Returns the collection name of the input key.
  *
- * @param input
- * @returns
+ * @param input - The key or reference to extract the collection name from
+ * @returns The FirestoreCollectionName from the deepest key pair, or undefined if unavailable
  */
 export function firestoreModelKeyCollectionName<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreCollectionName> {
   return firestoreModelKeyTypePair(input)?.collectionName;
@@ -667,8 +710,9 @@ export function firestoreModelKeyCollectionName<T = unknown>(input: ReadFirestor
 /**
  * Returns the parent model key from up the specified amount of levels.
  *
- * @param input
- * @param maxLevelsUp
+ * @param input - The key or reference to extract the parent key from
+ * @param maxLevelsUp - The number of levels to traverse up the key hierarchy; defaults to 1
+ * @returns The parent FirestoreModelKey, or undefined if no parent exists
  */
 export function firestoreModelKeyParentKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, maxLevelsUp = 1): Maybe<FirestoreModelKey> {
   const keyParts = firestoreModelKeyParentKeyPartPairs(input, maxLevelsUp);
@@ -681,6 +725,13 @@ export function firestoreModelKeyParentKey<T = unknown>(input: ReadFirestoreMode
   return result;
 }
 
+/**
+ * Returns the collection/id pair array truncated by the specified number of levels from the end.
+ *
+ * @param input - The key or reference to extract pairs from
+ * @param maxLevelsUp - The number of levels to remove from the end; defaults to 1
+ * @returns An array of FirestoreModelCollectionAndIdPair values up to the parent level, or undefined if unavailable
+ */
 export function firestoreModelKeyParentKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>, maxLevelsUp = 1): Maybe<FirestoreModelCollectionAndIdPair[]> {
   const allParts = firestoreModelKeyPartPairs(input);
   let parentParts: Maybe<FirestoreModelCollectionAndIdPair[]> = undefined;
@@ -703,12 +754,18 @@ export function firestoreModelKeyTypePair<T = unknown>(input: ReadFirestoreModel
   return lastValue(firestoreModelKeyPartPairs(input));
 }
 
+/**
+ * Parses a FirestoreModelKey into an ordered array of collection/id pair objects.
+ *
+ * @param input - The key or reference to parse
+ * @returns An array of FirestoreModelCollectionAndIdPair values, or undefined if the key is unavailable
+ */
 export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionAndIdPair[]> {
   const key = readFirestoreModelKey<T>(input);
   let pairs: Maybe<FirestoreModelCollectionAndIdPair[]>;
 
   if (key) {
-    const pieces = key?.split(FIRESTORE_COLLECTION_NAME_SEPARATOR);
+    const pieces = key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR);
 
     if (isOddNumber(pieces.length)) {
       throw new Error('input key source was a collection ref or unavailable.');
@@ -748,6 +805,13 @@ export function firestoreModelKeyPartPairsPaths(input: FirestoreModelCollectionA
 
 export type ReadFirestoreModelKeyInput<T = unknown> = FirestoreModelKey | FirestoreModelKeyRef | DocumentReferenceRef<T>;
 
+/**
+ * Reads a FirestoreModelKey from the input, which may be a raw key string, a key ref, or a document reference ref.
+ *
+ * @param input - The key, key ref, or document reference ref to read
+ * @param required - Whether to throw if the key is not available; defaults to false
+ * @returns The FirestoreModelKey string, or undefined if unavailable and not required
+ */
 export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required: true): FirestoreModelKey;
 export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required: false): Maybe<FirestoreModelKey>;
 export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required?: boolean): Maybe<FirestoreModelKey>;
@@ -757,7 +821,7 @@ export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyI
   if (typeof input === 'object') {
     if ((input as FirestoreModelKeyRef).key) {
       key = (input as FirestoreModelKeyRef).key;
-    } else if ((input as DocumentReferenceRef<unknown>).documentRef != null) {
+    } else if ((input as Partial<DocumentReferenceRef<unknown>>).documentRef != null) {
       key = (input as DocumentReferenceRef<unknown>).documentRef.path;
     }
   } else {
@@ -861,7 +925,7 @@ export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = Fire
  *
  * @template T - The data type of documents in the collection
  * @template D - The FirestoreDocument type that wraps the data
- * @param config - Configuration for the collection
+ * @param inputConfig - Configuration for the collection
  * @returns A fully configured FirestoreCollection instance
  */
 export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(inputConfig: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {

@@ -149,8 +149,7 @@ export function isLatestSuccessfulRoute(config: IsLatestSuccessfulRouteConfig): 
   return successTransition(dbxRouterTransitionService.transitions$).pipe(
     startWith(undefined),
     map(() => {
-      const isActive = routes.findIndex(checkRoute) !== -1;
-      return isActive;
+      return routes.some(checkRoute);
     }),
     distinctUntilChanged(),
     shareReplay(1)

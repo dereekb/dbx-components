@@ -74,6 +74,9 @@ export class DbxAvatarViewService {
    * Resolves the injection component configuration for the given avatar context.
    *
    * Falls back to the default component config if no custom resolver is configured or if it returns null.
+   *
+   * @param context - the avatar context used to resolve the appropriate component configuration
+   * @returns the resolved injection component config, or the default if no custom resolver matches
    */
   avatarComponentForContext(context: DbxAvatarContext): DbxAvatarInjectionComponentConfig {
     let config: DbxAvatarInjectionComponentConfig = this._defaultAvatarComponentConfig;
@@ -97,22 +100,38 @@ export class DbxAvatarViewService {
     return this._defaultAvatarErrorIcon;
   }
 
-  /** Sets the default avatar image URL used when no context-specific URL is provided. */
+  /**
+   * Sets the default avatar image URL used when no context-specific URL is provided.
+   *
+   * @param url - the URL to use as the default avatar image, or nullish to clear
+   */
   setDefaultAvatarUrl(url: Maybe<WebsitePath | WebsiteUrlWithPrefix>) {
     this._defaultAvatarUrl = url;
   }
 
-  /** Sets the default Material icon name used as a fallback when no avatar image is available. */
+  /**
+   * Sets the default Material icon name used as a fallback when no avatar image is available.
+   *
+   * @param icon - the Material icon name to use, or nullish to clear
+   */
   setDefaultAvatarIcon(icon: Maybe<string>) {
     this._defaultAvatarIcon = icon;
   }
 
-  /** Sets the Material icon name displayed when the avatar image fails to load. */
+  /**
+   * Sets the Material icon name displayed when the avatar image fails to load.
+   *
+   * @param icon - the Material icon name to display on image load error, or nullish to clear
+   */
   setDefaultAvatarErrorIcon(icon: Maybe<string>) {
     this._defaultAvatarErrorIcon = icon;
   }
 
-  /** Overrides the default component used to render avatars when no context-specific component is resolved. */
+  /**
+   * Overrides the default component used to render avatars when no context-specific component is resolved.
+   *
+   * @param config - the injection component config to use as the new default
+   */
   setDefaultAvatarComponentConfig(config: DbxAvatarInjectionComponentConfig) {
     this._defaultAvatarComponentConfig = config;
   }

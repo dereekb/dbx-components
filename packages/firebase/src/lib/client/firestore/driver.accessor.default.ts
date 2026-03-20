@@ -73,6 +73,8 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
  * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces {@link DefaultFirestoreDocumentDataAccessor} instances
  * for direct (non-batched, non-transactional) Firestore operations.
  *
+ * @returns a factory that creates default (non-transactional) document data accessors
+ *
  * @example
  * ```ts
  * const factory = defaultFirestoreAccessorFactory<MyModel>();
@@ -92,6 +94,8 @@ export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAcces
  *
  * The context type is {@link FirestoreDocumentContextType.NONE}, meaning operations execute immediately
  * against Firestore without transaction or batch grouping.
+ *
+ * @returns a default {@link FirestoreDocumentContext} with no transaction or batch semantics
  *
  * @example
  * ```ts

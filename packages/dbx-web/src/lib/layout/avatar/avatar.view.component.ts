@@ -54,8 +54,7 @@ export class DbxAvatarViewComponent {
   readonly avatarHideOnError = input<Maybe<boolean>>();
 
   readonly avatarHideOnErrorSignal = computed(() => {
-    const hideOnError = this.avatarHideOnError() ?? this.defaultContext?.hideOnError ?? false;
-    return hideOnError;
+    return this.avatarHideOnError() ?? this.defaultContext?.hideOnError ?? false;
   });
 
   readonly currentAvatarUrlSignal = computed<Maybe<WebsiteUrlWithPrefix | WebsitePath>>(() => {

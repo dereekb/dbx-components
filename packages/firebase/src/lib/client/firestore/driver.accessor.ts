@@ -16,6 +16,8 @@ import { type WriteBatchFirestoreDocumentContextFactory } from '../../common/fir
  * - Transaction and write batch context factories for atomic operations
  * - A default (non-transactional) document context
  *
+ * @returns a {@link FirestoreAccessorDriver} backed by the `firebase/firestore` client SDK
+ *
  * @example
  * ```ts
  * const driver = firestoreClientAccessorDriver();
@@ -32,7 +34,7 @@ export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
     transactionFactoryForFirestore:
       (firestore) =>
       async <T>(fn: TransactionFunction<T>) =>
-        await runTransaction(firestore as FirebaseFirestore, fn as (transaction: Transaction) => Promise<T>),
+        runTransaction(firestore as FirebaseFirestore, fn as (transaction: Transaction) => Promise<T>),
     writeBatchFactoryForFirestore: (firestore) => () => writeBatch(firestore as FirebaseFirestore),
     defaultContextFactory: defaultFirestoreDocumentContext,
     transactionContextFactory: transactionDocumentContext as TransactionFirestoreDocumentContextFactory,

@@ -95,9 +95,7 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
   readonly showIconSignal = computed(() => {
     const config = this.configSignal();
     return (
-      config &&
-      config.buttonIcon && // button icon must be defined
-      !this.showTextContentSignal()
+      config?.buttonIcon && !this.showTextContentSignal() // button icon must be defined
     ); // show icon if either fab or iconOnly is true
   });
 

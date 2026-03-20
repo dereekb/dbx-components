@@ -64,6 +64,7 @@ export type OnCallCreateModelFunctionAuthAware<N, I = unknown, O extends OnCallC
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallCreateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallCreateModelFunctionAuthAware<N, any, OnCallCreateModelResult>;
 };
 
@@ -71,7 +72,9 @@ export type OnCallCreateModelMap<N, T extends FirestoreModelIdentity = Firestore
  * Configuration for {@link onCallCreateModel}.
  */
 export interface OnCallCreateModelConfig<N> {
-  /** Optional assertion run before the create handler; throw to reject. */
+  /**
+   * Optional assertion run before the create handler; throw to reject.
+   */
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallCreateModelParams>;
 }
 
@@ -96,6 +99,7 @@ export interface OnCallCreateModelConfig<N> {
 export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCallCreateModelConfig<N> = {}): OnCallWithNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult> {
   const { preAssert } = config;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'create',
     crudType: 'create',
@@ -106,6 +110,9 @@ export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCal
 
 /**
  * Creates a bad-request error indicating the requested model type is not valid for creation.
+ *
+ * @param modelType - The unrecognized model type string.
+ * @returns A bad-request error with UNKNOWN_TYPE_ERROR code.
  */
 export function createModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(

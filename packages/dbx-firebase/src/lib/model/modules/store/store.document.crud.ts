@@ -9,7 +9,7 @@ import { type DbxFirebaseDocumentStore } from './store';
  * Optional configuration for store CRUD wrapper functions.
  *
  * Provides an `onResult` callback that fires after the wrapped function resolves.
- * Useful for capturing one-time values (e.g. `client_secret`) from the response.
+ * Useful for capturing one-time values (e.g., `client_secret`) from the response.
  */
 export interface FirebaseDocumentStoreFunctionConfig<I, O = unknown> {
   /**
@@ -24,10 +24,10 @@ export type DbxFirebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMode
 /**
  * Creates a function for a store that DbxFirebaseDocumentStore captures the ModelFirebaseCreateFunction result and sets the key of the created value.
  *
- * @param store
- * @param fn
+ * @param store - The document store to capture the created model's key into.
+ * @param fn - The Firebase create function to wrap.
  * @param config - Optional config with an `onResult` callback.
- * @returns
+ * @returns A function that executes the create and sets the resulting key on the store.
  */
 export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseCreateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<I, O>): DbxFirebaseDocumentStoreCreateFunction<I, O> {
   return (params: I) =>
@@ -94,9 +94,10 @@ export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentS
  *
  * The store's current key is always injected into the params of the request.
  *
- * @param store
- * @param fn
- * @returns
+ * @param store - The document store whose current key is injected into the request params.
+ * @param fn - The Firebase update function to wrap.
+ * @param config - Optional config with an `onResult` callback.
+ * @returns A function that executes the update with the store's key injected.
  */
 export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {
   return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>

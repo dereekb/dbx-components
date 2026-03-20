@@ -11,6 +11,8 @@ import { DbxAngularRouterSegueAnchorComponent } from './anchor.component';
  *   providers: [provideDbxRouterWebAngularRouterProviderConfig()]
  * });
  * ```
+ *
+ * @returns environment providers that configure the Angular Router-based segue anchor component
  */
 export function provideDbxRouterWebAngularRouterProviderConfig(): EnvironmentProviders {
   const config: DbxRouterWebProviderConfig = {

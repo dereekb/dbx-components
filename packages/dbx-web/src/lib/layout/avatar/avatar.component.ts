@@ -59,7 +59,7 @@ export class DbxAvatarComponent {
     const style = this.avatarStyle() ?? inputContext?.style;
     const hideOnError = this.avatarHideOnError() ?? inputContext?.hideOnError;
 
-    const context = {
+    return {
       selector,
       uid,
       url,
@@ -68,8 +68,6 @@ export class DbxAvatarComponent {
       style,
       hideOnError
     };
-
-    return context;
   });
 
   readonly configSignal = computed(() => {

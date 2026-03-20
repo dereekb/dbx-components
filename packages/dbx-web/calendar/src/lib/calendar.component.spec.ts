@@ -7,7 +7,7 @@ describe('DbxCalendarComponent', () => {
   let fixture: ComponentFixture<DbxCalendarComponent<any>>;
 
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
       imports: [DbxCalendarComponent],
       providers: [DbxCalendarStore]
     }).compileComponents();

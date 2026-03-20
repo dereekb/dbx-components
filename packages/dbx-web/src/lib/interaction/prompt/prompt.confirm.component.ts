@@ -47,6 +47,7 @@ export class DbxPromptConfirmComponent {
   readonly cancelTextSignal = computed(() => this.config()?.cancelText || 'Cancel');
 
   readonly confirm = output<void>();
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly cancel = output<void>();
 
   onConfirm(): void {

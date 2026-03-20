@@ -11,45 +11,85 @@ import { type DbxButtonWorking } from '@dereekb/dbx-core';
  * colors, spinner behavior, and button type.
  */
 export interface DbxProgressButtonConfig {
-  /** Current working state. A boolean enables indeterminate mode; a number (0-100) enables determinate mode. */
+  /**
+   * Current working state. A boolean enables indeterminate mode; a number (0-100) enables determinate mode.
+   */
   readonly working?: Maybe<DbxButtonWorking>;
-  /** Button label text. */
+  /**
+   * Button label text.
+   */
   readonly text?: Maybe<string>;
-  /** Text displayed alongside the spinner while working. */
+  /**
+   * Text displayed alongside the spinner while working.
+   */
   readonly spinnerText?: Maybe<string>;
-  /** Theme color for the button itself. */
+  /**
+   * Theme color for the button itself.
+   */
   readonly buttonColor?: Maybe<ThemePalette | DbxThemeColor>;
-  /** Theme color for the progress spinner. */
+  /**
+   * Theme color for the progress spinner.
+   */
   readonly spinnerColor?: Maybe<ThemePalette | DbxThemeColor>;
-  /** Theme color for the progress bar (bar mode only). */
+  /**
+   * Theme color for the progress bar (bar mode only).
+   */
   readonly barColor?: Maybe<ThemePalette | DbxThemeColor>;
-  /** When true, renders only the icon button without text. */
+  /**
+   * When true, renders only the icon button without text.
+   */
   readonly iconOnly?: Maybe<boolean>;
-  /** Explicit spinner diameter in pixels. */
+  /**
+   * Explicit spinner diameter in pixels.
+   */
   readonly spinnerSize?: Maybe<number>;
-  /** Ratio of spinner size relative to button height (0-1). */
+  /**
+   * Ratio of spinner size relative to button height (0-1).
+   */
   readonly spinnerRatio?: Maybe<number>;
-  /** Spinner mode: determinate or indeterminate. */
+  /**
+   * Spinner mode: determinate or indeterminate.
+   */
   readonly mode?: Maybe<ProgressSpinnerMode>;
-  /** Whether the button stretches to full container width. */
+  /**
+   * Whether the button stretches to full container width.
+   */
   readonly fullWidth?: Maybe<boolean>;
-  /** Whether the button is disabled. */
+  /**
+   * Whether the button is disabled.
+   */
   readonly disabled?: Maybe<boolean>;
-  /** Custom inline styles applied to the button element. */
+  /**
+   * Custom inline styles applied to the button element.
+   */
   readonly customStyle?: Maybe<{ [key: string]: string }>;
-  /** Custom CSS class applied to the button element. */
+  /**
+   * Custom CSS class applied to the button element.
+   */
   readonly customClass?: Maybe<string>;
-  /** Custom CSS color for the spinner stroke. Overrides `spinnerColor` when provided. */
+  /**
+   * Custom CSS color for the spinner stroke. Overrides `spinnerColor` when provided.
+   */
   readonly customSpinnerColor?: Maybe<string>;
-  /** Icon configuration for the button. */
+  /**
+   * Icon configuration for the button.
+   */
   readonly buttonIcon?: Maybe<DbxProgressButtonIcon>;
-  /** Identifier used for matching against global configuration. */
+  /**
+   * Identifier used for matching against global configuration.
+   */
   readonly id?: Maybe<string>;
-  /** Material button variant to render. */
+  /**
+   * Material button variant to render.
+   */
   readonly buttonType?: Maybe<DbxButtonType>;
-  /** HTML `type` attribute for the underlying button element (e.g. "submit", "button"). */
+  /**
+   * HTML `type` attribute for the underlying button element (e.g. "submit", "button").
+   */
   readonly buttonTypeAttribute?: Maybe<string>;
-  /** Whether to render as a floating action button (FAB). */
+  /**
+   * Whether to render as a floating action button (FAB).
+   */
   readonly fab?: Maybe<boolean>;
 }
 
@@ -57,17 +97,29 @@ export interface DbxProgressButtonConfig {
  * Configuration for the icon displayed inside a progress button.
  */
 export interface DbxProgressButtonIcon {
-  /** Theme color for the icon. */
+  /**
+   * Theme color for the icon.
+   */
   readonly color?: Maybe<ThemePalette | DbxThemeColor>;
-  /** Material icon font ligature name (e.g. "save", "delete"). */
+  /**
+   * Material icon font ligature name (e.g. "save", "delete").
+   */
   readonly fontIcon?: Maybe<string>;
-  /** Icon font set to use (e.g. for extended icon libraries). */
+  /**
+   * Icon font set to use (e.g. for extended icon libraries).
+   */
   readonly fontSet?: Maybe<string>;
-  /** Whether to render the icon inline with text. */
+  /**
+   * Whether to render the icon inline with text.
+   */
   readonly inline?: Maybe<boolean>;
-  /** SVG icon name registered with MatIconRegistry. */
+  /**
+   * SVG icon name registered with MatIconRegistry.
+   */
   readonly svgIcon?: Maybe<string>;
-  /** Custom CSS class applied to the icon element. */
+  /**
+   * Custom CSS class applied to the icon element.
+   */
   readonly customClass?: Maybe<string>;
 }
 

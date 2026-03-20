@@ -117,16 +117,6 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
 }
 
 /**
- * Merges multiple partial {@link DbxInjectionComponentConfig} objects into a single configuration.
- *
- * Provider arrays are concatenated (not overwritten) so that all providers from all configs
- * are preserved. All other properties are merged with later values taking precedence.
- *
- * @typeParam T - The component type for the configuration.
- * @param configs - An array of partial configs (may contain `undefined`/`null` entries which are filtered out).
- * @returns A single merged partial configuration.
- */
-/**
  * Compares two {@link DbxInjectionComponentConfig} values for structural equality, safely handling nullish values.
  *
  * Compares `componentClass`, `data`, `init`, and `injector` by reference. Does NOT compare
@@ -139,6 +129,15 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const dbxInjectionComponentConfigIsEqual: EqualityComparatorFunction<Maybe<DbxInjectionComponentConfig<any>>> = safeEqualityComparatorFunction((a, b) => a.componentClass === b.componentClass && a.data === b.data && a.init === b.init && a.injector === b.injector);
 
+/**
+ * Merges multiple partial {@link DbxInjectionComponentConfig} objects into a single configuration.
+ *
+ * Provider arrays are concatenated so that all providers from all configs are preserved.
+ * All other properties are merged with later values taking precedence.
+ *
+ * @param configs - An array of partial configs to merge. May contain `undefined`/`null` entries which are filtered out.
+ * @returns A single merged partial configuration.
+ */
 export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
   const providers = mergeArrays(filterMaybeArrayValues(configs).map((x) => x.providers));
   const result = mergeObjects(configs) as Configurable<DbxInjectionComponentConfig<T>>;

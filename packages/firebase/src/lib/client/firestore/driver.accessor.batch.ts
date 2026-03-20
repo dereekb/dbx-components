@@ -45,6 +45,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestore
  * into the same batch.
  *
  * @param writeBatch - the Firestore `WriteBatch` to queue operations into
+ * @returns a factory that creates write-batch-backed document data accessors for any document reference
  *
  * @example
  * ```ts
@@ -88,6 +89,7 @@ export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentC
  * Factory function that creates a {@link WriteBatchFirestoreDocumentContext} for the given batch.
  *
  * @param batch - the Firestore `WriteBatch` to use for all document operations
+ * @returns a new {@link WriteBatchFirestoreDocumentContext} bound to the given batch
  *
  * @example
  * ```ts

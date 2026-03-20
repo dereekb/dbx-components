@@ -100,8 +100,7 @@ export function enableHasAuthRoleHook(transitionService: TransitionService, conf
   const isSecureCriteria: HookMatchCriteria = {
     entering: (state) => {
       const data = state?.data as Maybe<Partial<HasAuthRoleStateData>>;
-      const match = Boolean(data?.authRoles);
-      return match;
+      return Boolean(data?.authRoles);
     }
   };
 
@@ -155,9 +154,9 @@ export function hasAuthRoleDecisionPipe(stateData: HasAuthRoleStateData): Operat
   let mapFn: OperatorFunction<AuthRoleSet, boolean>;
 
   if (authRolesMode === 'any') {
-    mapFn = map((x) => authRoleConfigs.findIndex((y) => setIncludes(x, y.requiredRoles, y.authRolesMode)) !== -1); // find the first match
+    mapFn = map((x) => authRoleConfigs.some((y) => setIncludes(x, y.requiredRoles, y.authRolesMode))); // find the first match
   } else {
-    mapFn = map((x) => authRoleConfigs.findIndex((y) => !setIncludes(x, y.requiredRoles, y.authRolesMode)) === -1); // find the first failed match
+    mapFn = map((x) => !authRoleConfigs.some((y) => !setIncludes(x, y.requiredRoles, y.authRolesMode))); // find the first failed match
   }
 
   return mapFn;

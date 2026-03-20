@@ -6,7 +6,9 @@ import { DbxFormFormlyWrapperModule } from './wrapper/wrapper.module';
 
 const importsAndExports = [DbxFormFormlyChecklistItemFieldModule, DbxFormFormlyComponentFieldModule, DbxFormFormlyTextEditorFieldModule, DbxFormFormlyWrapperModule];
 
-/** Aggregates all custom Formly field type modules (checklist, component, texteditor) and wrappers. */
+/**
+ * Aggregates all custom Formly field type modules (checklist, component, texteditor) and wrappers.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

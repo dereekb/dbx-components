@@ -47,6 +47,7 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   readonly data$ = this.store$.pipe(switchMap((x) => x.data$));
   readonly loadingState$ = this.store$.pipe(switchMap((x) => x.dataLoadingState$));
 
+  // eslint-disable-next-line @angular-eslint/prefer-inject -- abstract class receives store from subclass constructors
   constructor(store: S) {
     this.replaceStore(store);
 
@@ -96,6 +97,8 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   /**
    * Replaces the internal store.
+   *
+   * @param store - The new document store to use.
    */
   replaceStore(store: S) {
     this._store.next(store);
@@ -113,7 +116,6 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety; we want to simply match that the Store type S is used in the Directive type C to provide it.
 
 /**
@@ -121,7 +123,8 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
  *
  * Can optionally also provide the actual store type to include in the providers array so it is instantiated by Angular.
  *
- * @param sourceType
+ * @param sourceType - The directive type to register as the DbxFirebaseDocumentStoreDirective provider.
+ * @returns Array of Angular providers for the directive and its route delegates.
  */
 export function provideDbxFirebaseDocumentStoreDirective<S extends DbxFirebaseDocumentStoreDirective<any, any, any>>(sourceType: Type<S>): Provider[];
 export function provideDbxFirebaseDocumentStoreDirective<S extends DbxFirebaseDocumentStore<any, any>, C extends DbxFirebaseDocumentStoreDirective<any, any, S> = DbxFirebaseDocumentStoreDirective<any, any, S>>(sourceType: Type<C>, storeType: Type<S>): Provider[];

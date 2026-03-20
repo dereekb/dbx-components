@@ -402,10 +402,22 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   }
 }
 
+/**
+ * Creates a new {@link DbxFirebaseCollectionLoaderInstance} from the given configuration.
+ *
+ * @param config - Initial configuration including collection, constraints, pagination, and mode settings.
+ * @returns A new collection loader instance.
+ */
 export function dbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>): DbxFirebaseCollectionLoaderInstance<T, D> {
   return new DbxFirebaseCollectionLoaderInstance<T, D>(config);
 }
 
+/**
+ * Convenience function that creates a {@link DbxFirebaseCollectionLoaderInstance} initialized with the given Firestore collection.
+ *
+ * @param collection - The Firestore collection to load from.
+ * @returns A new collection loader instance using the specified collection.
+ */
 export function dbxFirebaseCollectionLoaderInstanceWithCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(collection: Maybe<FirestoreCollectionLike<T, D>>): DbxFirebaseCollectionLoaderInstance<T, D> {
   return new DbxFirebaseCollectionLoaderInstance<T, D>({ collection });
 }

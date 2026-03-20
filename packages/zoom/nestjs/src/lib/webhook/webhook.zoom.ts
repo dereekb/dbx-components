@@ -48,7 +48,6 @@ export interface ZoomEventHandlerConfigurer extends HandlerBindAccessor<UntypedZ
 
 export const zoomEventHandlerConfigurerFactory = handlerConfigurerFactory<ZoomEventHandlerConfigurer, UntypedZoomWebhookEvent>({
   configurerForAccessor: (accessor: HandlerBindAccessor<UntypedZoomWebhookEvent, ZoomWebhookEventType>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<ZoomWebhookEvent<any>, any>(accessor, zoomWebhookEvent);
 
     const configurer: ZoomEventHandlerConfigurer = {

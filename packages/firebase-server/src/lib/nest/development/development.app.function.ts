@@ -20,8 +20,11 @@ import { type Building } from '@dereekb/util';
  * @typeParam N - The NestJS context type.
  * @typeParam S - The schedule function map type.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic type parameters require `any` for Firebase SDK compatibility
 export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap> {
-  /** When false, dev endpoints return an "unavailable" error instead of executing. */
+  /**
+   * When false, dev endpoints return an "unavailable" error instead of executing.
+   */
   readonly enabled: boolean;
   /**
    * Whether or not to require an auth context when calling dev functions. True by default.
@@ -29,11 +32,17 @@ export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNest
    * Set to false only in local development where authentication is unavailable.
    */
   readonly secure?: boolean;
-  /** Getter for the NestJS application promise, used to bootstrap the context. */
+  /**
+   * Getter for the NestJS application promise, used to bootstrap the context.
+   */
   readonly nest: NestAppPromiseGetter;
-  /** Map of specifier keys to developer utility functions. */
+  /**
+   * Map of specifier keys to developer utility functions.
+   */
   readonly developerFunctionsMap: OnCallDevelopmentFunctionMap<N>;
-  /** Factory that wraps a handler function with NestJS context resolution. */
+  /**
+   * Factory that wraps a handler function with NestJS context resolution.
+   */
   readonly onCallFactory: OnCallHandlerWithNestContextFactory<N>;
   /**
    * Whether or not to disable adding the dev schedule function. False by default.
@@ -52,6 +61,7 @@ export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNest
  * Spread this into your Firebase Functions exports to register the dev endpoint.
  */
 export interface FirebaseServerDevFunctions {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- RunnableHttpFunction supports legacy gen 1 deployments
   readonly [RUN_DEV_FUNCTION_APP_FUNCTION_KEY]: RunnableHttpFunction<OnCallDevelopmentParams> | CallableHttpFunction<OnCallDevelopmentParams>;
 }
 
@@ -78,9 +88,11 @@ export interface FirebaseServerDevFunctions {
  * export const { dev } = devFunctions;
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic type parameters require `any` for Firebase SDK compatibility
 export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap>(config: FirebaseServerDevFunctionsConfig<N, S>): FirebaseServerDevFunctions {
   const { enabled, secure, nest, developerFunctionsMap, onCallFactory, allScheduledFunctions, disableDevelopmentScheduleFunction } = config;
 
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- RunnableHttpFunction supports legacy gen 1 deployments
   let dev: RunnableHttpFunction<OnCallDevelopmentParams> | CallableHttpFunction<OnCallDevelopmentParams>;
 
   if (enabled) {
@@ -102,7 +114,7 @@ export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext
 
     dev = onCallFactory(onCallFunction)(nest);
   } else {
-    dev = onCallFactory(async (x) => {
+    dev = onCallFactory(async () => {
       throw unavailableError({
         message: 'developer tools service is not enabled.'
       });

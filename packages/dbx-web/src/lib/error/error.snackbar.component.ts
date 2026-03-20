@@ -12,15 +12,19 @@ import { clean, cleanSubscription } from '@dereekb/dbx-core';
 /**
  * Configuration for error snackbar display, extending Material snackbar config but excluding `data` and `viewContainerRef`.
  */
-export type DbxErrorSnackbarConfig = Omit<MatSnackBarConfig<any>, 'data' | 'viewContainerRef'>;
+export type DbxErrorSnackbarConfig = Omit<MatSnackBarConfig<unknown>, 'data' | 'viewContainerRef'>;
 
 /**
  * Data passed to the error snackbar component via `MAT_SNACK_BAR_DATA`.
  */
 export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
-  /** The error to display in the snackbar. */
+  /**
+   * The error to display in the snackbar.
+   */
   readonly error: T;
-  /** Optional auto-dismiss duration in milliseconds. If omitted, the snackbar persists until manually dismissed. */
+  /**
+   * Optional auto-dismiss duration in milliseconds. If omitted, the snackbar persists until manually dismissed.
+   */
   readonly duration?: number;
 }
 

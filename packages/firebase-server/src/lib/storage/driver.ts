@@ -11,6 +11,8 @@ export type GoogleCloudFirebaseStorageDrivers = FirebaseStorageDrivers;
  *
  * Bundles the server-side storage accessor driver, identified as `@google-cloud/storage`.
  *
+ * @returns A complete set of storage drivers for server-side usage.
+ *
  * @example
  * ```typescript
  * const drivers = googleCloudFirebaseStorageDrivers();

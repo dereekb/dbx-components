@@ -49,5 +49,7 @@ export type SearchableValueFieldDisplayFn<T, M = unknown> = MapFunction<Searchab
  */
 export type SearchableValueFieldAnchorFn<T, M = unknown> = MapFunction<SearchableValueFieldValue<T, M>, ClickableAnchor>;
 
-/** Hash function for searchable field values, used to identify and deduplicate selections. */
+/**
+ * Hash function for searchable field values, used to identify and deduplicate selections.
+ */
 export type SearchableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFunction<T, H>;

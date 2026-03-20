@@ -379,7 +379,6 @@ export function latLngBoundFromInput(input: ExtendLatLngBoundInput): Maybe<LatLn
 
   const first: LatLngBoundOrPoint = firstValue(input);
 
-  // eslint-disable-next-line eqeqeq -- firstValue returns undefined for empty arrays despite type signature
   if (first != null) {
     if (isLatLngBound(first)) {
       bound = first;

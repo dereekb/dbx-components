@@ -5,7 +5,7 @@ import { type ArrayOrValue, asArray, type Configurable, type FactoryWithRequired
 import { type ClickableAnchorLinkSegueRef, type IconAndTitle, type SegueRef } from '@dereekb/dbx-core';
 import { type ObservableOrValue, filterMaybe, filterMaybeArray } from '@dereekb/rxjs';
 import { type GrantedRole } from '@dereekb/model';
-import { Injectable, inject, Inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { DbxFirebaseModelContextService } from '../../service/model.context.service';
 import { type DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../service/model.context';
 
@@ -51,10 +51,11 @@ export class DbxFirebaseModelTypesService {
   readonly dbxFirebaseModelContextService = inject(DbxFirebaseModelContextService);
 
   readonly dbxModelTypesService = inject(DbxModelTypesService<DbxFirebaseModelTypeInfo>);
+  private readonly _initialConfig = inject(DbxFirebaseModelTypesServiceConfig);
 
-  constructor(@Inject(DbxFirebaseModelTypesServiceConfig) initialConfig: DbxFirebaseModelTypesServiceConfig) {
-    if (initialConfig.entries) {
-      this.register(initialConfig.entries);
+  constructor() {
+    if (this._initialConfig.entries) {
+      this.register(this._initialConfig.entries);
     }
   }
 
@@ -124,6 +125,12 @@ export interface DbxFirebaseModelTypesServiceInstancePair<D extends FirestoreDoc
 
 export type DbxFirebaseModelTypesServiceInstancePairForKeysFactory = (keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) => Observable<DbxFirebaseModelTypesServiceInstancePair[]>;
 
+/**
+ * Creates a factory function that produces an observable of instance pairs for the given model keys.
+ *
+ * @param service - The model types service used to resolve type info and instances.
+ * @returns A factory that accepts model keys and returns an Observable of instance pairs with display info and segue refs.
+ */
 export function dbxFirebaseModelTypesServiceInstancePairForKeysFactory(service: DbxFirebaseModelTypesService): DbxFirebaseModelTypesServiceInstancePairForKeysFactory {
   return (keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) => {
     const instances = asArray(keys).map((x) => service.instanceForKey(x).safeInstancePair$);
@@ -150,6 +157,13 @@ export interface DbxFirebaseModelTypesServiceInstance<D extends FirestoreDocumen
   readonly instancePair$: Observable<DbxFirebaseModelTypesServiceInstancePair>;
 }
 
+/**
+ * Creates a {@link DbxFirebaseModelTypesServiceInstance} that provides observables for type info, display info, segue refs, and instance pairs for a single model.
+ *
+ * @param modelInfoInstance$ - Observable of the model info service instance providing data and role access.
+ * @param dbxFirebaseModelTypesService - The model types service for resolving type configurations and display info.
+ * @returns A DbxFirebaseModelTypesServiceInstance with derived observables.
+ */
 export function dbxFirebaseModelTypesServiceInstance<D extends FirestoreDocument<any> = any, R extends GrantedRole = GrantedRole>(modelInfoInstance$: Observable<DbxFirebaseInContextFirebaseModelInfoServiceInstance<D, R>>, dbxFirebaseModelTypesService: DbxFirebaseModelTypesService) {
   const key$ = modelInfoInstance$.pipe(switchMap((x) => x.key$));
   const modelType$ = modelInfoInstance$.pipe(switchMap((x) => x.modelType$));

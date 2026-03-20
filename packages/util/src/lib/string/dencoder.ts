@@ -138,7 +138,6 @@ export function primativeKeyDencoder<D extends PrimativeKey, E extends Primative
         }
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- overloaded return type requires cast
       return value as any;
     }
   }) as Partial<PrimativeKeyDencoderFunction<D, E>>;
@@ -209,7 +208,6 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
       return dencoder(split);
     } else {
       const encoded = dencoder(input as D[]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- overloaded return type requires cast
       return encoded.join(joiner) as any;
     }
   };

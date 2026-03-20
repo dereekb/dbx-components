@@ -26,7 +26,7 @@ export class PrettyJsonPipe implements PipeTransform {
     if (input) {
       try {
         json = JSON.stringify(input, null, spacing);
-      } catch (e) {
+      } catch {
         console.error('prettyjson pipe failed parsing input: ', input);
         json = 'ERROR';
       }

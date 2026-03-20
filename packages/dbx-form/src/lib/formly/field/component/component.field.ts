@@ -1,6 +1,8 @@
 import { type DbxFormComponentFieldConfig, type DbxFormComponentFormlyFieldConfig } from './component.field.component';
 
-/** Configuration for a custom Angular component embedded as a Formly field. */
+/**
+ * Configuration for a custom Angular component embedded as a Formly field.
+ */
 export type ComponentFieldConfig<T = unknown> = DbxFormComponentFieldConfig<T>;
 
 /**

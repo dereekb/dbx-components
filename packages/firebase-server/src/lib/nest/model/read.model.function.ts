@@ -56,6 +56,7 @@ export type OnCallReadModelFunctionAuthAware<N, I = unknown, O = unknown> = OnCa
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallReadModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallReadModelFunctionAuthAware<N, any, any>;
 };
 
@@ -63,7 +64,9 @@ export type OnCallReadModelMap<N, T extends FirestoreModelIdentity = FirestoreMo
  * Configuration for {@link onCallReadModel}.
  */
 export interface OnCallReadModelConfig<N> {
-  /** Optional assertion run before the read handler; throw to reject. */
+  /**
+   * Optional assertion run before the read handler; throw to reject.
+   */
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallReadModelParams>;
 }
 
@@ -88,6 +91,7 @@ export interface OnCallReadModelConfig<N> {
 export function onCallReadModel<N>(map: OnCallReadModelMap<N>, config: OnCallReadModelConfig<N> = {}): OnCallWithNestContext<N, OnCallReadModelParams, unknown> {
   const { preAssert } = config;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'read',
     crudType: 'read',
@@ -98,6 +102,9 @@ export function onCallReadModel<N>(map: OnCallReadModelMap<N>, config: OnCallRea
 
 /**
  * Creates a bad-request error indicating the requested model type is not valid for reading.
+ *
+ * @param modelType - The unrecognized model type string.
+ * @returns A bad-request error with UNKNOWN_TYPE_ERROR code.
  */
 export function readModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(

@@ -144,7 +144,9 @@ export function isIdleActionState(actionState: DbxActionState): boolean {
     case DbxActionState.REJECTED:
     case DbxActionState.RESOLVED:
       return true;
-    default:
+    case DbxActionState.TRIGGERED:
+    case DbxActionState.VALUE_READY:
+    case DbxActionState.WORKING:
       return false;
   }
 }
@@ -172,7 +174,9 @@ export function loadingStateTypeForActionState(actionState: DbxActionState): Loa
     case DbxActionState.DISABLED:
       loadingStateType = LoadingStateType.IDLE;
       break;
-    default:
+    case DbxActionState.TRIGGERED:
+    case DbxActionState.VALUE_READY:
+    case DbxActionState.WORKING:
       loadingStateType = LoadingStateType.LOADING;
       break;
   }

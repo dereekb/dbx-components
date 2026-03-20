@@ -82,6 +82,8 @@ export type NotificationTaskSubtaskCheckpoint = typeof NOTIFICATION_TASK_SUBTASK
  * Internal helper that marks the `'processing'` checkpoint complete and schedules the `'cleanup'` phase.
  *
  * Prefer using {@link notificationSubtaskComplete} in subtask handlers instead of calling this directly.
+ *
+ * @returns a partially-complete task result with the processing checkpoint marked done
  */
 export function completeSubtaskProcessingAndScheduleCleanupTaskResult<D extends NotificationTaskSubtaskData>(): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
   return notificationTaskPartiallyComplete(['processing']);
@@ -92,6 +94,9 @@ export function completeSubtaskProcessingAndScheduleCleanupTaskResult<D extends 
  *
  * Unlike {@link notificationTaskComplete}, this signals that the cleanup checkpoint should still run.
  * Use `canRunNextCheckpoint: true` in options to run cleanup immediately in the same execution.
+ *
+ * @param options - optional metadata updates and flag to run cleanup immediately in the same execution
+ * @returns a task result marking the subtask as complete while allowing cleanup to proceed
  *
  * @example
  * ```ts

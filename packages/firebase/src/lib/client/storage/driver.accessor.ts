@@ -2,7 +2,7 @@ import { type StorageListFilesPageToken, type FirebaseStorageAccessorDriver, typ
 import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
 import { type ConfigurableStorageMetadata, type StorageCustomMetadata, type StorageUploadTask, type StorageUploadTaskSnapshot, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
 import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, updateMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, type SettableMetadata, type UploadTask, type UploadTaskSnapshot } from 'firebase/storage';
-import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
+import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory, type StorageListFilesResultFactoryInput } from '../../common';
 import { cachedGetter, type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { map, Observable, shareReplay } from 'rxjs';
 
@@ -13,6 +13,7 @@ import { map, Observable, shareReplay } from 'rxjs';
  * e.g., to silently handle deletion of already-deleted files.
  *
  * @param input - the error or error message to check
+ * @returns `true` if the error message contains `'storage/object-not-found'`, `false` otherwise
  *
  * @example
  * ```ts
@@ -34,6 +35,7 @@ export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | s
  *
  * @param storage - the client Firebase Storage instance
  * @param path - abstract storage path to resolve
+ * @returns a `StorageReference` pointing to the resolved storage path
  */
 export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStorage, path: StoragePath): StorageReference {
   return ref(storage, firebaseStorageFilePathFromStorageFilePath(path));
@@ -45,6 +47,7 @@ export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStor
  * Returns `true` if metadata is successfully retrieved, `false` for any error (including permission errors).
  *
  * @param ref - the storage reference to check
+ * @returns a promise that resolves to `true` if the file exists, `false` otherwise
  */
 export function firebaseStorageFileExists(ref: StorageReference): Promise<boolean> {
   return getMetadata(ref).then(
@@ -66,6 +69,7 @@ export type FirebaseStorageClientAccessorFile = FirebaseStorageAccessorFile<Stor
  *
  * @param storage - the client Firebase Storage instance
  * @param storagePath - the abstract storage path for the file
+ * @returns a {@link FirebaseStorageClientAccessorFile} providing CRUD and upload operations for the given path
  *
  * @example
  * ```ts
@@ -90,7 +94,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
       contentType: options.metadata?.contentType,
       customMetadata: filterUndefinedValues({
         ...options.metadata?.customMetadata,
-        ...options?.customMetadata
+        ...options.customMetadata
       }) as { [key: string]: string }
     });
   }
@@ -219,7 +223,7 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
   nextPageTokenFromResult(result: FirebaseStorageClientListResult): Maybe<StorageListFilesPageToken> {
     return result.listResult.nextPageToken;
   },
-  next(storage: ClientFirebaseStorage, options: Maybe<StorageListFilesOptions>, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
+  next({ options, folder }: StorageListFilesResultFactoryInput<ClientFirebaseStorage>, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
     return folder.list({
       ...options,
       ...result.options,
@@ -248,6 +252,7 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
  *
  * @param storage - the client Firebase Storage instance
  * @param storagePath - the abstract storage path for the folder
+ * @returns a {@link FirebaseStorageClientAccessorFolder} providing listing and existence operations for the given path
  *
  * @example
  * ```ts
@@ -264,7 +269,7 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
     storagePath,
     exists: () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
     list: async (options?: StorageListFilesOptions) => {
-      const rootResults = await list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory(storage, folder, options, { options, listResult }));
+      const rootResults = await list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory({ storage, folder, options }, { options, listResult }));
       let result: StorageListFilesResult;
 
       if (options?.includeNestedResults) {
@@ -303,6 +308,8 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
  *
  * Provides file and folder accessor factories and default bucket resolution.
  * Used internally by {@link firebaseStorageClientDrivers}.
+ *
+ * @returns a {@link FirebaseStorageAccessorDriver} backed by the `firebase/storage` client SDK
  *
  * @example
  * ```ts

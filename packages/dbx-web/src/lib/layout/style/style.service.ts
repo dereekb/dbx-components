@@ -49,10 +49,8 @@ export class DbxStyleService implements Destroyable {
       map(([config, suffix]) => {
         let styleClass = config.style;
 
-        if (suffix != null && config.suffixes) {
-          if (config.suffixes.has(suffix)) {
-            styleClass = `${styleClass}${DASH_CHARACTER_PREFIX_INSTANCE.prefixSuffixString(suffix)}`;
-          }
+        if (suffix != null && config.suffixes?.has(suffix)) {
+          styleClass = `${styleClass}${DASH_CHARACTER_PREFIX_INSTANCE.prefixSuffixString(suffix)}`;
         }
 
         return styleClass;
@@ -95,6 +93,8 @@ export class DbxStyleService implements Destroyable {
 
   /**
    * Returns the current style class suffix, if one is set.
+   *
+   * @returns the currently active style class suffix, or undefined if none is set
    */
   get currentStyleClassSuffix(): Maybe<DbxStyleClassCleanSuffix> {
     return this._styleClassSuffix.value;
@@ -102,6 +102,8 @@ export class DbxStyleService implements Destroyable {
 
   /**
    * Directly sets the active style class suffix, or clears it if null/undefined.
+   *
+   * @param suffix - the suffix to activate, or nullish to clear the current suffix
    */
   setStyleClassSuffix(suffix: Maybe<DbxStyleClassSuffix>) {
     this._styleClassSuffix.next(suffix ? dbxStyleClassCleanSuffix(suffix) : undefined);
@@ -109,6 +111,8 @@ export class DbxStyleService implements Destroyable {
 
   /**
    * Updates the default style configuration used when no override config is set.
+   *
+   * @param defaultConfig - the style configuration to use as the new default
    */
   setDefaultConfig(defaultConfig: DbxStyleConfig) {
     this._defaultConfig.next(defaultConfig);
@@ -116,6 +120,8 @@ export class DbxStyleService implements Destroyable {
 
   /**
    * Overrides the active style configuration with the given value or observable.
+   *
+   * @param config - a style configuration value or observable to set as the active override
    */
   setConfig(config: ObservableOrValue<DbxStyleConfig>) {
     this._config.next(asObservable(config));
@@ -123,6 +129,8 @@ export class DbxStyleService implements Destroyable {
 
   /**
    * Clears the active config override if it matches the given reference, reverting to the default config.
+   *
+   * @param config - the config reference to compare against the current override
    */
   unsetConfig(config: ObservableOrValue<DbxStyleConfig>) {
     if (this._config.value === config) {

@@ -101,8 +101,7 @@ export function enableHasAuthStateHook(transitionService: TransitionService, con
   const isSecureCriteria: HookMatchCriteria = {
     entering: (state) => {
       const data = state?.data as Maybe<Partial<HasAuthStateData>>;
-      const match = Boolean(data?.authStates);
-      return match;
+      return Boolean(data?.authStates);
     }
   };
 

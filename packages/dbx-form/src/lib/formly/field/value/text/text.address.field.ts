@@ -42,7 +42,9 @@ export interface AddressFormlyFieldsConfig {
  * Configuration for a single address line field.
  */
 export interface AddressLineFieldConfig extends Partial<TextFieldConfig> {
-  /** Address line number: 0 for single "Street" line, 1 for "Line 1", 2 for "Line 2". */
+  /**
+   * Address line number: 0 for single "Street" line, 1 for "Line 1", 2 for "Line 2".
+   */
   readonly line?: 0 | 1 | 2;
 }
 
@@ -158,7 +160,9 @@ export function addressField(config: Partial<AddressFieldConfig> = {}): FormlyFi
  * Configuration for a repeatable list of address field groups.
  */
 export interface AddressListFieldConfig extends Readonly<FieldConfig>, AddressFormlyFieldsConfig {
-  /** Maximum number of addresses allowed. Defaults to 6. */
+  /**
+   * Maximum number of addresses allowed. Defaults to 6.
+   */
   readonly maxAddresses?: number;
 }
 

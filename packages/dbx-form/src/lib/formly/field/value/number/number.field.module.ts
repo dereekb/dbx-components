@@ -4,7 +4,9 @@ import { NgModule } from '@angular/core';
 
 const importsAndExports = [FormlyMaterialModule, FormlyMatSliderModule];
 
-/** Provides Formly Material number input and slider support. */
+/**
+ * Provides Formly Material number input and slider support.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

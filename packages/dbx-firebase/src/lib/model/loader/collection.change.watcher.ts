@@ -46,6 +46,13 @@ export interface DbxFirebaseCollectionChangeWatcherInstance<S extends DbxFirebas
   setMode(mode: DbxFirebaseCollectionChangeWatcherTriggerMode): void;
 }
 
+/**
+ * Creates a {@link DbxFirebaseCollectionChangeWatcherInstance} that monitors a store's query for document changes and can trigger actions based on those changes.
+ *
+ * @param store - The collection loader accessor to watch for changes.
+ * @param initialMode - The initial trigger mode ('auto' or 'off'). Defaults to 'off'.
+ * @returns A new change watcher instance with observable change state and configurable trigger mode.
+ */
 export function dbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>>(store: S, initialMode?: DbxFirebaseCollectionChangeWatcherTriggerMode): DbxFirebaseCollectionChangeWatcherInstance<S> {
   const _mode = new BehaviorSubject<DbxFirebaseCollectionChangeWatcherTriggerMode>(initialMode ?? 'off');
   const _sub = new SubscriptionObject();

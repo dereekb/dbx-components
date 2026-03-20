@@ -68,7 +68,6 @@ export type AsNumberInput = Maybe<NumberOrNumberString>;
 export function asNumber(input: AsNumberInput): number {
   let value: number;
 
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'number':
       value = input;

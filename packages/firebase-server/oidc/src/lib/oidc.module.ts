@@ -85,6 +85,9 @@ export const FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = ['
  * Reads the JWKS encryption secret from `OIDC_JWKS_ENCRYPTION_SECRET`; in test environments,
  * a deterministic fallback is used.
  *
+ * @param configService - the NestJS ConfigService for reading environment variables
+ * @param envService - the Firebase server environment service for app URL and env detection
+ * @returns the constructed OidcModuleConfig
  * @throws {Error} When `appUrl` is missing, lacks an HTTP prefix, or the encryption secret is invalid.
  */
 export function oidcModuleConfigFactory(configService: ConfigService, envService: FirebaseServerEnvService): OidcModuleConfig {
@@ -132,6 +135,10 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
 /**
  * Factory that creates {@link OidcServerFirestoreCollections} using the provided Firestore context
  * and JWKS encryption config from {@link OidcModuleConfig}.
+ *
+ * @param firestoreContext - the Firestore context for collection creation
+ * @param oidcModuleConfig - the OIDC module config containing JWKS encryption settings
+ * @returns the configured OidcServerFirestoreCollections
  */
 export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcServerFirestoreCollections {
   return {
@@ -163,12 +170,12 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
  * Additionally, the following may be optionally provided:
  * - JwksServiceStorageConfig
  *
- * @param metadataConfig
- * @returns
+ * @param metadataConfig - the configuration for generating the OIDC module metadata
+ * @returns the NestJS module metadata for the OIDC module
  */
 export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataConfig): ModuleMetadata {
   const { dependencyModule, config, imports, exports, providers } = metadataConfig;
-  const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
+  const dependencyModuleImport = [dependencyModule];
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ConfigureOidcAuthMiddlewareModule, ...dependencyModuleImport, ...(imports ?? [])],

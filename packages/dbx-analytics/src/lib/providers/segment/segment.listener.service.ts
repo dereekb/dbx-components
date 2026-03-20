@@ -50,6 +50,8 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
    * Subscribes to the Segment API service and analytics event stream, forwarding events to the Segment SDK.
    *
    * Events are only sent when the Segment configuration is marked as active.
+   *
+   * @returns subscription to the combined Segment API and analytics event stream
    */
   protected _initializeServiceSubscription() {
     return combineLatest([this._segmentApi.service$, this.analyticsEvents$]).subscribe(([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, DbxAnalyticsStreamEvent]) => {
@@ -89,6 +91,10 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
         break;
       case DbxAnalyticsStreamEventType.UserChange:
         this.changeUser(api, streamEvent.user);
+        break;
+      case DbxAnalyticsStreamEventType.UserIdChange:
+      case DbxAnalyticsStreamEventType.UserPropertiesEvent:
+        // These event types are not forwarded to Segment
         break;
     }
   }

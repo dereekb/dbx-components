@@ -38,6 +38,7 @@ export interface DbxWebFilePreviewServicePreviewComponentFunctionInput {
 /**
  * Used for generating a preview component for the given src url and embedMimeType.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for contravariant init callback compatibility
 export type DbxWebFilePreviewServicePreviewComponentFunction = (input: DbxWebFilePreviewServicePreviewComponentFunctionInput) => DbxInjectionComponentConfig<any>;
 
 /**
@@ -63,7 +64,7 @@ export interface DbxWebFilePreviewServicePreviewDialogFunctionInputWithMatDialog
 /**
  * Used for previewing a src url and embedMimeType in a dialog.
  */
-export type DbxWebFilePreviewServicePreviewDialogFunction = (input: DbxWebFilePreviewServicePreviewDialogFunctionInputWithMatDialog) => MatDialogRef<any, any>;
+export type DbxWebFilePreviewServicePreviewDialogFunction = (input: DbxWebFilePreviewServicePreviewDialogFunctionInputWithMatDialog) => MatDialogRef<unknown, unknown>;
 
 /**
  * Configuration for a preview entry.
@@ -94,13 +95,14 @@ export interface DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput
   /**
    * The component configuration for the component to display in the dialog.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for contravariant init callback compatibility
   readonly componentConfig: DbxInjectionComponentConfig<any>;
 }
 
 /**
  * Used for previewing a src url and embedMimeType in a dialog.
  */
-export type DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input: DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput) => MatDialogRef<any, any>;
+export type DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input: DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput) => MatDialogRef<unknown, unknown>;
 
 /**
  * @deprecated use DbxWebFilePreviewServicePreviewDialogFunction instead.

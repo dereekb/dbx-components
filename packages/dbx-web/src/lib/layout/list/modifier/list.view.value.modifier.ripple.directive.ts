@@ -14,6 +14,9 @@ export const DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY = 'disable_ripp
 /**
  * Default decision function that disables ripple on items that already have ripple disabled,
  * lack an anchor, or have an anchor with no navigation target.
+ *
+ * @param item - the list item to evaluate for ripple disabling
+ * @returns `true` if the ripple should be disabled for this item
  */
 export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DbxValueListItemDecisionFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
   return item.rippleDisabled || !item.anchor || (!item.anchor.ref && !item.anchor.url && !item.anchor.onClick);

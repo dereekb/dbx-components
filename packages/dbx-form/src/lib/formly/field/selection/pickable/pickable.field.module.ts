@@ -5,7 +5,9 @@ import { DbxPickableListFieldComponent, DbxPickableListFieldItemListComponent, D
 
 const importsAndExports = [DbxPickableChipListFieldComponent, DbxPickableListFieldComponent, DbxPickableListFieldItemListComponent, DbxPickableListFieldItemListViewComponent, DbxPickableListFieldItemListViewItemComponent];
 
-/** Registers the `pickablechipfield` and `pickablelistfield` Formly field types. */
+/**
+ * Registers the `pickablechipfield` and `pickablelistfield` Formly field types.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

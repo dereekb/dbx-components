@@ -37,6 +37,7 @@ export class DbxActionAutoModifyDirective<T, O> {
   readonly markAsModified$: Observable<void> = toObservable(this.autoModifyEnabled).pipe(
     distinctUntilChanged(),
     switchMap((x) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let obs: Observable<any>;
 
       if (x) {

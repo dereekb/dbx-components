@@ -4,14 +4,22 @@ import { type ChecklistItemDisplayContent } from './checklist.item';
 import { type Configurable, type KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
 import { checklistItemField, type ChecklistItemFieldBuilderInput } from './checklist.item.field';
 
-/** A field key from the data set type, constrained to string keys. */
+/**
+ * A field key from the data set type, constrained to string keys.
+ */
 export type ChecklistItemFieldDataSetFieldKey<D> = keyof D & string;
-/** The value type for a specific key in the data set. */
+/**
+ * The value type for a specific key in the data set.
+ */
 export type ChecklistItemFieldDataSetFieldValueForKey<D, K extends keyof D = keyof D> = D[K];
-/** Maps all keys of a data type to boolean values, representing a checklist. */
+/**
+ * Maps all keys of a data type to boolean values, representing a checklist.
+ */
 export type ChecklistType<D> = KeyValueTransformMap<D, boolean>;
 
-/** Input for adding a checklist item to the data set builder, combining a key with field builder input. */
+/**
+ * Input for adding a checklist item to the data set builder, combining a key with field builder input.
+ */
 export type ChecklistItemFieldDataSetBuilderInput<D, T> = { key: ChecklistItemFieldDataSetFieldKey<D> } & ChecklistItemFieldBuilderInput<T>;
 
 /**
@@ -44,6 +52,12 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
    * Merges the input config with existing configuration.
    *
    * The displayContentObs, if provided, will merge with the existing observable and the two objects merged.
+   *
+   * @param key - The key identifying which checklist field to merge into
+   * @param config - Partial configuration to merge with the existing field config
+   *
+   * @param key - The key identifying which checklist field to merge into
+   * @param config - Partial configuration to merge with the existing field config
    */
   merge<T>(key: ChecklistItemFieldDataSetFieldKey<D>, config: Partial<ChecklistItemFieldBuilderInput<T>>) {
     const currentField = this._assertFieldExists(key).field;
@@ -56,13 +70,11 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
     if (currentField.displayContent && config.displayContent) {
       mergedConfig.displayContent = combineLatest([currentField.displayContent, config.displayContent]).pipe(
         map(([a, b]) => {
-          const result = {
+          // console.log('A and b: ', a, b, result);
+          return {
             ...a,
             ...b
           };
-
-          // console.log('A and b: ', a, b, result);
-          return result;
         }),
         shareReplay(1)
       );
@@ -122,7 +134,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
 
   // MARK: Build/Finish
   build(): FormlyFieldConfig[] {
-    return Array.from(this._fields.values()).map(({ field }) => {
+    return [...this._fields.values()].map(({ field }) => {
       return checklistItemField(field);
     });
   }

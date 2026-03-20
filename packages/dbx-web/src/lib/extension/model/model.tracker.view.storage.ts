@@ -65,6 +65,7 @@ export class DbxModelViewTrackerStorage {
    * Returns all stored view events for the given folder.
    *
    * @param folder - Optional folder name; defaults to `'default'`
+   * @returns Observable of all view tracker events in the folder
    */
   getAllEvents(folder?: Maybe<string>): Observable<DbxModelViewTrackerEvent[]> {
     return this.getEventSet(folder).pipe(map((x) => x.e));
@@ -74,6 +75,7 @@ export class DbxModelViewTrackerStorage {
    * Returns the complete event set for the given folder.
    *
    * @param folder - Optional folder name; defaults to `'default'`
+   * @returns Observable of the event set containing events and the last-update timestamp
    */
   getEventSet(folder?: Maybe<string>): Observable<DbxModelViewTrackerEventSet> {
     const storageKey = this.getStorageKeyForFolder(folder);
@@ -82,7 +84,7 @@ export class DbxModelViewTrackerStorage {
 
   private _getEventSetForStorageKey(storageKey: string): Observable<DbxModelViewTrackerEventSet> {
     return this.storageAccessor.get(storageKey).pipe(
-      catchError((e) => {
+      catchError(() => {
         return of(undefined);
       }),
       map((result) => result ?? { e: [], l: 0 })
@@ -93,9 +95,9 @@ export class DbxModelViewTrackerStorage {
    * Computes the storage key for a given folder name.
    *
    * @param folder - Optional folder name; defaults to `'default'`
+   * @returns The computed storage key string combining the base key and folder name
    */
   getStorageKeyForFolder(folder?: Maybe<string>): string {
-    const storageKey = `${this.storageKey}_${folder ?? 'default'}`;
-    return storageKey;
+    return `${this.storageKey}_${folder ?? 'default'}`;
   }
 }

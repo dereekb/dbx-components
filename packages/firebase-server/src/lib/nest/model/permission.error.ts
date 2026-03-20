@@ -10,6 +10,9 @@ import { forbiddenError, modelNotAvailableError } from '../../function/error';
  * which the client can use to display a meaningful "not found" message. Intended to be
  * passed to Firebase permission/existence checking utilities as the
  * {@link FirebaseDoesNotExistErrorContextErrorFunction} callback.
+ *
+ * @param firebaseContextGrantedModelRoles - The granted model roles context containing the document reference.
+ * @returns A model-not-available HTTP error.
  */
 export const nestFirebaseDoesNotExistError: FirebaseDoesNotExistErrorContextErrorFunction = (firebaseContextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>) => {
   return modelNotAvailableError({
@@ -26,6 +29,10 @@ export const nestFirebaseDoesNotExistError: FirebaseDoesNotExistErrorContextErro
  * Returns a "forbidden" HTTP error including the document key, model type, and the roles
  * that were required but not granted. Intended to be passed to Firebase permission checking
  * utilities as the {@link FirebasePermissionErrorContextErrorFunction} callback.
+ *
+ * @param firebaseContextGrantedModelRoles - The granted model roles context containing the document reference.
+ * @param roles - The roles that were required but not granted.
+ * @returns A forbidden HTTP error.
  */
 export const nestFirebaseForbiddenPermissionError: FirebasePermissionErrorContextErrorFunction = (firebaseContextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, roles?: ArrayOrValue<GrantedRole>) => {
   return forbiddenError({

@@ -28,6 +28,7 @@ export class OidcClientService {
    */
   async createClient(params: CreateOidcClientParams, validatedMetadata?: Partial<Pick<ClientMetadata, 'jwks'>>): Promise<CreateOidcClientResult> {
     const provider = await this.oidcService.getProvider();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
 
     // Mirrors oidc-provider's default idFactory from lib/helpers/defaults.js
@@ -85,7 +86,7 @@ export class OidcClientService {
     return {
       modelKeys: firestoreModelKey(oidcEntryIdentity, clientId),
       client_id: clientId,
-      client_secret: clientSecret!
+      client_secret: clientSecret ?? ''
     };
   }
 
@@ -103,6 +104,7 @@ export class OidcClientService {
    */
   async updateClient(clientId: OidcEntryClientId, params: Omit<UpdateOidcClientParams, 'key'>): Promise<void> {
     const provider = await this.oidcService.getProvider();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 
@@ -111,21 +113,15 @@ export class OidcClientService {
     }
 
     const updatedMetadata = { ...existing };
-
-    if (params.client_name !== undefined && params.client_name !== null) {
-      updatedMetadata.client_name = params.client_name;
-    }
-
-    if (params.redirect_uris !== undefined && params.redirect_uris !== null) {
-      updatedMetadata.redirect_uris = params.redirect_uris;
-    }
+    updatedMetadata.client_name = params.client_name;
+    updatedMetadata.redirect_uris = params.redirect_uris;
 
     if (params.logo_uri !== undefined) {
-      updatedMetadata.logo_uri = params.logo_uri || undefined;
+      updatedMetadata.logo_uri = params.logo_uri ?? undefined;
     }
 
     if (params.client_uri !== undefined) {
-      updatedMetadata.client_uri = params.client_uri || undefined;
+      updatedMetadata.client_uri = params.client_uri ?? undefined;
     }
 
     // Mirrors oidc-provider's lib/helpers/add_client.js: re-validates and persists.
@@ -146,6 +142,7 @@ export class OidcClientService {
    */
   async rotateClientSecret(clientId: OidcEntryClientId): Promise<RotateOidcClientSecretResult> {
     const provider = await this.oidcService.getProvider();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 
@@ -174,6 +171,7 @@ export class OidcClientService {
    */
   async deleteClient(clientId: OidcEntryClientId): Promise<void> {
     const provider = await this.oidcService.getProvider();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 

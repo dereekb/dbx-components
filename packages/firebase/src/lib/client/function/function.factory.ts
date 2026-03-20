@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { cachedGetter, type ClassLikeType, type Getter, mapObjectMap, type Maybe } from '@dereekb/util';
@@ -37,6 +36,7 @@ export type FirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap> = (fun
  * for direct data access. Per-key options (e.g., timeout) are applied if provided.
  *
  * @param configMap - maps function keys to their optional configuration
+ * @returns a {@link FirebaseFunctionMapFactory} that creates a typed callable function map for a given `Functions` instance
  *
  * @example
  * ```ts
@@ -61,8 +61,7 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
       return fn;
     };
 
-    const result = mapObjectMap<FirebaseFunctionTypeConfigMap<M>>(configMap, mapFn) as FirebaseFunctionMap<M>;
-    return result;
+    return mapObjectMap<FirebaseFunctionTypeConfigMap<M>>(configMap, mapFn) as FirebaseFunctionMap<M>;
   };
 }
 
@@ -122,6 +121,7 @@ export type LazyFirebaseFunctions<M extends FirebaseFunctionsMap> = {
  * so `httpsCallable` instances are only created when actually needed.
  *
  * @param configMap - maps each function group key to its `[ClassType, Factory]` tuple
+ * @returns a {@link LazyFirebaseFunctionsFactory} that creates a lazy-loaded function map for a given `Functions` instance
  *
  * @example
  * ```ts

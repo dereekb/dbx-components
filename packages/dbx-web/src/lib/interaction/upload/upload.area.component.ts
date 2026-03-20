@@ -27,10 +27,10 @@ export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
     @if (show()) {
       <div class="dbx-file-upload-area-content">
         <div class="dbx-file-upload-area-content-text">
-          @if (icon() != null) {
+          @if (icon()) {
             <mat-icon>{{ icon() }}</mat-icon>
           }
-          @if (text() != null) {
+          @if (text()) {
             <span>{{ text() }}</span>
           }
         </div>

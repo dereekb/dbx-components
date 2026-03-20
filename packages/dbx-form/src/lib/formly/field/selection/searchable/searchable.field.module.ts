@@ -6,7 +6,9 @@ import { DbxSearchableTextFieldComponent } from './searchable.text.field.compone
 
 const importsAndExports = [DbxSearchableChipFieldComponent, DbxSearchableTextFieldComponent, DbxSearchableFieldAutocompleteItemComponent, DbxDefaultSearchableFieldDisplayComponent];
 
-/** Registers the `searchablechipfield` and `searchabletextfield` Formly field types. */
+/**
+ * Registers the `searchablechipfield` and `searchabletextfield` Formly field types.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

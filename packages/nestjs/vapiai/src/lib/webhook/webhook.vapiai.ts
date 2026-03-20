@@ -62,7 +62,6 @@ export interface VapiAiEventHandlerConfigurer extends HandlerBindAccessor<Untype
 
 export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<VapiAiEventHandlerConfigurer, UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult>({
   configurerForAccessor: (accessor: HandlerBindAccessor<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<VapiAiWebhookEvent<any>, any, VapiAiWebhookEventType, Maybe<VapiAiWebhookResult>>(accessor, vapiAiWebhookEvent);
 
     const configurer: VapiAiEventHandlerConfigurer = {

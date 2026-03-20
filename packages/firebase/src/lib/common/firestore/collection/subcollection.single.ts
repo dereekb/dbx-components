@@ -66,13 +66,11 @@ export interface SingleItemFirestoreCollection<T, PT, D extends FirestoreDocumen
  * @returns A subcollection instance with specialized accessors for the single document
  */
 export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: SingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD> {
-  const collection = build<SingleItemFirestoreCollection<T, PT, D, PD>>({
+  return build<SingleItemFirestoreCollection<T, PT, D, PD>>({
     base: makeFirestoreCollectionWithParent(config),
     build: (x) => {
       // Extend the collection with single document accessor capabilities
       extendFirestoreCollectionWithSingleDocumentAccessor<SingleItemFirestoreCollection<T, PT, D, PD>, T, D>(x, config.singleItemIdentifier);
     }
   });
-
-  return collection;
 }

@@ -27,6 +27,14 @@ export interface CalcomFactoryConfig extends CalcomOAuthContextRef {
 
 export type CalcomFactory = (config: CalcomConfig) => Calcom;
 
+/**
+ * Creates a {@link CalcomFactory} that produces fully configured Cal.com API instances.
+ * Sets up rate limiting, error handling, OAuth token management, and both server
+ * and per-user fetch contexts.
+ *
+ * @param factoryConfig - configuration including OAuth context, rate limiter, and optional fetch/logging overrides
+ * @returns a factory function that accepts a CalcomConfig and produces a Calcom instance
+ */
 export function calcomFactory(factoryConfig: CalcomFactoryConfig): CalcomFactory {
   const { oauthContext } = factoryConfig;
   const serverAccessTokenStringFactory = calcomAccessTokenStringFactory(oauthContext.loadAccessToken);

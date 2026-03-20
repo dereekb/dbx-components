@@ -9,6 +9,7 @@ import { type NestContextRequest } from '../nest';
  * @typeParam N - The nest context type.
  * @typeParam E - The specific {@link CloudEvent} subtype.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type CloudEventNestContextRequest<N, E extends CloudEvent<any>> = NestContextRequest<N, E>;
 
 // MARK: From Firebase/Cloud Event
@@ -18,6 +19,7 @@ export type CloudEventNestContextRequest<N, E extends CloudEvent<any>> = NestCon
  * @typeParam E - The specific cloud event subtype.
  * @typeParam O - The return type (typically `void` for event handlers).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type CloudEventHandler<E extends CloudEvent<any>, O = unknown> = (event: E) => PromiseOrValue<O>;
 
 /**
@@ -28,6 +30,7 @@ export type CloudEventHandler<E extends CloudEvent<any>, O = unknown> = (event: 
  * @typeParam E - The specific cloud event subtype.
  * @typeParam O - The return type.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export interface CloudFunctionBuilder<E extends CloudEvent<any>, O = unknown> {
   (handler: (event: E) => PromiseOrValue<O>): CloudFunction<E>;
 }
@@ -40,12 +43,14 @@ export interface CloudFunctionBuilder<E extends CloudEvent<any>, O = unknown> {
  * @typeParam E - The specific cloud event subtype.
  * @typeParam O - The return type.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type NestContextCloudEventHandler<N, E extends CloudEvent<any>, O = unknown> = (request: CloudEventNestContextRequest<N, E>) => PromiseOrValue<O>;
 
 /**
  * Builder that wraps a {@link NestContextCloudEventHandler} into a raw {@link CloudEventHandler}
  * by injecting the nest context into each event before delegation.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type NestContextCloudEventHandlerBuilder<N, E extends CloudEvent<any>, O = unknown> = (handler: NestContextCloudEventHandler<N, E, O>) => CloudEventHandler<E, O>;
 
 /**
@@ -63,22 +68,26 @@ export type NestContextCloudEventHandlerWithData<N, I, O = unknown> = NestContex
  * to construct a complete {@link CloudFunction}, typically by calling the Firebase event
  * function constructor (e.g., `onDocumentWritten`) with the wrapped handler.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type CloudEventHandlerWithNestContextBuilder<N, E extends CloudEvent<any>, O = unknown> = (nest: NestContextCloudEventHandlerBuilder<N, E, O>) => CloudFunction<E>;
 
 /**
  * Utility type that infers the correct {@link CloudEventHandlerWithNestContextBuilder} type
  * from a given {@link CloudFunctionBuilder}, preserving the event and output type parameters.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint uses `any` to match any CloudFunctionBuilder
 export type CloudEventHandlerWithNestContextBuilderForBuilder<N, B extends CloudFunctionBuilder<any, any>> = B extends CloudFunctionBuilder<infer E, infer O> ? CloudEventHandlerWithNestContextBuilder<N, E, O> : never;
 
 /**
  * Factory produced by CloudEventHandlerWithNestContextFactory.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type NestApplicationCloudEventFunctionFactory<E extends CloudEvent<any>> = NestApplicationFunctionFactory<CloudFunction<E>>;
 
 /**
  * Factory function for generating a firebase CloudFunction for a specific event.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
 export type CloudEventHandlerWithNestContextFactory<N> = <E extends CloudEvent<any>, O = unknown>(fn: CloudEventHandlerWithNestContextBuilder<N, E, O>) => NestApplicationCloudEventFunctionFactory<E>;
 
 /**
@@ -104,6 +113,7 @@ export type CloudEventHandlerWithNestContextFactory<N> = <E extends CloudEvent<a
  * @returns A factory for creating nest-context-aware event function handlers.
  */
 export function cloudEventHandlerWithNestContextFactory<N>(makeNestContext: MakeNestContext<N>): CloudEventHandlerWithNestContextFactory<N> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CloudEvent generic requires `any` for SDK compatibility
   return <E extends CloudEvent<any>, O = unknown>(fn: CloudEventHandlerWithNestContextBuilder<N, E, O>) => {
     return (nestAppPromiseGetter: NestApplicationPromiseGetter) => {
       const handlerBuilder: NestContextCloudEventHandlerBuilder<N, E, O> = (handler: NestContextCloudEventHandler<N, E, O>) => {

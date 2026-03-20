@@ -7,6 +7,12 @@ import { DbxFirebaseAuthService } from '../auth/service/firebase.auth.service';
 
 export type DbxFirebaseAnalyticsUserPropertiesFactory = FactoryWithRequiredInput<Observable<AnalyticsUserProperties>, AuthUserInfo>;
 
+/**
+ * Extracts analytics user properties (name, email, creation time) from an {@link AuthUserInfo} instance.
+ *
+ * @param user - The authenticated user info to extract properties from.
+ * @returns AnalyticsUserProperties populated from the user info.
+ */
 export function readDbxAnalyticsUserPropertiesFromAuthUserInfo(user: AuthUserInfo): AnalyticsUserProperties {
   const properties: AnalyticsUserProperties = {
     name: user.displayName ?? '',

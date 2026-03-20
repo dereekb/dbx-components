@@ -257,9 +257,9 @@ describe('firestoreModelIdsFromKey', () => {
     const modelKey = 'a/b/c/d';
     const pairs = firestoreModelIdsFromKey(modelKey);
     expect(pairs).toBeDefined();
-    expect(pairs?.length).toBe(2);
-    expect(pairs?.[0]).toBe('b');
-    expect(pairs?.[1]).toBe('d');
+    expect(pairs.length).toBe(2);
+    expect(pairs[0]).toBe('b');
+    expect(pairs[1]).toBe('d');
   });
 });
 

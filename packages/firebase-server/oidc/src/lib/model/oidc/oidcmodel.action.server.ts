@@ -30,6 +30,7 @@ export abstract class OidcModelServerActions {
  * Creates a concrete {@link OidcModelServerActions} implementation wired to the provided context.
  *
  * @param context - the fully assembled OIDC model server actions context
+ * @returns the concrete OidcModelServerActions instance
  *
  * @example
  * ```ts
@@ -53,6 +54,9 @@ export function oidcModelServerActions(context: OidcModelServerActionsContext): 
  *
  * Delegates to {@link OidcClientService.createClient} to generate a `client_id` and `client_secret`,
  * create the adapter entry, and return the secret in plaintext (only returned once).
+ *
+ * @param context - the OIDC model server actions context
+ * @returns a transform function factory for creating OIDC clients
  */
 export function createOidcClientFactory(context: OidcModelServerActionsContext) {
   const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
@@ -68,6 +72,9 @@ export function createOidcClientFactory(context: OidcModelServerActionsContext) 
  * Factory for the `updateOidcClient` action.
  *
  * Delegates to {@link OidcClientService.updateClient} to apply plaintext field updates.
+ *
+ * @param context - the OIDC model server actions context
+ * @returns a transform function factory for updating OIDC clients
  */
 export function updateOidcClientFactory(context: OidcModelServerActionsContext) {
   const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
@@ -85,6 +92,9 @@ export function updateOidcClientFactory(context: OidcModelServerActionsContext) 
  *
  * Delegates to {@link OidcClientService.rotateClientSecret} to generate a new secret
  * and return it in plaintext (only returned once).
+ *
+ * @param context - the OIDC model server actions context
+ * @returns a transform function factory for rotating OIDC client secrets
  */
 export function rotateOidcClientSecretFactory(context: OidcModelServerActionsContext) {
   const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
@@ -100,11 +110,14 @@ export function rotateOidcClientSecretFactory(context: OidcModelServerActionsCon
  * Factory for the `deleteOidcClient` action.
  *
  * Delegates to {@link OidcClientService.deleteClient}.
+ *
+ * @param context - the OIDC model server actions context
+ * @returns a transform function factory for deleting OIDC clients
  */
 export function deleteOidcClientFactory(context: OidcModelServerActionsContext) {
   const { oidcClientService, firebaseServerActionTransformFunctionFactory } = context;
 
-  return firebaseServerActionTransformFunctionFactory(deleteOidcClientParamsType, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(deleteOidcClientParamsType, async (_params) => {
     return async (document: OidcEntryDocument): Promise<void> => {
       await oidcClientService.deleteClient(document.id);
     };

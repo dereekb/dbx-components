@@ -76,7 +76,7 @@ export interface DbxTableReaderDelegate<C, T, O> {
   trackItem: DbxTableReaderItemTrackByFunction<T>;
 }
 
-export interface DbxTableReaderConfig<C, T, O, G = any> {
+export interface DbxTableReaderConfig<C, T, O, G = unknown> {
   /**
    * Delegate used for retrieving the data for a specific column and item/row.
    */
@@ -84,10 +84,10 @@ export interface DbxTableReaderConfig<C, T, O, G = any> {
   /**
    * The table store used for retrieving the items.
    */
-  readonly tableStore: DbxTableStore<any, C, T, G>;
+  readonly tableStore: DbxTableStore<unknown, C, T, G>;
 }
 
-export interface DbxTableReader<C, T, O, G = any> extends DbxTableReaderConfig<C, T, O, G> {
+export interface DbxTableReader<C, T, O, G = unknown> extends DbxTableReaderConfig<C, T, O, G> {
   /**
    * Retrieves all cell data pairs for a specific column.
    */
@@ -110,7 +110,13 @@ export interface DbxTableReader<C, T, O, G = any> extends DbxTableReaderConfig<C
   cellDataForColumnAndItem(column: DbxTableColumn<C>, item: T): Observable<Maybe<O>>;
 }
 
-export function dbxTableReader<C, T, O, G = any>(config: DbxTableReaderConfig<C, T, O, G>): DbxTableReader<C, T, O, G> {
+/**
+ * Creates a {@link DbxTableReader} that provides reactive access to cell data across all columns and items in the table.
+ *
+ * @param config The reader configuration containing the delegate and table store
+ * @returns A {@link DbxTableReader} instance with observable accessors for cell data
+ */
+export function dbxTableReader<C, T, O, G = unknown>(config: DbxTableReaderConfig<C, T, O, G>): DbxTableReader<C, T, O, G> {
   const { delegate, tableStore } = config;
   const { items$ } = tableStore;
   const { readItemCellDataForColumn, trackColumn: inputTrackColumn, trackItem } = delegate;
@@ -212,15 +218,13 @@ export function dbxTableReader<C, T, O, G = any>(config: DbxTableReaderConfig<C,
   };
 
   const loadCellDataPairsForColumn = (column: DbxTableColumn<C>): Observable<DbxTableReaderCellDataPair<C, T, O>[]> => {
-    const columnsData$ = _columnAccessorForColumn(column).pipe(
+    return _columnAccessorForColumn(column).pipe(
       switchMap((accessor) => {
         // when visibility changes, the data will change to be an empty array
         return accessor ? accessor.cellData$ : of([]);
       }),
       shareReplay(1)
     );
-
-    return columnsData$;
   };
 
   const cellDataPairsForColumn = (column: DbxTableColumn<C>): Observable<DbxTableReaderCellDataPair<C, T, O>[]> => {
@@ -236,7 +240,7 @@ export function dbxTableReader<C, T, O, G = any>(config: DbxTableReaderConfig<C,
 
   const cellDataPairForColumnAndItem = (column: DbxTableColumn<C>, item: T): Observable<Maybe<DbxTableReaderCellDataPair<C, T, O>>> => {
     const itemKey = trackItem(item);
-    const columnsData$ = _columnAccessorForColumn(column).pipe(
+    return _columnAccessorForColumn(column).pipe(
       switchMap((columnsData) => {
         return columnsData
           ? columnsData.cellDataAccessors$.pipe(
@@ -250,8 +254,6 @@ export function dbxTableReader<C, T, O, G = any>(config: DbxTableReaderConfig<C,
       }),
       shareReplay(1)
     );
-
-    return columnsData$;
   };
 
   const cellDataForColumnAndItem = (column: DbxTableColumn<C>, item: T): Observable<Maybe<O>> => {

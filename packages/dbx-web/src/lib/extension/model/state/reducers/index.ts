@@ -13,6 +13,13 @@ export interface State {
   [FEATURE_KEY]: DbxModelState;
 }
 
+/**
+ * Combined reducer for the DbxModel NgRx feature state, delegating to sub-reducers for each state slice.
+ *
+ * @param state The current DbxModel feature state, or undefined for initial state
+ * @param action The NgRx action to process
+ * @returns The new DbxModelState produced by the combined sub-reducers
+ */
 export function reducers(state: DbxModelState | undefined, action: Action) {
   return combineReducers({
     [fromObjectModuleConfig.STATE_FEATURE_KEY]: fromObjectModuleConfig.reducer
@@ -20,6 +27,7 @@ export function reducers(state: DbxModelState | undefined, action: Action) {
 }
 
 // MARK: Context
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export const selectDbxModelFeature = createFeatureSelector<State, DbxModelState>(FEATURE_KEY);
 
 // MARK: Module Config
@@ -29,4 +37,5 @@ export const selectDbxModelFeatureObjectModuleConfig = createSelector(selectDbxM
 /**
  * @deprecated use FEATURE_KEY instead.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const featureKey = FEATURE_KEY;

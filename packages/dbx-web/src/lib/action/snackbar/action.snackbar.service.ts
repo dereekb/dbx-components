@@ -29,15 +29,25 @@ export interface DbxActionSnackbarEventMakeConfig {
  * positioning, default durations, and per-type message configurations.
  */
 export interface DbxActionSnackbarServiceConfig<C = unknown> {
-  /** Component class to render inside the snackbar. Defaults to {@link DbxActionSnackbarComponent}. */
+  /**
+   * Component class to render inside the snackbar. Defaults to {@link DbxActionSnackbarComponent}.
+   */
   readonly componentClass: Type<C>;
-  /** Snackbar positioning overrides. */
+  /**
+   * Snackbar positioning overrides.
+   */
   readonly snackbar?: Pick<MatSnackBarConfig, 'horizontalPosition' | 'verticalPosition'>;
-  /** Default duration for snackbars without an action. */
+  /**
+   * Default duration for snackbars without an action.
+   */
   readonly defaultDuration?: Milliseconds;
-  /** Default duration for snackbars that include an undo action. */
+  /**
+   * Default duration for snackbars that include an undo action.
+   */
   readonly defaultUndoDuration?: Milliseconds;
-  /** Per-type message configurations (e.g. "save", "create", "delete"). */
+  /**
+   * Per-type message configurations (e.g. "save", "create", "delete").
+   */
   readonly eventTypeConfigs: DbxActionSnackbarEventMakeConfig;
 }
 
@@ -117,6 +127,7 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
    *
    * @param type - The snackbar type key (e.g. "save", "delete"), or undefined to use "none".
    * @param input - The generator input containing the event and optional undo configuration.
+   * @returns The generated display configuration, or `undefined` if no config is registered for the given type.
    */
   generateDisplayConfig<T = unknown, O = unknown>(type: Maybe<DbxActionSnackbarType>, input: DbxActionSnackbarGeneratorInput<T, O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
     const configForType = this.eventTypeConfigs[type ?? 'none'];

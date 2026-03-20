@@ -4,13 +4,15 @@ import { DbxFlagLayoutModule } from './flag/flag.layout.module';
 import { DbxContentLayoutModule } from './content/content.layout.module';
 import { DbxColumnLayoutModule } from './column/column.layout.module';
 import { DbxCardBoxLayoutModule } from './card/card.box.layout.module';
-import { DbxCompactLayoutModule } from './compact/compact.layout.module';
+import { DbxCompactDirective } from './compact/compact.directive';
 import { DbxBarLayoutModule } from './bar/bar.layout.module';
 import { DbxTextModule } from './text/text.module';
 import { DbxStyleLayoutModule } from './style/style.layout.module';
-import { DbxFlexLayoutModule } from './flex/flex.layout.module';
+import { DbxFlexGroupDirective } from './flex/flex.group.directive';
+import { DbxFlexSizeDirective } from './flex/flex.size.directive';
 
 @NgModule({
-  exports: [DbxBarLayoutModule, DbxCardBoxLayoutModule, DbxColumnLayoutModule, DbxCompactLayoutModule, DbxContentLayoutModule, DbxFlagLayoutModule, DbxFlexLayoutModule, DbxSectionLayoutModule, DbxStyleLayoutModule, DbxTextModule]
+  imports: [DbxCompactDirective, DbxFlexGroupDirective, DbxFlexSizeDirective],
+  exports: [DbxBarLayoutModule, DbxCardBoxLayoutModule, DbxColumnLayoutModule, DbxCompactDirective, DbxContentLayoutModule, DbxFlagLayoutModule, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxSectionLayoutModule, DbxStyleLayoutModule, DbxTextModule]
 })
 export class DbxLayoutModule {}

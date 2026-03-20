@@ -11,6 +11,7 @@ import { type Maybe } from '@dereekb/util';
  * ```
  */
 @Directive({
+  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: 'dbx-chip',
   host: {
     class: 'dbx-chip mat-standard-chip',

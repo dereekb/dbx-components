@@ -1,5 +1,5 @@
 import { Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { type CalendarEvent, type CalendarMonthViewBeforeRenderEvent, type CalendarMonthViewDay, CalendarModule } from 'angular-calendar';
+import { type CalendarEvent, type CalendarMonthViewBeforeRenderEvent, type CalendarMonthViewDay, CalendarMonthViewComponent, CalendarDatePipe } from 'angular-calendar';
 import { map, shareReplay, type Subject, first, throttleTime, distinctUntilChanged, type Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { type DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents, DbxCalendarBaseComponent } from '@dereekb/dbx-web/calendar';
 import { type DayOfWeek, type Maybe, reduceBooleansWithAnd } from '@dereekb/util';
@@ -49,7 +49,15 @@ export type DbxScheduleSelectionCalendarBeforeMonthViewRenderFunction = (renderE
 
 export type DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory = (state: Observable<CalendarScheduleSelectionState>) => DbxScheduleSelectionCalendarBeforeMonthViewRenderFunction;
 
+/**
+ * Creates a factory that produces a beforeMonthViewRender handler for the schedule selection calendar.
+ * The handler applies CSS classes and metadata to each day cell based on the current selection state.
+ *
+ * @param inputModifyFn - Optional function to further customize each day cell after default processing
+ * @returns A factory function that accepts a state observable and produces a render handler
+ */
 export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputModifyFn?: Maybe<DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction>): DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const modifyFn = inputModifyFn || (() => {});
 
   return (state$: Observable<CalendarScheduleSelectionState>) => {
@@ -96,7 +104,7 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
 @Component({
   selector: 'dbx-schedule-selection-calendar',
   templateUrl: './calendar.schedule.selection.component.html',
-  imports: [NgClass, CalendarModule, DbxCalendarBaseComponent, DbxInjectionComponent, DbxButtonSpacerDirective, DbxScheduleSelectionCalendarCellComponent, DbxScheduleSelectionCalendarSelectionToggleButtonComponent],
+  imports: [NgClass, CalendarMonthViewComponent, CalendarDatePipe, DbxCalendarBaseComponent, DbxInjectionComponent, DbxButtonSpacerDirective, DbxScheduleSelectionCalendarCellComponent, DbxScheduleSelectionCalendarSelectionToggleButtonComponent],
   providers: [DbxCalendarStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true

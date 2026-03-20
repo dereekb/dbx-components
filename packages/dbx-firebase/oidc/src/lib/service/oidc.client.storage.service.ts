@@ -18,8 +18,6 @@ const DBX_FIREBASE_OAUTH_CLIENT_STORAGE_ACCESSOR_STORAGE_KEY = 'c';
 export class DbxFirebaseOauthClientStorageService {
   readonly storageAccessor = inject<StorageAccessor<OAuthInteractionLoginDetails>>(DBX_FIREBASE_OAUTH_CLIENT_STORAGE_ACCESSOR_TOKEN);
 
-  constructor() {}
-
   getLoginInteractionDetails(): Observable<Maybe<OAuthInteractionLoginDetails>> {
     return this.storageAccessor.get(DBX_FIREBASE_OAUTH_CLIENT_STORAGE_ACCESSOR_STORAGE_KEY).pipe(catchError(() => of(null)));
   }

@@ -3,7 +3,9 @@ import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreD
 import { NotificationSummaryCollectionStore } from './notificationsummary.collection.store';
 import { type NotificationSummary, type NotificationSummaryDocument } from '@dereekb/firebase';
 
-/** Directive providing a {@link NotificationSummaryCollectionStore} for querying notification summaries. */
+/**
+ * Directive providing a {@link NotificationSummaryCollectionStore} for querying notification summaries.
+ */
 @Directive({
   selector: '[dbxFirebaseNotificationSummaryCollection]',
   providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseNotificationSummaryCollectionStoreDirective, NotificationSummaryCollectionStore),

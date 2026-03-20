@@ -44,6 +44,7 @@ export interface FirebaseStorageContextFactoryConfig {
  * a {@link StoragePathFactory} to normalize all path inputs.
  *
  * @param drivers - the storage driver implementations to use
+ * @returns a {@link FirebaseStorageContextFactory} that creates storage contexts for a given storage instance
  * @throws {Error} When a default bucket ID cannot be resolved from the driver or config.
  *
  * @example
@@ -56,7 +57,7 @@ export interface FirebaseStorageContextFactoryConfig {
 export function firebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage>(drivers: FirebaseStorageDrivers): FirebaseStorageContextFactory<F> {
   return (firebaseStorage: F, config?: FirebaseStorageContextFactoryConfig) => {
     const { defaultBucketId: inputDefaultBucketId, forceBucket = false } = config ?? {};
-    const defaultBucketId: StorageBucketId = inputDefaultBucketId || drivers.storageAccessorDriver.getDefaultBucket?.(firebaseStorage) || '';
+    const defaultBucketId: StorageBucketId = inputDefaultBucketId ?? drivers.storageAccessorDriver.getDefaultBucket?.(firebaseStorage) ?? '';
 
     if (!defaultBucketId) {
       throw new Error('Could not resolve a default bucket id for the firebaseStorageContextFactory(). Supply a defaultBucketId.');

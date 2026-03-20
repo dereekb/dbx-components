@@ -3,7 +3,9 @@ import { AbstractDbxFirebaseCollectionWithParentStore } from '../../../model/mod
 import { NotificationFirestoreCollections, type NotificationBox, type NotificationBoxDocument, type Notification, type NotificationDocument } from '@dereekb/firebase';
 import { NotificationBoxDocumentStore } from './notificationbox.document.store';
 
-/** Collection store for Notification documents, scoped to a parent NotificationBox when available. */
+/**
+ * Collection store for Notification documents, scoped to a parent NotificationBox when available.
+ */
 @Injectable()
 export class NotificationCollectionStore extends AbstractDbxFirebaseCollectionWithParentStore<Notification, NotificationBox, NotificationDocument, NotificationBoxDocument> {
   constructor() {

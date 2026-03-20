@@ -43,6 +43,8 @@ export class DbxMapboxMenuComponent {
       case false:
         this.matMenuTrigger.closeMenu();
         break;
+      default:
+        break;
     }
   });
 

@@ -14,6 +14,7 @@ export interface ModelPermissionService<C, T, R extends string = string, O = T> 
 export interface ModelOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
    * Returns roles for the model given the input context.
+   *
    * @param model
    * @param context
    */
@@ -26,6 +27,7 @@ export interface ModelOnlyModelPermissionService<C, T, R extends string = string
 export interface KeyOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
    * Returns roles for the model given the input context.
+   *
    * @param model
    * @param context
    */
@@ -79,7 +81,7 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
 
   protected abstract outputForModel(model: T, context: C): PromiseOrValue<Maybe<O>>;
 
-  protected isUsableOutputForRoles(output: O, context: C) {
+  protected isUsableOutputForRoles(_output: O, _context: C) {
     return true; // can override in parent functions to further filter roles.
   }
 
@@ -100,6 +102,7 @@ export interface ModelsPermissionService<C> {
 export interface InContextModelOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
    * Returns roles for the model given the input context.
+   *
    * @param model
    * @param context
    */
@@ -112,6 +115,7 @@ export interface InContextModelOnlyModelPermissionService<C, T, R extends string
 export interface InContextKeyOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
    * Returns roles for the model given the input context.
+   *
    * @param model
    * @param context
    */

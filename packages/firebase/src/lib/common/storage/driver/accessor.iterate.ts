@@ -31,6 +31,7 @@ export type IterateStorageListFilesFactory = FetchPageFactory<IterateStorageList
  * Wraps the folder's `list()` API with cursor-based pagination via {@link fetchPageFactory}.
  *
  * @param config - default listing options (e.g., maxResults)
+ * @returns an {@link IterateStorageListFilesFactory} for paginated file listing
  *
  * @example
  * ```ts
@@ -42,13 +43,11 @@ export function iterateStorageListFilesFactory(config: IterateStorageListFilesFa
 
   return fetchPageFactory<IterateStorageListFilesInput, StorageListFilesResult>({
     fetch: async (input: IterateStorageListFilesInput) => {
-      const list = await input.folder.list({
+      return input.folder.list({
         includeNestedResults: input.includeNestedResults,
         maxResults: input.maxResults ?? factoryDefaultMaxResults,
         pageToken: input.pageToken ?? undefined
       });
-
-      return list;
     },
     readFetchPageResultInfo: (result) => {
       const cursor = result.nextPageToken();
@@ -61,7 +60,7 @@ export function iterateStorageListFilesFactory(config: IterateStorageListFilesFa
 
       return info;
     },
-    buildInputForNextPage: function (pageResult: Partial<FetchPageResult<StorageListFilesResult<unknown>>>, input: IterateStorageListFilesInput, options: FetchPageFactoryInputOptions): PromiseOrValue<Maybe<Partial<IterateStorageListFilesInput>>> {
+    buildInputForNextPage: function (pageResult: Partial<FetchPageResult<StorageListFilesResult<unknown>>>, input: IterateStorageListFilesInput, _options: FetchPageFactoryInputOptions): PromiseOrValue<Maybe<Partial<IterateStorageListFilesInput>>> {
       return {
         ...input,
         pageToken: pageResult.nextPageCursor ?? undefined
@@ -81,6 +80,9 @@ export type IterateStorageListFilesByEachFileConfig<T, R> = Omit<IterateFetchPag
  * Iterates through every file in a storage folder, invoking a callback for each individual file result.
  *
  * Convenience wrapper around {@link iterateFetchPagesByEachItem} pre-configured for storage listing.
+ *
+ * @param input - iteration configuration including folder, listing options, and per-item callback
+ * @returns the result of the paginated per-item iteration
  */
 export function iterateStorageListFilesByEachFile<T, R>(input: IterateStorageListFilesByEachFileConfig<T, R>) {
   const { folder, includeNestedResults, pageToken } = input;
@@ -102,6 +104,9 @@ export type IterateStorageListFilesConfig<R> = Omit<IterateFetchPagesConfigWithF
  * Iterates through pages of file results in a storage folder, invoking a callback for each page.
  *
  * Convenience wrapper around {@link iterateFetchPages} pre-configured for storage listing.
+ *
+ * @param input - iteration configuration including folder, listing options, and per-page callback
+ * @returns the result of the paginated page-level iteration
  */
 export function iterateStorageListFiles<R>(input: IterateStorageListFilesConfig<R>) {
   const { folder, includeNestedResults, pageToken } = input;

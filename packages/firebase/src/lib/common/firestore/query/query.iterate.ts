@@ -163,12 +163,10 @@ export async function iterateFirestoreDocumentSnapshots<T, R>(config: IterateFir
     ...config,
     maxParallelCheckpoints: 1,
     iterateSnapshotBatch: async (docSnapshots) => {
-      const performTasksResult = await performAsyncTasks(docSnapshots, iterateSnapshot, {
+      return performAsyncTasks(docSnapshots, iterateSnapshot, {
         sequential: true, // sequential by default
         ...(snapshotsPerformTasksConfig ?? { ...performTasksConfig, nonConcurrentTaskKeyFactory: undefined, beforeRetry: undefined }) // don't pass the nonConcurrentTaskKeyFactory
       });
-
-      return performTasksResult;
     }
   });
 }
@@ -354,7 +352,7 @@ export async function iterateFirestoreDocumentSnapshotBatches<T, R>(config: Iter
     ...config,
     iterateCheckpoint: async (docSnapshots) => {
       if (docSnapshots.length > 0) {
-        const batchSizeForSnapshotsResult = await batchSizeForSnapshots(docSnapshots);
+        const batchSizeForSnapshotsResult = batchSizeForSnapshots(docSnapshots);
         const batches = batchSizeForSnapshotsResult === null ? [docSnapshots] : batch(docSnapshots, batchSizeForSnapshotsResult);
         let i = 0;
 
@@ -672,6 +670,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
   const handleRepeatCursor = typeof inputHandleRepeatCursor === 'function' ? inputHandleRepeatCursor : () => inputHandleRepeatCursor;
   const filterCheckpointSnapshot = inputFilterCheckpointSnapshot ?? mapIdentityFunction();
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- cursor-based pagination logic with repeat detection is inherently complex
   async function taskInputFactory() {
     // Perform another query, then pass the results to the task factory.
     let result: { i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> } | null = null;

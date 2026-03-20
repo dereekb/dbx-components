@@ -31,6 +31,13 @@ export function authUserStateFromFirebaseAuthServiceFunction(stateForLoggedInUse
 
 export type StateFromTokenFunction = (token: IdTokenResult) => ObservableOrValue<AuthUserState>;
 
+/**
+ * Creates an AuthUserStateObsFunction that derives the user state from the current ID token using the provided mapping function.
+ *
+ * @param stateFromToken - Function that maps an IdTokenResult to an AuthUserState.
+ * @param defaultState - The fallback state when no token is available. Defaults to 'user'.
+ * @returns An AuthUserStateObsFunction that reads state from the ID token.
+ */
 export function stateFromTokenForLoggedInUserFunction(stateFromToken: StateFromTokenFunction, defaultState: AuthUserState = 'user'): AuthUserStateObsFunction {
   return (dbxFirebaseAuthService: DbxFirebaseAuthService) => {
     return readValueFromIdToken<AuthUserState>(dbxFirebaseAuthService, stateFromToken, defaultState);

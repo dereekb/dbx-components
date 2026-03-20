@@ -19,6 +19,7 @@ import { DbxFormValueChangeDirective } from '../../form/io/form.change.directive
   }
 })
 export class DbxFormSearchFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> {
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly search = output<string>();
 
   readonly fields$: Observable<FormlyFieldConfig[]> = this.currentConfig$.pipe(map(dbxFormSearchFormFields));

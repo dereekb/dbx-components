@@ -124,6 +124,8 @@ interface ConfiguredSimpleStorageAccessorConfig extends SimpleStorageAccessorCon
 /**
  * Validates that a storage key prefix is non-empty and does not contain the prefix splitter character.
  *
+ * @param prefix - The prefix string to validate.
+ * @param prefixSplitter - The splitter string that separates the prefix from the key.
  * @throws {Error} If the prefix is invalid or the splitter is empty.
  */
 export function assertValidStorageKeyPrefix(prefix: string, prefixSplitter: string): void {
@@ -138,9 +140,13 @@ export function assertValidStorageKeyPrefix(prefix: string, prefixSplitter: stri
 
 /**
  * Checks whether a storage key prefix is valid (non-empty and does not contain the splitter).
+ *
+ * @param prefix - The prefix string to validate.
+ * @param prefixSpltter - The splitter string that separates the prefix from the key.
+ * @returns `true` if the prefix is valid.
  */
 export function isValidStorageKeyPrefix(prefix: string, prefixSpltter: string): boolean {
-  return Boolean(prefix && prefix.indexOf(prefixSpltter) === -1);
+  return Boolean(prefix?.indexOf(prefixSpltter) === -1);
 }
 
 /**

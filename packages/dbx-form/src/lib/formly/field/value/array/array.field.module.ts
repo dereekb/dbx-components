@@ -4,7 +4,9 @@ import { DbxFormRepeatArrayTypeComponent } from './array.field.component';
 
 const importsAndExports = [DbxFormRepeatArrayTypeComponent];
 
-/** Registers the `repeatarray` Formly field type for dynamic array fields. */
+/**
+ * Registers the `repeatarray` Formly field type for dynamic array fields.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

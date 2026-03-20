@@ -3,7 +3,9 @@ import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirec
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
 import { type NotificationUser, type NotificationUserDocument } from '@dereekb/firebase';
 
-/** Directive providing a {@link NotificationUserDocumentStore} for accessing a single notification user document. */
+/**
+ * Directive providing a {@link NotificationUserDocumentStore} for accessing a single notification user document.
+ */
 @Directive({
   selector: '[dbxFirebaseNotificationUserDocument]',
   providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationUserDocumentStoreDirective, NotificationUserDocumentStore),

@@ -49,6 +49,9 @@ export const defaultCalendarScheduleSelectionCellContentFactory: CalendarSchedul
       icon = 'check_box_outline_blank';
       text = 'Add';
       break;
+    default:
+      // meta.state is undefined when no metadata is attached to the day cell
+      break;
   }
 
   const result: CalendarScheduleSelectionCellContent = {

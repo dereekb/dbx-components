@@ -12,6 +12,9 @@ import { type ReadableError, type ServerError, ServerErrorResponse, Unauthorized
  * const pojoError = convertToPOJOServerErrorResponse(httpErrorResponse);
  * console.log(pojoError.message);
  * ```
+ *
+ * @param httpError - The HTTP error response or generic error object to convert.
+ * @returns A plain JSON-serializable {@link ServerError} object.
  */
 export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | object): ServerError {
   const result: ServerErrorResponse | undefined = convertToServerErrorResponse(httpError);
@@ -22,7 +25,7 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
         try {
           const stringy = JSON.stringify(pojo.data);
           x.data = JSON.parse(stringy);
-        } catch (e) {
+        } catch {
           console.warn('convertToPOJOServerErrorResponse(): Non-serializable Error Data Detected. It is being removed.: ', pojo.data);
           x.data = undefined;
         }
@@ -46,6 +49,9 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
  *   console.log(serverError.status, serverError.message);
  * }
  * ```
+ *
+ * @param error - The HTTP error response or generic error object to convert.
+ * @returns A {@link ServerErrorResponse} derived from the error, or `undefined` if the input is falsy.
  */
 export function convertToServerErrorResponse(error: HttpErrorResponse | object): ServerErrorResponse | undefined {
   let result: ServerErrorResponse | undefined;
@@ -54,6 +60,8 @@ export function convertToServerErrorResponse(error: HttpErrorResponse | object):
     const { status, error: data }: { status: number; error: ServerError } = error;
 
     const code = data.code;
+    // statusText is deprecated with HTTP/2+ but still needed as a fallback for error messages
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const message = data.message ?? error.statusText;
 
     switch (status) {

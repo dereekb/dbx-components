@@ -19,6 +19,7 @@ export interface AuthDataRef<T extends AuthData = AuthData> {
  * including email, phone, and sign-in timestamps.
  *
  * @param token - The decoded ID token from Firebase Admin Auth.
+ * @returns A normalized {@link FirebaseAuthToken} with camelCase fields.
  *
  * @example
  * ```typescript

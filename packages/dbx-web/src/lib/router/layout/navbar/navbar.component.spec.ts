@@ -10,7 +10,8 @@ import { provideDbxScreenMediaService } from '../../../screen/screen.providers';
 
 describe('NavbarComponent', () => {
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       imports: [NoopAnimationsModule, UIRouterModule.forRoot()],
       providers: [{ provide: APP_BASE_HREF, useValue: '/' }, provideDbxScreenMediaService(), provideDbxUIRouterService(), provideDbxRouterWebUiRouterProviderConfig()]
     }).compileComponents();

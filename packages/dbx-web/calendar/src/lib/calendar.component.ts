@@ -1,6 +1,6 @@
 import { Component, inject, output, ChangeDetectionStrategy, computed } from '@angular/core';
 import { isSameMonth } from 'date-fns';
-import { type CalendarEvent, CalendarModule, CalendarDayModule, CalendarWeekModule } from 'angular-calendar';
+import { type CalendarEvent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';
 import { distinctUntilChanged, map, shareReplay, withLatestFrom } from 'rxjs';
 import { type MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -12,7 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-calendar',
   templateUrl: './calendar.component.html',
-  imports: [DbxCalendarBaseComponent, CalendarModule, CalendarDayModule, CalendarWeekModule, MatButtonToggleModule, NgClass],
+  imports: [DbxCalendarBaseComponent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent, MatButtonToggleModule, NgClass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

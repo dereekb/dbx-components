@@ -5,6 +5,12 @@ import { CalcomServiceConfig } from './calcom.config';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Provider Factories
+/**
+ * Factory function that creates a {@link CalcomServiceConfig} from NestJS ConfigService values.
+ *
+ * @param _configService - the NestJS ConfigService instance
+ * @returns a validated CalcomServiceConfig
+ */
 export function calcomServiceConfigFactory(_configService: ConfigService): CalcomServiceConfig {
   const config: CalcomServiceConfig = {
     calcom: {}
@@ -27,6 +33,9 @@ export interface ProvideAppCalcomMetadataConfig extends Pick<ModuleMetadata, 'im
 
 /**
  * Convenience function used to generate ModuleMetadata for an app's CalcomModule.
+ *
+ * @param config - the module metadata configuration including optional dependency module
+ * @returns NestJS ModuleMetadata for registering the CalcomModule
  */
 export function appCalcomModuleMetadata(config: ProvideAppCalcomMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

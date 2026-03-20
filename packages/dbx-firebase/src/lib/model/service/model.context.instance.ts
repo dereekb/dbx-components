@@ -7,6 +7,12 @@ import { type DbxFirebaseInContextFirebaseModelInfoServiceInstance } from './mod
 
 export type DbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> = <D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole>(type: S extends InContextFirebaseModelsService<infer Y> ? (Y extends FirebaseModelsService<infer X, infer C> ? keyof X : never) : never, keyObs: ObservableOrValue<ModelKey>) => DbxFirebaseInContextFirebaseModelServiceInstance<D, R, C>;
 
+/**
+ * Factory function that creates typed model service instance accessors from an observable context.
+ *
+ * @param context$ - Observable of the in-context Firebase models service.
+ * @returns A factory function for creating model service instances by type and key.
+ */
 export function dbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext>(context$: Observable<S>): DbxFirebaseInContextFirebaseModelServiceInstanceFactory<S, C> {
   return <D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole>(type: S extends InContextFirebaseModelsService<infer Y> ? (Y extends FirebaseModelsService<infer X, infer C> ? keyof X : never) : never, keyObs: ObservableOrValue<ModelKey>) => {
     const key$ = asObservable(keyObs);
@@ -27,6 +33,9 @@ export interface DbxFirebaseInContextFirebaseModelServiceInstance<D extends Fire
  * Creates a new DbxFirebaseInContextFirebaseModelServiceInstance.
  *
  * Wraps an InModelContextFirebaseModelService observable and provides different piped observables.
+ *
+ * @param modelService$ - Observable of the in-model-context Firebase model service to wrap.
+ * @returns A DbxFirebaseInContextFirebaseModelServiceInstance with derived observables for model data, roles, and permissions.
  */
 export function dbxFirebaseInContextFirebaseModelServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext>(modelService$: Observable<InModelContextFirebaseModelService<C, FirestoreDocumentData<D>, D, R>>) {
   const key$ = modelService$.pipe(map((x) => x.model.key));
@@ -55,7 +64,7 @@ export function dbxFirebaseInContextFirebaseModelServiceInstance<D extends Fires
     );
   }
 
-  function snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<FirestoreDocumentData<D>> {
+  function snapshotDataStream(mode: FirestoreAccessorStreamMode, _options?: SnapshotOptions): Observable<FirestoreDocumentData<D>> {
     return model$.pipe(
       switchMap((x) => x.snapshotDataStream(mode)),
       shareReplay(1)

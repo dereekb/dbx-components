@@ -14,6 +14,12 @@ export type AuthUserInfo = Omit<UserInfo, 'providerId'> & {
   readonly lastSignInTime?: Maybe<ISO8601DateString>;
 };
 
+/**
+ * Converts a Firebase Auth {@link User} into an {@link AuthUserInfo} containing display name, email, phone, photo URL, UID, and metadata timestamps.
+ *
+ * @param user - The Firebase Auth user to convert.
+ * @returns An AuthUserInfo object with the user's profile and metadata.
+ */
 export function authUserInfoFromAuthUser(user: User): AuthUserInfo {
   return {
     displayName: user?.displayName,
@@ -26,6 +32,12 @@ export function authUserInfoFromAuthUser(user: User): AuthUserInfo {
   };
 }
 
+/**
+ * Extracts a {@link FirebaseAuthToken} from a Firebase Auth {@link User}, including email verification status and metadata timestamps.
+ *
+ * @param user - The Firebase Auth user to extract token info from.
+ * @returns A FirebaseAuthToken with the user's auth-related properties.
+ */
 export function firebaseAuthTokenFromUser(user: User): FirebaseAuthToken {
   return {
     email: user.email,

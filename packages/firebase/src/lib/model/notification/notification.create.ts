@@ -128,6 +128,9 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
  *
  * Maps friendly field names (`subject`, `message`, `createdBy`, etc.) to their Firestore abbreviations
  * and filters out null/undefined metadata values.
+ *
+ * @param input - friendly input with readable field names
+ * @returns the low-level template using Firestore field abbreviations
  */
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
   const {
@@ -230,6 +233,9 @@ export interface ShouldSendCreatedNotificationInput {
  * Determines whether a notification should be created based on the explicit toggle and throttle settings.
  *
  * Returns false if `sendNotification` is explicitly false, or if the throttle window hasn't elapsed.
+ *
+ * @param input - the send control parameters including the toggle and throttle configuration
+ * @returns true if the notification should be created and sent
  */
 export function shouldSendCreatedNotificationInput(input: ShouldSendCreatedNotificationInput): boolean {
   const { sendNotification, sendNotificationThrottleDate, sendNotificationThrottleTime: inputSendNotificationThrottleTime } = input;
@@ -275,7 +281,13 @@ export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNo
  * Result of creating a notification document pair (document reference + data), before or after saving.
  */
 export interface CreateNotificationDocumentPairResult extends Pick<CreateNotificationTemplate, 'overrideExistingTask'> {
+  /**
+   * The notification document.
+   */
   readonly notificationDocument: NotificationDocument;
+  /**
+   * The notification data.
+   */
   readonly notification: Notification;
   /**
    * Whether or not the notification was created.
@@ -294,6 +306,8 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  *
  * For unique task notifications, generates a deterministic document ID from the target model and task type.
  *
+ * @param input - the creation parameters including template, context, and accessor
+ * @returns the document reference and notification data pair, with `notificationCreated` set to false
  * @throws {Error} When neither an accessor nor sufficient context is provided
  * @throws {Error} When `unique=true` but no target model is specified
  */
@@ -304,17 +318,15 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
   /**
    * Use the input, or default to true if inputUnique is true.
    */
-  const overrideExistingTask = inputOverrideExistingTask != null ? inputOverrideExistingTask : inputUnique ? true : undefined;
+  const overrideExistingTask = inputOverrideExistingTask ?? (inputUnique ? true : undefined);
 
   let accessor = inputAccessor;
   const notificationBoxId = notificationBoxIdForModel(notificationModel);
 
-  if (!accessor && notificationBoxId) {
-    if (context) {
-      const { notificationCollectionFactory, notificationBoxCollection } = context;
-      const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationBoxId);
-      accessor = notificationCollectionFactory(notificationBoxDocument).documentAccessorForTransaction(transaction);
-    }
+  if (!accessor && notificationBoxId && context) {
+    const { notificationCollectionFactory, notificationBoxCollection } = context;
+    const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationBoxId);
+    accessor = notificationCollectionFactory(notificationBoxDocument).documentAccessorForTransaction(transaction);
   }
 
   if (!accessor) {
@@ -407,6 +419,10 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
 
 /**
  * Internal function used by createNotificationDocument().
+ *
+ * @param input - send control parameters (throttle settings, shouldCreateNotification flag)
+ * @param pair - the document pair created by {@link createNotificationDocumentPair}
+ * @returns the pair with `notificationCreated` updated to reflect whether the document was saved
  */
 export async function _createNotificationDocumentFromPair(input: Pick<CreateNotificationDocumentPairInput, 'shouldCreateNotification' | keyof ShouldSendCreatedNotificationInput>, pair: CreateNotificationDocumentPairResult): Promise<CreateNotificationDocumentPairResult> {
   const { notification, notificationDocument, isNotificationTask, overrideExistingTask } = pair;
@@ -428,6 +444,9 @@ export async function _createNotificationDocumentFromPair(input: Pick<CreateNoti
  *
  * For unique tasks with `overrideExistingTask`, uses `set()` to replace existing documents.
  * Otherwise uses `create()` which fails if the document already exists.
+ *
+ * @param input - the creation parameters including template, context, send control settings
+ * @returns the document pair with `notificationCreated` reflecting whether the document was saved
  */
 export async function createNotificationDocument(input: CreateNotificationDocumentPairInput): Promise<CreateNotificationDocumentPairResult> {
   const pair = createNotificationDocumentPair(input);
@@ -438,6 +457,9 @@ export async function createNotificationDocument(input: CreateNotificationDocume
  * Creates and saves a notification only if sending conditions are met (not throttled, not explicitly disabled).
  *
  * Returns `undefined` if the notification was not created.
+ *
+ * @param input - the creation parameters including template, context, and send control settings
+ * @returns the document pair if the notification was created, or undefined if it was skipped
  */
 export async function createNotificationDocumentIfSending(input: CreateNotificationDocumentPairInput): Promise<Maybe<CreateNotificationDocumentPairResult>> {
   const pair = await createNotificationDocument(input);

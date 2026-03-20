@@ -8,7 +8,9 @@ import { type StringValueFieldsFieldProps } from './searchable.field.directive';
  * Configuration for a plain text chip field that allows freeform string entry.
  */
 export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFieldsFieldProps {
-  /** Whether text values are case-sensitive. Defaults to false (lowercased). */
+  /**
+   * Whether text values are case-sensitive. Defaults to false (lowercased).
+   */
   caseSensitive?: boolean;
 }
 

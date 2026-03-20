@@ -26,8 +26,12 @@ import { successTransition } from './transition.rxjs';
 export abstract class AbstractTransitionDirective {
   protected readonly dbxRouterTransitionService = inject(DbxRouterTransitionService);
 
-  /** Observable that emits on each successful router transition. */
+  /**
+   * Observable that emits on each successful router transition.
+   */
   readonly transitionSuccess$ = successTransition(this.dbxRouterTransitionService.transitions$);
-  /** Observable that emits immediately on initialization and on each subsequent successful transition. */
+  /**
+   * Observable that emits immediately on initialization and on each subsequent successful transition.
+   */
   readonly initAndUpdateOnTransitionSuccess$: Observable<void> = this.transitionSuccess$.pipe(startWith(undefined)) as Observable<void>;
 }

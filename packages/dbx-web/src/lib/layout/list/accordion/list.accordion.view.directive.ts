@@ -32,4 +32,5 @@ export abstract class AbstractDbxListAccordionViewDirective<T> extends AbstractD
 /**
  * @deprecated use DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const dbxListAccordionViewComponentImportsAndExports = DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS;

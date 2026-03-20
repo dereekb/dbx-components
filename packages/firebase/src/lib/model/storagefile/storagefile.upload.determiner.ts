@@ -145,6 +145,7 @@ export interface DetermineByFileNameConfig {
  * (e.g., `image` matches `image.png`, `image-test.jpg`) at {@link HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL}.
  *
  * @param config - file type, match string, and optional determination levels
+ * @returns an UploadedFileTypeDeterminer that classifies by file name
  *
  * @example
  * ```ts
@@ -206,6 +207,7 @@ export interface DetermineByFolderNameConfig {
  * exactly equals the configured match string.
  *
  * @param config - file type and folder name to match
+ * @returns an UploadedFileTypeDeterminer that classifies by folder name
  *
  * @example
  * ```ts
@@ -272,6 +274,7 @@ export interface DetermineByFilePathConfig {
  * built-in determiners.
  *
  * @param config - file type, path match config, optional bucket/file filters
+ * @returns an UploadedFileTypeDeterminer that classifies by storage path
  *
  * @example
  * ```ts
@@ -361,6 +364,7 @@ export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: Upload
  * If `requireUser` is true, the determination fails when no user can be detected.
  *
  * @param config - root folder, user prefix, and matching options
+ * @returns a wrapper function that adds user detection to any UploadedFileTypeDeterminer
  *
  * @example
  * ```ts
@@ -372,8 +376,7 @@ export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: Upload
  * ```
  */
 export function determineUserByFolderWrapperFunction(config: DetermineUserByFolderWrapperFunctionConfig): DetermineUserByFolderDeterminerWrapperFunction {
-  const { rootFolder, userFolderPrefix, requireUser = false, allowSubPaths: inputAllowSubPaths = true } = config;
-  const allowSubPaths = inputAllowSubPaths ?? true;
+  const { rootFolder, userFolderPrefix, requireUser = false, allowSubPaths = true } = config;
   const subPathMatcherConfig = config.matchSubPath ?? { basePath: mergeSlashPaths([rootFolder, userFolderPrefix]) };
   const pathMatcher = slashPathSubPathMatcher(subPathMatcherConfig);
 
@@ -421,6 +424,9 @@ export function determineUserByFolderWrapperFunction(config: DetermineUserByFold
 
 /**
  * Convenience wrapper pre-configured for the standard uploads folder structure (`uploads/u/{userId}/...`).
+ *
+ * @param config - optional matching options (rootFolder and userFolderPrefix are pre-configured)
+ * @returns a wrapper function that adds user detection for the standard uploads folder structure
  *
  * @example
  * ```ts
@@ -477,6 +483,7 @@ export interface LimitUploadFileTypeDeterminerConfig {
  *
  * @param determiner - the determiner to filter
  * @param types - allowed file type identifier(s)
+ * @returns an UploadedFileTypeDeterminer that only returns results for the specified file types
  *
  * @example
  * ```ts
@@ -527,6 +534,7 @@ export interface CombineUploadFileTypeDeterminerConfig {
  * short-circuited via `completeSearchOnFirstMatch` or `completeSearchAtLevel`.
  *
  * @param config - determiners to combine and optional early-exit settings
+ * @returns a combined UploadedFileTypeDeterminer that returns the highest-confidence match
  *
  * @example
  * ```ts
@@ -543,7 +551,7 @@ export function combineUploadFileTypeDeterminers(config: CombineUploadFileTypeDe
   if (determiners.length === 1) {
     result = determiners[0];
   } else {
-    const possibleFileTypes = unique(determiners.map((d) => d.getPossibleFileTypes()).flat());
+    const possibleFileTypes = unique(determiners.flatMap((d) => d.getPossibleFileTypes()));
     const completeSearchOnFirstMatch = Boolean(inputCompleteSearchOnFirstMatch);
     const completeSearchAtLevel = completeSearchOnFirstMatch ? LOW_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL : (inputCompleteSearchAtLevel ?? EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL);
 

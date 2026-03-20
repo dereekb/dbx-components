@@ -8,7 +8,9 @@ import { type DbxFormRepeatArrayConfig } from './array.field.component';
  * groups of fields (e.g., multiple addresses, phone numbers).
  */
 export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayConfig<T>, FieldConfig {
-  /** Field group template that is repeated for each array entry. */
+  /**
+   * Field group template that is repeated for each array entry.
+   */
   repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;
 }
 

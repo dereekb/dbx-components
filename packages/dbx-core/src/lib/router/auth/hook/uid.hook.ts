@@ -72,6 +72,7 @@ export interface RedirectForUserIdentifierParamHookInput {
  * missing or matches the placeholder value.
  *
  * @param input - Configuration specifying the route criteria, access control logic, and optional parameter overrides.
+ * @returns The result of registering the transition hook.
  *
  * @see {@link RedirectForUserIdentifierParamHookInput}
  * @see {@link redirectForIdentifierParamHook}

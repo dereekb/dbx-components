@@ -1,5 +1,5 @@
 import { type CreateNotificationDocumentPairResult, firestoreDummyKey, type NotificationDocument, type SendNotificationParams, type SendNotificationResult } from '@dereekb/firebase';
-import { type NotificationServerActions } from './notification.action.service';
+import { type NotificationServerActions } from './notification.action.server';
 import { type Abstract, Injectable, type Provider } from '@nestjs/common';
 import { type Maybe, runAsyncTasksForValues } from '@dereekb/util';
 
@@ -57,8 +57,8 @@ export interface NotificationExpediteServiceInstance {
 /**
  * Creates a new NotificationExpediteServiceInstance with the input NotificationExpediteService.
  
- * @param notificationExpediteService 
- * @returns 
+ * @param notificationExpediteService - the expedite service to use for sending
+ * @returns a new {@link NotificationExpediteServiceInstance} with an internal queue
  */
 export function notificationExpediteServiceInstance(notificationExpediteService: NotificationExpediteService): NotificationExpediteServiceInstance {
   let _documentsToSend: NotificationDocument[] = [];
@@ -83,11 +83,9 @@ export function notificationExpediteServiceInstance(notificationExpediteService:
   };
 
   const send = async (options?: Maybe<NotificationExpediteServiceSendNotificationOptions>) => {
-    const results = await runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x, options), {
+    return runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x, options), {
       nonConcurrentTaskKeyFactory: (x) => x.parent.id // only send one notification at a time for a notification box
     });
-
-    return results;
   };
 
   return {
@@ -120,6 +118,8 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
 
   /**
    * Returns the configured NotificationServerActions instance.
+   *
+   * @returns the current {@link NotificationServerActions} instance
    */
   getNotificationServerActions(): NotificationServerActions {
     return this._notificationServerActions;
@@ -127,6 +127,8 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
 
   /**
    * Sets the NotificationServerActions instance to use.
+   *
+   * @param notificationServerActions - the actions instance to configure
    */
   setNotificationServerActions(notificationServerActions: NotificationServerActions) {
     this._notificationServerActions = notificationServerActions;
@@ -147,6 +149,8 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
  * Provides an instance of MutableNotificationExpediteService and NotificationExpediteService.
  *
  * This should generally be used in the global module of an app.
+ *
+ * @returns an array of NestJS providers for both MutableNotificationExpediteService and NotificationExpediteService
  */
 export function provideMutableNotificationExpediteService(): Provider[] {
   return [
@@ -162,7 +166,10 @@ export function provideMutableNotificationExpediteService(): Provider[] {
  * Convenience function that exports NotificationExpediteService and MutableNotificationExpediteService.
  *
  * This should generally be used in the global module of an app.
+ *
+ * @returns an array of abstract classes to export from the NestJS module
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exportMutableNotificationExpediteService(): Abstract<any>[] {
   return [NotificationExpediteService, MutableNotificationExpediteService];
 }

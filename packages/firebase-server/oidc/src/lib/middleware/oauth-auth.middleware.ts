@@ -25,7 +25,7 @@ export class OidcAuthBearerTokenMiddleware implements NestMiddleware {
   async use(req: OidcAuthenticatedRequest, _res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid Authorization header');
     }
 

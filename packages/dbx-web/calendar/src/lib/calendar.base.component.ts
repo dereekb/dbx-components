@@ -8,12 +8,12 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
-import { CalendarModule } from 'angular-calendar';
+import { CalendarDatePipe } from 'angular-calendar';
 
 @Component({
   selector: 'dbx-calendar-base',
   standalone: true,
-  imports: [MatButtonModule, MatButtonToggleModule, DbxButtonSpacerDirective, MatIconModule, CalendarModule, FlexLayoutModule],
+  imports: [MatButtonModule, MatButtonToggleModule, DbxButtonSpacerDirective, MatIconModule, CalendarDatePipe, FlexLayoutModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './calendar.base.component.html'
 })

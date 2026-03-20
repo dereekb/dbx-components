@@ -1,7 +1,6 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type MaterialFormFieldConfig } from '../../field';
-import { PickableItemFieldItem, type PickableValueFieldsFieldProps } from './pickable.field.directive';
-export { PickableItemFieldItem };
+import { type PickableValueFieldsFieldProps } from './pickable.field.directive';
 
 /**
  * Configuration for a pickable item field that displays selected values as chips or a list.

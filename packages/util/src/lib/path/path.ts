@@ -847,7 +847,6 @@ export function expandSlashPathPathMatcherPartToDecisionFunctions(path: SlashPat
   const indexMatchingDecisionFunctions: SlashPathPathMatcherFunction[] = [];
 
   targetPathPartsInput.forEach((part, _index) => {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (typeof part) {
       case 'number': {
         // Currently only SlashPathPathMatcherPartCode.WILDCARD (0) exists; treat as wildcard
@@ -961,7 +960,6 @@ export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeV
   if (Array.isArray(input)) {
     pathMatcherConfig = { targetPath: input };
   } else {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (typeof input) {
       case 'string':
         pathMatcherConfig = { targetPath: [input] };

@@ -22,6 +22,14 @@ export interface CalcomOAuthFactoryConfig {
 
 export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
 
+/**
+ * Creates a {@link CalcomOAuthFactory} that produces configured Cal.com OAuth instances.
+ * Supports both API key authentication (static token, no refresh) and full OAuth
+ * refresh token flow with automatic token rotation.
+ *
+ * @param factoryConfig - configuration including optional fetch factory and error logging
+ * @returns a factory function that accepts a CalcomOAuthConfig and produces a CalcomOAuth instance
+ */
 export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): CalcomOAuthFactory {
   const fetchHandler = calcomRateLimitedFetchHandler();
 
@@ -63,7 +71,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
     // MARK: API Key Auth (static token, no refresh)
     if (useApiKey) {
       const apiKeyToken: CalcomAccessToken = {
-        accessToken: config.apiKey!,
+        accessToken: config.apiKey as string,
         refreshToken: '',
         expiresIn: Number.MAX_SAFE_INTEGER,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 100), // 100 years
@@ -168,6 +176,11 @@ export interface CalcomOAuthAccessTokenFactoryConfig {
 
 /**
  * Creates a CalcomAccessTokenFactory with multi-tier caching.
+ * Checks the in-memory cache first, then the external cache, and finally refreshes
+ * from the token refresher if no valid token is available.
+ *
+ * @param config - configuration including the token refresher, optional cache, and expiration buffer
+ * @returns a CalcomAccessTokenFactory that returns a valid access token on each call
  */
 export function calcomOAuthAccessTokenFactory(config: CalcomOAuthAccessTokenFactoryConfig): CalcomAccessTokenFactory {
   const { tokenRefresher, accessTokenCache, tokenExpirationBuffer: inputTokenExpirationBuffer } = config;
@@ -209,7 +222,7 @@ export function calcomOAuthAccessTokenFactory(config: CalcomOAuthAccessTokenFact
       if (currentToken) {
         try {
           await accessTokenCache?.updateCachedToken(currentToken);
-        } catch (e) {
+        } catch {
           // do nothing
         }
       }

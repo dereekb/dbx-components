@@ -51,7 +51,7 @@ describe('DbxLoadingButton', () => {
 @Component({
   template: `
     <div>
-      <button dbxButton [dbxLoadingButton]="context"></button>
+      <button dbxButton [dbxLoadingButton]="context">Loading</button>
     </div>
   `,
   standalone: true,

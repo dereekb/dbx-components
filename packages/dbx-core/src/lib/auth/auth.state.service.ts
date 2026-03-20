@@ -27,9 +27,13 @@ import { type DbxAppAuthFullState } from './state/state';
   providedIn: 'root'
 })
 export class DbxAppAuthStateService {
-  /** NgRx store instance typed to the full auth state. */
+  /**
+   * NgRx store instance typed to the full auth state.
+   */
   readonly store = inject(Store<DbxAppAuthFullState>);
 
-  /** Observable of the current {@link DbxAppAuthStateUser} from the NgRx store. */
+  /**
+   * Observable of the current {@link DbxAppAuthStateUser} from the NgRx store.
+   */
   readonly authStateUser$ = this.store.select(fromDbxAppAuth.selectDbxAppAuthUser);
 }

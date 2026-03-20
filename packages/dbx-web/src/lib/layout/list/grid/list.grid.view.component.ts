@@ -152,6 +152,7 @@ export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueL
 export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   private readonly _gridSizeOverride = inject(DbxValueListGridSizeDirective, { optional: true });
 
+  // eslint-disable-next-line @angular-eslint/no-input-rename
   readonly inputGridConfig = input<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>(undefined, { alias: 'grid' });
   readonly gridConfigFromGridSizeSignal = toSignal(this._gridSizeOverride?.gridSize$ ?? of(undefined));
 

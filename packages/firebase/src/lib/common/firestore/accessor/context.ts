@@ -12,11 +12,17 @@ import { type FirestoreDocumentDataAccessorFactory } from './accessor';
  * - BATCH: Operations within a Firestore write batch (atomic writes only, no reads)
  */
 export enum FirestoreDocumentContextType {
-  /** Standard context with no special transactional semantics */
+  /**
+   * Standard context with no special transactional semantics
+   */
   NONE = 'none',
-  /** Operations within a Firestore transaction (atomic reads and writes) */
+  /**
+   * Operations within a Firestore transaction (atomic reads and writes)
+   */
   TRANSACTION = 'transaction',
-  /** Operations within a Firestore write batch (atomic writes only) */
+  /**
+   * Operations within a Firestore write batch (atomic writes only)
+   */
   BATCH = 'batch'
 }
 

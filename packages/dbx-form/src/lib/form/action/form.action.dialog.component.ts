@@ -97,6 +97,9 @@ export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, 
 
   /**
    * Action handler that marks the action as successful and closes the dialog with the submitted value.
+   *
+   * @param value - The submitted form value
+   * @param context - The action context used to signal success
    */
   readonly handleSubmitValue: WorkUsingContext<O> = (value, context) => {
     context.success();
@@ -111,14 +114,12 @@ export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, 
    * @returns A reference to the opened dialog, which resolves to the submitted value or `undefined`.
    */
   static openDialogWithForm<O>(matDialog: MatDialog, config: DbxFormActionDialogComponentConfig<O>): MatDialogRef<DbxFormActionDialogComponent<O>, Maybe<O>> {
-    const dialogRef = matDialog.open(DbxFormActionDialogComponent<O>, {
+    return matDialog.open(DbxFormActionDialogComponent<O>, {
       width: '90vw',
       maxHeight: '300px',
       maxWidth: '600px',
       ...config.dialog,
       data: config
     });
-
-    return dialogRef;
   }
 }

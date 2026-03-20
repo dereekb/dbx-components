@@ -33,10 +33,11 @@ export interface IsWebsiteUrlValidatorConfig {
 }
 
 /**
- * Angular Form ValidationFn for checking isDivisibleBy the input divisor.
+ * Angular form validator that checks whether the control value is a valid website URL,
+ * optionally requiring an http/https prefix, allowing port numbers, and restricting to specific domains.
  *
- * @param divisor
- * @returns
+ * @param config - Optional validation configuration for prefix, port, and domain requirements
+ * @returns A ValidatorFn that validates website URLs
  */
 export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): ValidatorFn {
   const { requirePrefix, allowPorts, validDomains: inputValidDomains } = config ?? {};

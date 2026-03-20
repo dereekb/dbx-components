@@ -1,7 +1,6 @@
 /**
  * A function that returns a boolean.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type BooleanReturnFunction = (...args: any[]) => boolean;
 
 /**
@@ -13,9 +12,7 @@ export type BooleanReturnFunction = (...args: any[]) => boolean;
  */
 export function invertBooleanReturnFunction<F extends BooleanReturnFunction>(decisionFn: F, invert = true): F {
   if (invert) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((...args: any[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result: boolean = (decisionFn as any).call(undefined, ...args);
       return !result;
     }) as F;

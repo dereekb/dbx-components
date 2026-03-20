@@ -33,7 +33,7 @@ export class DbxErrorWidgetViewComponent {
 
   readonly errorWithCodeSignal = computed<Maybe<DbxInjectionComponentConfig>>(() => {
     const currentError = this.error();
-    const error: Maybe<ReadableErrorWithCode> = currentError && currentError.code ? (currentError as ReadableErrorWithCode) : undefined;
+    const error: Maybe<ReadableErrorWithCode> = currentError?.code ? (currentError as ReadableErrorWithCode) : undefined;
 
     let config: Maybe<DbxInjectionComponentConfig>;
 

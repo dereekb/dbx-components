@@ -73,6 +73,9 @@ export interface StorageFileUploadHandlerConfig {
 
 /**
  * Default implementation of StorageFileUploadHandler.
+ *
+ * @param config - Configuration providing the storage service and file upload config factory.
+ * @returns A StorageFileUploadHandler that manages resumable file uploads.
  */
 export function storageFileUploadHandler(config: StorageFileUploadHandlerConfig): StorageFileUploadHandler {
   const { storageService, storageFileUploadConfigFactory } = config;
@@ -269,7 +272,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
   const multiUploadsSubscriptionObject = new MultiSubscriptionObject();
 
   // begin the upload for each file
-  const allFiles = Array.from(files);
+  const allFiles = [...files];
 
   // unsubscribe from all previous uploads
   multiUploadsSubscriptionObject.unsub();
@@ -528,7 +531,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
     // run upload task for each file
     const fileTuples = allFiles.map((file, index) => [file, index] as const);
 
-    runAsyncTasksForValues(fileTuples, runUploadTaskForFile, {
+    void runAsyncTasksForValues(fileTuples, runUploadTaskForFile, {
       maxParallelTasks,
       retriesAllowed: 0 // no retries allowed
     }).then(() => {

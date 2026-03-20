@@ -216,7 +216,7 @@ describe('firebaseModelsService', () => {
       describe('InContextFirebaseModelLoader', () => {
         describe('loadModelForKey()', () => {
           it('should return a document for the input key', async () => {
-            const result = await mockFirebaseModelServices('mockItem', context).loadModelForKey(item.documentRef.path);
+            const result = mockFirebaseModelServices('mockItem', context).loadModelForKey(item.documentRef.path);
             expect(result).toBeDefined();
             expect(result.documentRef.path).toBe(item.documentRef.path);
           });

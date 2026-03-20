@@ -39,7 +39,7 @@ export class DbxButtonSegueDirective {
         const segueRef = this.segueRef();
 
         if (segueRef) {
-          this.dbxRouterService.go(segueRef);
+          void this.dbxRouterService.go(segueRef);
         }
       })
     );

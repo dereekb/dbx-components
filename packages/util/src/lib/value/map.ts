@@ -49,13 +49,11 @@ export type MapSameFunction<I> = MapFunction<I, I>;
 /**
  * Derives an asynchronous variant of a MapFunction, allowing the output to be either a value or a Promise.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AsyncMapFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I, PromiseOrValue<O>> : never;
 
 /**
  * Derives an array variant of a MapFunction that maps each element individually, producing an array of results.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MapArrayFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I[], O[]> : never;
 
 /**

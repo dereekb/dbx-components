@@ -4,7 +4,6 @@ import { type POJOKey } from './object';
 /**
  * An object with values of a specific type keyed by either string or number or symbols.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ObjectMap<T, K extends keyof any = string | number | symbol> = Record<K, T>;
 
 /**
@@ -102,7 +101,6 @@ export type MapObjectKeyFunction<M> = <K extends keyof M>(key: K, value: M[K]) =
  */
 export function mapObjectKeysFunction<M extends object>(mapKeyFn: MapObjectKeyFunction<M>): MapObjectKeysFunction<M> {
   return (object: M) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const target: any = {};
 
     Object.entries(object).forEach(([key, value]) => {

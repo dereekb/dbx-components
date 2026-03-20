@@ -35,7 +35,7 @@ export default [
     }
   },
   {
-    files: ['**/*.{ts,tsx,mts,cts}'],
+    files: ['**/*.{ts,tsx,mts,cts,html}'],
     rules: {
       'import/no-unresolved': 'off',
       'import/namespace': 'off'
@@ -70,8 +70,11 @@ export default [
     files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     // Override or add rules here
     rules: {
+      '@typescript-eslint/no-explicit-any': 'off', // disabled: any is used intentionally throughout the codebase
       '@typescript-eslint/no-inferrable-types': 'off',
-      '@typescript-eslint/no-unnecessary-condition': 'off' // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
+      '@typescript-eslint/no-unnecessary-condition': 'off', // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
+      '@typescript-eslint/no-empty-object-type': 'off', // disabled: empty object types are used intentionally
+      '@typescript-eslint/no-empty-interface': 'off' // disabled: empty interfaces are used intentionally for extensibility
     }
   },
   {

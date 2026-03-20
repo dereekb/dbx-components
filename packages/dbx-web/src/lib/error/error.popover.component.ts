@@ -15,9 +15,13 @@ export const DEFAULT_ERROR_POPOVER_KEY = 'error';
  * Configuration for opening an error popover via {@link DbxErrorPopoverComponent.openPopover}.
  */
 export interface DbxErrorPopoverConfig {
-  /** The element that the popover should be anchored to. */
+  /**
+   * The element that the popover should be anchored to.
+   */
   readonly origin: ElementRef;
-  /** The error to display in the popover. */
+  /**
+   * The error to display in the popover.
+   */
   readonly error: ReadableError;
 }
 

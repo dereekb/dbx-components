@@ -67,7 +67,7 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
     return this.contextGrantedModelRoles.roleMap;
   }
 
-  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): GrantedRoleTruthMap<M> {
+  truthMap<M extends GrantedRoleTruthMapObject<unknown, R>>(input: M): GrantedRoleTruthMap<M> {
     return this._roleReader.truthMap(input);
   }
 
@@ -120,18 +120,19 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
   }
 
   throwDoesNotExistError(): never {
-    const error = this.contextGrantedModelRoles.context.makeDoesNotExistError?.(this.contextGrantedModelRoles) ?? new Error(contextGrantedModelRolesReaderDoesNotExistErrorMessage(this.contextGrantedModelRoles));
-    throw error;
+    throw this.contextGrantedModelRoles.context.makeDoesNotExistError?.(this.contextGrantedModelRoles) ?? new Error(contextGrantedModelRolesReaderDoesNotExistErrorMessage(this.contextGrantedModelRoles));
   }
 
   throwPermissionError(role?: ArrayOrValue<R>): never {
-    const error = this.contextGrantedModelRoles.context.makePermissionError?.(this.contextGrantedModelRoles, role) ?? new Error(contextGrantedModelRolesReaderPermissionErrorMessage(this.contextGrantedModelRoles, role));
-    throw error;
+    throw this.contextGrantedModelRoles.context.makePermissionError?.(this.contextGrantedModelRoles, role) ?? new Error(contextGrantedModelRolesReaderPermissionErrorMessage(this.contextGrantedModelRoles, role));
   }
 }
 
 /**
  * Creates a new ContextGrantedModelRolesReader for the input model.
+ *
+ * @param service - the in-model-context permission service to read roles from
+ * @returns a promise resolving to a {@link ContextGrantedModelRolesReader} for the model
  */
 export function contextGrantedModelRolesReader<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(service: InModelContextFirebaseModelPermissionService<C, T, D, R>): Promise<ContextGrantedModelRolesReader<C, T, D, R>> {
   return service.roleMap().then((x) => new ContextGrantedModelRolesReaderInstance(x));
@@ -140,14 +141,14 @@ export function contextGrantedModelRolesReader<C extends FirebasePermissionError
 /**
  * Creates the default permission error message.
  *
- * @param contextGrantedModelRoles
- * @param role
- * @returns
+ * @param contextGrantedModelRoles - the granted model roles context to generate the message from
+ * @param roles - the required role(s) that were not satisfied
+ * @returns a human-readable permission error message string
  */
 export function contextGrantedModelRolesReaderPermissionErrorMessage(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, roles?: ArrayOrValue<GrantedRole>) {
   let message = `Permissions Error ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
 
-  if (roles && roles?.length) {
+  if (roles?.length) {
     message = `${message}: required role(s) "${roles}"`;
   }
 
@@ -157,11 +158,9 @@ export function contextGrantedModelRolesReaderPermissionErrorMessage(contextGran
 /**
  * Creates the default does not exist error message.
  *
- * @param contextGrantedModelRoles
- * @param role
- * @returns
+ * @param contextGrantedModelRoles - the granted model roles context to generate the message from
+ * @returns a human-readable does-not-exist error message string
  */
 export function contextGrantedModelRolesReaderDoesNotExistErrorMessage(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>) {
-  const message = `Does Not Exist ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
-  return message;
+  return `Does Not Exist ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
 }

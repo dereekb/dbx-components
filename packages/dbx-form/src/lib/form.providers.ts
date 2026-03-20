@@ -11,6 +11,13 @@ export interface ProvideDbxFormConfigurationConfig {
   readonly defaultDateTimePresets?: Maybe<DateTimePresetConfiguration[]>;
 }
 
+/**
+ * Provides the core dbx-form configuration including Material form field defaults,
+ * date adapter, and optional date-time presets.
+ *
+ * @param config - Optional configuration for the date adapter and default date-time presets
+ * @returns Environment providers for dbx-form
+ */
 export function provideDbxFormConfiguration(config?: ProvideDbxFormConfigurationConfig): EnvironmentProviders {
   const { provideDateAdapter, defaultDateTimePresets } = config ?? {};
 

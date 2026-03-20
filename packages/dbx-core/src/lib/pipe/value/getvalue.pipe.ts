@@ -20,7 +20,9 @@ import { type GetterOrValue, getValueFromGetter } from '@dereekb/util';
   pure: false
 })
 export class GetValuePipe implements PipeTransform {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transform<T, A = any>(input: GetterOrValue<T>, args?: A): T {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return getValueFromGetter(input as any, args);
   }
 }
@@ -42,7 +44,9 @@ export class GetValuePipe implements PipeTransform {
   pure: true
 })
 export class GetValueOncePipe implements PipeTransform {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transform<T, A = any>(input: GetterOrValue<T>, args?: A): T {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return getValueFromGetter(input as any, args);
   }
 }

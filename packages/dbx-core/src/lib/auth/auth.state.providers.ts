@@ -19,5 +19,5 @@ import { DbxAppAuthEffects } from './state/effect/auth.effect';
  * @see {@link fromDbxAppAuth}
  */
 export function provideDbxAppAuthState(): EnvironmentProviders {
-  return makeEnvironmentProviders([provideState(fromDbxAppAuth.featureKey, fromDbxAppAuth.reducers), provideEffects(DbxAppAuthEffects)]);
+  return makeEnvironmentProviders([provideState(fromDbxAppAuth.FEATURE_KEY, fromDbxAppAuth.reducers), provideEffects(DbxAppAuthEffects)]);
 }

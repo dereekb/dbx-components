@@ -148,7 +148,6 @@ export interface ZohoSignEventHandlerConfigurer extends HandlerBindAccessor<Zoho
 
 export const zohoSignEventHandlerConfigurerFactory = handlerConfigurerFactory<ZohoSignEventHandlerConfigurer, ZohoSignWebhookEvent, ZohoSignWebhookOperationType>({
   configurerForAccessor: (accessor: HandlerBindAccessor<ZohoSignWebhookEvent, ZohoSignWebhookOperationType>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<ZohoSignWebhookEvent<any>, any, ZohoSignWebhookOperationType>(accessor, (x) => x as ZohoSignWebhookEvent<any>);
 
     const configurer: ZohoSignEventHandlerConfigurer = {

@@ -960,7 +960,6 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
       current = use != null ? ({ block: use, priority } as DateCellRangePriorityPair<B>) : sorted[i];
       next = sorted[i + 1];
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next may be undefined when sorted[i+1] is out of bounds
       if (next) {
         nextStartIndex = next.block.i;
 
@@ -1104,7 +1103,6 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- current may be undefined when sorted is empty
     if (current != null) {
       // if current != null, then atleast one block was input/remaining.
       const lastStartIndex = current.block.i;

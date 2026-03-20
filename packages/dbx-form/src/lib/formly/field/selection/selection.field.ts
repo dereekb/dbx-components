@@ -102,7 +102,7 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
  */
 export function addValueSelectionOptionFunction<T>(label?: string | undefined): (options: ValueSelectionOption<T>[]) => ValueSelectionOption<T>[] {
   return (options: ValueSelectionOption<T>[]) => {
-    const hasClear = options.findIndex((x) => (x as ValueSelectionOptionClear).clear) !== -1;
+    const hasClear = options.some((x) => (x as ValueSelectionOptionClear).clear);
 
     if (hasClear) {
       return options;

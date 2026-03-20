@@ -27,7 +27,7 @@ export function provideCalendarScheduleSelectionStoreIfParentIsUnavailable(): Pr
   return {
     provide: DbxCalendarScheduleSelectionStore,
     useFactory: (parentInjector: Injector, dbxCalendarScheduleSelectionStoreInjectionBlock?: DbxCalendarScheduleSelectionStoreProviderBlock, dbxCalendarScheduleSelectionStore?: DbxCalendarScheduleSelectionStore) => {
-      if (!dbxCalendarScheduleSelectionStore || (dbxCalendarScheduleSelectionStore && dbxCalendarScheduleSelectionStoreInjectionBlock != null && dbxCalendarScheduleSelectionStoreInjectionBlock.dbxCalendarScheduleSelectionStore === dbxCalendarScheduleSelectionStore)) {
+      if (!dbxCalendarScheduleSelectionStore || (dbxCalendarScheduleSelectionStore && dbxCalendarScheduleSelectionStoreInjectionBlock?.dbxCalendarScheduleSelectionStore === dbxCalendarScheduleSelectionStore)) {
         // create a new dbxCalendarScheduleSelectionStore to use
         const injector = Injector.create({ providers: [{ provide: DbxCalendarScheduleSelectionStore }], parent: parentInjector });
         dbxCalendarScheduleSelectionStore = injector.get(DbxCalendarScheduleSelectionStore);

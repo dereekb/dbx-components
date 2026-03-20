@@ -10,6 +10,7 @@ import { asArray } from '@dereekb/util';
  *
  * @param inputCompletions - the current list of completed checkpoint strings
  * @param handleTaskResult - the handler result containing removal instructions
+ * @returns the filtered completions array with specified checkpoints removed
  *
  * @example
  * ```ts
@@ -20,6 +21,7 @@ import { asArray } from '@dereekb/util';
  * // remaining === ['validate', 'cleanup']
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function removeFromCompletionsArrayWithTaskResult<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(inputCompletions: S[], handleTaskResult: Pick<NotificationTaskServiceHandleNotificationTaskResult<any, S>, 'removeAllCompletedCheckpoints' | 'removeFromCompletedCheckpoints'>) {
   const { removeAllCompletedCheckpoints, removeFromCompletedCheckpoints } = handleTaskResult;
 

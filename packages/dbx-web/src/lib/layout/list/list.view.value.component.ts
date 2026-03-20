@@ -5,7 +5,7 @@ import { type DbxValueListItem, type AbstractDbxValueListViewConfig, type DbxVal
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
-import { type Maybe, ModelKeyRef, spaceSeparatedCssClasses, UniqueModel } from '@dereekb/util';
+import { type Maybe, type ModelKeyRef, spaceSeparatedCssClasses, type UniqueModel } from '@dereekb/util';
 import { type DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
 import { MatListModule, MatNavList } from '@angular/material/list';
@@ -42,7 +42,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
       }
       @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
         <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
-          <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
+          <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
             @if (item.icon) {
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
             }
@@ -100,6 +100,10 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
  *
  * Uses the item's {@link DbxValueListItem.key} when available for stable identity across
  * data updates, falling back to a prefixed index string to avoid collisions with key values.
+ *
+ * @param index - the item's position index in the list
+ * @param item - the list item whose identity key is resolved
+ * @returns the item's key, itemValue key/id, or a prefixed index string as a fallback
  */
 export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackByFunction<DbxValueListItem<unknown>> = (index: number, item: DbxValueListItem<unknown>) => item?.key ?? (item?.itemValue as Partial<ModelKeyRef>)?.key ?? (item?.itemValue as Partial<UniqueModel>)?.id ?? `__list__${index}__`;
 
@@ -130,6 +134,7 @@ export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackB
 })
 export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxListView = inject(DbxListView<T>);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for generic group delegate compatibility
   private readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I> = inject<Maybe<DbxValueListViewGroupDelegate<any, T, I>>>(DbxValueListViewGroupDelegate, { optional: true }) ?? defaultDbxValueListViewGroupDelegate();
 
   private readonly _trackBy$ = this.dbxListView.trackBy$ ?? of(undefined);
@@ -138,6 +143,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly items = input<Maybe<DbxValueListItemConfig<T, I>[]>>();
   readonly emitAllClicks = input<Maybe<boolean>>();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for generic group type compatibility
   readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
     switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
     shareReplay(1)
@@ -148,11 +154,9 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 
   onClickItem(item: I) {
     // do not emit clicks for disabled items.
-    if (!item.disabled) {
-      if (this.emitAllClicks() || !item.anchor || anchorTypeForAnchor(item.anchor) === 'plain') {
-        // only emit clicks for items with no anchor, or plain anchors.
-        this.onClickValue(item.itemValue);
-      }
+    if (!item.disabled && (this.emitAllClicks() || !item.anchor || anchorTypeForAnchor(item.anchor) === 'plain')) {
+      // only emit clicks for items with no anchor, or plain anchors.
+      this.onClickValue(item.itemValue);
     }
   }
 

@@ -96,8 +96,9 @@ export class DbxFirebaseAuthLoginService {
   /**
    * Used to register a provider. If a provider is already registered, this will override it by default.
    *
-   * @param provider
-   * @param override
+   * @param provider - The login provider to register.
+   * @param override - Whether to override an existing provider of the same type. Defaults to true.
+   * @returns True if the provider was registered, false if it already existed and override was false.
    */
   register(provider: DbxFirebaseAuthLoginProvider, override: boolean = true): boolean {
     if (override || !this._providers.has(provider.loginMethodType)) {
@@ -131,6 +132,8 @@ export class DbxFirebaseAuthLoginService {
   // MARK: Enable/Disable
   /**
    * Enables all providers and any providers that will be registered.
+   *
+   * @param enableAll - Whether to enable all providers. Defaults to true.
    */
   setEnableAll(enableAll = true) {
     this._enableAll = enableAll;
@@ -155,11 +158,11 @@ export class DbxFirebaseAuthLoginService {
 
   // MARK: Get
   getRegisteredTypes(): FirebaseLoginMethodType[] {
-    return Array.from(this._providers.keys());
+    return [...this._providers.keys()];
   }
 
   getEnabledTypes(): FirebaseLoginMethodType[] {
-    return this._enableAll ? this.getRegisteredTypes() : Array.from(this._enabled);
+    return this._enableAll ? this.getRegisteredTypes() : [...this._enabled];
   }
 
   getLoginProvider(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProvider> {

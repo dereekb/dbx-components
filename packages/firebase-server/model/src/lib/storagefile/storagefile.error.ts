@@ -19,6 +19,8 @@ import { internalServerError, preconditionConflictError } from '@dereekb/firebas
 
 /**
  * Creates an error indicating that a storage file model has already been initialized.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_MODEL_ALREADY_INITIALIZED error code
  */
 export function storageFileModelAlreadyInitializedError() {
   return preconditionConflictError({
@@ -29,6 +31,8 @@ export function storageFileModelAlreadyInitializedError() {
 
 /**
  * Creates an error indicating that the StorageFile is not flagged for group sync.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC error code
  */
 export function storageFileNotFlaggedForGroupsSyncError() {
   return preconditionConflictError({
@@ -39,6 +43,8 @@ export function storageFileNotFlaggedForGroupsSyncError() {
 
 /**
  * Creates an error indicating that the target uploaded file does not exist in storage.
+ *
+ * @returns a precondition-conflict HttpsError with the UPLOADED_FILE_DOES_NOT_EXIST error code
  */
 export function uploadedFileDoesNotExistError() {
   return preconditionConflictError({
@@ -49,6 +55,8 @@ export function uploadedFileDoesNotExistError() {
 
 /**
  * Creates an error indicating that the file is not allowed to be initialized (rejected by the check function).
+ *
+ * @returns a precondition-conflict HttpsError with the UPLOADED_FILE_NOT_ALLOWED_TO_BE_INITIALIZED error code
  */
 export function uploadedFileIsNotAllowedToBeInitializedError() {
   return preconditionConflictError({
@@ -61,6 +69,7 @@ export function uploadedFileIsNotAllowedToBeInitializedError() {
  * Creates an error indicating that the file initialization failed with the given result type.
  *
  * @param data - error data containing the result type that caused the failure
+ * @returns an internal-server HttpsError with the UPLOADED_FILE_INITIALIZATION_FAILED error code and the result type
  */
 export function uploadedFileInitializationFailedError(data: UploadedFileInitializationFailedErrorData) {
   return internalServerError({
@@ -74,6 +83,8 @@ export function uploadedFileInitializationFailedError(data: UploadedFileInitiali
 
 /**
  * Creates an error indicating that the initialization result was discarded (e.g., the created file no longer exists).
+ *
+ * @returns an internal-server HttpsError with the UPLOADED_FILE_INITIALIZATION_DISCARDED error code
  */
 export function uploadedFileInitializationDiscardedError() {
   return internalServerError({
@@ -84,6 +95,8 @@ export function uploadedFileInitializationDiscardedError() {
 
 /**
  * Creates an error indicating that the StorageFile is not in a valid state for processing.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_PROCESSING_NOT_ALLOWED_FOR_INVALID_STATE error code
  */
 export function storageFileProcessingNotAllowedForInvalidStateError() {
   return preconditionConflictError({
@@ -94,6 +107,8 @@ export function storageFileProcessingNotAllowedForInvalidStateError() {
 
 /**
  * Creates an error indicating that the StorageFile is not queued for processing.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING error code
  */
 export function storageFileProcessingNotQueuedForProcessingError() {
   return preconditionConflictError({
@@ -104,6 +119,8 @@ export function storageFileProcessingNotQueuedForProcessingError() {
 
 /**
  * Creates an error indicating that no processor is configured for the StorageFile's type.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_PROCESSING_NOT_AVAILABLE_FOR_TYPE error code
  */
 export function storageFileProcessingNotAvailableForTypeError() {
   return preconditionConflictError({
@@ -114,6 +131,8 @@ export function storageFileProcessingNotAvailableForTypeError() {
 
 /**
  * Creates an error indicating that the StorageFile has already finished processing.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_ALREADY_PROCESSED error code
  */
 export function storageFileAlreadyProcessedError() {
   return preconditionConflictError({
@@ -124,6 +143,8 @@ export function storageFileAlreadyProcessedError() {
 
 /**
  * Creates an error indicating that the StorageFile is not flagged for deletion.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_NOT_FLAGGED_FOR_DELETION error code
  */
 export function storageFileNotFlaggedForDeletionError() {
   return preconditionConflictError({
@@ -134,6 +155,8 @@ export function storageFileNotFlaggedForDeletionError() {
 
 /**
  * Creates an error indicating that the StorageFile's scheduled deletion time has not yet passed.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_CANNOT_BE_DELETED_YET error code
  */
 export function storageFileCannotBeDeletedYetError() {
   return preconditionConflictError({
@@ -144,6 +167,8 @@ export function storageFileCannotBeDeletedYetError() {
 
 /**
  * Creates an error indicating that the StorageFileGroup is still queued for initialization and cannot be operated on.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_GROUP_QUEUED_FOR_INITIALIZATION error code
  */
 export function storageFileGroupQueuedForInitializationError() {
   return preconditionConflictError({
@@ -154,6 +179,8 @@ export function storageFileGroupQueuedForInitializationError() {
 
 /**
  * Creates an error indicating that the required model key or storageFileId is missing when creating a StorageFileGroup.
+ *
+ * @returns a precondition-conflict HttpsError with the STORAGE_FILE_GROUP_CREATE_INPUT error code
  */
 export function createStorageFileGroupInputError() {
   return preconditionConflictError({

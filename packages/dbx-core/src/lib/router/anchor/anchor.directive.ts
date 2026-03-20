@@ -33,17 +33,27 @@ import { toObservable } from '@angular/core/rxjs-interop';
  */
 @Directive()
 export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbxAnchor {
-  /** Model input for the segue ref or router link to navigate to. */
+  /**
+   * Model input for the segue ref or router link to navigate to.
+   */
   readonly ref = model<Maybe<SegueRefOrSegueRefRouterLink>>();
 
-  /** Model input for the full anchor configuration object. */
+  /**
+   * Model input for the full anchor configuration object.
+   */
   readonly anchor = model<Maybe<T>>();
-  /** Model input for externally controlling the disabled state. */
+  /**
+   * Model input for externally controlling the disabled state.
+   */
   readonly disabled = model<Maybe<boolean>>();
-  /** Model input for externally controlling the selected state. */
+  /**
+   * Model input for externally controlling the selected state.
+   */
   readonly selected = model<Maybe<boolean>>();
 
-  /** Computed anchor that merges the `ref` input with the `anchor` input, preferring `ref` when set. */
+  /**
+   * Computed anchor that merges the `ref` input with the `anchor` input, preferring `ref` when set.
+   */
   readonly anchorSignal = computed(() => {
     const ref = this.ref();
     const anchor = this.anchor();
@@ -57,7 +67,9 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     return result;
   });
 
-  /** Computed selected state that combines the `selected` input with the anchor's own `selected` property. */
+  /**
+   * Computed selected state that combines the `selected` input with the anchor's own `selected` property.
+   */
   readonly selectedSignal = computed(() => {
     const selected = this.selected();
     const anchor = this.anchorSignal();
@@ -65,14 +77,18 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     return selected || anchor?.selected;
   });
 
-  /** Computed {@link ClickableAnchorType} derived from the current anchor and disabled state. */
+  /**
+   * Computed {@link ClickableAnchorType} derived from the current anchor and disabled state.
+   */
   readonly typeSignal = computed(() => {
     const anchor = this.anchorSignal();
     const disabled = this.disabled();
     return anchorTypeForAnchor(anchor, disabled);
   });
 
-  /** Computed disabled state that combines the `disabled` input with the anchor's own `disabled` property. */
+  /**
+   * Computed disabled state that combines the `disabled` input with the anchor's own `disabled` property.
+   */
   readonly disabledSignal = computed(() => {
     const disabled = this.disabled();
     const anchor = this.anchorSignal();
@@ -80,9 +96,13 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     return disabled || anchor?.disabled;
   });
 
-  /** Computed URL extracted from the current anchor's `url` property. */
+  /**
+   * Computed URL extracted from the current anchor's `url` property.
+   */
   readonly urlSignal = computed(() => this.anchorSignal()?.url);
-  /** Computed target (e.g., `_blank`) extracted from the current anchor's `target` property. */
+  /**
+   * Computed target (e.g., `_blank`) extracted from the current anchor's `target` property.
+   */
   readonly targetSignal = computed(() => this.anchorSignal()?.target);
 
   readonly anchor$: Observable<Maybe<T>> = toObservable(this.anchorSignal);
@@ -91,22 +111,38 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
   readonly type$: Observable<ClickableAnchorType> = toObservable(this.typeSignal);
 
   // MARK: Accessors
-  /** Sets the segue ref or router link for this anchor. */
+  /**
+   * Sets the segue ref or router link for this anchor.
+   *
+   * @param ref - The segue ref or router link to set.
+   */
   setRef(ref: Maybe<SegueRefOrSegueRefRouterLink>) {
     this.ref.set(ref);
   }
 
-  /** Sets the full anchor configuration object. */
+  /**
+   * Sets the full anchor configuration object.
+   *
+   * @param anchor - The anchor configuration to set.
+   */
   setAnchor(anchor: Maybe<T>) {
     this.anchor.set(anchor);
   }
 
-  /** Sets the external disabled state override. */
+  /**
+   * Sets the external disabled state override.
+   *
+   * @param disabled - Whether the anchor should be disabled.
+   */
   setDisabled(disabled: Maybe<boolean>) {
     this.disabled.set(disabled);
   }
 
-  /** Sets the external selected state override. */
+  /**
+   * Sets the external selected state override.
+   *
+   * @param selected - Whether the anchor should be selected.
+   */
   setSelected(selected: Maybe<boolean>) {
     this.selected.set(selected);
   }

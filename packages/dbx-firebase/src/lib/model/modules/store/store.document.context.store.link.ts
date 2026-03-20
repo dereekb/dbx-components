@@ -9,6 +9,8 @@ export const DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN = new InjectionToke
 
 /**
  * Provides the DbxFirebaseDocumentStoreContextStore.
+ *
+ * @returns Array of Angular providers that create and register a DbxFirebaseDocumentStoreContextStore.
  */
 export function provideDbxFirebaseDocumentStoreContextStore(): Provider[] {
   return [
@@ -29,6 +31,8 @@ export function provideDbxFirebaseDocumentStoreContextStore(): Provider[] {
  * Links a DbxFirebaseDocumentStore to parent DbxFirebaseDocumentStoreContextStore instances.
  *
  * This should be called in an Angular injection context.
+ *
+ * @param store - The document store to register with all available parent context stores.
  */
 export function linkDocumentStoreToParentContextStores(store: DbxFirebaseDocumentStore<any, any>) {
   const contextStores = inject(DBX_FIREBASE_DOCUMENT_STORE_CONTEXT_STORE_TOKEN, { optional: true });

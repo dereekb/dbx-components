@@ -4,7 +4,9 @@ import { Component, type Type, computed, inject, input } from '@angular/core';
 import { containsStringAnyCase, type Maybe, type ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
-/** Injection config for a single login list item, enriched with the login method type for tracking. */
+/**
+ * Injection config for a single login list item, enriched with the login method type for tracking.
+ */
 export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionComponentConfig & Pick<DbxFirebaseAuthLoginProvider, 'loginMethodType'>;
 
 /**
@@ -40,8 +42,7 @@ export class DbxFirebaseLoginListComponent {
     const omitProviderTypes = this.omitProviderTypes();
 
     const baseTypes = providerTypes ? asArray(providerTypes) : this.dbxFirebaseAuthLoginService.getEnabledTypes();
-    const types = omitProviderTypes ? excludeValuesFromArray(baseTypes, asArray(omitProviderTypes)) : baseTypes;
-    return types;
+    return omitProviderTypes ? excludeValuesFromArray(baseTypes, asArray(omitProviderTypes)) : baseTypes;
   });
 
   readonly providersSignal = computed(() => {
@@ -67,7 +68,6 @@ export class DbxFirebaseLoginListComponent {
       mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass as Type<unknown>, loginMethodType: x.loginMethodType });
     }
 
-    const configs = providers.map(mapFn);
-    return configs;
+    return providers.map(mapFn);
   });
 }

@@ -30,6 +30,7 @@ export class FirebaseServerError<T extends ServerErrorResponseData = ServerError
    * structured error details from the error's `details` property if available.
    *
    * @param error - the Firebase error from an `HttpsCallable` failure
+   * @returns a new {@link FirebaseServerError} wrapping the given Firebase error with structured server error details
    */
   static fromFirebaseError(error: FirebaseError): FirebaseServerError {
     let details: Maybe<ServerError<ServerErrorResponseData>> = (error as Partial<{ details: ServerError }>).details;

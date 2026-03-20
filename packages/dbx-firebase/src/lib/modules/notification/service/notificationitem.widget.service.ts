@@ -17,8 +17,9 @@ export class DbxFirebaseNotificationItemWidgetService {
   /**
    * Used to register a item widget. If widget for the given type is already registered, this will override it by default.
    *
-   * @param provider
-   * @param override
+   * @param provider - The notification item widget entry to register.
+   * @param override - Whether to override an existing widget for the same notification template type. Defaults to true.
+   * @returns True if the widget was registered, false if it already existed and override was false or the template type was unknown.
    */
   register(provider: DbxFirebaseNotificationItemWidgetEntryRegistration, override: boolean = true): boolean {
     const { componentClass, notificationTemplateType } = provider;

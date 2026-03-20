@@ -15,18 +15,32 @@ export interface FirebaseServerEnvServiceRef<S extends FirebaseServerEnvService 
  * backed by a {@link FirebaseServerEnvironmentConfig}.
  */
 export abstract class FirebaseServerEnvService {
-  /** Whether the server is running in a test/CI environment. */
+  /**
+   * Whether the server is running in a test/CI environment.
+   */
   abstract readonly isTestingEnv: boolean;
-  /** Whether the server is running in production. */
+  /**
+   * Whether the server is running in production.
+   */
   abstract readonly isProduction: boolean;
-  /** Whether the server is running in a staging environment. */
+  /**
+   * Whether the server is running in a staging environment.
+   */
   abstract readonly isStaging: boolean;
-  /** Whether developer/debug tools are enabled for this environment. */
+  /**
+   * Whether developer/debug tools are enabled for this environment.
+   */
   abstract readonly developerToolsEnabled: boolean;
-  /** Whether the development scheduler (for cron-like tasks) is enabled. */
+  /**
+   * Whether the development scheduler (for cron-like tasks) is enabled.
+   */
   abstract readonly developmentSchedulerEnabled: boolean;
-  /** The application's public URL, if configured. */
+  /**
+   * The application's public URL, if configured.
+   */
   abstract readonly appUrl: Maybe<string>;
-  /** Parsed URL details for the application URL. */
+  /**
+   * Parsed URL details for the application URL.
+   */
   abstract readonly appUrlDetails: Maybe<WebsiteUrlDetails>;
 }

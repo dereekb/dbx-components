@@ -2,6 +2,8 @@
 
 /**
  * Whether or not the current host is localhost. Useful for determining local dev environments.
+ *
+ * @returns True if the current hostname is `localhost`
  */
 export function isLocalhost(): boolean {
   return window.location.hostname === 'localhost';

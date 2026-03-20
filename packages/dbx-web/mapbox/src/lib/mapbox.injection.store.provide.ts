@@ -27,7 +27,7 @@ export function provideMapboxInjectionStoreIfParentIsUnavailable(): Provider {
   return {
     provide: DbxMapboxInjectionStore,
     useFactory: (parentInjector: Injector, dbxMapboxInjectionStoreInjectionBlock?: DbxMapboxInjectionStoreProviderBlock, dbxMapboxInjectionStore?: DbxMapboxInjectionStore) => {
-      if (!dbxMapboxInjectionStore || (dbxMapboxInjectionStore && dbxMapboxInjectionStoreInjectionBlock != null && dbxMapboxInjectionStoreInjectionBlock.dbxMapboxInjectionStore === dbxMapboxInjectionStore)) {
+      if (!dbxMapboxInjectionStore || (dbxMapboxInjectionStore && dbxMapboxInjectionStoreInjectionBlock?.dbxMapboxInjectionStore === dbxMapboxInjectionStore)) {
         // create a new dbxMapboxInjectionStore to use
         const injector = Injector.create({ providers: [{ provide: DbxMapboxInjectionStore }], parent: parentInjector });
         dbxMapboxInjectionStore = injector.get(DbxMapboxInjectionStore);

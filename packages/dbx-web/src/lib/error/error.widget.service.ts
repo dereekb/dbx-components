@@ -91,6 +91,7 @@ export class DbxErrorWidgetService {
     if (override || !this._entries.has(entry.code)) {
       this._entries.set(entry.code, {
         ...entry,
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         widgetComponentClass: entry.widgetComponentClass ?? entry.componentClass
       });
       return true;
@@ -101,7 +102,7 @@ export class DbxErrorWidgetService {
 
   // MARK: Get
   getErrorWidgetIdentifiers(): StringErrorCode[] {
-    return Array.from(this._entries.keys());
+    return [...this._entries.keys()];
   }
 
   getDefaultErrorWidgetEntry(): Maybe<DbxErrorWidgetEntry> {

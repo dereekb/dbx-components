@@ -44,6 +44,7 @@ import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUse
  * and initializes with an empty notifications array.
  *
  * @param model - the model key to associate the summary with
+ * @returns a blank {@link NotificationSummary} with creation timestamp and empty notifications
  *
  * @example
  * ```ts
@@ -198,8 +199,8 @@ export interface ExpandNotificationRecipientsResult {
  *
  * Recipients are each configurable and may be defined with as little info as a single contact info, or have multiple contact info pieces associated with them.
  *
- * @param input
- * @returns
+ * @param input - the notification, box, auth service, and recipient configuration
+ * @returns channel-specific recipient lists (email, text, notification summary) ready for delivery
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
   const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients: inputOnlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
@@ -213,7 +214,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
   const onlySendToExplicitlyEnabledRecipients = inputOnlySendToExplicitlyEnabledRecipients === true; // defaults to false
   const onlyEmailExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
-  const onlySendPushNotificationExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
+  // const onlySendPushNotificationExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
   const onlySendNotificationSummaryExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
 
   const { canSendToGlobalRecipients, canSendToBoxRecipients, canSendToExplicitRecipients } = allowedNotificationRecipients(recipientFlag);
@@ -275,7 +276,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const notificationUserRecipientConfigs = new Map<NotificationUserId, NotificationUserDefaultNotificationBoxRecipientConfig>();
 
   if (nonNotificationBoxUidRecipientConfigs.size > 0) {
-    const nonNotificationBoxRecipientUids = Array.from(nonNotificationBoxUidRecipientConfigs.keys());
+    const nonNotificationBoxRecipientUids = [...nonNotificationBoxUidRecipientConfigs.keys()];
     const notificationUserDocuments = loadDocumentsForIds(notificationUserAccessor, nonNotificationBoxRecipientUids);
 
     // Attempt to load the NotificationUser for each uid.
@@ -356,7 +357,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
   // load user details from auth service
   const allUserDetails = await Promise.all(
-    Array.from(recipientUids).map((uid) =>
+    [...recipientUids].map((uid) =>
       authService
         .userContext(uid)
         .loadDetails()
@@ -619,18 +620,16 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
           notificationSummaryId = x.s;
         }
 
-        if (notificationSummaryId) {
-          if (!notificationSummaryKeysSet.has(notificationSummaryId)) {
-            const name = displayName || x.n;
-            const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
-              notificationSummaryId,
-              otherRecipient: x,
-              name
-            };
+        if (notificationSummaryId && !notificationSummaryKeysSet.has(notificationSummaryId)) {
+          const name = displayName || x.n;
+          const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
+            notificationSummaryId,
+            otherRecipient: x,
+            name
+          };
 
-            notificationSummaries.push(notificationSummary);
-            explicitOtherRecipientNotificationSummaryIds.delete(notificationSummaryId);
-          }
+          notificationSummaries.push(notificationSummary);
+          explicitOtherRecipientNotificationSummaryIds.delete(notificationSummaryId);
         }
       }
     }
@@ -718,6 +717,7 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
  * Also re-applies send exclusions to the updated config array.
  *
  * @param input - the current state and intended change
+ * @returns the updated box config array and notification box recipient, if changes occurred
  * @throws notificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user
  * @throws notificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config
  */

@@ -66,6 +66,7 @@ export type MailgunNotificationEmailSendService = NotificationEmailSendService;
  * and dispatches them through the Mailgun API.
  *
  * @param config - service configuration including the Mailgun service, template builders, and batch size
+ * @returns a {@link NotificationEmailSendService} that batches and sends emails through Mailgun
  *
  * @example
  * ```ts
@@ -110,6 +111,7 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
       const templateRequestArrays: ArrayOrValue<MailgunTemplateEmailRequest>[] = await Promise.all(
         messageSendBatches.map(async ([sendTemplateName, messages]) => {
           const sendTemplateNameToLowercase = sendTemplateName.toLowerCase();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const builderForKey = lowercaseKeysMessageBuilders[sendTemplateNameToLowercase as any];
 
           if (!builderForKey) {

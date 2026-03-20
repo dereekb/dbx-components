@@ -93,7 +93,6 @@ export interface ZohoSignPageResult<T> {
  * A fetch function that accepts paginated input and returns a {@link ZohoSignPageResult}.
  * Used as the underlying data source for {@link zohoSignFetchPageFactory}.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint requires any
 export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R extends ZohoSignPageResult<any>> = (input: I) => Promise<R>;
 
 /**
@@ -118,14 +117,12 @@ export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R exten
  * }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint requires any
 export function zohoSignFetchPageFactory<I extends ZohoSignPageFilter, R extends ZohoSignPageResult<any>>(fetch: ZohoSignFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({
     ...defaults,
     fetch,
     readFetchPageResultInfo: function (result: R): PromiseOrValue<ReadFetchPageResultInfo> {
       return {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- page_context may be missing in malformed responses
         hasNext: result.page_context?.has_more_rows ?? false
       };
     },

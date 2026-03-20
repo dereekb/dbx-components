@@ -10,19 +10,33 @@ export interface FirebaseAuthError {
   readonly customData: unknown;
 }
 
-/** Error code when the user account is not found. */
+/**
+ * Error code when the user account is not found.
+ */
 export const FIREBASE_AUTH_USER_NOT_FOUND_ERROR = 'auth/user-not-found';
-/** Error code when the password is incorrect. */
+/**
+ * Error code when the password is incorrect.
+ */
 export const FIREBASE_AUTH_WRONG_PASSWORD = 'auth/wrong-password';
-/** Error code for a network request error (client SDK). */
+/**
+ * Error code for a network request error (client SDK).
+ */
 export const FIREBASE_AUTH_NETWORK_REQUEST_ERROR = 'auth/network-request-error';
-/** Error code for a failed network request (client SDK). */
+/**
+ * Error code for a failed network request (client SDK).
+ */
 export const FIREBASE_AUTH_NETWORK_REQUEST_FAILED = 'auth/network-request-failed';
-/** Error code when a phone number is already associated with another account. */
+/**
+ * Error code when a phone number is already associated with another account.
+ */
 export const FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR = 'auth/phone-number-already-exists';
-/** Error code when an email is already associated with another account. */
+/**
+ * Error code when an email is already associated with another account.
+ */
 export const FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR = 'auth/email-already-exists';
-/** Error code when the provided phone number is not a valid E.164 string. */
+/**
+ * Error code when the provided phone number is not a valid E.164 string.
+ */
 export const FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR = 'auth/invalid-phone-number';
 
 /**
@@ -32,6 +46,7 @@ export const FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR = 'auth/invalid-phone-numb
  * suitable for display in the UI.
  *
  * @param inputError - the Firebase Auth error to convert
+ * @returns a {@link ReadableError} with a human-readable message suitable for display
  *
  * @example
  * ```ts

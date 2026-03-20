@@ -183,7 +183,7 @@ export interface ZohoCrmChangeObjectDetails {
 /**
  * Base Zoho Crm field data type.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ZohoCrmRecordFieldsData {}
 
 export interface ZohoCrmRecordDraftStateData {

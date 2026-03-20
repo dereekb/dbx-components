@@ -84,15 +84,14 @@ export type FirestoreIdBatchVerifierFactory<T, I extends PrimativeKey> = Factory
 export function firestoreIdBatchVerifierFactory<T, I extends PrimativeKey>(config: FirestoreIdBatchVerifierFactoryConfig<T, I>): FirestoreIdBatchVerifierFactory<T, I> {
   const { readKeys } = config;
   const fieldToQuery: keyof T | '_id' = (config as FirestoreIdBatchVerifierFactoryFieldsQueryConfig<T, I>).fieldToQuery;
-  const makeQueryConstraints = (config as FirestoreIdBatchVerifierFactoryMakeQueryConfig<T, I>).makeQueryConstraints ? (config as FirestoreIdBatchVerifierFactoryMakeQueryConfig<T, I>).makeQueryConstraints : fieldToQuery === '_id' ? (ids: I[]) => whereDocumentId('in', ids) : (ids: I[]) => where(fieldToQuery as string, 'in', ids);
+  const makeQueryConstraints = (config as Partial<FirestoreIdBatchVerifierFactoryMakeQueryConfig<T, I>>).makeQueryConstraints ?? (fieldToQuery === '_id' ? (ids: I[]) => whereDocumentId('in', ids) : (ids: I[]) => where(fieldToQuery as string, 'in', ids));
 
   return (collection: FirestoreCollectionLike<T>) => {
     const verify: IdBatchVerifierFunction<I> = async (keys: I[]) => {
       const constraints = makeQueryConstraints(keys);
       const results = await collection.query(constraints).getDocs();
-      const keysInResults: I[] = results.docs.map((x) => readKeys(x)).flat();
-      const unusedKeys = unique(keys, keysInResults);
-      return unusedKeys;
+      const keysInResults: I[] = results.docs.flatMap((x) => readKeys(x));
+      return unique(keys, keysInResults);
     };
 
     const verifier: IdBatchVerifier<I, I> = {

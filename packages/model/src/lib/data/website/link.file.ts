@@ -165,8 +165,7 @@ export const WEBSITE_FILE_LINK_ENCODE_SEPARATOR = '|';
  * ```
  */
 export function encodeWebsiteFileLinkToWebsiteLinkEncodedData(input: WebsiteFileLink): EncodedWebsiteFileLink {
-  const encoded = [input.type, input.mime, input.data, input.name].map((x) => x || '').join(WEBSITE_FILE_LINK_ENCODE_SEPARATOR);
-  return encoded;
+  return [input.type, input.mime, input.data, input.name].map((x) => x || '').join(WEBSITE_FILE_LINK_ENCODE_SEPARATOR);
 }
 
 /**

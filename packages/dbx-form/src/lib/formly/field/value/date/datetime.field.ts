@@ -19,6 +19,8 @@ export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate' | 'timeOnly'>
 /**
  * Factory that returns an observable of a date-time picker configuration
  * that automatically selects the next upcoming time, rounded down to the nearest minute.
+ *
+ * @returns An observable emitting a picker configuration with takeNextUpcomingTime and roundDownToMinute enabled
  */
 export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePickerConfiguration> = () =>
   of({
@@ -28,6 +30,11 @@ export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePic
 
 /**
  * Same as DateTime field but with the Date input hidden by default.
+ *
+ * @param config - Optional time field configuration overrides
+ * @returns A {@link FormlyFieldConfig} configured as a time-only input
+ *
+ * @param config - Optional time field configuration overrides
  */
 export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
   return dateTimeField({
@@ -86,7 +93,9 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
   return fieldConfig;
 }
 
-/** Configuration for a single date within a date range (no time mode or sync). */
+/**
+ * Configuration for a single date within a date range (no time mode or sync).
+ */
 export type DateDateRangeFieldDateConfig = Omit<DateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
 
 /**
@@ -155,7 +164,9 @@ export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFie
   };
 }
 
-/** Configuration for a single time within a date-time range (no full-day options). */
+/**
+ * Configuration for a single time within a date-time range (no full-day options).
+ */
 export type DateTimeRangeFieldTimeConfig = Omit<DateDateRangeFieldDateConfig, 'allDayLabel' | 'fullDayFieldName' | 'fullDayInUTC'>;
 
 /**

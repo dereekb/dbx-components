@@ -67,8 +67,8 @@ export class DbxFirebaseStorageFileDownloadStorage {
    *
    * The pair may be expired.
    *
-   * @param key
-   * @returns
+   * @param input - The Firestore model ID or key identifying the storage file.
+   * @returns Observable that emits the cached download URL pair, or undefined if not found.
    */
   getDownloadUrlPair(input: FirestoreModelIdInput): Observable<DbxFirebaseStorageFileDownloadUrlPair | undefined> {
     const id = firestoreModelId(input);
@@ -123,7 +123,7 @@ export class DbxFirebaseStorageFileDownloadStorage {
 
   private _getUserDownloadCacheForStorageKey(storageKey: string, uid: FirebaseAuthUserId): Observable<DbxFirebaseStorageFileDownloadUserCache> {
     return this.storageAccessor.get(storageKey).pipe(
-      catchError((e) => {
+      catchError((_e) => {
         return of(undefined);
       }),
       map((result) => result ?? { uid, pairs: {} })
@@ -131,7 +131,6 @@ export class DbxFirebaseStorageFileDownloadStorage {
   }
 
   getStorageKeyForUid(uid: FirebaseAuthUserId): string {
-    const storageKey = `sf_dl_cache_${uid}`;
-    return storageKey;
+    return `sf_dl_cache_${uid}`;
   }
 }

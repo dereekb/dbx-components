@@ -64,6 +64,11 @@ export interface ProvideAppFirestoreCollectionsConfig<T> {
 /**
  * Creates a NestJS provider that initializes a Firestore collections instance from the app's {@link FirestoreContext}.
  *
+ * @param config - The provide token and factory function configuration.
+ * @param config.provide - The class token to provide.
+ * @param config.useFactory - Factory that creates the collections from a FirestoreContext.
+ * @returns A tuple containing the configured NestJS provider.
+ *
  * @example
  * ```typescript
  * const [provider] = provideAppFirestoreCollections({
@@ -88,6 +93,9 @@ export interface ProvideAppFirestoreModuleMetadataConfig<T> extends ProvideAppFi
 /**
  * Generates NestJS {@link ModuleMetadata} for an app's Firestore module, including the
  * {@link FirebaseServerFirestoreContextModule} import and the app's collections provider.
+ *
+ * @param config - The Firestore collections config plus optional additional module metadata.
+ * @returns NestJS module metadata ready to be passed to the `@Module()` decorator.
  *
  * @example
  * ```typescript

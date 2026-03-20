@@ -30,6 +30,9 @@ export abstract class DbxListViewWrapper<T = unknown, S extends ListLoadingState
  * })
  * export class MyListWrapperComponent extends DbxListViewWrapper<MyItem> { ... }
  * ```
+ *
+ * @param sourceType - the component class to register as the DbxListViewWrapper provider
+ * @returns an array of Angular providers that wire up the component as a DbxListViewWrapper
  */
 export function provideDbxListViewWrapper<V extends DbxListViewWrapper>(sourceType: Type<V>): Provider[] {
   return [

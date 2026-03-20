@@ -27,7 +27,7 @@ import { overrideClickElementEffect } from '../../../util/click';
         <ng-container *ngTemplateOutlet="content"></ng-container>
       }
       @case ('clickable') {
-        <a #clickable class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
+        <a #clickable class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" tabindex="0" (click)="clickAnchor()" (keydown.enter)="clickAnchor()">
           <span #childClickTarget>
             <ng-container *ngTemplateOutlet="content"></ng-container>
           </span>

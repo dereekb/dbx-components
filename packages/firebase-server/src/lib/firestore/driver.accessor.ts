@@ -23,6 +23,7 @@ interface DocRefSource {
  * @param start - A Firestore object that can resolve collection paths (e.g., Firestore instance, DocumentReference).
  * @param path - The initial collection path.
  * @param pathSegments - Optional pairs of [docId, collectionName] for subcollection traversal.
+ * @returns The resolved {@link CollectionReference} at the given path.
  * @throws Error if pathSegments length is odd (segments must come in pairs).
  *
  * @example
@@ -35,7 +36,7 @@ export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: 
   let ref = start.collection(path);
 
   if (pathSegments?.length) {
-    if (pathSegments?.length % 2 !== 0) {
+    if (pathSegments.length % 2 !== 0) {
       throw new Error(`Invalid number of path segments provided for collection. Path: "${path}" + "${pathSegments}"`);
     }
 
@@ -59,6 +60,7 @@ export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: 
  * @param start - A Firestore object that can resolve document paths (e.g., CollectionReference).
  * @param path - Optional document ID or path within the collection.
  * @param pathSegments - Optional pairs of [collectionName, docId] for subcollection traversal.
+ * @returns The resolved {@link DocumentReference} at the given path.
  *
  * @example
  * ```typescript
@@ -88,6 +90,8 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
  * Implements document/collection resolution, transaction/batch factories, and context factories
  * using the `@google-cloud/firestore` library.
  *
+ * @returns A {@link FirestoreAccessorDriver} for the Google Cloud Admin SDK.
+ *
  * @example
  * ```typescript
  * const accessorDriver = googleCloudFirestoreAccessorDriver();
@@ -103,7 +107,7 @@ export function googleCloudFirestoreAccessorDriver(): FirestoreAccessorDriver {
     transactionFactoryForFirestore:
       (firestore) =>
       async <T>(fn: TransactionFunction<T>) =>
-        await (firestore as GoogleCloudFirestore).runTransaction(fn),
+        (firestore as GoogleCloudFirestore).runTransaction(fn),
     writeBatchFactoryForFirestore: (firestore) => () => (firestore as GoogleCloudFirestore).batch(),
     defaultContextFactory: defaultFirestoreDocumentContext,
     transactionContextFactory: transactionDocumentContext as TransactionFirestoreDocumentContextFactory,

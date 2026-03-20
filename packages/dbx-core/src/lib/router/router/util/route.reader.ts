@@ -131,7 +131,7 @@ export function dbxRouteParamReaderInstance<T>(dbxRouterService: DbxRouterServic
     setParamValue(value: MaybeObservableOrValueGetter<T>) {
       combineLatest([paramKey$, asObservableFromGetter(value)])
         .pipe(first())
-        .subscribe(([paramKey, value]) => dbxRouterService.updateParams({ [paramKey]: value }));
+        .subscribe(([paramKey, value]) => void dbxRouterService.updateParams({ [paramKey]: value }));
     }
   };
 

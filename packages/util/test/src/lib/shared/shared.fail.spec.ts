@@ -46,7 +46,7 @@ describe('testDoneCallbackRef()', () => {
     const ref = testDoneCallbackRef();
     const testError = new Error('test error');
 
-    ref.done.fail(testError);
+    ref.done.fail!(testError);
 
     await expect(() => ref._promise.promise).rejects.toThrow(testError);
   });
@@ -55,7 +55,7 @@ describe('testDoneCallbackRef()', () => {
     const ref = testDoneCallbackRef();
     const errorString = 'test error';
 
-    ref.done.fail(errorString);
+    ref.done.fail!(errorString);
 
     await expect(() => ref._promise.promise).rejects.toThrow(errorString);
   });

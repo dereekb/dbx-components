@@ -38,6 +38,9 @@ export type CompactModeOption = CompactMode | boolean;
  * compactModeFromInput(true);  // CompactMode.COMPACT
  * compactModeFromInput(CompactMode.FULL);  // CompactMode.FULL
  * ```
+ *
+ * @param input - a boolean or CompactMode value to normalize
+ * @returns the normalized CompactMode enum value
  */
 export function compactModeFromInput(input: CompactMode | boolean): CompactMode {
   if (typeof input === 'boolean') {
@@ -59,6 +62,10 @@ export function compactModeFromInput(input: CompactMode | boolean): CompactMode 
  *   defaultMode: CompactMode.FULL
  * });
  * ```
+ *
+ * @param mode$ - an observable of the current compact mode, or nullish to use the default
+ * @param config - the mapping configuration containing values for each mode and an optional default
+ * @returns an observable emitting the mapped value corresponding to the current compact mode
  */
 export function mapCompactModeObs<T>(mode$: Maybe<Observable<CompactMode>>, config: CompactModeDefaultOptions<T>): Observable<Maybe<T>> {
   const modeObs = mode$ ?? of(config.defaultMode ?? CompactMode.FULL);

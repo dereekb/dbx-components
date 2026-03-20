@@ -20,7 +20,9 @@ export enum ScheduledFunctionDevelopmentFunctionTypeEnum {
  */
 export interface ScheduledFunctionDevelopmentFirebaseFunctionParams {
   readonly type: ScheduledFunctionDevelopmentFunctionTypeEnum;
-  /** Name of the scheduled function to run (required when type is 'run'). */
+  /**
+   * Name of the scheduled function to run (required when type is 'run').
+   */
   readonly run?: string;
 }
 

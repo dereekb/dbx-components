@@ -6,7 +6,7 @@ import { type AuthRole } from '@dereekb/util';
 /**
  * NgRx feature key for the auth user sub-state within the auth feature.
  */
-export const dbxAppAuthUserFeatureKey = 'user';
+export const DBX_APP_AUTH_USER_FEATURE_KEY = 'user';
 
 /**
  * Shape of the authenticated user's state stored in the NgRx store.
@@ -28,13 +28,21 @@ export const dbxAppAuthUserFeatureKey = 'user';
  * @see {@link AuthUserState} for possible values of `userState`.
  */
 export interface DbxAppAuthStateUser {
-  /** Unique identifier for the authenticated user. Defaults to {@link NO_AUTH_USER_IDENTIFIER} when no user is logged in. */
+  /**
+   * Unique identifier for the authenticated user. Defaults to {@link NO_AUTH_USER_IDENTIFIER} when no user is logged in.
+   */
   userId: AuthUserIdentifier;
-  /** Whether the user has completed the onboarding/setup flow. */
+  /**
+   * Whether the user has completed the onboarding/setup flow.
+   */
   isOnboarded: boolean;
-  /** Current authentication lifecycle state of the user. */
+  /**
+   * Current authentication lifecycle state of the user.
+   */
   userState: AuthUserState;
-  /** Array of authorization roles assigned to the current user. */
+  /**
+   * Array of authorization roles assigned to the current user.
+   */
   userRoles: AuthRole[];
 }
 
@@ -57,5 +65,5 @@ export const reducer = createReducer(
   on(DbxAppAuthUserActions.setUserIdentifier, (state, { id: userId }) => ({ ...state, userId })),
   on(DbxAppAuthUserActions.setUserIsOnboarded, (state, { isOnboarded }) => ({ ...state, isOnboarded })),
   on(DbxAppAuthUserActions.setUserState, (state, { state: userState }) => ({ ...state, userState })),
-  on(DbxAppAuthUserActions.setUserRoles, (state, { roles: userRoles }) => ({ ...state, userRoles: Array.from(userRoles) }))
+  on(DbxAppAuthUserActions.setUserRoles, (state, { roles: userRoles }) => ({ ...state, userRoles: [...userRoles] }))
 );

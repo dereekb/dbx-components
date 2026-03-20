@@ -33,6 +33,7 @@ export type UserUploadsFolderSlashPathFactory = FactoryWithRequiredInput<SlashPa
  * Creates a {@link UserUploadsFolderSlashPathFactory} that generates per-user upload folder paths.
  *
  * @param inputBasePath - optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
+ * @returns a factory function that generates per-user upload folder slash paths
  *
  * @example
  * ```ts
@@ -61,6 +62,11 @@ export interface UserUploadsFolderStoragePathFactoryConfig {
 
 /**
  * Creates a {@link UserUploadsFolderStoragePathFactory} that includes the storage bucket ID.
+ *
+ * @param root0 - the configuration object
+ * @param root0.bucketId - the storage bucket ID to include in each generated path
+ * @param root0.basePath - optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
+ * @returns a factory function that generates per-user StoragePath values including the bucket ID
  *
  * @example
  * ```ts

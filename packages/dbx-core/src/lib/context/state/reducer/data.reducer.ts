@@ -5,7 +5,7 @@ import { DbxAppContextActions } from '../action';
 /**
  * The feature key for these items/reducers.
  */
-export const dbxAppContextStateFeatureKey = 'data';
+export const DBX_APP_CONTEXT_STATE_FEATURE_KEY = 'data';
 
 /**
  * The typings for this feature.

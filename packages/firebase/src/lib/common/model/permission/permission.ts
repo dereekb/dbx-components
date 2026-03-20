@@ -10,13 +10,21 @@ import { type FirebasePermissionErrorContext } from './permission.context';
  * Passed to role-mapping functions so they can inspect the model's state to determine permissions.
  */
 export interface FirebasePermissionServiceModel<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  /** The {@link FirestoreDocument} wrapper. */
+  /**
+   * The {@link FirestoreDocument} wrapper.
+   */
   readonly document: D;
-  /** The raw Firestore document snapshot. */
+  /**
+   * The raw Firestore document snapshot.
+   */
   readonly snapshot: DocumentSnapshot<T>;
-  /** Whether the document exists in Firestore. */
+  /**
+   * Whether the document exists in Firestore.
+   */
   readonly exists: boolean;
-  /** The deserialized document data, or `undefined` if it doesn't exist. */
+  /**
+   * The deserialized document data, or `undefined` if it doesn't exist.
+   */
   readonly data: Maybe<T>;
 }
 

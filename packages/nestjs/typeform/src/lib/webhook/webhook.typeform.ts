@@ -43,7 +43,6 @@ export interface TypeformEventHandlerConfigurer extends HandlerBindAccessor<Unty
 
 export const typeformEventHandlerConfigurerFactory = handlerConfigurerFactory<TypeformEventHandlerConfigurer, UntypedTypeformWebhookEvent, TypeformWebhookEventType>({
   configurerForAccessor: (accessor: HandlerBindAccessor<UntypedTypeformWebhookEvent, TypeformWebhookEventType>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<TypeformWebhookEvent<any>, any, TypeformWebhookEventType>(accessor, typeFormWebhookEvent);
 
     const configurer: TypeformEventHandlerConfigurer = {

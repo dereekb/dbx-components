@@ -11,7 +11,9 @@ import { type E164PhoneNumberWithOptionalExtension, type MailToUrlInput, mailToU
  * ```
  */
 export interface ClickableFunction {
-  /** Optional click handler invoked when the element is clicked. */
+  /**
+   * Optional click handler invoked when the element is clicked.
+   */
   readonly onClick?: (event?: Maybe<MouseEvent>) => void;
 }
 

@@ -41,12 +41,10 @@ export interface RootSingleItemFirestoreCollection<T, D extends FirestoreDocumen
  * @returns A RootSingleItemFirestoreCollection instance configured for the specified document
  */
 export function makeRootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: RootSingleItemFirestoreCollectionConfig<T, D>): RootSingleItemFirestoreCollection<T, D> {
-  const collection = build<RootSingleItemFirestoreCollection<T, D>>({
+  return build<RootSingleItemFirestoreCollection<T, D>>({
     base: makeFirestoreCollection(config),
     build: (x) => {
       extendFirestoreCollectionWithSingleDocumentAccessor<RootSingleItemFirestoreCollection<T, D>, T, D>(x, config.singleItemIdentifier);
     }
   });
-
-  return collection;
 }

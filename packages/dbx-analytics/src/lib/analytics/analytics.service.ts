@@ -26,7 +26,9 @@ export abstract class DbxAnalyticsEventEmitterService {
   /**
    * @deprecated When sending an event with no data, use {@link sendEventType} instead.
    */
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   abstract sendEventData(name: AnalyticsEventName): void;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   abstract sendEventData(name: AnalyticsEventName, data: AnalyticsEventData): void;
   abstract sendEvent(event: AnalyticsEvent): void;
   abstract sendPageView(page?: string): void;

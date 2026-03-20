@@ -3,7 +3,9 @@ import { OidcEntryCollectionStore } from './oidcentry.collection.store';
 import { type OidcEntry, type OidcEntryDocument } from '@dereekb/firebase';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';
 
-/** Directive providing a {@link OidcEntryCollectionStore} for querying {@link OidcEntry} documents. */
+/**
+ * Directive providing a {@link OidcEntryCollectionStore} for querying {@link OidcEntry} documents.
+ */
 @Directive({
   selector: '[dbxOidcEntryCollection]',
   providers: provideDbxFirebaseCollectionStoreDirective(OidcEntryCollectionStoreDirective, OidcEntryCollectionStore),

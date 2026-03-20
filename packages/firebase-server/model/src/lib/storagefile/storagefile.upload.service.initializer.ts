@@ -98,6 +98,7 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
  *
  * @param error - the error that caused the permanent failure
  * @param createdFile - optional path to a file that was created before the error and should be deleted
+ * @returns a permanent failure result with the error and optional created file reference
  */
 export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown, createdFile?: Maybe<StoragePathRef>): StorageFileInitializeFromUploadServiceInitializerResult {
   return {
@@ -182,6 +183,7 @@ export interface StorageFileInitializeFromUploadServiceConfig {
  * 4. Optionally, previous files for the same purpose/user are flagged for deletion
  *
  * @param config - service configuration including determiners, initializers, and storage references
+ * @returns a {@link StorageFileInitializeFromUploadService} with type detection and upload initialization
  *
  * @example
  * ```ts
@@ -226,10 +228,9 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
   const determiner = combineUploadFileTypeDeterminers({
     determiners: allDeterminers,
-    ...{
-      completeSearchOnFirstMatch: true,
-      ...config.combineDeterminersConfig
-    }
+
+    completeSearchOnFirstMatch: true,
+    ...config.combineDeterminersConfig
   });
 
   // validate initializers
@@ -254,6 +255,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
   return {
     checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized ?? asDecisionFunction(true),
     determineUploadFileType,
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     initializeFromUpload: async (input: StorageFileInitializeFromUploadInput) => {
       const determinerResult = await determineUploadFileType(input);
 
@@ -265,11 +267,9 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
       if (determinerResult) {
         const { input: fileDetailsAccessor } = determinerResult;
-
         resultType = 'success';
 
         const initializer = initializers[determinerResult.type];
-
         if (initializer) {
           try {
             const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });

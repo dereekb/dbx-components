@@ -5,6 +5,7 @@ import { DbxModelStateActions } from '../actions';
 /**
  * NgRx state slice for model module configuration.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DbxModelModuleStateConfiguration {}
 
 /**
@@ -31,6 +32,7 @@ export const reducer = createReducer(
 /**
  * @deprecated use STATE_FEATURE_KEY instead.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const stateFeatureKey = STATE_FEATURE_KEY;
 /**
  * @deprecated use INITIAL_STATE instead.

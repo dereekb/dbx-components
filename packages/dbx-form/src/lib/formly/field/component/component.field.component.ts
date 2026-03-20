@@ -2,10 +2,14 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { FieldType, type FormlyFieldConfig } from '@ngx-formly/core';
 
-/** Configuration for the custom component to inject into the form field. Alias for {@link DbxInjectionComponentConfig}. */
+/**
+ * Configuration for the custom component to inject into the form field. Alias for {@link DbxInjectionComponentConfig}.
+ */
 export type DbxFormComponentFieldConfig<T> = DbxInjectionComponentConfig<T>;
 
-/** Formly field config extended with a {@link DbxFormComponentFieldConfig} for custom component rendering. */
+/**
+ * Formly field config extended with a {@link DbxFormComponentFieldConfig} for custom component rendering.
+ */
 export interface DbxFormComponentFormlyFieldConfig<T = unknown> extends FormlyFieldConfig {
   componentField: DbxFormComponentFieldConfig<T>;
 }

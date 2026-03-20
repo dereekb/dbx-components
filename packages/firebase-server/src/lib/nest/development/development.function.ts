@@ -27,6 +27,7 @@ export type OnCallDevelopmentFunction<N, I = unknown, O = unknown> = (request: N
  * @typeParam N - The NestJS context type.
  */
 export type OnCallDevelopmentFunctionMap<N> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- handler map values accept arbitrary input/output types
   readonly [key: string]: OnCallDevelopmentFunction<N, any, any>;
 };
 
@@ -36,7 +37,9 @@ export type OnCallDevelopmentFunctionMap<N> = {
  * @typeParam N - The NestJS context type.
  */
 export interface OnCallDevelopmentConfig<N> {
-  /** Optional assertion run before the dev handler; throw to reject the request. */
+  /**
+   * Optional assertion run before the dev handler; throw to reject the request.
+   */
   readonly preAssert?: AssertDevelopmentRequestFunction<N, OnCallDevelopmentParams>;
 }
 
@@ -80,6 +83,9 @@ export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N
 
 /**
  * Creates a bad-request error indicating the provided development function specifier is not recognized.
+ *
+ * @param specifier - the unrecognized specifier string from the client request.
+ * @returns A bad-request error with the unknown specifier details.
  */
 export function developmentUnknownSpecifierError(specifier: DevelopmentFirebaseFunctionSpecifier) {
   return badRequestError(

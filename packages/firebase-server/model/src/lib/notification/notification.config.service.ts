@@ -57,6 +57,7 @@ export class NotificationTemplateService {
    * pre-wired with the resolved factory for that type.
    *
    * @param type - the notification template type
+   * @returns a new {@link NotificationTemplateServiceInstance} bound to the given type
    */
   templateInstanceForType(type: NotificationTemplateType): NotificationTemplateServiceInstance {
     return notificationTemplateServiceInstance(this, type);
@@ -101,6 +102,7 @@ export interface NotificationTemplateServiceInstance {
  *
  * @param service - the parent template service
  * @param type - the template type to bind
+ * @returns a {@link NotificationTemplateServiceInstance} with the resolved factory for the type
  *
  * @example
  * ```ts

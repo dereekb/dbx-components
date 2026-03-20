@@ -27,9 +27,13 @@ import { type DbxInjectionComponentConfig } from '../../injection/injection';
  * @see {@link SegueRef} for router navigation references
  */
 export interface ClickableAnchor extends ClickableFunction, MousableFunction, ClickableUrl, Partial<SegueRef> {
-  /** Whether this anchor is disabled and should not be interactive. */
+  /**
+   * Whether this anchor is disabled and should not be interactive.
+   */
   readonly disabled?: boolean;
-  /** Whether this anchor is currently in a selected/active state. */
+  /**
+   * Whether this anchor is currently in a selected/active state.
+   */
   readonly selected?: boolean;
 }
 
@@ -89,7 +93,9 @@ export type ClickableAnchorLinkSegueRef = ClickableAnchorLink & SegueRef;
  * @see {@link ClickableAnchorLink}
  */
 export interface ClickableIconAnchorLink extends Omit<ClickableAnchorLink, 'title'> {
-  /** The icon identifier (e.g., Material icon name). */
+  /**
+   * The icon identifier (e.g., Material icon name).
+   */
   readonly icon: string;
 }
 
@@ -115,7 +121,9 @@ export interface ClickableIconAnchorLink extends Omit<ClickableAnchorLink, 'titl
  * @see {@link expandClickableAnchorLinkTree} for flattening trees
  */
 export interface ClickableAnchorLinkTree extends ClickableAnchorLink {
-  /** Optional child links forming a nested navigation tree. */
+  /**
+   * Optional child links forming a nested navigation tree.
+   */
   readonly children?: ClickableAnchorLinkTree[];
 }
 

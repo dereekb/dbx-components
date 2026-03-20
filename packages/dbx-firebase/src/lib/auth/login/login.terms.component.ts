@@ -3,7 +3,9 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseAuthLoginService } from './login.service';
 
-/** Renders the configured terms of service component via dynamic injection from the login service. */
+/**
+ * Renders the configured terms of service component via dynamic injection from the login service.
+ */
 @Component({
   selector: 'dbx-firebase-login-terms',
   template: `

@@ -21,11 +21,12 @@ export default [
       '@typescript-eslint/no-deprecated': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-misused-promises': 'warn',
+      '@typescript-eslint/return-await': ['warn', 'in-try-catch'],
       '@typescript-eslint/await-thenable': 'warn',
-      '@typescript-eslint/no-unnecessary-condition': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      // '@typescript-eslint/no-unnecessary-condition' is disabled in base config (runtime guards needed despite types)
+      // '@typescript-eslint/prefer-nullish-coalescing' is disabled — `||` vs `??` is intentional in most cases
       '@typescript-eslint/prefer-optional-chain': 'warn',
-      '@typescript-eslint/switch-exhaustiveness-check': 'warn',
+      '@typescript-eslint/switch-exhaustiveness-check': ['warn', { considerDefaultExhaustiveForUnions: true }],
       '@typescript-eslint/naming-convention': [
         'warn',
         {
@@ -37,6 +38,12 @@ export default [
           trailingUnderscore: 'allow'
         }
       ]
+    }
+  },
+  {
+    files: ['**/*.action.server.ts', '**/*.action.server.*.ts'],
+    rules: {
+      'sonarjs/cognitive-complexity': 'off' // action server files are inherently complex orchestration code
     }
   },
   {

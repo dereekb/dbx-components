@@ -37,6 +37,10 @@ export interface NotificationSendMessagesResult<K> {
  *
  * Used when combining results from multiple send batches within the same channel.
  *
+ * @param a - first result to merge
+ * @param b - second result to merge
+ * @returns a new result with all recipient lists concatenated from both inputs
+ *
  * @example
  * ```ts
  * const combined = mergeNotificationSendMessagesResult(firstBatchResult, secondBatchResult);

@@ -35,12 +35,14 @@ export abstract class ActionContextStoreSourceMap<T = unknown, O = unknown> impl
   abstract sourceForKey(key: ActionKey): ActionContextStoreSource<T, O>;
   /**
    * Adds the store source for the input key.
+   *
    * @param key Action key to add the source for.
    * @param source Store source to add.
    */
   abstract addStoreSource(key: ActionKey, source: ActionContextStoreSource<T, O>): void;
   /**
    * Removes the store source for the input key.
+   *
    * @param key Action key to remove the source for.
    */
   abstract removeStoreSource(key: ActionKey): void;

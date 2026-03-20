@@ -35,6 +35,7 @@ export type DevelopmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseF
  * through a single endpoint. The function specifier and data are wrapped via {@link onCallDevelopmentParams}.
  *
  * @param configMap - maps each development function key to optional configuration
+ * @returns a factory that creates a {@link DevelopmentFirebaseFunctionMap} for a given `Functions` instance
  *
  * @example
  * ```ts

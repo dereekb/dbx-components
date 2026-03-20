@@ -12,6 +12,8 @@ export type GoogleCloudFirestoreDrivers = FirestoreDrivers;
  *
  * Bundles the server-side accessor driver and query driver, identified as `@google-cloud/firestore`.
  *
+ * @returns A complete set of {@link FirestoreDrivers} for the Google Cloud Admin SDK.
+ *
  * @example
  * ```typescript
  * const drivers = googleCloudFirestoreDrivers();

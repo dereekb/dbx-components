@@ -8,7 +8,7 @@ describe('DbxMapboxInjectionComponent', () => {
   let fixture: ComponentFixture<DbxMapboxInjectionComponent>;
 
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
       imports: [BrowserModule, DbxMapboxInjectionComponent],
       providers: [DbxMapboxInjectionStore]
     }).compileComponents();

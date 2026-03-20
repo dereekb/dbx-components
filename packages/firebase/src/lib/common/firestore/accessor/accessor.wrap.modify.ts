@@ -142,7 +142,6 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
  */
 export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldName: keyof T): ModifyBeforeSetModifierFunction<T> {
   return ({ data, documentRef }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (data as unknown as Record<any, string>)[fieldName] = documentRef.id; // copy the id to the target field
   };
 }
@@ -150,6 +149,9 @@ export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldNam
 /**
  * Creates an {@link InterceptAccessorFactoryFunction} that wraps all created accessors with
  * {@link ModifyBeforeSetFirestoreDocumentDataAccessorWrapper} using the provided config.
+ *
+ * @param config - The ModifyBeforeSetConfig defining when and how to modify documents
+ * @returns An InterceptAccessorFactoryFunction that wraps accessors with the modify-before-set behavior
  */
 export function modifyBeforeSetInterceptAccessorFactoryFunction<T extends object, D = DocumentData>(config: ModifyBeforeSetConfig<T>): InterceptAccessorFactoryFunction<T, D> {
   return interceptAccessorFactoryFunction((accessor) => new ModifyBeforeSetFirestoreDocumentDataAccessorWrapper(accessor, config));
@@ -158,6 +160,8 @@ export function modifyBeforeSetInterceptAccessorFactoryFunction<T extends object
 // MARK: Templates
 /**
  * Creates a modifier that copies the document ID to the `uid` field for {@link UserRelated} models.
+ *
+ * @returns A ModifyBeforeSetModifierFunction that sets the `uid` field to the document's ID
  */
 export function copyDocumentIdForUserRelatedModifierFunction<T extends UserRelated>(): ModifyBeforeSetModifierFunction<T> {
   return copyDocumentIdToFieldModifierFunction<T>('uid');
@@ -166,6 +170,8 @@ export function copyDocumentIdForUserRelatedModifierFunction<T extends UserRelat
 /**
  * Returns a pre-configured {@link ModifyBeforeSetConfig} for {@link UserRelated} models
  * that copies the document ID to the `uid` field on set operations (new document creation).
+ *
+ * @returns A ModifyBeforeSetConfig configured to copy the document ID to the `uid` field on set
  */
 export function copyUserRelatedDataModifierConfig<T extends UserRelated>(): ModifyBeforeSetConfig<T> {
   return {
@@ -182,6 +188,8 @@ export const COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION = cachedGetter(() 
 /**
  * Returns a typed {@link InterceptAccessorFactoryFunction} that applies the UserRelated
  * document ID copy modifier to all accessors created by the factory.
+ *
+ * @returns A typed InterceptAccessorFactoryFunction with the UserRelated document ID copy modifier applied
  */
 export function copyUserRelatedDataAccessorFactoryFunction<T extends UserRelated, D = DocumentData>(): InterceptAccessorFactoryFunction<T, D> {
   return COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION() as unknown as InterceptAccessorFactoryFunction<T, D>;

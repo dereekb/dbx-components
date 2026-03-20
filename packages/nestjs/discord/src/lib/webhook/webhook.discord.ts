@@ -69,7 +69,6 @@ export interface DiscordInteractionHandlerConfigurer extends HandlerBindAccessor
 
 export const discordInteractionHandlerConfigurerFactory = handlerConfigurerFactory<DiscordInteractionHandlerConfigurer, UntypedDiscordInteraction, DiscordInteractionType>({
   configurerForAccessor: (accessor: HandlerBindAccessor<UntypedDiscordInteraction, DiscordInteractionType>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<DiscordWebhookInteraction<any>, any, DiscordInteractionType>(accessor, discordWebhookInteraction);
 
     const configurer: DiscordInteractionHandlerConfigurer = {

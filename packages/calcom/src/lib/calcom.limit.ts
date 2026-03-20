@@ -40,6 +40,13 @@ export interface CalcomRateLimitedFetchHandlerConfig {
 
 export type CalcomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPromiseRateLimiter>;
 
+/**
+ * Creates a rate-limited fetch handler configured for Cal.com API rate limits.
+ * Automatically adjusts based on rate limit response headers and retries on 429 responses.
+ *
+ * @param config - optional rate limiter configuration overrides
+ * @returns a CalcomRateLimitedFetchHandler that enforces rate limiting
+ */
 export function calcomRateLimitedFetchHandler(config?: Maybe<CalcomRateLimitedFetchHandlerConfig>): CalcomRateLimitedFetchHandler {
   const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_CALCOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_CALCOM_API_RATE_LIMIT;
@@ -76,8 +83,8 @@ export function calcomRateLimitedFetchHandler(config?: Maybe<CalcomRateLimitedFe
             shouldRetry = true;
 
             try {
-              onTooManyRequests?.(headerDetails, response, fetchResponseError);
-            } catch (_) {
+              void onTooManyRequests?.(headerDetails, response, fetchResponseError);
+            } catch {
               // ignore logging errors
             }
           }
@@ -97,8 +104,8 @@ export function calcomRateLimitedFetchHandler(config?: Maybe<CalcomRateLimitedFe
 
         try {
           const headerDetails: CalcomRateLimitHeaderDetails = {};
-          onTooManyRequests?.(headerDetails, response, fetchResponseError);
-        } catch (_) {
+          void onTooManyRequests?.(headerDetails, response, fetchResponseError);
+        } catch {
           // ignore logging errors
         }
       }

@@ -29,6 +29,13 @@ export class CalcomOAuthAuthFailureError extends FetchRequestFactoryError {
 
 export const logCalcomOAuthErrorToConsole = logCalcomServerErrorFunction('CalcomOAuth');
 
+/**
+ * Parses a FetchResponseError from a Cal.com OAuth call into a typed error.
+ * Attempts to extract JSON error data from the response body.
+ *
+ * @param responseError - the fetch response error to parse
+ * @returns a parsed CalcomServerError or CalcomOAuthAccessTokenError, or undefined if unparseable
+ */
 export async function parseCalcomOAuthError(responseError: FetchResponseError) {
   const data: CalcomServerErrorData | undefined = await responseError.response.json().catch((_x) => undefined);
   let result: ParsedCalcomServerError | undefined;
@@ -40,6 +47,15 @@ export async function parseCalcomOAuthError(responseError: FetchResponseError) {
   return result;
 }
 
+/**
+ * Parses Cal.com OAuth server error response data into a specific error type.
+ * Handles known error codes like `invalid_grant` and delegates unknown errors
+ * to {@link parseCalcomServerErrorData}.
+ *
+ * @param calcomServerError - the parsed error data from the Cal.com OAuth response body
+ * @param responseError - the original FetchResponseError containing the HTTP response
+ * @returns a parsed error instance, or undefined if the error data is falsy
+ */
 export function parseCalcomOAuthServerErrorResponseData(calcomServerError: CalcomServerErrorData, responseError: FetchResponseError) {
   let result: ParsedCalcomServerError | undefined;
 
