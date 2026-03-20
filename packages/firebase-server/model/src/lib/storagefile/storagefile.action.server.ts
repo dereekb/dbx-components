@@ -216,7 +216,7 @@ export function createStorageFileFactory(context: BaseStorageFileServerActionsCo
   const { firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(createStorageFileParamsType, async (params) => {
-    const {} = params;
+    const _params = params;
 
     return async () => {
       // TODO: check the file exists, and pull the metadata, and create the document
@@ -664,7 +664,7 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
         // begin processing
         await beginProcessing(false);
         break;
-      case StorageFileProcessingState.PROCESSING:
+      case StorageFileProcessingState.PROCESSING: {
         // check if the processing task is still running
         const shouldCheckProcessing = !isThrottled(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS, storageFile.pat);
 
@@ -694,6 +694,7 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
           }
         }
         break;
+      }
       case StorageFileProcessingState.FAILED:
         // restart processing on failure
         await beginProcessing(true);
@@ -1006,7 +1007,7 @@ export function createStorageFileGroupFactory(context: StorageFileServerActionsC
     }
 
     return async () => {
-      return await firestoreContext.runTransaction(async (transaction) => {
+      return firestoreContext.runTransaction(async (transaction) => {
         const { storageFileGroupDocument } = await createStorageFileGroupInTransaction({ storageFileGroupRelatedModelKey }, transaction);
         return storageFileGroupDocument;
       });
@@ -1075,7 +1076,7 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
       const change: Maybe<'add' | 'remove'> = removeAllStorageFileGroups ? (existsInStorageFileGroup ? 'remove' : undefined) : !existsInStorageFileGroup ? 'add' : undefined;
 
       switch (change) {
-        case 'add':
+        case 'add': {
           // add it if it doesn't exist
           const createTemplate = calculateStorageFileGroupEmbeddedFileUpdate({
             storageFileGroup: storageFileGroup ?? { f: [] },
@@ -1098,7 +1099,8 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
           }
 
           break;
-        case 'remove':
+        }
+        case 'remove': {
           // remove it
           const removeTemplate = calculateStorageFileGroupEmbeddedFileUpdate({
             storageFileGroup: storageFileGroup ?? { f: [] },
@@ -1109,6 +1111,7 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
           storageFilesGroupsUpdated += 1;
 
           break;
+        }
         case undefined:
           // no change needed
           break;

@@ -107,7 +107,7 @@ export function googleCloudFirestoreAccessorDriver(): FirestoreAccessorDriver {
     transactionFactoryForFirestore:
       (firestore) =>
       async <T>(fn: TransactionFunction<T>) =>
-        await (firestore as GoogleCloudFirestore).runTransaction(fn),
+        (firestore as GoogleCloudFirestore).runTransaction(fn),
     writeBatchFactoryForFirestore: (firestore) => () => (firestore as GoogleCloudFirestore).batch(),
     defaultContextFactory: defaultFirestoreDocumentContext,
     transactionContextFactory: transactionDocumentContext as TransactionFirestoreDocumentContextFactory,

@@ -358,7 +358,6 @@ describe('combineLoadingStates()', () => {
 
         const expectedValue = 0;
         const obs = combineLoadingStates(a, b, c, d, e, (a, b, c, d, e) => {
-          // eslint-disable-line @typescript-eslint/max-params
           expect(a).toBeDefined();
           expect(a.a).toBe(true);
           expect(b).toBeDefined();

@@ -90,6 +90,5 @@ export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulat
  * @returns observable emitting the most recently loaded page number
  */
 export function pageItemAccumulatorCurrentPage(pageItemAccumulator: PageItemAccumulator<any, any>): Observable<number> {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
   return pageItemAccumulator.itemIteration.latestLoadedPage$;
 }

@@ -1,5 +1,5 @@
 import { type CreateNotificationDocumentPairResult, firestoreDummyKey, type NotificationDocument, type SendNotificationParams, type SendNotificationResult } from '@dereekb/firebase';
-import { type NotificationServerActions } from './notification.action.service';
+import { type NotificationServerActions } from './notification.action.server';
 import { type Abstract, Injectable, type Provider } from '@nestjs/common';
 import { type Maybe, runAsyncTasksForValues } from '@dereekb/util';
 
@@ -72,16 +72,12 @@ export function notificationExpediteServiceInstance(notificationExpediteService:
   };
 
   const enqueueCreateResult = (createResult: CreateNotificationDocumentPairResult) => {
-    let enqueued = false;
-
     enqueue(createResult.notificationDocument);
-    enqueued = true;
-
-    return enqueued;
+    return true;
   };
 
   const send = async (options?: Maybe<NotificationExpediteServiceSendNotificationOptions>) => {
-    return await runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x, options), {
+    return runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x, options), {
       nonConcurrentTaskKeyFactory: (x) => x.parent.id // only send one notification at a time for a notification box
     });
   };

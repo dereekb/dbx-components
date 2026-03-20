@@ -85,6 +85,7 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
       const cutSubject = cutStringFunction({ maxLength: NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH });
       const cutMessage = cutStringFunction({ maxLength: NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH });
 
+      // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- {} is the correct default for NotificationItemMetadata which uses any
       const messagesGroups = messagesGroupedByNotificationSummaryMapBuilder.entries() as [NotificationSummaryId, NotificationMessage<{}>[]][];
 
       return async () => {

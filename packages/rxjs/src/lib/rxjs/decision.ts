@@ -16,7 +16,6 @@ export type ObservableDecisionFunction<T> = (value: T) => Observable<boolean>;
  * @returns the inverted (or original) decision function
  */
 export function invertObservableDecision<F extends ObservableDecisionFunction<any>>(decisionFn: F, invert = true): F {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
   if (invert) {
     return ((value: unknown) => {
       const obs: Observable<boolean> = decisionFn(value);

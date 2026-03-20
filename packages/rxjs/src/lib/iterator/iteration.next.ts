@@ -71,7 +71,7 @@ export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: Ge
         const promise: Promise<PageNumber> = performTaskLoop<PageNumber>({
           initValue: firstLatestPage,
           checkContinue: async (latestPage: PageNumber) => firstValueFrom(iterationHasNextAndCanLoadMore(iteration)).then((canLoadMore) => canLoadMore && checkPageLimit(latestPage)),
-          next: async () => await iteration.nextPage()
+          next: async () => iteration.nextPage()
         });
 
         resolve(promise);

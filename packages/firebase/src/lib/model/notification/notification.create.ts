@@ -281,7 +281,13 @@ export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNo
  * Result of creating a notification document pair (document reference + data), before or after saving.
  */
 export interface CreateNotificationDocumentPairResult extends Pick<CreateNotificationTemplate, 'overrideExistingTask'> {
+  /**
+   * The notification document.
+   */
   readonly notificationDocument: NotificationDocument;
+  /**
+   * The notification data.
+   */
   readonly notification: Notification;
   /**
    * Whether or not the notification was created.

@@ -69,7 +69,6 @@ export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N
     const devFn = map[specifier];
 
     if (devFn) {
-      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- runtime guard: specifier may not exist in map
       preAssert({ request, specifier });
       return devFn({
         ...request,

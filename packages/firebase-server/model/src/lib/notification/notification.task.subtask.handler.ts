@@ -340,7 +340,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
               // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array index access may return undefined at runtime
               fn = (nonSubtaskFlows[0] ?? subtaskFlows[0])?.fn as Maybe<NotificationTaskSubtask<I, D, M, S>>;
               break;
-            default:
+            default: {
               const completedSubtasksSet = new Set(completedSubtasks);
               /**
                * Find the next flow function that hasn't had its checkpoint completed yet.
@@ -348,6 +348,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
               const nextSubtask = subtaskFlows.find((x) => !completedSubtasksSet.has(x.subtask));
               fn = nextSubtask?.fn as Maybe<NotificationTaskSubtask<I, D, M, S>>;
               break;
+            }
           }
 
           let result: NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>;
@@ -374,7 +375,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
                 // remove any completions, if applicable
                 sfps = removeFromCompletionsArrayWithTaskResult(sfps, subtaskResult);
                 break;
-              default:
+              default: {
                 sfps = unique([
                   ...removeFromCompletionsArrayWithTaskResult(sfps, subtaskResult), // remove any completions, if applicable
                   ...asArray(subtaskCompletion)
@@ -385,6 +386,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
 
                 allSubtasksDone = incompleteSubtasks.length === 0;
                 break;
+              }
             }
 
             // configure the update metadata result

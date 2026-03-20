@@ -269,7 +269,7 @@ export function initializeAllApplicableStorageFileGroupsFactory(context: Storage
         const query = storageFileGroupCollection.queryDocument(storageFileGroupsFlaggedForNeedsInitializationQuery());
         const storageFileGroupDocuments = await query.getDocs();
 
-        return await performAsyncTasks(
+        return performAsyncTasks(
           storageFileGroupDocuments,
           async (storageFileGroupDocument) => {
             return firestoreContext.runTransaction((transaction) => initializeStorageFileGroupInTransaction(initializeStorageFileGroupParams, storageFileGroupDocument, transaction));

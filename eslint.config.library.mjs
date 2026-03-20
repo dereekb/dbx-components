@@ -21,6 +21,7 @@ export default [
       '@typescript-eslint/no-deprecated': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-misused-promises': 'warn',
+      '@typescript-eslint/return-await': ['warn', 'in-try-catch'],
       '@typescript-eslint/await-thenable': 'warn',
       '@typescript-eslint/no-unnecessary-condition': 'warn',
       '@typescript-eslint/prefer-nullish-coalescing': 'warn',
@@ -37,6 +38,12 @@ export default [
           trailingUnderscore: 'allow'
         }
       ]
+    }
+  },
+  {
+    files: ['**/*.action.server.ts', '**/*.action.server.*.ts'],
+    rules: {
+      'sonarjs/cognitive-complexity': 'off' // action server files are inherently complex orchestration code
     }
   },
   {

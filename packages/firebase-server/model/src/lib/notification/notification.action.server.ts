@@ -1219,11 +1219,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             // handle the notification box's absence
             if (!notificationBox && tryRun) {
               switch (notification.st) {
-                case NotificationSendType.INIT_BOX_AND_SEND:
+                case NotificationSendType.INIT_BOX_AND_SEND: {
                   const { notificationBoxTemplate } = await createNotificationBoxInTransaction({ notificationBoxDocument }, transaction);
                   notificationBox = setIdAndKeyFromKeyIdRefOnDocumentData(notificationBoxTemplate, notificationBoxDocument);
                   createdBox = true;
                   break;
+                }
                 case NotificationSendType.SEND_IF_BOX_EXISTS:
                   // delete the notification since it won't get sent.
                   await deleteNotification();
@@ -1421,12 +1422,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                       // only run if there is no tpr reversal flagged
                       tryRunNextPart = !partTprReversal;
                       break;
-                    default:
+                    default: {
                       // check subtask tpr changes
                       nextCompleteSubTasks = asArray(allCompletedSubTasks);
                       const subtaskTprChanged = !iterablesAreSetEquivalent(previouslyCompleteSubTasks, nextCompleteSubTasks);
                       partTprReversal = !subtaskTprChanged || nextCompleteSubTasks.length <= previouslyCompleteSubTasks.length;
                       break;
+                    }
                   }
                 }
               }
@@ -1570,7 +1572,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
               });
 
-              let { es, ts, ps, ns, esr: currentEsr, tsr: currentTsr } = notification;
+              let { es, ts, ps, ns } = notification;
+              const { esr: currentEsr, tsr: currentTsr } = notification;
 
               // do emails
               let esr: EmailAddress[] | undefined;
@@ -1919,7 +1922,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
         const query = notificationCollectionGroup.queryDocument(notificationsPastSendAtTimeQuery());
         const notificationDocuments = await query.getDocs();
 
-        return await performAsyncTasks(
+        return performAsyncTasks(
           notificationDocuments,
           async (notificationDocument) => {
             const result = await sendNotificationInstance(notificationDocument);
@@ -2046,7 +2049,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
         const notificationDocuments = await query.getDocs();
         const notificationDocumentsGroupedByNotificationBox = [...makeValuesGroupMap(notificationDocuments, (x) => x.parent.id).values()];
 
-        return await performAsyncTasks(
+        return performAsyncTasks(
           notificationDocumentsGroupedByNotificationBox,
           async (notificationDocumentsInSameBox) => {
             const allPairs = await getDocumentSnapshotDataPairs(notificationDocumentsInSameBox);

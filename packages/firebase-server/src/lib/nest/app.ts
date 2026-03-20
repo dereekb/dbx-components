@@ -47,11 +47,6 @@ export interface NestServerInstance<T> {
 }
 
 /**
- * @deprecated Use `FirebaseNestServerRootModule` from `./app.module` instead.
- */
-export { FirebaseNestServerRootModule } from './app.module';
-
-/**
  * Optional hook to customize the NestJS application after creation but before initialization.
  */
 export type ConfigureNestServerInstanceFunction = (nestApp: INestApplication) => INestApplication | void;

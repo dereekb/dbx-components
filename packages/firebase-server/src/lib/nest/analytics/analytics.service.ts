@@ -40,7 +40,6 @@ export class FirebaseServerAnalyticsService extends OnCallModelAnalyticsService 
     super();
 
     if (listener) {
-      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- @Optional() makes listener undefined at runtime despite the type
       this._listener = listener;
     } else {
       console.warn('FirebaseServerAnalyticsService: No analytics listener configured. All analytics events will be ignored.');

@@ -5,7 +5,7 @@ import { type Configurable, separateValues } from '@dereekb/util';
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.
  */
-export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
+export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = NotificationItemMetadata, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**
    * Checkpoint this flow entry represents.
    */
@@ -16,7 +16,7 @@ export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends Notificat
   readonly fn: NotificationTaskServiceTaskHandlerFunction<D>;
 }
 
-export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
+export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = NotificationItemMetadata, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   readonly type: NotificationTaskType;
   /**
    * The order/flow of checkpoints and handler functions.
@@ -99,7 +99,7 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- array index access may return undefined at runtime
             fn = (nonCheckpointFlows[0] ?? checkpointFlows[0])?.fn;
             break;
-          default:
+          default: {
             const completedCheckpointsSet = new Set(completedCheckpoints);
             /**
              * Find the next flow function that hasn't had its checkpoint completed yet.
@@ -107,6 +107,7 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
             const nextCheckpoint = checkpointFlows.find((x) => !completedCheckpointsSet.has(x.checkpoint as string));
             fn = nextCheckpoint?.fn;
             break;
+          }
         }
 
         let result: NotificationTaskServiceHandleNotificationTaskResult;

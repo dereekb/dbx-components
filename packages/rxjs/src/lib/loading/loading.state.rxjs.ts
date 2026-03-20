@@ -100,7 +100,6 @@ export function combineLoadingStates<A extends object, B extends object, C exten
 export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, obsE: Observable<LoadingState<E>>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): Observable<LoadingState<O>>;
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>>;
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>> {
-  // eslint-disable-line jsdoc/require-jsdoc -- JSDoc is on the overload signatures above
   /* eslint-enable @typescript-eslint/max-params, @typescript-eslint/no-explicit-any */
   const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
   const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
@@ -112,7 +111,6 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
       return !x.some((_, i) => x[i] !== y[i]);
     }), // Prevent remerging the same values!
     map((states: LoadingState<any>[]) => {
-      // eslint-disable-line @typescript-eslint/no-explicit-any
       return mergeLoadingStates(...states, mergeFn) as LoadingState<O>;
     }),
     shareReplay(1) // Share the result.
@@ -143,7 +141,6 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
  * @returns An observable emitting a {@link LoadingState}<boolean> representing the combined status.
  */
 export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[]>(sources: readonly [...ObservableInputTuple<A>]): Observable<LoadingState<boolean>> {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
   return combineLatest(sources).pipe(
     map((allLoadingStates) => {
       const firstErrorState = allLoadingStates.find((x) => x.error);

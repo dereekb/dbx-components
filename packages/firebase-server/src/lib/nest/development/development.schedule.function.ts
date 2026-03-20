@@ -72,7 +72,6 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
         const targetFunction = allScheduledFunctions[targetRunName];
 
         if (!targetFunction) {
-          // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- runtime guard: function name may not exist in map
           throw unknownScheduledFunctionDevelopmentFunctionName(targetRunName);
         }
 

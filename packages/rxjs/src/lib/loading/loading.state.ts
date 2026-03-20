@@ -531,7 +531,6 @@ export function mergeLoadingStates<A extends object, B extends object, C extends
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
-  // eslint-disable-line jsdoc/require-jsdoc -- JSDoc is on the overload signatures above
   /* eslint-enable @typescript-eslint/max-params, @typescript-eslint/no-explicit-any */
   const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
   const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
