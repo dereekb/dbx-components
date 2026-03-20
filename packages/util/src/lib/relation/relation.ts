@@ -176,7 +176,7 @@ export class ModelRelationUtility {
   private static _modifyCollectionWithoutMask<T extends RelationObject>(current: T[], change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { readKey, merge, shouldRemove } = config;
 
-    const readType = (config as UpdateMiltiTypeRelationConfig<T>).readType ?? (() => '0');
+    const readType = (config as Partial<UpdateMiltiTypeRelationConfig<T>>).readType ?? (() => '0');
 
     function remove(rCurrent = current, rMods = mods) {
       return ModelRelationUtility._modifyCollection(
@@ -246,6 +246,12 @@ export class ModelRelationUtility {
 
   /**
    * Used to modify a collection which may be multi-type. If readType is provided, the collection is handled as a multi-type map.
+   *
+   * @param current - the current collection of relation objects
+   * @param mods - the modifications to apply to the collection
+   * @param modifyCollection - function that applies modifications to a single-type subset of the collection
+   * @param readType - optional function to read the type from each relation object, enabling multi-type handling
+   * @returns the modified collection with all changes applied
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: Maybe<ReadRelationModelTypeFn<T>>): T[] {
@@ -327,7 +333,7 @@ export class ModelRelationUtility {
    */
   static addToCollection<T extends RelationObject>(current: Maybe<T[]>, add: T[], readKey: ReadRelationKeyFn<T>): T[] {
     current = current ?? [];
-    return add?.length ? ModelRelationUtility.removeDuplicates([...add, ...current], readKey) : current; // Will keep any "added" before any existing ones.
+    return add.length ? ModelRelationUtility.removeDuplicates([...add, ...current], readKey) : current; // Will keep any "added" before any existing ones.
   }
 
   /**
@@ -391,7 +397,7 @@ export class ModelRelationUtility {
   }
 
   // MARK: Internal Utility
-  private static _assertMergeProvided<T = unknown>(merge: MergeRelationObjectsFn<T>) {
+  private static _assertMergeProvided<T = unknown>(merge: Maybe<MergeRelationObjectsFn<T>>) {
     if (!merge) {
       throw new Error('Merge was not provided.');
     }

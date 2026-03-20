@@ -12,7 +12,7 @@ export type TestDoneCallback = ((...args: any[]) => any) & {
    *
    * @param error
    */
-  fail(error?: string | { message: string }): any;
+  fail?(error?: string | { message: string }): any;
 };
 
 /**
@@ -52,6 +52,8 @@ export type TestDoneCallbackRef = Omit<TestDoneCallback, 'fail'> & {
  * Creates a new TestDoneCallbackRef.
  *
  * Used to create a promise reference that can be used to assert that a test function was called.
+ *
+ * @returns a new {@link TestDoneCallbackRef} with a done callback and underlying promise
  */
 export function testDoneCallbackRef(): TestDoneCallbackRef {
   const _promise = promiseReference<void>();
@@ -91,6 +93,9 @@ export function testDoneCallbackRef(): TestDoneCallbackRef {
  *   // async test code
  *   done();
  * }));
+ *
+ * @param testFn - the callback-based test function that receives a done callback
+ * @returns a Promise-based wrapper function suitable for Vitest or other async test runners
  */
 export function callbackTest(testFn: TestProvidesCallbackWithDone | ((cb: TestDoneCallback) => PromiseOrValue<void | undefined>)): () => Promise<void> {
   return async () => {
@@ -142,7 +147,7 @@ export abstract class AbstractTestContextFixture<I> implements TestContextFixtur
   private _instance?: I;
 
   get instance(): I {
-    return this._instance!;
+    return this._instance as I;
   }
 
   setInstance(instance: I): TestContextFixtureClearInstanceFunction {

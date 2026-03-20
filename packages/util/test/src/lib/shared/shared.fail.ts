@@ -16,6 +16,7 @@ export class ExpectedFailError extends BaseError {}
  * Creates an {@link ExpectedFailError} without throwing it, for use in deferred error handling.
  *
  * @param message - optional error message
+ * @returns a new {@link ExpectedFailError} instance
  */
 export function failSuccessfullyError(message?: string): ExpectedFailError {
   return new ExpectedFailError(message);
@@ -42,6 +43,7 @@ export class UnexpectedSuccessFailureError extends BaseError {}
  * Creates an {@link UnexpectedSuccessFailureError} without throwing it.
  *
  * @param message - optional error message; defaults to a standard "expected an error" message
+ * @returns a new {@link UnexpectedSuccessFailureError} instance
  */
 export function failDueToSuccessError(message?: string): UnexpectedSuccessFailureError {
   return new UnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
@@ -80,6 +82,8 @@ export function failDueToSuccess(): never {
 /**
  * Default error handler for {@link expectSuccessfulFail} that passes through {@link ExpectedFailError}
  * instances and re-throws all other errors.
+ *
+ * @param e - the caught error to evaluate
  */
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   if (e instanceof ExpectedFailError) {
@@ -118,8 +122,8 @@ export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeTyp
  *
  * @param errorFn - function expected to throw an error (sync or async)
  * @param assertFailType - optional assertion to validate the type or content of the thrown error
+ * @returns a promise that resolves when the expected failure is verified
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: ExpectFailAssertionFunction): Promise<void> {
   function handleError(e: unknown) {
     if (e instanceof UnexpectedSuccessFailureError) {
@@ -300,6 +304,8 @@ export interface FakeDoneHandler extends TestDoneCallback, PromiseReference {
  *
  * Calling the returned function with no arguments resolves the promise;
  * calling it with an error (or calling `.fail()`) rejects the promise.
+ *
+ * @returns a new {@link FakeDoneHandler} backed by a promise reference
  */
 export function fakeDoneHandler(): FakeDoneHandler {
   const promiseRef = promiseReference();

@@ -18,7 +18,7 @@ export type ReadStringFunction<T, S extends string = string> = MapFunction<T, S>
  *
  * Optional generic typing exists for communicating what values are separated within the string.
  */
-// eslint-disable-next-line
+
 export type SeparatedString<T = unknown> = string;
 
 /**

@@ -83,11 +83,16 @@ export function mapArrayFunction<I, O>(mapFunction: MapFunction<I, O>): MapArray
  *
  * Used as a sentinel value so that {@link chainMapSameFunctions} and other combinators can detect
  * and skip no-op mappings for efficiency.
+ *
+ * @param input - the value to pass through unchanged
+ * @returns the same input value, unmodified
  */
 export const MAP_IDENTITY: <T>(input: T) => T = ((input: unknown) => input) as <T>(input: T) => T;
 
 /**
  * Returns the shared {@link MAP_IDENTITY} function cast to the requested type, useful for providing a typed no-op transformation.
+ *
+ * @returns the singleton identity function typed as `MapFunction<T, T>`
  */
 export function mapIdentityFunction<T>(): MapFunction<T, T> {
   return MAP_IDENTITY as MapFunction<T, T>;
@@ -95,6 +100,9 @@ export function mapIdentityFunction<T>(): MapFunction<T, T> {
 
 /**
  * Checks whether the given function is the singleton {@link MAP_IDENTITY} reference.
+ *
+ * @param fn - the function to check
+ * @returns `true` if the function is the identity singleton
  */
 export function isMapIdentityFunction(fn: unknown): fn is typeof MAP_IDENTITY {
   return fn === MAP_IDENTITY;
@@ -214,13 +222,14 @@ export function chainMapSameFunctions<I>(input: ArrayOrValue<Maybe<MapSameFuncti
  * @param a - the first map function
  * @param b - the optional second map function to chain after `a`
  * @param apply - when false, skips chaining and returns `a` directly
+ * @returns a composed function piping `a` into `b`, or `a` alone if `b` is absent or `apply` is false
  */
 export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>): MapSameFunction<I>;
 export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>, apply?: boolean): MapSameFunction<I>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>): MapFunction<I, B>;
-export function chainMapFunction<I, O, _B>(a: MapFunction<I, O>, b: MaybeNot): MapFunction<I, O>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot): MapFunction<I, O>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: false): MapFunction<I, O>;
-export function chainMapFunction<I, O, _B>(a: MapFunction<I, O>, b: MaybeNot, apply: true): MapFunction<I, O>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot, apply: true): MapFunction<I, O>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>, apply: true): MapFunction<I, B>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: boolean): MapFunction<I, O> | MapFunction<I, B>;
 export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply = true): MapFunction<I, O> | MapFunction<I, B> {

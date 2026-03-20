@@ -570,7 +570,9 @@ export interface WebsiteDomainAndPathPair {
  * @returns A pair containing the domain and path.
  */
 export function websiteDomainAndPathPair(input: WebsiteDomainAndPath): WebsiteDomainAndPathPair {
-  const [domain, path] = splitJoinRemainder(input, '/', 2);
+  const result = splitJoinRemainder(input, '/', 2);
+  const domain = result[0];
+  const path = result[1] as string | undefined; // may be undefined if input has no path separator
 
   return {
     domain,

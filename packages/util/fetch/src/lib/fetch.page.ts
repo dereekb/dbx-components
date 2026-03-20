@@ -137,7 +137,7 @@ export interface FetchPageFactoryConfig<I, O> extends FetchPageFactoryConfigDefa
   readonly buildInputForNextPage: (pageResult: Partial<FetchPageResult<O>>, input: I, options: FetchPageFactoryInputOptions) => PromiseOrValue<Maybe<Partial<I>>>;
 }
 
-export type FetchPageFactoryOptions<_I, _O> = FetchPageFactoryInputOptions;
+export type FetchPageFactoryOptions<I, O> = FetchPageFactoryInputOptions;
 
 /**
  * Creates a new FetchPage instance.

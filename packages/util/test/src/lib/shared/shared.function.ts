@@ -51,7 +51,7 @@ export type UseTestFunctionMapFixture<T extends UseTestFunctionMapObject> = {
  * Maps each key in `T` to its corresponding function getter type, filtering out non-getter entries.
  */
 export type UseTestFunctionMapFixtureGetterFunctions<T extends UseTestFunctionMapObject> = {
-  [K in keyof T]: T[K] extends UseTestFunctionFixtureFunctionGetter<infer _I, infer _O> ? T[K] : never;
+  [K in keyof T]: T[K] extends UseTestFunctionFixtureFunctionGetter<infer I, infer O> ? T[K] : never;
 };
 
 /**
@@ -59,7 +59,7 @@ export type UseTestFunctionMapFixtureGetterFunctions<T extends UseTestFunctionMa
  * This is the shape of the object passed to test-building functions.
  */
 export type UseTestFunctionMapFixtureFunctions<T extends UseTestFunctionMapObject> = {
-  [K in keyof T]: T[K] extends UseTestFunctionFixtureFunctionGetter<infer I, infer _O> ? I : never;
+  [K in keyof T]: T[K] extends UseTestFunctionFixtureFunctionGetter<infer I, infer O> ? I : never;
 };
 
 /**

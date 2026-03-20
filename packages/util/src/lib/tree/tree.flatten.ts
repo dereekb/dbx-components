@@ -117,6 +117,7 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown>>(): Flatt
  * Creates a FlattenTreeFunction that flattens tree nodes themselves into an array.
  *
  * @template N The type of the tree node.
+ * @param config - configuration object with optional mapping and node filtering settings
  * @returns A FlattenTreeFunction that collects nodes of type N.
  */
 export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(config: FlattenTreeToArrayFunctionConfig<N, V>): FlattenTreeFunction<N, V>;
@@ -125,7 +126,8 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(co
  *
  * @template N The type of the tree node.
  * @template V The type of the value to map each node to.
- * @param mapNodeFn An optional function to transform each node N into a value V. If not provided, nodes are returned as is.
+ * @param mapNodeFn - optional function to transform each node N into a value V; if not provided, nodes are returned as-is
+ * @param defaultAddNodeFn - optional decision function that filters which nodes are included in the result
  * @returns A FlattenTreeFunction that collects values of type V.
  */
 export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFn?: (node: N) => V, defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V>;

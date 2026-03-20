@@ -46,6 +46,8 @@ export class JestExpectedErrorOfSpecificTypeError extends ExpectedErrorOfSpecifi
 
 /**
  * @deprecated Use failWithTestDoneCallback with failDueToSuccessError from shared instead. This is kept for backwards compatibility.
+ *
+ * @param done - the test done callback to invoke with the failure error
  */
 export function failWithDoneDueToSuccess(done: TestDoneCallback): void {
   failWithTestDoneCallback(done, failDueToSuccessError());

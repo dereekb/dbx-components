@@ -19,6 +19,7 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  *
  * @param contextValue - the reference value to compare against
  * @param fn - the equality comparator
+ * @returns a function that checks whether a given value equals the captured reference
  *
  * @example
  * ```ts
@@ -43,6 +44,7 @@ export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunctio
  *
  * @param contextValue - the reference value to compare against
  * @param fn - the equality comparator
+ * @returns a function that checks whether all input values equal the captured reference
  *
  * @example
  * ```ts
@@ -77,6 +79,7 @@ export function areEqualContext<T>(contextValue: T, fn: EqualityComparatorFuncti
  *
  * @param values - the values to compare
  * @param fn - the equality comparator
+ * @returns `true` if all values are equal to each other, or if fewer than two values are provided
  *
  * @example
  * ```ts

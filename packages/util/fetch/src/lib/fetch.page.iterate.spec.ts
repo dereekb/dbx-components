@@ -18,6 +18,13 @@ export interface TestFetchPage extends Page {
 
 export class TestThrownError extends BaseError {}
 
+/**
+ * Creates a {@link FetchPageFactory} that generates test pages up to the specified page number,
+ * each containing random numeric items.
+ *
+ * @param defaultReturnAtPage - the page number at which `hasNext` becomes false (defaults to 3)
+ * @returns a configured {@link FetchPageFactory} for testing pagination
+ */
 export function fetchPageToPageNumber(defaultReturnAtPage = 3): FetchPageFactory<TestFetchPageInput, TestFetchPage> {
   const randomNumber = randomNumberFactory(1000);
   const randomNumbers = arrayFactory(randomNumber);

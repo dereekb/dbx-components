@@ -14,6 +14,7 @@ export type CronExpression = string;
  * every 1 hour at minute 30), which means intervals won't be exactly N minutes apart.
  *
  * @param inputMinutes - interval in minutes between executions
+ * @returns a cron expression string that approximates the requested interval
  *
  * @example
  * ```ts

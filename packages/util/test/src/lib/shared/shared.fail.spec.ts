@@ -86,7 +86,7 @@ describe('expectFail', () => {
   describe('sync', () => {
     it('should throw an UnexpectedSuccessFailureError if an error is not thrown.', () => {
       try {
-        expectFail(() => {
+        void expectFail(() => {
           //no error thrown
         });
       } catch (e) {
@@ -96,7 +96,7 @@ describe('expectFail', () => {
 
     it('should resolve successfully if any exception is thrown.', () => {
       try {
-        expectFail(() => {
+        void expectFail(() => {
           throw new Error('success');
         });
       } catch (e) {

@@ -227,7 +227,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   let currentNode: Configurable<SplitStringTree<M>> = tree;
 
   parts.forEach((nodeValue) => {
-    const existingChildNode = currentNode.children[nodeValue];
+    const existingChildNode = currentNode.children[nodeValue] as SplitStringTree<M> | undefined; // may be undefined for new paths
     const childNode = (existingChildNode ?? { nodeValue, children: {} }) as Configurable<SplitStringTree<M>>; // use the existing node or create a new node
 
     if (!existingChildNode) {

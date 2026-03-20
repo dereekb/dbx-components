@@ -429,6 +429,11 @@ export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<
 
 /**
  * Returns false if the input array contains any value from the second array.
+ *
+ * @param values - the values to check against
+ * @param valuesToFind - the values to look for
+ * @param emptyValuesToFindArrayResult - result when valuesToFind is empty
+ * @returns `true` if none of the valuesToFind are present in values
  */
 export function containsNoneOfValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean): boolean {
   const set = new Set(asIterable(valuesToFind, false));
@@ -463,6 +468,11 @@ export function setContainsNoneOfValue<T>(valuesSet: Set<T>, valuesToFind: Itera
  * Returns true if the input array contains any value from the second array.
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
+ *
+ * @param values - the values to build a set from and check against
+ * @param valuesToFind - the values to search for within the set
+ * @param emptyValuesToFindArrayResult - result when valuesToFind is empty; defaults to false
+ * @returns `true` if any of the valuesToFind exist in values
  */
 export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean): boolean {
   const set = new Set(asIterable(values, false));
@@ -474,9 +484,10 @@ export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: It
  *
  * If values is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
- * @param values
- * @param valuesToFind
- * @returns
+ * @param values - the values to check for membership in the set
+ * @param valuesToFind - the set to check against
+ * @param emptyValuesArrayResult - result when values is empty; defaults to false
+ * @returns `true` if any of the values are present in the set
  */
 export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>, emptyValuesArrayResult?: boolean): boolean {
   return setContainsAnyValue(valuesToFind, values, emptyValuesArrayResult);
@@ -487,27 +498,19 @@ export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToF
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
- * @param valuesSet
- * @param valuesToFind
- * @param emptyValuesToFindArrayResult
- * @returns
+ * @param valuesSet - the set to check for membership
+ * @param valuesToFind - the values to search for in the set
+ * @param emptyValuesToFindArrayResult - result when valuesToFind is empty; defaults to false
+ * @returns `true` if any of the valuesToFind are present in the set
  */
 export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = false): boolean {
-  let result: boolean;
+  const valuesToFindArray = iterableToArray(valuesToFind);
 
-  if (valuesSet) {
-    const valuesToFindArray = iterableToArray(valuesToFind);
-
-    if (valuesToFindArray.length > 0) {
-      result = valuesToFindArray.some((x) => valuesSet.has(x));
-    } else {
-      result = emptyValuesToFindArrayResult;
-    }
+  if (valuesToFindArray.length > 0) {
+    return valuesToFindArray.some((x) => valuesSet.has(x));
   } else {
-    result = false;
+    return emptyValuesToFindArrayResult;
   }
-
-  return result;
 }
 
 /**
@@ -515,9 +518,10 @@ export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to true.
  *
- * @param values
- * @param valuesToFind
- * @returns
+ * @param values - the iterable of values to build a set from
+ * @param valuesToFind - the values that must all be present
+ * @param emptyValuesArrayResult - result when valuesToFind is empty; defaults to true
+ * @returns `true` if all valuesToFind are present in the values set
  */
 export function containsAllValues<T>(values: Iterable<T>, valuesToFind: IterableOrValue<T>, emptyValuesArrayResult?: boolean): boolean {
   const set = new Set(values);
@@ -529,35 +533,27 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to true.
  *
- * @param valuesSet
- * @param valuesToFind
- * @param emptyValuesToFindArrayResult
- * @returns
+ * @param valuesSet - the set to check for full containment
+ * @param valuesToFind - the values that must all be present in the set
+ * @param emptyValuesToFindArrayResult - result when valuesToFind is empty; defaults to true
+ * @returns `true` if every value in valuesToFind is present in the set
  */
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = true): boolean {
-  let result: boolean;
+  const valuesToFindArray = iterableToArray(valuesToFind);
 
-  if (valuesSet) {
-    const valuesToFindArray = iterableToArray(valuesToFind);
-
-    if (valuesToFindArray.length > 0) {
-      result = !valuesToFindArray.some((x) => !valuesSet.has(x));
-    } else {
-      result = emptyValuesToFindArrayResult;
-    }
+  if (valuesToFindArray.length > 0) {
+    return !valuesToFindArray.some((x) => !valuesSet.has(x));
   } else {
-    result = false;
+    return emptyValuesToFindArrayResult;
   }
-
-  return result;
 }
 
 /**
  * Returns true if both iterables are defined (or are both null/undefined) and have the same values exactly.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - first iterable to compare
+ * @param b - second iterable to compare
+ * @returns `true` if both iterables contain the same unique values, or both are nullish
  */
 export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
   return a && b ? setsAreEquivalent(new Set(a), new Set(b)) : a == b;
@@ -566,8 +562,9 @@ export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Ite
 /**
  * Returns true if both sets are defined (or are both null/undefined) and have the same values exactly.
  *
- * @param a
- * @param b
+ * @param a - first set to compare
+ * @param b - second set to compare
+ * @returns `true` if both sets contain the same values, or both are nullish
  */
 export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
   return a && b ? a.size === b.size && setContainsAllValues(a, b, true) : a == b;

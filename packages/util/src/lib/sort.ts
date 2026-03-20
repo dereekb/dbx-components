@@ -49,6 +49,9 @@ export type SortDescendingCompareFunction<T> = SortCompareFunction<T>;
 
 /**
  * Convenience function that reverses the order of the sorted values.
+ *
+ * @param compareFn - the comparison function whose order should be reversed
+ * @returns a new comparison function with the opposite sort direction
  */
 export function reverseCompareFn<T>(compareFn: AscendingSortCompareFunction<T>): SortDescendingCompareFunction<T>;
 export function reverseCompareFn<T>(compareFn: SortDescendingCompareFunction<T>): AscendingSortCompareFunction<T>;
@@ -60,6 +63,10 @@ export function reverseCompareFn<T>(compareFn: SortCompareFunction<T>): SortComp
  * Convenience function that reverses the order of the sorted values if the order is specified descending.
  *
  * The input comparison function must be in ascending order.
+ *
+ * @param ascendingCompareFn - a comparison function that sorts in ascending order
+ * @param order - the desired sort direction; defaults to 'asc'
+ * @returns the original function if ascending, or a reversed version if descending
  */
 export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFunction<T>, order: SortingOrder = 'asc'): SortCompareFunction<T> {
   return order === 'asc' ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
@@ -155,6 +162,10 @@ export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortComp
 
 /**
  * Creates a SortValuesFunction using the input. If the input is not defined, or it's sort function is not defined, then returns mapIdentityFunction().
+ *
+ * @param sortRef - optional reference containing the sort comparison function
+ * @param sortOnCopyDefault - whether to sort on a copy by default
+ * @returns a sort function that sorts arrays, or the identity function if no sort comparison is configured
  */
 export function sortValuesFunctionOrMapIdentityWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean): SortValuesFunction<T> {
   const sortWith = sortRef?.sortWith;

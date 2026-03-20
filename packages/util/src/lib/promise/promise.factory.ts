@@ -14,7 +14,7 @@ export type TryWithPromiseFactoriesFunction<I, O> = (input: I, config?: TryWithP
 /**
  * Optional per-call configuration for {@link TryWithPromiseFactoriesFunction}.
  */
-export interface TryWithPromiseFactoriesFunctionOptionalConfig<_I, _O> {
+export interface TryWithPromiseFactoriesFunctionOptionalConfig<I, O> {
   /**
    * Whether or not to return a Maybe value if it is returned by one of the created promises.
    *

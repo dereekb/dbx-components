@@ -395,7 +395,7 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
   /**
-   * By default returns null
+   * @returns null
    */
   const defaultNonConcurrentTaskKeyFactory = () => null;
 
@@ -614,5 +614,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- matching return type
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }

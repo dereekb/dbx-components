@@ -121,6 +121,13 @@ export interface FetchJsonRequestInitFunctionConfig {
 
 export type FetchJsonRequestInitFunction = (methodOrInput?: string | FetchJsonInput | undefined, body?: FetchJsonBody) => RequestInit;
 
+/**
+ * Creates a {@link FetchJsonRequestInitFunction} that converts method/body inputs into a fully formed {@link RequestInit},
+ * applying the configured default method and optional input mapping.
+ *
+ * @param config - optional configuration specifying the default HTTP method and an input mapping function
+ * @returns a function that produces a {@link RequestInit} from a method string or {@link FetchJsonInput}
+ */
 export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctionConfig = {}): FetchJsonRequestInitFunction {
   const { defaultMethod = 'GET', mapFetchJsonInput = mapIdentityFunction() } = config;
 

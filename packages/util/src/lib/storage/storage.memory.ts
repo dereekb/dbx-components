@@ -12,6 +12,8 @@ export class MemoryStorageInstance implements StorageObject {
 
   /**
    * The number of items stored.
+   *
+   * @returns the current count of stored key-value pairs
    */
   get length(): number {
     return this._length;

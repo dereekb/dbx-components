@@ -32,9 +32,12 @@ export type LatLngBoundOrPoint = LatLngBound | LatLngPoint;
 
 /**
  * Type guard that checks whether the input is a {@link LatLngBound} by testing for the presence of `sw` and `ne` properties.
+ *
+ * @param input - value to test
+ * @returns `true` if the input has `sw` and `ne` properties, indicating a bound
  */
 export function isLatLngBound(input: LatLngBound | unknown): input is LatLngBound {
-  return typeof input === 'object' && (input as LatLngBound).sw != null && (input as LatLngBound).ne != null;
+  return typeof input === 'object' && input != null && 'sw' in input && 'ne' in input;
 }
 
 /**
@@ -320,7 +323,7 @@ export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngB
           sw: latLngPoint(sw),
           ne: latLngPoint(ne)
         };
-      } else if (input.length === 4) {
+      } else {
         const points = input.map(latLngPoint);
         const lats = points.map((x) => x.lat);
         const lngs = points.map((x) => x.lng);
@@ -335,10 +338,10 @@ export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngB
           ne: latLngPoint([maxLat, maxLng])
         };
       }
-    } else if (input && inputNe) {
+    } else if (inputNe) {
       bound = { sw: input as LatLngBoundSouthWestPoint, ne: inputNe };
-    } else if ((input as LatLngBound).sw && (input as LatLngBound).ne) {
-      bound = input as LatLngBound;
+    } else if (isLatLngBound(input)) {
+      bound = input;
     }
 
     if (!bound) {
@@ -374,9 +377,9 @@ export type ExtendLatLngBoundInput = ArrayOrValue<LatLngBoundOrPoint>;
 export function latLngBoundFromInput(input: ExtendLatLngBoundInput): Maybe<LatLngBound> {
   let bound: Maybe<LatLngBound>;
 
-  const first = firstValue(input);
+  const first: LatLngBoundOrPoint = firstValue(input);
 
-  if (first != null) {
+  {
     if (isLatLngBound(first)) {
       bound = first;
     } else {

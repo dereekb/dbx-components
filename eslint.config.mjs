@@ -20,13 +20,14 @@ export default [
       'unused-imports': unusedImports
     },
     rules: {
-      'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off', // handled by unused-imports/no-unused-vars with _-prefix ignore patterns
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
         {
           vars: 'all',
-          varsIgnorePattern: '^_',
+          varsIgnorePattern: '^_|^[A-Z]$',
           args: 'after-used',
           argsIgnorePattern: '^_'
         }
@@ -34,10 +35,16 @@ export default [
     }
   },
   {
-    files: ['**/*.{ts,tsx}', '!**/*.spec.{ts,tsx}'],
+    files: ['**/*.{ts,tsx,mts,cts}'],
     rules: {
       'import/no-unresolved': 'off',
-      'import/namespace': 'off',
+      'import/namespace': 'off'
+    }
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    ignores: ['**/*.spec.ts', '**/*.spec.tsx'],
+    rules: {
       'import/no-duplicates': ['warn', { considerQueryString: true, 'prefer-inline': true }]
     }
   },
@@ -70,7 +77,6 @@ export default [
     files: ['**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
       'unused-imports/no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
@@ -79,7 +85,15 @@ export default [
     }
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '!**/*.spec.{ts,tsx}'],
+    files: ['**/test/src/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off'
+    }
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/*.spec.ts', '**/*.spec.tsx'],
     plugins: { sonarjs: sonarjsPlugin },
     rules: {
       'sonarjs/cognitive-complexity': ['warn', 15],
@@ -93,7 +107,8 @@ export default [
     }
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '!**/*.spec.{ts,tsx}'],
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/*.spec.ts', '**/*.spec.tsx'],
     plugins: { jsdoc: jsdocPlugin },
     rules: {
       'jsdoc/require-jsdoc': [

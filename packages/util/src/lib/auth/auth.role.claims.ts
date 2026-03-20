@@ -162,8 +162,9 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
     return 'roles' in entry;
   }
 
-  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry>(config as any)
-    .filter(([, entry]) => entry != null) // skip any ignored/null values
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic config object needs cast for Object.entries
+  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry | IgnoreAuthRoleClaimsEntry>(config as any)
+    .filter((x): x is [string, AuthRoleClaimsFactoryConfigEntry] => x[1] != null) // skip any ignored/null values
     .map((x) => {
       const inputEntry = x[1];
       let entry: AuthRoleClaimsFactoryConfigEntryEncodeOptions;

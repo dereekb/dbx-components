@@ -25,6 +25,7 @@ export type ObjectWithConstructor = {
  * @param obj - The value to check.
  * @returns Whether the value is a function with a constructor.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- type guard accepting any value
 export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor {
   return typeof obj === 'function' && !!obj.prototype && !!obj.constructor && !!obj.prototype.constructor.name;
 }
@@ -190,6 +191,7 @@ export type AllCommaSeparatedKeys<T extends string> = StringConcatenation<T, ','
 export type OrderedCommaSeparatedKeysOfObject<T extends object> = OrderedCommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
 export type OrderedCommaSeparatedKeys<T extends string> = StringConcatenationOrder<T, ','>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- distributive conditional type requires `any`
 export type UnionToOvlds<U> = UnionToIntersection<U extends any ? (f: U) => void : never>;
 export type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : never;
 

@@ -15,6 +15,7 @@ export type EqualityComparatorFunction<T> = (a: T, b: T) => boolean;
  * but `null === undefined` is `false`.
  *
  * @param compare - the comparator to wrap
+ * @returns a new comparator that handles nullish values safely before delegating to the wrapped comparator
  *
  * @example
  * ```ts
@@ -37,6 +38,7 @@ export function safeEqualityComparatorFunction<T>(compare: EqualityComparatorFun
  * @param a - first value to compare
  * @param b - second value to compare
  * @param compare - the equality comparator for non-nullish values
+ * @returns `true` if the values are considered equal
  *
  * @example
  * ```ts
@@ -78,6 +80,7 @@ export type CompareEqualityWithValueFromItemsFunction<I, V> = ((a: Maybe<I>, b: 
  *
  * @param readValues - extracts the comparable value from each item
  * @param equalityComparator - compares the extracted values for equality
+ * @returns a function that compares two items by their extracted values
  */
 export function compareEqualityWithValueFromItemsFunction<I, V>(readValues: ReadValueFunction<I, V>, equalityComparator: EqualityComparatorFunction<V>): CompareEqualityWithValueFromItemsFunction<I, V> {
   return compareEqualityWithValueFromItemsFunctionFactory(readValues)(equalityComparator);
@@ -95,6 +98,7 @@ export type CompareEqualityWithValueFromItemsFunctionFactory<I, V> = ((equalityC
  * with varying comparison strategies.
  *
  * @param readValues - extracts the comparable value from each item
+ * @returns a factory function that accepts an equality comparator and produces a comparison function
  *
  * @example
  * ```ts

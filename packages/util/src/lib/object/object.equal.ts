@@ -31,35 +31,33 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
  * @returns `true` if the filtered values are deeply equal
  */
 export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   // check self
   if (a === b) {
-    return true;
+    result = true;
+  } else {
+    // run pojo filter before comparison
+    a = pojoFilter(a, true);
+    b = pojoFilter(b, true);
+
+    // check one value is nullish and other is not
+    if ((a == null || b == null) && (a || b)) {
+      result = false;
+    } else if (typeof a !== 'object') {
+      result = false;
+    } else if (isIterable(a, false)) {
+      // check if they are iterables (arrays, Sets, Maps)
+      result = _compareIterables(a, b, pojoFilter);
+    } else if (typeof b === 'object') {
+      // check plain object comparison
+      result = _compareObjects(a, b, pojoFilter);
+    } else {
+      result = false;
+    }
   }
 
-  // run pojo filter before comparison
-  a = pojoFilter(a, true);
-  b = pojoFilter(b, true);
-
-  // check one value is nullish and other is not
-  if ((a == null || b == null) && (a || b)) {
-    return false;
-  }
-
-  if (typeof a !== 'object') {
-    return false;
-  }
-
-  // check if they are iterables (arrays, Sets, Maps)
-  if (isIterable(a, false)) {
-    return _compareIterables(a, b, pojoFilter);
-  }
-
-  // check plain object comparison
-  if (typeof b === 'object') {
-    return _compareObjects(a, b, pojoFilter);
-  }
-
-  return false;
+  return result;
 }
 
 function _compareIterables<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
@@ -106,8 +104,8 @@ function _compareMaps<F>(a: Map<unknown, unknown>, b: Map<unknown, unknown>, poj
 
 function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
   // check constructors/types
-  const firstType = (a as object)?.constructor.name;
-  const secondType = (b as object)?.constructor.name;
+  const firstType = (a as object).constructor.name;
+  const secondType = (b as object).constructor.name;
 
   if (firstType !== secondType) {
     return false;

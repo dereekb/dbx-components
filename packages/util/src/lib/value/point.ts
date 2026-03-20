@@ -66,9 +66,12 @@ export interface LonLatPoint {
 
 /**
  * Type guard that checks whether the input is a {@link LatLngPoint} by testing for `lat` and `lng` properties.
+ *
+ * @param input - the value to test
+ * @returns `true` if the input has both `lat` and `lng` properties
  */
 export function isLatLngPoint(input: LatLngPoint | unknown): input is LatLngPoint {
-  return typeof input === 'object' && (input as LatLngPoint).lat != null && (input as LatLngPoint).lng != null;
+  return typeof input === 'object' && input != null && 'lat' in input && 'lng' in input;
 }
 
 /**
@@ -543,7 +546,7 @@ export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngP
         latLng = { lat: tuple[0], lng: tuple[1] };
       }
     } else if (latType === 'object') {
-      latLng = { lat: (lat as LatLngPoint).lat, lng: (lat as LatLngPoint).lng ?? (lat as LonLatPoint).lon };
+      latLng = { lat: (lat as LatLngPoint).lat, lng: (lat as Partial<LatLngPoint>).lng ?? (lat as LonLatPoint).lon };
     } else if (lng != null) {
       latLng = { lat: lat as Latitude, lng };
     } else {

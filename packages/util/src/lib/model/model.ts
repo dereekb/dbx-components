@@ -425,9 +425,7 @@ export function modelTypeDataPairFactory<T, M extends ModelTypeString = ModelTyp
 export abstract class AbstractUniqueModel {
   id?: ModelKey;
 
-  constructor(template: Partial<AbstractUniqueModel>) {
-    if (template) {
-      this.id = template.id;
-    }
+  constructor(template: Partial<UniqueModel>) {
+    this.id = template.id;
   }
 }

@@ -38,7 +38,7 @@ export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], exclu
   const unique = new Set(values);
   const exclude = readKeysFromFilterUniqueFunctionAdditionalKeysInput<T>(excludeInput, (x) => x) as T[];
 
-  if (exclude?.length) {
+  if (exclude.length) {
     removeFromSet(unique, exclude);
   }
 

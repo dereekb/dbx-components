@@ -1,6 +1,6 @@
 import { type PromiseRateLimiter } from '@dereekb/util';
 import { type FetchResponseError } from './error';
-import { rateLimitedFetchHandler, type RateLimitedFetchHandlerConfig } from './fetch.limit';
+import { rateLimitedFetchHandler } from './fetch.limit';
 
 function mockRateLimiter(): PromiseRateLimiter {
   return {

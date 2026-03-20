@@ -194,7 +194,7 @@ export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<Iterate
  * Result of {@link iterateFetchPagesByItems}, extending page-level results
  * with item-level counters.
  */
-export interface IterateFetchPagesByItemsResult<_I, _O, _T, _R> extends IterateFetchPagesResult {
+export interface IterateFetchPagesByItemsResult<I, O, T, R> extends IterateFetchPagesResult {
   /**
    * Total number of raw items loaded from all pages (pre-filter).
    */

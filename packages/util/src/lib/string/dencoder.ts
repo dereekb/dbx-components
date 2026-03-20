@@ -106,6 +106,9 @@ export type PrimativeKeyDencoderFunction<D extends PrimativeKey, E extends Prima
 /**
  * Default fallback factory for {@link PrimativeKeyDencoderFunction} that always returns null,
  * causing an error to be thrown for unknown values.
+ *
+ * @param _input - the unknown value to look up (ignored; always returns null)
+ * @returns always returns null to signal an unknown value
  */
 export const PRIMATIVE_KEY_DENCODER_VALUE = (_input: unknown) => null;
 
@@ -135,6 +138,7 @@ export function primativeKeyDencoder<D extends PrimativeKey, E extends Primative
         }
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- overloaded return type requires cast
       return value as any;
     }
   }) as Partial<PrimativeKeyDencoderFunction<D, E>>;
@@ -205,6 +209,7 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
       return dencoder(split);
     } else {
       const encoded = dencoder(input as D[]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- overloaded return type requires cast
       return encoded.join(joiner) as any;
     }
   };

@@ -24,6 +24,7 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  * Useful for providing a constant decision where a function is expected.
  *
  * @param decision - the constant boolean value to return
+ * @returns a decision function that always returns the given boolean
  *
  * @example
  * ```ts
@@ -50,6 +51,7 @@ export function decisionFunction<I>(decision: boolean): DecisionFunction<I> {
  * isNotPositive(5); // false
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint needs `any` to match all DecisionFunction variants
 export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: boolean) => F = invertBooleanReturnFunction;
 
 /**
@@ -59,6 +61,7 @@ export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: b
  *
  * @param valueOrFunction - a boolean, decision function, or undefined
  * @param defaultIfUndefined - fallback boolean when the input is nullish (defaults to true)
+ * @returns a {@link DecisionFunction} derived from the input
  *
  * @example
  * ```ts
@@ -86,6 +89,7 @@ export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean |
  * concrete value or a custom decision function interchangeably.
  *
  * @param equalityValue - the value to compare against, or an existing decision function
+ * @returns a decision function that checks strict equality with the given value
  *
  * @example
  * ```ts

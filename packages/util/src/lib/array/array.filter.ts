@@ -12,9 +12,9 @@ import { type AscendingSortCompareFunction } from '../sort';
  *
  * If order is irrelevant, use filterValuesByDistanceNoOrder() instead.
  *
- * @param input - The array of values to filter
- * @param minDistance - The minimum distance required between values
- * @param getValue - Function that extracts a numeric value from each item for distance comparison
+ * @param _input - The array of values to filter
+ * @param _minDistance - The minimum distance required between values
+ * @param _getValue - Function that extracts a numeric value from each item for distance comparison
  * @returns A filtered array with only values that are at least minDistance apart
  */
 export function filterValuesByDistance<T>(_input: T[], _minDistance: number, _getValue: (value: T) => number | null): T[] {
