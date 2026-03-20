@@ -83,7 +83,6 @@ export interface ZoomPageResultInfo {
 }
 
 // MARK: Page Factory
-
 export type ZoomFetchPageFetchFunction<I extends ZoomPageFilter, R extends ZoomPageResult<any>> = (input: I) => Promise<R>;
 
 /**

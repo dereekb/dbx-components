@@ -11,7 +11,6 @@ export type POJOKey = PrimativeKey | symbol;
 /**
  * This is an object that can be serialized to JSON and back and be equivalent.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type JsonSerializableObject = Record<PrimativeKey, any>;
 
 /**

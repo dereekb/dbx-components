@@ -214,7 +214,7 @@ export interface ItemAccumulatorNextPageUntilResultsCountConfig<O> {
   /**
    * The accumulator whose iteration will be advanced.
    */
-  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>;
   /**
    * Target number of results to accumulate before stopping.
    */

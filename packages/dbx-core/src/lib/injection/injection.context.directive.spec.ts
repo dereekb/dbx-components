@@ -41,7 +41,7 @@ class TestExistingInjectionContent implements OnDestroy {
 @Component({
   template: `
     <div *dbxInjectionContext>
-      <test-existing-content></test-existing-content>
+      <dbx-test-existing-content></dbx-test-existing-content>
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

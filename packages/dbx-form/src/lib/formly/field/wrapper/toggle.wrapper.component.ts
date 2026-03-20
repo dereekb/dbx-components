@@ -11,7 +11,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
  * reactive label function.
  */
 export interface DbxFormToggleWrapperConfig<T extends object = object> extends AbstractFormExpandSectionConfig<T> {
-  /** Optional function that returns an observable of the toggle label based on open state. */
+  /**
+   * Optional function that returns an observable of the toggle label based on open state.
+   */
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
 }
 

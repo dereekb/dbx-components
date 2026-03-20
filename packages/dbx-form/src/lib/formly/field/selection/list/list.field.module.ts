@@ -4,7 +4,9 @@ import { DbxItemListFieldComponent } from './list.field.component';
 
 const importsAndExports = [DbxItemListFieldComponent];
 
-/** Registers the `dbxlistfield` Formly field type for item list selection. */
+/**
+ * Registers the `dbxlistfield` Formly field type for item list selection.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

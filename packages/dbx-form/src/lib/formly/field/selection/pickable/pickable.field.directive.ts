@@ -1,6 +1,6 @@
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
-import { type PrimativeKey, convertMaybeToArray, makeValuesGroupMap, type Maybe, type ArrayOrValue, separateValues, filterUniqueValues, type Configurable } from '@dereekb/util';
+import { type PrimativeKey, convertMaybeToArray, makeValuesGroupMap, type Maybe, type ArrayOrValue, separateValues, filterUniqueValues, type Configurable, asArray } from '@dereekb/util';
 import { computed, Directive, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { FormControl, type AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
@@ -17,7 +17,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
  */
 export type PickableItemFieldItem<T, M = unknown> = DbxValueListItem<PickableValueFieldDisplayValue<T, M>>;
 
-/** Sort function for ordering pickable items before display. */
+/**
+ * Sort function for ordering pickable items before display.
+ */
 export type PickableItemFieldItemSortFn<T, M = unknown> = (items: PickableItemFieldItem<T, M>[]) => PickableItemFieldItem<T, M>[];
 
 /**
@@ -423,10 +425,8 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
               displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
 
               // Zip values back together.
-              const newDisplayValues = mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
-
               // Return display values.
-              return newDisplayValues;
+              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
         } else {
@@ -465,7 +465,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   protected _getValueOnFormControl(valueOnFormControl: ArrayOrValue<T>): T[] {
-    const value: T[] = valueOnFormControl != null ? ([] as T[]).concat(valueOnFormControl) : []; // Always return an array.
+    const value: T[] = valueOnFormControl != null ? [...asArray(valueOnFormControl)] : []; // Always return an array.
     return value;
   }
 
@@ -529,10 +529,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
 
   // MARK: Internal
   protected _setValueOnFormControl(values: T[]): void {
-    let newValue: T | T[] = values;
+    let newValue: Maybe<ArrayOrValue<T>> = values;
 
     if (!this.asArrayValue) {
-      newValue = [values[0]].filter((x) => x != null)[0];
+      newValue = [values[0]].find((x) => x != null);
     }
 
     this.formControl.setValue(newValue);

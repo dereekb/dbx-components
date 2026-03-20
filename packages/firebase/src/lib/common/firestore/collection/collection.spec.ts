@@ -12,7 +12,6 @@ describe('firestoreModelIdentity()', () => {
 
     it('should compile', () => {
       const identity = firestoreModelIdentity(testName);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- compile-time type narrowing check
       expect(identity.collectionName === 'testnamewithpieces').toBe(true);
     });
   });
@@ -27,7 +26,6 @@ describe('firestoreModelIdentity()', () => {
 
     it('should compile', () => {
       const identity = firestoreModelIdentity(testName, testCollectionName);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- compile-time type narrowing check
       expect(identity.collectionName === testCollectionName).toBe(true);
     });
   });
@@ -44,7 +42,6 @@ describe('firestoreModelIdentity()', () => {
 
       it('should compile', () => {
         const identity = firestoreModelIdentity(parent, testName);
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- compile-time type narrowing check
         expect(identity.collectionName === 'testnamewithpieces').toBe(true);
         expect(identity.parent).toBe(parent);
       });
@@ -61,7 +58,6 @@ describe('firestoreModelIdentity()', () => {
 
       it('should compile', () => {
         const identity = firestoreModelIdentity(parent, testName, testCollectionName);
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- compile-time type narrowing check
         expect(identity.collectionName === testCollectionName).toBe(true);
         expect(identity.parent).toBe(parent);
       });

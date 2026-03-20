@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { cachedGetter, type ClassLikeType, type Getter, mapObjectMap, type Maybe } from '@dereekb/util';

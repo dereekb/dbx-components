@@ -142,7 +142,6 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
  */
 export function copyDocumentIdToFieldModifierFunction<T extends object>(fieldName: keyof T): ModifyBeforeSetModifierFunction<T> {
   return ({ data, documentRef }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (data as unknown as Record<any, string>)[fieldName] = documentRef.id; // copy the id to the target field
   };
 }

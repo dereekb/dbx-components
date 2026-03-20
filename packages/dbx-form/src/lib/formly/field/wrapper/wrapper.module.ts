@@ -27,7 +27,9 @@ const importsAndExports = [
   FormlyMaterialModule
 ];
 
-/** Registers all Formly field wrapper types (section, flex, expand, toggle, style, info, working, autotouch, subsection). */
+/**
+ * Registers all Formly field wrapper types (section, flex, expand, toggle, style, info, working, autotouch, subsection).
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

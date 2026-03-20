@@ -520,7 +520,7 @@ export function isPageLoadingStateMetadataEqual(a: Partial<PageLoadingState>, b:
  * @param b - the second loading state to merge
  * @returns the combined loading state reflecting the merged values, errors, and loading flags
  */
-/* eslint-disable @typescript-eslint/max-params, @typescript-eslint/no-explicit-any -- variadic overload signatures */
+/* eslint-disable @typescript-eslint/max-params -- variadic overload signatures */
 export function mergeLoadingStates<A extends object, B extends object>(a: LoadingState<A>, b: LoadingState<B>): LoadingState<A & B>;
 export function mergeLoadingStates<A extends object, B extends object, O>(a: LoadingState<A>, b: LoadingState<B>, mergeFn: (a: A, b: B) => O): LoadingState<O>;
 export function mergeLoadingStates<A extends object, B extends object, C extends object>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>): LoadingState<A & B & C>;
@@ -530,12 +530,13 @@ export function mergeLoadingStates<A extends object, B extends object, C extends
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>): LoadingState<A & B & C & D & E>;
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
+// eslint-disable-next-line jsdoc/require-jsdoc -- JSDoc is on the overload signatures above
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
-  /* eslint-enable @typescript-eslint/max-params, @typescript-eslint/no-explicit-any */
+  /* eslint-enable @typescript-eslint/max-params */
   const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
   const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
-  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs; // eslint-disable-line @typescript-eslint/no-explicit-any
-  const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
+  const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs);
 
   const error = loadingStates.find((x) => x.error)?.error; // find the first error
   let result: LoadingState<O>;

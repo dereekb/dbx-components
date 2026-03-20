@@ -190,7 +190,6 @@ export function dateCellScheduleEncodedWeek(codes: Iterable<DateCellScheduleDayC
  * // Returns [DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.WEDNESDAY]  // [2, 4]
  * ```
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export function simplifyDateCellScheduleDayCodes(codes: Iterable<DateCellScheduleDayCode>): DateCellScheduleDayCode[] {
   const codesSet = new Set(codes);
   const result: DateCellScheduleDayCode[] = [];
@@ -299,7 +298,6 @@ export function expandDateCellScheduleDayCodesToDayCodesSet(input: DateCellSched
   const days = new Set<DateCellScheduleDayCode>();
 
   codes.forEach((code) => {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (code) {
       case 0:
         // do nothing
@@ -330,7 +328,6 @@ export function expandDateCellScheduleDayCodesToDayCodesSet(input: DateCellSched
 export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
   let dayCodes: DateCellScheduleDayCode[];
 
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'string':
       dayCodes = [...new Set(input)].map((x) => Number(x)) as DateCellScheduleDayCode[];

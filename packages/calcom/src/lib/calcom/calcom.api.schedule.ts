@@ -28,6 +28,9 @@ export interface CalcomGetSchedulesResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/schedules/get-all-schedules
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves all schedules
+ *
  * @example
  * ```ts
  * const response = await getSchedules(context)();

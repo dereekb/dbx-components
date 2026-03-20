@@ -125,7 +125,6 @@ export function objectCopyFactory<T extends object>(value: T, copyFunction: Copy
  */
 export function asObjectCopyFactory<T>(input: T | ObjectCopyFactory<T>, copyFunction?: CopyObjectFunction<T>): ObjectCopyFactory<T> {
   if (typeof input === 'object') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return objectCopyFactory<any>(input, copyFunction);
   } else {
     return asGetter(input);

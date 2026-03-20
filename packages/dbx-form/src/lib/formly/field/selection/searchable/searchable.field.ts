@@ -9,8 +9,10 @@ import { type SearchableTextValueFieldsFieldProps } from './searchable.text.fiel
 /**
  * Used to create a SearchableValueFieldDisplayFn function that will retrieve the metadata for items that are missing their metadata so they can be displayed properly.
  *
- * @param param0
- * @returns
+ * @param param0 - Configuration object
+ * @param param0.loadMetaForValues - Function to load metadata for values that are missing it
+ * @param param0.makeDisplayForValues - Function to convert values with metadata into display values
+ * @returns A display function that lazily loads metadata before generating display values
  */
 export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: { loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>; makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]> }): SearchableValueFieldDisplayFn<T, M> {
   return (values: SearchableValueFieldValue<T, M>[]) => {
@@ -23,7 +25,7 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
         map((result) => {
           const resultMap: Map<Maybe<T>, SearchableValueFieldValue<T, M>> = arrayToMap(result, (x) => x.value);
 
-          const mergedWithLoad = needLoading.map((x) => {
+          return needLoading.map((x) => {
             const id = x.value;
             const loadedItem = resultMap.get(id);
             const anchor = x.anchor ?? loadedItem?.anchor;
@@ -35,8 +37,6 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
               meta
             };
           });
-
-          return mergedWithLoad;
         }),
         map((result) => [...loaded, ...result])
       );
@@ -49,7 +49,9 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
 }
 
 // MARK: Chips
-/** Configuration for a searchable chip field that uses string values directly. */
+/**
+ * Configuration for a searchable chip field that uses string values directly.
+ */
 export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFieldConfig<string, M>, 'allowStringValues'>;
 
 /**

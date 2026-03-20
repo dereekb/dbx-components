@@ -38,6 +38,9 @@ export type Clearable<T> = Maybe<T>;
  *   "items?": clearable(mySchemaType.array()),          // .array() result
  * });
  * ```
+ *
+ * @param definition The ArkType definition string or Type instance to make clearable.
+ * @returns An ArkType schema that accepts the defined type, null, or undefined.
  */
 export function clearable<const def extends string>(definition: def): Type<type.infer<def> | null | undefined>;
 export function clearable<T>(definition: Type<T>): Type<T | null | undefined>;

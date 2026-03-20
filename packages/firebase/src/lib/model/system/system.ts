@@ -54,7 +54,6 @@ export type SystemStateId = SystemStateTypeIdentifier;
 /**
  * Arbitrary data stored within a SystemState. Stored values should always be either a string, number, or boolean.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- values are arbitrary system state data (string, number, boolean)
 export type SystemStateStoredData = Record<string, any>;
 
 /**
@@ -125,7 +124,6 @@ export type SystemStateFirestoreCollection<T extends SystemStateStoredData = Sys
  *
  * @template T - shape of the stored data
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- converter maps between typed data and arbitrary Firestore representation
 export type SystemStateStoredDataFieldConverterConfig<T extends SystemStateStoredData = SystemStateStoredData> = ModelFieldMapFunctionsConfig<T, any>;
 
 /**
@@ -134,7 +132,6 @@ export type SystemStateStoredDataFieldConverterConfig<T extends SystemStateStore
  * Each entry defines how a specific SystemState type's `data` field is serialized/deserialized.
  */
 export type SystemStateStoredDataConverterMap = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- allows converters for any SystemStateStoredData subtype
   [key: string]: SystemStateStoredDataFieldConverterConfig<any>;
 };
 

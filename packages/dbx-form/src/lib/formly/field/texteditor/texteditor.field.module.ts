@@ -4,7 +4,9 @@ import { DbxTextEditorFieldComponent } from './texteditor.field.component';
 
 const importsAndExports = [DbxTextEditorFieldComponent];
 
-/** Registers the `texteditor` Formly field type for rich text editing. */
+/**
+ * Registers the `texteditor` Formly field type for rich text editing.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

@@ -260,7 +260,6 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
     const batchSendRequestRecipients: MailgunRecipientBatchSendTarget[] = [];
 
     recipients.forEach((recipient) => {
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: need || so empty cc array (length 0) falls through to check bcc
       const recipientHasCarbonCopy = Boolean(recipient.cc?.length || recipient.bcc?.length);
 
       if (allowBatchSend && !recipientHasCarbonCopy) {

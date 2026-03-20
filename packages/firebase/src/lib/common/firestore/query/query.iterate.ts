@@ -163,7 +163,7 @@ export async function iterateFirestoreDocumentSnapshots<T, R>(config: IterateFir
     ...config,
     maxParallelCheckpoints: 1,
     iterateSnapshotBatch: async (docSnapshots) => {
-      return await performAsyncTasks(docSnapshots, iterateSnapshot, {
+      return performAsyncTasks(docSnapshots, iterateSnapshot, {
         sequential: true, // sequential by default
         ...(snapshotsPerformTasksConfig ?? { ...performTasksConfig, nonConcurrentTaskKeyFactory: undefined, beforeRetry: undefined }) // don't pass the nonConcurrentTaskKeyFactory
       });
@@ -708,7 +708,6 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
         // check for repeat cursor
         const nextCursorDocument: Maybe<QueryDocumentSnapshot<T>> = lastValue(docSnapshots);
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- nextCursorDocument is Maybe<T> from lastValue()
         if (nextCursorDocument != null) {
           const cursorPath = readFirestoreModelKeyFromDocumentSnapshot(nextCursorDocument);
 
@@ -732,7 +731,6 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
           const newSnapshotsVisited = docSnapshots.length;
           totalSnapshotsVisited += newSnapshotsVisited;
 
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- cursorDocument can be undefined when nextCursorDocument is undefined
           if (!cursorDocument || totalSnapshotsVisited > totalSnapshotsLimit) {
             hasReachedEnd = true; // mark as having reached the end
             totalSnapshotsLimitReached = true; // mark as having reached the limit

@@ -283,7 +283,6 @@ export class DateTimeUtilityInstance {
             // 1212AM
             removeAmPm(input);
 
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- removedPm is set via closure side effect in removeAmPm()
             if (removedPm) {
               removedPm = input[0] !== '2'; // If 2, ignore the PM part.
             }

@@ -55,7 +55,6 @@ export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey
     const map = new Map<K, T>();
 
     values.forEach((x) => {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const keys = read(x) ?? [];
       keys.forEach((key) => map.set(key, x));
     });

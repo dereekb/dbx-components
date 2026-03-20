@@ -81,6 +81,11 @@ export type PartialPotentialFieldConfig = Partial<FieldConfig> & Partial<Labeled
 
 /**
  * Validates the configuration on the input field.
+ *
+ * @param fieldConfig - The Formly field configuration to validate
+ * @returns The validated field configuration
+ *
+ * @param fieldConfig - The Formly field configuration to validate
  */
 export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fieldConfig: T): T {
   if (!fieldConfig.key) {
@@ -109,17 +114,26 @@ export function propsAndConfigForFieldConfig<O extends object = object>(fieldCon
   };
 }
 
-/** Keys from {@link PartialPotentialFieldConfig} that are merged into Formly props. */
+/**
+ * Keys from {@link PartialPotentialFieldConfig} that are merged into Formly props.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const partialPotentialFieldConfigKeys: (keyof PartialPotentialFieldConfig)[] = ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'];
-/** Filter configuration for extracting field config keys from objects. */
+/**
+ * Filter configuration for extracting field config keys from objects.
+ */
 export const partialPotentialFieldConfigKeysFilter: FilterKeyValueTuplesInput<PartialPotentialFieldConfig> = {
   keysFilter: partialPotentialFieldConfigKeys
 };
 
-/** Merge function that combines multiple partial field configs, picking only the recognized keys. */
+/**
+ * Merge function that combines multiple partial field configs, picking only the recognized keys.
+ */
 export const mergePropsValueObjects = mergeObjectsFunction<PartialPotentialFieldConfig>(partialPotentialFieldConfigKeysFilter);
 
-/** Filter function that extracts only the recognized field config keys from an object. */
+/**
+ * Filter function that extracts only the recognized field config keys from an object.
+ */
 export const filterPartialPotentialFieldConfigValuesFromObject = filterFromPOJOFunction<PartialPotentialFieldConfig>({
   filter: partialPotentialFieldConfigKeysFilter
 }) as GeneralFilterFromPOJOFunction<PartialPotentialFieldConfig>;
@@ -169,6 +183,8 @@ export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends o
 
 /**
  * Returns configuration for a formlyField that will disable autofill/autocomplete for a field.
+ *
+ * @returns An attributes object that disables browser autofill
  */
 export function disableFormlyFieldAutofillAttributes(): { name: string; autocomplete: string } {
   // https://stackoverflow.com/questions/15738259/disabling-chrome-autofill

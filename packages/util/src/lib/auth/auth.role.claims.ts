@@ -157,12 +157,10 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
   const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
   const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function isSimpleOptions(entry: AuthRoleClaimsFactoryConfigEntry<any>): entry is AuthRoleClaimsFactoryConfigEntrySimpleOptions {
     return 'roles' in entry;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic config object needs cast for Object.entries
   const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry | IgnoreAuthRoleClaimsEntry>(config as any)
     .filter((x): x is [string, AuthRoleClaimsFactoryConfigEntry] => x[1] != null) // skip any ignored/null values
     .map((x) => {

@@ -18,9 +18,13 @@ import { NgxMatInputTelComponent } from 'ngx-mat-input-tel';
  * Formly field props for the international phone number component.
  */
 export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
-  /** ISO country codes for countries shown first in the dropdown. */
+  /**
+   * ISO country codes for countries shown first in the dropdown.
+   */
   readonly preferredCountries?: Maybe<string[]>;
-  /** ISO country codes to restrict the dropdown to. */
+  /**
+   * ISO country codes to restrict the dropdown to.
+   */
   readonly onlyCountries?: Maybe<string[]>;
   /**
    * Whether or not to enable the search feature. True by default.
@@ -32,7 +36,9 @@ export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
   readonly allowExtension?: boolean;
 }
 
-/** Default preferred countries shown at the top of the phone country dropdown. */
+/**
+ * Default preferred countries shown at the top of the phone country dropdown.
+ */
 export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 /**
@@ -132,7 +138,7 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
     });
 
     // sync any phoneCtrl errors with the errors of the form control.
-    this.phoneErrorSync.subscription = this.inputFormGroup.statusChanges.subscribe((x) => {
+    this.phoneErrorSync.subscription = this.inputFormGroup.statusChanges.subscribe((_x) => {
       const errors = { ...this.phoneCtrl.errors, ...this.extensionCtrl.errors };
       this.formControl.setErrors(objectHasNoKeys(errors) ? null : errors, { emitEvent: true });
     });

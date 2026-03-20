@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- generic constraints require `any` for covariant document data types */
 import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeArrayValues, runAsyncTasksForValues, type Building } from '@dereekb/util';
 import { type FirestoreModelId, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from '../collection';
 import { type QueryDocumentSnapshot, type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';

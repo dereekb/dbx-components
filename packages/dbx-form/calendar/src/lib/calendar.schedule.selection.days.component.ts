@@ -29,8 +29,7 @@ export class DbxScheduleSelectionCalendarDateDaysComponent {
     const newSetValue = new Set(dateCellScheduleDayCodesFromEnabledDays(value));
     return this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(
       map((currentSet) => {
-        const result = !dateCellScheduleDayCodesAreSetsEquivalent(newSetValue, currentSet);
-        return result;
+        return !dateCellScheduleDayCodesAreSetsEquivalent(newSetValue, currentSet);
       })
     );
   };

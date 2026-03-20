@@ -37,7 +37,9 @@ export type DbxFixedDateRangePickerConfiguration = Omit<DateTimeMinuteConfig, 'd
  */
 export type DbxFixedDateRangeSelectionMode = 'single' | 'normal' | 'arbitrary' | 'arbitrary_quick';
 
-/** Whether the user is currently picking the start or end of a range. */
+/**
+ * Whether the user is currently picking the start or end of a range.
+ */
 export type DbxFixedDateRangePicking = 'start' | 'end';
 
 export interface DbxFixedDateRangeFieldProps extends FormlyFieldProps {
@@ -127,7 +129,9 @@ function dbxFixedDateRangeOutputValueFactory(mode: DbxDateTimeValueMode, timezon
 
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
-/** Type of the most recent date range pick action. */
+/**
+ * Type of the most recent date range pick action.
+ */
 export type FixedDateRangeScanType = 'start' | 'end' | 'startRepeat';
 
 /**
@@ -274,11 +278,12 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         } else {
           // take the first date, then wait unless the date is outside of the range.
           return this.selectedDateRange$.pipe(
+            // eslint-disable-next-line sonarjs/cognitive-complexity
             scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
               let result: FixedDateRangeScan;
               let pickType: Maybe<FixedDateRangeScanType> = 'start';
 
-              if (nextDateRange && nextDateRange.start != null) {
+              if (nextDateRange?.start != null) {
                 const { start: startOrNextDate, end } = nextDateRange;
                 const potentialBoundary = dateRange({ ...dateRangeInput, date: startOrNextDate } as DateRangeInput);
 
@@ -293,10 +298,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
                   // for normal mode we want to protect against "start" being input, then the output being passed,
                   // and then the next click being treated as another "start" instead of an "end".
-                  if (mode === 'normal' && acc.lastPickType === 'start' && isSameDateDay(startOrNextDate, end)) {
-                    if (isSameDateDay(startOrNextDate, acc.lastDateRange?.start)) {
-                      pickType = 'startRepeat';
-                    }
+                  if (mode === 'normal' && acc.lastPickType === 'start' && isSameDateDay(startOrNextDate, end) && isSameDateDay(startOrNextDate, acc.lastDateRange?.start)) {
+                    pickType = 'startRepeat';
                   }
                 } else {
                   let range: Maybe<DateRange> = undefined;
@@ -316,7 +319,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
                     // react based on how this
                     switch (pickType) {
-                      case 'end':
+                      case 'end': {
                         const lastStart = acc.lastDateRange?.start as Date;
 
                         let boundaryToCheck: DateRange;
@@ -353,6 +356,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                           end: nextEnd
                         };
                         break;
+                      }
                       case 'start':
                         // retain the boundary as potential boundary, and set our new range from the single date.
                         range = {
@@ -435,7 +439,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
    */
   readonly calendarFocusDate$: Observable<Date> = this._selectionEvent.pipe(startWith(null)).pipe(
     switchMap((selectionEvent) => {
-      if (selectionEvent && selectionEvent.type === 'calendar' && selectionEvent.range?.start) {
+      if (selectionEvent?.type === 'calendar' && selectionEvent.range?.start) {
         return of(selectionEvent.range.start);
       } else {
         return this.fullBoundary$.pipe(
@@ -625,12 +629,10 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
             const latestBoundary = this.latestBoundarySignal();
 
-            if (currentSelectionMode === 'arbitrary_quick' && latestBoundary && x?.start && x?.end) {
-              if (!isDateInDateRange(x.start, latestBoundary)) {
-                // if the end date it outside of the current range (i.e. a range was typed in only to the start date) then set the end to the boundary end
-                const boundary = dateRange({ ...this.currentDateRangeInputSignal(), date: x.start } as DateRangeInput);
-                rangeToSet = { start: x.start, end: boundary.end };
-              }
+            if (currentSelectionMode === 'arbitrary_quick' && latestBoundary && x?.start && x?.end && !isDateInDateRange(x.start, latestBoundary)) {
+              // if the end date it outside of the current range (i.e. a range was typed in only to the start date) then set the end to the boundary end
+              const boundary = dateRange({ ...this.currentDateRangeInputSignal(), date: x.start } as DateRangeInput);
+              rangeToSet = { start: x.start, end: boundary.end };
             }
 
             this.setDateRange(rangeToSet, 'input');
@@ -735,12 +737,12 @@ export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeS
   private readonly _dateAdapter = inject(DateAdapter<D>);
   readonly dbxFixedDateRangeFieldComponent = inject(DbxFixedDateRangeFieldComponent);
 
-  selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
+  selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     // unused
     return currentRange;
   }
 
-  createPreview(activeDate: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
+  createPreview(activeDate: D | null, _currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     const { currentSelectionModeSignal, latestBoundarySignal } = this.dbxFixedDateRangeFieldComponent;
     const currentSelectionMode = currentSelectionModeSignal();
 
@@ -749,8 +751,7 @@ export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeS
       const date = this.dateFromAdapterDate(activeDate);
 
       if (latestBoundary && (currentSelectionMode === 'normal' || isDateInDateRange(date, latestBoundary))) {
-        const exampleDateRange = this._createDateRange(latestBoundary);
-        return exampleDateRange;
+        return this._createDateRange(latestBoundary);
       }
     }
 

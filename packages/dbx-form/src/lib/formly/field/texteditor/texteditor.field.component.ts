@@ -10,7 +10,9 @@ import { type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 
-/** Formly field properties for the text editor component. */
+/**
+ * Formly field properties for the text editor component.
+ */
 export type TextEditorComponentFieldProps = FormlyFieldProps;
 
 /**

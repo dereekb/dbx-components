@@ -10,4 +10,5 @@ export const FORMLY_TEST_PROVIDERS = [
   FormlyMaterialModule
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- NoopAnimationsModule is needed here because FORM_TEST_PROVIDERS is spread into TestBed imports arrays
 export const FORM_TEST_PROVIDERS = [DbxFormExtensionModule, ...FORMLY_TEST_PROVIDERS, NoopAnimationsModule];

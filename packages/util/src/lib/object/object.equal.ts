@@ -117,9 +117,7 @@ function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): 
   }
 
   // check object comparison via keys
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const aObject = a as Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bObject = b as Record<string, any>;
 
   const aKeys = Object.keys(aObject);

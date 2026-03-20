@@ -149,6 +149,9 @@ export class QuizStore extends ComponentStore<QuizStoreState> {
   /**
    * Returns a reactive observable of the answer for a given question, looked up by id, index, or the current question.
    *
+   * @param lookupInput - Lookup criteria specifying which question's answer to retrieve
+   * @returns An observable that emits the current answer for the specified question, or undefined if not answered
+   *
    * @example
    * ```ts
    * // By current question:
@@ -156,6 +159,8 @@ export class QuizStore extends ComponentStore<QuizStoreState> {
    * // By question id:
    * store.answerForQuestion({ id: 'q1' }).subscribe(answer => console.log(answer));
    * ```
+   *
+   * @param lookupInput - Lookup criteria specifying which question's answer to retrieve
    */
   answerForQuestion(lookupInput: ObservableOrValue<QuizStoreAnswerLookupInput>): Observable<Maybe<QuizAnswer>> {
     return asObservable(lookupInput).pipe(
@@ -291,7 +296,7 @@ function restartQuizToFirstQuestionOnState(state: QuizStoreState): QuizStoreStat
 
 function setQuizOnState(state: QuizStoreState, quiz?: Maybe<Quiz>): QuizStoreState {
   let questionMap: Maybe<ReadonlyMap<QuizQuestionId, QuizQuestion>> = undefined;
-  const currentAnswers = Array.from(state.answers.values());
+  const currentAnswers = [...state.answers.values()];
 
   if (quiz?.questions) {
     questionMap = new Map(quiz.questions.map((question) => [question.id, question]));

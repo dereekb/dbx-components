@@ -4,6 +4,12 @@ import { type DbxFormMapboxZoomComponentFieldProps } from './zoom.field.componen
 
 export interface MapboxZoomFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxZoomComponentFieldProps, 'showMap' | 'center' | 'minZoom' | 'maxZoom' | 'zoomStep'> {}
 
+/**
+ * Creates a Formly field configuration for a Mapbox-powered zoom level picker with optional map preview.
+ *
+ * @param config - Optional field configuration overrides
+ * @returns A validated Formly field configuration for the Mapbox zoom picker
+ */
 export function mapboxZoomField(config: MapboxZoomFieldConfig = {}): FormlyFieldConfig {
   const { key = 'zoom', showMap, center, minZoom, maxZoom, zoomStep } = config;
 

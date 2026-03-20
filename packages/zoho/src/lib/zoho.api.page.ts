@@ -87,7 +87,6 @@ export interface ZohoPageResultInfoRef {
  * A fetch function that accepts paginated input and returns a {@link ZohoPageResult}.
  * Used as the underlying data source for {@link zohoFetchPageFactory}.
  */
-
 export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoPageResult<any>> = (input: I) => Promise<R>;
 
 /**

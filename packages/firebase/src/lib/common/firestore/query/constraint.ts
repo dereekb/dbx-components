@@ -244,7 +244,6 @@ export interface WhereQueryConstraintData {
 export function where<T>(fieldPath: StringKeyPropertyKeys<T>, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- only specific operators need validation
   switch (opStr) {
     case 'array-contains':
       if (Array.isArray(value)) {
@@ -549,7 +548,6 @@ export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: 
  * indicate unsupported constraint types.
  */
 export type FirestoreQueryConstraintHandlerMap<B> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>;
 };
 

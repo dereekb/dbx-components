@@ -69,6 +69,9 @@ export interface CalcomGetBusyTimesResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/calendars/get-all-calendars
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves all connected calendars
+ *
  * @example
  * ```ts
  * const response = await getCalendars(context)();
@@ -83,6 +86,9 @@ export function getCalendars(context: CalcomContext): () => Promise<CalcomGetCal
  * Retrieves busy time ranges across the user's connected calendars for a given date range.
  *
  * @see https://cal.com/docs/api-reference/v2/calendars/get-busy-times
+ *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves busy time ranges for a date range
  *
  * @example
  * ```ts

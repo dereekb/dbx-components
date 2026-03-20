@@ -207,7 +207,6 @@ export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFuncti
   const map = new Map<string, T>();
 
   input.forEach((x) => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     const keys = read(x) ?? [];
     keys.forEach((key) => map.set(key, x));
   });
@@ -231,7 +230,6 @@ export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFuncti
 export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { useModel, useKey, required = false }: { useModel?: (model: T) => O; useKey: (key: Maybe<ModelKey>) => O; required?: boolean }): Maybe<O> {
   let result: Maybe<O>;
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (input != null) {
     if (isModelKey(input)) {
       result = useKey(input);
@@ -282,7 +280,6 @@ export function readModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undef
 export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'string':
       key = input as ModelKey;
@@ -328,7 +325,6 @@ export function readModelKeyFromObject<T extends UniqueModel>(input: T, required
  * @returns `true` if the input is a string key
  */
 export function isModelKey<T extends UniqueModel>(input: ModelOrKey<T>): input is ModelKey {
-  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof input) {
     case 'string':
       return true;

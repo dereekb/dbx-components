@@ -6,7 +6,9 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
 
 const importsAndExports = [DbxDateTimeFieldComponent, DbxFixedDateRangeFieldComponent, DbxFormFormlyWrapperModule];
 
-/** Registers the `datetime` and `fixeddaterange` Formly field types with style and form-field wrappers. */
+/**
+ * Registers the `datetime` and `fixeddaterange` Formly field types with style and form-field wrappers.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

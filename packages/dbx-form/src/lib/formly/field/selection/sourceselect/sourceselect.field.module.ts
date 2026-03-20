@@ -2,7 +2,9 @@ import { NgModule } from '@angular/core';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormSourceSelectFieldComponent } from './sourceselect.field.component';
 
-/** Registers the `sourceselectfield` Formly field type. */
+/**
+ * Registers the `sourceselectfield` Formly field type.
+ */
 @NgModule({
   imports: [
     DbxFormSourceSelectFieldComponent,

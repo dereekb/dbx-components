@@ -29,9 +29,13 @@ export type TextFieldInputType = 'text' | 'password' | 'email';
  * and Material form field styling into one config object.
  */
 export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig, Partial<TransformStringFunctionConfigRef>, MaterialFormFieldConfig {
-  /** HTML input type. Defaults to `'text'`. */
+  /**
+   * HTML input type. Defaults to `'text'`.
+   */
   inputType?: TextFieldInputType;
-  /** String transformation applied as a value parser (e.g., trim, uppercase). */
+  /**
+   * String transformation applied as a value parser (e.g., trim, uppercase).
+   */
   transform?: TransformStringFunctionConfig;
 }
 
@@ -75,7 +79,7 @@ export function textFieldTransformParser(config: Partial<FieldConfigParsersRef> 
  * ```
  */
 export function textField(config: TextFieldConfig): FormlyFieldConfig {
-  const { transform, key, pattern, minLength, maxLength, inputType: type = 'text', materialFormField } = config;
+  const { transform: _transform, key, pattern, minLength, maxLength, inputType: type = 'text', materialFormField } = config;
   const parsers = textFieldTransformParser(config);
 
   return formlyField({
@@ -96,7 +100,9 @@ export function textField(config: TextFieldConfig): FormlyFieldConfig {
  * Configuration for a multi-line textarea input field.
  */
 export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig, Partial<TransformStringFunctionConfigRef>, MaterialFormFieldConfig {
-  /** Number of visible text rows. Defaults to 3. */
+  /**
+   * Number of visible text rows. Defaults to 3.
+   */
   rows?: number;
 }
 

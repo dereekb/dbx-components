@@ -148,7 +148,6 @@ export function handlerFactory<T, K extends PrimativeKey = string, R = HandleRes
         let handled: Promise<R>;
 
         if (handler) {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defaultResultValue is needed as fallback when handler returns undefined
           handled = Promise.resolve(handler(value)).then((x) => x ?? defaultResultValue);
         } else {
           handled = Promise.resolve(negativeResultValue);

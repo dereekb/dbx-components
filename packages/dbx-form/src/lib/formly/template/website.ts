@@ -22,7 +22,7 @@ export interface WebsiteUrlFieldConfig extends Omit<TextFieldConfig, 'inputType'
 export function websiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFieldConfig {
   const validators: ValidatorFn[] = [isWebsiteUrlValidator(config)];
 
-  const field = {
+  return {
     ...textField({
       key: 'website',
       ...config,
@@ -33,6 +33,4 @@ export function websiteUrlField(config?: WebsiteUrlFieldConfig): FormlyFieldConf
       validators
     })
   };
-
-  return field;
 }

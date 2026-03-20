@@ -102,7 +102,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
       return result;
     }, new Set<T>()),
     distinctUntilChanged(),
-    map((x) => Array.from(x)),
+    map((x) => [...x]),
     shareReplay(1)
   );
 
@@ -127,7 +127,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
             return combineLatest(sourceObs).pipe(
               map((x) => {
                 const statesWithValues = x.filter((y) => isLoadingStateWithDefinedValue(y));
-                const loading = x.findIndex(isLoadingStateLoading) !== -1;
+                const loading = x.some(isLoadingStateLoading);
                 const value: SourceSelectValueGroup<T, M>[] = statesWithValues.map((y) => {
                   const group: SourceSelectValueGroup<T, M> = {
                     label: y.label,
@@ -215,30 +215,28 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
         const simplifiedValuesGroups: SourceSelectValueGroup<T, M>[] = [];
 
         // sort to put the blank label first
-        Array.from(allGroupsReducedByLabel.entries())
-          .sort(sortByStringFunction((x) => x[0]))
-          .forEach(([label, groups]) => {
-            const values: SourceSelectValue<T, M>[] = [];
+        [...allGroupsReducedByLabel.entries()].sort(sortByStringFunction((x) => x[0])).forEach(([label, groups]) => {
+          const values: SourceSelectValue<T, M>[] = [];
 
-            groups.forEach((group) => {
-              group.values.forEach((selectValue) => {
-                if (!valuesEncountered.has(selectValue.value)) {
-                  values.push(selectValue);
-                  allUniqueValues.push(selectValue);
-                  valuesEncountered.add(selectValue.value);
-                }
-              });
+          groups.forEach((group) => {
+            group.values.forEach((selectValue) => {
+              if (!valuesEncountered.has(selectValue.value)) {
+                values.push(selectValue);
+                allUniqueValues.push(selectValue);
+                valuesEncountered.add(selectValue.value);
+              }
             });
-
-            if (values.length > 0) {
-              simplifiedValuesGroups.push({
-                label,
-                values
-              });
-            }
           });
 
-        const obs = this.getDisplayValuesForSelectValues(allUniqueValues).pipe(
+          if (values.length > 0) {
+            simplifiedValuesGroups.push({
+              label,
+              values
+            });
+          }
+        });
+
+        return this.getDisplayValuesForSelectValues(allUniqueValues).pipe(
           map((displayValues) => {
             const displayValuesMap = new Map(displayValues.map((x) => [x.value, x]));
 
@@ -254,8 +252,6 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
             return displayGroups;
           })
         );
-
-        return obs;
       })
     ),
     shareReplay(1)
@@ -364,10 +360,8 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
               metaResultsMapping.forEach((x) => metaMap.set(x.value, x));
 
               // Zip values back together.
-              const newDisplayValues = mappingResult.map((x) => x[2] ?? valueIndexHashMap.get(x[1]));
-
               // Return display values.
-              return newDisplayValues;
+              return mappingResult.map((x) => x[2] ?? valueIndexHashMap.get(x[1]));
             })
           );
         } else {
@@ -411,10 +405,8 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
               displayResultsMapping.forEach(([x, hash]) => metaMap.set(hash, x));
 
               // Zip values back together.
-              const newDisplayValues = mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
-
               // Return display values.
-              return newDisplayValues;
+              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
         } else {

@@ -69,6 +69,11 @@ export type CalcomAccessTokenStringFactory = () => Promise<CalcomAccessTokenStri
 
 /**
  * Generates a new CalcomAccessTokenStringFactory.
+ * Wraps a CalcomAccessTokenFactory to extract just the access token string,
+ * throwing a CalcomOAuthAuthFailureError if the token is missing.
+ *
+ * @param calcomAccessTokenFactory - the factory that produces CalcomAccessToken objects
+ * @returns a factory function that returns the access token string
  */
 export function calcomAccessTokenStringFactory(calcomAccessTokenFactory: CalcomAccessTokenFactory): CalcomAccessTokenStringFactory {
   return async () => {

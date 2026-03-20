@@ -45,7 +45,6 @@ export function partialServerError<T = ServerErrorResponseData>(messageOrError: 
   if (typeof messageOrError === 'string') {
     serverError = { message: messageOrError };
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     serverError = (messageOrError as Partial<ServerError<T>>) ?? {};
   }
 

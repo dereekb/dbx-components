@@ -3,7 +3,9 @@ import { type Observable, of } from 'rxjs';
 import { type PickableValueFieldDisplayValue, type PickableValueFieldValue } from './pickable';
 import { type PickableItemFieldItem, type PickableValueFieldsFieldProps } from './pickable.field.directive';
 
-/** Case-insensitive filter function that matches pickable display values by their label using indexOf. */
+/**
+ * Case-insensitive filter function that matches pickable display values by their label using indexOf.
+ */
 export const filterPickableItemFieldValuesByLabelFilterFunction: SearchStringFilterFunction<PickableValueFieldDisplayValue<any>> = searchStringFilterFunction({
   readStrings: (x) => [x.label],
   decisionFactory: caseInsensitiveFilterByIndexOfDecisionFactory
@@ -30,7 +32,9 @@ export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string
   return of(filteredValues.map((x) => x.value));
 }
 
-/** String sort comparator that orders pickable items alphabetically by label. */
+/**
+ * String sort comparator that orders pickable items alphabetically by label.
+ */
 export const sortPickableItemsByLabelStringFunction = sortByStringFunction<PickableItemFieldItem<any>>((x) => x.itemValue.label);
 
 /**
@@ -44,10 +48,14 @@ export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): 
 }
 
 // MARK: PickableValueFieldValuesConfigForStaticLabeledValues
-/** Subset of {@link PickableValueFieldsFieldProps} needed for static labeled value configuration. */
+/**
+ * Subset of {@link PickableValueFieldsFieldProps} needed for static labeled value configuration.
+ */
 export type PickableValueFieldValuesConfigForStaticLabeledValues<T, M extends LabeledValue<T>> = Pick<PickableValueFieldsFieldProps<T, M>, 'loadValues' | 'displayForValue' | 'filterValues'>;
 
-/** Configuration for creating a pickable field from a static set of labeled values. */
+/**
+ * Configuration for creating a pickable field from a static set of labeled values.
+ */
 export interface PickableValueFieldValuesConfigForStaticLabeledValuesConfig<T, M extends LabeledValue<T>> {
   readonly allOptions: M[];
   readonly unknownOptionLabel?: string;

@@ -31,7 +31,7 @@ export type ChecklistItemFieldBuilderInput<T = unknown> = Partial<ChecklistItemF
 export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilderInput<T>): FormlyFieldConfig<DbxChecklistItemFieldProps<T>> {
   const { key, displayContent, componentClass } = config;
 
-  const fieldConfig = formlyField({
+  return formlyField({
     key,
     type: 'checklistitem',
     ...propsAndConfigForFieldConfig(config, {
@@ -39,6 +39,4 @@ export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilde
       componentClass
     })
   });
-
-  return fieldConfig;
 }

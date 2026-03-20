@@ -122,8 +122,7 @@ export function notificationTemplateTypeInfoRecord(infoArray: NotificationTempla
   infoArray.forEach((x) => {
     const { type } = x;
 
-    if (record[type] != null) {
-      // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- record is mutated inside loop
+    if (record[type]) {
       throw new Error(`notificationTemplateTypeInfoRecord(): duplicate NotificationTemplateType in record: ${type}`);
     }
 

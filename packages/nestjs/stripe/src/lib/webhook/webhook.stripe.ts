@@ -89,7 +89,6 @@ export interface StripeEventHandlerConfigurer extends HandlerBindAccessor<Stripe
 
 export const stripeEventHandlerConfigurerFactory = handlerConfigurerFactory<StripeEventHandlerConfigurer, Stripe.Event>({
   configurerForAccessor: (accessor: HandlerBindAccessor<Stripe.Event>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<StripeWebhookEvent<any>, any>(accessor, stripeWebhookEvent);
 
     const configurer: StripeEventHandlerConfigurer = {

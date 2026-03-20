@@ -11,7 +11,9 @@ import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.au
 import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-/** Formly field properties for text input with optional custom validators. */
+/**
+ * Formly field properties for text input with optional custom validators.
+ */
 export interface StringValueFieldsFieldProps extends FormlyFieldProps {
   /**
    * Custom input validators.
@@ -206,8 +208,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   get searchInputPlaceholder(): string | '' {
     const searchOnEmpty = this.searchOnEmptyText;
     const placeholder = this.searchableField.placeholder;
-    const test = placeholder || (searchOnEmpty ? undefined : this.defaultSearchInputPlaceholder) || '';
-    return test;
+    return placeholder || (searchOnEmpty ? undefined : this.defaultSearchInputPlaceholder) || '';
   }
 
   get autocomplete(): string {
@@ -318,10 +319,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
               displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
 
               // Zip values back together.
-              const newDisplayValues = mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
-
               // Return display values.
-              return newDisplayValues;
+              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
         } else {
@@ -367,6 +366,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
    * Used to sync the input control with the selected value.
    *
    * Only used when multiSelect is false.
+   *
+   * @param value - The display value to synchronize the input control with
+   *
+   * @param value - The display value to synchronize the input control with
    */
   protected _syncSingleValue(value: SearchableValueFieldDisplayValue<T>): void {
     this.inputCtrl.setValue(value.label);
@@ -395,6 +398,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   /**
    * Returns the first validation error message from the input control, if any.
+   *
+   * @returns The first error message string, or undefined if there are no errors
    */
   get inputErrorMessage(): string | undefined {
     const errors = this.inputCtrl.errors;
@@ -486,7 +491,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     let newValue: T | T[] = values;
 
     if (!this.asArrayValue) {
-      newValue = [values[0]].filter((x) => x != null)[0];
+      newValue = [values[0]].find((x) => x != null) as T;
     }
 
     this.formControl.setValue(newValue);

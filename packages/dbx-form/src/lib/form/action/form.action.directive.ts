@@ -261,8 +261,12 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
  * used by {@link DbxActionFormDirective.checkIsValidAndIsModified}.
  */
 interface CheckValidAndModifiedOverrides<T> {
-  /** Override function for the modification check. */
+  /**
+   * Override function for the modification check.
+   */
   isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
-  /** Override function for the validity check. */
+  /**
+   * Override function for the validity check.
+   */
   isValidFunction?: Maybe<IsValidFunction<T>>;
 }

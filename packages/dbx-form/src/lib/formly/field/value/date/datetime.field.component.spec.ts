@@ -8,7 +8,7 @@ import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxDateTimeFieldComponent', () => {
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS, DbxFormFormlyDateFieldModule]
     }).compileComponents();
   }));

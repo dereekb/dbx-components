@@ -66,7 +66,7 @@ export function combineLatestFromObject<T extends ObservableObjectMap>(objectMap
       const result: Building<ObservableObjectMapResult<T>> = {};
 
       latestValues.forEach(([key, value]) => {
-        result[key] = value as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        result[key] = value as any;
       });
 
       return result as ObservableObjectMapResult<T>;

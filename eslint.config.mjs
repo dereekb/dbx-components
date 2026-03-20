@@ -73,7 +73,8 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off', // disabled: any is used intentionally throughout the codebase
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off', // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
-      '@typescript-eslint/no-empty-object-type': 'off' // disabled: empty object types are used intentionally
+      '@typescript-eslint/no-empty-object-type': 'off', // disabled: empty object types are used intentionally
+      '@typescript-eslint/no-empty-interface': 'off' // disabled: empty interfaces are used intentionally for extensibility
     }
   },
   {

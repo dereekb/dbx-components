@@ -45,6 +45,9 @@ export interface CalcomGetWebhooksResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/create-a-webhook
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that creates a webhook subscription from the given input
+ *
  * @example
  * ```ts
  * const response = await createWebhook(context)({
@@ -68,6 +71,9 @@ export function createWebhook(context: CalcomContext): (input: CalcomCreateWebho
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/get-all-webhooks
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves all webhooks
+ *
  * @example
  * ```ts
  * const response = await getWebhooks(context)();
@@ -85,6 +91,9 @@ export function getWebhooks(context: CalcomContext): () => Promise<CalcomGetWebh
  * Retrieves a specific webhook by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/get-a-webhook
+ *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves a specific webhook by ID
  *
  * @example
  * ```ts
@@ -104,6 +113,9 @@ export function getWebhook(context: CalcomContext): (webhookId: CalcomWebhookId)
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/update-a-webhook
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that updates an existing webhook by ID
+ *
  * @example
  * ```ts
  * await updateWebhook(context)(42, { active: false });
@@ -121,6 +133,9 @@ export function updateWebhook(context: CalcomContext): (webhookId: CalcomWebhook
  * Deletes a webhook by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/delete-a-webhook
+ *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that deletes a webhook by ID
  *
  * @example
  * ```ts

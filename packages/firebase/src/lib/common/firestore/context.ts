@@ -225,9 +225,7 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
 
       return {
         ...config,
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- collection can be undefined for collection group configs
         collection: config.converter ? collection?.withConverter(config.converter) : collection,
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- converter is optional at runtime via union type
         queryLike: config.converter ? queryLike.withConverter(config.converter) : queryLike,
         firestoreContext: context,
         firestoreDriverIdentifier: drivers.firestoreDriverIdentifier,

@@ -1687,7 +1687,6 @@ export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   const transform = latLngStringFunction({ precision, wrap: false, validate: true });
 
   return firestoreString<LatLngString>({
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional
     default: defaultValue || DEFAULT_LAT_LNG_STRING_VALUE,
     defaultBeforeSave,
     transform
@@ -1699,13 +1698,15 @@ export type FirestoreTimezoneStringConfig = DefaultMapConfiguredFirestoreFieldCo
 /**
  * Default configuration for a TimezoneString.
  *
- * The value defaults to UTC
+ * The value defaults to UTC.
+ *
+ * @param config - Optional configuration for the timezone string field, including default value and pre-save default.
+ * @returns A configured Firestore field that stores a TimezoneString value.
  */
 export function firestoreTimezoneString(config?: FirestoreTimezoneStringConfig) {
   const { default: defaultValue, defaultBeforeSave } = config ?? {};
 
   return firestoreString<TimezoneString>({
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional
     default: defaultValue || DEFAULT_LAT_LNG_STRING_VALUE,
     defaultBeforeSave
   });

@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractFormExpandSectionWrapperDirective, type AbstractFormExpandSectionConfig } from './expand.wrapper.delegate';
 
-/** The visual style of the expand button: a styled button or plain text link. */
+/**
+ * The visual style of the expand button: a styled button or plain text link.
+ */
 export type DbxFormExpandWrapperButtonType = 'button' | 'text';
 
 /**
@@ -9,7 +11,9 @@ export type DbxFormExpandWrapperButtonType = 'button' | 'text';
  * with an optional button type.
  */
 export interface DbxFormExpandWrapperConfig<T extends object = object> extends AbstractFormExpandSectionConfig<T> {
-  /** Visual style of the expand trigger. Defaults to `'button'`. */
+  /**
+   * Visual style of the expand trigger. Defaults to `'button'`.
+   */
   readonly buttonType?: DbxFormExpandWrapperButtonType;
 }
 
@@ -21,7 +25,7 @@ export interface DbxFormExpandWrapperConfig<T extends object = object> extends A
     @if (showSignal()) {
       <ng-container #fieldComponent></ng-container>
     } @else {
-      <span class="dbx-form-expand-wrapper-button" (click)="open()">{{ expandLabel }}</span>
+      <span class="dbx-form-expand-wrapper-button" tabindex="0" role="button" (click)="open()" (keydown.enter)="open()" (keydown.space)="open()">{{ expandLabel }}</span>
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

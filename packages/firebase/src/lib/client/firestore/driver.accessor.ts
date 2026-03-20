@@ -34,7 +34,7 @@ export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
     transactionFactoryForFirestore:
       (firestore) =>
       async <T>(fn: TransactionFunction<T>) =>
-        await runTransaction(firestore as FirebaseFirestore, fn as (transaction: Transaction) => Promise<T>),
+        runTransaction(firestore as FirebaseFirestore, fn as (transaction: Transaction) => Promise<T>),
     writeBatchFactoryForFirestore: (firestore) => () => writeBatch(firestore as FirebaseFirestore),
     defaultContextFactory: defaultFirestoreDocumentContext,
     transactionContextFactory: transactionDocumentContext as TransactionFirestoreDocumentContextFactory,

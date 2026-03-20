@@ -9,7 +9,7 @@ import { callbackTest } from '@dereekb/util/test';
 
 describe('FormActionDirective', () => {
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS, DbxCoreActionModule]
     }).compileComponents();
   }));

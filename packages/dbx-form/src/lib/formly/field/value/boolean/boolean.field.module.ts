@@ -5,7 +5,9 @@ import { FormlyMatToggleModule } from '@ngx-formly/material/toggle';
 
 const importsAndExports = [FormlyMaterialModule, FormlyMatCheckboxModule, FormlyMatToggleModule];
 
-/** Provides Formly Material checkbox and toggle field support. */
+/**
+ * Provides Formly Material checkbox and toggle field support.
+ */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

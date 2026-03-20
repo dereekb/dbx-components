@@ -5,7 +5,9 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 
-/** Injection token providing the {@link ConfiguredSearchableValueFieldDisplayValue} to autocomplete item display components. */
+/**
+ * Injection token providing the {@link ConfiguredSearchableValueFieldDisplayValue} to autocomplete item display components.
+ */
 export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
 
 /**

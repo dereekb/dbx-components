@@ -109,7 +109,6 @@ export function documentReferencesFromSnapshot<T>(snapshots: QuerySnapshot<T>): 
  * @param snapshot - The document snapshot to extract the key from
  * @returns The document's full path as a FirestoreModelKey
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts any document snapshot type
 export function readFirestoreModelKeyFromDocumentSnapshot(snapshot: DocumentSnapshot<any>): FirestoreModelKey {
   return snapshot.ref.path;
 }

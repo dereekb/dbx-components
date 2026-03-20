@@ -658,7 +658,6 @@ export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): Fires
     array.push(current.collectionName);
 
     if (current.type === 'nested') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       current = (current as FirestoreModelIdentityWithParent<any>).parent as FirestoreModelIdentity;
     } else {
       break;

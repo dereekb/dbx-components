@@ -59,6 +59,9 @@ export interface CalcomCancelBookingResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/bookings/create-a-booking
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that creates a booking from the given input
+ *
  * @example
  * ```ts
  * const response = await createBooking(context)({
@@ -84,6 +87,9 @@ export function createBooking(context: CalcomContext): (input: CalcomCreateBooki
  *
  * @see https://cal.com/docs/api-reference/v2/bookings/get-a-booking
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves a booking by its UID
+ *
  * @example
  * ```ts
  * const response = await getBooking(context)('abc-123-uid');
@@ -103,6 +109,9 @@ export function getBooking(context: CalcomContext): (uid: CalcomBookingUid) => P
  * Cancels a booking by its unique UID, with an optional cancellation reason.
  *
  * @see https://cal.com/docs/api-reference/v2/bookings/cancel-a-booking
+ *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that cancels a booking by UID
  *
  * @example
  * ```ts

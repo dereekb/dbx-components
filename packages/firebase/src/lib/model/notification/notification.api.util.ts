@@ -149,7 +149,6 @@ export function updateNotificationUserNotificationBoxRecipientConfigs(a: Notific
   let result: NotificationUserNotificationBoxRecipientConfig[] | undefined;
 
   if (hasChanges) {
-    // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- hasChanges is mutated inside forEach callback
     result = [...boxesMap.values()];
   }
 

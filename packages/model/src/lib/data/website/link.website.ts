@@ -39,8 +39,7 @@ export const WEBSITE_LINK_ISOLATE_BASE_URL_PROFILE_ID = isolateWebsitePathFuncti
  */
 export function usernameFromUsernameOrWebsiteWithBaseUrlUsername(input: ModelKey | WebsiteUrl, prefix?: string) {
   const username = toRelativeSlashPathStartType(WEBSITE_LINK_ISOLATE_BASE_URL_PROFILE_ID(usernameOrWebsiteUrlToWebsiteUrl(input)));
-  const result = prefix ? addPrefix(prefix, username) : username;
-  return result;
+  return prefix ? addPrefix(prefix, username) : username;
 }
 
 /**
@@ -132,9 +131,13 @@ export function phoneNumberToWebsiteLink(input: E164PhoneNumber): WebsiteLink {
 }
 
 // MARK: Facebook
-/** Base URL for Facebook profiles. */
+/**
+ * Base URL for Facebook profiles.
+ */
 export const FACEBOOK_BASE_URL = `https://www.facebook.com`;
-/** {@link WebsiteLinkType} code for Facebook. */
+/**
+ * {@link WebsiteLinkType} code for Facebook.
+ */
 export const FACEBOOK_WEBSITE_LINK_TYPE: WebsiteLinkType = 'fb';
 
 export type FacebookBaseUrl = typeof FACEBOOK_BASE_URL;
@@ -177,9 +180,13 @@ export function facebookProfileUrl<P extends FacebookProfileId>(profileId: P): F
 }
 
 // MARK: Instagram
-/** Base URL for Instagram profiles. */
+/**
+ * Base URL for Instagram profiles.
+ */
 export const INSTAGRAM_BASE_URL = `https://www.instagram.com`;
-/** {@link WebsiteLinkType} code for Instagram. */
+/**
+ * {@link WebsiteLinkType} code for Instagram.
+ */
 export const INSTAGRAM_WEBSITE_LINK_TYPE: WebsiteLinkType = 'ig';
 
 export type InstagramBaseUrl = typeof INSTAGRAM_BASE_URL;
@@ -211,9 +218,13 @@ export function instagramProfileUrl<P extends InstagramProfileId>(profileId: P):
 }
 
 // MARK: Twitter
-/** Base URL for Twitter profiles. */
+/**
+ * Base URL for Twitter profiles.
+ */
 export const TWITTER_BASE_URL = `https://www.twitter.com`;
-/** {@link WebsiteLinkType} code for Twitter. */
+/**
+ * {@link WebsiteLinkType} code for Twitter.
+ */
 export const TWITTER_WEBSITE_LINK_TYPE: WebsiteLinkType = 'tw';
 
 export type TwitterBaseUrl = typeof TWITTER_BASE_URL;
@@ -245,11 +256,17 @@ export function twitterProfileUrl<P extends TwitterProfileId>(profileId: P): Twi
 }
 
 // MARK: Tiktok
-/** Base URL for TikTok profiles. */
+/**
+ * Base URL for TikTok profiles.
+ */
 export const TIKTOK_BASE_URL = `https://tiktok.com`;
-/** TikTok usernames are prefixed with "@" in URLs and stored data. */
+/**
+ * TikTok usernames are prefixed with "@" in URLs and stored data.
+ */
 export const TIKTOK_USERNAME_PREFIX = '@';
-/** {@link WebsiteLinkType} code for TikTok. */
+/**
+ * {@link WebsiteLinkType} code for TikTok.
+ */
 export const TIKTOK_WEBSITE_LINK_TYPE: WebsiteLinkType = 'tt';
 
 export type TikTokBaseUrl = typeof TIKTOK_BASE_URL;
@@ -284,9 +301,13 @@ export function tiktokProfileUrl<P extends TikTokProfileId>(profileId: P): TikTo
 }
 
 // MARK: Snapchat
-/** Base URL for Snapchat profiles. */
+/**
+ * Base URL for Snapchat profiles.
+ */
 export const SNAPCHAT_BASE_URL = `https://snapchat.com`;
-/** {@link WebsiteLinkType} code for Snapchat. */
+/**
+ * {@link WebsiteLinkType} code for Snapchat.
+ */
 export const SNAPCHAT_WEBSITE_LINK_TYPE: WebsiteLinkType = 'sc';
 
 export type SnapchatBaseUrl = typeof SNAPCHAT_BASE_URL;
@@ -331,9 +352,13 @@ export function snapchatProfileUrl<P extends SnapchatProfileId>(profileId: P): S
 }
 
 // MARK: YouTube
-/** Base URL for YouTube channels. */
+/**
+ * Base URL for YouTube channels.
+ */
 export const YOUTUBE_BASE_URL = `https://youtube.com`;
-/** {@link WebsiteLinkType} code for YouTube. */
+/**
+ * {@link WebsiteLinkType} code for YouTube.
+ */
 export const YOUTUBE_WEBSITE_LINK_TYPE: WebsiteLinkType = 'yt';
 
 export type YouTubeBaseUrl = typeof YOUTUBE_BASE_URL;
@@ -378,9 +403,13 @@ export function youtubeProfileUrl<P extends YouTubeProfileId>(profileId: P): You
 }
 
 // MARK: PayPal
-/** Base URL for PayPal.me profiles. */
+/**
+ * Base URL for PayPal.me profiles.
+ */
 export const PAYPAL_BASE_URL = `https://paypal.me`;
-/** {@link WebsiteLinkType} code for PayPal. */
+/**
+ * {@link WebsiteLinkType} code for PayPal.
+ */
 export const PAYPAL_WEBSITE_LINK_TYPE: WebsiteLinkType = 'pp';
 
 export type PayPalBaseUrl = typeof PAYPAL_BASE_URL;
@@ -413,11 +442,17 @@ export function paypalProfileUrl<P extends PayPalProfileId>(profileId: P): PayPa
 }
 
 // MARK: Cashapp
-/** Base URL for Cash App profiles. */
+/**
+ * Base URL for Cash App profiles.
+ */
 export const CASHAPP_BASE_URL = `https://cash.app`;
-/** Cash App usernames are prefixed with "$" (cashtag). */
+/**
+ * Cash App usernames are prefixed with "$" (cashtag).
+ */
 export const CASHAPP_USERNAME_PREFIX = '$';
-/** {@link WebsiteLinkType} code for Cash App. */
+/**
+ * {@link WebsiteLinkType} code for Cash App.
+ */
 export const CASHAPP_WEBSITE_LINK_TYPE: WebsiteLinkType = 'ca';
 
 export type CashappBaseUrl = typeof CASHAPP_BASE_URL;
@@ -452,9 +487,13 @@ export function cashappProfileUrl<P extends CashappProfileId>(profileId: P): Cas
 }
 
 // MARK: Venmo
-/** Base URL for Venmo profiles. */
+/**
+ * Base URL for Venmo profiles.
+ */
 export const VENMO_BASE_URL = `https://account.venmo.com`;
-/** {@link WebsiteLinkType} code for Venmo. */
+/**
+ * {@link WebsiteLinkType} code for Venmo.
+ */
 export const VENMO_WEBSITE_LINK_TYPE: WebsiteLinkType = 'vn';
 
 export type VenmoBaseUrl = typeof VENMO_BASE_URL;
@@ -499,9 +538,13 @@ export function venmoProfileUrl<P extends VenmoProfileId>(profileId: P): VenmoPr
 }
 
 // MARK: Spotify
-/** Base URL for Spotify profiles. */
+/**
+ * Base URL for Spotify profiles.
+ */
 export const SPOTIFY_BASE_URL = `https://open.spotify.com/`;
-/** {@link WebsiteLinkType} code for Spotify. */
+/**
+ * {@link WebsiteLinkType} code for Spotify.
+ */
 export const SPOTIFY_WEBSITE_LINK_TYPE: WebsiteLinkType = 'sp';
 
 export type SpotifyBaseUrl = typeof SPOTIFY_BASE_URL;

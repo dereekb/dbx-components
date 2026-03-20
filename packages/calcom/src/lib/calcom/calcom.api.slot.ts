@@ -36,6 +36,9 @@ export interface CalcomGetAvailableSlotsResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/slots/get-available-time-slots-for-an-event-type
  *
+ * @param context - the Cal.com API context (authenticated or public)
+ * @returns a function that queries available slots for the given input
+ *
  * @example
  * ```ts
  * const response = await getAvailableSlots(context)({

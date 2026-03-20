@@ -42,8 +42,8 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>).get();
   }
 
-  delete(params: FirestoreDocumentDeleteParams): Promise<GoogleCloudWriteResult> {
-    return this.documentRef.delete(params.precondition);
+  delete(params?: FirestoreDocumentDeleteParams): Promise<GoogleCloudWriteResult> {
+    return this.documentRef.delete(params?.precondition);
   }
 
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<GoogleCloudWriteResult> {

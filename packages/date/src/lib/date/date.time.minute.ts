@@ -440,7 +440,6 @@ export class DateTimeMinuteInstance {
    *
    * @returns The nearest valid scheduled date, or the input date if already valid or no schedule is configured.
    */
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   clampToSchedule(date = this.date, maxClampDistance: Days = 370): Date {
     let nextAvailableDate: Maybe<Date>;
 

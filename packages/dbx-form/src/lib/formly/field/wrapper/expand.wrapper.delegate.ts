@@ -13,7 +13,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
  * function to determine whether the field's value is "populated" (which auto-expands the section).
  */
 export interface AbstractFormExpandSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
-  /** Label shown on the expand trigger. Falls back to the field label or first child field label. */
+  /**
+   * Label shown on the expand trigger. Falls back to the field label or first child field label.
+   */
   expandLabel?: string;
   /**
    * Optional function to use for checking value existence.
@@ -23,6 +25,11 @@ export interface AbstractFormExpandSectionConfig<T extends object = object> exte
 
 /**
  * Default value existence check that returns `true` if the object is non-empty.
+ *
+ * @param x - The object to check for non-emptiness
+ * @returns True if the object has at least one own property
+ *
+ * @param x - The object to check for non-emptiness
  */
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 

@@ -7,7 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
  * Configuration for the info wrapper that adds an info icon button beside the field.
  */
 export interface DbxFormInfoConfig extends FormlyFieldProps {
-  /** Callback invoked when the info button is clicked. */
+  /**
+   * Callback invoked when the info button is clicked.
+   */
   readonly onInfoClick: () => void;
 }
 

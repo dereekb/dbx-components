@@ -29,7 +29,7 @@ export function calcomWebhookEventVerifier(secret: string): CalcomWebhookEventVe
 
     try {
       event = JSON.parse(rawBodyString);
-    } catch (e) {
+    } catch {
       event = { triggerEvent: '', createdAt: '', payload: {} };
     }
 

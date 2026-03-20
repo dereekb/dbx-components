@@ -4,7 +4,7 @@ import { DbxTestDbxFormComponent } from '../../test/test.formly.component';
 
 describe('DbxInputFormControlComponent', () => {
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    void TestBed.configureTestingModule({
       imports: [...FORM_TEST_PROVIDERS]
     }).compileComponents();
   }));

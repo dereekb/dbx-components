@@ -6,7 +6,9 @@ import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.f
 
 const importsAndExports = [DbxChecklistItemFieldComponent, DbxChecklistItemContentComponent, DbxDefaultChecklistItemFieldDisplayComponent];
 
-/** Registers the `checklistitem` Formly field type with wrapper support. */
+/**
+ * Registers the `checklistitem` Formly field type with wrapper support.
+ */
 @NgModule({
   imports: [
     ...importsAndExports,

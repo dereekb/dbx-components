@@ -32,6 +32,9 @@ export type CalcomOAuthAccessTokenCacheServiceWithRefreshToken = Required<Calcom
 
 /**
  * Derives a short, filesystem-safe cache key from a refresh token using md5.
+ *
+ * @param refreshToken - the OAuth refresh token to hash
+ * @returns a 16-character hex string suitable for use as a cache key
  */
 export function calcomRefreshTokenCacheKey(refreshToken: string): string {
   return createHash('md5').update(refreshToken).digest('hex').substring(0, 16);
@@ -40,6 +43,12 @@ export function calcomRefreshTokenCacheKey(refreshToken: string): string {
 // MARK: Merge
 export type LogMergeCalcomOAuthAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [CalcomAccessTokenCache, unknown])[]) => void;
 
+/**
+ * Default error logging function for {@link mergeCalcomOAuthAccessTokenCacheServices}.
+ * Logs a warning for each cache that failed to update.
+ *
+ * @param failedUpdates - array of tuples containing the failed cache and its error
+ */
 export function logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction(failedUpdates: (readonly [CalcomAccessTokenCache, unknown])[]) {
   console.warn(`mergeCalcomOAuthAccessTokenCacheServices(): failed updating ${failedUpdates.length} caches.`);
   failedUpdates.forEach(([_cache, e], i) => {
@@ -54,6 +63,8 @@ export function logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction(failedUp
  * When updating a cached token, it will update the token across all services.
  *
  * @param inputServicesToMerge Must include at least one service. Empty arrays will throw an error.
+ * @param logError - optional error logging configuration; pass a function, true for default logging, or false to disable
+ * @returns a merged CalcomOAuthAccessTokenCacheService that delegates across all input services
  */
 export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: CalcomOAuthAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeCalcomOAuthAccessTokenCacheServiceErrorFunction>): CalcomOAuthAccessTokenCacheService {
   const allServices = [...inputServicesToMerge];
@@ -137,6 +148,10 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
 /**
  * Creates a CalcomOAuthAccessTokenCacheService that uses in-memory storage.
  * Per-user caches are stored in a Map keyed by the md5 hash of the refresh token.
+ *
+ * @param existingToken - optional pre-existing server-level access token to seed the cache
+ * @param logAccessToConsole - when true, logs all cache reads and writes to console
+ * @returns a CalcomOAuthAccessTokenCacheService backed by in-memory Maps
  */
 export function memoryCalcomOAuthAccessTokenCacheService(existingToken?: Maybe<CalcomAccessToken>, logAccessToConsole?: boolean): CalcomOAuthAccessTokenCacheService {
   let serverToken: Maybe<CalcomAccessToken> = existingToken;
@@ -204,6 +219,7 @@ export interface FileSystemCalcomOAuthAccessTokenCacheService extends CalcomOAut
  * ```
  *
  * @param cacheDir Directory to store token files. Defaults to `.tmp/calcom-tokens`.
+ * @returns a CalcomOAuthAccessTokenCacheService backed by the file system
  */
 export function fileCalcomOAuthAccessTokenCacheService(cacheDir: string = DEFAULT_FILE_CALCOM_ACCESS_TOKEN_CACHE_DIR): FileSystemCalcomOAuthAccessTokenCacheService {
   const memoryTokens = new Map<string, Maybe<CalcomOAuthAccessTokenCacheFileContent>>();

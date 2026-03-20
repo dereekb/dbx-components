@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { type GrantedRole } from '@dereekb/model';
@@ -153,7 +152,6 @@ export function inContextFirebaseModelServiceFactory<C extends FirebaseModelServ
       const model = typeof modelOrKey === 'string' ? firebaseModelService.loadModelForKey(modelOrKey, context) : modelOrKey;
 
       const roleReader = () => contextGrantedModelRolesReader(inModelContextService);
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- assertExists() always returns true or throws; && chains both assertions
       const requireRole = (roles: ArrayOrValue<R>, setIncludes: SetIncludesMode = 'all') => roleReader().then((x) => x.assertExists() && x.assertHasRoles(setIncludes, roles));
       const requireUse = (roles: ArrayOrValue<R>, setIncludes?: SetIncludesMode) => usePromise(requireRole(roles, setIncludes));
 

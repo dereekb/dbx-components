@@ -74,6 +74,11 @@ export interface DbxDateTimeFieldTimeDateConfig<I = unknown> {
 
 /**
  * Type guard that checks whether the input is a {@link DbxDateTimeFieldTimeDateConfig}.
+ *
+ * @param input - The value to check
+ * @returns True if the input is a DbxDateTimeFieldTimeDateConfig with a string path property
+ *
+ * @param input - The value to check
  */
 export function isDbxDateTimeFieldTimeDateConfig(input: unknown): input is DbxDateTimeFieldTimeDateConfig {
   return input != null && typeof input === 'object' && typeof (input as DbxDateTimeFieldTimeDateConfig).path === 'string';
@@ -326,7 +331,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
 
   private readonly _configUpdateTimeSync = new SubscriptionObject(
-    this.latestConfig$.pipe(skip(1)).subscribe((x) => {
+    this.latestConfig$.pipe(skip(1)).subscribe((_x) => {
       this._updateTime.next();
     })
   );
@@ -621,11 +626,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
                 date,
                 useSystemTimezone: true
               }) ?? date;
-          } else if (!this.timeOnly) {
-            if (this.timeMode !== DbxDateTimeFieldTimeMode.REQUIRED) {
-              // only autofill the date if the time is marked as required (and the time string is empty)
-              result = date;
-            }
+          } else if (!this.timeOnly && this.timeMode !== DbxDateTimeFieldTimeMode.REQUIRED) {
+            // only autofill the date if the time is marked as required (and the time string is empty)
+            result = date;
           }
         }
       }
@@ -920,7 +923,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
               // when the time updates the first time, set the current min date
               return this._updateTime.pipe(
                 debounceTime(200),
-                switchMap((x) => this.dateInputMin$),
+                switchMap((_x) => this.dateInputMin$),
                 filterMaybe()
               );
             } else {
@@ -1012,7 +1015,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
     }
 
-    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((x) => combineLatest([this.currentDate$, this.timeString$]).pipe(first()))).subscribe(([currentDate, timeString]) => {
+    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((_x) => combineLatest([this.currentDate$, this.timeString$]).pipe(first()))).subscribe(([currentDate, timeString]) => {
       // only resync when the current date is set, otherwise do not change the time string.
       // This helps in cases where the user picks a time first and we don't want it to be cleared.
       if (currentDate != null) {

@@ -43,7 +43,7 @@ export function iterateStorageListFilesFactory(config: IterateStorageListFilesFa
 
   return fetchPageFactory<IterateStorageListFilesInput, StorageListFilesResult>({
     fetch: async (input: IterateStorageListFilesInput) => {
-      return await input.folder.list({
+      return input.folder.list({
         includeNestedResults: input.includeNestedResults,
         maxResults: input.maxResults ?? factoryDefaultMaxResults,
         pageToken: input.pageToken ?? undefined

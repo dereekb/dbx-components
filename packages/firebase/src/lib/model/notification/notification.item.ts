@@ -15,7 +15,6 @@ import { sortByDateFunction } from '@dereekb/date';
  *
  * Stored directly in Firestore, so values must be Firestore-compatible (no class instances, functions, etc.).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- values are arbitrary Firestore-compatible data
 export type NotificationItemMetadata = Readonly<Record<string, any>>;
 
 /**
@@ -131,7 +130,7 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  * ```
  */
 export function unreadNotificationItems<D extends NotificationItemMetadata = {}>(items: NotificationItem<D>[], considerReadIfCreatedBefore?: Maybe<Date>): UnreadNotificationItemsResult<D> {
-  const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v ?? !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
+  const checkIsRead = considerReadIfCreatedBefore != null ? (x: NotificationItem<D>) => Boolean(x.v || !isAfter(x.cat, considerReadIfCreatedBefore)) : (x: NotificationItem<D>) => Boolean(x.v);
   const { included: read, excluded: unread } = separateValues<NotificationItem<D>>(items, checkIsRead);
 
   return {

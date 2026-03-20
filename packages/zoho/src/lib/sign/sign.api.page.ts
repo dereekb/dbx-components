@@ -93,7 +93,6 @@ export interface ZohoSignPageResult<T> {
  * A fetch function that accepts paginated input and returns a {@link ZohoSignPageResult}.
  * Used as the underlying data source for {@link zohoSignFetchPageFactory}.
  */
-
 export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R extends ZohoSignPageResult<any>> = (input: I) => Promise<R>;
 
 /**

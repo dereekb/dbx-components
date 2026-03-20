@@ -199,7 +199,6 @@ export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: Per
 async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<[I, O, boolean]> {
   const { throwError: inputThrowError, retriesAllowed: inputRetriesAllowed, retryWait = 200, beforeRetry } = config;
   const throwError = inputThrowError ?? true; // throw errors by default
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   const retriesAllowed = inputRetriesAllowed || 0;
 
   async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
@@ -462,7 +461,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           if (isFulfillingTask) {
             requestTasksQueue.push([parallelIndex, promiseRef]);
 
-            return await promiseRef.promise;
+            return promiseRef.promise;
           } else {
             void fulfillRequestMoreTasks(parallelIndex, promiseRef);
           }
@@ -504,7 +503,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       async function getNextTask(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
         let nextTask: NextIncompleteTask = undefined;
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- nextTask is reassigned within the loop but always reset to undefined before the condition is re-checked; loop exits via break
         while (!nextTask) {
           // request more tasks if the tasks list is empty
           if (!isOutOfTasks && incompleteTasks.length === 0) {
@@ -543,7 +541,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           currentParellelTaskKeys.delete(key);
           const waitingForKey = waitingConcurrentTasks.get(key);
 
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- intentional infinite loop with break
           while (true) {
             const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
 
@@ -612,8 +609,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
  *
  * @returns A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- matching return type
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }

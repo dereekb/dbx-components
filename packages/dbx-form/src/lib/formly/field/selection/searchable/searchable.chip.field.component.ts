@@ -53,12 +53,10 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
   }
 
   tabPressedOnInput(event: KeyboardEvent): boolean {
-    if (event?.key?.toLowerCase() === 'tab') {
-      if (this._tryAddCurrentInputValue()) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return false;
-      }
+    if (event?.key?.toLowerCase() === 'tab' && this._tryAddCurrentInputValue()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return false;
     }
 
     return true;
@@ -69,7 +67,7 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
     return this._addWithTextValue(text);
   }
 
-  protected override _syncSingleValue(value: SearchableValueFieldDisplayValue<T>): void {
+  protected override _syncSingleValue(_value: SearchableValueFieldDisplayValue<T>): void {
     // Do nothing
   }
 

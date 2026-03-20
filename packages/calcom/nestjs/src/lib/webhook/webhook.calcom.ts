@@ -3,6 +3,9 @@ import { type CalcomWebhookEventType, type UntypedCalcomWebhookEvent, type Calco
 
 /**
  * Creates a CalcomWebhookEvent and treats the data as the input type.
+ *
+ * @param event - the untyped webhook event to convert
+ * @returns a typed CalcomWebhookEvent with the payload cast to type T
  */
 export function calcomWebhookEvent<T>(event: UntypedCalcomWebhookEvent): CalcomWebhookEvent<T> {
   return {
@@ -27,7 +30,6 @@ export interface CalcomEventHandlerConfigurer extends HandlerBindAccessor<Untype
 
 export const calcomEventHandlerConfigurerFactory = handlerConfigurerFactory<CalcomEventHandlerConfigurer, UntypedCalcomWebhookEvent>({
   configurerForAccessor: (accessor: HandlerBindAccessor<UntypedCalcomWebhookEvent, CalcomWebhookEventType>) => {
-    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<CalcomWebhookEvent<any>, any>(accessor, calcomWebhookEvent);
 
     const configurer: CalcomEventHandlerConfigurer = {

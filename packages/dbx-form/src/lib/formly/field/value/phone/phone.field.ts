@@ -28,7 +28,7 @@ export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}):
   const { key = 'phone', label = 'Phone Number', preferredCountries, enableSearch, onlyCountries, allowExtension: inputAllowExtension } = config;
   const allowExtension = inputAllowExtension ?? false;
 
-  const fieldConfig = formlyField({
+  return formlyField({
     key,
     type: 'intphone',
     ...propsAndConfigForFieldConfig(config, {
@@ -42,8 +42,6 @@ export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}):
       validators: [isE164PhoneNumber(allowExtension)]
     })
   });
-
-  return fieldConfig;
 }
 
 /**
@@ -59,6 +57,8 @@ export interface WrappedPhoneAndLabelFieldConfig {
  * useful for collecting named phone numbers (e.g., "Work", "Home").
  *
  * @param config - Optional phone and label field configurations
+ * @param config.phoneField - Optional configuration overrides for the phone number input
+ * @param config.labelField - Optional configuration overrides for the label text input
  * @returns A flex-layout-wrapped {@link FormlyFieldConfig}
  *
  * @example
@@ -98,6 +98,11 @@ export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, W
  * Creates a section-wrapped phone + label field pair with a configurable header.
  *
  * @param config - Optional overrides; defaults to header `'Phone Number'`
+ * @param config.key - Optional form model key for the section group
+ * @param config.header - Section header text; defaults to `'Phone Number'`
+ * @param config.hint - Optional hint text displayed below the section header
+ * @param config.phoneField - Optional phone field configuration overrides
+ * @param config.labelField - Optional label field configuration overrides
  * @returns A section-wrapped {@link FormlyFieldConfig}
  *
  * @example

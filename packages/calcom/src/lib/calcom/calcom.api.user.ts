@@ -24,6 +24,9 @@ export interface CalcomGetMeResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/me
  *
+ * @param context - the Cal.com API context providing authentication and fetch capabilities
+ * @returns a function that retrieves the authenticated user's profile
+ *
  * @example
  * ```ts
  * const response = await getMe(context)();

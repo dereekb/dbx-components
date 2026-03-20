@@ -33,6 +33,9 @@ export interface CalcomOAuthAccessTokenErrorResponse {
  *
  * @see https://cal.com/docs/api-reference/v2/oauth/refresh-an-existing-access-token
  *
+ * @param context - the Cal.com OAuth context providing client credentials and fetch capabilities
+ * @returns a function that refreshes an access token using an optional refresh token override
+ *
  * @example
  * ```ts
  * const response = await refreshAccessToken(context)({ refreshToken: 'existing-refresh-token' });
@@ -64,6 +67,9 @@ export function refreshAccessToken(context: CalcomOAuthContext): (input?: Calcom
  * Cal.com uses JSON body (not Basic Auth) for token requests.
  *
  * @see https://cal.com/docs/api-reference/v2/oauth/exchange-an-authorization-code-for-access-tokens
+ *
+ * @param context - the Cal.com OAuth context providing client credentials and fetch capabilities
+ * @returns a function that exchanges an authorization code for access and refresh tokens
  *
  * @example
  * ```ts

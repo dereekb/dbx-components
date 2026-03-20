@@ -11,13 +11,19 @@ import { type AttributesFieldConfig, type LabeledFieldConfig, formlyField, props
 export interface NumberFieldNumberConfig {
   readonly min?: number;
   readonly max?: number;
-  /** Step increment for the input. */
+  /**
+   * Step increment for the input.
+   */
   readonly step?: number;
-  /** When true, adds a validator that enforces the value is divisible by `step`. */
+  /**
+   * When true, adds a validator that enforces the value is divisible by `step`.
+   */
   readonly enforceStep?: boolean;
 }
 
-/** HTML input type for number fields. */
+/**
+ * HTML input type for number fields.
+ */
 export type NumberFieldInputType = 'number';
 
 /**
@@ -180,7 +186,9 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
 }
 
 // MARK: Dollar Amount Field
-/** Configuration for a dollar amount field, which enforces cent-level precision. */
+/**
+ * Configuration for a dollar amount field, which enforces cent-level precision.
+ */
 export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
 
 /**
