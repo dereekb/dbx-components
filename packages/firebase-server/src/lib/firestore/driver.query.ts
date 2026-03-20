@@ -26,7 +26,6 @@ import {
 /**
  * Server-side query builder type, aliasing the Google Cloud Firestore {@link Query}.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- GoogleCloudQuery default type parameter requires any
 export type FirestoreServerQueryBuilder<T = any> = GoogleCloudQuery<T>;
 
 /**

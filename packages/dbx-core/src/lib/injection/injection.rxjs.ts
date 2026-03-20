@@ -29,7 +29,6 @@ import { type Type } from '@angular/core';
  * });
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function switchMapDbxInjectionComponentConfig<T extends DbxInjectionComponentConfig<X>, X = any>(defaultConfig?: GetterOrValue<Maybe<T | Type<X>>>) {
   const defaultAsGetter = asGetter(defaultConfig);
 

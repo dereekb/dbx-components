@@ -114,7 +114,6 @@ export type BlockingFunctionHandlerWithNestContextBuilder<N, E extends object, O
  * Utility type that infers the correct {@link BlockingFunctionHandlerWithNestContextBuilder} type
  * from a given {@link BlockingFunctionBuilder}, preserving the event and output type parameters.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic constraint uses `any` to match any BlockingFunctionBuilder
 export type BlockingFunctionHandlerWithNestContextBuilderForBuilder<N, B extends BlockingFunctionBuilder<any, any>> = B extends BlockingFunctionBuilder<infer E, infer O> ? BlockingFunctionHandlerWithNestContextBuilder<N, E, O> : never;
 
 /**

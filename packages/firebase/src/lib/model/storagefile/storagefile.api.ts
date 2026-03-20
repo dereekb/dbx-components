@@ -15,7 +15,6 @@ import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
  *
  * Typically used server-side or for testing. Validated with {@link createStorageFileParamsType}.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CreateStorageFileParams {}
 
 export const createStorageFileParamsType = type({}) as Type<CreateStorageFileParams>;
@@ -93,7 +92,6 @@ export interface ProcessStorageFileResult {
 /**
  * Processes all StorageFiles that are queued for processing.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ProcessAllQueuedStorageFilesParams {}
 
 export const processAllQueuedStorageFilesParamsType = type({}) as Type<ProcessAllQueuedStorageFilesParams>;
@@ -123,7 +121,6 @@ export const deleteStorageFileParamsType = targetModelParamsType.merge({
 /**
  * Processes all StorageFiles that are queued for processing.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DeleteAllQueuedStorageFilesParams {}
 
 export const deleteAllQueuedStorageFilesParamsType = type({}) as Type<DeleteAllQueuedStorageFilesParams>;
@@ -196,7 +193,6 @@ export interface SyncStorageFileWithGroupsResult {
   readonly storageFilesGroupsUpdated: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface SyncAllFlaggedStorageFilesWithGroupsParams {}
 
 export const syncAllFlaggedStorageFilesWithGroupsParamsType = type({}) as Type<SyncAllFlaggedStorageFilesWithGroupsParams>;
@@ -237,7 +233,6 @@ export interface RegenerateStorageFileGroupContentResult {
   readonly contentStorageFilesFlaggedForProcessing: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface RegenerateAllFlaggedStorageFileGroupsContentParams {}
 
 export const regenerateAllFlaggedStorageFileGroupsContentParamsType = type({}) as Type<RegenerateAllFlaggedStorageFileGroupsContentParams>;
@@ -258,7 +253,6 @@ export const initializeStorageFileModelParamsType = targetModelParamsType.merge(
   'throwErrorIfAlreadyInitialized?': 'boolean'
 }) as Type<InitializeStorageFileModelParams>;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InitializeAllApplicableStorageFileGroupsParams {}
 
 export const initializeAllApplicableStorageFileGroupsParamsType = type({}) as Type<InitializeAllApplicableStorageFileGroupsParams>;

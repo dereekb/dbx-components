@@ -43,7 +43,6 @@ export interface NotificationTaskServiceConfig {
   /**
    * Handler configurations that define the checkpoint-based flow for each task type.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly handlers: NotificationTaskServiceTaskHandlerConfig<any, any>[];
 }
 
@@ -82,7 +81,6 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
     handlers[type] = handlerForConfig(handlerConfig);
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handlerForConfig(handlerConfig: NotificationTaskServiceTaskHandlerConfig<any, any>): NotificationTaskServiceTaskHandler {
     const { flow: inputFlows, allowRunMultipleParts } = handlerConfig;
     const { included: checkpointFlows, excluded: nonCheckpointFlows } = separateValues(inputFlows, (x) => x.checkpoint != null);

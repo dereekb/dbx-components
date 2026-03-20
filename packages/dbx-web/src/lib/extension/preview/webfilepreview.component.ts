@@ -34,7 +34,6 @@ export class DbxWebFilePreviewComponent {
   readonly componentConfigSignal = computed(() => {
     const config = this.config();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for contravariant init callback compatibility
     let componentConfig: Maybe<DbxInjectionComponentConfig<any>>;
 
     if (config) {

@@ -91,7 +91,6 @@ export function defaultDbxValueListViewGroupDelegate<T, I extends DbxValueListIt
  * export class MyGroupDelegate extends DbxValueListViewGroupDelegate<MyGroup, MyItem> { ... }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic provider factory requires any for type compatibility
 export function provideDbxValueListViewGroupDelegate<D extends DbxValueListViewGroupDelegate<any, any, any, any>>(sourceType: Type<D>): Provider[] {
   // use of any here is allowed as typings are not relevant for providers
   return [

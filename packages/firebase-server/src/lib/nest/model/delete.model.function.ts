@@ -54,7 +54,6 @@ export type OnCallDeleteModelFunctionAuthAware<N, I = unknown, O = void> = OnCal
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallDeleteModelFunctionAuthAware<N, any, any>;
 };
 
@@ -89,7 +88,6 @@ export interface OnCallDeleteModelConfig<N> {
 export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>, config: OnCallDeleteModelConfig<N> = {}): OnCallWithNestContext<N, OnCallDeleteModelParams, unknown> {
   const { preAssert } = config;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'delete',
     crudType: 'delete',

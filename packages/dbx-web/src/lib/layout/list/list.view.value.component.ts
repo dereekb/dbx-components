@@ -134,7 +134,6 @@ export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackB
 })
 export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxListView = inject(DbxListView<T>);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for generic group delegate compatibility
   private readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I> = inject<Maybe<DbxValueListViewGroupDelegate<any, T, I>>>(DbxValueListViewGroupDelegate, { optional: true }) ?? defaultDbxValueListViewGroupDelegate();
 
   private readonly _trackBy$ = this.dbxListView.trackBy$ ?? of(undefined);
@@ -143,7 +142,6 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly items = input<Maybe<DbxValueListItemConfig<T, I>[]>>();
   readonly emitAllClicks = input<Maybe<boolean>>();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for generic group type compatibility
   readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
     switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
     shareReplay(1)

@@ -25,7 +25,6 @@ export interface ZoomOAuthConfig extends ZoomAuthClientIdAndSecretPair, ZoomAcco
   readonly accessTokenCache?: Maybe<ZoomAccessTokenCache>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ZoomOAuthFetchFactoryParams {}
 
 export type ZoomOAuthFetchFactory = FactoryWithInput<ConfiguredFetch, ZoomOAuthFetchFactoryParams>;

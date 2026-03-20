@@ -54,7 +54,6 @@ export type OnCallUpdateModelFunctionAuthAware<N, I = unknown, O = void> = OnCal
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallUpdateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallUpdateModelFunctionAuthAware<N, any, any>;
 };
 
@@ -92,7 +91,6 @@ export interface OnCallUpdateModelConfig<N> {
 export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCallUpdateModelConfig<N> = {}): OnCallWithNestContext<N, OnCallUpdateModelParams, unknown> {
   const { preAssert } = config;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'update',
     crudType: 'update',

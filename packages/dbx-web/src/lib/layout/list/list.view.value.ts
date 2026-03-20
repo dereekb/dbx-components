@@ -82,7 +82,6 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
   /**
    * @see DbxListViewMetaIconComponent.metaConfig()
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaConfig?: DbxInjectionComponentConfig<any>;
 }
 
@@ -99,7 +98,6 @@ export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueLi
  */
 export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> = I & {
   config: DbxInjectionComponentConfig<V>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metaConfig?: DbxInjectionComponentConfig<any>;
 };
 

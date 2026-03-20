@@ -99,7 +99,7 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly tableStore = inject(DbxTableStore<I, C, T, G>);
   readonly table = viewChild.required<MatTable<DbxTableViewElement<T, G>>>(MatTable);
 
-  readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<unknown> = (index) => {
+  readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
     return index;
   };
 

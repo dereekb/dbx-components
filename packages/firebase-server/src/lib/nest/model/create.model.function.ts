@@ -64,7 +64,6 @@ export type OnCallCreateModelFunctionAuthAware<N, I = unknown, O extends OnCallC
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallCreateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallCreateModelFunctionAuthAware<N, any, OnCallCreateModelResult>;
 };
 
@@ -99,7 +98,6 @@ export interface OnCallCreateModelConfig<N> {
 export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCallCreateModelConfig<N> = {}): OnCallWithNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult> {
   const { preAssert } = config;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'create',
     crudType: 'create',

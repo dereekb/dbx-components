@@ -47,7 +47,6 @@ export interface OnCallModelAnalyticsEvent {
   /**
    * Custom key-value properties attached by lifecycle callbacks.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly properties?: Maybe<Record<string, any>>;
   /**
    * The error object, if this event was emitted during the `'error'` lifecycle stage.

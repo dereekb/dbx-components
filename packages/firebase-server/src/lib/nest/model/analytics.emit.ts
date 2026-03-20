@@ -48,7 +48,6 @@ export function onCallAnalyticsEmitterInstance(config: OnCallAnalyticsEmitterIns
       service,
       context,
       lifecycle,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sendEvent(event: string, properties?: Record<string, any>): void {
         service.handleOnCallAnalyticsEvent({
           event,

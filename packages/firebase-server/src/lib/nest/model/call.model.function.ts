@@ -17,7 +17,6 @@ import { callWithAnalytics } from './analytics.emit';
  * Used by {@link onCallModel} to dispatch incoming requests to the correct CRUD handler.
  */
 export type OnCallModelMap = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [call: OnCallFunctionType]: OnCallWithNestContext<any, OnCallTypedModelParams>;
 };
 
@@ -95,14 +94,11 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
     }
 
     const { specifier, modelType } = request.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const auth = (request as any).auth;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const context: OnCallAnalyticsContext = { call, modelType, specifier, uid: auth?.uid, auth, data: request.data.data, request: request as any };
 
     preAssert(context);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: PromiseOrValue<any>;
 
     // Resolve analytics from _apiDetails tree — callWithAnalytics handles undefined details
@@ -170,7 +166,6 @@ export function onCallModelUnknownCallTypeError(call: OnCallFunctionType) {
  * @typeParam T - The Firestore model identity constraining which model type keys are valid.
  */
 export type OnCallWithCallTypeModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: ((request: NestContextCallableRequest<N, any> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<any>) & OnCallWithAuthAwareNestRequireAuthRef;
 };
 

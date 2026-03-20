@@ -15,13 +15,11 @@ export type DbxFilterButtonConfig<F extends object> = DbxFilterComponentConfig<F
 /**
  * Filter button config that only uses a custom filter component (no preset filter).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DbxFilterButtonConfigWithCustomFilter<F extends object, CF extends FilterSource<F> = FilterSource<F>> = Omit<DbxFilterComponentConfig<F, any, CF, any>, 'presetFilter' | 'presetFilterComponentConfig'>;
 
 /**
  * Filter button config that only uses a preset filter component (no custom filter).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DbxFilterButtonConfigWithPresetFilter<F extends object, PF extends PresetFilterSource<F, any> = PresetFilterSource<F, any>> = Omit<DbxFilterComponentConfig<F, any, any, PF>, 'customFilter' | 'customFilterComponentConfig'>;
 
 /**
@@ -30,7 +28,6 @@ export type DbxFilterButtonConfigWithPresetFilter<F extends object, PF extends P
 @Directive()
 export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly popupService = inject(DbxPopoverService);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly config = input<Maybe<DbxFilterComponentConfig<F, any, any, any>>>(undefined);
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {

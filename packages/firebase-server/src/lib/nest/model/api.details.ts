@@ -161,7 +161,6 @@ export function isActualSpecifier(details: OnCallModelTypeApiDetails): boolean {
  *
  * Combines API metadata, auth configuration, and the handler function into a single config object.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends OnCallModelFunctionApiDetails {
   /**
    * When true, marks the handler as not requiring auth (equivalent to optionalAuthContext).
@@ -218,7 +217,6 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  * @param config - The API details configuration including the handler function.
  * @returns The handler function with _apiDetails attached.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
   const { optionalAuth, fn, ...apiDetails } = config;
   (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails;

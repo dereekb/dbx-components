@@ -137,9 +137,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
     };
 
     // Also intercept the _close function to capture backdropClose, etc.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private member _close
     const original_close = (this.popoverRef as any)._close;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private member _close
     (this.popoverRef as any)._close = (closeType: NgPopoverCloseType, inputValue: O | undefined) => {
       const closeWithValue = (value?: O | undefined) => {
         original_close.call(this.popoverRef, closeType, value);
@@ -153,7 +151,6 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
       }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private member _overlay
     const overlay = (this.popoverRef as any)._overlay as Overlay; // overlay is not publically accessible
     const elementRef = this.config.origin;
     const configuration = this.config.configuration;
