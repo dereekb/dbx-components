@@ -83,7 +83,7 @@
 
 /**
   Sets --dbx-* color variables by aliasing --mat-sys-* system variables
-  emitted by mat.m2-theme(). Custom colors (notice, success, ok) still
+  emitted by the Material theme. Custom colors (notice, success, ok) still
   come from the dbx theme config since they have no Material equivalent.
 */
 @mixin root-theme-color-variables($root-selector, $theme-config) {
@@ -92,8 +92,8 @@
     #{theming.$dbx-primary-color-var}: var(--mat-sys-primary);
     #{theming.$dbx-primary-color-contrast-var}: var(--mat-sys-on-primary);
 
-    #{theming.$dbx-accent-color-var}: var(--mat-sys-secondary);
-    #{theming.$dbx-accent-color-contrast-var}: var(--mat-sys-on-secondary);
+    #{theming.$dbx-accent-color-var}: var(--mat-sys-tertiary);
+    #{theming.$dbx-accent-color-contrast-var}: var(--mat-sys-on-tertiary);
 
     #{theming.$dbx-warn-color-var}: var(--mat-sys-error);
     #{theming.$dbx-warn-color-contrast-var}: var(--mat-sys-on-error);

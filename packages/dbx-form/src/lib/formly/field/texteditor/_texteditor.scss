@@ -59,6 +59,4 @@
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-texteditor') {
-  }
 }

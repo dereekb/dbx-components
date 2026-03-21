@@ -143,7 +143,5 @@ $two-columns-right-padding-size: 6px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-column') {
-    @include responsive($theme-config);
-  }
+  @include responsive($theme-config);
 }

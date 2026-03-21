@@ -98,6 +98,4 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-dialog') {
-  }
 }

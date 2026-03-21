@@ -59,6 +59,4 @@ $dbx-flex-group-columns-count: 6;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-flex') {
-  }
 }

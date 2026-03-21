@@ -13,7 +13,10 @@
 @forward './lib/style/function';
 
 // Config
-@forward './lib/style/config' show theme-config-from-theme-config-or-typography-config, define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
+@forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
+
+// M2 Visual Compat
+@forward './lib/style/m2-visual-compat' show m2-visual-compat;
 
 // Theme bundles
 @forward './lib/style/all-theme' show all-component-themes;
@@ -22,7 +25,8 @@
 @mixin theme($root-selector, $theme-config) {
   #{$root-selector} {
     @include mat.all-component-themes($theme-config);
-    @include mat.m2-theme($theme-config);
+    @include mat.system-level-colors($theme-config);
+    @include mat.system-level-typography($theme-config);
     @include dbx-theme.all-component-themes($theme-config);
   }
 

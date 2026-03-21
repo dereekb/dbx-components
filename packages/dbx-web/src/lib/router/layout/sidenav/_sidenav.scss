@@ -170,6 +170,4 @@ $active-background-transparent-color: 0.93;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
-  }
 }

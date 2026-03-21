@@ -11,6 +11,4 @@ $dbx-firebase-model-entities-expansion-panel-height: 64px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-firebase-model-model') {
-  }
 }

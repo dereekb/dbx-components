@@ -1,0 +1,45 @@
+/// Opt-in mixin that restores M2-era visual defaults (shapes, border radii)
+/// when using M3 theming. Include inside your theme root selector.
+///
+/// Usage:
+/// ```scss
+/// @mixin my-theme($root-selector) {
+///   @include dbx.theme($root-selector, $theme);
+///   #{$root-selector} {
+///     @include dbx.m2-visual-compat();
+///   }
+/// }
+/// ```
+@mixin m2-visual-compat() {
+  // Buttons: M2 ~4px vs M3 ~20px
+  --mat-filled-button-container-shape: 4px;
+  --mat-outlined-button-container-shape: 4px;
+  --mat-text-button-container-shape: 4px;
+  --mat-protected-button-container-shape: 4px;
+
+  // FAB: M2 ~4px vs M3 fully rounded
+  --mdc-fab-container-shape: 4px;
+  --mdc-fab-small-container-shape: 4px;
+
+  // Dialog: M2 ~4px vs M3 ~28px
+  --mdc-dialog-container-shape: 4px;
+
+  // Card: M2 ~4px vs M3 ~12px
+  --mdc-elevated-card-container-shape: 4px;
+  --mdc-outlined-card-container-shape: 4px;
+
+  // Chip: M2 ~16px (pill) vs M3 ~8px
+  --mdc-chip-container-shape-radius: 16px;
+
+  // Form fields: M2 ~4px vs M3 varies
+  --mdc-filled-text-field-container-shape: 4px;
+  --mdc-outlined-text-field-container-shape: 4px;
+
+  // Snackbar: M2 ~4px vs M3 ~4px
+  --mdc-snackbar-container-shape: 4px;
+
+  // Menu / Select / Autocomplete
+  --mat-menu-container-shape: 4px;
+  --mat-select-container-shape: 4px;
+  --mat-autocomplete-container-shape: 4px;
+}

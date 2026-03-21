@@ -28,6 +28,4 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-wrapper') {
-  }
 }

@@ -267,6 +267,4 @@ $dbx-detail-block-big-header-icon-size: 18px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-text') {
-  }
 }

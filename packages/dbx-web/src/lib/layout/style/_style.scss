@@ -1,6 +1,4 @@
 @use 'sass:map';
-@use 'sass:list';
-@use 'sass:color';
 @use '../../style/theming';
 
 // Sections
@@ -151,11 +149,5 @@
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-style') {
-    $color: theming.m2-get-color-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-  }
+  @include color($theme-config);
 }

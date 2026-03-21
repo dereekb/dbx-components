@@ -13,6 +13,4 @@ $dbx-zip-blob-preview-path-height: 28px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-zip') {
-  }
 }

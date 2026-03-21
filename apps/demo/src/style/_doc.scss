@@ -3,85 +3,21 @@
 @use 'dbx-form/src/index' as dbx-form;
 @use './variables';
 
-$opmore-navy: #1c3454;
-$opmore-pink: #ec4565;
-$opmore-white: #fff;
-
-$dark-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 50);
-$light-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 600);
-
-$opmore-blue: (
-  50: #e5e9ed,
-  100: #bec7d3,
-  200: #95a3b6,
-  300: #6e8098,
-  400: #4f6685,
-  500: #2f4e73,
-  600: #29476c,
-  700: #213e61,
-  800: $opmore-navy,
-  900: #16243b,
-  contrast: (
-    50: $dark-primary-text,
-    100: $dark-primary-text,
-    200: $dark-primary-text,
-    300: $dark-primary-text,
-    400: $dark-primary-text,
-    500: $light-primary-text,
-    600: $light-primary-text,
-    700: $light-primary-text,
-    800: $light-primary-text,
-    900: $light-primary-text,
-    A100: $dark-primary-text,
-    A200: $light-primary-text,
-    A400: $light-primary-text,
-    A700: $light-primary-text
-  )
-);
-
-$opmore-pink: (
-  50: #fde6ec,
-  100: #fac0cf,
-  200: #f898b0,
-  300: #f47191,
-  400: #f05779,
-  500: $opmore-pink,
-  600: #db4061,
-  700: #c53a5c,
-  800: #b03558,
-  900: #8a2d50,
-  contrast: (
-    50: $dark-primary-text,
-    100: $dark-primary-text,
-    200: $dark-primary-text,
-    300: $dark-primary-text,
-    400: $light-primary-text,
-    500: $light-primary-text,
-    600: $light-primary-text,
-    700: $light-primary-text,
-    800: $light-primary-text,
-    900: $light-primary-text,
-    A100: $dark-primary-text,
-    A200: $light-primary-text,
-    A400: $light-primary-text,
-    A700: $light-primary-text
-  )
-);
-
-// Define an alternate dark theme.
-$doc-primary: mat.m2-define-palette($opmore-blue);
-$doc-accent: mat.m2-define-palette($opmore-pink);
-$doc-warn: mat.m2-define-palette(mat.$m2-red-palette);
-$doc-mat-theme: mat.m2-define-light-theme(
+// Light theme
+$doc-mat-theme: mat.define-theme(
   (
     color: (
-      primary: $doc-primary,
-      accent: $doc-accent,
-      warn: $doc-warn
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$rose-palette
     ),
-    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
-    density: null,
-    typography: null
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
   )
 );
 
@@ -97,19 +33,21 @@ This mixin creates the doc-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $doc-form-theme);
 }
 
-$dark-doc-primary: mat.m2-define-palette(mat.$m2-purple-palette);
-$dark-doc-accent: mat.m2-define-palette(mat.$m2-orange-palette);
-$dark-doc-warn: mat.m2-define-palette(mat.$m2-red-palette);
-$dark-doc-mat-theme: mat.m2-define-dark-theme(
+// Dark theme
+$dark-doc-mat-theme: mat.define-theme(
   (
     color: (
-      primary: $dark-doc-primary,
-      accent: $dark-doc-accent,
-      warn: $dark-doc-warn
+      theme-type: dark,
+      primary: mat.$violet-palette,
+      tertiary: mat.$orange-palette
     ),
-    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
-    density: null,
-    typography: null
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
   )
 );
 
@@ -119,4 +57,8 @@ $dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
 @mixin dark-doc-theme($root-selector) {
   @include dbx.theme($root-selector, $dark-doc-theme);
   @include dbx-form.theme($root-selector, $dark-doc-form-theme);
+
+  #{$root-selector} {
+    @include dbx.m2-visual-compat();
+  }
 }

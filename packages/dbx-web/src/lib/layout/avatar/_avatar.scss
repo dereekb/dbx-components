@@ -76,6 +76,4 @@ $icon-to-avatar-size-ratio: 0.65;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-avatar') {
-  }
 }

@@ -24,6 +24,4 @@ $dbx-popup-controls-height: 33px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {
-  }
 }

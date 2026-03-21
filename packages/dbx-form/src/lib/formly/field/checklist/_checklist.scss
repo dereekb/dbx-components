@@ -46,6 +46,4 @@ $dbx-checklist-item-spacing: 8px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-checklist') {
-  }
 }

@@ -50,6 +50,4 @@ $error-message-button-margin: 12px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-error') {
-  }
 }

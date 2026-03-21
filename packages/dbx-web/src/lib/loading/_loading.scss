@@ -28,6 +28,4 @@ $linear-line-height: 4px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-loading') {
-  }
 }

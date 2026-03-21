@@ -229,7 +229,5 @@ $header-left-reserved-space-small-screen: 120px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
-    @include responsive($theme-config);
-  }
+  @include responsive($theme-config);
 }

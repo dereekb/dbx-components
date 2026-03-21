@@ -233,6 +233,4 @@ $big-button-height: 46px; // 33% bigger
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-button') {
-  }
 }

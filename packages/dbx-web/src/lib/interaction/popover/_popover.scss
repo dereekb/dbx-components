@@ -85,9 +85,7 @@ $dbx-popover-header-height: 48px;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popover') {
-    @include responsive($theme-config);
-  }
+  @include responsive($theme-config);
 }
 
 @mixin fillPopoverContentHeight($hasControls: 0, $hasHeader: 0) {

@@ -203,7 +203,5 @@ $dbx-border-opacity-default: 20%;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-content') {
-    @include responsive($theme-config);
-  }
+  @include responsive($theme-config);
 }

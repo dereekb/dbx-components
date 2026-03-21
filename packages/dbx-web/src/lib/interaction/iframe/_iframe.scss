@@ -24,6 +24,4 @@ $dbx-iframe-height-var: --dbx-iframe-height;
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-iframe') {
-  }
 }
