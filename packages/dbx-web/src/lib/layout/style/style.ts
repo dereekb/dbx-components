@@ -64,9 +64,12 @@ export interface DbxStyleConfig {
 
 // MARK: Theme
 /**
- * The three core Material Design theme palette colors.
+ * The five core Material Design M3 theme palette colors.
+ *
+ * - 'secondary' is the M3 secondary palette color (equivalent to 'accent')
+ * - 'tertiary' is the M3 tertiary palette color
  */
-export type DbxThemeColorMain = 'primary' | 'accent' | 'warn';
+export type DbxThemeColorMain = 'primary' | 'secondary' | 'tertiary' | 'accent' | 'warn';
 
 /**
  * Additional semantic theme colors beyond the core Material palettes.
@@ -88,7 +91,7 @@ export type DbxThemeColorMainOrExtra = DbxThemeColorMain | DbxThemeColorExtra;
  */
 export type DbxThemeColor = DbxThemeColorMainOrExtra | DbxThemeColorExtraSecondary;
 
-export const DBX_THEME_COLORS_MAIN: DbxThemeColorMain[] = ['primary', 'accent', 'warn'];
+export const DBX_THEME_COLORS_MAIN: DbxThemeColorMain[] = ['primary', 'secondary', 'tertiary', 'accent', 'warn'];
 export const DBX_THEME_COLORS_EXTRA: DbxThemeColorExtra[] = ['notice', 'ok', 'success', 'grey'];
 export const DBX_THEME_COLORS_EXTRA_SECONDARY: DbxThemeColorExtraSecondary[] = ['default', 'disabled'];
 export const DBX_THEME_COLORS: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...DBX_THEME_COLORS_EXTRA, ...DBX_THEME_COLORS_EXTRA_SECONDARY];
@@ -110,6 +113,8 @@ export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
 
   switch (color) {
     case 'primary':
+    case 'secondary':
+    case 'tertiary':
     case 'accent':
     case 'warn':
     case 'notice':
@@ -132,6 +137,8 @@ export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
  */
 const DBX_THEME_COLOR_CSS_VAR_MAP: Record<DbxThemeColor, CssToken> = {
   primary: '--dbx-primary-color',
+  secondary: '--dbx-secondary-color',
+  tertiary: '--dbx-tertiary-color',
   accent: '--dbx-accent-color',
   warn: '--dbx-warn-color',
   notice: '--dbx-notice-color',

@@ -88,10 +88,17 @@
 */
 @mixin root-theme-color-variables($root-selector, $theme-config) {
   #{$root-selector} {
-    // Primary/accent/warn - alias from mat system variables
+    // Primary/secondary/tertiary/accent/warn - alias from mat system variables
     #{theming.$dbx-primary-color-var}: var(--mat-sys-primary);
     #{theming.$dbx-primary-color-contrast-var}: var(--mat-sys-on-primary);
 
+    #{theming.$dbx-secondary-color-var}: var(--mat-sys-secondary);
+    #{theming.$dbx-secondary-color-contrast-var}: var(--mat-sys-on-secondary);
+
+    #{theming.$dbx-tertiary-color-var}: var(--mat-sys-tertiary);
+    #{theming.$dbx-tertiary-color-contrast-var}: var(--mat-sys-on-tertiary);
+
+    // accent is an alias for tertiary
     #{theming.$dbx-accent-color-var}: var(--mat-sys-tertiary);
     #{theming.$dbx-accent-color-contrast-var}: var(--mat-sys-on-tertiary);
 

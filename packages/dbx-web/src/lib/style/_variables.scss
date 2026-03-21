@@ -25,6 +25,8 @@ $dbx-color-var: --dbx-color-current;
 $dbx-bg-color-var: --dbx-bg-color-current;
 
 $dbx-primary-color-var: --dbx-primary-color;
+$dbx-secondary-color-var: --dbx-secondary-color;
+$dbx-tertiary-color-var: --dbx-tertiary-color;
 $dbx-accent-color-var: --dbx-accent-color;
 $dbx-warn-color-var: --dbx-warn-color;
 $dbx-notice-color-var: --dbx-notice-color;
@@ -35,6 +37,8 @@ $dbx-disabled-color-var: --dbx-disabled-color;
 $dbx-default-color-var: --dbx-default-color;
 
 $dbx-primary-color-contrast-var: --dbx-primary-color-contrast;
+$dbx-secondary-color-contrast-var: --dbx-secondary-color-contrast;
+$dbx-tertiary-color-contrast-var: --dbx-tertiary-color-contrast;
 $dbx-accent-color-contrast-var: --dbx-accent-color-contrast;
 $dbx-warn-color-contrast-var: --dbx-warn-color-contrast;
 $dbx-notice-color-contrast-var: --dbx-notice-color-contrast;
@@ -124,6 +128,8 @@ $dbx-color: var($dbx-color-var);
 $dbx-bg-color: var($dbx-bg-color-var);
 
 $dbx-primary-color: var($dbx-primary-color-var);
+$dbx-secondary-color: var($dbx-secondary-color-var);
+$dbx-tertiary-color: var($dbx-tertiary-color-var);
 $dbx-accent-color: var($dbx-accent-color-var);
 $dbx-warn-color: var($dbx-warn-color-var);
 $dbx-notice-color: var($dbx-notice-color-var);
@@ -134,6 +140,8 @@ $dbx-disabled-color: var($dbx-disabled-color-var);
 $dbx-default-color: var($dbx-default-color-var);
 
 $dbx-primary-color-contrast: var($dbx-primary-color-contrast-var);
+$dbx-secondary-color-contrast: var($dbx-secondary-color-contrast-var);
+$dbx-tertiary-color-contrast: var($dbx-tertiary-color-contrast-var);
 $dbx-accent-color-contrast: var($dbx-accent-color-contrast-var);
 $dbx-warn-color-contrast: var($dbx-warn-color-contrast-var);
 $dbx-notice-color-contrast: var($dbx-notice-color-contrast-var);
@@ -165,6 +173,14 @@ $dbx-theme-colors-main: (
   'primary': (
     'color': $dbx-primary-color,
     'contrast': $dbx-primary-color-contrast
+  ),
+  'secondary': (
+    'color': $dbx-secondary-color,
+    'contrast': $dbx-secondary-color-contrast
+  ),
+  'tertiary': (
+    'color': $dbx-tertiary-color,
+    'contrast': $dbx-tertiary-color-contrast
   ),
   'accent': (
     'color': $dbx-accent-color,
