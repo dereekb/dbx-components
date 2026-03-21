@@ -1,6 +1,6 @@
 import { computed, Directive, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { type DbxThemeColor, dbxThemeColorCssVariableVar } from '../style/style';
+import { type DbxThemeColor, dbxThemeColorCssTokenVar } from '../style/style';
 
 /**
  * Border opacity preset values.
@@ -47,7 +47,7 @@ export class DbxContentBorderDirective {
 
   readonly borderOpacity = input<Maybe<DbxContentBorderOpacity | string>>('lite');
 
-  readonly borderColorVar = computed(() => dbxThemeColorCssVariableVar(this.color(), true));
+  readonly borderColorVar = computed(() => dbxThemeColorCssTokenVar(this.color(), true));
 
   readonly borderOpacityValue = computed(() => {
     const color = this.color();

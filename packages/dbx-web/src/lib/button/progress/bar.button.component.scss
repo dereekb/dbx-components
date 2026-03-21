@@ -1,5 +1,9 @@
+$bar-button-progress-bar-height-default: 5px;
+
 :host {
   > button.dbx-progress-bar-button.mdc-button.mat-mdc-button {
+    overflow: hidden; // clip progress bar to rounded corners
+
     &.working {
       cursor: not-allowed;
     }
@@ -16,6 +20,8 @@
         position: absolute;
         top: 0;
         left: 0;
+        --mat-progress-bar-track-height: var(--dbx-progress-bar-button-height, #{$bar-button-progress-bar-height-default});
+        --mat-progress-bar-active-indicator-height: var(--dbx-progress-bar-button-height, #{$bar-button-progress-bar-height-default});
       }
 
       mat-icon {

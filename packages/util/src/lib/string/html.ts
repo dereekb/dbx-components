@@ -10,28 +10,65 @@ import { type PrimativeValue } from '../type';
 export type CssClass = string;
 
 /**
- * Represents a CSS Variable
+ * The name portion of a CSS token, without the leading `--` prefix.
  *
- * i.e. "--dbx-primary-color"
+ * @example
+ * ```ts
+ * const name: CssTokenName = 'dbx-primary-color';
+ * ```
  */
-export type CssVariable = `--${string}`;
+export type CssTokenName = string;
 
 /**
- * A CSS variable wrapped in a var() call.
+ * Represents a CSS custom property token (CSS variable).
  *
- * i.e. "var(--dbx-primary-color)"
+ * @example
+ * ```ts
+ * const token: CssToken = '--dbx-primary-color';
+ * ```
  */
-export type CssVariableVar<T extends CssVariable = CssVariable> = `var(${T})`;
+export type CssToken<T extends CssTokenName = CssTokenName> = `--${T}`;
 
 /**
- * Converts a CSS variable into a var() string.
+ * A CSS token wrapped in a var() call.
  *
- * @param cssVariable - the CSS variable to convert
+ * @example
+ * ```ts
+ * const tokenVar: CssTokenVar = 'var(--dbx-primary-color)';
+ * ```
+ */
+export type CssTokenVar<T extends CssToken = CssToken> = `var(${T})`;
+
+/**
+ * Converts a CSS token into a var() string.
+ *
+ * @example
+ * ```ts
+ * cssTokenVar('--dbx-primary-color'); // 'var(--dbx-primary-color)'
+ * ```
+ *
+ * @param cssToken - the CSS token to convert
  * @returns the var() string
  */
-export function cssVariableVar<T extends CssVariable>(cssVariable: T): CssVariableVar<T> {
-  return `var(${cssVariable})`;
+export function cssTokenVar<T extends CssToken>(cssToken: T): CssTokenVar<T> {
+  return `var(${cssToken})`;
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use {@link CssToken} instead.
+ */
+export type CssVariable = CssToken;
+
+/**
+ * @deprecated Use {@link CssTokenVar} instead.
+ */
+export type CssVariableVar<T extends CssToken = CssToken> = CssTokenVar<T>;
+
+/**
+ * @deprecated Use {@link cssTokenVar} instead.
+ */
+export const cssVariableVar = cssTokenVar;
 
 /**
  * Represents a single CSS Style
