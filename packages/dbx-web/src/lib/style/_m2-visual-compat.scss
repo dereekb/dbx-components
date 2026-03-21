@@ -18,7 +18,11 @@
 
   // Card: M3 default is "medium" (12px). Small = 8px.
   --mat-card-elevated-container-shape: 8px;
+  --mat-card-filled-container-shape: 8px;
   --mat-card-outlined-container-shape: 8px;
+
+  // Sidenav: M3 default is "large" (16px). No rounding for dbx-components.
+  --mat-sidenav-container-shape: 0;
 
   // Chip: Small = 8px.
   --mat-chip-container-shape-radius: 8px;
@@ -79,7 +83,11 @@
 
   // Card: M2 ~4px vs M3 ~12px
   --mat-card-elevated-container-shape: 4px;
+  --mat-card-filled-container-shape: 4px;
   --mat-card-outlined-container-shape: 4px;
+
+  // Sidenav: M2 had no rounding vs M3 "large" (16px)
+  --mat-sidenav-container-shape: 0;
 
   // Chip: M2 ~16px (pill) vs M3 ~8px
   --mat-chip-container-shape-radius: 16px;

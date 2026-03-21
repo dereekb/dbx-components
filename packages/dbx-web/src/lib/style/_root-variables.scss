@@ -118,7 +118,7 @@
 
     // Default - foreground text / surface background
     #{theming.$dbx-default-color-var}: var(--mat-sys-on-surface);
-    #{theming.$dbx-default-color-contrast-var}: var(--mat-sys-surface);
+    #{theming.$dbx-default-color-contrast-var}: var(--mat-sys-surface-container);
 
     // Surface and outline variables
     #{theming.$dbx-surface-color-var}: var(--mat-sys-surface);

@@ -8,7 +8,7 @@ export const CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE = 'CUSTOM_ERROR_WIDGET_TEST_ERR
 @Component({
   template: `
     <p class="mat-header">Custom widget content</p>
-    <div>Error Data: {{ data | json }}</div>
+    <div class="dbx-json">Error Data: {{ data | json }}</div>
   `,
   standalone: true,
   imports: [JsonPipe],
