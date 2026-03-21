@@ -1,5 +1,6 @@
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
 import { ApplicationConfig, importProvidersFrom, inject, Injector, provideAppInitializer } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
@@ -200,7 +201,8 @@ export const appConfig: ApplicationConfig = {
     }),
     // App initializers
     provideAppInitializer(() => {
-      // add any initialization here
+      const iconRegistry = inject(MatIconRegistry);
+      iconRegistry.setDefaultFontSetClass('material-symbols-outlined');
     })
   ]
 };

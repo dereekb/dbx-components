@@ -59,13 +59,21 @@ export class DbxFirebaseLoginListComponent {
 
   readonly providersInjectionConfigsSignal = computed<DbxFirebaseLoginListItemInjectionComponentConfig[]>(() => {
     let providers = this.providersSignal();
+    const loginMode = this.loginMode();
     let mapFn: (x: DbxFirebaseAuthLoginProvider) => DbxFirebaseLoginListItemInjectionComponentConfig;
 
-    if (this.loginMode() === 'register') {
-      providers = providers.filter((x) => x.registrationComponentClass !== false); // providers with "registrationComponentClass" set to false are not available for registration
-      mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType });
-    } else {
-      mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass as Type<unknown>, loginMethodType: x.loginMethodType });
+    switch (loginMode) {
+      case 'register':
+        providers = providers.filter((x) => x.registrationComponentClass !== false);
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode } });
+        break;
+      case 'link':
+        providers = providers.filter((x) => x.allowLinking !== false);
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode } });
+        break;
+      default:
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode } });
+        break;
     }
 
     return providers.map(mapFn);

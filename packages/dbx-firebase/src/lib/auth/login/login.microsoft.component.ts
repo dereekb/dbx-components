@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { OAuthProvider } from '@angular/fire/auth';
 import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION } from './login.button.component';
 
 /**
@@ -15,6 +16,10 @@ export class DbxFirebaseLoginMicrosoftComponent extends AbstractConfiguredDbxFir
   readonly loginProvider = 'microsoft';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithMicrosoft();
+    return this.dbxFirebaseAuthService.logInWithPopup(new OAuthProvider('microsoft.com'));
+  }
+
+  override handleLink() {
+    return this.dbxFirebaseAuthService.linkWithPopup(new OAuthProvider('microsoft.com'));
   }
 }

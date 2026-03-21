@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { GoogleAuthProvider } from '@angular/fire/auth';
 import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION } from './login.button.component';
 
 /**
@@ -15,6 +16,10 @@ export class DbxFirebaseLoginGoogleComponent extends AbstractConfiguredDbxFireba
   readonly loginProvider = 'google';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithGoogle();
+    return this.dbxFirebaseAuthService.logInWithPopup(new GoogleAuthProvider());
+  }
+
+  override handleLink() {
+    return this.dbxFirebaseAuthService.linkWithPopup(new GoogleAuthProvider());
   }
 }
