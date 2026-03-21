@@ -15,12 +15,6 @@
 }
 
 @mixin all-value-typography($theme-config) {
-  @include array.typography($theme-config);
-  @include boolean.typography($theme-config);
-  @include date.typography($theme-config);
-  @include number.typography($theme-config);
-  @include phone.typography($theme-config);
-  @include text.typography($theme-config);
 }
 
 @mixin all-value-theme($theme-config) {

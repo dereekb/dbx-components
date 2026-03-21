@@ -19,14 +19,6 @@
 }
 
 @mixin all-interaction-typography($theme-config) {
-  @include dialog.typography($theme-config);
-  @include filter.typography($theme-config);
-  @include iframe.typography($theme-config);
-  @include popover.typography($theme-config);
-  @include popup.typography($theme-config);
-  @include prompt.typography($theme-config);
-  @include style.typography($theme-config);
-  @include upload.typography($theme-config);
 }
 
 @mixin all-interaction-theme($theme-config) {

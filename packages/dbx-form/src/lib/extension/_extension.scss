@@ -15,19 +15,6 @@
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
-  $calendar-enabled: 1;
-
-  @if ($theme-config-or-typography-config != null) {
-    @if (theming.private-is-theme-object($theme-config-or-typography-config)) {
-      $theme-config: $theme-config-or-typography-config;
-
-      $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
-    }
-
-    @if ($calendar-enabled == 1) {
-      @include calendar.typography($theme-config-or-typography-config);
-    }
-  }
 }
 
 @mixin all-extension-theme($theme-config) {

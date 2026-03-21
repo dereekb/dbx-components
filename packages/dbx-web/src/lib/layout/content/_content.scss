@@ -184,7 +184,7 @@ $dbx-border-opacity-default: 20%;
   }
 }
 
-@mixin color($theme-config) {
+@mixin responsive($theme-config) {
   .dbx-content-container {
     @include theming.if-small-screen($theme-config) {
       // reduce all paddings down.
@@ -202,21 +202,8 @@ $dbx-border-opacity-default: 20%;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-content') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
+    @include responsive($theme-config);
   }
 }
