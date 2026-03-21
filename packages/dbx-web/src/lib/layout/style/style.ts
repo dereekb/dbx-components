@@ -1,4 +1,4 @@
-import { type CharacterPrefixSuffixCleanString, type CssClass, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, type Maybe } from '@dereekb/util';
+import { type CharacterPrefixSuffixCleanString, type CssClass, CssClassesArray, CssVariable, cssVariableVar, CssVariableVar, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, type Maybe } from '@dereekb/util';
 
 // MARK: App Styling
 /**
@@ -125,4 +125,70 @@ export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
   }
 
   return cssClass;
+}
+
+/**
+ * Maps each {@link DbxThemeColor} to its corresponding CSS variable reference string.
+ */
+const DBX_THEME_COLOR_CSS_VAR_MAP: Record<DbxThemeColor, CssVariable> = {
+  primary: '--dbx-primary-color',
+  accent: '--dbx-accent-color',
+  warn: '--dbx-warn-color',
+  notice: '--dbx-notice-color',
+  ok: '--dbx-ok-color',
+  success: '--dbx-success-color',
+  grey: '--dbx-grey-color',
+  disabled: '--dbx-disabled-color',
+  default: '--dbx-default-color'
+};
+
+/**
+ * Returns the CSS variable reference string for a given {@link DbxThemeColor}.
+ *
+ * @example
+ * ```ts
+ * dbxThemeColorCssVariable('primary'); // '--dbx-primary-color'
+ * dbxThemeColorCssVariable(undefined); // undefined
+ * ```
+ *
+ * @param color - the theme color, or nullish/empty for the default
+ * @returns CSS variable reference string (e.g., `'--dbx-primary-color'`) or undefined if the color is not valid.
+ */
+export function dbxThemeColorCssVariable(color: Maybe<DbxThemeColor>, returnDefault: true): CssVariable;
+export function dbxThemeColorCssVariable(color: Maybe<DbxThemeColor>, returnDefault?: Maybe<boolean>): Maybe<CssVariable>;
+export function dbxThemeColorCssVariable(color: Maybe<DbxThemeColor>, returnDefault?: Maybe<boolean>): Maybe<CssVariable> {
+  let result: Maybe<CssVariable>;
+
+  if (color && color in DBX_THEME_COLOR_CSS_VAR_MAP) {
+    result = DBX_THEME_COLOR_CSS_VAR_MAP[color as DbxThemeColor];
+  } else if (returnDefault) {
+    result = DBX_THEME_COLOR_CSS_VAR_MAP.default;
+  }
+
+  return result;
+}
+
+/**
+ * Returns the CSS variable reference string for a given {@link DbxThemeColor}.
+ *
+ * @example
+ * ```ts
+ * dbxThemeColorCssVariableVar('primary'); // 'var(--dbx-primary-color)'
+ * dbxThemeColorCssVariableVar(undefined); // undefined
+ * ```
+ *
+ * @param color - the theme color, or nullish/empty for the default
+ * @returns CSS variable reference string (e.g., `'var(--dbx-primary-color)'`) or undefined if the color is not valid.
+ */
+export function dbxThemeColorCssVariableVar(color: Maybe<DbxThemeColor>, returnDefault: true): CssVariableVar;
+export function dbxThemeColorCssVariableVar(color: Maybe<DbxThemeColor>, returnDefault?: Maybe<boolean>): Maybe<CssVariableVar>;
+export function dbxThemeColorCssVariableVar(color: Maybe<DbxThemeColor>, returnDefault?: Maybe<boolean>): Maybe<CssVariableVar> {
+  const cssVar = dbxThemeColorCssVariable(color, returnDefault);
+  let result: Maybe<CssVariableVar>;
+
+  if (cssVar) {
+    result = cssVariableVar(cssVar);
+  }
+
+  return result;
 }

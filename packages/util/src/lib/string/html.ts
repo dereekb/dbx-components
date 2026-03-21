@@ -10,6 +10,30 @@ import { type PrimativeValue } from '../type';
 export type CssClass = string;
 
 /**
+ * Represents a CSS Variable
+ *
+ * i.e. "--dbx-primary-color"
+ */
+export type CssVariable = `--${string}`;
+
+/**
+ * A CSS variable wrapped in a var() call.
+ *
+ * i.e. "var(--dbx-primary-color)"
+ */
+export type CssVariableVar<T extends CssVariable = CssVariable> = `var(${T})`;
+
+/**
+ * Converts a CSS variable into a var() string.
+ *
+ * @param cssVariable - the CSS variable to convert
+ * @returns the var() string
+ */
+export function cssVariableVar<T extends CssVariable>(cssVariable: T): CssVariableVar<T> {
+  return `var(${cssVariable})`;
+}
+
+/**
  * Represents a single CSS Style
  */
 export type CssStyle = string;

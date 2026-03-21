@@ -1,5 +1,3 @@
-@use 'sass:map';
-@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
@@ -204,25 +202,6 @@ $dbx-detail-block-big-header-icon-size: 18px;
     pointer-events: none; // disable the chip click and selection events.
     user-select: none;
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $accent: map.get($color-config, 'accent');
-  $warn: map.get($color-config, 'warn');
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-
-  $text-color: theming.m2-get-color-from-palette($foreground, 'text');
-  $border-color: theming.m2-get-color-from-palette($background, 'background');
-  $outlined-text-color: transparentize($border-color, 0.6);
-
-  $is-dark: map.get($theme-config, is-dark);
-
-  @if $is-dark == true {
-    $text-color: darken($text-color, 35);
-    $outlined-text-color: $border-color;
-  }
 
   .dbx-hint,
   .dbx-clear-hint {
@@ -245,12 +224,12 @@ $dbx-detail-block-big-header-icon-size: 18px;
   }
 
   .dbx-outlined-text {
-    color: $text-color;
+    color: var(--mat-sys-on-surface-variant);
     text-shadow:
-      -1px -1px 0 $outlined-text-color,
-      1px -1px 0 $outlined-text-color,
-      -1px 1px 0 $outlined-text-color,
-      1px 1px 0 $outlined-text-color;
+      -1px -1px 0 color-mix(in srgb, var(--mat-sys-surface) 40%, transparent),
+      1px -1px 0 color-mix(in srgb, var(--mat-sys-surface) 40%, transparent),
+      -1px 1px 0 color-mix(in srgb, var(--mat-sys-surface) 40%, transparent),
+      1px 1px 0 color-mix(in srgb, var(--mat-sys-surface) 40%, transparent);
   }
 
   .dbx-nowrap {
@@ -272,15 +251,11 @@ $dbx-detail-block-big-header-icon-size: 18px;
   .dbx-click-to-copy-text-highlighted {
     text-decoration: underline;
   }
-}
-
-@mixin typography($theme-config-or-typography-config) {
-  $typography-config: theming.m2-get-typography-config($theme-config-or-typography-config);
 
   .dbx-label,
   .dbx-sublabel,
   .dbx-chip-sublabel {
-    font-size: theming.m2-font-size($typography-config, 'caption');
+    font-size: var(--mat-sys-body-small-size);
   }
 
   .dbx-click-to-copy-text-icon.mat-icon {
@@ -289,6 +264,12 @@ $dbx-detail-block-big-header-icon-size: 18px;
     font-size: $click-to-copy-icon-size;
     padding-left: 4px;
   }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

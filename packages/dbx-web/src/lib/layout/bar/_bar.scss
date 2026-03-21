@@ -1,5 +1,3 @@
-@use 'sass:map';
-@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
@@ -20,6 +18,13 @@ $bar-fixed-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: var(--mat-sys-body-small-size);
+  }
+
+  .dbx-bar,
+  .dbx-bar-background {
+    background: var(--mat-sys-surface-container);
+    color: var(--mat-sys-on-surface);
   }
 
   .dbx-bar-fixed-height {
@@ -37,31 +42,9 @@ $bar-fixed-height: 40px;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $primary: map.get($color-config, 'primary');
-  $accent: map.get($color-config, 'accent');
-
-  $dbx-bar-bg-color: theming.m2-get-color-from-palette($background, 'app-bar');
-  $dbx-bar-color: theming.m2-get-color-from-palette($background, 'contrast');
-
-  .dbx-pagebar .mat-toolbar {
-    // todo?
-  }
-
-  .dbx-bar,
-  .dbx-bar-background {
-    background: $dbx-bar-bg-color;
-    color: $dbx-bar-color;
-  }
 }
 
 @mixin typography($theme-config-or-typography-config) {
-  $typography-config: theming.m2-get-typography-config($theme-config-or-typography-config);
-
-  .dbx-bar {
-    font-size: theming.m2-font-size($typography-config, 'caption');
-  }
 }
 
 @mixin theme($theme-config) {
