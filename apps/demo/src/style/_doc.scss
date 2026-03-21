@@ -31,6 +31,10 @@ This mixin creates the doc-theme components and elements for @angular/material a
 @mixin doc-theme($root-selector) {
   @include dbx.theme($root-selector, $doc-theme);
   @include dbx-form.theme($root-selector, $doc-form-theme);
+
+  #{$root-selector} {
+    @include dbx.dbx-components-shapes();
+  }
 }
 
 // Dark theme

@@ -15,8 +15,8 @@
 // Config
 @forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
 
-// M2 Visual Compat
-@forward './lib/style/m2-visual-compat' show m2-visual-compat;
+// Shape Overrides
+@forward './lib/style/m2-visual-compat' show dbx-components-shapes, m2-visual-compat;
 
 // Theme bundles
 @forward './lib/style/all-theme' show all-component-themes;
