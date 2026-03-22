@@ -21,7 +21,10 @@ $bar-fixed-height: 40px;
     font-size: var(--mat-sys-body-small-size);
   }
 
-  .dbx-bar,
+  .dbx-bar {
+    color: var(--mat-sys-on-surface);
+  }
+
   .dbx-bar-background {
     background: var(--mat-sys-surface-container);
     color: var(--mat-sys-on-surface);

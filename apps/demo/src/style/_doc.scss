@@ -2,14 +2,15 @@
 @use 'dbx-web/src/index' as dbx;
 @use 'dbx-form/src/index' as dbx-form;
 @use './variables';
+@use './theme-colors' as theme-colors;
 
-// Light theme
+// Light theme — palettes generated from primary: #1a4b8c (opmore navy), tertiary: #e83d5e (opmore pink)
 $doc-mat-theme: mat.define-theme(
   (
     color: (
       theme-type: light,
-      primary: mat.$azure-palette,
-      tertiary: mat.$rose-palette
+      primary: theme-colors.$primary-palette,
+      tertiary: theme-colors.$tertiary-palette
     ),
     typography: (
       plain-family: 'Fira Sans',
@@ -37,13 +38,13 @@ This mixin creates the doc-theme components and elements for @angular/material a
   }
 }
 
-// Dark theme
+// Dark theme — same brand palettes, M3 automatically selects dark tones
 $dark-doc-mat-theme: mat.define-theme(
   (
     color: (
       theme-type: dark,
-      primary: mat.$violet-palette,
-      tertiary: mat.$orange-palette
+      primary: theme-colors.$primary-palette,
+      tertiary: theme-colors.$tertiary-palette
     ),
     typography: (
       plain-family: 'Fira Sans',

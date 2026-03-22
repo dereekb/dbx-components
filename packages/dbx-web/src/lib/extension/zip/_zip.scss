@@ -2,11 +2,15 @@
 @use '../../style/theming';
 
 // MARK: Variables
-$dbx-zip-blob-preview-toolbar-height: 36px;
+$dbx-zip-blob-preview-toolbar-height: 42px;
 $dbx-zip-blob-preview-path-height: 28px;
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-zip-blob-preview-toolbar {
+    overflow-y: hidden;
+  }
+
   .dbx-zip-blob-preview-content {
     height: calc(100% - #{$dbx-zip-blob-preview-toolbar-height} - #{$dbx-zip-blob-preview-path-height});
   }

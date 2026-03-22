@@ -6,9 +6,9 @@
     max-width: 90vw;
   }
 
-  .ng-overlay-container {
+  .cdk-overlay-pane.ng-overlay-container {
     color: var(--mat-sys-on-surface);
-    background: var(--mat-sys-surface);
+    background-color: var(--mat-sys-surface);
     @include theming.elevation(8);
     border: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
   }

@@ -118,8 +118,14 @@ $active-background-transparent-color: 0.93;
   }
 
   .dbx-sidenav {
-    mat-sidenav {
+    mat-sidenav.mat-drawer {
+      // darken the sidenav background slightly for better contrast with active items
+      --dbx-sidenav-background: color-mix(in srgb, var(--dbx-bg-color-current) 75%, var(--mat-sys-shadow));
+      background: var(--dbx-sidenav-background);
+
       .dbx-anchor-list.mat-mdc-nav-list {
+        --dbx-sidenav-active-accent: color-mix(in srgb, var(--dbx-accent-color) 65%, var(--mat-sys-surface));
+
         --mdc-list-list-item-label-text-color: var(--mat-sys-on-primary-container);
         --mdc-list-list-item-supporting-text-color: var(--mat-sys-on-primary-container);
         --mdc-list-list-item-leading-icon-color: var(--mat-sys-on-primary-container);
@@ -138,31 +144,31 @@ $active-background-transparent-color: 0.93;
         .dbx-anchor-active {
           .mat-mdc-list-item {
             .mat-mdc-list-item-icon {
-              color: var(--dbx-accent-color);
+              color: var(--dbx-sidenav-active-accent);
             }
           }
         }
 
         .dbx-anchor-list-root .dbx-anchor-active .mat-mdc-list-item {
           // root list items glow when active
-          background: color-mix(in srgb, var(--dbx-accent-color) 7%, transparent);
+          background: color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent);
         }
 
         // directly active links have a side-
         .dbx-anchor-active-eq,
         .dbx-anchor-list-child .dbx-anchor-active {
           .mat-mdc-list-item {
-            border-left: var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}) solid var(--dbx-accent-color);
+            border-left: var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}) solid var(--dbx-sidenav-active-accent);
 
             .mat-mdc-list-item-icon {
-              --mdc-list-list-item-leading-icon-color: var(--dbx-accent-color);
+              --mdc-list-list-item-leading-icon-color: var(--dbx-sidenav-active-accent);
             }
           }
         }
 
         .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
         .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
-          background: color-mix(in srgb, var(--dbx-accent-color) 7%, transparent);
+          background: color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent);
         }
       }
     }

@@ -10,7 +10,6 @@ import { asPromise, type Maybe, type PromiseOrValue, type SpaceSeparatedCssClass
 import { DbxPopoverController, type DbxPopoverKey } from './popover';
 import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { DbxWindowKeyDownListenerDirective } from '../../keypress';
-import { DbxStyleDirective } from '../../layout/style/style.directive';
 
 /**
  * Extended popover controller that supports an optional async closing value function.
@@ -76,7 +75,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
 @Component({
   template: `
     <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown()" [dbxWindowKeyDownFilter]="triggerCloseKeys">
-      <div dbxStyle class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
+      <div class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
     </dbx-popover-coordinator>
   `,
   providers: [
@@ -91,7 +90,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   host: {
     '[class]': 'config.panelClass'
   },
-  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxStyleDirective, DbxInjectionComponent],
+  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

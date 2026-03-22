@@ -116,8 +116,8 @@
     #{theming.$dbx-ok-color-contrast-var}: var(--dbx-warn-color-contrast);
 
     // Grey - foreground text / background
-    #{theming.$dbx-grey-color-var}: var(--mat-sys-on-surface);
-    #{theming.$dbx-grey-color-contrast-var}: var(--mat-sys-outline);
+    #{theming.$dbx-grey-color-var}: var(--mat-sys-outline);
+    #{theming.$dbx-grey-color-contrast-var}: var(--mat-sys-surface);
 
     // Disabled - disabled text / background
     #{theming.$dbx-disabled-color-var}: var(--mat-sys-outline-variant);
