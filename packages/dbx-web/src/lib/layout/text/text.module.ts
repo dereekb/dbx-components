@@ -6,12 +6,13 @@ import { DbxIconSpacerDirective } from './icon.spacer.component';
 import { DbxLabelBlockComponent } from './label.block.component';
 import { DbxLinkifyComponent } from './linkify/linkify.component';
 import { DbxChipDirective } from './text.chip.directive';
+import { DbxChipListComponent } from './text.chip.list.component';
 import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxNumberWithLimitComponent } from './number.limit.component';
 import { DbxClickToCopyTextDirective } from './copy.text.directive';
 import { DbxClickToCopyTextComponent } from './copy.text.component';
 
-const importsAndExports = [DbxUnitedStatesAddressComponent, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
+const importsAndExports = [DbxUnitedStatesAddressComponent, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent, DbxChipDirective, DbxChipListComponent, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
 
 /**
  * Angular module that bundles all text-related layout components and directives, including

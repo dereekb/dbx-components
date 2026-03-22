@@ -107,13 +107,13 @@
 
     // Custom dbx colors - still from theme config (no --mat-sys-* equivalent)
     #{theming.$dbx-notice-color-var}: theming.get-dbx-notice-color($theme-config);
-    #{theming.$dbx-notice-color-contrast-var}: var(--dbx-warn-color-contrast);
+    #{theming.$dbx-notice-color-contrast-var}: var(--mat-sys-surface);
 
     #{theming.$dbx-success-color-var}: theming.get-dbx-success-color($theme-config);
-    #{theming.$dbx-success-color-contrast-var}: var(--dbx-warn-color-contrast);
+    #{theming.$dbx-success-color-contrast-var}: var(--mat-sys-surface);
 
     #{theming.$dbx-ok-color-var}: theming.get-dbx-ok-color($theme-config);
-    #{theming.$dbx-ok-color-contrast-var}: var(--dbx-warn-color-contrast);
+    #{theming.$dbx-ok-color-contrast-var}: var(--mat-sys-surface);
 
     // Grey - foreground text / background
     #{theming.$dbx-grey-color-var}: var(--mat-sys-outline);

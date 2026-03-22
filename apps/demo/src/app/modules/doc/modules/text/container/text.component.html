@@ -25,52 +25,67 @@
     <doc-feature-example header="dbx-text-chips" hint="Displays a number of chips within a mat-chip-set, with an optional tooltip.">
       <dbx-text-chips [defaultSelection]="true" [chips]="chips"></dbx-text-chips>
     </doc-feature-example>
-    <doc-feature-example header="dbx-chip" hint="mat-chip like presentation.">
+    <doc-feature-example header="dbx-chip" hint="mat-chip like presentation. Default tone is 18% (tonal).">
       <div>
+        <h4>Tonal (default)</h4>
         <p>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="primary">Primary</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="accent">Accent</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="warn">Warn</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="notice">Notice</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="ok">Ok</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="success">Success</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="grey">Grey</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" dbxColor="disabled">Disabled</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'primary'">Primary</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'accent'">Accent</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'warn'">Warn</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'notice'">Notice</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'ok'">Ok</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'success'">Success</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'grey'">Grey</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'disabled'">Disabled</dbx-chip>
+          <dbx-chip dbxColor>Background</dbx-chip>
+        </p>
+      </div>
+      <div>
+        <h4>Full (tone 100)</h4>
+        <p>
+          <dbx-chip class="dbx-chip-spacer" [color]="'primary'" [tone]="100">Primary</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'accent'" [tone]="100">Accent</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'warn'" [tone]="100">Warn</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'notice'" [tone]="100">Notice</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'ok'" [tone]="100">Ok</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'success'" [tone]="100">Success</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'grey'" [tone]="100">Grey</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [color]="'disabled'" [tone]="100">Disabled</dbx-chip>
           <dbx-chip dbxColor>Background</dbx-chip>
         </p>
       </div>
       <div>
         <h4>Small</h4>
         <p>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="primary">Primary</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="accent">Accent</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="warn">Warn</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="notice">Notice</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="ok">Ok</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="success">Success</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="grey">Grey</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="disabled">Disabled</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'primary'">Primary</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'accent'">Accent</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'warn'">Warn</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'notice'">Notice</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'ok'">Ok</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'success'">Success</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'grey'">Grey</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [small]="true" [color]="'disabled'">Disabled</dbx-chip>
           <dbx-chip [small]="true" dbxColor>Background</dbx-chip>
         </p>
       </div>
       <div>
         <h4>Small Block</h4>
         <p>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="primary">Primary</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="accent">Accent</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="warn">Warn</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="notice">Notice</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="ok">Ok</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="success">Success</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="grey">Grey</dbx-chip>
-          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="disabled">Disabled</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'primary'">Primary</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'accent'">Accent</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'warn'">Warn</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'notice'">Notice</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'ok'">Ok</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'success'">Success</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'grey'">Grey</dbx-chip>
+          <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" [color]="'disabled'">Disabled</dbx-chip>
           <dbx-chip [block]="true" [small]="true" dbxColor>Background</dbx-chip>
         </p>
       </div>
       <div>
         <h4>Line Layout</h4>
         <p>
-          <dbx-chip dbxColor="primary">State</dbx-chip>
+          <dbx-chip [color]="'primary'">State</dbx-chip>
           <dbx-button-spacer></dbx-button-spacer>
           <span>Example Line Item With Chip</span>
         </p>
@@ -78,11 +93,18 @@
       <div>
         <h4>Line Layout With Small Chip Text</h4>
         <p>
-          <dbx-chip class="dbx-chip-small-text" dbxColor="primary">State</dbx-chip>
+          <dbx-chip class="dbx-chip-small-text" [color]="'primary'">State</dbx-chip>
           <dbx-button-spacer></dbx-button-spacer>
           <span>Example Line Item With Chip</span>
         </p>
       </div>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-chip-list" hint="Renders a row of colored chips from an array of DbxChipDisplay items.">
+      <dbx-chip-list [chips]="chipDisplays"></dbx-chip-list>
+      <h4>Small</h4>
+      <dbx-chip-list [chips]="chipDisplays" [small]="true"></dbx-chip-list>
+      <h4>With Different Tones</h4>
+      <dbx-chip-list [chips]="chipDisplaysWithTones"></dbx-chip-list>
     </doc-feature-example>
     <h4>Layouts</h4>
     <doc-feature-example header="dbx-us-address" hint="Styles a UnitedStateAddressWithContent value. Provides more css classes to override.">
@@ -237,6 +259,17 @@
     <doc-feature-example header=".dbx-default, .dbx-default-bg">
       <p class="dbx-default">{{ lorem }}</p>
       <p class="dbx-default-bg">{{ loremBg }}</p>
+    </doc-feature-example>
+    <h4>Tonal Colors (dbxColor + dbxColorTone)</h4>
+    <doc-feature-example header="dbxColorTone" hint="Uses dbxColor with dbxColorTone to create a tonal/muted background with the vibrant color as text.">
+      <p dbxColor="primary" [dbxColorTone]="18">Primary tonal (18%)</p>
+      <p dbxColor="accent" [dbxColorTone]="18">Accent tonal (18%)</p>
+      <p dbxColor="warn" [dbxColorTone]="18">Warn tonal (18%)</p>
+      <p dbxColor="notice" [dbxColorTone]="18">Notice tonal (18%)</p>
+      <p dbxColor="ok" [dbxColorTone]="18">Ok tonal (18%)</p>
+      <p dbxColor="success" [dbxColorTone]="18">Success tonal (18%)</p>
+      <p dbxColor="grey" [dbxColorTone]="18">Grey tonal (18%)</p>
+      <p dbxColor="primary" [dbxColorTone]="40">Primary tonal (40%)</p>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

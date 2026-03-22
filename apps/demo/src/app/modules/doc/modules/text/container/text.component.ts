@@ -1,5 +1,5 @@
 import { type ClickableAnchor } from '@dereekb/dbx-core';
-import { type TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, type DbxLinkifyConfig, DbxLinkifyService, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, type NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
+import { type TextChip, type DbxChipDisplay, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, type DbxLinkifyConfig, DbxLinkifyService, DbxTextChipsComponent, DbxChipDirective, DbxChipListComponent, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, type NumberWithLimit, DbxNumberWithLimitComponent, DbxClickToCopyTextDirective } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { type UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -10,7 +10,7 @@ import { LOREM } from '../../shared';
 @Component({
   templateUrl: './text.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxNumberWithLimitComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxChipListComponent, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxNumberWithLimitComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, DbxClickToCopyTextDirective, DbxClickToCopyTextComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocTextTextComponent {
@@ -76,16 +76,49 @@ export class DocTextTextComponent {
   readonly linkify = `this feature is powered by https://linkify.js.org/`;
   readonly linkifyWithLongerUrl = `This is the docs url: https://linkify.js.org/docs/linkify-react.html`;
 
+  readonly chipDisplays: DbxChipDisplay[] = [
+    { label: 'Primary', value: 'primary', color: 'primary' },
+    { label: 'Accent', value: 'accent', color: 'accent' },
+    { label: 'Warn', value: 'warn', color: 'warn' },
+    { label: 'Notice', value: 'notice', color: 'notice' },
+    { label: 'Ok', value: 'ok', color: 'ok' },
+    { label: 'Success', value: 'success', color: 'success' },
+    { label: 'Grey', value: 'grey', color: 'grey' },
+    { label: 'Background', value: 'background' },
+    { label: 'No Color', value: 'none' }
+  ];
+
+  readonly chipDisplaysWithTones: DbxChipDisplay[] = [
+    { label: 'Primary 18%', value: 'primary-18', color: 'primary', tone: 18 },
+    { label: 'Primary 40%', value: 'primary-40', color: 'primary', tone: 40 },
+    { label: 'Primary 100%', value: 'primary-100', color: 'primary', tone: 100 },
+    { label: 'Accent 18%', value: 'accent-18', color: 'accent', tone: 18 },
+    { label: 'Accent 100%', value: 'accent-100', color: 'accent', tone: 100 },
+    { label: 'Success 18%', value: 'success-18', color: 'success', tone: 18 },
+    { label: 'Success 100%', value: 'success-100', color: 'success', tone: 100 }
+  ];
+
   readonly chips: TextChip[] = [
     {
-      text: 'a chip with a tool tip',
-      tooltip: 'tooltip to show'
+      label: 'a chip with a tool tip',
+      value: 'a',
+      tooltip: 'tooltip to show',
+      color: 'primary'
     },
     {
-      text: 'b'
+      label: 'b',
+      value: 'b',
+      color: 'accent'
     },
     {
-      text: 'c'
+      label: 'c',
+      value: 'c'
+    },
+    {
+      label: 'not selected',
+      value: 'd',
+      color: 'success',
+      selected: false
     }
   ];
 

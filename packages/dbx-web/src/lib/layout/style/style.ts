@@ -97,19 +97,27 @@ export const DBX_THEME_COLORS_EXTRA_SECONDARY: DbxThemeColorExtraSecondary[] = [
 export const DBX_THEME_COLORS: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...DBX_THEME_COLORS_EXTRA, ...DBX_THEME_COLORS_EXTRA_SECONDARY];
 
 /**
+ * Background mix percentage (0-100) that controls the opacity of a themed background color.
+ *
+ * Used with `--dbx-color-bg-tone` to create tonal/muted color appearances.
+ * A value of `100` produces a fully opaque background, while lower values (e.g. `18`) produce a subtle tonal effect.
+ */
+export type DbxColorTone = number;
+
+/**
  * Returns the CSS class name for a themed background color.
  *
  * @example
  * ```ts
  * dbxColorBackground('primary'); // 'dbx-primary-bg'
- * dbxColorBackground(undefined); // 'dbx-default'
+ * dbxColorBackground(undefined); // 'dbx-default-bg'
  * ```
  *
  * @param color - the theme color to convert, or nullish/empty for the default class
- * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'` or `'dbx-default'`)
+ * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'` or `'dbx-default-bg'`)
  */
 export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
-  let cssClass = 'dbx-default'; // background by default
+  let cssClass = 'dbx-default-bg'; // background by default
 
   switch (color) {
     case 'primary':

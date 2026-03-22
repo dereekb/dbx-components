@@ -157,7 +157,7 @@ $dbx-detail-block-big-header-icon-size: 18px;
     transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     padding: 7px 12px;
-    border-radius: var(--dbx-chip-container-shape, var(--mat-sys-corner-large));
+    border-radius: var(--dbx-chip-container-shape, var(--mat-sys-corner-full, 9999px));
     align-items: center;
     cursor: default;
     min-height: 32px;
@@ -201,6 +201,16 @@ $dbx-detail-block-big-header-icon-size: 18px;
   .dbx-text-chips-listbox button.mat-mdc-chip-action {
     pointer-events: none; // disable the chip click and selection events.
     user-select: none;
+  }
+
+  // override Material's chip styling when a -bg color class is applied
+  .dbx-text-chips-listbox mat-chip-option[class*='-bg'] {
+    --mat-chip-elevated-selected-container-color: #{theming.$dbx-bg-color};
+    --mat-chip-elevated-container-color: #{theming.$dbx-bg-color};
+    --mat-chip-selected-label-text-color: #{theming.$dbx-color};
+    --mat-chip-label-text-color: #{theming.$dbx-color};
+    --mat-chip-with-icon-selected-icon-color: #{theming.$dbx-color};
+    --mat-chip-with-icon-icon-color: #{theming.$dbx-color};
   }
 
   .dbx-hint,
