@@ -44,11 +44,8 @@
     </dbx-content-box>
     <dbx-content-box [wide]="true">
       <dbx-section header="Download Files">
-        <div>
+        <div class="dbx-button-column">
           <dbx-firebase-storagefile-download-button [config]="avatarDownloadButtonConfig" [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>
-        </div>
-        <p></p>
-        <div>
           <dbx-firebase-storagefile-download-button [config]="archiveDownloadButtonConfig" [source]="archiveDownloadSource"></dbx-firebase-storagefile-download-button>
         </div>
       </dbx-section>

@@ -23,6 +23,13 @@
       <dbx-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionHandler]="handleAction">
         <dbx-button dbxActionButton text="Action Button Trigger"></dbx-button>
       </dbx-action-example-tools>
+
+      <h4>dbxActionConfirmSkip</h4>
+      <p>Use dbxActionConfirmSkip to conditionally skip the confirmation dialog. This is useful when the same template renders both confirmed and unconfirmed actions.</p>
+      <dbx-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionConfirmSkip]="skipConfirm" dbxActionValue [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton [text]="skipConfirm ? 'Skip Confirm (No Dialog)' : 'With Confirm (Shows Dialog)'"></dbx-button>
+        <dbx-button [text]="skipConfirm ? 'Enable Confirm' : 'Disable Confirm'" (dbxButtonClick)="toggleSkipConfirm()"></dbx-button>
+      </dbx-action-example-tools>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionError" hint="Combined with a dbx-error view to show any errors that pop up.">

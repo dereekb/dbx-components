@@ -1,4 +1,4 @@
-import { Directive, inject, input } from '@angular/core';
+import { Directive, inject, input, booleanAttribute } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { type DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
@@ -38,12 +38,23 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
 
   readonly dbxActionConfirm = input<Maybe<DbxActionConfirmConfig<T>>, Maybe<DbxActionConfirmConfig<T> | ''>>(undefined, { transform: transformEmptyStringInputToUndefined });
 
+  /**
+   * When true, the confirmation dialog is disabled and the action proceeds without prompting.
+   */
+  readonly dbxActionConfirmSkip = input<boolean, unknown>(false, { transform: booleanAttribute });
+
   constructor() {
     super();
     cleanSubscriptionWithLockSet({
       lockSet: this.source.lockSet,
       sub: this.source.triggered$.subscribe(() => {
-        this.showDialog();
+        const skip = this.dbxActionConfirmSkip();
+
+        if (!skip) {
+          this.showDialog();
+        } else {
+          this._handleDialogResult(true);
+        }
       })
     });
   }

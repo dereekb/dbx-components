@@ -55,6 +55,12 @@ export class DocActionInteractionComponent implements OnDestroy {
     cancelText: 'Cancel Customized'
   };
 
+  skipConfirm = false;
+
+  toggleSkipConfirm() {
+    this.skipConfirm = !this.skipConfirm;
+  }
+
   readonly analyticsConfig: DbxActionAnalyticsConfig = {
     onTriggered: (service: DbxAnalyticsService) => {
       service.sendEventType('Analytics Trigger Example');
