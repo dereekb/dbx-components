@@ -38,7 +38,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../../coverage/packages/firebase-server/model"
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/firebase-server/model"
       }
     }
   }

@@ -111,7 +111,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/firebase-server"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/firebase-server"
       }
     }
   }

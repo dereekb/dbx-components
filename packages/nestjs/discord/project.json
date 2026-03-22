@@ -39,7 +39,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../../coverage/packages/nestjs/discord"
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/nestjs/discord"
       }
     }
   }

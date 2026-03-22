@@ -89,7 +89,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/calcom"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/calcom"
       }
     }
   }

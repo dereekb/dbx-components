@@ -39,7 +39,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../../coverage/packages/nestjs/mailgun"
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/nestjs/mailgun"
       }
     }
   }

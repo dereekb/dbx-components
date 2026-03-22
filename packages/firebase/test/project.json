@@ -50,7 +50,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../../coverage/packages/firebase/test"
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/firebase/test"
       }
     }
   }
