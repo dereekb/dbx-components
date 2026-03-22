@@ -2,10 +2,10 @@
   "name": "@dereekb/dbx-firebase",
   "version": "13.4.2",
   "peerDependencies": {
-    "@angular/common": "^21.0.0",
-    "@angular/core": "^21.0.0",
+    "@angular/common": "21.2.3",
+    "@angular/core": "21.2.3",
     "@angular/fire": "21.0.0-rc.0-canary.ac3dd7c",
-    "@angular/material": "^21.0.0",
+    "@angular/material": "21.2.3",
     "@dereekb/date": "13.4.2",
     "@dereekb/dbx-analytics": "13.4.2",
     "@dereekb/dbx-core": "13.4.2",

@@ -15,7 +15,7 @@
     "@dereekb/nestjs": "13.4.2",
     "@dereekb/util": "13.4.2",
     "@dereekb/zoom": "13.4.2",
-    "@nestjs/common": "^11.1.16",
+    "@nestjs/common": "^11.1.17",
     "firebase-admin": "^13.0.0",
     "firebase-functions": "^7.0.0",
     "sharp": "^0.34.5",
