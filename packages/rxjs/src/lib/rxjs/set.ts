@@ -48,10 +48,8 @@ export function distinctUntilHasDifferentValues<I extends Iterable<K>, K extends
  * @param readValues - function to extract the iterable of values to compare
  * @returns operator that suppresses consecutive emissions whose extracted iterable values are the same
  */
-export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<I, V>): MonoTypeOperatorFunction<I>;
-export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<I, V>): MonoTypeOperatorFunction<Maybe<I>>;
-export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<I, V>) {
-  return distinctUntilItemsValueChanges<I, V>(readValues, hasSameValues);
+export function distinctUntilItemsHaveDifferentValues<I extends Maybe<unknown>, V extends Iterable<PrimativeKey>>(readValues: ReadValueFunction<NonNullable<I>, V>): MonoTypeOperatorFunction<I> {
+  return distinctUntilItemsValueChanges<I, V>(readValues as ReadValueFunction<NonNullable<I>, V>, hasSameValues);
 }
 
 /**
@@ -62,8 +60,6 @@ export function distinctUntilItemsHaveDifferentValues<I, V extends Iterable<Prim
  * @param isEqualComparator - custom equality function for the extracted values
  * @returns operator that suppresses consecutive emissions whose extracted values are considered equal
  */
-export function distinctUntilItemsValueChanges<I, V>(readValues: ReadValueFunction<I, V>, isEqualComparator: EqualityComparatorFunction<V>): MonoTypeOperatorFunction<I>;
-export function distinctUntilItemsValueChanges<I, V>(readValues: ReadValueFunction<I, V>, isEqualComparator: EqualityComparatorFunction<V>): MonoTypeOperatorFunction<Maybe<I>>;
-export function distinctUntilItemsValueChanges<I, V>(readValues: ReadValueFunction<I, V>, isEqualComparator: EqualityComparatorFunction<V>) {
-  return distinctUntilChanged<I>(compareEqualityWithValueFromItemsFunction(readValues, isEqualComparator));
+export function distinctUntilItemsValueChanges<I extends Maybe<unknown>, V>(readValues: ReadValueFunction<NonNullable<I>, V>, isEqualComparator: EqualityComparatorFunction<V>): MonoTypeOperatorFunction<I> {
+  return distinctUntilChanged<I>(compareEqualityWithValueFromItemsFunction(readValues as ReadValueFunction<I, V>, isEqualComparator));
 }
