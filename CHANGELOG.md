@@ -1,3 +1,15 @@
+## [13.5.1](https://github.com/dereekb/dbx-components/compare/v13.5.0-dev...v13.5.1) (2026-03-22)
+
+
+### Bug Fixes
+
+- reverted [...Set] spreads to Array.from() ([fc712166](https://github.com/dereekb/dbx-components/commit/fc712166daaeecad86411f4dd8e38c9de19989f6))
+
+
+### Code Refactoring
+
+- added unlink mode and confirm skip to login ([1a7dfabc](https://github.com/dereekb/dbx-components/commit/1a7dfabc53436d77bf5f1fb9dd4d552733cc38c2))
+
 # [13.5.0](https://github.com/dereekb/dbx-components/compare/v13.4.2-dev...v13.5.0) (2026-03-22)
 
 

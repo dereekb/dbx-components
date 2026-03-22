@@ -29,4 +29,4 @@ export type KnownFirebaseLoginMethodCategory = typeof DEFAULT_FIREBASE_LOGIN_MET
 /**
  * Mode for the login UI — either signing in or creating a new account.
  */
-export type DbxFirebaseLoginMode = 'login' | 'register' | 'link';
+export type DbxFirebaseLoginMode = 'login' | 'register' | 'link' | 'unlink';

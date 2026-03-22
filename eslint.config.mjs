@@ -141,7 +141,7 @@ export default [
       'unicorn/prefer-string-starts-ends-with': 'warn',
       'unicorn/no-lonely-if': 'warn',
       'unicorn/no-useless-spread': 'warn',
-      'unicorn/prefer-spread': 'warn',
+      'unicorn/prefer-spread': 'off', // disabled: bundler transpiles [...Set] to [].concat(Set) which breaks non-array iterables
       'unicorn/no-for-loop': 'warn',
       'unicorn/prefer-includes': 'warn',
       'unicorn/prefer-optional-catch-binding': 'warn',

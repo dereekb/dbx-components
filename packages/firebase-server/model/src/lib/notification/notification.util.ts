@@ -276,7 +276,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const notificationUserRecipientConfigs = new Map<NotificationUserId, NotificationUserDefaultNotificationBoxRecipientConfig>();
 
   if (nonNotificationBoxUidRecipientConfigs.size > 0) {
-    const nonNotificationBoxRecipientUids = [...nonNotificationBoxUidRecipientConfigs.keys()];
+    const nonNotificationBoxRecipientUids = Array.from(nonNotificationBoxUidRecipientConfigs.keys());
     const notificationUserDocuments = loadDocumentsForIds(notificationUserAccessor, nonNotificationBoxRecipientUids);
 
     // Attempt to load the NotificationUser for each uid.

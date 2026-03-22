@@ -7,8 +7,11 @@ import { DbxFirebaseLoginContext } from './login.context';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
+import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
+import { type DbxThemeColor } from '@dereekb/dbx-web';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { firebaseAuthErrorToReadableError, type FirebaseAuthError } from '@dereekb/firebase';
+import { loginMethodTypeToFirebaseProviderId } from './login.provider.id';
 
 /**
  * Configuration for a login button's appearance and action handler.
@@ -20,6 +23,14 @@ export interface DbxFirebaseLoginButtonConfig {
   iconFilter?: string;
   buttonColor?: string;
   buttonTextColor?: string;
+  /**
+   * Material theme color to apply (e.g., 'warn', 'primary').
+   */
+  color?: DbxThemeColor;
+  /**
+   * Optional confirmation dialog config. When set, the action will prompt the user before executing.
+   */
+  confirmConfig?: DbxActionConfirmConfig;
   handleLogin: () => Promise<unknown>;
 }
 
@@ -31,8 +42,8 @@ export interface DbxFirebaseLoginButtonConfig {
 @Component({
   selector: 'dbx-firebase-login-button',
   template: `
-    <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue [dbxActionSuccessHandler]="onActionSuccess">
-      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal()" [customButtonColor]="buttonColorSignal()" [raised]="true">
+    <ng-container dbxAction [dbxActionHandler]="handleAction" [dbxActionSuccessHandler]="onActionSuccess" [dbxActionConfirm]="confirmConfigSignal()" [dbxActionConfirmSkip]="!confirmConfigSignal()">
+      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal()" [customButtonColor]="buttonColorSignal()" [raised]="true" [color]="colorSignal()">
         <div class="dbx-firebase-login-button-content">
           <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
             @if (iconUrlSignal()) {
@@ -61,8 +72,10 @@ export class DbxFirebaseLoginButtonComponent {
   readonly iconSignal = computed(() => this.config()?.icon);
   readonly iconFilterSignal = computed(() => this.config()?.iconFilter);
   readonly textSignal = computed(() => this.config()?.text ?? '');
-  readonly buttonColorSignal = computed(() => this.config()?.buttonColor ?? 'transparent');
+  readonly buttonColorSignal = computed(() => this.config()?.buttonColor ?? (this.config()?.color ? undefined : 'transparent'));
   readonly buttonTextColorSignal = computed(() => this.config()?.buttonTextColor);
+  readonly colorSignal = computed(() => this.config()?.color);
+  readonly confirmConfigSignal = computed(() => this.config()?.confirmConfig);
 
   setConfig(config: Maybe<DbxFirebaseLoginButtonConfig>) {
     this.config.set(config);
@@ -167,14 +180,17 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
   ngOnInit(): void {
     const assets = this.assetConfig;
     const text = this._textForMode(assets);
+    const isUnlink = this.effectiveLoginMode === 'unlink';
 
     this._config.set({
       text,
-      icon: assets.loginIcon,
-      iconUrl: assets.logoUrl,
-      iconFilter: assets.logoFilter,
-      buttonColor: assets.backgroundColor,
-      buttonTextColor: assets.textColor,
+      icon: isUnlink ? 'link_off' : assets.loginIcon,
+      iconUrl: isUnlink ? undefined : assets.logoUrl,
+      iconFilter: isUnlink ? undefined : assets.logoFilter,
+      buttonColor: isUnlink ? undefined : assets.backgroundColor,
+      buttonTextColor: isUnlink ? undefined : assets.textColor,
+      color: isUnlink ? 'warn' : undefined,
+      confirmConfig: isUnlink ? { title: `Disconnect ${assets.providerName ?? 'Provider'}`, prompt: `Are you sure you want to disconnect ${assets.providerName ?? 'this provider'}?` } : undefined,
       handleLogin: () => this._handleAction()
     });
   }
@@ -189,6 +205,22 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    */
   handleLink(): Promise<unknown> {
     throw new Error(`Linking is not supported for the "${this.loginProvider}" provider.`);
+  }
+
+  /**
+   * Handles the unlink action by removing the provider from the current user.
+   * Uses the {@link LOGIN_METHOD_TYPE_TO_FIREBASE_PROVIDER_ID_MAP} to resolve the Firebase provider ID.
+   *
+   * @returns A promise that resolves when the unlink action completes.
+   */
+  handleUnlink(): Promise<unknown> {
+    const providerId = loginMethodTypeToFirebaseProviderId(this.loginProvider);
+
+    if (!providerId) {
+      throw new Error(`Unknown provider ID for login method type "${this.loginProvider}".`);
+    }
+
+    return this.dbxFirebaseAuthService.unlinkProvider(providerId);
   }
 
   get providerConfig() {
@@ -206,10 +238,16 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
   private _textForMode(assets: DbxFirebaseAuthLoginProviderAssets): string {
     let text: string;
 
-    if (this.effectiveLoginMode === 'link') {
-      text = assets.linkText ?? (assets.providerName ? `Connect ${assets.providerName}` : '<linkText not configured>');
-    } else {
-      text = assets.loginText ?? '<loginText not configured>';
+    switch (this.effectiveLoginMode) {
+      case 'link':
+        text = assets.linkText ?? (assets.providerName ? `Connect ${assets.providerName}` : '<linkText not configured>');
+        break;
+      case 'unlink':
+        text = assets.unlinkText ?? (assets.providerName ? `Disconnect ${assets.providerName}` : '<unlinkText not configured>');
+        break;
+      default:
+        text = assets.loginText ?? '<loginText not configured>';
+        break;
     }
 
     return text;
@@ -218,10 +256,16 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
   private _handleAction(): Promise<unknown> {
     let promise: Promise<unknown>;
 
-    if (this.effectiveLoginMode === 'link') {
-      promise = this.handleLink();
-    } else {
-      promise = this.handleLogin();
+    switch (this.effectiveLoginMode) {
+      case 'link':
+        promise = this.handleLink();
+        break;
+      case 'unlink':
+        promise = this.handleUnlink();
+        break;
+      default:
+        promise = this.handleLogin();
+        break;
     }
 
     return promise.catch((error) => {

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageService, DbxFirebaseManageAuthProvidersComponent } from '@dereekb/dbx-firebase';
 import { JsonPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { makeUserAvatarFileStoragePath } from 'demo-firebase';
@@ -8,7 +8,7 @@ import { map, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './settings.component.html',
-  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent],
+  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseManageAuthProvidersComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

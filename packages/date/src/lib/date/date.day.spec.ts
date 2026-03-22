@@ -320,6 +320,7 @@ wrapDateTests(() => {
             const dates = weekDaysAndWeekends([dateCellsForRange, { i: 0, to: 0 }]); // two ranges to blocks, first day should have two items grouped.
             const groups = groupFactory(dates);
 
+            expect(Array.isArray(groups)).toBe(true);
             expect(groups.length).toBe(14);
             expect(groups[0].dayCode).toBe(20220102);
             expect(groups[0].items.length).toBe(2);

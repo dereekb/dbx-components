@@ -42,7 +42,7 @@ export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], exclu
     removeFromSet(unique, exclude);
   }
 
-  return [...unique];
+  return Array.from(unique);
 }
 
 /**
@@ -95,7 +95,7 @@ export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends Prim
     addToSet(keys, input.values.map(readKey));
   }
 
-  return [...keys];
+  return Array.from(keys);
 }
 
 /**

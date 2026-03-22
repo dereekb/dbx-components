@@ -78,12 +78,15 @@ $big-button-height: 46px; // 33% bigger
   .dbx-button-column {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-items: center;
 
     > * {
       margin-bottom: 6px !important;
     }
+  }
+
+  .dbx-button-column.dbx-button-column-center {
+    align-items: center;
+    justify-items: center;
   }
 
   // dbx-color interactions

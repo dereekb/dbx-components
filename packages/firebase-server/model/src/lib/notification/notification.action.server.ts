@@ -376,7 +376,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
           if (notificationBoxConfigsToSyncInThisBatch.length > 0) {
             const notificationBoxConfigsToSyncInThisBatchMap = makeModelMap(notificationBoxConfigsToSyncInThisBatch, (x) => x.nb);
 
-            const notificationBoxIdsToSyncInThisBatch = [...notificationBoxConfigsToSyncInThisBatchMap.keys()] as string[];
+            const notificationBoxIdsToSyncInThisBatch = Array.from(notificationBoxConfigsToSyncInThisBatchMap.keys()) as string[];
 
             const notificationBoxDocuments = loadDocumentsForIds(notificationBoxCollection.documentAccessorForTransaction(transaction), notificationBoxIdsToSyncInThisBatch);
             const notificationBoxDocumentSnapshotDataPairs = await getDocumentSnapshotDataPairs(notificationBoxDocuments);

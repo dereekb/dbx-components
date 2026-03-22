@@ -94,7 +94,7 @@ function _compareMaps<F>(a: Map<unknown, unknown>, b: Map<unknown, unknown>, poj
     return false;
   }
 
-  const firstInequalityIndex = [...a.entries()].findIndex(([key, aValue]) => {
+  const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
     const bValue = b.get(key);
     return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
   });

@@ -22,6 +22,6 @@ export function sanitizeDbxDialogContentConfig(input: Maybe<DbxDialogContentConf
 
   return {
     ...input,
-    panelClass: panelClass ? [...cssClassesSet(input?.panelClass)] : undefined
+    panelClass: panelClass ? Array.from(cssClassesSet(input?.panelClass)) : undefined
   };
 }

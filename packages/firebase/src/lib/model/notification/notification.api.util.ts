@@ -149,7 +149,7 @@ export function updateNotificationUserNotificationBoxRecipientConfigs(a: Notific
   let result: NotificationUserNotificationBoxRecipientConfig[] | undefined;
 
   if (hasChanges) {
-    result = [...boxesMap.values()];
+    result = Array.from(boxesMap.values());
   }
 
   return result;

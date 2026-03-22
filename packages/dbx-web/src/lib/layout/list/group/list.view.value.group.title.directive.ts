@@ -39,7 +39,7 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
           const componentClass = delegate.headerComponentClass ?? DbxListTitleGroupHeaderComponent;
           const { dataForGroupValue, footerComponentClass } = delegate;
 
-          groups = [...groupsValuesMap.entries()].map(([value, items]) => {
+          groups = Array.from(groupsValuesMap.entries()).map(([value, items]) => {
             const data = dataForGroupValue(value as O, items);
             (data as Building<D>).value = value as O;
             const cssClasses = data.cssClasses ? [...cssClassesForAllGroups, ...data.cssClasses] : cssClassesForAllGroups;

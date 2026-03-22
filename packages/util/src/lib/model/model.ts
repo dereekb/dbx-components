@@ -103,7 +103,7 @@ export const readUniqueModelKey = (model: UniqueModel) => model.id;
  * ```
  */
 export function uniqueKeys(keys: ModelKey[]): ModelKey[] {
-  return [...new Set(keys)];
+  return Array.from(new Set(keys));
 }
 
 /**

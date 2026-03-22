@@ -10,10 +10,6 @@ $login-button-icon-size: 24px;
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-firebase-login-button-container {
-    margin-bottom: 6px;
-  }
-
   .dbx-firebase-login-terms {
     margin: 12px 0;
   }

@@ -5,8 +5,9 @@ interface TestModel extends UniqueModel {
 }
 
 describe('uniqueKeys()', () => {
-  it('should return unique keys', () => {
+  it('should return unique keys as an array', () => {
     const result = uniqueKeys(['a', 'b', 'a', 'c']);
+    expect(Array.isArray(result)).toBe(true);
     expect(result).toEqual(['a', 'b', 'c']);
   });
 

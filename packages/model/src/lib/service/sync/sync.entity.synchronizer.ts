@@ -78,7 +78,7 @@ export interface SyncEntitySynchronizerConfig {
  */
 export function syncEntitySynchronizer(config: SyncEntitySynchronizerConfig): SyncEntitySynchronizer {
   const map = new Map<SyncEntityCommonType, SyncEntityCommonTypeSynchronizer>(config.commonTypeSynchronizers.map((x) => [x.commonType, x]));
-  const commonTypes = [...map.keys()];
+  const commonTypes = Array.from(map.keys());
 
   const commonTypeSynchronizer = (input: SyncEntityCommonType): SyncEntityCommonTypeSynchronizer => {
     const synchronizer = map.get(input);

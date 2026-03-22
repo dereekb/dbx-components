@@ -2,7 +2,7 @@ import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
 import { reauthenticateWithPopup, Auth, authState, idToken, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential } from '@angular/fire/auth';
-import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY } from 'rxjs';
+import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';
 import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -48,7 +48,15 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
 
-  readonly currentAuthUser$: Observable<Maybe<User>> = this._authState$.pipe(timeoutStartWith(null as Maybe<User>, 1000), distinctUntilChanged(), shareReplay(1));
+  /**
+   * Subject that triggers a re-emission of the current auth user.
+   *
+   * Useful after operations that mutate the {@link User} object in place (e.g., linking/unlinking providers)
+   * without triggering a new {@link authState} emission.
+   */
+  private readonly _authUpdate$ = new Subject<void>();
+
+  readonly currentAuthUser$: Observable<Maybe<User>> = merge(this._authState$, this._authUpdate$.pipe(map(() => this.firebaseAuth.currentUser))).pipe(timeoutStartWith(null as Maybe<User>, 1000), shareReplay(1));
   readonly currentAuthUserInfo$: Observable<Maybe<AuthUserInfo>> = this.currentAuthUser$.pipe(map((x) => (x ? authUserInfoFromAuthUser(x) : undefined)));
 
   readonly authUser$: Observable<User> = this.currentAuthUser$.pipe(filterMaybe());
@@ -218,7 +226,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
           } else {
             throw new Error('User is not logged in currently.');
           }
-        })
+        }),
+        tap(() => this._authUpdate$.next())
       )
     );
   }
@@ -244,7 +253,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
           } else {
             throw new Error('User is not logged in currently.');
           }
-        })
+        }),
+        tap(() => this._authUpdate$.next())
       )
     );
   }
@@ -269,7 +279,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
           } else {
             throw new Error('User is not logged in currently.');
           }
-        })
+        }),
+        tap(() => this._authUpdate$.next())
       )
     );
   }

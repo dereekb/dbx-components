@@ -87,6 +87,6 @@ export function mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<Make
   });
 
   return {
-    omitKeys: omitKeys.size > 0 ? [...omitKeys] : undefined
+    omitKeys: omitKeys.size > 0 ? Array.from(omitKeys) : undefined
   };
 }
