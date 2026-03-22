@@ -38,9 +38,7 @@ $error-message-button-margin: 12px;
       align-items: center;
     }
   }
-}
 
-@mixin color($theme-config) {
   .mat-mdc-snack-bar-container.dbx-error-snackbar {
     --mdc-snackbar-container-color: var(--dbx-warn-color);
     --mdc-snackbar-supporting-text-color: var(--dbx-warn-color-contrast);
@@ -51,21 +49,5 @@ $error-message-button-margin: 12px;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-error') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

@@ -1,7 +1,7 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, Auth, authState, idToken, type User, type IdTokenResult, type ParsedToken, GoogleAuthProvider, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { reauthenticateWithPopup, Auth, authState, idToken, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential } from '@angular/fire/auth';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY } from 'rxjs';
 import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
@@ -66,6 +66,21 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     shareReplay(1)
   );
   readonly isNotAnonymousUser$: Observable<boolean> = this.isAnonymousUser$.pipe(isNot(), distinctUntilChanged(), shareReplay(1));
+
+  /**
+   * Observable of provider IDs currently linked to the authenticated user.
+   *
+   * @example
+   * ```ts
+   * authService.currentLinkedProviderIds$.subscribe(ids => console.log(ids));
+   * // ['google.com', 'facebook.com']
+   * ```
+   */
+  readonly currentLinkedProviderIds$: Observable<string[]> = this.currentAuthUser$.pipe(
+    map((user) => (user ? user.providerData.map((p) => p.providerId) : [])),
+    distinctUntilChanged((a, b) => a.length === b.length && a.every((v, i) => v === b[i])),
+    shareReplay(1)
+  );
 
   readonly isLoggedIn$: Observable<boolean> = this.hasAuthUser$;
   readonly isNotLoggedIn$: Observable<boolean> = this.isLoggedIn$.pipe(isNot());
@@ -178,38 +193,85 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     return result;
   }
 
-  logInWithGoogle(): Promise<UserCredential> {
-    return this.logInWithPopup(new GoogleAuthProvider());
-  }
-
-  logInWithFacebook(): Promise<UserCredential> {
-    return this.logInWithPopup(new FacebookAuthProvider());
-  }
-
-  logInWithTwitter(): Promise<UserCredential> {
-    return this.logInWithPopup(new TwitterAuthProvider());
-  }
-
-  logInWithGithub(): Promise<UserCredential> {
-    return this.logInWithPopup(new GithubAuthProvider());
-  }
-
-  logInWithApple(): Promise<UserCredential> {
-    throw new Error('todo');
-  }
-
-  logInWithMicrosoft(): Promise<UserCredential> {
-    // return this.logInWithPopup(new MicrosoftAuthProvider());
-    throw new Error('todo');
-  }
-
-  logInWithPhone(): Promise<UserCredential> {
-    throw new Error('todo');
-    // return signInWithPhoneNumber(this.firebaseAuth, )
-  }
-
   logInWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
     return signInWithPopup(this.firebaseAuth, provider, resolver);
+  }
+
+  /**
+   * Links an additional authentication provider to the current user via popup.
+   *
+   * @param provider - The auth provider to link.
+   * @param resolver - Optional popup redirect resolver.
+   * @returns A promise resolving to the user credential after linking.
+   *
+   * @example
+   * ```ts
+   * await authService.linkWithPopup(new GoogleAuthProvider());
+   * ```
+   */
+  linkWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
+    return firstValueFrom(
+      this.currentAuthUser$.pipe(
+        switchMap((x: Maybe<User>) => {
+          if (x) {
+            return linkWithPopup(x, provider, resolver);
+          } else {
+            throw new Error('User is not logged in currently.');
+          }
+        })
+      )
+    );
+  }
+
+  /**
+   * Links a credential to the current user. Useful for merging accounts
+   * when a credential-already-in-use error provides an {@link AuthCredential}.
+   *
+   * @param credential - The auth credential to link.
+   * @returns A promise resolving to the user credential after linking.
+   *
+   * @example
+   * ```ts
+   * await authService.linkWithCredential(credential);
+   * ```
+   */
+  linkWithCredential(credential: AuthCredential): Promise<UserCredential> {
+    return firstValueFrom(
+      this.currentAuthUser$.pipe(
+        switchMap((x: Maybe<User>) => {
+          if (x) {
+            return linkWithCredential(x, credential);
+          } else {
+            throw new Error('User is not logged in currently.');
+          }
+        })
+      )
+    );
+  }
+
+  /**
+   * Unlinks an authentication provider from the current user.
+   *
+   * @param providerId - The provider ID to unlink (e.g., 'google.com').
+   * @returns A promise resolving to the updated user.
+   *
+   * @example
+   * ```ts
+   * await authService.unlinkProvider('google.com');
+   * ```
+   */
+  unlinkProvider(providerId: string): Promise<User> {
+    return firstValueFrom(
+      this.currentAuthUser$.pipe(
+        switchMap((x: Maybe<User>) => {
+          if (x) {
+            return unlink(x, providerId);
+          } else {
+            throw new Error('User is not logged in currently.');
+          }
+        })
+      )
+    );
   }
 
   registerWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {

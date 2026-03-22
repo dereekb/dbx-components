@@ -1,3 +1,38 @@
+## [13.4.3](https://github.com/dereekb/dbx-components/compare/v13.4.2-dev...v13.4.3) (2026-03-22)
+
+
+### Bug Fixes
+
+- e164 phone number regex minimum digit count ([d001923d](https://github.com/dereekb/dbx-components/commit/d001923d45f47b2389643a69131056ef40d6270e))
+- fixed flaky jwks rotation test ([05adea51](https://github.com/dereekb/dbx-components/commit/05adea519f04d127bbacff31287e2e1cfcb69328))
+
+
+### Checkpoints
+
+- angular material M3 theming migration ([fca67305](https://github.com/dereekb/dbx-components/commit/fca67305bf3880973a8ee20eede6475f3dd084ec))
+- m3 shape overrides and token fixes ([0a0ca805](https://github.com/dereekb/dbx-components/commit/0a0ca805b050200f5cf42751a98262d4ae69de02))
+
+
+### Code Refactoring
+
+- added secondary and tertiary to DbxThemeColor ([f988ae27](https://github.com/dereekb/dbx-components/commit/f988ae2763c7a0efc016ab6828a2262b7c8f043b))
+- added social login provider linking and material symbols ([7871df41](https://github.com/dereekb/dbx-components/commit/7871df4106339d6dd72bfad65a7cd6635be01e23))
+- added tryConvertToE164PhoneNumber utility ([042a0772](https://github.com/dereekb/dbx-components/commit/042a077294eaf5df7711bac8e273f5be1b77e4e6))
+- removed empty color()/typography() scss mixins ([380abc56](https://github.com/dereekb/dbx-components/commit/380abc56bb18a284fe911d21c143c469c798d9b3))
+- renamed CssVariable to CssToken ([b04d79b4](https://github.com/dereekb/dbx-components/commit/b04d79b482832186987ece540a3b919bd7d74e14))
+- scss modernization with mat.m2-theme() css variables ([aee6e99f](https://github.com/dereekb/dbx-components/commit/aee6e99f686e8423d28246319143e259c1db2116))
+- styling fixes for sidenav, popover, bar, and grey ([8817ecfa](https://github.com/dereekb/dbx-components/commit/8817ecfafeaff2070866d982f15f040f72ca8719))
+- styling fixes with m3 migration ([9f048cdf](https://github.com/dereekb/dbx-components/commit/9f048cdff4f9cebdcfa1e2cef4674bf4262b2b9c))
+- type fixes ([3545484d](https://github.com/dereekb/dbx-components/commit/3545484d6c88ea299dff4bd00e82e27f505c7ea2))
+
+
+### Demo
+
+- updated landing page package list ([0d384933](https://github.com/dereekb/dbx-components/commit/0d384933337e1f52349e14386de08661fa006180))
+
+
+
+
 ## [13.4.2](https://github.com/dereekb/dbx-components/compare/v13.4.1-dev...v13.4.2) (2026-03-20)
 
 

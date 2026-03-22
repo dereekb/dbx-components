@@ -28,7 +28,6 @@ export class OidcClientService {
    */
   async createClient(params: CreateOidcClientParams, validatedMetadata?: Partial<Pick<ClientMetadata, 'jwks'>>): Promise<CreateOidcClientResult> {
     const provider = await this.oidcService.getProvider();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
 
     // Mirrors oidc-provider's default idFactory from lib/helpers/defaults.js
@@ -86,7 +85,7 @@ export class OidcClientService {
     return {
       modelKeys: firestoreModelKey(oidcEntryIdentity, clientId),
       client_id: clientId,
-      client_secret: clientSecret ?? ''
+      client_secret: clientSecret
     };
   }
 
@@ -104,7 +103,6 @@ export class OidcClientService {
    */
   async updateClient(clientId: OidcEntryClientId, params: Omit<UpdateOidcClientParams, 'key'>): Promise<void> {
     const provider = await this.oidcService.getProvider();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 
@@ -142,7 +140,6 @@ export class OidcClientService {
    */
   async rotateClientSecret(clientId: OidcEntryClientId): Promise<RotateOidcClientSecretResult> {
     const provider = await this.oidcService.getProvider();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 
@@ -171,7 +168,6 @@ export class OidcClientService {
    */
   async deleteClient(clientId: OidcEntryClientId): Promise<void> {
     const provider = await this.oidcService.getProvider();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 

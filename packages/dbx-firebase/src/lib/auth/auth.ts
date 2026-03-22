@@ -12,6 +12,10 @@ export type AuthUserInfo = Omit<UserInfo, 'providerId'> & {
    * The last time the user signed in and recieved a refresh token.
    */
   readonly lastSignInTime?: Maybe<ISO8601DateString>;
+  /**
+   * Provider data for each linked authentication provider.
+   */
+  readonly providerData?: UserInfo[];
 };
 
 /**
@@ -28,7 +32,8 @@ export function authUserInfoFromAuthUser(user: User): AuthUserInfo {
     photoURL: user.photoURL,
     uid: user.uid,
     creationTime: safeFormatToISO8601DateString(user.metadata.creationTime),
-    lastSignInTime: safeFormatToISO8601DateString(user.metadata.lastSignInTime)
+    lastSignInTime: safeFormatToISO8601DateString(user.metadata.lastSignInTime),
+    providerData: user.providerData
   };
 }
 

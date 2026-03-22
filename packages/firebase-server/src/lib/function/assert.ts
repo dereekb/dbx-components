@@ -34,7 +34,6 @@ export function assertContextHasAuth(context: CallableContext): void {
  * const userData = await assertSnapshotData(userDocument);
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirestoreDocument generic requires any for proper type inference
 export async function assertSnapshotData<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<FirestoreDocumentData<D>> {
   const data = await document.snapshotData();
 
@@ -57,7 +56,6 @@ export async function assertSnapshotData<D extends FirestoreDocument<any>>(docum
  * @returns The document's snapshot data with `id` and `key` attached.
  * @throws {HttpsError} Throws a {@link modelNotAvailableError} (404) if the document has no data.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirestoreDocument generic requires any for proper type inference
 export async function assertSnapshotDataWithKey<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>> {
   const data = await assertSnapshotData(document, message);
   return setIdAndKeyFromKeyIdRefOnDocumentData(data, document);
@@ -70,7 +68,6 @@ export async function assertSnapshotDataWithKey<D extends FirestoreDocument<any>
  * @param message - Optional custom error message.
  * @throws {HttpsError} Throws a {@link modelNotAvailableError} (404) if the document does not exist.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirestoreDocument generic requires any for proper type inference
 export async function assertDocumentExists<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<void> {
   const exists = await document.exists();
 
@@ -88,7 +85,6 @@ export async function assertDocumentExists<D extends FirestoreDocument<any>>(doc
  * @param message - Optional custom error message.
  * @returns A {@link modelNotAvailableError} with the document's model type in the message.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirestoreDocument generic requires any for proper type inference
 export function documentModelNotAvailableError(document: Pick<FirestoreDocument<any>, 'modelType'>, message?: string) {
   return modelNotAvailableError({
     message: message ?? `The ${document.modelType} was unavailable.`

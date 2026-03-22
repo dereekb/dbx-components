@@ -169,7 +169,6 @@ export function provideMutableNotificationExpediteService(): Provider[] {
  *
  * @returns an array of abstract classes to export from the NestJS module
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exportMutableNotificationExpediteService(): Abstract<any>[] {
   return [NotificationExpediteService, MutableNotificationExpediteService];
 }

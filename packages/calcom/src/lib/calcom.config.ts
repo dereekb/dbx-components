@@ -33,7 +33,6 @@ export type CalcomRefreshToken = string;
  */
 export type CalcomApiKey = string;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CalcomConfig {}
 
 /**

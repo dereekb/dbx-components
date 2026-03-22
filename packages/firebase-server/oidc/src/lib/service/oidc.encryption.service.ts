@@ -80,7 +80,6 @@ export class OidcEncryptionService {
    * @returns the decrypted adapter payload
    */
   decryptAdapterPayload(payload: JsonSerializableObject): AdapterPayload {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.adapterPayloadEncryptor.decrypt(payload as any) as AdapterPayload;
   }
 }

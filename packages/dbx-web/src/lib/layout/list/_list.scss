@@ -1,6 +1,3 @@
-@use 'sass:map';
-@use 'sass:list';
-@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
@@ -167,14 +164,6 @@ $list-item-padded-min-height: 42px;
   .dbx-list-content .dbx-list-view .mat-mdc-list-base .mat-mdc-list-item .mat-divider {
     position: unset; // do not touch the divider in dbx-list
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-  $cdk-background-color: theming.m2-get-color-from-palette($background, 'background');
-  $cdk-text-color: theming.m2-get-color-from-palette($foreground, 'text');
 
   .dbx-list-view-group-header {
     color: var(--mdc-list-list-item-label-text-color);
@@ -191,21 +180,5 @@ $list-item-padded-min-height: 42px;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-list') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

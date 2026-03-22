@@ -7,3 +7,4 @@ export * from './style.providers';
 export * from './style.set.directive';
 export * from './style.body.directive';
 export * from './style.color.directive';
+export * from './style.text-color.directive';

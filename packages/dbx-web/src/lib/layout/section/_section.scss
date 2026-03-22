@@ -209,7 +209,7 @@ $header-left-reserved-space-small-screen: 120px;
   }
 }
 
-@mixin color($theme-config) {
+@mixin responsive($theme-config) {
   // MARK: Page
   .dbx-section-page {
     > .dbx-section-header > .dbx-section-header-content {
@@ -228,21 +228,6 @@ $header-left-reserved-space-small-screen: 120px;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
+  @include responsive($theme-config);
 }

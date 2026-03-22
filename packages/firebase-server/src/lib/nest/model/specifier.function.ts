@@ -55,9 +55,7 @@ export type OnCallSpecifierHandlerConfig<N> = {
   /**
    * The default handler function, invoked when the specifier is `_` or omitted.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly _?: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
 };
 
@@ -84,7 +82,6 @@ export type OnCallSpecifierHandlerConfig<N> = {
  * });
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef & OnCallApiDetailsRef {
   const map = objectToMap(config);
 
@@ -94,7 +91,6 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
 
     if (handler != null) {
       assertRequestRequiresAuthForFunction(handler, request);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return handler(request as any) as PromiseOrValue<O>;
     } else {
       throw unknownModelCrudFunctionSpecifierError(specifier);

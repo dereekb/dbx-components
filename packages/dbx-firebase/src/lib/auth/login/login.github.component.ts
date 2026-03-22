@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { GithubAuthProvider } from '@angular/fire/auth';
 import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION } from './login.button.component';
 
 /**
@@ -15,6 +16,10 @@ export class DbxFirebaseLoginGitHubComponent extends AbstractConfiguredDbxFireba
   readonly loginProvider = 'github';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithGithub();
+    return this.dbxFirebaseAuthService.logInWithPopup(new GithubAuthProvider());
+  }
+
+  override handleLink() {
+    return this.dbxFirebaseAuthService.linkWithPopup(new GithubAuthProvider());
   }
 }

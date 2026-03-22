@@ -38,7 +38,6 @@ export function isCalendarViewDateRangeEqual(a: CalendarViewDateRange, b: Calend
   return a.type === b.type && isSameDay(a.start, b.start) && isSameDay(a.end, b.end) && a.distance === b.distance && a.isMinDateVisible === b.isMinDateVisible && a.isMaxDateVisible === b.isMaxDateVisible;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface CalendarState<T = any> {
   /**
    * Calendar display mode
@@ -121,7 +120,6 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
 const distinctUntilDateOrTypeOrEventsChanged = distinctUntilChanged<CalendarState>((a, b) => a?.date === b?.date && a?.type === b?.type && a?.events === b?.events);
 
 @Injectable()
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> {
   constructor() {
     super({

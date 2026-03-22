@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/zoom/nestjs",
-  "version": "13.4.2",
+  "version": "13.4.3",
   "peerDependencies": {
-    "@dereekb/nestjs": "13.4.2",
-    "@dereekb/util": "13.4.2",
-    "@dereekb/zoom": "13.4.2",
+    "@dereekb/nestjs": "13.4.3",
+    "@dereekb/util": "13.4.3",
+    "@dereekb/zoom": "13.4.3",
     "@nestjs/common": "^11.1.16",
     "@nestjs/config": "^4.0.3",
     "express": "^5.0.0"

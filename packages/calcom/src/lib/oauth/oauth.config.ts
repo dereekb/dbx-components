@@ -34,7 +34,6 @@ export interface CalcomOAuthConfig extends Partial<CalcomAuthClientIdAndSecretPa
   readonly apiKey?: Maybe<CalcomApiKey>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CalcomOAuthFetchFactoryInput {}
 
 export type CalcomOAuthFetchFactory = FactoryWithInput<ConfiguredFetch, CalcomOAuthFetchFactoryInput>;

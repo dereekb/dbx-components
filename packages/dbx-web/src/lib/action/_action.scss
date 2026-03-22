@@ -5,7 +5,6 @@
 }
 
 @mixin all-action-typography($theme-config) {
-  @include snackbar.typography($theme-config);
 }
 
 @mixin all-action-theme($theme-config) {

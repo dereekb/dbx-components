@@ -1,5 +1,3 @@
-@use 'sass:map';
-@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
@@ -46,38 +44,16 @@ $dbx-popup-border-radius: 4px;
       min-height: 28px;
     }
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $controls-bg-color: theming.m2-get-color-from-palette($background);
-  $controls-text-color: theming.m2-get-color-from-palette($background, 'contrast');
 
   .dbx-popup-controls {
-    color: $controls-text-color;
-    background: $controls-bg-color;
+    color: var(--mat-sys-on-surface);
+    background: var(--mat-sys-surface);
   }
-}
 
-@mixin typography($theme-config-or-typography-config) {
   .dbx-popup-controls-header {
     @include theming.limit-text();
   }
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popup') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

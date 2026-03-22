@@ -3,7 +3,6 @@ import { type Maybe, type MaybeNot } from '@dereekb/util';
 /**
  * Base marker interface for Zoho data models.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ZohoModel {}
 
 // MARK: DateTime

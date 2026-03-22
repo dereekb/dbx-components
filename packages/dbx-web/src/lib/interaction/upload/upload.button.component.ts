@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, input, output, viewChild } from '@angular/core';
 import { fileAcceptString, fileArrayAcceptMatchFunction } from './upload.accept';
 import { DbxButtonComponent } from '../../button/button.component';
 import { type DbxButtonStyle } from '../../button/button';
@@ -59,6 +59,12 @@ export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent
    */
   readonly multipleAttributeSignal = computed(() => (this.buttonMultipleSignal() ? '' : null));
 
+  /**
+   * NOTE: A Chrome bug can cause "File chooser dialog can only be shown with a user activation" errors
+   * when Chrome's "Restart to Update" banner is visible. Restarting Chrome to apply the update resolves it.
+   *
+   * See https://issues.chromium.org/issues/330663542 (scroll to bottom for details).
+   */
   openInput() {
     const inputRef = this.fileInput();
     const input = inputRef.nativeElement;

@@ -74,7 +74,6 @@ export abstract class AbstractNestContext {
  *
  * Your API implementation of this class is usually <AppPrefix>ApiNestContext (e.g. `DemoApiNestContext`).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirebaseModelsService generic requires `any` for SDK compatibility
 export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerEnvServiceRef, FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {
   /**
    * FirebasePermissionErrorContextErrorFunction to use with makeModelContext().
@@ -146,7 +145,6 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
 
   async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O>): Promise<O>;
   async useModel<T extends FirebaseModelsServiceTypes<Y>>(type: T, select: UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<FirebaseModelsServiceSelectionResultRolesReader<Y, T>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- implementation signature uses `any` to unify overload return types
   async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O> | UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<any> {
     const context: FirebaseAppModelContext<A> = this.makeModelContext(select.request, select.buildFn);
     const usePromise = useFirebaseModelsService(this.firebaseModelsService, type, {
@@ -164,7 +162,6 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
 /**
  * Input for {@link AbstractFirebaseNestContext.useModel} when only a roles reader is needed (no custom use function).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirebaseModelsService generic requires `any` for SDK compatibility
 export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>> = Omit<UseFirebaseModelsServiceSelection<Y, T>, 'type' | 'context'> & {
   readonly request: AuthDataRef;
   readonly buildFn?: BuildFunction<C>;
@@ -173,7 +170,6 @@ export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y
 /**
  * Input for {@link AbstractFirebaseNestContext.useModel} with a custom use function that transforms the selection result.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FirebaseModelsService generic requires `any` for SDK compatibility
 export type UseModelInput<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>, O> = UseModelInputForRolesReader<C, Y, T> & {
   readonly use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O>;
 };

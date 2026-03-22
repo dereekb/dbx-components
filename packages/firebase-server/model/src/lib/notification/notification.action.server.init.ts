@@ -139,10 +139,7 @@ export function notificationInitServerActions(context: NotificationInitServerAct
  * Input for {@link initializeNotificationModelInTransaction}, providing the document,
  * its current data, the template function, and the transaction context.
  */
-export interface InitializeNotificationModelInTransactionInput<
-  D extends // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    FirestoreDocument<InitializedNotificationModel, any>
-> {
+export interface InitializeNotificationModelInTransactionInput<D extends FirestoreDocument<InitializedNotificationModel, any>> {
   readonly makeTemplateFunction: MakeTemplateForNotificationRelatedModelInitializationFunction<FirestoreDocumentData<D>>;
   readonly throwErrorIfAlreadyInitialized?: Maybe<boolean>;
   readonly transaction: Transaction;
@@ -164,10 +161,7 @@ export interface InitializeNotificationModelInTransactionInput<
  * @returns an object with `initialized` and `alreadyInitialized` boolean flags
  * @throws notificationModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true
  */
-export async function initializeNotificationModelInTransaction<
-  D extends // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    FirestoreDocument<InitializedNotificationModel, any>
->(input: InitializeNotificationModelInTransactionInput<D>) {
+export async function initializeNotificationModelInTransaction<D extends FirestoreDocument<InitializedNotificationModel, any>>(input: InitializeNotificationModelInTransactionInput<D>) {
   const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: notificationBox } = input;
 
   let initialized: boolean = false;

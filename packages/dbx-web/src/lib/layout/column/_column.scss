@@ -118,7 +118,7 @@ $two-columns-right-padding-size: 6px;
   }
 }
 
-@mixin color($theme-config) {
+@mixin responsive($theme-config) {
   .dbx-two-column {
     @include theming.if-small-screen($theme-config) {
       .left-column {
@@ -142,21 +142,6 @@ $two-columns-right-padding-size: 6px;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-column') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
+  @include responsive($theme-config);
 }

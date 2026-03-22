@@ -111,7 +111,6 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
       const templateRequestArrays: ArrayOrValue<MailgunTemplateEmailRequest>[] = await Promise.all(
         messageSendBatches.map(async ([sendTemplateName, messages]) => {
           const sendTemplateNameToLowercase = sendTemplateName.toLowerCase();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const builderForKey = lowercaseKeysMessageBuilders[sendTemplateNameToLowercase as any];
 
           if (!builderForKey) {

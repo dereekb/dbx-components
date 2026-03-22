@@ -1,6 +1,3 @@
-@use 'sass:map';
-@use 'sass:list';
-@use 'sass:color';
 @use '../../../../style/theming';
 
 // MARK: Variables
@@ -22,47 +19,19 @@
     padding: 2px 6px 0 110px;
   }
 
-  .dbx-form-phone-field-extension-input {
-    border: 0;
-  }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-  $text-color: theming.m2-get-color-from-palette($foreground, 'text');
-  $border-color: theming.m2-get-color-from-palette($foreground, 'divider');
-
   .dbx-form-phone-field {
-    .country-selector.mat-mdc-button,
-    .country-list-button.mat-menu-item {
-      color: $text-color;
+    .country-selector,
+    .country-list-button {
+      color: var(--mat-sys-on-surface);
     }
   }
 
   .dbx-form-phone-field-extension-input {
     border: 0;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid var(--mat-sys-outline);
     background: none;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-phone') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

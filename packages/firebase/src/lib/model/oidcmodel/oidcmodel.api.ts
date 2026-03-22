@@ -65,7 +65,11 @@ export const createOidcClientParamsType = inferredTargetModelParamsType.merge(cr
  */
 export interface CreateOidcClientResult extends OnCallCreateModelResult {
   readonly client_id: OidcEntryClientId;
-  readonly client_secret: string;
+  /**
+   * The generated client secret in plaintext. Only returned for auth methods that require a secret
+   * (e.g., `client_secret_basic`, `client_secret_post`). Undefined for `private_key_jwt`.
+   */
+  readonly client_secret?: string;
 }
 
 // MARK: Update

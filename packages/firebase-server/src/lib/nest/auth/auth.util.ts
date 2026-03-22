@@ -10,7 +10,6 @@ import { type AbstractFirebaseNestContext } from '../nest.provider';
  * @param request - The callable request to check for admin privileges.
  * @throws {HttpsError} Throws forbidden (403) if the caller is not an admin.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertIsAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   if (!isAdminInRequest(request)) {
     throw forbiddenError();
@@ -23,7 +22,6 @@ export function assertIsAdminInRequest<N extends AbstractFirebaseNestContext<any
  * @param request - The callable request to check for admin privileges.
  * @returns True if the caller has admin privileges.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   return request.nest.authService.context(request).isAdmin;
 }
@@ -38,7 +36,6 @@ export function isAdminInRequest<N extends AbstractFirebaseNestContext<any, any>
  * @returns The resolved target UID (from request data or auth).
  * @throws {HttpsError} Throws forbidden (403) if the caller is not authorized.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertIsAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithOptionalAuth<N, I>, requireUid?: boolean) {
   if (!isAdminOrTargetUserInRequestData(request, requireUid)) {
     throw forbiddenError();
@@ -54,7 +51,6 @@ export function assertIsAdminOrTargetUserInRequestData<N extends AbstractFirebas
  * @param requireUid - If true, a UID must be present in the request data.
  * @returns True if the caller is an admin or is targeting their own user record.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithOptionalAuth<N, I>, requireUid = false) {
   const uid = request.data.uid;
   const authUid = request.auth?.uid;
@@ -74,7 +70,6 @@ export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestC
  * @param request - The callable request to check for ToS status.
  * @throws {HttpsError} Throws forbidden (403) if ToS has not been signed.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   if (!hasSignedTosInRequest(request)) {
     throw forbiddenError({
@@ -89,7 +84,6 @@ export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContex
  * @param request - The callable request to check for ToS status.
  * @returns True if the caller has signed the Terms of Service.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   return request.nest.authService.context(request).hasSignedTos;
 }
@@ -101,7 +95,6 @@ export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any,
  * @param authRoles - One or more roles that must all be present.
  * @throws {HttpsError} Throws forbidden (403) if any required role is missing.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
   if (!hasAuthRolesInRequest(request, authRoles)) {
     throw forbiddenError({
@@ -120,7 +113,6 @@ export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<an
  * @param authRoles - One or more roles that must all be present.
  * @returns True if the caller has all of the specified auth roles.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
   return containsAllValues(request.nest.authService.context(request).authRoles, authRoles);
 }
@@ -133,7 +125,6 @@ export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any,
  * @param request - The callable request to check for setup password claims.
  * @returns True if the claims contain a setup password key.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   const claims = request.nest.authService.context(request).claims;
 

@@ -5,7 +5,6 @@ import { type AbstractFirebaseNestContext } from './nest.provider';
  *
  * Your API implementation of this class is usually <AppPrefix>ApiServerNestContext (e.g. `DemoApiServerNestContext`).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic type parameters require `any` for Firebase SDK compatibility
 export abstract class AbstractServerFirebaseNestContext<C extends AbstractFirebaseNestContext<any, any>> {
   private readonly _context: C;
 

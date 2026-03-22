@@ -1,6 +1,3 @@
-@use 'sass:map';
-@use 'sass:list';
-@use 'sass:color';
 @use '../../style/theming';
 
 // Sections
@@ -8,42 +5,14 @@
   .cdk-overlay-pane .mat-menu-panel {
     max-width: 90vw;
   }
-}
 
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-  $cdk-background-color: theming.m2-get-color-from-palette($background, 'background');
-  $cdk-text-color: theming.m2-get-color-from-palette($foreground, 'text');
-  $cdk-border-color: color.adjust(
-    $color: $cdk-text-color,
-    $alpha: -0.9
-  );
-
-  .ng-overlay-container {
-    color: $cdk-text-color;
-    background: $cdk-background-color;
+  .cdk-overlay-pane.ng-overlay-container {
+    color: var(--mat-sys-on-surface);
+    background-color: var(--mat-sys-surface);
     @include theming.elevation(8);
-    border: 1px solid $cdk-border-color;
+    border: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
   }
-}
-
-@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-style') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

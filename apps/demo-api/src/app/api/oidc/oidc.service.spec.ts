@@ -75,14 +75,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
 
       it('should include both active and rotated keys in JWKS', async () => {
-        await jwksService.generateKeyPair();
-        const countAfterGenerate = (await jwksService.getLatestPublicJwks()).keys.length;
+        const { jwksKey: originalKey } = await jwksService.generateKeyPair();
 
-        await jwksService.rotateKeys();
+        const rotatedKey = await jwksService.rotateKeys();
         const jwks = await jwksService.getLatestPublicJwks();
 
-        // Rotation adds one new active key; the old one stays as rotated
-        expect(jwks.keys.length).toBe(countAfterGenerate + 1);
+        // Both the original (now rotated) and the new active key should be present
+        const kids = jwks.keys.map((k) => k.kid);
+        expect(kids).toContain(originalKey.publicKey.kid);
+        expect(kids).toContain(rotatedKey.publicKey.kid);
+        expect(jwks.keys.length).toBeGreaterThanOrEqual(2);
       });
     });
 

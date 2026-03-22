@@ -10,7 +10,6 @@ import { asPromise, type Maybe, type PromiseOrValue, type SpaceSeparatedCssClass
 import { DbxPopoverController, type DbxPopoverKey } from './popover';
 import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { DbxWindowKeyDownListenerDirective } from '../../keypress';
-import { DbxStyleDirective } from '../../layout/style/style.directive';
 
 /**
  * Extended popover controller that supports an optional async closing value function.
@@ -76,7 +75,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
 @Component({
   template: `
     <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown()" [dbxWindowKeyDownFilter]="triggerCloseKeys">
-      <div dbxStyle class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
+      <div class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
     </dbx-popover-coordinator>
   `,
   providers: [
@@ -91,7 +90,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   host: {
     '[class]': 'config.panelClass'
   },
-  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxStyleDirective, DbxInjectionComponent],
+  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -137,9 +136,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
     };
 
     // Also intercept the _close function to capture backdropClose, etc.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private member _close
     const original_close = (this.popoverRef as any)._close;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private member _close
     (this.popoverRef as any)._close = (closeType: NgPopoverCloseType, inputValue: O | undefined) => {
       const closeWithValue = (value?: O | undefined) => {
         original_close.call(this.popoverRef, closeType, value);
@@ -153,7 +150,6 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
       }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private member _overlay
     const overlay = (this.popoverRef as any)._overlay as Overlay; // overlay is not publically accessible
     const elementRef = this.config.origin;
     const configuration = this.config.configuration;
