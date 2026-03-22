@@ -1,3 +1,27 @@
+# [13.5.0](https://github.com/dereekb/dbx-components/compare/v13.4.2-dev...v13.5.0) (2026-03-22)
+
+
+### Bug Fixes
+
+- fixed flaky jwks rotation test ([56039ab4](https://github.com/dereekb/dbx-components/commit/56039ab4b4a8c424566c3aa1216bc0fed3804cc3))
+
+
+### Code Refactoring
+
+- added missing dependency ([bfa92abf](https://github.com/dereekb/dbx-components/commit/bfa92abfdef61eb29687c248997c046de8cf0fda))
+- added tryConvertToE164PhoneNumber() ([85ccbbd8](https://github.com/dereekb/dbx-components/commit/85ccbbd8866dbc3492625654bd3111fb5372db41))
+- type fixes ([3545484d](https://github.com/dereekb/dbx-components/commit/3545484d6c88ea299dff4bd00e82e27f505c7ea2))
+
+
+### Demo
+
+- updated landing page package list ([0d384933](https://github.com/dereekb/dbx-components/commit/0d384933337e1f52349e14386de08661fa006180))
+
+
+### Features
+
+- angular material m3 ([#40](https://github.com/dereekb/dbx-components/issues/40)) ([ad91169d](https://github.com/dereekb/dbx-components/commit/ad91169d28118e63e4a2108d0e4d27cc7eda8a27)), closes [#40](https://github.com/dereekb/dbx-components/issues/40)
+
 ## [13.4.2](https://github.com/dereekb/dbx-components/compare/v13.4.1-dev...v13.4.2) (2026-03-20)
 
 
