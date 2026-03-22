@@ -8,6 +8,7 @@ export * from './linkify/linkify.component';
 export * from './linkify/linkify.service';
 export * from './linkify/linkify.providers';
 export * from './text.chip.directive';
+export * from './text.chip.list.component';
 export * from './text.chips.component';
 export * from './number.limit.component';
 export * from './copy.text.directive';

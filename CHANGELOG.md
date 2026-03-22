@@ -1,3 +1,12 @@
+## [13.5.2](https://github.com/dereekb/dbx-components/compare/v13.5.1-dev...v13.5.2) (2026-03-22)
+
+
+### Code Refactoring
+
+- added DbxChipListComponent, tonal color system ([da097523](https://github.com/dereekb/dbx-components/commit/da097523ae52746dbbfe2af599fadd9b19e6e844))
+- fixed anchor list active styling ([fd64b889](https://github.com/dereekb/dbx-components/commit/fd64b88996ce64d345e655d8fd57ca47e2511fe8))
+- updated cleanupDestroyable() to support Maybe ([a80f9859](https://github.com/dereekb/dbx-components/commit/a80f98593bed57a22e22e962c46329e09e808efc))
+
 ## [13.5.1](https://github.com/dereekb/dbx-components/compare/v13.5.0-dev...v13.5.1) (2026-03-22)
 
 

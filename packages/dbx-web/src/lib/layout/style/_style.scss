@@ -115,7 +115,8 @@
   .dbx-#{$name}-bg {
     #{theming.$dbx-color-var}: #{$bg-text};
     #{theming.$dbx-bg-color-var}: #{$bg-color};
-    background: #{theming.$dbx-bg-color};
+    #{theming.$dbx-bg-tone-var}: 100%;
+    background: color-mix(in srgb, #{theming.$dbx-bg-color} var(#{theming.$dbx-bg-tone-var}), transparent);
     color: #{theming.$dbx-color};
   }
 

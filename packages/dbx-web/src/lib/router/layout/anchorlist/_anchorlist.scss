@@ -52,7 +52,8 @@ $default-mdc-list-list-item-leading-icon-size: 24px;
     }
   }
 
-  .dbx-anchor-list.mat-mdc-nav-list {
+  .dbx-anchor-list.mat-mdc-nav-list,
+  .dbx-list-view .mat-mdc-nav-list {
     --mat-divider-color: color-mix(in srgb, var(--mat-sys-outline-variant) 15%, transparent);
 
     // MARK: Muting

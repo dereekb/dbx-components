@@ -67,9 +67,16 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait 
 /**
  * Convenience wrapper for {@link cleanup} that calls `destroy()` on each replaced {@link Destroyable} instance.
  *
+ * Accepts both {@link Destroyable} and {@link Maybe}<{@link Destroyable}> values,
+ * skipping cleanup for nullish emissions.
+ *
  * @param wait - whether to wait for the previous destroy to complete before emitting
  * @returns an operator that manages Destroyable lifecycle
  */
-export function cleanupDestroyable<T extends Destroyable>(wait?: boolean): MonoTypeOperatorFunction<T> {
-  return cleanup((x) => x.destroy(), wait);
+export function cleanupDestroyable<T extends Maybe<Destroyable>>(wait?: boolean): MonoTypeOperatorFunction<T> {
+  return cleanup((x: T) => {
+    if (x) {
+      return x.destroy();
+    }
+  }, wait);
 }
