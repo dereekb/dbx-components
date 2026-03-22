@@ -1,0 +1,120 @@
+/// Applies M3 "small" (8px) corner rounding to components that default to
+/// larger radii in M3 (buttons default to "full"/pill, dialogs to 28px, etc).
+/// This gives a modern but restrained look.
+@mixin dbx-components-shapes() {
+  // Buttons: M3 default is "full" (pill). Small = 8px.
+  --mat-button-filled-container-shape: 8px;
+  --mat-button-outlined-container-shape: 8px;
+  --mat-button-text-container-shape: 8px;
+  --mat-button-protected-container-shape: 8px;
+  --mat-button-tonal-container-shape: 8px;
+
+  // FAB: M3 default is "large" (16px). Small = 8px.
+  --mat-fab-container-shape: 8px;
+  --mat-fab-small-container-shape: 8px;
+
+  // Dialog: M3 default is "extra-large" (28px). Small = 8px.
+  --mat-dialog-container-shape: 8px;
+
+  // Card: M3 default is "medium" (12px). Small = 8px.
+  --mat-card-elevated-container-shape: 8px;
+  --mat-card-filled-container-shape: 8px;
+  --mat-card-outlined-container-shape: 8px;
+
+  // Sidenav: M3 default is "large" (16px). No rounding for dbx-components.
+  --mat-sidenav-container-shape: 0;
+
+  // Chip: Small = 8px.
+  --mat-chip-container-shape-radius: 8px;
+
+  // Form fields: Small = 8px.
+  --mat-form-field-filled-container-shape: 8px;
+  --mat-form-field-outlined-container-shape: 8px;
+
+  // Snackbar: Small = 8px.
+  --mat-snack-bar-container-shape: 8px;
+
+  // Menu / Select / Autocomplete: Small = 8px.
+  --mat-menu-container-shape: 8px;
+  --mat-autocomplete-container-shape: 8px;
+
+  // Expansion panel
+  --mat-expansion-container-shape: 8px;
+
+  // Datepicker
+  --mat-datepicker-calendar-container-shape: 8px;
+
+  // Bottom sheet
+  --mat-bottom-sheet-container-shape: 8px;
+
+  // Tooltip
+  --mat-tooltip-container-shape: 8px;
+
+  // List: active indicator defaults to "full" (pill). Small = 8px.
+  --mat-list-active-indicator-shape: 2px;
+}
+
+/// Opt-in mixin that restores M2-era visual defaults (shapes, border radii)
+/// when using M3 theming. Include inside your theme root selector.
+///
+/// Usage:
+/// ```scss
+/// @mixin my-theme($root-selector) {
+///   @include dbx.theme($root-selector, $theme);
+///   #{$root-selector} {
+///     @include dbx.m2-visual-compat();
+///   }
+/// }
+/// ```
+@mixin m2-visual-compat() {
+  // Buttons: M2 ~4px vs M3 "full" (pill)
+  --mat-button-filled-container-shape: 4px;
+  --mat-button-outlined-container-shape: 4px;
+  --mat-button-text-container-shape: 4px;
+  --mat-button-protected-container-shape: 4px;
+  --mat-button-tonal-container-shape: 4px;
+
+  // FAB: M2 ~4px vs M3 fully rounded
+  --mat-fab-container-shape: 4px;
+  --mat-fab-small-container-shape: 4px;
+
+  // Dialog: M2 ~4px vs M3 ~28px
+  --mat-dialog-container-shape: 4px;
+
+  // Card: M2 ~4px vs M3 ~12px
+  --mat-card-elevated-container-shape: 4px;
+  --mat-card-filled-container-shape: 4px;
+  --mat-card-outlined-container-shape: 4px;
+
+  // Sidenav: M2 had no rounding vs M3 "large" (16px)
+  --mat-sidenav-container-shape: 0;
+
+  // Chip: M2 ~16px (pill) vs M3 ~8px
+  --mat-chip-container-shape-radius: 16px;
+
+  // Form fields: M2 ~4px vs M3 varies
+  --mat-form-field-filled-container-shape: 4px;
+  --mat-form-field-outlined-container-shape: 4px;
+
+  // Snackbar: M2 ~4px
+  --mat-snack-bar-container-shape: 4px;
+
+  // Menu / Autocomplete
+  --mat-menu-container-shape: 4px;
+  --mat-autocomplete-container-shape: 4px;
+
+  // Expansion panel
+  --mat-expansion-container-shape: 4px;
+
+  // Datepicker
+  --mat-datepicker-calendar-container-shape: 4px;
+
+  // Bottom sheet
+  --mat-bottom-sheet-container-shape: 4px;
+
+  // Tooltip
+  --mat-tooltip-container-shape: 4px;
+
+  // List: active indicator defaults to "full" (pill). M2 had no rounding.
+  --mat-list-active-indicator-shape: 0;
+}

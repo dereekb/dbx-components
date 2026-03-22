@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChil
 import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { DbxTextColorDirective } from '../layout/style/style.text-color.directive';
 
 /**
  * Event emitted when the error icon button is clicked, containing the button's element reference for popover anchoring.
@@ -27,7 +28,7 @@ export interface DbxErrorViewButtonEvent {
 @Component({
   selector: 'dbx-error-view',
   template: `
-    <button class="dbx-error-button" [disabled]="buttonDisabled()" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
+    <button class="dbx-error-button" [disabled]="buttonDisabled()" [dbxTextColor]="'warn'" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
       <mat-icon>{{ icon() }}</mat-icon>
     </button>
     @if (message()) {
@@ -38,7 +39,7 @@ export interface DbxErrorViewButtonEvent {
     class: 'dbx-error dbx-warn dbx-b'
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatButtonModule],
+  imports: [MatIconModule, MatButtonModule, DbxTextColorDirective],
   standalone: true
 })
 export class DbxErrorViewComponent {

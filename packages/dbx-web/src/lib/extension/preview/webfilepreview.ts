@@ -38,7 +38,6 @@ export interface DbxWebFilePreviewServicePreviewComponentFunctionInput {
 /**
  * Used for generating a preview component for the given src url and embedMimeType.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for contravariant init callback compatibility
 export type DbxWebFilePreviewServicePreviewComponentFunction = (input: DbxWebFilePreviewServicePreviewComponentFunctionInput) => DbxInjectionComponentConfig<any>;
 
 /**
@@ -95,7 +94,6 @@ export interface DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput
   /**
    * The component configuration for the component to display in the dialog.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- any required for contravariant init callback compatibility
   readonly componentConfig: DbxInjectionComponentConfig<any>;
 }
 

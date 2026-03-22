@@ -1,5 +1,3 @@
-@use 'sass:map';
-@use 'sass:color';
 @use '../../style/theming';
 
 $content-max-width: theming.$content-max-width;
@@ -19,11 +17,11 @@ $pit-padding: theming.$padding-4;
 $content-container-padding: theming.$padding-4;
 $content-container-padding-small-screen: theming.$padding-2;
 
-$content-end-margin: theming.$padding-4;
-
 $scroll-content-bottom-padding: 42px;
 
 $dbx-content-pit-floating-button-margin: 8px;
+
+$dbx-border-opacity-default: 20%;
 
 @mixin core() {
   .dbx-content-border {
@@ -75,10 +73,6 @@ $dbx-content-pit-floating-button-margin: 8px;
 
   .dbx-content-pit-scrollable > .dbx-content-pit-floating-button {
     top: 0;
-  }
-
-  .dbx-content-end {
-    margin-bottom: $content-end-margin;
   }
 
   .dbx-app-page {
@@ -180,44 +174,17 @@ $dbx-content-pit-floating-button-margin: 8px;
   .dbx-scroll-content {
     padding-bottom: $scroll-content-bottom-padding;
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $primary: map.get($color-config, 'primary');
-  $accent: map.get($color-config, 'accent');
-  $warn: map.get($color-config, 'warn');
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-  $content-color: theming.m2-get-color-from-palette($foreground, 'text');
-  $content-background: theming.m2-get-color-from-palette($background, 'background');
-  $content-border-background: theming.m2-get-color-from-palette($background, 'hover');
-
-  $primary-color: theming.m2-get-color-from-palette($primary, 500);
-  $accent-color: theming.m2-get-color-from-palette($accent, 500);
-  $warn-color: theming.m2-get-color-from-palette($warn, 500);
 
   .dbx-content-pit {
-    background: $content-border-background;
+    background: var(--mat-sys-surface-container);
   }
 
   .dbx-content-border {
-    // border-radius: 6px;
-    border: 3px dashed $content-border-background;
-
-    &.dbx-content-border-primary {
-      border-color: $primary-color;
-    }
-
-    &.dbx-content-border-warn {
-      border-color: $warn-color;
-    }
-
-    &.dbx-content-border-accent {
-      border-color: $accent-color;
-    }
+    border: 3px dashed color-mix(in srgb, var(--dbx-border-color, var(--mat-sys-outline-variant)) var(--dbx-border-opacity, $dbx-border-opacity-default), transparent);
   }
+}
 
+@mixin responsive($theme-config) {
   .dbx-content-container {
     @include theming.if-small-screen($theme-config) {
       // reduce all paddings down.
@@ -235,21 +202,6 @@ $dbx-content-pit-floating-button-margin: 8px;
   }
 }
 
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-content') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
+  @include responsive($theme-config);
 }

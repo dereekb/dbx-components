@@ -100,7 +100,6 @@ export class OidcService {
    */
   async findClientPayload(clientId: OidcEntryClientId): Promise<Maybe<OidcEntryOAuthClientPayloadData>> {
     const provider = await this.getProvider();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider Client has static methods not exposed in types
     const ProviderClient = provider.Client as any;
     const existing = await ProviderClient.adapter.find(clientId);
 
@@ -231,9 +230,7 @@ export class OidcService {
     const provider = new ProviderClass(config.issuer, {
       ...providerConfiguration,
       adapter: adapterFactory,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider findAccount signature is more specific than our wrapper
       findAccount: findAccount as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- oidc-provider expects JOSE JWK type which differs from Node.js JsonWebKey
       jwks: { keys: [signingKey] as any[] }
     });
 

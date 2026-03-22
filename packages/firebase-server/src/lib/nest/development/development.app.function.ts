@@ -20,7 +20,6 @@ import { type Building } from '@dereekb/util';
  * @typeParam N - The NestJS context type.
  * @typeParam S - The schedule function map type.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic type parameters require `any` for Firebase SDK compatibility
 export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap> {
   /**
    * When false, dev endpoints return an "unavailable" error instead of executing.
@@ -88,7 +87,6 @@ export interface FirebaseServerDevFunctions {
  * export const { dev } = devFunctions;
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic type parameters require `any` for Firebase SDK compatibility
 export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap>(config: FirebaseServerDevFunctionsConfig<N, S>): FirebaseServerDevFunctions {
   const { enabled, secure, nest, developerFunctionsMap, onCallFactory, allScheduledFunctions, disableDevelopmentScheduleFunction } = config;
 

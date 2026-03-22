@@ -126,7 +126,6 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
  * When both values are nullish, uses strict equality (`null === null` is `true`,
  * `null === undefined` is `false`). The comparator is only invoked when both are non-nullish.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const dbxInjectionComponentConfigIsEqual: EqualityComparatorFunction<Maybe<DbxInjectionComponentConfig<any>>> = safeEqualityComparatorFunction((a, b) => a.componentClass === b.componentClass && a.data === b.data && a.init === b.init && a.injector === b.injector);
 
 /**

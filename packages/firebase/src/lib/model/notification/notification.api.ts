@@ -143,7 +143,6 @@ export interface ResyncNotificationUserResult {
   readonly notificationBoxesUpdated: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ResyncAllNotificationUserParams {}
 
 export const resyncAllNotificationUserParamsType = type({}) as Type<ResyncAllNotificationUserParams>;
@@ -202,7 +201,6 @@ export const initializeNotificationModelParamsType = targetModelParamsType.merge
   'throwErrorIfAlreadyInitialized?': 'boolean'
 }) as Type<InitializeNotificationModelParams>;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InitializeAllApplicableNotificationBoxesParams {}
 
 export const initializeAllApplicableNotificationBoxesParamsType = type({}) as Type<InitializeAllApplicableNotificationBoxesParams>;
@@ -214,7 +212,6 @@ export interface InitializeAllApplicableNotificationBoxesResult {
   readonly notificationBoxesAlreadyInitialized: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InitializeAllApplicableNotificationSummariesParams {}
 
 export const initializeAllApplicableNotificationSummariesParamsType = type({}) as Type<InitializeAllApplicableNotificationSummariesParams>;
@@ -374,7 +371,6 @@ export interface SendQueuedNotificationsResult extends Omit<
 /**
  * Used for sending queued notifications in the system.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CleanupSentNotificationsParams {}
 
 export const cleanupSentNotificationsParamsType = type({}) as Type<CleanupSentNotificationsParams>;

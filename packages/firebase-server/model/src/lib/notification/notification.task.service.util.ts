@@ -21,7 +21,6 @@ import { asArray } from '@dereekb/util';
  * // remaining === ['validate', 'cleanup']
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function removeFromCompletionsArrayWithTaskResult<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(inputCompletions: S[], handleTaskResult: Pick<NotificationTaskServiceHandleNotificationTaskResult<any, S>, 'removeAllCompletedCheckpoints' | 'removeFromCompletedCheckpoints'>) {
   const { removeAllCompletedCheckpoints, removeFromCompletedCheckpoints } = handleTaskResult;
 

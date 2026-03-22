@@ -10,6 +10,67 @@ import { type PrimativeValue } from '../type';
 export type CssClass = string;
 
 /**
+ * The name portion of a CSS token, without the leading `--` prefix.
+ *
+ * @example
+ * ```ts
+ * const name: CssTokenName = 'dbx-primary-color';
+ * ```
+ */
+export type CssTokenName = string;
+
+/**
+ * Represents a CSS custom property token (CSS variable).
+ *
+ * @example
+ * ```ts
+ * const token: CssToken = '--dbx-primary-color';
+ * ```
+ */
+export type CssToken<T extends CssTokenName = CssTokenName> = `--${T}`;
+
+/**
+ * A CSS token wrapped in a var() call.
+ *
+ * @example
+ * ```ts
+ * const tokenVar: CssTokenVar = 'var(--dbx-primary-color)';
+ * ```
+ */
+export type CssTokenVar<T extends CssToken = CssToken> = `var(${T})`;
+
+/**
+ * Converts a CSS token into a var() string.
+ *
+ * @example
+ * ```ts
+ * cssTokenVar('--dbx-primary-color'); // 'var(--dbx-primary-color)'
+ * ```
+ *
+ * @param cssToken - the CSS token to convert
+ * @returns the var() string
+ */
+export function cssTokenVar<T extends CssToken>(cssToken: T): CssTokenVar<T> {
+  return `var(${cssToken})`;
+}
+
+// MARK: Compat
+/**
+ * @deprecated Use {@link CssToken} instead.
+ */
+export type CssVariable = CssToken;
+
+/**
+ * @deprecated Use {@link CssTokenVar} instead.
+ */
+export type CssVariableVar<T extends CssToken = CssToken> = CssTokenVar<T>;
+
+/**
+ * @deprecated Use {@link cssTokenVar} instead.
+ */
+export const cssVariableVar = cssTokenVar;
+
+/**
  * Represents a single CSS Style
  */
 export type CssStyle = string;

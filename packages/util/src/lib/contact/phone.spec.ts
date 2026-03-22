@@ -1,4 +1,4 @@
-import { E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX, type E164PhoneNumber, type E164PhoneNumberWithExtension, type PhoneNumber, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, isE164PhoneNumberWithExtension, isValidPhoneExtensionNumber, removeExtensionFromPhoneNumber } from './phone';
+import { E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX, type E164PhoneNumber, type E164PhoneNumberWithExtension, type PhoneNumber, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, isE164PhoneNumberWithExtension, isValidPhoneExtensionNumber, removeExtensionFromPhoneNumber, tryConvertToE164PhoneNumber } from './phone';
 
 const validPhoneNumber: PhoneNumber = '234-567-8910';
 const validE164PhoneNumber: E164PhoneNumber = '+12345678910';
@@ -91,5 +91,47 @@ describe('e164PhoneNumberFromE164PhoneNumberExtensionPair()', () => {
     expect(pair.extension).toBe(extensionNumber);
     const result = e164PhoneNumberFromE164PhoneNumberExtensionPair(pair);
     expect(result).toBe(validE164PhoneNumberWithExtension);
+  });
+});
+
+describe('tryConvertToE164PhoneNumber()', () => {
+  it('should return the input as-is when already valid E.164', () => {
+    const result = tryConvertToE164PhoneNumber('+17206620850');
+    expect(result).toBe('+17206620850');
+  });
+
+  it('should strip parentheses and prepend +1', () => {
+    const result = tryConvertToE164PhoneNumber('(720)6620850');
+    expect(result).toBe('+17206620850');
+  });
+
+  it('should strip hyphens and prepend +1', () => {
+    const result = tryConvertToE164PhoneNumber('720-662-0850');
+    expect(result).toBe('+17206620850');
+  });
+
+  it('should strip spaces, parentheses, and hyphens together', () => {
+    const result = tryConvertToE164PhoneNumber('(720) 662-0850');
+    expect(result).toBe('+17206620850');
+  });
+
+  it('should strip dots and prepend +1', () => {
+    const result = tryConvertToE164PhoneNumber('720.662.0850');
+    expect(result).toBe('+17206620850');
+  });
+
+  it('should prepend +1 for bare digit strings', () => {
+    const result = tryConvertToE164PhoneNumber('7206620850');
+    expect(result).toBe('+17206620850');
+  });
+
+  it('should return undefined for non-numeric input', () => {
+    const result = tryConvertToE164PhoneNumber('abc');
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined for too-short numbers', () => {
+    const result = tryConvertToE164PhoneNumber('123');
+    expect(result).toBeUndefined();
   });
 });

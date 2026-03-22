@@ -19,7 +19,7 @@ import { DbxFirebaseLoginContextDirective } from './login.context.directive';
   `,
   host: {
     class: 'd-block dbx-firebase-login',
-    '[class]': '{ "dbx-firebase-register": loginMode() === "register" }'
+    '[class]': '{ "dbx-firebase-register": loginMode() === "register", "dbx-firebase-link": loginMode() === "link" }'
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })

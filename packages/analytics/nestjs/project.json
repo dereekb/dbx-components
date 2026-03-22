@@ -39,7 +39,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../../coverage/packages/analytics/nestjs"
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/analytics/nestjs"
       }
     }
   }

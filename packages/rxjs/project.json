@@ -64,7 +64,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/rxjs"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/rxjs"
       }
     }
   }

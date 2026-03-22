@@ -5,7 +5,6 @@ import { DbxModelStateActions } from '../actions';
 /**
  * NgRx state slice for model module configuration.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface DbxModelModuleStateConfiguration {}
 
 /**

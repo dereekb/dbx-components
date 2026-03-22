@@ -21,5 +21,7 @@ export * from './login.terms.component';
 export * from './login.terms.simple.component';
 export * from './login';
 export * from './login.twitter.component';
+export * from './login.provider.id';
+export * from './manage.providers.component';
 export * from './register.component';
 export * from './register.email.component';

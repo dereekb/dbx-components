@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/vitest",
-  "version": "13.4.2",
+  "version": "13.5.0",
   "peerDependencies": {
-    "@vitest/expect": "^4.1.0",
+    "@vitest/expect": "4.1.0",
     "date-fns": "^4.0.0",
-    "vitest": "4.0.18"
+    "vitest": "4.1.0"
   },
   "exports": {
     ".": {

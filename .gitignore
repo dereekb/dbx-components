@@ -80,3 +80,5 @@ vitest.config.*.timestamp*
 
 # Setup
 setup/.tmp
+
+.claude/worktrees

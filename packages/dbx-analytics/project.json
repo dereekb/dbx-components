@@ -52,7 +52,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/dbx-analytics"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/dbx-analytics"
       }
     }
   }

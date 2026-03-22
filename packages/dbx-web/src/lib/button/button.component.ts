@@ -37,11 +37,11 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
   selector: 'dbx-button',
   template: `
     @if (bar()) {
-      <dbx-progress-bar-button (btnClick)="clickButton()" [config]="configSignal()">
+      <dbx-progress-bar-button (btnClick)="clickButton()" [config]="configSignal()" [allowClickPropagation]="allowClickPropagation()">
         <ng-template [ngTemplateOutlet]="content"></ng-template>
       </dbx-progress-bar-button>
     } @else {
-      <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()">
+      <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()" [allowClickPropagation]="allowClickPropagation()">
         <ng-template [ngTemplateOutlet]="content"></ng-template>
       </dbx-progress-spinner-button>
     }
@@ -74,6 +74,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly allowClickPropagation = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly mode = input<Maybe<ProgressSpinnerMode>>();
 

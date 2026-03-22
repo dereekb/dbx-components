@@ -56,7 +56,6 @@ export type OnCallReadModelFunctionAuthAware<N, I = unknown, O = unknown> = OnCa
  * @typeParam T - The Firestore model identity constraining valid model type keys.
  */
 export type OnCallReadModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly [K in FirestoreModelTypes<T>]?: OnCallReadModelFunctionAuthAware<N, any, any>;
 };
 
@@ -91,7 +90,6 @@ export interface OnCallReadModelConfig<N> {
 export function onCallReadModel<N>(map: OnCallReadModelMap<N>, config: OnCallReadModelConfig<N> = {}): OnCallWithNestContext<N, OnCallReadModelParams, unknown> {
   const { preAssert } = config;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'read',
     crudType: 'read',

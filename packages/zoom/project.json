@@ -89,7 +89,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/zoom"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/zoom"
       }
     }
   }

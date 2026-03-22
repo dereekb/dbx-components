@@ -123,7 +123,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/nestjs"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/nestjs"
       }
     }
   }

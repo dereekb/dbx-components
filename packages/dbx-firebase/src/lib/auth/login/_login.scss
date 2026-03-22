@@ -6,7 +6,7 @@ $login-button-height: 42px;
 $login-button-width: 220px;
 $login-button-content-width: $login-button-width - 20px;
 $login-button-icon-box-size: 28px;
-$login-button-icon-size: 18px;
+$login-button-icon-size: 24px;
 
 // MARK: Mixin
 @mixin core() {
@@ -53,24 +53,5 @@ $login-button-icon-size: 18px;
   }
 }
 
-@mixin color($theme-config) {
-}
-
-@mixin typography($theme-config-or-typography-config) {
-}
-
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-firebase-login') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

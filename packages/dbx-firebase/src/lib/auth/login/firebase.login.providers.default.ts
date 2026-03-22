@@ -1,5 +1,6 @@
 import { DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY, type KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
 import { DbxFirebaseLoginAnonymousComponent } from './login.anonymous.component';
+import { DbxFirebaseLoginAppleComponent } from './login.apple.component';
 import { DbxFirebaseLoginEmailComponent } from './login.email.component';
 import { DbxFirebaseLoginFacebookComponent } from './login.facebook.component';
 import { DbxFirebaseLoginGitHubComponent } from './login.github.component';
@@ -14,9 +15,9 @@ import { DbxFirebaseRegisterEmailComponent } from './register.email.component';
  * @returns Array of DbxFirebaseAuthLoginProvider
  */
 export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLoginProvider[] {
-  // NOTE: Asset URLS are from Firebase.
-  // https://firebase.google.com/docs/auth/web/firebaseui
-  const baseFirebaseJSUrl = `https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth`;
+  // Brand logos from @firebase-oss/ui-core via jsdelivr CDN.
+  // https://github.com/firebase/firebaseui-web/tree/master/packages/core/brands
+  const brandLogoBaseUrl = `https://cdn.jsdelivr.net/npm/@firebase-oss/ui-core/brands`;
 
   // NOTE: Colors are from https://brandcolors.net/
   return [
@@ -25,8 +26,10 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       loginMethodType: 'email' as KnownFirebaseLoginMethodType,
       componentClass: DbxFirebaseLoginEmailComponent,
       registrationComponentClass: DbxFirebaseRegisterEmailComponent,
+      allowLinking: false,
       assets: {
-        logoUrl: `${baseFirebaseJSUrl}/mail.svg`,
+        providerName: 'Email',
+        loginIcon: 'mail',
         loginText: 'Continue with Email',
         backgroundColor: '#ea4335', // gmail red color
         textColor: '#FFF'
@@ -37,7 +40,8 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       loginMethodType: 'google' as KnownFirebaseLoginMethodType,
       componentClass: DbxFirebaseLoginGoogleComponent,
       assets: {
-        logoUrl: `${baseFirebaseJSUrl}/google.svg`,
+        providerName: 'Google',
+        logoUrl: `${brandLogoBaseUrl}/google/logo.svg`,
         loginText: 'Continue with Google',
         backgroundColor: '#FFF',
         textColor: '#757575'
@@ -48,9 +52,11 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       loginMethodType: 'facebook' as KnownFirebaseLoginMethodType,
       componentClass: DbxFirebaseLoginFacebookComponent,
       assets: {
-        logoUrl: `${baseFirebaseJSUrl}/facebook.svg`,
+        providerName: 'Facebook',
+        logoUrl: `${brandLogoBaseUrl}/facebook/logo.svg`,
+        logoFilter: 'brightness(0) invert(1)',
         loginText: 'Continue with Facebook',
-        backgroundColor: '#4267B2',
+        backgroundColor: '#1877F2',
         textColor: '#FFF'
       }
     },
@@ -59,10 +65,11 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       loginMethodType: 'twitter' as KnownFirebaseLoginMethodType,
       componentClass: DbxFirebaseLoginTwitterComponent,
       assets: {
-        logoUrl: `${baseFirebaseJSUrl}/twitter.svg`,
-        loginText: 'Continue with Twitter',
-        backgroundColor: '#1da1f2',
-        textColor: '#FFF'
+        providerName: 'X',
+        logoUrl: `${brandLogoBaseUrl}/twitter/logo.svg`,
+        loginText: 'Continue with X',
+        backgroundColor: '#FFF',
+        textColor: '#000'
       }
     },
     {
@@ -70,37 +77,33 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       loginMethodType: 'github' as KnownFirebaseLoginMethodType,
       componentClass: DbxFirebaseLoginGitHubComponent,
       assets: {
-        logoUrl: `${baseFirebaseJSUrl}/github.svg`,
-        loginText: 'Continue with Github',
+        providerName: 'GitHub',
+        logoUrl: `${brandLogoBaseUrl}/github/logo.svg`,
+        logoFilter: 'brightness(0) invert(1)',
+        loginText: 'Continue with GitHub',
         backgroundColor: '#333',
         textColor: '#FFF'
       }
     },
-    /*{
-    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'apple' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginGitHubComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/apple.svg`,
-      loginText: 'Continue with Apple',
-      backgroundColor: '#333',
-      textColor: '#FFF'
-    }
-  }, {
-    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'microsoft' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginGitHubComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/microsoft.svg`,
-      loginText: 'Continue with Microsoft',
-      backgroundColor: '#ea3e23',
-      textColor: '#FFF'
-    }
-  },*/ {
+    {
+      category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'apple' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginAppleComponent,
+      assets: {
+        providerName: 'Apple',
+        logoUrl: `${brandLogoBaseUrl}/apple/logo.svg`,
+        loginText: 'Continue with Apple',
+        backgroundColor: '#FFF',
+        textColor: '#000'
+      }
+    },
+    {
       category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
       loginMethodType: 'anonymous' as KnownFirebaseLoginMethodType,
       componentClass: DbxFirebaseLoginAnonymousComponent,
+      allowLinking: false,
       assets: {
+        providerName: 'Guest',
         loginIcon: 'account_circle',
         loginText: 'Continue as Guest',
         backgroundColor: '#000',

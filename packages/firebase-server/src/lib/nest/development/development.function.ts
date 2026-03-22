@@ -27,7 +27,6 @@ export type OnCallDevelopmentFunction<N, I = unknown, O = unknown> = (request: N
  * @typeParam N - The NestJS context type.
  */
 export type OnCallDevelopmentFunctionMap<N> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- handler map values accept arbitrary input/output types
   readonly [key: string]: OnCallDevelopmentFunction<N, any, any>;
 };
 

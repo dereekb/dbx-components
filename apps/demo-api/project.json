@@ -88,7 +88,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/apps/demo-api"
+        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo-api"
       }
     },
     "watch": {

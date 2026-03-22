@@ -15,12 +15,6 @@
 }
 
 @mixin all-field-typography($theme-config) {
-  @include checklist.typography($theme-config);
-  @include component.typography($theme-config);
-  @include selection.all-selection-typography($theme-config);
-  @include texteditor.typography($theme-config);
-  @include value.all-value-typography($theme-config);
-  @include wrapper.typography($theme-config);
 }
 
 @mixin all-field-theme($theme-config) {

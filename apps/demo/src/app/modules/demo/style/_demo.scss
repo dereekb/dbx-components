@@ -3,25 +3,32 @@
 @use 'dbx-form/src/index' as dbx-form;
 @use '../../../../style/variables';
 
-// Define an alternate dark theme.
-$demo-primary: mat.m2-define-palette(mat.$m2-deep-purple-palette);
-$demo-accent: mat.m2-define-palette(mat.$m2-blue-palette);
-$demo-warn: mat.m2-define-palette(mat.$m2-red-palette);
-$demo-mat-theme: mat.m2-define-light-theme(
+// Define an alternate demo theme.
+$demo-mat-theme: mat.define-theme(
   (
     color: (
-      primary: $demo-primary,
-      accent: $demo-accent,
-      warn: $demo-warn
+      theme-type: light,
+      primary: mat.$violet-palette,
+      tertiary: mat.$blue-palette
     ),
-    density: null,
-    typography: null
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
   )
 );
+
 $demo-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $demo-theme: dbx.define-dbx-theme-config($demo-mat-theme, $demo-dbx-theme-with-banner-config);
 
 @mixin demo-theme($root-selector) {
   @include dbx.theme($root-selector, $demo-theme);
   @include dbx-form.theme($root-selector, $demo-theme);
+
+  #{$root-selector} {
+    @include dbx.m2-visual-compat();
+  }
 }

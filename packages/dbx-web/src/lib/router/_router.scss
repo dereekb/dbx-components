@@ -11,10 +11,6 @@
 }
 
 @mixin all-router-typography($theme-config) {
-  @include anchor.typography($theme-config);
-  @include anchorlist.typography($theme-config);
-  @include navbar.typography($theme-config);
-  @include sidenav.typography($theme-config);
 }
 
 @mixin all-router-theme($theme-config) {

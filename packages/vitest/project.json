@@ -33,7 +33,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../../coverage/packages/vitest"
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/vitest"
       }
     }
   }

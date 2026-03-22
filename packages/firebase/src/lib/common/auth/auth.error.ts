@@ -38,6 +38,18 @@ export const FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR = 'auth/email-already-exis
  * Error code when the provided phone number is not a valid E.164 string.
  */
 export const FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR = 'auth/invalid-phone-number';
+/**
+ * Error code when a provider is already linked to the current user account.
+ */
+export const FIREBASE_AUTH_PROVIDER_ALREADY_LINKED_ERROR = 'auth/provider-already-linked';
+/**
+ * Error code when the credential is already associated with a different user account.
+ */
+export const FIREBASE_AUTH_CREDENTIAL_ALREADY_IN_USE_ERROR = 'auth/credential-already-in-use';
+/**
+ * Error code when an email address is already in use by another account during linking.
+ */
+export const FIREBASE_AUTH_EMAIL_ALREADY_IN_USE_ERROR = 'auth/email-already-in-use';
 
 /**
  * Converts a {@link FirebaseAuthError} into a user-friendly {@link ReadableError} with a human-readable message.
@@ -80,6 +92,24 @@ export function firebaseAuthErrorToReadableError(inputError: FirebaseAuthError):
       error = {
         code,
         message: 'Could not reach the server. Are you connected to the internet?'
+      };
+      break;
+    case FIREBASE_AUTH_PROVIDER_ALREADY_LINKED_ERROR:
+      error = {
+        code,
+        message: 'This provider is already linked to your account.'
+      };
+      break;
+    case FIREBASE_AUTH_CREDENTIAL_ALREADY_IN_USE_ERROR:
+      error = {
+        code,
+        message: 'These credentials are already associated with a different account.'
+      };
+      break;
+    case FIREBASE_AUTH_EMAIL_ALREADY_IN_USE_ERROR:
+      error = {
+        code,
+        message: 'This email address is already in use by another account.'
       };
       break;
     default:
