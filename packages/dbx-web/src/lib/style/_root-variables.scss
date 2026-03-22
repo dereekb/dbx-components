@@ -29,7 +29,7 @@
     #{theming.$dbx-page-height-additional-offset-var}: 0px;
     #{theming.$dbx-content-height-additional-offset-var}: 0px;
 
-    #{theming.$dbx-content-pit-rounded-border-radius-var}: 12px;
+    #{theming.$dbx-content-pit-rounded-border-radius-var}: var(--mat-sys-corner-medium);
     #{theming.$dbx-content-pit-scrollable-max-height-var}: 140px;
 
     #{theming.$dbx-avatar-size-var}: theming.get-dbx-avatar-size($theme-config);

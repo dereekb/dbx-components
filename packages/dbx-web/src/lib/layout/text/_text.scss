@@ -157,7 +157,7 @@ $dbx-detail-block-big-header-icon-size: 18px;
     transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     padding: 7px 12px;
-    border-radius: 16px;
+    border-radius: var(--dbx-chip-container-shape, var(--mat-sys-corner-large));
     align-items: center;
     cursor: default;
     min-height: 32px;
@@ -245,7 +245,7 @@ $dbx-detail-block-big-header-icon-size: 18px;
   }
 
   .dbx-number-with-limit-rounded {
-    border-radius: 12px;
+    border-radius: var(--dbx-number-with-limit-container-shape, var(--mat-sys-corner-medium));
   }
 
   .dbx-click-to-copy-text-highlighted {

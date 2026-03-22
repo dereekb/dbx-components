@@ -23,7 +23,7 @@
   }
 
   .dbx-file-upload-area-square {
-    border-radius: 12px;
+    border-radius: var(--dbx-file-upload-square-container-shape, var(--mat-sys-corner-medium));
   }
 
   .dbx-file-upload-area-with-hint .dbx-file-upload-area-content {

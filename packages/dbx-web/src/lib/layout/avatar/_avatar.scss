@@ -67,7 +67,7 @@ $icon-to-avatar-size-ratio: 0.65;
   }
 
   .dbx-avatar-view-square {
-    border-radius: 12px;
+    border-radius: var(--dbx-avatar-square-container-shape, var(--mat-sys-corner-medium));
   }
 
   .dbx-avatar-view {

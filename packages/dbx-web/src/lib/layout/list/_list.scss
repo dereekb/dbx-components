@@ -165,6 +165,10 @@ $list-item-padded-min-height: 42px;
     position: unset; // do not touch the divider in dbx-list
   }
 
+  .dbx-list-accordion-view {
+    --mat-expansion-container-shape: 0px;
+  }
+
   .dbx-list-view-group-header {
     color: var(--mdc-list-list-item-label-text-color);
     background: var(--mat-sidenav-content-background-color);

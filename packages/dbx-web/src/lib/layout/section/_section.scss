@@ -13,6 +13,11 @@ $header-left-reserved-space-small-screen: 120px;
 
 // MARK: Mixin
 @mixin core() {
+  // MARK: Section
+  .dbx-section {
+    border-radius: var(--dbx-section-container-shape, var(--mat-sys-corner-medium));
+  }
+
   // MARK: Header
   .dbx-section-header {
     box-sizing: border-box;
