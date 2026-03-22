@@ -1,5 +1,18 @@
 import { Component } from '@angular/core';
+import { OAuthProvider } from '@angular/fire/auth';
 import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION } from './login.button.component';
+
+/**
+ * Creates an Apple OAuthProvider configured with email and name scopes.
+ *
+ * @returns A configured {@link OAuthProvider} for Apple sign-in.
+ */
+function createAppleAuthProvider(): OAuthProvider {
+  const provider = new OAuthProvider('apple.com');
+  provider.addScope('email');
+  provider.addScope('name');
+  return provider;
+}
 
 /**
  * Login button component for Apple OAuth authentication.
@@ -15,6 +28,10 @@ export class DbxFirebaseLoginAppleComponent extends AbstractConfiguredDbxFirebas
   readonly loginProvider = 'apple';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithApple();
+    return this.dbxFirebaseAuthService.logInWithPopup(createAppleAuthProvider());
+  }
+
+  override handleLink() {
+    return this.dbxFirebaseAuthService.linkWithPopup(createAppleAuthProvider());
   }
 }

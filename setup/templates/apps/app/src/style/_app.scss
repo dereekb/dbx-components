@@ -3,87 +3,21 @@
 @use '@dereekb/dbx-form' as dbx-form;
 @use './variables';
 
-$app-typography-config: mat.m2-define-typography-config();
-
-$opmore-navy: #1C3454;
-$opmore-pink: #ec4565;
-$opmore-white: #fff;
-
-$dark-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 50);
-$light-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 600);
-
-$opmore-blue: (
-  50: #e5e9ed,
-  100: #bec7d3,
-  200: #95a3b6,
-  300: #6e8098,
-  400: #4f6685,
-  500: #2f4e73,
-  600: #29476c,
-  700: #213e61,
-  800: $opmore-navy,
-  900: #16243b,
-  contrast: (
-    50: $dark-primary-text,
-    100: $dark-primary-text,
-    200: $dark-primary-text,
-    300: $dark-primary-text,
-    400: $dark-primary-text,
-    500: $light-primary-text,
-    600: $light-primary-text,
-    700: $light-primary-text,
-    800: $light-primary-text,
-    900: $light-primary-text,
-    A100: $dark-primary-text,
-    A200: $light-primary-text,
-    A400: $light-primary-text,
-    A700: $light-primary-text,
-  )
-);
-
-$opmore-pink: (
-  50: #fde6ec,
-  100: #fac0cf,
-  200: #f898b0,
-  300: #f47191,
-  400: #f05779,
-  500: $opmore-pink,
-  600: #db4061,
-  700: #c53a5c,
-  800: #b03558,
-  900: #8a2d50,
-  contrast: (
-    50: $dark-primary-text,
-    100: $dark-primary-text,
-    200: $dark-primary-text,
-    300: $dark-primary-text,
-    400: $light-primary-text,
-    500: $light-primary-text,
-    600: $light-primary-text,
-    700: $light-primary-text,
-    800: $light-primary-text,
-    900: $light-primary-text,
-    A100: $dark-primary-text,
-    A200: $light-primary-text,
-    A400: $light-primary-text,
-    A700: $light-primary-text,
-  )
-);
-
-// Define an alternate dark theme.
-$app-primary: mat.m2-define-palette($opmore-blue);
-$app-accent: mat.m2-define-palette($opmore-pink);
-$app-warn: mat.m2-define-palette(mat.$m2-red-palette);
-$app-mat-theme: mat.m2-define-light-theme(
+// Light theme
+$app-mat-theme: mat.define-theme(
   (
     color: (
-      primary: $app-primary,
-      accent: $app-accent,
-      warn: $app-warn
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$rose-palette
     ),
-    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
-    density: null,
-    typography: null
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
   )
 );
 
@@ -97,21 +31,27 @@ This mixin creates the app-theme components and elements for @angular/material a
 @mixin app-theme($root-selector) {
   @include dbx.theme($root-selector, $app-theme);
   @include dbx-form.theme($root-selector, $app-form-theme);
+
+  #{$root-selector} {
+    @include dbx.m2-visual-compat();
+  }
 }
 
-$dark-app-primary: mat.m2-define-palette(mat.$m2-purple-palette);
-$dark-app-accent: mat.m2-define-palette(mat.$m2-orange-palette);
-$dark-app-warn: mat.m2-define-palette(mat.$m2-red-palette);
-$dark-app-mat-theme: mat.m2-define-dark-theme(
+// Dark theme
+$dark-app-mat-theme: mat.define-theme(
   (
     color: (
-      primary: $dark-app-primary,
-      accent: $dark-app-accent,
-      warn: $dark-app-warn
+      theme-type: dark,
+      primary: mat.$violet-palette,
+      tertiary: mat.$orange-palette
     ),
-    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
-    density: null,
-    typography: null
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
   )
 );
 
@@ -121,4 +61,8 @@ $dark-app-form-theme: dbx-form.define-dbx-form-theme-config($dark-app-theme);
 @mixin dark-app-theme($root-selector) {
   @include dbx.theme($root-selector, $dark-app-theme);
   @include dbx-form.theme($root-selector, $dark-app-form-theme);
+
+  #{$root-selector} {
+    @include dbx.m2-visual-compat();
+  }
 }

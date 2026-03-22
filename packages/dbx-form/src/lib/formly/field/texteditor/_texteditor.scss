@@ -1,6 +1,3 @@
-@use 'sass:map';
-@use 'sass:list';
-@use 'sass:color';
 @use '../../../style/theming';
 
 // MARK: Variables
@@ -19,42 +16,31 @@
     max-height: 400px;
     overflow: auto;
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-  $background-color: theming.m2-get-color-from-palette($background, 'background');
-  $hover-color: theming.m2-get-color-from-palette($background, 'hover');
-  $focused-color: theming.m2-get-color-from-palette($background, 'focused-button');
-  $border-color: theming.m2-get-color-from-palette($foreground, 'divider');
-  $text-color: theming.m2-get-color-from-palette($foreground, 'text');
 
   .dbx-texteditor-field {
     .NgxEditor {
       background: transparent;
-      color: $text-color;
-      border-color: $border-color;
+      color: var(--mat-sys-on-surface);
+      border-color: var(--mat-sys-outline);
     }
 
     .NgxEditor__MenuBar {
-      background: $background-color;
-      color: $text-color;
+      background: var(--mat-sys-background);
+      color: var(--mat-sys-on-surface);
       @include theming.elevation(2);
 
       svg {
-        fill: $text-color;
+        fill: var(--mat-sys-on-surface);
       }
     }
 
     .NgxEditor__MenuItem:hover,
     .NgxEditor__Dropdown:hover {
-      background-color: $hover-color;
+      background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
     }
 
     .NgxEditor__MenuItem.NgxEditor__MenuItem--Active {
-      background-color: $focused-color;
+      background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
     }
 
     .NgxEditor__Popup,
@@ -62,31 +48,15 @@
     .NgxEditor__Dropdown.NgxEditor__Dropdown--Open,
     .NgxEditor__Dropdown .NgxEditor__Dropdown--DropdownMenu,
     .NgxEditor__Popup--FormGroup input {
-      background: $background-color;
-      color: $text-color;
+      background: var(--mat-sys-background);
+      color: var(--mat-sys-on-surface);
     }
 
     .NgxEditor__Dropdown.NgxEditor__Dropdown--Selected .NgxEditor__Dropdown--Text {
-      color: $text-color;
+      color: var(--mat-sys-on-surface);
     }
   }
-}
-
-@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-texteditor') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

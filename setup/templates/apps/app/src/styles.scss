@@ -1,21 +1,13 @@
-@use '@angular/material'as mat;
-@use '@dereekb/dbx-web'as dbx;
+@use '@angular/material' as mat;
+@use '@dereekb/dbx-web' as dbx;
 @use '@dereekb/dbx-form' as dbx-form;
 @use '@dereekb/dbx-firebase' as dbx-firebase;
 @use './style/style';
 
-$app-typography-config: mat.m2-define-typography-config(
-  $font-family: 'Fira Sans'
-);
-
-// define all densities here since each theme uses the same density
-@include mat.all-component-densities(0);
-
-// define the topographies here since the themes use the same and we don't want to re-declare the config
-@include mat.all-component-typographies($app-typography-config);
-@include dbx.all-component-typographies($app-typography-config);
-@include dbx-form.all-component-typographies($app-typography-config);
-@include dbx-firebase.all-component-typographies($app-typography-config);
+@include mat.core();
+@include dbx.core();
+@include dbx-form.core();
+@include dbx-firebase.core();
 
 @include style.dark-app-theme('.app-theme-dark');
 @include style.app-theme('.app-theme');

@@ -36,37 +36,6 @@
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
-  $calendar-enabled: 1;
-  $table-enabled: 1;
-  $zip-enabled: 1;
-  $help-enabled: 1;
-
-  @if ($theme-config-or-typography-config != null) {
-    @if (theming.private-is-theme-object($theme-config-or-typography-config)) {
-      $theme-config: $theme-config-or-typography-config;
-
-      $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
-      $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
-      $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
-      $help-enabled: config.get-dbx-extension-help-enabled($theme-config);
-    }
-
-    @if ($calendar-enabled == 1) {
-      @include calendar.typography($theme-config-or-typography-config);
-    }
-
-    @if ($table-enabled == 1) {
-      @include table.typography($theme-config-or-typography-config);
-    }
-
-    @if ($zip-enabled == 1) {
-      @include zip.typography($theme-config-or-typography-config);
-    }
-
-    @if ($help-enabled == 1) {
-      @include help.typography($theme-config-or-typography-config);
-    }
-  }
 }
 
 @mixin all-extension-theme($theme-config) {

@@ -158,6 +158,13 @@ export abstract class AbstractProgressButtonDirective {
     return working && !disabled;
   });
 
+  /**
+   * When true, the click handler will not call `stopImmediatePropagation()`,
+   * allowing the click event to continue bubbling. Needed for components like
+   * file upload buttons where a parent must handle the click synchronously.
+   */
+  readonly allowClickPropagation = input<boolean, Maybe<boolean>>(false, { transform: Boolean });
+
   @HostListener('click', ['$event'])
   public handleClick(event: MouseEvent): void {
     const working = this.isWorkingSignal();
@@ -165,7 +172,10 @@ export abstract class AbstractProgressButtonDirective {
 
     if (!working && !disabled) {
       this.btnClick.emit(event);
-      event.stopImmediatePropagation();
+
+      if (!this.allowClickPropagation()) {
+        event.stopImmediatePropagation();
+      }
     }
   }
 }

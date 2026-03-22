@@ -25,9 +25,14 @@ export interface DbxFirebaseAuthLoginProvider<D = unknown> {
    */
   readonly componentClass: Type<unknown>;
   /**
-   * Custom registration type to use instead. If false, registration is not allowd for this type.
+   * Custom registration type to use instead. If false, registration is not allowed for this type.
    */
   readonly registrationComponentClass?: Type<unknown> | false;
+  /**
+   * Whether this provider supports linking to an existing account. Defaults to true.
+   * Set to false to exclude this provider in link mode (e.g., email, anonymous).
+   */
+  readonly allowLinking?: Maybe<boolean>;
   /**
    * Custom data available to the components.
    *
@@ -57,11 +62,27 @@ export interface DbxFirebaseAuthLoginProviderAssets {
    */
   readonly loginText?: string;
   /**
+   * Display name of the provider (e.g., "Google", "Facebook").
+   */
+  readonly providerName?: string;
+  /**
+   * Text to display for the link action. Defaults to "Connect " + providerName.
+   */
+  readonly linkText?: string;
+  /**
+   * Text to display for the unlink action. Defaults to "Disconnect " + providerName.
+   */
+  readonly unlinkText?: string;
+  /**
+   * Optional CSS filter to apply to the logo image (e.g., 'brightness(0) invert(1)' to make a black SVG white).
+   */
+  readonly logoFilter?: string;
+  /**
    * Optional background color to apply.
    */
   readonly backgroundColor?: string;
   /**
-   * Optional background color to apply.
+   * Optional text color to apply.
    */
   readonly textColor?: string;
 }
@@ -179,6 +200,19 @@ export class DbxFirebaseAuthLoginService {
 
   getRegisterProviders(types: Iterable<FirebaseLoginMethodType>): DbxFirebaseAuthLoginProvider[] {
     return filterMaybeArrayValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter((x) => x.registrationComponentClass !== false);
+  }
+
+  getLinkProviders(types: Iterable<FirebaseLoginMethodType>): DbxFirebaseAuthLoginProvider[] {
+    return filterMaybeArrayValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter((x) => x.allowLinking !== false);
+  }
+
+  /**
+   * Returns all registered provider assets.
+   *
+   * @returns A map of login method types to their asset configurations.
+   */
+  getAllProviderAssets(): Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets> {
+    return new Map(this._assets);
   }
 
   getProviderAssets(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProviderAssets> {

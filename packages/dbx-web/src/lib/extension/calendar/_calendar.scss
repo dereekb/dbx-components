@@ -1,4 +1,3 @@
-@use 'sass:map';
 @use '../../style/theming';
 @use './style/angular-calendar' as calendar;
 
@@ -146,81 +145,33 @@ $calendar-content-border-consideration: 2px;
     .cal-day-number {
       user-select: none; // Do not allow selecting/highlighting text accidentally
     }
+
+    // Calendar color tokens (theme-aware via --mat-sys-* / --dbx-* CSS variables)
+    #{calendar.$cal-event-icon-color-var}: var(--dbx-primary-color);
+    #{calendar.$cal-event-color-primary-var}: var(--mat-sys-on-primary-container);
+    #{calendar.$cal-event-color-secondary-var}: var(--mat-sys-primary-container);
+    #{calendar.$cal-border-color-var}: var(--mat-sys-outline);
+    #{calendar.$cal-bg-primary-var}: var(--mat-sys-background);
+    #{calendar.$cal-bg-secondary-var}: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+    #{calendar.$cal-bg-hover-var}: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+    #{calendar.$cal-bg-active-var}: color-mix(in srgb, var(--dbx-accent-color) 30%, transparent);
+    #{calendar.$cal-bg-selected-var}: color-mix(in srgb, var(--dbx-primary-color) 60%, transparent);
+    #{calendar.$cal-bg-disabled-var}: var(--mat-sys-surface);
+    #{calendar.$cal-bg-not-applicable-var}: var(--mat-sys-surface);
+    #{calendar.$cal-bg-highlight-var}: color-mix(in srgb, var(--dbx-accent-color) 30%, transparent);
+    #{calendar.$cal-today-bg-var}: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+    #{calendar.$cal-weekend-color-var}: var(--mat-sys-on-surface);
+    #{calendar.$cal-badge-color-var}: var(--dbx-accent-color);
+    #{calendar.$cal-selected-var}: var(--mat-sys-on-primary);
+    #{calendar.$cal-disabled-var}: var(--dbx-warn-color);
+    #{calendar.$cal-not-applicable-var}: color-mix(in srgb, var(--mat-sys-on-surface) 30%, transparent);
+    #{calendar.$cal-current-time-marker-color-var}: var(--dbx-accent-color);
+    #{calendar.$cal-white-var}: var(--mat-sys-surface);
+    #{calendar.$cal-gray-var}: var(--mat-sys-on-surface-variant);
+    #{calendar.$cal-black-var}: var(--mat-sys-on-surface);
+    #{calendar.$cal-gradient-var}: inset 0 0 10px 0 color-mix(in srgb, var(--mat-sys-surface) 20%, transparent);
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $primary: map.get($color-config, 'primary');
-  $accent: map.get($color-config, 'accent');
-  $warn: map.get($color-config, 'warn');
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-
-  $background-color: theming.m2-get-color-from-palette($background, 'background');
-  $hover-color: theming.m2-get-color-from-palette($background, 'hover');
-  $focused-color: theming.m2-get-color-from-palette($background, 'focused-button');
-  $border-color: theming.m2-get-color-from-palette($foreground, 'divider');
-  $text-color: theming.m2-get-color-from-palette($foreground, 'text');
-
-  $event-icon-color: theming.m2-get-color-from-palette($primary, 600);
-  $event-bg-color: theming.m2-get-color-from-palette($primary, 800);
-  $event-text-color: theming.m2-get-color-from-palette($primary, '800-contrast');
-  $highlight-color: theming.m2-get-color-from-palette($accent, 300);
-  $weekend-color: $text-color; // theming.m2-get-color-from-palette($accent, 500);
-  $badge-color: theming.m2-get-color-from-palette($accent, 500);
-  $current-time-marker-color: theming.m2-get-color-from-palette($accent, 400);
-
-  $active-color: rgba($highlight-color, 0.3);
-  $selected-color: theming.m2-get-color-from-palette($primary, '500-contrast');
-  $selected-background-color: transparentize(theming.m2-get-color-from-palette($primary, 500), 0.4);
-
-  $disabled-color: theming.m2-get-color-from-palette($warn, 500);
-  $disabled-background-color: theming.m2-get-color-from-palette($background, 'background');
-
-  $not-applicable-color: transparentize($text-color, 0.7);
-  $not-applicable-background-color: $background-color;
-
-  #{calendar.$cal-event-icon-color-var}: $event-icon-color; // text/border color
-  #{calendar.$cal-event-color-primary-var}: $event-text-color; // text/border color
-  #{calendar.$cal-event-color-secondary-var}: $event-bg-color; // event background color
-  #{calendar.$cal-border-color-var}: $border-color;
-  #{calendar.$cal-bg-primary-var}: $background-color;
-  #{calendar.$cal-bg-secondary-var}: $hover-color;
-  #{calendar.$cal-bg-hover-var}: $hover-color;
-  #{calendar.$cal-bg-active-var}: $active-color;
-  #{calendar.$cal-bg-selected-var}: $selected-background-color;
-  #{calendar.$cal-bg-disabled-var}: $disabled-background-color;
-  #{calendar.$cal-bg-not-applicable-var}: $not-applicable-background-color;
-  #{calendar.$cal-bg-highlight-var}: rgba($highlight-color, 0.3);
-  #{calendar.$cal-today-bg-var}: $hover-color;
-  #{calendar.$cal-weekend-color-var}: $weekend-color;
-  #{calendar.$cal-badge-color-var}: $badge-color;
-  #{calendar.$cal-selected-var}: $selected-color;
-  #{calendar.$cal-disabled-var}: $disabled-color;
-  #{calendar.$cal-not-applicable-var}: $not-applicable-color;
-  #{calendar.$cal-current-time-marker-color-var}: $current-time-marker-color;
-  #{calendar.$cal-white-var}: #fff;
-  #{calendar.$cal-gray-var}: #555;
-  #{calendar.$cal-black-var}: #000;
-  #{calendar.$cal-gradient-var}: inset 0 0 10px 0 rgba($background-color, 0.2);
-}
-
-@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-calendar') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

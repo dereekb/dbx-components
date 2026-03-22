@@ -78,7 +78,7 @@
       text-align: center;
       white-space: nowrap;
       vertical-align: middle;
-      border-radius: 10px;
+      border-radius: var(--dbx-calendar-day-badge-container-shape, var(--mat-sys-corner-small));
     }
 
     .cal-day-number {

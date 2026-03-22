@@ -1,5 +1,3 @@
-@use 'sass:map';
-@use 'sass:color';
 @use '../../../style/theming';
 @use '../anchorlist/anchorlist';
 
@@ -118,142 +116,64 @@ $active-background-transparent-color: 0.93;
       overflow: auto;
     }
   }
-}
-
-@mixin color($theme-config) {
-  $color-config: theming.m2-get-color-config($theme-config);
-  $primary: map.get($color-config, 'primary');
-  $accent: map.get($color-config, 'accent');
-
-  $background: map.get($color-config, 'background');
-  $text-color: theming.m2-get-color-from-palette($primary, '800-contrast');
-  $text-faded-color: transparentize(
-    $color: $text-color,
-    $amount: $faded-text-transparent-color
-  );
-  $sidenav-background-color: theming.m2-get-color-from-palette($primary, 800);
-  $inactive-text-color: theming.m2-get-color-from-palette($primary, '800-contrast');
-  $active-icon-color: theming.m2-get-color-from-palette($accent, 400);
 
   .dbx-sidenav {
-    mat-sidenav {
+    mat-sidenav.mat-drawer {
+      // darken the sidenav background slightly for better contrast with active items
+      --dbx-sidenav-background: color-mix(in srgb, var(--dbx-bg-color-current) 75%, var(--mat-sys-shadow));
+      background: var(--dbx-sidenav-background);
+
       .dbx-anchor-list.mat-mdc-nav-list {
-        --mdc-list-list-item-label-text-color: #{$text-color};
-        --mdc-list-list-item-supporting-text-color: #{$text-color};
-        --mdc-list-list-item-leading-icon-color: #{$text-color};
+        --dbx-sidenav-active-accent: color-mix(in srgb, var(--dbx-accent-color) 65%, var(--mat-sys-surface));
 
-        --mdc-list-list-item-disabled-label-text-color: #{$text-color};
-        --mdc-list-list-item-disabled-leading-icon-color: #{$text-color};
-        --mdc-list-list-item-disabled-trailing-icon-color: #{$text-color};
+        --mdc-list-list-item-label-text-color: var(--mat-sys-on-primary-container);
+        --mdc-list-list-item-supporting-text-color: var(--mat-sys-on-primary-container);
+        --mdc-list-list-item-leading-icon-color: var(--mat-sys-on-primary-container);
 
-        --mdc-list-list-item-hover-state-layer-color: #{$text-color};
-        --mdc-list-list-item-focus-state-layer-color: #{$text-color};
+        --mdc-list-list-item-disabled-label-text-color: var(--mat-sys-on-primary-container);
+        --mdc-list-list-item-disabled-leading-icon-color: var(--mat-sys-on-primary-container);
+        --mdc-list-list-item-disabled-trailing-icon-color: var(--mat-sys-on-primary-container);
 
-        --mdc-list-list-item-hover-label-text-color: #{$text-faded-color};
-        --mdc-list-list-item-hover-supporting-text-color: #{$text-faded-color};
-        --mdc-list-list-item-hover-leading-icon-color: #{$text-faded-color};
+        --mdc-list-list-item-hover-state-layer-color: var(--mat-sys-on-primary-container);
+        --mdc-list-list-item-focus-state-layer-color: var(--mat-sys-on-primary-container);
 
-        /*
-        // TODO: add stylings if they're used in the nav list.
-
-        --mdc-list-list-item-trailing-supporting-text-color: rgba(0, 0, 0, 0.38);
-        --mdc-list-list-item-trailing-icon-color: rgba(0, 0, 0, 0.38);
-        --mdc-list-list-item-selected-trailing-icon-color: rgba(0, 0, 0, 0.38);
-        --mdc-list-list-item-hover-label-text-color: rgba(0, 0, 0, 0.87);
-        --mdc-list-list-item-hover-leading-icon-color: rgba(0, 0, 0, 0.38);
-        --mdc-list-list-item-hover-trailing-icon-color: rgba(0, 0, 0, 0.38);
-        --mdc-list-list-item-focus-label-text-color: rgba(0, 0, 0, 0.87);
-        */
+        --mdc-list-list-item-hover-label-text-color: color-mix(in srgb, var(--mat-sys-on-primary-container) 80%, transparent);
+        --mdc-list-list-item-hover-supporting-text-color: color-mix(in srgb, var(--mat-sys-on-primary-container) 80%, transparent);
+        --mdc-list-list-item-hover-leading-icon-color: color-mix(in srgb, var(--mat-sys-on-primary-container) 80%, transparent);
 
         .dbx-anchor-active {
           .mat-mdc-list-item {
             .mat-mdc-list-item-icon {
-              color: $active-icon-color;
+              color: var(--dbx-sidenav-active-accent);
             }
           }
         }
 
         .dbx-anchor-list-root .dbx-anchor-active .mat-mdc-list-item {
           // root list items glow when active
-          background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
+          background: color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent);
         }
 
         // directly active links have a side-
         .dbx-anchor-active-eq,
         .dbx-anchor-list-child .dbx-anchor-active {
           .mat-mdc-list-item {
-            border-left: var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}) solid $active-icon-color;
+            border-left: var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}) solid var(--dbx-sidenav-active-accent);
 
             .mat-mdc-list-item-icon {
-              --mdc-list-list-item-leading-icon-color: #{$active-icon-color};
+              --mdc-list-list-item-leading-icon-color: var(--dbx-sidenav-active-accent);
             }
           }
         }
 
         .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
         .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
-          background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
+          background: color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent);
         }
       }
     }
   }
-
-  /*
-    .active {
-      &.mat-mdc-list-item {
-        background-color: rgba(0, 0, 0, 0.1);
-      }
-
-      mat-icon {
-        color: $sidenav-active-color;
-      }
-    }
-
-    $app-side-nav-bar-padding: 14px;
-
-    .app-side-nav-bar-title {
-      // text-align: center;
-      padding: $app-side-nav-bar-padding;
-
-      .app-side-nav-bar-title-header {
-        display: flex;
-
-        >img {
-          width: 32px;
-          height: 32px;
-          padding-left: 2px;
-          padding-right: 16px;
-        }
-
-        span {
-          @include mat-typography-level-to-styles($color-config, title);
-          font-weight: 300;
-        }
-      }
-
-    }
-
-    .app-side-nav-bar-title-content {
-      padding-top: $app-side-nav-bar-padding;
-    }
-    */
-}
-
-@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
-    $color: theming.m2-get-color-config($theme-config);
-    $density: theming.m2-get-density-config($theme-config);
-    $typography: theming.m2-get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($theme-config);
-    }
-  }
 }

@@ -1,14 +1,35 @@
 {
   "migrations": [
-    { "version": "21.0.0-beta.8", "description": "Removes the legacy cache configuration from nx.json", "implementation": "./src/migrations/update-21-0-0/remove-legacy-cache", "package": "nx", "name": "remove-legacy-cache" },
-    { "version": "21.0.0-beta.8", "description": "Removes the legacy cache configuration from nx.json", "implementation": "./src/migrations/update-21-0-0/remove-custom-tasks-runner", "package": "nx", "name": "remove-custom-tasks-runner" },
-    { "version": "21.0.0-beta.11", "description": "Updates release version config based on the breaking changes in Nx v21", "implementation": "./src/migrations/update-21-0-0/release-version-config-changes", "package": "nx", "name": "release-version-config-changes" },
-    { "version": "21.0.0-beta.11", "description": "Updates release changelog config based on the breaking changes in Nx v21", "implementation": "./src/migrations/update-21-0-0/release-changelog-config-changes", "package": "nx", "name": "release-changelog-config-changes" },
-    { "version": "22.0.0-beta.1", "description": "Updates release version config based on the breaking changes in Nx v22", "implementation": "./src/migrations/update-22-0-0/release-version-config-changes", "package": "nx", "name": "22-0-0-release-version-config-changes" },
-    { "version": "22.0.0-beta.2", "description": "Consolidates releaseTag* options into nested releaseTag object structure", "implementation": "./src/migrations/update-22-0-0/consolidate-release-tag-config", "package": "nx", "name": "22-0-0-consolidate-release-tag-config" },
-    { "cli": "nx", "version": "22.1.0-beta.5", "description": "Updates the nx wrapper.", "implementation": "./src/migrations/update-22-1-0/update-nx-wrapper", "package": "nx", "name": "22-1-0-update-nx-wrapper" },
-    { "cli": "nx", "version": "21.0.0-beta.3", "description": "Set the `continuous` option to `true` for continuous tasks.", "factory": "./src/migrations/update-21-0-0/set-continuous-option", "package": "@nx/angular", "name": "set-continuous-option" },
-    { "cli": "nx", "version": "21.0.0-beta.5", "requires": { "@ngrx/store": ">=16.0.0" }, "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.", "factory": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence", "package": "@nx/angular", "name": "change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence" },
-    { "version": "21.5.0-beta.0", "description": "Set the 'tsConfig' option to build and test targets to help with Angular migration issues.", "factory": "./src/migrations/update-21-5-0/set-tsconfig-option", "package": "@nx/angular", "name": "set-tsconfig-option" }
+    {
+      "cli": "nx",
+      "version": "22.6.0-beta.10",
+      "description": "Adds .claude/worktrees to .gitignore",
+      "implementation": "./src/migrations/update-22-6-0/add-claude-worktrees-to-git-ignore",
+      "package": "nx",
+      "name": "22-6-1-add-claude-worktrees-to-git-ignore"
+    },
+    {
+      "cli": "nx",
+      "version": "22.6.0-rc.0",
+      "description": "Adds .claude/settings.local.json to .gitignore",
+      "implementation": "./src/migrations/update-22-6-0/add-claude-settings-local-to-git-ignore",
+      "package": "nx",
+      "name": "22-6-0-add-claude-settings-local-to-git-ignore"
+    },
+    {
+      "cli": "nx",
+      "version": "22.6.0-beta.11",
+      "description": "Prompts to enable usage analytics",
+      "implementation": "./src/migrations/update-22-6-0/enable-analytics-prompt",
+      "package": "nx",
+      "name": "22-6-0-enable-analytics-prompt"
+    },
+    {
+      "version": "22.6.0-beta.11",
+      "description": "Prefix reportsDirectory with {projectRoot} to maintain correct resolution after workspace-root-relative behavior change.",
+      "implementation": "./src/migrations/update-22-6-0/prefix-reports-directory-with-project-root",
+      "package": "@nx/vitest",
+      "name": "update-22-6-0-prefix-reports-directory"
+    }
   ]
 }

@@ -12,9 +12,9 @@
   "peerDependencies": {
     "@dereekb/nestjs": "13.4.2",
     "@dereekb/util": "13.4.2",
-    "@nestjs/common": "^11.1.16",
+    "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
-    "@nestjs/core": "^11.1.16",
+    "@nestjs/core": "^11.1.17",
     "@nestjs/event-emitter": "^3.0.1",
     "@segment/analytics-node": "^2.3.0",
     "rxjs": "^7.8.0"
