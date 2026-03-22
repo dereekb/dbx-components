@@ -608,6 +608,7 @@ wrapDateTests(() => {
         const code = DateCellScheduleDayCode.SUNDAY;
         const result = expandDateCellScheduleDayCodes(code);
 
+        expect(Array.isArray(result)).toBe(true);
         expect(result.length).toBe(1);
         expect(result[0]).toBe(code);
       });

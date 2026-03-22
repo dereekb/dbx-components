@@ -38,7 +38,7 @@ export function setKeysOnMap<K, T>(map: Map<K, T>, key: ArrayOrValue<K>, value: 
  * @returns An array of [key, value] tuples
  */
 export function mapToTuples<K, T>(map: Map<K, T>): [K, T][] {
-  return [...map.entries()];
+  return Array.from(map.entries());
 }
 
 /**

@@ -327,6 +327,7 @@ wrapDateTests(() => {
           const dates = [202202, 202203];
           const groups = groupFactory(dates);
 
+          expect(Array.isArray(groups)).toBe(true);
           expect(groups.length).toBe(2);
           expect(groups[0].week).toBe(202202);
           expect(groups[1].week).toBe(202203);

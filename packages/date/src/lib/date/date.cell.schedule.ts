@@ -99,7 +99,7 @@ export function weekendDateCellScheduleDayCodes() {
  * @returns an EnabledDays object with boolean flags for each day
  */
 export function enabledDaysFromDateCellScheduleDayCodes(input: Maybe<Iterable<DateCellScheduleDayCode>>): EnabledDays {
-  const days = expandDateCellScheduleDayCodesToDayOfWeekSet([...new Set(input)]);
+  const days = expandDateCellScheduleDayCodesToDayOfWeekSet(Array.from(new Set(input)));
   return enabledDaysFromDaysOfWeek(days);
 }
 
@@ -284,7 +284,7 @@ export function dateCellScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfW
  * @returns sorted array of individual day codes (1-7 only, no shorthand)
  */
 export function expandDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
-  return [...expandDateCellScheduleDayCodesToDayCodesSet(input)].sort(sortNumbersAscendingFunction);
+  return Array.from(expandDateCellScheduleDayCodesToDayCodesSet(input)).sort(sortNumbersAscendingFunction);
 }
 
 /**
@@ -330,7 +330,7 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
 
   switch (typeof input) {
     case 'string':
-      dayCodes = [...new Set(input)].map((x) => Number(x)) as DateCellScheduleDayCode[];
+      dayCodes = Array.from(new Set(input)).map((x) => Number(x)) as DateCellScheduleDayCode[];
       break;
     case 'number':
       dayCodes = [input];

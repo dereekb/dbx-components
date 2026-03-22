@@ -215,26 +215,28 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
         const simplifiedValuesGroups: SourceSelectValueGroup<T, M>[] = [];
 
         // sort to put the blank label first
-        [...allGroupsReducedByLabel.entries()].sort(sortByStringFunction((x) => x[0])).forEach(([label, groups]) => {
-          const values: SourceSelectValue<T, M>[] = [];
+        Array.from(allGroupsReducedByLabel.entries())
+          .sort(sortByStringFunction((x) => x[0]))
+          .forEach(([label, groups]) => {
+            const values: SourceSelectValue<T, M>[] = [];
 
-          groups.forEach((group) => {
-            group.values.forEach((selectValue) => {
-              if (!valuesEncountered.has(selectValue.value)) {
-                values.push(selectValue);
-                allUniqueValues.push(selectValue);
-                valuesEncountered.add(selectValue.value);
-              }
+            groups.forEach((group) => {
+              group.values.forEach((selectValue) => {
+                if (!valuesEncountered.has(selectValue.value)) {
+                  values.push(selectValue);
+                  allUniqueValues.push(selectValue);
+                  valuesEncountered.add(selectValue.value);
+                }
+              });
             });
+
+            if (values.length > 0) {
+              simplifiedValuesGroups.push({
+                label,
+                values
+              });
+            }
           });
-
-          if (values.length > 0) {
-            simplifiedValuesGroups.push({
-              label,
-              values
-            });
-          }
-        });
 
         return this.getDisplayValuesForSelectValues(allUniqueValues).pipe(
           map((displayValues) => {

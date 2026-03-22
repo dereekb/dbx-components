@@ -1,5 +1,14 @@
 import { type TransformStringFunction } from '../string/transform';
-import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, filterUniqueCaseInsensitiveStrings, filterUniqueTransform } from './array.string';
+import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, filterUniqueCaseInsensitiveStrings, filterUniqueTransform, uniqueCaseInsensitiveStrings } from './array.string';
+
+describe('uniqueCaseInsensitiveStrings()', () => {
+  it('should return an array of unique lowercase strings', () => {
+    const result = uniqueCaseInsensitiveStrings(['Hello', 'HELLO', 'World']);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result).toEqual(['hello', 'world']);
+  });
+});
 
 describe('filterUniqueCaseInsensitiveStrings()', () => {
   it('should return only the strings that are unique from the array.', () => {

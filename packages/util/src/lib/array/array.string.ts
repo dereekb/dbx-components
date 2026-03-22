@@ -81,7 +81,7 @@ export function toCaseInsensitiveStringArray(values: Iterable<string>): string[]
  * @returns an array of unique lowercase strings
  */
 export function uniqueCaseInsensitiveStrings(values: Iterable<string>): string[] {
-  return [...uniqueCaseInsensitiveStringsSet(values)];
+  return Array.from(uniqueCaseInsensitiveStringsSet(values));
 }
 
 /**

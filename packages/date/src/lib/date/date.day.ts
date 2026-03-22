@@ -392,7 +392,7 @@ export function yearMonthDayCodeGroupFactory<B>(config: YearMonthDayCodeGroupFac
       return dayCode;
     });
 
-    const groups: YearMonthDayCodeGroup<B>[] = [...map.entries()].map(([dayCode, items]) => {
+    const groups: YearMonthDayCodeGroup<B>[] = Array.from(map.entries()).map(([dayCode, items]) => {
       return {
         dayCode: dayCode ?? 0,
         items

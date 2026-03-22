@@ -50,7 +50,7 @@ export class DbxMapboxInjectionStore extends ComponentStore<DbxMapboxMapInjectio
   );
 
   readonly allInjectionConfigs$: Observable<DbxMapboxInjectionConfig[]> = this.map$.pipe(
-    map((x) => [...x.values()]),
+    map((x) => Array.from(x.values())),
     shareReplay(1)
   );
 

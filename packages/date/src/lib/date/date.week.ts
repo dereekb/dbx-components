@@ -428,7 +428,7 @@ export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConf
       return yearWeekCode;
     });
 
-    const groups: YearWeekCodeGroup<B>[] = [...map.entries()].map(([week, items]) => {
+    const groups: YearWeekCodeGroup<B>[] = Array.from(map.entries()).map(([week, items]) => {
       return {
         week: week ?? 0,
         items

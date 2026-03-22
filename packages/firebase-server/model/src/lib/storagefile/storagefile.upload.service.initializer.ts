@@ -228,7 +228,6 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
   const determiner = combineUploadFileTypeDeterminers({
     determiners: allDeterminers,
-
     completeSearchOnFirstMatch: true,
     ...config.combineDeterminersConfig
   });

@@ -1,5 +1,6 @@
 import { objectToMap } from '@dereekb/util';
 import { fetchURL, type FetchURLQueryKeyValueStringTuple, type FetchURLQueryKeyValueTuple, isURL, isURLSearchParams } from './url';
+import { mergeMakeUrlSearchParamsOptions } from './fetch.url';
 
 const urlString = 'https://components.dereekb.com/';
 const url = new URL(urlString);
@@ -163,5 +164,16 @@ describe('fetchURL()', () => {
       const result = fetchURL({ url, queryParams: `${queryParams.toString()}` });
       expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
+  });
+});
+
+describe('mergeMakeUrlSearchParamsOptions()', () => {
+  it('should merge omitKeys from multiple options into an array', () => {
+    const result = mergeMakeUrlSearchParamsOptions([{ omitKeys: ['a'] }, { omitKeys: ['b'] }]);
+
+    expect(result.omitKeys).toBeDefined();
+    expect(Array.isArray(result.omitKeys)).toBe(true);
+    expect(result.omitKeys).toContain('a');
+    expect(result.omitKeys).toContain('b');
   });
 });

@@ -80,7 +80,7 @@ export class DbxFirebaseDocumentStoreContextStore extends ComponentStore<DbxFire
     switchMap((stores) => {
       let entriesObs: Observable<DbxFirebaseDocumentStoreContextStoreEntryWithIdentity[]>;
 
-      const allEntries = [...stores.values()];
+      const allEntries = Array.from(stores.values());
 
       const { included: hasIdentity, excluded: noIdentity } = separateValues(allEntries, (x) => x.modelIdentity != null);
 

@@ -114,7 +114,7 @@ export class OidcProviderConfigService {
   ) {
     this.providerConfig = accountService.providerConfig;
     this.scopesSupported = Object.keys(this.providerConfig.claims);
-    this.claimsSupported = [...new Set(Object.values(this.providerConfig.claims).flat())];
+    this.claimsSupported = Array.from(new Set(Object.values(this.providerConfig.claims).flat()));
     this.tokenEndpointAuthMethodsSupported = this.config.tokenEndpointAuthMethods ?? [...DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS];
 
     const appUrl = envService.appUrl as string;

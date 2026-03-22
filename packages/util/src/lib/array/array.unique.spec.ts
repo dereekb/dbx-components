@@ -11,6 +11,14 @@ describe('unique', () => {
     values.forEach((x) => expect(result).toContain(x));
   });
 
+  it('should return an array, not a Set', () => {
+    const values = ['a', 'b', 'c'];
+    const result = unique(values);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result).toEqual(['a', 'b', 'c']);
+  });
+
   it('should exclude any excluded values', () => {
     const values = [0, 1, 2, 3, 4];
 

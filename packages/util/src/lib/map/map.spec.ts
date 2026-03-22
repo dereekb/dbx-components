@@ -53,6 +53,7 @@ describe('mapToTuples', () => {
     ]);
     const result = mapToTuples(map);
 
+    expect(Array.isArray(result)).toBe(true);
     expect(result).toEqual([
       ['a', 1],
       ['b', 2]

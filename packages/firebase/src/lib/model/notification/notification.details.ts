@@ -262,13 +262,13 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
     allKnownTemplateTypes.push(info.type);
   });
 
-  const allNotificationModelIdentityValues = [...allNotificationModelIdentityValuesSet];
+  const allNotificationModelIdentityValues = Array.from(allNotificationModelIdentityValuesSet);
 
   const notificationModelTemplateInfoMap = notificationModelTypeInfoMapBuilder.map();
   const targetModelTemplateInfoMap = targetModelTypeInfoMapBuilder.map();
 
-  const notificationModelTemplateTypesMap = new Map([...notificationModelTemplateInfoMap.entries()].map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
-  const targetModelTemplateTypesMap = new Map([...targetModelTemplateInfoMap.entries()].map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
+  const notificationModelTemplateTypesMap = new Map(Array.from(notificationModelTemplateInfoMap.entries()).map(([k, x]) => [k as NotificationTemplateType, (x ?? []).map((y) => y.type)]));
+  const targetModelTemplateTypesMap = new Map(Array.from(targetModelTemplateInfoMap.entries()).map(([k, x]) => [k as NotificationTemplateType, (x ?? []).map((y) => y.type)]));
 
   const service: AppNotificationTemplateTypeInfoRecordService = {
     appNotificationTemplateTypeInfoRecord,
