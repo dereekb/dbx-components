@@ -506,56 +506,56 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
   /**
    * Specific user identifier to use.
    */
-  readonly uid?: FirebaseAuthUserId;
+  readonly uid?: Maybe<FirebaseAuthUserId>;
   /**
    * User's display name
    */
-  readonly displayName?: string;
+  readonly displayName?: Maybe<string>;
   /**
    * Email for the new user, if applicable.
    */
-  readonly email?: EmailAddress;
+  readonly email?: Maybe<EmailAddress>;
   /**
    * Phone for the new user, if applicable. Must be a valid {@link E164PhoneNumber} (e.g. `'+17206620850'`).
    *
    * Firebase Auth requires E.164 format. If the value is not valid, {@link FirebaseServerAuthUserBadInputError}
    * is thrown with code `auth/invalid-phone-number`.
    */
-  readonly phone?: E164PhoneNumber;
+  readonly phone?: Maybe<E164PhoneNumber>;
   /**
    * Temporary setup password assigned during account creation.
    *
    * This is not the user's permanent password; it is replaced when the user completes setup.
    */
-  readonly setupPassword?: FirebaseAuthSetupPassword;
+  readonly setupPassword?: Maybe<FirebaseAuthSetupPassword>;
   /**
    * Whether or not to send a setup email. Is false by default.
    */
-  readonly sendSetupContent?: boolean;
+  readonly sendSetupContent?: Maybe<boolean>;
   /**
    * Whether or not to resend a setup email if the user already existed. Is false by default.
    */
-  readonly sendSetupContentIfUserExists?: boolean;
+  readonly sendSetupContentIfUserExists?: Maybe<boolean>;
   /**
    * If true, and the setup content has been sent before, it will not be sent again.
    */
-  readonly sendSetupDetailsOnce?: boolean;
+  readonly sendSetupDetailsOnce?: Maybe<boolean>;
   /**
    * If true, will ignore throttling when sending setup content.
    */
-  readonly sendSetupIgnoreThrottle?: boolean;
+  readonly sendSetupIgnoreThrottle?: Maybe<boolean>;
   /**
    * Whether or not to throw an error if sending setup content fails. Is false by default.
    */
-  readonly sendSetupThrowErrors?: boolean;
+  readonly sendSetupThrowErrors?: Maybe<boolean>;
   /**
    * Whether or not to force sending the test details.
    */
-  readonly sendDetailsInTestEnvironment?: boolean;
+  readonly sendDetailsInTestEnvironment?: Maybe<boolean>;
   /**
    * Any additional setup context
    */
-  readonly data?: D;
+  readonly data?: Maybe<D>;
 }
 
 /**
@@ -575,26 +575,26 @@ export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
   /**
    * Whether or not to force sending the test details. Usage differs between providers.
    */
-  readonly sendDetailsInTestEnvironment?: boolean;
+  readonly sendDetailsInTestEnvironment?: Maybe<boolean>;
   /**
    * Whether or not to skip sending again if the setup content has already been sent once.
    */
-  readonly sendSetupDetailsOnce?: boolean;
+  readonly sendSetupDetailsOnce?: Maybe<boolean>;
   /**
    * Whether or not to force sending again even if the send is being throttled
    */
-  readonly ignoreSendThrottleTime?: boolean;
+  readonly ignoreSendThrottleTime?: Maybe<boolean>;
   /**
    * Whether or not to throw errors if the send fails, instead of returning false.
    *
    * @see FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError
    * @see FirebaseServerAuthNewUserSendSetupDetailsThrottleError
    */
-  readonly throwErrors?: boolean;
+  readonly throwErrors?: Maybe<boolean>;
   /**
    * Any additional setup context
    */
-  readonly data?: D;
+  readonly data?: Maybe<D>;
 }
 
 /**
@@ -914,10 +914,10 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
     try {
       user = await this.authService.auth.createUser({
-        uid,
-        displayName,
-        email,
-        phoneNumber,
+        uid: uid ?? undefined,
+        displayName: displayName ?? undefined,
+        email: email ?? undefined,
+        phoneNumber: phoneNumber ?? undefined,
         password
       });
     } catch (e: unknown) {
