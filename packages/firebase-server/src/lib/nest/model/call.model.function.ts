@@ -6,9 +6,9 @@ import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCru
 import { type NestContextCallableRequest } from '../function/nest';
 import { type OnCallApiDetailsRef, type OnCallModelApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, resolveAnalyticsFromApiDetails } from './api.details';
 import { type OnCallAnalyticsContext } from './analytics.details';
-import { type OnCallModelAnalyticsService } from './analytics.handler';
-import { OnCallModelAnalyticsResolver } from './analytics.resolver';
+import { type OnCallModelAnalyticsService, ON_CALL_MODEL_ANALYTICS_SERVICE, noopOnCallModelAnalyticsService } from './analytics.handler';
 import { callWithAnalytics } from './analytics.emit';
+import { ModuleRef } from '@nestjs/core';
 
 // MARK: Function
 /**
@@ -71,17 +71,23 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
   const aggregatedApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
   const modelApiDetails: OnCallModelApiDetails = (aggregatedApiDetails as OnCallModelApiDetails | undefined) ?? {};
 
-  // Resolve analytics service via OnCallModelAnalyticsResolver per-request.
+  // Resolve analytics service per-request via ModuleRef.get().
   // Not cached because the NestJS application instance may differ across test suites
   // when the onCallModel closure is shared as a module-level singleton.
   //
-  // Uses OnCallModelAnalyticsResolver (which is always globally registered) instead of
-  // resolving ON_CALL_MODEL_ANALYTICS_SERVICE directly. Direct app.get() for an optional
-  // provider is unsafe: the NestFactory Proxy wraps method calls in ExceptionsZone, which
-  // calls process.exit(1) on missing providers before any try/catch can intercept the error.
+  // Uses ModuleRef.get() instead of app.get() because the NestFactory Proxy wraps
+  // app.get() in ExceptionsZone, which calls process.exit(1) on missing providers
+  // before any try/catch can intercept. ModuleRef.get() is not proxied and throws a
+  // normal catchable exception. Falls back to a no-op service if not registered.
   function getAnalyticsService(request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>): OnCallModelAnalyticsService {
-    const resolver: OnCallModelAnalyticsResolver = request.nestApplication.get(OnCallModelAnalyticsResolver, { strict: false });
-    return resolver.getAnalyticsService(analyticsToken);
+    const token = analyticsToken ?? ON_CALL_MODEL_ANALYTICS_SERVICE;
+    const moduleRef: ModuleRef = request.nestApplication.get(ModuleRef);
+
+    try {
+      return moduleRef.get(token, { strict: false });
+    } catch {
+      return noopOnCallModelAnalyticsService();
+    }
   }
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
