@@ -1,3 +1,20 @@
+## [13.6.1](https://github.com/dereekb/dbx-components/compare/v13.6.0-dev...v13.6.1) (2026-03-23)
+
+
+### Bug Fixes
+
+- dbxFormSource reset mode feedback loop ([a8c7b5aa](https://github.com/dereekb/dbx-components/commit/a8c7b5aa6706c01b3a42288c3a165afcf40a83ef))
+- optional analytics provider crashes on missing token ([a9a3feb8](https://github.com/dereekb/dbx-components/commit/a9a3feb831d6e8b566d5279ea7e550b7bec0ce4e))
+
+
+### Code Refactoring
+
+- added DbxStepBlockComponent, removed old step layout ([c48da438](https://github.com/dereekb/dbx-components/commit/c48da43890dae2b46095a56825ef1e0203205ffc))
+- added env service API and webhook URL fields ([859ef3c0](https://github.com/dereekb/dbx-components/commit/859ef3c02ffe36f68759c9ae59e93eeffff5ec13))
+- allow Maybe for auth init user inputs ([2e773475](https://github.com/dereekb/dbx-components/commit/2e7734752e25ef157b4b3492bb97006702bca90e))
+- allow Maybe for DbxButtonStyle and inputs ([eedeee25](https://github.com/dereekb/dbx-components/commit/eedeee2571555d27e6758217885ea6fdd6f09f43))
+- chip interfaces extend LabeledValue ([097c4479](https://github.com/dereekb/dbx-components/commit/097c447910239b6c0449cbb5bfef3300c64bfa24))
+
 # [13.6.0](https://github.com/dereekb/dbx-components/compare/v13.5.2-dev...v13.6.0) (2026-03-23)
 
 
