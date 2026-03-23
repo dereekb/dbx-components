@@ -27,4 +27,8 @@ export class ServerEnvironmentService {
   get appUrl(): Maybe<WebsiteUrl> {
     return this.env.appUrl;
   }
+
+  get appApiUrl(): Maybe<WebsiteUrl> {
+    return this.env.appApiUrl;
+  }
 }

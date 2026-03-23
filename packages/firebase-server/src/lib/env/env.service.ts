@@ -1,4 +1,4 @@
-import { type Maybe, type WebsiteUrlDetails } from '@dereekb/util';
+import { type Maybe, type WebsiteUrl, type WebsiteUrlDetails } from '@dereekb/util';
 
 /**
  * Reference to a FirebaseServerEnvService
@@ -43,4 +43,20 @@ export abstract class FirebaseServerEnvService {
    * Parsed URL details for the application URL.
    */
   abstract readonly appUrlDetails: Maybe<WebsiteUrlDetails>;
+  /**
+   * The full API URL (e.g., 'https://app.example.com/api').
+   */
+  abstract readonly appApiUrl: Maybe<WebsiteUrl>;
+  /**
+   * The full webhook URL (e.g., 'https://app.example.com/webhook').
+   */
+  abstract readonly appWebhookUrl: Maybe<WebsiteUrl>;
+  /**
+   * Whether the API is enabled (appUrl and globalApiRoutePrefix are both configured).
+   */
+  abstract readonly isApiEnabled: boolean;
+  /**
+   * Whether webhooks are enabled (appUrl is configured and webhooks are turned on).
+   */
+  abstract readonly isWebhooksEnabled: boolean;
 }

@@ -1,8 +1,9 @@
-import { type ArrayOrValue, type ClassType, type Getter, type Maybe, type WebsitePath, asArray, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
+import { type ArrayOrValue, type ClassType, type Getter, type Maybe, type WebsitePath, asArray, pushItemOrArrayItemsIntoArray, websiteUrlFromPaths } from '@dereekb/util';
 import { type DynamicModule, type FactoryProvider, type Provider, type Type } from '@nestjs/common';
 import { type StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
+import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
@@ -110,9 +111,29 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     providers.push(firebaseServerAppTokenProvider(config.firebaseAppGetter));
   }
 
+  // Global route prefix — resolved early so the env config can derive URLs from it
+  const globalApiRoutePrefixConfig: Maybe<GlobalRoutePrefixConfig> = typeof config.globalApiRoutePrefix === 'string' ? { globalApiRoutePrefix: config.globalApiRoutePrefix } : config.globalApiRoutePrefix;
+
   // Environment tokens and env service
   if (config.envConfig != null) {
-    providers.push(...firebaseServerEnvTokenProviders(config.envConfig));
+    const appUrl = config.envConfig.appUrl;
+    const apiPrefix = globalApiRoutePrefixConfig?.globalApiRoutePrefix;
+
+    // Respect explicit overrides; only compute defaults when not already set on the config
+    const isApiEnabled = config.envConfig.isApiEnabled ?? (appUrl != null && apiPrefix != null);
+    const isWebhooksEnabled = config.envConfig.isWebhooksEnabled ?? (appUrl != null && Boolean(config.configureWebhooks));
+    const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefix ? websiteUrlFromPaths(appUrl, `/${apiPrefix}` as WebsitePath) : undefined);
+    const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath) : undefined);
+
+    const augmentedEnvConfig: FirebaseServerEnvironmentConfig = {
+      ...config.envConfig,
+      appApiUrl,
+      appWebhookUrl,
+      isApiEnabled,
+      isWebhooksEnabled
+    };
+
+    providers.push(...firebaseServerEnvTokenProviders(augmentedEnvConfig));
 
     if (config.configureEnvService !== false) {
       providers.push(
@@ -152,9 +173,6 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
       })
     );
   }
-
-  // Global route prefix
-  const globalApiRoutePrefixConfig: Maybe<GlobalRoutePrefixConfig> = typeof config.globalApiRoutePrefix === 'string' ? { globalApiRoutePrefix: config.globalApiRoutePrefix } : config.globalApiRoutePrefix;
 
   providers.push({
     provide: GlobalRoutePrefixConfig,
