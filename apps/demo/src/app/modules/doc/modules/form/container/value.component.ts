@@ -29,13 +29,16 @@ import {
   DbxFormFormlyNumberFieldModule,
   DbxFormFormlyArrayFieldModule,
   DbxFormlyFieldsContextDirective,
-  DbxFormSourceDirective
+  DbxFormSourceDirective,
+  DbxActionFormDirective
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
-import { of } from 'rxjs';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
+import { of, delay } from 'rxjs';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
@@ -43,7 +46,28 @@ import { DocFormExampleComponent } from '../component/example.form.component';
 @Component({
   templateUrl: './value.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormFormlyArrayFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule],
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DocFormExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxFormFormlyTextFieldModule,
+    DbxFormFormlyWrapperModule,
+    DbxFormFormlyArrayFieldModule,
+    DbxFormFormlyPhoneFieldModule,
+    DbxFormFormlyBooleanFieldModule,
+    DbxFormFormlyNumberFieldModule,
+    DbxActionDirective,
+    DbxActionHandlerDirective,
+    DbxActionFormDirective,
+    DbxButtonComponent,
+    DbxActionButtonDirective,
+    DbxActionEnforceModifiedDirective,
+    DbxErrorComponent,
+    DbxActionErrorDirective
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormValueComponent {
@@ -170,4 +194,16 @@ export class DocFormValueComponent {
   ];
 
   readonly phoneListField: FormlyFieldConfig[] = [phoneListField()];
+
+  // -- Phone Dirty State Demo --
+  readonly phoneDirtyStateFields: FormlyFieldConfig[] = [nameField({ required: true }), phoneField()];
+
+  readonly phoneDirtyStateDefaultValue$ = of({
+    name: 'Test User',
+    phone: '+12025551234'
+  });
+
+  readonly handlePhoneDirtyStateAction: WorkUsingObservable<object> = () => {
+    return of(true).pipe(delay(1000));
+  };
 }

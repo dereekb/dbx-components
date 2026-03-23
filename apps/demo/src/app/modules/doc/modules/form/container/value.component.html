@@ -6,6 +6,14 @@
       <doc-form-example-form [dbxFormlyFields]="phoneFields"></doc-form-example-form>
       <h4>Phone Number List</h4>
       <doc-form-example-form [dbxFormlyFields]="phoneListField"></doc-form-example-form>
+      <h4>Phone Dirty State Demo</h4>
+      <p class="dbx-hint">Demonstrates the intphone dirty/touched state issue with dbxActionEnforceModified. The Submit button should enable when either the name or phone is changed, but currently changing only the phone number does not enable the button because the phone field does not mark the parent form control as dirty/touched.</p>
+      <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handlePhoneDirtyStateAction">
+        <doc-form-example-form dbxActionForm [dbxFormlyFields]="phoneDirtyStateFields" [dbxFormSource]="phoneDirtyStateDefaultValue$"></doc-form-example-form>
+        <p></p>
+        <dbx-button [raised]="true" text="Submit" dbxActionButton></dbx-button>
+        <dbx-error dbxActionError></dbx-error>
+      </div>
     </doc-feature-example>
     <doc-feature-example header="textField()" hint="Used to configure a text field.">
       <p>There are also several helper builders available.</p>

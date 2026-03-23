@@ -125,6 +125,8 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
       )
       .subscribe((x) => {
         this.formControl.setValue(x);
+        this.formControl.markAsDirty();
+        this.formControl.markAsTouched();
       });
 
     /*
