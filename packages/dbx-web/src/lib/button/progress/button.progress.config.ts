@@ -91,6 +91,11 @@ export interface DbxProgressButtonConfig {
    * Whether to render as a floating action button (FAB).
    */
   readonly fab?: Maybe<boolean>;
+  /**
+   * Accessible label for the button, applied as `aria-label`.
+   * Especially important for icon-only buttons that lack visible text.
+   */
+  readonly ariaLabel?: Maybe<string>;
 }
 
 /**

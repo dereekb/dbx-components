@@ -24,10 +24,12 @@ export interface DbxFormToggleWrapperConfig<T extends object = object> extends A
   template: `
     <div class="dbx-form-toggle-wrapper">
       <div class="dbx-form-toggle-wrapper-toggle">
-        <mat-slide-toggle [checked]="showSignal()" (toggleChange)="onToggleChange()">{{ slideLabelSignal() }}</mat-slide-toggle>
+        <mat-slide-toggle [checked]="showSignal()" [attr.aria-expanded]="showSignal()" [attr.aria-controls]="expandContentId" (toggleChange)="onToggleChange()">{{ slideLabelSignal() }}</mat-slide-toggle>
       </div>
       @if (showSignal()) {
-        <ng-container #fieldComponent></ng-container>
+        <div [id]="expandContentId" role="region" [attr.aria-label]="slideLabelSignal()">
+          <ng-container #fieldComponent></ng-container>
+        </div>
       }
     </div>
   `,

@@ -29,7 +29,9 @@ import { DbxSectionHeaderComponent } from './section.header.component';
   `,
   host: {
     class: 'd-block dbx-section',
-    '[class]': 'classConfig()'
+    role: 'region',
+    '[class]': 'classConfig()',
+    '[attr.aria-label]': 'headerConfigSignal().header'
   },
   imports: [DbxSectionHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,

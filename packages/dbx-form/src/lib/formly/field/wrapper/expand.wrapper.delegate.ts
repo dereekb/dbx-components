@@ -42,6 +42,9 @@ export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
  */
 @Directive()
 export class AbstractFormExpandSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandSectionConfig<T> = AbstractFormExpandSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit, OnDestroy {
+  private static _nextId = 0;
+  readonly expandContentId = `dbx-form-expand-${AbstractFormExpandSectionWrapperDirective._nextId++}`;
+
   protected readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   protected readonly _toggleOpen = new BehaviorSubject<Maybe<boolean>>(undefined);
 

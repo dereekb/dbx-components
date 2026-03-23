@@ -23,9 +23,11 @@ export interface DbxFormExpandWrapperConfig<T extends object = object> extends A
 @Component({
   template: `
     @if (showSignal()) {
-      <ng-container #fieldComponent></ng-container>
+      <div [id]="expandContentId" role="region" [attr.aria-label]="expandLabel">
+        <ng-container #fieldComponent></ng-container>
+      </div>
     } @else {
-      <span class="dbx-form-expand-wrapper-button" tabindex="0" role="button" (click)="open()" (keydown.enter)="open()" (keydown.space)="open()">{{ expandLabel }}</span>
+      <span class="dbx-form-expand-wrapper-button" tabindex="0" role="button" [attr.aria-expanded]="showSignal()" [attr.aria-controls]="expandContentId" (click)="open()" (keydown.enter)="open()" (keydown.space)="open()">{{ expandLabel }}</span>
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -32,12 +32,12 @@
 <ng-template #filterTemplate>
   <div class="dbx-pickable-item-field-filter">
     <div class="dbx-label">{{ filterLabel }}</div>
-    <input [name]="name" autocomplete="{{ autocomplete }}" #filterMatInput="matInput" matInput [placeholder]="placeholder" [formControl]="inputCtrl" />
+    <input [name]="name" autocomplete="{{ autocomplete }}" #filterMatInput="matInput" matInput [placeholder]="placeholder" [formControl]="inputCtrl" [attr.aria-label]="filterLabel || 'Filter items'" />
     <mat-divider></mat-divider>
     <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
     <!-- No items found. -->
     @if (noItemsAvailableSignal()) {
-      <p class="dbx-label">No items match this filter.</p>
+      <p class="dbx-label" role="status">No items match this filter.</p>
     }
   </div>
 </ng-template>

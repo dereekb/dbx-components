@@ -11,11 +11,11 @@
           <span class="dbx-chip-sublabel">{{ displayValue.sublabel }}</span>
         }
         @if (!readonly) {
-          <mat-icon matChipRemove>cancel</mat-icon>
+          <mat-icon matChipRemove aria-label="Remove">cancel</mat-icon>
         }
       </mat-chip-row>
     }
-    <input #textInput [name]="name" [placeholder]="searchInputPlaceholder" [formControl]="inputCtrl" [matAutocomplete]="auto" autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()" />
+    <input #textInput [name]="name" [placeholder]="searchInputPlaceholder" [formControl]="inputCtrl" [matAutocomplete]="auto" autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()" [attr.aria-label]="searchInputPlaceholder || 'Search'" />
   </mat-chip-grid>
   <div class="searchable-field-form-loading">
     <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>

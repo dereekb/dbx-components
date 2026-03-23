@@ -1,4 +1,4 @@
-<button [dbxColor]="configSignal()?.buttonColor" class="dbx-base-button dbx-progress-bar-button" mat-button [type]="buttonTypeAttributeSignal()" [ngClass]="buttonCssSignal()" [ngStyle]="configSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
+<button [dbxColor]="configSignal()?.buttonColor" class="dbx-base-button dbx-progress-bar-button" mat-button [type]="buttonTypeAttributeSignal()" [ngClass]="buttonCssSignal()" [ngStyle]="configSignal()?.customStyle" [disabled]="buttonDisabledSignal()" [attr.aria-label]="configSignal()?.ariaLabel">
   @if (configSignal()?.buttonIcon) {
     <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet!" [ngClass]="configSignal()?.buttonIcon?.customClass!" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!" [inline]="configSignal()?.buttonIcon?.inline!">
       {{ configSignal()?.buttonIcon?.fontSet! ? '' : configSignal()?.buttonIcon?.fontIcon! }}

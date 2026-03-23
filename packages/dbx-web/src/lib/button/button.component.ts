@@ -140,6 +140,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const working = this.workingSignal();
     const buttonType = this.typeSignal();
 
+    const ariaLabel = this.ariaLabel();
+
     const config: Configurable<DbxProgressButtonConfig> = {
       fab,
       working,
@@ -153,7 +155,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       mode,
       spinnerColor,
       customSpinnerColor,
-      disabled
+      disabled,
+      ariaLabel
     };
 
     return config;

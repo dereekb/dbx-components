@@ -133,6 +133,7 @@ export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
   templateUrl: './list.component.html',
   host: {
     class: 'd-block dbx-list',
+    role: 'list',
     '[class.dbx-list-padded]': 'padded()'
   },
   imports: [DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective, DbxLoadingComponent],

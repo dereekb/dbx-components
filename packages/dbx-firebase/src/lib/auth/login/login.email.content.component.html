@@ -1,4 +1,4 @@
-<div class="dbx-firebase-login-email-content">
+<div class="dbx-firebase-login-email-content" aria-live="polite">
   @switch (emailModeSignal()) {
     @case ('login') {
       <ng-container *ngTemplateOutlet="loginView"></ng-container>
@@ -47,7 +47,7 @@
 
 <!-- Reset Password Sent -->
 <ng-template #resetPasswordSent>
-  <div class="dbx-firebase-login-email-content-recovery-sent">
+  <div class="dbx-firebase-login-email-content-recovery-sent" role="status">
     <p class="dbx-hint">A recovery email was sent to the specified address. Please check your email for next steps.</p>
     <button mat-raised-button (click)="clickedRecoveryAcknowledged()">Ok</button>
   </div>
