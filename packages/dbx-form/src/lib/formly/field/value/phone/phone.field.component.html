@@ -3,7 +3,7 @@
   @if (allowExtension) {
     <div class="dbx-form-phone-field-extension-content">
       <span class="dbx-hint dbx-button-spacer">Ext.</span>
-      <input name="phone-extension" class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" #extensionInput [formControl]="extensionCtrl" />
+      <input name="phone-extension" class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" #extensionInput [formControl]="extensionCtrl" aria-label="Phone extension" />
     </div>
   }
 </div>

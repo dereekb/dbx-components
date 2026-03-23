@@ -10,7 +10,7 @@
       <div class="dbx-label">{{ searchLabel }}</div>
     }
     <!-- View -->
-    <input type="search" [name]="name" matInput #textInput [placeholder]="searchInputPlaceholder" [formControl]="inputCtrl" [matAutocomplete]="auto" [matAutocompleteDisabled]="readonly || disabled" autocomplete="{{ autocomplete }}" />
+    <input type="search" [name]="name" matInput #textInput [placeholder]="searchInputPlaceholder" [formControl]="inputCtrl" [matAutocomplete]="auto" [matAutocompleteDisabled]="readonly || disabled" autocomplete="{{ autocomplete }}" [attr.aria-label]="searchLabel || searchInputPlaceholder || 'Search'" />
     <div class="searchable-field-form-loading">
       <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
     </div>
