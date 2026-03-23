@@ -70,6 +70,16 @@ export abstract class OnCallModelAnalyticsService {
  */
 export const ON_CALL_MODEL_ANALYTICS_SERVICE = 'ON_CALL_MODEL_ANALYTICS_SERVICE' as InjectionToken<OnCallModelAnalyticsService>;
 
+/**
+ * Creates a no-op {@link OnCallModelAnalyticsService} that silently discards all events.
+ *
+ * Used as the default fallback by {@link OnCallModelAnalyticsResolver} when no analytics
+ * service is registered.
+ */
+export function noopOnCallModelAnalyticsService(): OnCallModelAnalyticsService {
+  return { handleOnCallAnalyticsEvent: () => undefined };
+}
+
 // MARK: Compat
 /**
  * @deprecated Use {@link OnCallModelAnalyticsService} instead.

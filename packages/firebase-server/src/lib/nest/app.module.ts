@@ -9,6 +9,7 @@ import { DefaultFirebaseServerEnvService } from './env';
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { firebaseServerEnvTokenProviders, type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
+import { OnCallModelAnalyticsResolver } from './model/analytics.resolver';
 import type * as admin from 'firebase-admin';
 
 // MARK: Root Module
@@ -159,6 +160,11 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     provide: GlobalRoutePrefixConfig,
     useValue: globalApiRoutePrefixConfig ?? {}
   });
+
+  // Analytics resolver — always available so that onCallModel can safely
+  // check for the optional ON_CALL_MODEL_ANALYTICS_SERVICE without triggering
+  // NestFactory's ExceptionsZone (which calls process.exit(1) on missing providers).
+  providers.push(OnCallModelAnalyticsResolver);
 
   const rootModule: DynamicModule = {
     module: FirebaseNestServerRootModule,
