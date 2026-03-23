@@ -10,7 +10,6 @@ import { DefaultFirebaseServerEnvService } from './env';
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { firebaseServerEnvTokenProviders, type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
-import { OnCallModelAnalyticsResolver } from './model/analytics.resolver';
 import type * as admin from 'firebase-admin';
 
 // MARK: Root Module
@@ -122,7 +121,8 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     // Respect explicit overrides; only compute defaults when not already set on the config
     const isApiEnabled = config.envConfig.isApiEnabled ?? (appUrl != null && apiPrefix != null);
     const isWebhooksEnabled = config.envConfig.isWebhooksEnabled ?? (appUrl != null && Boolean(config.configureWebhooks));
-    const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefix ? websiteUrlFromPaths(appUrl, `/${apiPrefix}` as WebsitePath) : undefined);
+    const apiPrefixPath: Maybe<WebsitePath> = apiPrefix ? (apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : (`/${apiPrefix}` as WebsitePath)) : undefined;
+    const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefixPath ? websiteUrlFromPaths(appUrl, apiPrefixPath) : undefined);
     const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath) : undefined);
 
     const augmentedEnvConfig: FirebaseServerEnvironmentConfig = {
@@ -178,11 +178,6 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     provide: GlobalRoutePrefixConfig,
     useValue: globalApiRoutePrefixConfig ?? {}
   });
-
-  // Analytics resolver — always available so that onCallModel can safely
-  // check for the optional ON_CALL_MODEL_ANALYTICS_SERVICE without triggering
-  // NestFactory's ExceptionsZone (which calls process.exit(1) on missing providers).
-  providers.push(OnCallModelAnalyticsResolver);
 
   const rootModule: DynamicModule = {
     module: FirebaseNestServerRootModule,
