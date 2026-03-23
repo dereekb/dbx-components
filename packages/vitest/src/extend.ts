@@ -1,4 +1,12 @@
-// File Stucture derived from https://github.com/stschulte/aws-sdk-client-mock-vitest
+/**
+ * Extend entry point for date matchers.
+ *
+ * A11y matchers (vitest-axe) are registered separately via `@dereekb/vitest/a11y`
+ * because `vitest-axe` and `axe-core` are optional peer dependencies.
+ *
+ * @see {@link file://./a11y.ts} for the a11y extend entry point.
+ */
+// File structure derived from https://github.com/stschulte/aws-sdk-client-mock-vitest
 
 import 'vitest';
 import { expect } from 'vitest';
