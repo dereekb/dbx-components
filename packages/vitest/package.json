@@ -1,10 +1,20 @@
 {
   "name": "@dereekb/vitest",
-  "version": "13.5.2",
+  "version": "13.6.0",
   "peerDependencies": {
     "@vitest/expect": "4.1.0",
+    "axe-core": "^4.11.1",
     "date-fns": "^4.0.0",
-    "vitest": "4.1.0"
+    "vitest": "4.1.0",
+    "vitest-axe": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "axe-core": {
+      "optional": true
+    },
+    "vitest-axe": {
+      "optional": true
+    }
   },
   "exports": {
     ".": {
@@ -14,6 +24,10 @@
     "./extend": {
       "types": "./src/extend.d.ts",
       "default": "./src/extend.js"
+    },
+    "./a11y": {
+      "types": "./src/a11y.d.ts",
+      "default": "./src/a11y.js"
     }
   }
 }

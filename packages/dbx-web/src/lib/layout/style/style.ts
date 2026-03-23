@@ -110,14 +110,14 @@ export type DbxColorTone = number;
  * @example
  * ```ts
  * dbxColorBackground('primary'); // 'dbx-primary-bg'
- * dbxColorBackground(undefined); // 'dbx-default-bg'
+ * dbxColorBackground(undefined); // 'dbx-default'
  * ```
  *
  * @param color - the theme color to convert, or nullish/empty for the default class
- * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'` or `'dbx-default-bg'`)
+ * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'` or `'dbx-default'`)
  */
 export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
-  let cssClass = 'dbx-default-bg'; // background by default
+  let cssClass = 'dbx-default'; // default text color class (not -bg) to avoid setting --dbx-bg-color-current which interferes with button label color tokens
 
   switch (color) {
     case 'primary':

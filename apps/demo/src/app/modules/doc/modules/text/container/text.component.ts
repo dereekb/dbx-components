@@ -84,7 +84,7 @@ export class DocTextTextComponent {
     { label: 'Ok', value: 'ok', color: 'ok' },
     { label: 'Success', value: 'success', color: 'success' },
     { label: 'Grey', value: 'grey', color: 'grey' },
-    { label: 'Background', value: 'background' },
+    { label: 'Background', value: 'background', color: 'default', tone: 100 },
     { label: 'No Color', value: 'none' }
   ];
 

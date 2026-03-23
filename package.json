@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.5.2",
+  "version": "13.6.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal 2>&1 /dev/null; fi",
@@ -59,6 +59,7 @@
     "change-case-all": "^2.1.0",
     "date-fns": "^4.0.0",
     "date-fns-tz": "^3.2.0",
+    "discord.js": "^14.25.1",
     "express": "^5.0.0",
     "extra-set": "^3.0.0",
     "fast-content-type-parse": "^3.0.0",
@@ -86,7 +87,6 @@
     "sharp": "^0.34.5",
     "stripe": "^9.1.0",
     "ts-essentials": "^10.0.0",
-    "discord.js": "^14.25.1",
     "tslib": "^2.3.0",
     "zone.js": "^0.16.0"
   },
@@ -99,8 +99,8 @@
     "@angular-eslint/eslint-plugin": "21.3.1",
     "@angular-eslint/eslint-plugin-template": "21.3.1",
     "@angular-eslint/template-parser": "21.3.1",
-    "@angular/cli": "21.2.3",
     "@angular/build": "21.2.3",
+    "@angular/cli": "21.2.3",
     "@angular/compiler-cli": "21.2.3",
     "@angular/language-service": "21.2.3",
     "@commitlint/cli": "20.4.2",
@@ -148,6 +148,7 @@
     "adm-zip": "0.5.16",
     "angular-eslint": "21.3.1",
     "autoprefixer": "^10.4.0",
+    "axe-core": "^4.11.1",
     "conventional-changelog": "^7.2.0",
     "conventional-recommended-bump": "^11.2.0",
     "env-cmd": "11.0.0",
@@ -186,7 +187,8 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.56.1",
     "vite": "7.3.1",
-    "vitest": "4.1.0"
+    "vitest": "4.1.0",
+    "vitest-axe": "^0.1.0"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "22.6.1",

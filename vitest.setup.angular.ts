@@ -2,6 +2,7 @@ import './vitest.setup.firebase';
 
 import '@angular/compiler';
 import '@analogjs/vitest-angular/setup-zone';
+import '@dereekb/vitest/a11y';
 
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { getTestBed } from '@angular/core/testing';

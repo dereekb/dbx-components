@@ -60,7 +60,7 @@ import { NgTemplateOutlet } from '@angular/common';
     }
     <ng-template #headerContentTitleTemplate>
       @if (headerConfigSignal().icon) {
-        <mat-icon>{{ headerConfigSignal().icon }}</mat-icon>
+        <mat-icon aria-hidden="true">{{ headerConfigSignal().icon }}</mat-icon>
       }
       <span class="title-text">
         {{ headerConfigSignal().header }}

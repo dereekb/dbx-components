@@ -55,7 +55,7 @@ export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSel
  */
 @Component({
   template: `
-    <div class="dbx-list-item-padded dbx-list-two-line-item dbx-firebase-notificationitem-list-view-item">
+    <div class="dbx-list-item-padded dbx-list-two-line-item dbx-firebase-notificationitem-list-view-item" role="article" [attr.aria-label]="subject">
       <div class="item-left">
         <span class="notificationitem-subject">{{ subject }}</span>
         <span class="notificationitem-message item-details">{{ message | cutText: 90 }}</span>

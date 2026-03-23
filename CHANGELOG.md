@@ -1,3 +1,16 @@
+# [13.6.0](https://github.com/dereekb/dbx-components/compare/v13.5.2-dev...v13.6.0) (2026-03-23)
+
+
+### Code Refactoring
+
+- cleanup ([9e06519d](https://github.com/dereekb/dbx-components/commit/9e06519d18a86774e1a8858990909316afc5cef6))
+- fixed tonal color system regressions ([de3eef66](https://github.com/dereekb/dbx-components/commit/de3eef66aab9c464d11e78c36d6085f4dee7c562))
+
+
+### Features
+
+- a11y support ([#41](https://github.com/dereekb/dbx-components/issues/41)) ([244b4f4d](https://github.com/dereekb/dbx-components/commit/244b4f4d84884c8659ba05ecb5d0d16d7a15469c)), closes [#41](https://github.com/dereekb/dbx-components/issues/41)
+
 ## [13.5.2](https://github.com/dereekb/dbx-components/compare/v13.5.1-dev...v13.5.2) (2026-03-22)
 
 

@@ -5,7 +5,9 @@
   }
   @case ('loading') {
     <!-- Loading -->
-    <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
+    <div role="status" aria-live="polite" [attr.aria-busy]="true">
+      <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
+    </div>
   }
   @case ('content') {
     <!-- Content -->
@@ -13,7 +15,9 @@
   }
   @case ('error') {
     <!-- Error -->
-    <ng-container *ngTemplateOutlet="errorTemplate"></ng-container>
+    <div role="alert" aria-live="assertive">
+      <ng-container *ngTemplateOutlet="errorTemplate"></ng-container>
+    </div>
   }
 }
 

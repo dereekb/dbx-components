@@ -24,8 +24,8 @@ export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
   selector: 'dbx-sidenav-button',
   template: `
     @if (showMenuButtonSignal()) {
-      <button class="dbx-sidenav-button" mat-icon-button (click)="toggleNav()" aria-label="open sidenav button">
-        <mat-icon>{{ sidenavMenuIcon() }}</mat-icon>
+      <button class="dbx-sidenav-button" mat-icon-button (click)="toggleNav()" aria-label="Toggle sidebar navigation">
+        <mat-icon aria-hidden="true">{{ sidenavMenuIcon() }}</mat-icon>
       </button>
     }
   `,

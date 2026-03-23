@@ -23,7 +23,7 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
   template: `
     @switch (buttonDisplayTypeSignal()) {
       @case ('text_button') {
-        <button mat-button class="mat-unthemed" [disabled]="disabledSignal()" (click)="clickButton()">
+        <button mat-button class="mat-unthemed" [disabled]="disabledSignal()" [attr.aria-label]="ariaLabel()" (click)="clickButton()">
           @if (iconSignal()) {
             <mat-icon class="dbx-icon-spacer">{{ iconSignal() }}</mat-icon>
           }
@@ -32,8 +32,8 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
         </button>
       }
       @case ('icon_button') {
-        <button mat-icon-button [disabled]="disabledSignal()" (click)="clickButton()">
-          <mat-icon>{{ iconSignal() }}</mat-icon>
+        <button mat-icon-button [disabled]="disabledSignal()" [attr.aria-label]="ariaLabel() || iconSignal()" (click)="clickButton()">
+          <mat-icon aria-hidden="true">{{ iconSignal() }}</mat-icon>
           <ng-container *ngTemplateOutlet="content"></ng-container>
         </button>
       }

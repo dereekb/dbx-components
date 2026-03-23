@@ -28,11 +28,11 @@ export interface DbxErrorViewButtonEvent {
 @Component({
   selector: 'dbx-error-view',
   template: `
-    <button class="dbx-error-button" [disabled]="buttonDisabled()" [dbxTextColor]="'warn'" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
-      <mat-icon>{{ icon() }}</mat-icon>
+    <button class="dbx-error-button" [disabled]="buttonDisabled()" [dbxTextColor]="'warn'" #buttonPopoverOrigin mat-icon-button (click)="clickError()" [attr.aria-label]="message() ? 'View error details' : 'Error'">
+      <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
     </button>
     @if (message()) {
-      <span class="dbx-error-message">{{ message() }}</span>
+      <span class="dbx-error-message" role="alert">{{ message() }}</span>
     }
   `,
   host: {

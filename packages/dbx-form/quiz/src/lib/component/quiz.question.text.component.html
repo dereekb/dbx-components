@@ -1,11 +1,11 @@
-<div class="dbx-quiz-question-text">
+<div class="dbx-quiz-question-text" role="group" aria-label="Question">
   <div class="dbx-quiz-question-text-content">
     @if (promptSignal() !== null) {
-      <div class="dbx-hint dbx-pb3">{{ promptSignal() }}</div>
+      <div class="dbx-hint dbx-pb3" aria-label="Prompt">{{ promptSignal() }}</div>
     }
     <div class="dbx-pb3">{{ textSignal() }}</div>
     @if (guidanceSignal() !== null) {
-      <div class="dbx-small dbx-hint">{{ guidanceSignal() }}</div>
+      <div class="dbx-small dbx-hint" role="note">{{ guidanceSignal() }}</div>
     }
   </div>
 </div>

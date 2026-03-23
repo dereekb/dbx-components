@@ -47,8 +47,8 @@ export const DBX_CHIP_DEFAULT_TONE = 18;
   host: {
     class: 'dbx-chip mat-standard-chip',
     '[class]': 'styleSignal()',
-    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
-    '[style.color]': 'tonalColorSignal()'
+    '[class.dbx-color-tonal]': 'isTonalSignal()',
+    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()'
   },
   standalone: true
 })
@@ -113,14 +113,12 @@ export class DbxChipDirective {
   });
 
   /**
-   * Overrides the host text color to use the vibrant theme color when tonal mode is active.
-   *
-   * Normally a `-bg` class sets the contrast color as text (e.g. white on blue).
-   * In tonal mode the background is semi-transparent, so white text would be unreadable.
-   * Instead we use `--dbx-bg-color-current` (the vibrant color set by the `-bg` mixin) as the text color.
+   * Whether tonal mode is active (color is set and tone < 100). Adds the `dbx-color-tonal`
+   * CSS class which overrides text color to the vibrant theme color via CSS rather than
+   * an inline style binding (which would conflict with `[ngStyle]`).
    */
-  readonly tonalColorSignal = computed(() => {
+  readonly isTonalSignal = computed(() => {
     const color = this.colorSignal();
-    return color && this.toneSignal() < 100 ? 'var(--dbx-bg-color-current)' : null;
+    return Boolean(color) && this.toneSignal() < 100;
   });
 }

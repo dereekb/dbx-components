@@ -78,6 +78,7 @@ $big-button-height: 46px; // 33% bigger
   .dbx-button-column {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
 
     > * {
       margin-bottom: 6px !important;
