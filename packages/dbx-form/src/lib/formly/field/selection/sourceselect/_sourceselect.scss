@@ -20,6 +20,29 @@
       overflow: visible;
     }
   }
+
+  .dbx-source-select-filter-container {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--mat-select-panel-background-color, var(--mat-sys-surface-container));
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  .dbx-source-select-filter-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .dbx-source-select-filterable-panel {
+    padding-top: 0 !important;
+  }
 }
 
 @mixin theme($theme-config) {

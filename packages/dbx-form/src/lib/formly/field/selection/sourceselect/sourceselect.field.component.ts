@@ -49,6 +49,24 @@ export interface SourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M
    * (Optional) observable that will trigger the clearing of all cached display values.
    */
   readonly refreshDisplayValues$?: Observable<unknown>;
+  /**
+   * Whether to show a type-to-filter text input inside the dropdown panel.
+   *
+   * When enabled, a sticky text input appears at the top of the dropdown that
+   * filters visible options by label. Currently-selected values always remain visible.
+   *
+   * Defaults to true.
+   */
+  readonly filterable?: boolean;
+  /**
+   * Whether the filter also matches against group labels.
+   *
+   * When enabled, typing a group name (e.g. "Source B") will show all options
+   * within matching groups, even if individual option labels don't match.
+   *
+   * Defaults to true.
+   */
+  readonly filterableGroups?: boolean;
 }
 
 interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = unknown> {
@@ -285,6 +303,44 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
   readonly nonGroupedValuesSignal = toSignal(this.nonGroupedValues$);
   readonly groupedOptionsSignal = toSignal(this.groupedOptions$);
 
+  // MARK: Filterable
+  private readonly _filterText$ = new BehaviorSubject<string>('');
+
+  readonly filterInputElement = viewChild<string, ElementRef<HTMLInputElement>>('filterInput', { read: ElementRef<HTMLInputElement> });
+
+  readonly filteredOptions$: Observable<SourceSelectOptions<T, M>> = combineLatest([this.options$, this._filterText$, this.values$]).pipe(
+    map(([options, filterText, currentValues]) => {
+      let result: SourceSelectOptions<T, M>;
+
+      if (!filterText) {
+        result = options;
+      } else {
+        const lowerFilter = filterText.toLowerCase();
+        const selectedSet = new Set(currentValues);
+        const matches = (dv: SourceSelectDisplayValue<T, M>) => selectedSet.has(dv.value) || dv.label.toLowerCase().includes(lowerFilter);
+
+        const filterGroups = this.filterableGroups;
+
+        result = {
+          nonGroupedValues: options.nonGroupedValues.filter(matches),
+          groupedValues: options.groupedValues
+            .map((g) => {
+              const groupLabelMatches = filterGroups && g.label.toLowerCase().includes(lowerFilter);
+              const filteredValues = groupLabelMatches ? g.values : g.values.filter(matches);
+              return { label: g.label, values: filteredValues };
+            })
+            .filter((g: SourceSelectDisplayValueGroup<T, M>) => g.values.length > 0)
+        };
+      }
+
+      return result;
+    }),
+    shareReplay(1)
+  );
+
+  readonly filteredNonGroupedValuesSignal = toSignal(this.filteredOptions$.pipe(map((x) => x.nonGroupedValues)));
+  readonly filteredGroupedOptionsSignal = toSignal(this.filteredOptions$.pipe(map((x) => x.groupedValues)));
+
   get sourceSelectField(): SourceSelectFieldProps<T, M> {
     return this.props;
   }
@@ -319,6 +375,18 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   get multiple() {
     return this.props.multiple || false;
+  }
+
+  get filterable() {
+    return this.props.filterable !== false;
+  }
+
+  get filterableGroups() {
+    return this.props.filterableGroups !== false;
+  }
+
+  get selectPanelClass(): string | string[] {
+    return this.filterable ? 'dbx-source-select-filterable-panel' : '';
   }
 
   get refreshDisplayValues$() {
@@ -423,6 +491,31 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   readonly context = loadingStateContext({ obs: this.allOptionGroupsState$ });
 
+  onSelectOpenedChange(opened: boolean): void {
+    if (opened) {
+      setTimeout(() => {
+        const inputEl = this.filterInputElement();
+
+        if (inputEl) {
+          inputEl.nativeElement.focus();
+        }
+      });
+    } else {
+      this._filterText$.next('');
+    }
+  }
+
+  onFilterInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this._filterText$.next(input.value);
+  }
+
+  onFilterKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' && event.key !== 'Tab') {
+      event.stopPropagation();
+    }
+  }
+
   ngOnInit(): void {
     const { loadSources } = this;
 
@@ -450,6 +543,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     this._formControlObs.complete();
     this._fromOpenSource.complete();
     this._loadSources.complete();
+    this._filterText$.complete();
     this.context.destroy();
   }
 
