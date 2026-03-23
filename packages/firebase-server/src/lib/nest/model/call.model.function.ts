@@ -1,4 +1,4 @@
-import { type Configurable, type PromiseOrValue, serverError, type Maybe } from '@dereekb/util';
+import { type Configurable, type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelType, type FirestoreModelTypes, type ModelFirebaseCrudFunctionSpecifierRef, type OnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestContext, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext, type OnCallWithNestContextRequest } from '../function/call';
@@ -6,7 +6,8 @@ import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCru
 import { type NestContextCallableRequest } from '../function/nest';
 import { type OnCallApiDetailsRef, type OnCallModelApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, resolveAnalyticsFromApiDetails } from './api.details';
 import { type OnCallAnalyticsContext } from './analytics.details';
-import { type OnCallModelAnalyticsService, ON_CALL_MODEL_ANALYTICS_SERVICE } from './analytics.handler';
+import { type OnCallModelAnalyticsService } from './analytics.handler';
+import { OnCallModelAnalyticsResolver } from './analytics.resolver';
 import { callWithAnalytics } from './analytics.emit';
 
 // MARK: Function
@@ -34,6 +35,9 @@ export interface OnCallModelConfig {
   readonly preAssert?: AssertModelCrudRequestFunction<unknown, OnCallTypedModelParams>;
   /**
    * Override the analytics handler injection token.
+   *
+   * It should return an {@link OnCallModelAnalyticsService}.
+   *
    * Default: {@link ON_CALL_MODEL_ANALYTICS_SERVICE}
    */
   readonly analyticsToken?: string;
@@ -62,22 +66,22 @@ export interface OnCallModelConfig {
  */
 export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> & OnCallApiDetailsRef {
   const { preAssert = () => undefined, analyticsToken } = config;
-  const resolvedToken = analyticsToken ?? ON_CALL_MODEL_ANALYTICS_SERVICE;
 
   // Aggregate _apiDetails from CRUD handlers in the map (built once at setup, not per-request)
   const aggregatedApiDetails = aggregateModelApiDetails(map as { readonly [key: string]: OnCallApiDetailsRef | undefined });
   const modelApiDetails: OnCallModelApiDetails = (aggregatedApiDetails as OnCallModelApiDetails | undefined) ?? {};
 
-  // Resolve analytics service from NestContext per-request.
+  // Resolve analytics service via OnCallModelAnalyticsResolver per-request.
   // Not cached because the NestJS application instance may differ across test suites
   // when the onCallModel closure is shared as a module-level singleton.
-  function getAnalyticsService(request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>): Maybe<OnCallModelAnalyticsService> {
-    try {
-      return request?.nestApplication?.get(resolvedToken, { strict: false });
-    } catch {
-      // silent — analytics is optional
-      return undefined;
-    }
+  //
+  // Uses OnCallModelAnalyticsResolver (which is always globally registered) instead of
+  // resolving ON_CALL_MODEL_ANALYTICS_SERVICE directly. Direct app.get() for an optional
+  // provider is unsafe: the NestFactory Proxy wraps method calls in ExceptionsZone, which
+  // calls process.exit(1) on missing providers before any try/catch can intercept the error.
+  function getAnalyticsService(request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>): OnCallModelAnalyticsService {
+    const resolver: OnCallModelAnalyticsResolver = request.nestApplication.get(OnCallModelAnalyticsResolver, { strict: false });
+    return resolver.getAnalyticsService(analyticsToken);
   }
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {
@@ -105,7 +109,7 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
     const analyticsService = getAnalyticsService(request);
     const analyticsDetails = resolveAnalyticsFromApiDetails(modelApiDetails, call, modelType, specifier);
 
-    if (analyticsService && analyticsDetails) {
+    if (analyticsDetails) {
       result = callWithAnalytics({ service: analyticsService, details: analyticsDetails, context, execute: () => callFn(request) });
     } else {
       result = callFn(request);

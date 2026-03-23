@@ -61,8 +61,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly type = input<Maybe<DbxButtonType>>();
   readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
-  readonly color = input<ThemePalette | DbxThemeColor>(undefined);
-  readonly spinnerColor = input<ThemePalette | DbxThemeColor>(undefined);
+  readonly color = input<Maybe<ThemePalette | DbxThemeColor>>();
+  readonly spinnerColor = input<Maybe<ThemePalette | DbxThemeColor>>();
   readonly customButtonColor = input<Maybe<string>>();
   readonly customTextColor = input<Maybe<string>>();
   readonly customSpinnerColor = input<Maybe<string>>();

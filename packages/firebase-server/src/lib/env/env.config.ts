@@ -1,6 +1,6 @@
 import { type InjectionToken, type Provider } from '@nestjs/common';
 import { SERVER_ENV_TOKEN, type ServerEnvironmentConfig } from '@dereekb/nestjs';
-import { type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 
 /**
  * Extension of ServerEnvironmentConfig for Firebase server applications.
@@ -9,6 +9,24 @@ import { type WebsiteUrlWithPrefix } from '@dereekb/util';
  */
 export interface FirebaseServerEnvironmentConfig extends ServerEnvironmentConfig {
   readonly appUrl: WebsiteUrlWithPrefix;
+  /**
+   * The API URL. When not set explicitly, `buildNestServerRootModule()` computes
+   * it from `appUrl + globalApiRoutePrefix`.
+   */
+  readonly appApiUrl?: Maybe<WebsiteUrlWithPrefix>;
+  /**
+   * The webhook URL. When not set explicitly, `buildNestServerRootModule()` computes
+   * it from `appUrl + /webhook`.
+   */
+  readonly appWebhookUrl?: Maybe<WebsiteUrlWithPrefix>;
+  /**
+   * Whether the API is enabled. Requires both `appUrl` and a configured `globalApiRoutePrefix`.
+   */
+  readonly isApiEnabled?: boolean;
+  /**
+   * Whether webhooks are enabled. Requires both `appUrl` and `configureWebhooks` being true.
+   */
+  readonly isWebhooksEnabled?: boolean;
 }
 
 // MARK: Tokens

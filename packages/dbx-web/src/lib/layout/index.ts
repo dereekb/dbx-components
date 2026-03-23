@@ -11,7 +11,6 @@ export * from './flex';
 export * from './item';
 export * from './list';
 export * from './section';
-export * from './step';
 export * from './style';
 export * from './text';
 export * from './layout.module';

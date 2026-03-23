@@ -30,4 +30,10 @@ export abstract class ServerEnvironmentConfig {
    * Should not end with a trailing slash.
    */
   abstract readonly appUrl?: Maybe<WebsiteUrl>;
+  /**
+   * The API URL of the application (e.g., 'https://app.example.com/api').
+   *
+   * Should not end with a trailing slash.
+   */
+  abstract readonly appApiUrl?: Maybe<WebsiteUrl>;
 }

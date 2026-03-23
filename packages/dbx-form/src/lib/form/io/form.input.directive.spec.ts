@@ -92,9 +92,8 @@ describe('dbxFormSourceObservableFromStream()', () => {
       );
 
       it(
-        'should continue to pipe values while the state is RESET.',
+        'should only pipe the first value when the state is RESET and ignore subsequent source changes.',
         callbackTest((done) => {
-          const additionalValues = [0, 1, 2];
           const values = new Subject<number>();
 
           const obs$ = dbxFormSourceObservableFromStream(
@@ -102,24 +101,23 @@ describe('dbxFormSourceObservableFromStream()', () => {
               of({
                 state: DbxFormState.RESET
               })
-            ), // either being completed will cause the
+            ),
             values,
             preventComplete(of('reset'))
           );
 
-          const valuesCount = 3;
-
-          subscriptionObject.subscription = obs$.pipe(bufferCount(3), first()).subscribe({
+          // bufferCount(2) waits for a second value that should never arrive
+          subscriptionObject.subscription = obs$.pipe(bufferCount(2), testTimeout(200), first()).subscribe({
             next: (x) => {
-              expect(x.length).toBe(valuesCount);
-              expect(x[0]).toBe(0);
-              expect(x[1]).toBe(1);
-              expect(x[2]).toBe(2);
+              expect(x).toBe(TIMEOUT_VALUE); // timeout proves only 1 value was emitted
               done();
             }
           });
 
-          additionalValues.forEach((x) => values.next(x));
+          // emit multiple values while state stays RESET — only the first should be forwarded
+          values.next(0);
+          values.next(1);
+          values.next(2);
         })
       );
 
@@ -166,6 +164,39 @@ describe('dbxFormSourceObservableFromStream()', () => {
           values$.next(value);
           state$.next(DbxFormState.RESET);
           state$.next(DbxFormState.USED);
+        })
+      );
+
+      it(
+        'should forward the latest value on each RESET after USED',
+        callbackTest((done) => {
+          const state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
+          const values$ = new BehaviorSubject<number>(0);
+
+          const obs$ = dbxFormSourceObservableFromStream(state$.pipe(map((state) => ({ state }))), values$, preventComplete(of('reset')));
+
+          const received: number[] = [];
+
+          subscriptionObject.subscription = obs$.subscribe({
+            next: (x) => {
+              received.push(x as number);
+
+              if (received.length === 2) {
+                expect(received).toEqual([0, 2]);
+                done();
+              }
+            }
+          });
+
+          // 1) Initial RESET → forward 0
+          state$.next(DbxFormState.RESET);
+          // 2) Form is used (user interacts)
+          state$.next(DbxFormState.USED);
+          // 3) Source value changes while form is in use — ignored
+          values$.next(1);
+          values$.next(2);
+          // 4) Form is explicitly reset → forward latest value (2)
+          state$.next(DbxFormState.RESET);
         })
       );
     });

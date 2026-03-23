@@ -13,6 +13,14 @@ $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
 $dbx-detail-block-big-header-icon-size: 18px;
 
+$dbx-step-block-badge-size: 32px;
+$dbx-step-block-gap: 16px;
+$dbx-step-block-padding: 6px;
+$dbx-step-block-badge-font-size: 14px;
+$dbx-step-block-badge-icon-size: 18px;
+$dbx-step-block-header-font-weight: 500;
+$dbx-step-block-badge-font-weight: 600;
+
 // MARK: Mixin
 @mixin core() {
   .dbx-small,
@@ -123,6 +131,57 @@ $dbx-detail-block-big-header-icon-size: 18px;
         font-size: $dbx-detail-block-big-header-icon-size;
       }
     }
+  }
+
+  .dbx-step-block {
+    display: flex;
+    flex-direction: row;
+    gap: var(--dbx-step-block-gap, #{$dbx-step-block-gap});
+    align-items: flex-start;
+    padding: var(--dbx-step-block-padding, #{$dbx-step-block-padding}) 0;
+  }
+
+  .dbx-step-block.dbx-step-block-center {
+    align-items: center;
+  }
+
+  .dbx-step-block-badge {
+    width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
+    border-radius: var(--dbx-step-block-badge-shape, 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
+    font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
+
+    .mat-icon {
+      width: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
+      height: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
+      font-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
+    }
+  }
+
+  .dbx-step-block-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dbx-step-block-header {
+    display: flex;
+    align-items: center;
+    font-weight: var(--dbx-step-block-header-font-weight, #{$dbx-step-block-header-font-weight});
+  }
+
+  .dbx-step-block-header-label {
+    padding-right: 4px;
+  }
+
+  .dbx-step-block-hint {
+    display: block;
+    font-size: var(--dbx-step-block-hint-font-size, var(--mat-sys-body-small-size));
+    opacity: var(--dbx-step-block-hint-opacity, #{$hint-opacity});
   }
 
   .dbx-text-no-overflow {

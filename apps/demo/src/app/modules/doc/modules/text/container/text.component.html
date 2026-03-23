@@ -196,6 +196,30 @@
         </div>
       </div>
     </doc-feature-example>
+    <doc-feature-example header="dbx-step-block" hint="Displays a numbered step badge on the left with content on the right. Supports a [header] content slot for custom header content. When no header or hint is provided, the badge centers vertically with the content.">
+      <dbx-step-block [step]="1" header="Create Account" hint="Start by filling in the registration form.">
+        <p>Enter your email and password to get started.</p>
+      </dbx-step-block>
+      <dbx-step-block [step]="2" header="Verify Email">
+        <p>Check your inbox for a verification link.</p>
+      </dbx-step-block>
+      <dbx-step-block [step]="3" icon="check" color="success" header="Complete" hint="This step uses an icon and a custom color.">
+        <p>Your account setup is complete.</p>
+      </dbx-step-block>
+      <dbx-step-block [step]="4" header="Visit Google">
+        <dbx-linkify header text="www.google.com"></dbx-linkify>
+        <p>This step uses the [header] content slot to add a clickable link next to the header.</p>
+      </dbx-step-block>
+      <dbx-step-block [step]="5" [center]="true">
+        <p>This step uses [center]="true" to vertically center the badge with the content. The badge is aligned to the middle regardless of content height.</p>
+      </dbx-step-block>
+      <div style="--dbx-step-block-badge-size: 48px; --dbx-step-block-badge-font-size: 20px; --dbx-step-block-badge-icon-size: 28px; --dbx-step-block-gap: 20px; --dbx-step-block-badge-shape: 8px">
+        <p class="dbx-hint">Custom tokens: larger badge (48px), bigger font (20px), rounded-square shape (8px), wider gap (20px).</p>
+        <dbx-step-block [step]="1" color="accent" header="Custom Tokens" hint="This example overrides CSS tokens on a parent element.">
+          <p>Styled with custom --dbx-step-block-* CSS properties.</p>
+        </dbx-step-block>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header="dbx-number-with-limit" hint="Displays a number that can be paired with a limit and be colored based on the ratio between the number and limit.">
       <p>A</p>
       <dbx-number-with-limit [number]="numberLimitA"></dbx-number-with-limit>

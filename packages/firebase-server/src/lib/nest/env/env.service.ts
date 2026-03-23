@@ -1,7 +1,8 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { Injectable } from '@nestjs/common';
 import { type FirebaseServerEnvService } from '../../env/env.service';
-import { cachedGetter, type Maybe, type WebsiteUrlDetails, websiteUrlDetails } from '@dereekb/util';
+import { type FirebaseServerEnvironmentConfig } from '../../env/env.config';
+import { cachedGetter, type Maybe, type WebsiteUrl, type WebsiteUrlDetails, websiteUrlDetails } from '@dereekb/util';
 
 /**
  * Default NestJS injectable implementation of {@link FirebaseServerEnvService}.
@@ -24,5 +25,17 @@ export class DefaultFirebaseServerEnvService extends ServerEnvironmentService im
 
   get appUrlDetails() {
     return this._appUrlDetails();
+  }
+
+  get appWebhookUrl(): Maybe<WebsiteUrl> {
+    return (this.env as FirebaseServerEnvironmentConfig).appWebhookUrl;
+  }
+
+  get isApiEnabled(): boolean {
+    return Boolean((this.env as FirebaseServerEnvironmentConfig).isApiEnabled);
+  }
+
+  get isWebhooksEnabled(): boolean {
+    return Boolean((this.env as FirebaseServerEnvironmentConfig).isWebhooksEnabled);
   }
 }

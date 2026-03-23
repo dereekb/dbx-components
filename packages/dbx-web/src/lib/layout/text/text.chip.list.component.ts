@@ -16,7 +16,7 @@ import { type DbxChipDisplay, DbxChipDirective } from './text.chip.directive';
 @Component({
   selector: 'dbx-chip-list',
   template: `
-    @for (chip of chips(); track chip.value) {
+    @for (chip of chips(); track chip.key ?? chip.label) {
       <dbx-chip class="dbx-chip-spacer" [display]="chip" [small]="small()">{{ chip.label }}</dbx-chip>
     }
   `,
@@ -28,7 +28,7 @@ import { type DbxChipDisplay, DbxChipDirective } from './text.chip.directive';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxChipListComponent<T = unknown> {
-  readonly chips = input<Maybe<DbxChipDisplay<T>[]>>();
+export class DbxChipListComponent {
+  readonly chips = input<Maybe<DbxChipDisplay[]>>();
   readonly small = input<Maybe<boolean>>();
 }
