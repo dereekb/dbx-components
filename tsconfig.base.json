@@ -65,7 +65,8 @@
       "@dereekb/zoom/nestjs": ["packages/zoom/nestjs/src/index.ts"],
       "demo-components": ["components/demo-components/src/index.ts"],
       "demo-firebase": ["components/demo-firebase/src/index.ts"],
-      "@dereekb/vitest": ["packages/vitest/src/index.ts"]
+      "@dereekb/vitest": ["packages/vitest/src/index.ts"],
+      "@dereekb/vitest/a11y": ["packages/vitest/src/a11y.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "setup", "dist"]

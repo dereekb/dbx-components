@@ -4,7 +4,6 @@ import { By } from '@angular/platform-browser';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { type Maybe } from '@dereekb/util';
-import { expectNoA11yViolations } from '../../../../../vitest.a11y';
 
 describe('Loading a11y', () => {
   beforeEach(waitForAsync(() => {
