@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/calcom/nestjs",
-  "version": "13.5.1",
+  "version": "13.5.2",
   "peerDependencies": {
-    "@dereekb/nestjs": "13.5.1",
-    "@dereekb/util": "13.5.1",
-    "@dereekb/calcom": "13.5.1",
+    "@dereekb/nestjs": "13.5.2",
+    "@dereekb/util": "13.5.2",
+    "@dereekb/calcom": "13.5.2",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "express": "^5.0.0"
