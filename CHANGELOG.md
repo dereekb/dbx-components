@@ -1,3 +1,10 @@
+## [13.6.2](https://github.com/dereekb/dbx-components/compare/v13.6.1-dev...v13.6.2) (2026-03-23)
+
+
+### Bug Fixes
+
+- removed OnCallModelAnalyticsResolver to fix test hang ([eb7d5e2a](https://github.com/dereekb/dbx-components/commit/eb7d5e2a84c615499f0a2822254f440c6fc377e1))
+
 ## [13.6.1](https://github.com/dereekb/dbx-components/compare/v13.6.0-dev...v13.6.1) (2026-03-23)
 
 
