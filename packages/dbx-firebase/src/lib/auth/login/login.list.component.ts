@@ -21,13 +21,15 @@ export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionCompo
   selector: 'dbx-firebase-login-list',
   template: `
     @for (config of providersInjectionConfigsSignal(); track config.loginMethodType) {
-      <div class="dbx-firebase-login-item">
+      <div class="dbx-firebase-login-item" role="listitem">
         <dbx-injection [config]="config"></dbx-injection>
       </div>
     }
   `,
   host: {
-    class: 'dbx-firebase-login-list dbx-button-column'
+    class: 'dbx-firebase-login-list dbx-button-column',
+    role: 'list',
+    '[attr.aria-label]': 'loginModeAriaLabel'
   },
   standalone: true,
   imports: [DbxInjectionComponent]
@@ -49,6 +51,23 @@ export class DbxFirebaseLoginListComponent {
   readonly providerTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
   readonly omitProviderTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
   readonly providerCategories = input<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>();
+
+  readonly loginModeAriaLabelSignal = computed(() => {
+    switch (this.loginMode()) {
+      case 'register':
+        return 'Registration options';
+      case 'link':
+        return 'Link account options';
+      case 'unlink':
+        return 'Unlink account options';
+      default:
+        return 'Login options';
+    }
+  });
+
+  get loginModeAriaLabel(): string {
+    return this.loginModeAriaLabelSignal();
+  }
 
   readonly providerTypesSignal = computed(() => {
     const providerTypes = this.providerTypes();

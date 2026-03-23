@@ -1,7 +1,7 @@
 <div class="dbx-quiz-answer-number" (dbxWindowKeyDownListener)="handleKeyDown($event)" [dbxWindowKeyDownFilter]="relevantKeysSignal()">
-  <div class="dbx-quiz-answer-number-buttons dbx-button-wrap-group">
+  <div class="dbx-quiz-answer-number-buttons dbx-button-wrap-group" role="radiogroup" aria-label="Answer choices">
     @for (choice of choicesSignal(); track choice.number) {
-      <dbx-button [color]="choice.selected ? 'accent' : 'primary'" [raised]="true" (buttonClick)="clickedAnswer(choice.number)">{{ choice.number }}</dbx-button>
+      <dbx-button role="radio" [attr.aria-checked]="choice.selected" [attr.aria-label]="'' + choice.number" [color]="choice.selected ? 'accent' : 'primary'" [raised]="true" (buttonClick)="clickedAnswer(choice.number)">{{ choice.number }}</dbx-button>
     }
   </div>
 </div>

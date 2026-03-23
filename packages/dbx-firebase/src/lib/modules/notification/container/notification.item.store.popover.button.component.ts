@@ -11,7 +11,7 @@ export type DbxFirebaseNotificationItemStorePopoverButtonConfig = DbxFirebaseNot
 @Component({
   selector: 'dbx-firebase-notification-item-store-popover-button',
   template: `
-    <dbx-icon-button #button (buttonClick)="showNotificationsPopover()" icon="notifications"></dbx-icon-button>
+    <dbx-icon-button #button (buttonClick)="showNotificationsPopover()" icon="notifications" aria-label="Notifications"></dbx-icon-button>
   `,
   standalone: true,
   imports: [DbxIconButtonComponent],
