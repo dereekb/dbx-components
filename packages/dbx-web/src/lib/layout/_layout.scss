@@ -9,7 +9,6 @@
 @use './item/item';
 @use './list/list';
 @use './section/section';
-@use './step/step';
 @use './style/style';
 @use './text/text';
 
@@ -25,7 +24,6 @@
   @include item.core();
   @include list.core();
   @include section.core();
-  @include step.core();
   @include style.core();
   @include text.core();
 }
@@ -45,7 +43,6 @@
   @include item.theme($theme-config);
   @include list.theme($theme-config);
   @include section.theme($theme-config);
-  @include step.theme($theme-config);
   @include style.theme($theme-config);
   @include text.theme($theme-config);
 }

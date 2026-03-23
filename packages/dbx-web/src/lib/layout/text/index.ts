@@ -1,6 +1,7 @@
 export * from './address.component';
 export * from './detail.block.component';
 export * from './detail.block.header.component';
+export * from './step.block.component';
 export * from './icon.spacer.component';
 export * from './label.block.component';
 export * from './linkify/linkify';
