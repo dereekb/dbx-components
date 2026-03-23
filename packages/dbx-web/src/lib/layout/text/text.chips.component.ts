@@ -9,7 +9,11 @@ import { type DbxThemeColor, dbxColorBackground } from '../style/style';
  *
  * Extends {@link LabeledValue} for the chip label and value.
  */
-export interface TextChip<T = unknown> extends LabeledValue<T> {
+export interface TextChip extends LabeledValue<string> {
+  /**
+   * Optional unique key for tracking in `@for` loops. Falls back to `label` when not provided.
+   */
+  readonly key?: string;
   /**
    * Optional tooltip shown on hover.
    */
@@ -22,17 +26,6 @@ export interface TextChip<T = unknown> extends LabeledValue<T> {
    * Theme color applied to the chip background via {@link dbxColorBackground}.
    */
   readonly color?: Maybe<DbxThemeColor>;
-  /**
-   * @deprecated use `label` instead.
-   */
-  readonly text?: string;
-}
-
-/**
- * Returns the display label for a {@link TextChip}, preferring `label` over the deprecated `text` field.
- */
-function textChipLabel(chip: TextChip): string {
-  return chip.label ?? chip.text ?? '';
 }
 
 /**
@@ -48,9 +41,9 @@ function textChipLabel(chip: TextChip): string {
   template: `
     @if (chips()) {
       <mat-chip-listbox class="dbx-text-chips-listbox">
-        @for (chip of chips(); track chipLabel(chip)) {
+        @for (chip of chips(); track chip.key ?? chip.label) {
           <mat-chip-option [selected]="chip.selected ?? defaultSelection()" [class]="chipColorClass(chip)" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
-            {{ chipLabel(chip) }}
+            {{ chip.label }}
           </mat-chip-option>
         }
       </mat-chip-listbox>
@@ -60,19 +53,14 @@ function textChipLabel(chip: TextChip): string {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxTextChipsComponent<T = unknown> {
+export class DbxTextChipsComponent {
   readonly defaultSelection = input<Maybe<boolean>>();
-  readonly chips = input<Maybe<TextChip<T>[]>>();
-
-  /**
-   * Returns the display label for a chip.
-   */
-  readonly chipLabel = textChipLabel;
+  readonly chips = input<Maybe<TextChip[]>>();
 
   /**
    * Returns the themed background CSS class for a chip's color.
    */
-  chipColorClass(chip: TextChip<T>): string {
+  chipColorClass(chip: TextChip): string {
     return chip.color ? dbxColorBackground(chip.color) : '';
   }
 }

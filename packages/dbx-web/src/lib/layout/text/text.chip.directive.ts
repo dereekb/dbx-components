@@ -7,7 +7,11 @@ import { type DbxColorTone, type DbxThemeColor, dbxColorBackground } from '../st
  *
  * Combines a labeled value with a theme color for rendering a styled chip.
  */
-export interface DbxChipDisplay<T = unknown> extends LabeledValue<T> {
+export interface DbxChipDisplay extends LabeledValue<string> {
+  /**
+   * Optional unique key for tracking in `@for` loops. Falls back to `label` when not provided.
+   */
+  readonly key?: string;
   /**
    * Theme color applied to the chip background.
    */
