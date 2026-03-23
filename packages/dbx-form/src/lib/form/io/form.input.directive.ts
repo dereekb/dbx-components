@@ -1,8 +1,8 @@
-import { distinctUntilChanged, filter, map, switchMap, combineLatest, type Observable, EMPTY, exhaustMap, takeUntil, Subject, tap, shareReplay, throttleTime, type Subscription } from 'rxjs';
+import { combineLatest, distinctUntilChanged, filter, first, map, switchMap, type Observable, EMPTY, exhaustMap, shareReplay, throttleTime, type Subscription } from 'rxjs';
 import { Directive, effect, inject, input } from '@angular/core';
 import { DbxFormState, type DbxFormStateRef, DbxMutableForm } from '../form';
 import { type Maybe } from '@dereekb/util';
-import { asObservable, type ObservableOrValue, cleanup, errorOnEmissionsInPeriod } from '@dereekb/rxjs';
+import { asObservable, type ObservableOrValue, errorOnEmissionsInPeriod } from '@dereekb/rxjs';
 import { cleanSubscription } from '@dereekb/dbx-core';
 
 /**
@@ -47,34 +47,12 @@ export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFo
     distinctUntilChanged(),
     switchMap((mode: DbxFormSourceDirectiveMode) => {
       if (mode === 'reset') {
-        // reset only
+        // Reset mode: forward exactly one value each time the form enters RESET state,
+        // then ignore subsequent source changes until the next reset.
         return state$.pipe(
           exhaustMap((state: DbxFormState) => {
             if (state === DbxFormState.RESET) {
-              let firstValueSent = false;
-              const doneSubject = new Subject();
-
-              return combineLatest([value$, state$]).pipe(
-                map(([value, state]) => {
-                  if (!firstValueSent || state === DbxFormState.RESET) {
-                    return [value, true] as [T, boolean]; // always forward the first value.
-                  } else {
-                    return [value, false] as [T, boolean];
-                  }
-                }),
-                tap(([_, send]) => {
-                  firstValueSent = true;
-                  if (!send) {
-                    doneSubject.next(undefined);
-                  }
-                }),
-                filter(([_, send]) => send),
-                map(([value, _]) => value),
-                takeUntil(doneSubject),
-                cleanup(() => {
-                  doneSubject.complete();
-                })
-              );
+              return value$.pipe(first());
             } else {
               return EMPTY;
             }
@@ -159,8 +137,17 @@ export class DbxFormSourceDirective<T = unknown> {
     let subscription: Maybe<Subscription>;
 
     if (formSource) {
-      subscription = dbxFormSourceObservableFromStream(this.form.stream$, formSource, mode).subscribe((x) => {
+      // Guard against the feedback loop where setValue() calls resetForm() internally,
+      // which triggers a new RESET state on stream$, causing another value to be forwarded.
+      // The flag is set before setValue and cleared on the next microtask, so the synchronous
+      // stream$ emissions from the feedback reset are filtered out.
+      let isSettingValue = false;
+      const guardedStream$ = this.form.stream$.pipe(filter(() => !isSettingValue));
+
+      subscription = dbxFormSourceObservableFromStream(guardedStream$, formSource, mode).subscribe((x) => {
+        isSettingValue = true;
         this.form.setValue(x);
+        Promise.resolve().then(() => (isSettingValue = false));
       });
     }
 
