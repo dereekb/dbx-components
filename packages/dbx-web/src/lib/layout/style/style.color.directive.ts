@@ -1,11 +1,13 @@
 import { computed, Directive, input } from '@angular/core';
 import { type DbxColorTone, type DbxThemeColor, dbxColorBackground } from './style';
-import { cssTokenVar, type Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Applies a themed background color to the host element based on a {@link DbxThemeColor} value.
  *
  * Optionally set {@link dbxColorTone} to control background opacity for a tonal/muted appearance.
+ * When tonal mode is active, the `dbx-color-tonal` CSS class is added and a CSS rule
+ * overrides the text color to the vibrant theme color (via `--dbx-bg-color-current`).
  *
  * @example
  * ```html
@@ -18,8 +20,8 @@ import { cssTokenVar, type Maybe } from '@dereekb/util';
   host: {
     '[class]': 'cssClassSignal()',
     '[class.dbx-color]': 'true',
-    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
-    '[style.color]': 'tonalColorSignal()'
+    '[class.dbx-color-tonal]': 'isTonalSignal()',
+    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()'
   },
   standalone: true
 })
@@ -35,21 +37,17 @@ export class DbxColorDirective {
   readonly cssClassSignal = computed(() => dbxColorBackground(this.dbxColor()));
 
   /**
+   * Whether tonal mode is active. Adds the `dbx-color-tonal` CSS class which
+   * overrides the text color to the vibrant theme color via CSS rather than
+   * an inline style binding (which would conflict with `[ngStyle]`).
+   */
+  readonly isTonalSignal = computed(() => this.dbxColorTone() != null);
+
+  /**
    * Sets `--dbx-color-bg-tone` on the host to control the background opacity via `color-mix` in the `-bg` class mixin.
    */
   readonly bgToneStyleSignal = computed(() => {
     const tone = this.dbxColorTone();
     return tone != null ? `${tone}%` : null;
-  });
-
-  /**
-   * Overrides the host text color to use the vibrant theme color when tonal mode is active.
-   *
-   * Normally a `-bg` class sets the contrast color as text (e.g. white on blue).
-   * In tonal mode the background is semi-transparent, so white text would be unreadable.
-   * Instead we use `--dbx-bg-color-current` (the vibrant color set by the `-bg` mixin) as the text color.
-   */
-  readonly tonalColorSignal = computed(() => {
-    return this.dbxColorTone() != null ? cssTokenVar('--dbx-bg-color-current') : null;
   });
 }

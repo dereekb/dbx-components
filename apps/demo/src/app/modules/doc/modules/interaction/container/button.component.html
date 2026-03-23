@@ -442,7 +442,20 @@
       </dbx-content-pit>
 
       <h3>.dbx-button-column</h3>
-      <p>Acts as a vertical spacer that centers all buttons and provides vertical spacing between buttons.</p>
+      <p>Provides vertical spacing between buttons. Buttons are left-aligned by default.</p>
+
+      <dbx-content-pit>
+        <div class="dbx-button-column">
+          <dbx-icon-button class="dbx-warn-bg" icon="settings" text="Warn Background"></dbx-icon-button>
+          <dbx-icon-button dbxColor="accent" text="Test Button"></dbx-icon-button>
+          <dbx-icon-button dbxColor="primary" text="Test Button"></dbx-icon-button>
+          <dbx-icon-button dbxColor="success" text="Test Button"></dbx-icon-button>
+          <dbx-icon-button dbxColor="ok" text="Test Button"></dbx-icon-button>
+        </div>
+      </dbx-content-pit>
+
+      <h3>.dbx-button-column + .dbx-button-column-center</h3>
+      <p>Centers all buttons horizontally within the column.</p>
 
       <dbx-content-pit>
         <div class="dbx-button-column dbx-button-column-center">

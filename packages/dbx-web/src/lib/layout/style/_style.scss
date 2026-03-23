@@ -142,6 +142,12 @@
     @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
   }
 
+  // tonal mode: use the vibrant theme color as text instead of the contrast color.
+  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
+  .dbx-color-tonal {
+    color: var(#{theming.$dbx-bg-color-var});
+  }
+
   // material color overrides
   // --mdc-text-button-label-text-color: #{theming.$dbx-color-var};
   --mat-button-text-label-text-color: #{theming.$dbx-color-var};
