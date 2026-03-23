@@ -10,6 +10,6 @@
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "express": "^5.0.0",
-    "stripe": "^9.1.0"
+    "stripe": "^20.4.1"
   }
 }
