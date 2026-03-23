@@ -3,7 +3,7 @@
   "version": "13.5.2",
   "peerDependencies": {
     "@vitest/expect": "4.1.0",
-    "axe-core": "^4.4.2",
+    "axe-core": "^4.11.1",
     "date-fns": "^4.0.0",
     "vitest": "4.1.0",
     "vitest-axe": "^0.1.0"
