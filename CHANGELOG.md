@@ -1,3 +1,24 @@
+## [13.6.3](https://github.com/dereekb/dbx-components/compare/v13.6.2-dev...v13.6.3) (2026-03-24)
+
+
+### Bug Fixes
+
+- intphone field not marking form dirty/touched ([29b1ac8f](https://github.com/dereekb/dbx-components/commit/29b1ac8fe4c13d48374fbd901a3c55427d91d2c8))
+
+
+### Code Refactoring
+
+- added config input to DbxStepBlockComponent ([1cf91678](https://github.com/dereekb/dbx-components/commit/1cf91678b157b7990fae63fbff71d32d18c714f0))
+- added type-to-filter for sourceSelectField ([e7b07986](https://github.com/dereekb/dbx-components/commit/e7b0798699d505be0dae77d06f4e17b89d046a95))
+- added TypeformPublicFormUrl ([4dfb22f4](https://github.com/dereekb/dbx-components/commit/4dfb22f4b566d66bda8f1ea1a06c84036ef0d869))
+- added updateUrlSearchParams utility ([c06b40ba](https://github.com/dereekb/dbx-components/commit/c06b40ba50d367f722cd7f907f03816a542e5f73))
+- upgraded stripe sdk from v9 to v20 ([11d0cb6e](https://github.com/dereekb/dbx-components/commit/11d0cb6e132161cfc3c5be018a5e57276138b572))
+
+
+### Demo
+
+- added bug tests section to demo app ([c1097bfc](https://github.com/dereekb/dbx-components/commit/c1097bfcec5e1f498e782a17303cbb1541f1a833))
+
 ## [13.6.2](https://github.com/dereekb/dbx-components/compare/v13.6.1-dev...v13.6.2) (2026-03-23)
 
 
