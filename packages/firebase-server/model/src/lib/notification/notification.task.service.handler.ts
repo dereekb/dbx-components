@@ -5,7 +5,7 @@ import { type Configurable, separateValues } from '@dereekb/util';
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+ 
 export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**
    * Checkpoint this flow entry represents.
@@ -17,7 +17,7 @@ export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends Notificat
   readonly fn: NotificationTaskServiceTaskHandlerFunction<D>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+ 
 export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   readonly type: NotificationTaskType;
   /**

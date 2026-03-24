@@ -22,7 +22,6 @@ import { MatButton } from '@angular/material/button';
 })
 export class DocActionExampleDialogComponent extends AbstractDialogDirective<number> {
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {
-    const dialogRef = matDialog.open(DocActionExampleDialogComponent, {});
-    return dialogRef;
+    return matDialog.open(DocActionExampleDialogComponent, {});
   }
 }

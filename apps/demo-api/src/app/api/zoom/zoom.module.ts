@@ -8,9 +8,7 @@ export const demoZoomAccountsAccessTokenCacheServiceFactory = () => {
   const memoryCache = memoryZoomOAuthAccessTokenCacheService();
   const fileCache = fileZoomOAuthAccessTokenCacheService();
 
-  const service = mergeZoomOAuthAccessTokenCacheServices([memoryCache, fileCache]);
-
-  return service;
+  return mergeZoomOAuthAccessTokenCacheServices([memoryCache, fileCache]);
 };
 
 @Module({

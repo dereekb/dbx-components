@@ -38,7 +38,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 
   return async (uid: string) => {
     // init within a transaction.
-    const profile = await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
+    return profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
       const profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
 
       const exists = await profile.accessor.exists();
@@ -68,8 +68,6 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 
       return profile!;
     });
-
-    return profile;
   };
 }
 
@@ -88,11 +86,9 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
         // check that there are any conflicts with other profiles
         const conflictingDoc = await queryProfile(profileWithUsername(username)).getFirstDoc(transaction);
 
-        if (conflictingDoc) {
-          if (conflictingDoc.id !== documentRef.id) {
+        if (conflictingDoc && conflictingDoc.id !== documentRef.id) {
             throw usernameAlreadyTakenError(username);
           }
-        }
 
         const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
         const profilePrivateDataDocument = profilePrivateDataCollectionFactory(documentInTransaction).loadDocumentForTransaction(transaction);

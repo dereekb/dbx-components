@@ -121,13 +121,13 @@ export class JwksService {
    * @returns the generated key pair result containing the stored JwksKey and signing key
    */
   async generateKeyPair(): Promise<GenerateKeyPairResult> {
-    /* eslint-disable @typescript-eslint/no-explicit-any -- Node.js crypto types do not include JWK format overloads */
+     
     const { publicKey, privateKey } = generateKeyPairSync('rsa' as any, {
       modulusLength: 2048,
       publicKeyEncoding: { type: 'spki', format: 'jwk' } as any,
       privateKeyEncoding: { type: 'pkcs8', format: 'jwk' } as any
     });
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+     
 
     const kid = randomBytes(16).toString('hex');
 

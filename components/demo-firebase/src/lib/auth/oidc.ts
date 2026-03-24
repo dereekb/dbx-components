@@ -16,7 +16,9 @@ export type DemoOidcScope = 'openid' | 'profile' | 'email' | 'demo';
  */
 export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
 
-/** All available OIDC scopes for the demo app, suitable for use in scope picker fields. */
+/**
+ * All available OIDC scopes for the demo app, suitable for use in scope picker fields.
+ */
 export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [
   { label: 'OpenID', value: 'openid', description: 'Authenticate your identity using OpenID Connect' },
   { label: 'Profile', value: 'profile', description: 'Access your basic profile information' },
@@ -24,5 +26,7 @@ export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [
   { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }
 ];
 
-/** All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields. */
+/**
+ * All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields.
+ */
 export const DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic', 'client_secret_jwt', 'private_key_jwt'];

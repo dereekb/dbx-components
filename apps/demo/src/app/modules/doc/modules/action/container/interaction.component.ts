@@ -112,7 +112,7 @@ export class DocActionInteractionComponent implements OnDestroy {
   }
 
   getUndoAction = () => {
-    const instance = new DbxActionContextMachine({
+    return new DbxActionContextMachine({
       oneTimeUse: true,
       handleValueReady: (value: any) => {
         safeDetectChanges(this.cdRef);
@@ -124,8 +124,6 @@ export class DocActionInteractionComponent implements OnDestroy {
         );
       }
     });
-
-    return instance;
   };
 
   handleOpenPopover: DbxActionPopoverFunction = ({ origin }) => {

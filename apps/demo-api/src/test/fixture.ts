@@ -721,13 +721,11 @@ export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFun
 
 export class DemoApiNotificationBoxTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationBox, NotificationBoxDocument, DemoApiFunctionContextFixtureInstance<F>> {
   allNotificationsForNotificationBoxQuery() {
-    const query = this.testContext.demoFirestoreCollections.notificationCollectionFactory(this.document).queryDocument();
-    return query;
+    return this.testContext.demoFirestoreCollections.notificationCollectionFactory(this.document).queryDocument();
   }
 
   allNotificationWeeksForNotificationBoxQuery() {
-    const query = this.testContext.demoFirestoreCollections.notificationWeekCollectionFactory(this.document).queryDocument();
-    return query;
+    return this.testContext.demoFirestoreCollections.notificationWeekCollectionFactory(this.document).queryDocument();
   }
 
   async initializeAllApplicableNotificationBoxes() {
@@ -983,8 +981,7 @@ export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFuncti
     }
 
     const notificationTaskKey = storageFile.pn;
-    const notificationTaskDocument = this.testContext.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey);
-    return notificationTaskDocument;
+    return this.testContext.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey);
   }
 
   async syncWithStorageFileGroups(): Promise<SyncStorageFileWithGroupsResult> {

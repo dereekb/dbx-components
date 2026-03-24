@@ -53,8 +53,7 @@ export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<un
       switchMapWhileTrue<boolean>(
         this.data$.pipe(
           map((current) => {
-            const isSame = current.message === value.message && current.signed === value.signed && current.published === value.published;
-            return isSame;
+            return current.message === value.message && current.signed === value.signed && current.published === value.published;
           })
         ),
         false
