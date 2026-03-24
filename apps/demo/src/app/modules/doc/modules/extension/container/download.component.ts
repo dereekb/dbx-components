@@ -11,7 +11,7 @@ function createRandomData() {
   const randomNumber = randomNumberFactory({ min: 100000, max: 10000000 - 1, round: 'round' });
   const randomPhoneFactory = randomPhoneNumberFactory();
 
-  const items = range(0, 1000).map((id) => {
+  return range(0, 1000).map((id) => {
     return {
       id,
       firstname: randomNumber(),
@@ -20,8 +20,6 @@ function createRandomData() {
       phone: randomPhoneFactory()
     };
   });
-
-  return items;
 }
 
 function createRandomCsvFile() {

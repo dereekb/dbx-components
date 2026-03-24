@@ -28,8 +28,7 @@ export class DocActionFormComponent {
   readonly isFormModified: IsModifiedFunction<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     return this.defaultValue$.pipe(
       map((defaultValue) => {
-        const isModified = value.name !== defaultValue.name || !isSameMinute(value.date, defaultValue.date);
-        return isModified;
+        return value.name !== defaultValue.name || !isSameMinute(value.date, defaultValue.date);
       })
     );
   };
@@ -37,8 +36,7 @@ export class DocActionFormComponent {
   readonly isFormEqual: IsEqualFunction<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     return this.defaultValue$.pipe(
       map((defaultValue) => {
-        const isEqual = value.name === defaultValue.name && isSameMinute(value.date, defaultValue.date);
-        return isEqual;
+        return value.name === defaultValue.name && isSameMinute(value.date, defaultValue.date);
       })
     );
   };

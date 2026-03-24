@@ -18,6 +18,8 @@
     &.mat-mdc-button.mat-mdc-icon-button {
       // icon button fixes
       min-width: unset;
+      width: var(--mat-icon-button-state-layer-size, 36px);
+      padding: 0;
       --mat-icon-button-icon-size: unset;
       --mat-text-button-with-icon-horizontal-padding: 0px;
       --mat-icon-button-state-layer-size: 36px;
@@ -55,12 +57,6 @@
       }
     }
 
-    // mat-spinners marked with dbx-progress-spinner-custom should allow the stroke to be inherited.
-    .dbx-progress-spinner-custom.mat-progress-spinner.mat-accent circle,
-    .dbx-progress-spinner-custom.mat-mdc-progress-spinner.mat-accent circle {
-      stroke: unset !important;
-    }
-
     .button-text {
       opacity: 1;
       transition: opacity 0.3s ease-in-out;
@@ -88,6 +84,19 @@
       &.working {
         opacity: 0;
       }
+    }
+
+    // echo overlay icon — mirrors the spinner: absolutely positioned, centered in the button
+    .echo-overlay-icon {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
     }
   }
 }

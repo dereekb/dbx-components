@@ -55,6 +55,26 @@ export type TypeformFormResponseToken = string;
  *
  * The type has utm fields added for convenience.
  */
+export interface TypeformSourceTrackingUrlParameters {
+  readonly utm_source?: Maybe<string>;
+  readonly utm_medium?: Maybe<string>;
+  readonly utm_campaign?: Maybe<string>;
+  readonly utm_term?: Maybe<string>;
+  readonly utm_content?: Maybe<string>;
+}
+
+export interface TypeformRespondentUrlParameters {
+  readonly first_name?: Maybe<string>;
+  readonly last_name?: Maybe<string>;
+  readonly email?: Maybe<EmailAddress>;
+  readonly phone_number?: Maybe<PhoneNumber>;
+  readonly user_id?: Maybe<string>;
+  readonly product_id?: Maybe<string>;
+  readonly auth_code?: Maybe<string>;
+}
+
+export type TypeformCustomUrlParameters = Record<string, string>;
+
 export interface TypeformFormHiddenMetadata extends Partial<Record<string, any>> {
   readonly utm_campaign?: string;
   readonly utm_medium?: string;

@@ -86,7 +86,7 @@ export type DbxTableGroupByFunction<T, G = unknown> = (items: T[]) => Observable
 /**
  * Delegate used for generating view configurations given the input.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any -- any required for DbxInjectionComponentConfig compatibility with diverse component types */
+ 
 export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G = unknown> {
   /**
    * Track by
@@ -167,4 +167,4 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    */
   tableClasses?: CssClassesArray;
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
+ 

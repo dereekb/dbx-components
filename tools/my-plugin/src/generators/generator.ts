@@ -8,7 +8,9 @@ import {
 
 import { TemporaryBuildTargetGeneratorSchema } from './schema';
 
-/** Unique tag to identify our change, must start with an `x-` as be XML schema. */
+/**
+ * Unique tag to identify our change, must start with an `x-` as be XML schema.
+ */
 const SCHEMA_TAG = 'x-g-by-btf';
 const TSCONFIG_TAG = 'x-g-by-btf-tsconfig';
 

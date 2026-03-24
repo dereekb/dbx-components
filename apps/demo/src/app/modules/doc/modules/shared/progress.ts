@@ -8,8 +8,6 @@ export const DEMO_WORKING_INCREASE_OBSERVABLE = interval(100).pipe(
 
     const xLoop = x % parts;
     const xVal = (x % halfParts) * pieceValue;
-    const value = xLoop < halfParts ? xVal : 100 - xVal;
-
-    return value;
+    return xLoop < halfParts ? xVal : 100 - xVal;
   })
 );

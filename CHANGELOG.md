@@ -1,3 +1,24 @@
+## [13.6.4](https://github.com/dereekb/dbx-components/compare/v13.6.3-dev...v13.6.4) (2026-03-24)
+
+
+### Build System
+
+- lint fix ([01b33c02](https://github.com/dereekb/dbx-components/commit/01b33c0214d7963822dbf3cb7df822a788958e2e))
+
+
+### Checkpoints
+
+- button echo overlay and icon fixes ([4f7c4f10](https://github.com/dereekb/dbx-components/commit/4f7c4f10f9995a69c029144f74fbca16a3df8956))
+
+
+### Code Refactoring
+
+- added echo overlay support to bar button ([a39e3102](https://github.com/dereekb/dbx-components/commit/a39e3102f1737a8307e78c8014ce5e24552ac051))
+- added typeform source tracking URL parameter types ([32c60b4f](https://github.com/dereekb/dbx-components/commit/32c60b4fd69cfb729e069b26897b54b5e60aa756))
+- button echo fixes and demo updates ([701eabc1](https://github.com/dereekb/dbx-components/commit/701eabc1fc0d4cb75ce67dee215634ef7a0fc7e9))
+- button spinner color and interaction fixes ([5d69550c](https://github.com/dereekb/dbx-components/commit/5d69550c1616f83d40aeb760c77de7261d4e647b))
+- fixed bar button echo and icon positioning ([d96de6d2](https://github.com/dereekb/dbx-components/commit/d96de6d26ba98f54d7f1c8f72dda3381a2e7001c))
+
 ## [13.6.3](https://github.com/dereekb/dbx-components/compare/v13.6.2-dev...v13.6.3) (2026-03-24)
 
 

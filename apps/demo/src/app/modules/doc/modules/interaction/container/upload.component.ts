@@ -23,7 +23,7 @@ export class DocInteractionUploadComponent {
   areaImagesUploaded: Maybe<DbxFileUploadAreaFilesChangedEvent>;
 
   filesChangeResult(filesChangedEvent: Maybe<DbxFileUploadAreaFilesChangedEvent | DbxFileUploadButtonFilesChangedEvent>) {
-    const result = filesChangedEvent
+    return filesChangedEvent
       ? {
           allFiles: filesChangedEvent.allFiles.length,
           matchResult: {
@@ -32,6 +32,5 @@ export class DocInteractionUploadComponent {
           }
         }
       : undefined;
-    return result;
   }
 }

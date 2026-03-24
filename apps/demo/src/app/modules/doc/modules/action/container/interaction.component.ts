@@ -1,7 +1,7 @@
 import { MatDialog } from '@angular/material/dialog';
 import { type DbxActionDialogFunction, DbxPopoverService, type DbxActionPopoverFunction, type DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, inject } from '@angular/core';
-import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
+import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective, type DbxActionButtonEchoConfig } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
@@ -55,6 +55,16 @@ export class DocActionInteractionComponent implements OnDestroy {
     cancelText: 'Cancel Customized'
   };
 
+  readonly customEchoConfig: DbxActionButtonEchoConfig = {
+    onSuccess: { icon: 'thumb_up', color: 'ok', iconOnly: true, duration: 3000 },
+    onError: { icon: 'warning', color: 'warn', iconOnly: true, duration: 3000 }
+  };
+
+  readonly noEchoConfig: DbxActionButtonEchoConfig = {
+    onSuccess: false,
+    onError: false
+  };
+
   skipConfirm = false;
 
   toggleSkipConfirm() {
@@ -102,7 +112,7 @@ export class DocActionInteractionComponent implements OnDestroy {
   }
 
   getUndoAction = () => {
-    const instance = new DbxActionContextMachine({
+    return new DbxActionContextMachine({
       oneTimeUse: true,
       handleValueReady: (value: any) => {
         safeDetectChanges(this.cdRef);
@@ -114,8 +124,6 @@ export class DocActionInteractionComponent implements OnDestroy {
         );
       }
     });
-
-    return instance;
   };
 
   handleOpenPopover: DbxActionPopoverFunction = ({ origin }) => {

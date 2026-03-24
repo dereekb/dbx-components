@@ -36,12 +36,10 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
         }
       }
 
-      if (scopes.has('email')) {
-        if (user.email) {
+      if (scopes.has('email') && user.email) {
           claims.email = user.email;
           claims.email_verified = user.emailVerified ?? false;
         }
-      }
 
       if (scopes.has('demo')) {
         const authClaims = await userContext.loadClaims<DemoApiAuthClaims>();

@@ -5,10 +5,8 @@ import { type DbxFirebaseLoginMode, type FirebaseLoginMethodType } from './login
 import { type DbxFirebaseAuthLoginProviderAssets, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxButtonModule , type DbxActionConfirmConfig , type DbxThemeColor } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
-import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
-import { type DbxThemeColor } from '@dereekb/dbx-web';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { firebaseAuthErrorToReadableError, type FirebaseAuthError } from '@dereekb/firebase';
 import { loginMethodTypeToFirebaseProviderId } from './login.provider.id';
@@ -59,7 +57,7 @@ export interface DbxFirebaseLoginButtonConfig {
     </ng-container>
   `,
   host: {
-    class: 'dbx-firebase-login-button'
+    class: 'dbx-firebase-login-button dbx-button-neutral-interaction-color'
   },
   standalone: true,
   imports: [MatIconModule, DbxActionModule, DbxButtonModule],

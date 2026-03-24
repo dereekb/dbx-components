@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/dbx-analytics",
-  "version": "13.6.3",
+  "version": "13.6.4",
   "peerDependencies": {
-    "@dereekb/analytics": "13.6.3",
-    "@dereekb/rxjs": "13.6.3",
+    "@dereekb/analytics": "13.6.4",
+    "@dereekb/rxjs": "13.6.4",
     "rxjs": "^7.8.0",
     "@angular/core": "21.2.3",
-    "@dereekb/dbx-core": "13.6.3",
-    "@dereekb/util": "13.6.3",
-    "@dereekb/browser": "13.6.3"
+    "@dereekb/dbx-core": "13.6.4",
+    "@dereekb/util": "13.6.4",
+    "@dereekb/browser": "13.6.4"
   },
   "dependencies": {}
 }

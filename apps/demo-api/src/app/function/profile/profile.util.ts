@@ -5,8 +5,7 @@ import { type DemoApiNestContext } from '../function.context';
 
 export function profileForUser(nest: DemoApiNestContext, uid: FirebaseAuthUserId): ProfileDocument {
   const profileFirestoreCollection = nest.demoFirestoreCollections.profileCollection;
-  const profileDocument = profileFirestoreCollection.documentAccessor().loadDocumentForId(uid);
-  return profileDocument;
+  return profileFirestoreCollection.documentAccessor().loadDocumentForId(uid);
 }
 
 export async function profileForUserRequest(request: NestContextCallableRequestWithAuth<DemoApiNestContext, TargetModelParams | InferredTargetModelParams>): Promise<ProfileDocument> {

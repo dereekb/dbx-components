@@ -1,9 +1,10 @@
 import { Directive, type Signal, computed, input, output, signal } from '@angular/core';
 import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
+import { emitDelayObs } from '@dereekb/rxjs';
 import { cleanSubscription, completeOnDestroy } from '../rxjs';
-import { type DbxButton, type DbxButtonDisplay, type DbxButtonDisplayType, dbxButtonDisplayType, type DbxButtonInterceptor, type DbxButtonWorking, provideDbxButton } from './button';
-import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
+import { type DbxButton, type DbxButtonDisplay, type DbxButtonDisplayType, dbxButtonDisplayType, type DbxButtonEcho, type DbxButtonInterceptor, type DbxButtonWorking, DEFAULT_DBX_BUTTON_ECHO_DURATION, provideDbxButton } from './button';
+import { outputToObservable, toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract base directive implementing the {@link DbxButton} interface with signal-based state management.
@@ -27,6 +28,13 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
    */
   protected readonly _buttonClick = completeOnDestroy(new Subject<void>());
   protected readonly _buttonInterceptor = completeOnDestroy(new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined));
+  private readonly _buttonEcho$ = completeOnDestroy(new Subject<DbxButtonEcho>());
+
+  /**
+   * Current active button echo, or undefined when no echo is active.
+   * Each new echo cancels the previous one via switchMap.
+   */
+  readonly buttonEchoSignal: Signal<Maybe<DbxButtonEcho>> = toSignal(this._buttonEcho$.pipe(switchMap((echo) => emitDelayObs<Maybe<DbxButtonEcho>>(echo, undefined, echo.duration ?? DEFAULT_DBX_BUTTON_ECHO_DURATION))), { initialValue: undefined });
 
   readonly buttonClick = output();
 
@@ -105,6 +113,10 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
 
   setDisplayContent(content: DbxButtonDisplay): void {
     this._buttonDisplayContentSignal.set(content);
+  }
+
+  showButtonEcho(echo: DbxButtonEcho): void {
+    this._buttonEcho$.next(echo);
   }
 
   /**

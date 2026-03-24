@@ -159,6 +159,20 @@ export abstract class AbstractProgressButtonDirective {
   });
 
   /**
+   * Whether a button echo overlay is active (iconOnly echo mode).
+   */
+  readonly echoActiveSignal = computed(() => {
+    return this.configSignal()?.buttonEcho != null;
+  });
+
+  /**
+   * Whether button content should be hidden via opacity (working spinner or echo overlay active).
+   */
+  readonly hideContentSignal = computed(() => {
+    return this.showProgressSignal() || this.echoActiveSignal();
+  });
+
+  /**
    * When true, the click handler will not call `stopImmediatePropagation()`,
    * allowing the click event to continue bubbling. Needed for components like
    * file upload buttons where a parent must handle the click synchronously.

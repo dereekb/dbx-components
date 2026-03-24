@@ -31,7 +31,5 @@ export const storageFileInitializeAllFromUploads: DemoCreateModelFunction<Initia
   await assertIsAdminInRequest(request);
 
   const initializeAllStorageFilesFromUploads = await nest.storageFileServerActions.initializeAllStorageFilesFromUploads(data);
-  const result = await initializeAllStorageFilesFromUploads();
-
-  return result;
+  return initializeAllStorageFilesFromUploads();
 };
