@@ -24,14 +24,41 @@ $bar-button-progress-bar-height-default: 5px;
         --mat-progress-bar-active-indicator-height: var(--dbx-progress-bar-button-height, #{$bar-button-progress-bar-height-default});
       }
 
-      mat-icon {
+      mat-icon.mat-button-icon {
         padding-right: 5px;
+        transition: opacity 0.3s ease-in-out;
+
         &.is-mat-icon {
           font-size: 18px;
           position: relative;
           top: 3px;
         }
+
+        &.working {
+          opacity: 0;
+        }
       }
+
+      > span {
+        transition: opacity 0.3s ease-in-out;
+
+        &.working {
+          opacity: 0;
+        }
+      }
+    }
+
+    // echo overlay icon — centered within the button
+    .echo-overlay-icon {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
     }
   }
 }
