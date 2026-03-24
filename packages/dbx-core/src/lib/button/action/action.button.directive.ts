@@ -112,8 +112,9 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective {
 
   /**
    * Per-instance echo configuration. Merges over the injected default.
+   * Pass `false` to disable all echoes for this button.
    */
-  readonly dbxActionButtonEcho = input<Maybe<DbxActionButtonEchoConfig>>();
+  readonly dbxActionButtonEcho = input<Maybe<DbxActionButtonEchoConfig | false>>();
 
   constructor() {
     super();
@@ -157,6 +158,12 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective {
 
   private _resolvedEchoConfig(): DbxActionButtonEchoConfig {
     const instanceConfig = this.dbxActionButtonEcho();
+
+    // false disables all echoes
+    if (instanceConfig === false) {
+      return { onSuccess: false, onError: false };
+    }
+
     const injectedConfig = this._injectedEchoConfig;
     const result: DbxActionButtonEchoConfig = {
       ...DEFAULT_DBX_ACTION_BUTTON_ECHO_CONFIG,

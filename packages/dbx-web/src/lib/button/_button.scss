@@ -17,6 +17,30 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  // Neutral hover/pressed/focus state layer instead of the primary-colored default.
+  // Apply to buttons with custom background colors where the primary tint looks wrong.
+  .dbx-button-neutral-interaction-color {
+    .mdc-button,
+    &.mdc-button {
+      $neutral: var(--mat-sys-on-surface, #000);
+
+      --mat-button-text-state-layer-color: #{$neutral};
+      --mat-button-text-pressed-state-layer-color: #{$neutral};
+      --mat-button-text-focus-state-layer-color: #{$neutral};
+      --mat-button-text-ripple-color: color-mix(in srgb, #{$neutral} 12%, transparent);
+      --mat-button-protected-state-layer-color: #{$neutral};
+      --mat-button-protected-pressed-state-layer-color: #{$neutral};
+      --mat-button-protected-focus-state-layer-color: #{$neutral};
+      --mat-button-protected-ripple-color: color-mix(in srgb, #{$neutral} 12%, transparent);
+      --mat-button-outlined-state-layer-color: #{$neutral};
+      --mat-button-outlined-pressed-state-layer-color: #{$neutral};
+      --mat-button-outlined-focus-state-layer-color: #{$neutral};
+      --mat-button-filled-state-layer-color: #{$neutral};
+      --mat-button-filled-pressed-state-layer-color: #{$neutral};
+      --mat-button-filled-focus-state-layer-color: #{$neutral};
+    }
+  }
+
   .dbx-button-wide {
     .dbx-button {
       min-width: 120px;

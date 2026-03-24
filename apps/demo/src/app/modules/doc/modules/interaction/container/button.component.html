@@ -210,12 +210,12 @@
     <doc-feature-example header="Button Echo" hint="Temporary visual feedback on buttons. Click a button to see it briefly change icon, text, and/or color before reverting.">
       <h4>Success / Error Echoes</h4>
       <div class="dbx-button-wrap-group">
-        <dbx-button #successBtn raised color="primary" icon="save" text="Success Echo" (buttonClick)="successBtn.showButtonEcho(successEcho)"></dbx-button>
+        <dbx-button [bar]="true" #successBtn raised color="primary" icon="save" text="Success Echo" (buttonClick)="successBtn.showButtonEcho(successEcho)"></dbx-button>
         <dbx-button #errorBtn raised color="accent" icon="save" text="Error Echo" (buttonClick)="errorBtn.showButtonEcho(errorEcho)"></dbx-button>
       </div>
       <div class="dbx-button-wrap-group">
         <dbx-button #successBtn2 raised color="tertiary" text="Success Echo" (buttonClick)="successBtn2.showButtonEcho(successEcho)"></dbx-button>
-        <dbx-button #errorBtn2 raised color="notice" text="Error Echo" (buttonClick)="errorBtn2.showButtonEcho(errorEcho)"></dbx-button>
+        <dbx-button [bar]="true" #errorBtn2 raised color="notice" text="Error Echo" (buttonClick)="errorBtn2.showButtonEcho(errorEcho)"></dbx-button>
       </div>
 
       <h4>Custom Echo (icon + text + color)</h4>
@@ -280,6 +280,16 @@
     </doc-feature-example>
 
     <doc-feature-example header="CSS" hint="CSS classes that provide styling support for buttons.">
+      <h3>.dbx-button-neutral-interaction-color</h3>
+      <p>Overrides the button's hover, pressed, and focus state layer to use a neutral color instead of the theme primary. Useful for buttons with custom background colors.</p>
+
+      <dbx-content-pit>
+        <div class="dbx-button-wrap-group">
+          <dbx-button raised text="Default Hover" [customButtonColor]="'#1877F2'" [customTextColor]="'#FFF'"></dbx-button>
+          <dbx-button class="dbx-button-neutral-interaction-color" raised text="Neutral Hover" [customButtonColor]="'#1877F2'" [customTextColor]="'#FFF'"></dbx-button>
+        </div>
+      </dbx-content-pit>
+
       <h3>.dbx-button-spacer, dbx-button-spacer</h3>
       <p>Acts as a horizontal spacer between two buttons.</p>
 

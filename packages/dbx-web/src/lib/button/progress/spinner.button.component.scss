@@ -57,12 +57,6 @@
       }
     }
 
-    // mat-spinners marked with dbx-progress-spinner-custom should allow the stroke to be inherited.
-    .dbx-progress-spinner-custom.mat-progress-spinner.mat-accent circle,
-    .dbx-progress-spinner-custom.mat-mdc-progress-spinner.mat-accent circle {
-      stroke: unset !important;
-    }
-
     .button-text {
       opacity: 1;
       transition: opacity 0.3s ease-in-out;

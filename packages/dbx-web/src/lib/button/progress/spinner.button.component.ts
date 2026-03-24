@@ -101,7 +101,7 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
 
   readonly customSpinnerStyleSignal = computed(() => {
     const customSpinnerColor = this.configSignal()?.customSpinnerColor;
-    return customSpinnerColor ? { stroke: customSpinnerColor } : undefined;
+    return customSpinnerColor ? { '--mat-progress-spinner-active-indicator-color': customSpinnerColor } : undefined;
   });
 
   readonly customSpinnerStyleClassSignal = computed(() => {

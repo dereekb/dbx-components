@@ -59,7 +59,7 @@ export interface DbxFirebaseLoginButtonConfig {
     </ng-container>
   `,
   host: {
-    class: 'dbx-firebase-login-button'
+    class: 'dbx-firebase-login-button dbx-button-neutral-interaction-color'
   },
   standalone: true,
   imports: [MatIconModule, DbxActionModule, DbxButtonModule],
