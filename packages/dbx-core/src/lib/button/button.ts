@@ -1,5 +1,5 @@
 import { type Type, type Provider, forwardRef } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type DbxActionWorkProgress, type DbxActionWorkOrWorkProgress } from '../action/action';
 
@@ -53,6 +53,50 @@ export interface DbxButtonDisplay {
    * button text, if applicable
    */
   readonly text?: Maybe<string>;
+}
+
+// MARK: Echo
+/**
+ * Default duration in milliseconds for a button echo display.
+ */
+export const DEFAULT_DBX_BUTTON_ECHO_DURATION: Milliseconds = 2000;
+
+/**
+ * Temporary visual feedback configuration for a button. When shown, the button briefly
+ * displays the specified icon, text, and/or color before reverting to its normal appearance.
+ *
+ * Used by {@link DbxButton.showButtonEcho} to flash success/error feedback.
+ *
+ * @example
+ * ```typescript
+ * const successEcho: DbxButtonEcho = { icon: 'check', color: 'success', duration: 2000 };
+ * button.showButtonEcho(successEcho);
+ * ```
+ */
+export interface DbxButtonEcho {
+  /**
+   * Material icon name to display during the echo.
+   */
+  readonly icon?: Maybe<string>;
+  /**
+   * Text to display during the echo.
+   */
+  readonly text?: Maybe<string>;
+  /**
+   * Theme color to apply to the button during the echo.
+   *
+   * Accepts any string that the button's color binding supports (e.g. Material ThemePalette values
+   * like 'primary'/'accent'/'warn' or DbxThemeColor values like 'success'/'notice'/'ok').
+   */
+  readonly color?: Maybe<string>;
+  /**
+   * When true, hides the button text and shows only the icon during the echo.
+   */
+  readonly iconOnly?: Maybe<boolean>;
+  /**
+   * Duration in milliseconds before the echo reverts. Defaults to {@link DEFAULT_DBX_BUTTON_ECHO_DURATION}.
+   */
+  readonly duration?: Maybe<Milliseconds>;
 }
 
 /**
@@ -109,6 +153,13 @@ export abstract class DbxButton {
    * @param interceptor
    */
   abstract setButtonInterceptor(interceptor: DbxButtonInterceptor): void;
+  /**
+   * Shows a temporary visual echo on the button (e.g. success checkmark or error icon).
+   * The echo automatically reverts after the configured duration.
+   *
+   * @param echo - The echo configuration to display.
+   */
+  abstract showButtonEcho(echo: DbxButtonEcho): void;
   /**
    * Main function to use for handling clicks on the button.
    */

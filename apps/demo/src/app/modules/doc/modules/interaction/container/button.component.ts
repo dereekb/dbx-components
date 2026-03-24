@@ -1,6 +1,6 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { type DbxButtonDisplay } from '@dereekb/dbx-core';
-import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
+import { type DbxButtonEcho } from '@dereekb/dbx-core';
+import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -15,7 +15,7 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 @Component({
   templateUrl: './button.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective],
+  imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionButtonComponent {
@@ -37,15 +37,6 @@ export class DocInteractionButtonComponent {
       }, DEMO_SPINNER_TIME);
     };
   }
-
-  buttonDisplay1: DbxButtonDisplay = {
-    icon: 'radio_button_checked',
-    text: 'Magic Button'
-  };
-
-  buttonDisplay2: DbxButtonDisplay = {
-    icon: 'radio_button_unchecked'
-  };
 
   demoButton1: DbxProgressButtonConfig = {
     id: 'button1',
@@ -271,6 +262,12 @@ export class DocInteractionButtonComponent {
   clickBar6 = this.activateAndDeactivate('barButtonConfig5');
   clickBar7 = this.activateAndDeactivate('barButtonConfig6');
   clickBar8 = this.activateAndDeactivate('barButtonConfig7');
+
+  // MARK: Echo Demos
+  readonly successEcho: DbxButtonEcho = { icon: 'check', color: 'success', iconOnly: true, duration: 2000 };
+  readonly errorEcho: DbxButtonEcho = { icon: 'error', color: 'warn', iconOnly: true, duration: 2000 };
+  readonly customEcho: DbxButtonEcho = { icon: 'star', text: 'Nice!', color: 'ok', duration: 3000 };
+  readonly iconOnlyEcho: DbxButtonEcho = { icon: 'thumb_up', color: 'success', iconOnly: true, duration: 2000 };
 
   constructor() {
     this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));

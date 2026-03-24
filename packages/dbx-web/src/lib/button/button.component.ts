@@ -159,6 +159,35 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       ariaLabel
     };
 
+    // Apply button echo when not working and not disabled
+    const echo = this.buttonEchoSignal();
+
+    if (echo && !working && !disabled) {
+      if (echo.color) {
+        config.buttonColor = echo.color as DbxThemeColor;
+      }
+
+      if (echo.iconOnly && isIconOnlyButton) {
+        // Icon-only button: directly swap icon and color
+        if (echo.icon) {
+          config.buttonIcon = { fontIcon: echo.icon };
+        }
+      } else if (echo.iconOnly) {
+        // Text button with iconOnly echo: overlay rendering — text/icon fade out via opacity
+        // (staying in DOM to preserve button width), echo icon shows as centered overlay
+        config.buttonEcho = echo;
+      } else {
+        // Direct swap: replace icon and/or text in the config
+        if (echo.icon) {
+          config.buttonIcon = { fontIcon: echo.icon };
+        }
+
+        if (echo.text != null) {
+          config.text = echo.text;
+        }
+      }
+    }
+
     return config;
   });
 }

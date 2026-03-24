@@ -8,6 +8,10 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
  * Lightweight button that renders as either an icon-only Material icon button or a text button
  * with an icon prefix, depending on whether text is provided.
  *
+ * @deprecated Use `dbx-button` instead. For icon-only buttons use `<dbx-button icon="settings" iconOnly>`.
+ * For icon+text buttons use `<dbx-button icon="settings" text="Label">`. The `dbx-button` component
+ * supports all the same inputs plus working/loading states, colors, and button style variants.
+ *
  * @example
  * ```html
  * <dbx-icon-button icon="settings" (buttonClick)="openSettings()"></dbx-icon-button>

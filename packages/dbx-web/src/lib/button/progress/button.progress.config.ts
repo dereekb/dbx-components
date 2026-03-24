@@ -4,7 +4,7 @@ import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../../layout/style/style';
 import { type DbxButtonType } from '../button';
-import { type DbxButtonWorking } from '@dereekb/dbx-core';
+import { type DbxButtonEcho, type DbxButtonWorking } from '@dereekb/dbx-core';
 
 /**
  * Full configuration for a progress button, controlling appearance, working state,
@@ -96,6 +96,11 @@ export interface DbxProgressButtonConfig {
    * Especially important for icon-only buttons that lack visible text.
    */
   readonly ariaLabel?: Maybe<string>;
+  /**
+   * Active button echo. When set, the button's text/icon fade out (preserving width)
+   * and a centered echo icon overlay appears, mirroring the spinner working animation.
+   */
+  readonly buttonEcho?: Maybe<DbxButtonEcho>;
 }
 
 /**
