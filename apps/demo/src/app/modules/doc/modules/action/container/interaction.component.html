@@ -18,7 +18,7 @@
         <dbx-button dbxActionButton text="Default Echo" raised></dbx-button>
       </dbx-action-example-tools>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
-        <dbx-button dbxActionButton [dbxActionButtonEcho]="customEchoConfig" text="Custom Echo" raised></dbx-button>
+        <dbx-button [bar]="true" dbxActionButton [dbxActionButtonEcho]="customEchoConfig" text="Custom Echo" raised></dbx-button>
       </dbx-action-example-tools>
       <dbx-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleActionWithError">
         <dbx-button dbxActionButton text="Error Echo" raised></dbx-button>

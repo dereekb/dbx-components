@@ -4,15 +4,23 @@ $bar-button-progress-bar-height-default: 5px;
   > button.dbx-progress-bar-button.mdc-button.mat-mdc-button {
     overflow: hidden; // clip progress bar to rounded corners
 
+    // normalize icon offset to match spinner button
+    --mat-button-text-icon-offset: 0px;
+    --mat-button-outlined-icon-offset: 0px;
+    --mat-button-protected-icon-offset: 0px;
+    --mat-button-filled-icon-offset: 0px;
+    --mat-button-tonal-icon-offset: 0px;
+
     &.working {
       cursor: not-allowed;
     }
     &.fullWidth {
       width: 100%;
     }
+
+    // ::ng-deep required for Material's internal .mdc-button__label element
     > ::ng-deep .mdc-button__label {
       position: unset; // required so the bar can expand fully
-
       display: flex;
       align-items: center;
 
@@ -23,28 +31,33 @@ $bar-button-progress-bar-height-default: 5px;
         --mat-progress-bar-track-height: var(--dbx-progress-bar-button-height, #{$bar-button-progress-bar-height-default});
         --mat-progress-bar-active-indicator-height: var(--dbx-progress-bar-button-height, #{$bar-button-progress-bar-height-default});
       }
+    }
 
-      mat-icon.mat-button-icon {
-        padding-right: 5px;
-        transition: opacity 0.3s ease-in-out;
+    // icon and text styles — outside ::ng-deep for proper view encapsulation
+    mat-icon.mat-button-icon {
+      padding-right: 5px;
 
-        &.is-mat-icon {
-          font-size: 18px;
-          position: relative;
-          top: 3px;
-        }
+      font-size: 1.125rem;
+      height: 1.125rem;
+      width: 1.125rem;
 
-        &.working {
-          opacity: 0;
-        }
+      margin-right: var(--mat-button-protected-icon-spacing, 8px);
+
+      &.is-mat-icon {
+        position: relative;
       }
 
-      > span {
+      &.working {
+        opacity: 0;
         transition: opacity 0.3s ease-in-out;
+      }
+    }
 
-        &.working {
-          opacity: 0;
-        }
+    span {
+      transition: opacity 0.3s ease-in-out;
+
+      &.working {
+        opacity: 0;
       }
     }
 
