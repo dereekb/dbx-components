@@ -23,8 +23,6 @@
     <mat-spinner class="spinner" [diameter]="spinnerSizeSignal()" [color]="configSignal()?.spinnerColor!" [mode]="modeSignal()" [value]="workingValueSignal()" [ngStyle]="customSpinnerStyleSignal()" [ngClass]="customSpinnerStyleClassSignal()" [class.working]="showProgressSignal()"></mat-spinner>
   }
   @if (echoActiveSignal()) {
-    <mat-icon class="echo-overlay-icon" [fontIcon]="configSignal()?.buttonEcho?.icon!">
-      {{ configSignal()?.buttonEcho?.icon }}
-    </mat-icon>
+    <span class="echo-overlay-icon material-symbols-outlined">{{ configSignal()?.buttonEcho?.icon }}</span>
   }
 </button>

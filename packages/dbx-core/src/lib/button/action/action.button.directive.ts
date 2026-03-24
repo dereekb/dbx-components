@@ -1,4 +1,4 @@
-import { Directive, inject, InjectionToken, input } from '@angular/core';
+import { Directive, inject, InjectionToken, input, type Provider } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { filter } from 'rxjs';
@@ -53,7 +53,7 @@ export const DEFAULT_DBX_ACTION_BUTTON_ECHO_CONFIG: DbxActionButtonEchoConfig = 
  * Injection token for providing an app-wide default {@link DbxActionButtonEchoConfig}.
  *
  * When provided, all {@link DbxActionButtonDirective} instances will use this config
- * unless overridden by the per-instance `echoConfig` input.
+ * unless overridden by the per-instance `dbxActionButtonEcho` input.
  *
  * @example
  * ```typescript
@@ -65,12 +65,26 @@ export const DEFAULT_DBX_ACTION_BUTTON_ECHO_CONFIG: DbxActionButtonEchoConfig = 
 export const DBX_ACTION_BUTTON_ECHO_CONFIG = new InjectionToken<DbxActionButtonEchoConfig>('DbxActionButtonEchoConfig');
 
 /**
+ * Creates a provider for the app-wide {@link DbxActionButtonEchoConfig}.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideDbxActionButtonEchoConfig({ onSuccess: { icon: 'done', color: 'ok' }, onError: false })
+ * ]
+ * ```
+ */
+export function provideDbxActionButtonEchoConfig(config: DbxActionButtonEchoConfig): Provider {
+  return { provide: DBX_ACTION_BUTTON_ECHO_CONFIG, useValue: config };
+}
+
+/**
  * Links a {@link DbxButton} to an action context, synchronizing the button's
  * disabled and working states with the action's lifecycle and forwarding
  * button clicks as action triggers.
  *
  * Also provides automatic visual echo feedback on action success and error,
- * configurable via the `echoConfig` input or the {@link DBX_ACTION_BUTTON_ECHO_CONFIG} injection token.
+ * configurable via the `dbxActionButtonEcho` input or the {@link DBX_ACTION_BUTTON_ECHO_CONFIG} injection token.
  *
  * Extends {@link DbxActionButtonTriggerDirective} by also binding working/disabled state.
  *
@@ -84,7 +98,7 @@ export const DBX_ACTION_BUTTON_ECHO_CONFIG = new InjectionToken<DbxActionButtonE
  * @example
  * ```html
  * <!-- Custom echo config -->
- * <button dbxButton dbxActionButton [echoConfig]="{ onSuccess: { icon: 'done', color: 'ok' } }">
+ * <button dbxButton dbxActionButton [dbxActionButtonEcho]="{ onSuccess: { icon: 'done', color: 'ok' } }">
  *   Save
  * </button>
  * ```
@@ -99,7 +113,7 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective {
   /**
    * Per-instance echo configuration. Merges over the injected default.
    */
-  readonly echoConfig = input<Maybe<DbxActionButtonEchoConfig>>();
+  readonly dbxActionButtonEcho = input<Maybe<DbxActionButtonEchoConfig>>();
 
   constructor() {
     super();
@@ -142,7 +156,7 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective {
   }
 
   private _resolvedEchoConfig(): DbxActionButtonEchoConfig {
-    const instanceConfig = this.echoConfig();
+    const instanceConfig = this.dbxActionButtonEcho();
     const injectedConfig = this._injectedEchoConfig;
     const result: DbxActionButtonEchoConfig = {
       ...DEFAULT_DBX_ACTION_BUTTON_ECHO_CONFIG,

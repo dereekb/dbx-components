@@ -11,6 +11,21 @@
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true">
         <dbx-button dbxActionButton text="Disabled Action"></dbx-button>
       </dbx-action-example-tools>
+
+      <h4>Echo Config</h4>
+      <p>The dbxActionButton directive automatically shows a visual echo on success and error. The echo config can be customized per-instance or globally via the DBX_ACTION_BUTTON_ECHO_CONFIG injection token.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButton text="Default Echo" raised></dbx-button>
+      </dbx-action-example-tools>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButton [dbxActionButtonEcho]="customEchoConfig" text="Custom Echo" raised></dbx-button>
+      </dbx-action-example-tools>
+      <dbx-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleActionWithError">
+        <dbx-button dbxActionButton text="Error Echo" raised></dbx-button>
+      </dbx-action-example-tools>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButton [dbxActionButtonEcho]="noEchoConfig" text="No Echo" raised></dbx-button>
+      </dbx-action-example-tools>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionButtonTrigger" hint="Used to link a dbx-button to an action and only responds to click events, ignoring the working state, unlike .">
