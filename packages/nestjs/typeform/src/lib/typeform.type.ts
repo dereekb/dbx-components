@@ -19,6 +19,11 @@ export type TypeformClientOptions = MaybeSo<Parameters<typeof createClient>[0]> 
 export type TypeformApiToken = string;
 
 /**
+ * The public url for viewing a typeform form.
+ */
+export type TypeformPublicFormUrl = WebsiteUrlWithPrefix;
+
+/**
  * Webhook secret used by Typeform for validating webhook events.
  */
 export type TypeformWebhookSecretToken = string;

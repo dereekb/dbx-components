@@ -1,12 +1,17 @@
 <div class="dbx-source-select-field">
   <div class="dbx-source-select-field-content">
-    <mat-select class="dbx-source-select-field-select" [id]="id" [formControl]="formControl" [multiple]="props.multiple">
-      @for (value of nonGroupedValuesSignal(); track value.value) {
+    <mat-select class="dbx-source-select-field-select" [id]="id" [formControl]="formControl" [multiple]="props.multiple" [panelClass]="selectPanelClass" (openedChange)="onSelectOpenedChange($event)">
+      @if (filterable) {
+        <div class="dbx-source-select-filter-container">
+          <input #filterInput class="dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
+        </div>
+      }
+      @for (value of filteredNonGroupedValuesSignal(); track value.value) {
         <mat-option [value]="value.value">
           {{ value.label }}
         </mat-option>
       }
-      @for (optionGroup of groupedOptionsSignal(); track optionGroup.label) {
+      @for (optionGroup of filteredGroupedOptionsSignal(); track optionGroup.label) {
         <mat-optgroup [label]="optionGroup.label">
           @for (value of optionGroup.values; track value.value) {
             <mat-option [value]="value.value">

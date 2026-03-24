@@ -11,7 +11,7 @@ declare module 'stripe' {
       previous_attributes?: Partial<T>;
     }
 
-    interface TypedEvent<T extends object = object> extends Stripe.Event {
+    interface TypedEvent<T extends object = object> extends Stripe.EventBase {
       data: TypedEventData<T>;
       type: Exclude<Stripe.WebhookEndpointCreateParams.EnabledEvent, '*'>;
     }

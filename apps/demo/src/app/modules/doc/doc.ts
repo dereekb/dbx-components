@@ -6,6 +6,7 @@ import { DOC_LAYOUT_ROOT_ROUTE } from './modules/layout/doc.layout';
 import { DOC_ROUTER_ROOT_ROUTE } from './modules/router/doc.router';
 import { DOC_TEXT_ROOT_ROUTE } from './modules/text/doc.text';
 import { DOC_EXTENSION_ROOT_ROUTE } from './modules/extension/doc.extension';
+import { DOC_BUGS_ROOT_ROUTE } from './modules/bugs/doc.bugs';
 
 export const DOC_HOME_ROUTE = {
   icon: 'home',
@@ -22,7 +23,8 @@ export const DOC_ROUTES = [
   DOC_EXTENSION_ROOT_ROUTE,
   DOC_LAYOUT_ROOT_ROUTE,
   DOC_ROUTER_ROOT_ROUTE,
-  DOC_TEXT_ROOT_ROUTE
+  DOC_TEXT_ROOT_ROUTE,
+  DOC_BUGS_ROOT_ROUTE
 ];
 
 export const DOC_ROOT_ROUTE = {

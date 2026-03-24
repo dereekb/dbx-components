@@ -72,6 +72,58 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
 }
 
 /**
+ * Updates or adds query parameters on an existing URL string.
+ *
+ * Parses the URL's existing query string, merges in the new parameters (new values
+ * override existing keys), and returns the rebuilt URL. Respects all
+ * {@link MakeUrlSearchParamsOptions} such as `omitKeys`, `filterEmptyValues`, and
+ * `useUrlSearchSpaceHandling`.
+ *
+ * @example
+ * ```typescript
+ * // Add params to a URL with no query string
+ * updateUrlSearchParams('https://example.com/form', { name: 'Alice', age: 30 });
+ * // => 'https://example.com/form?name=Alice&age=30'
+ *
+ * // Override an existing param
+ * updateUrlSearchParams('https://example.com?page=1&sort=asc', { page: 2 });
+ * // => 'https://example.com?page=2&sort=asc'
+ *
+ * // Use percent-encoded spaces for redirect URLs
+ * updateUrlSearchParams('https://example.com', { scope: 'openid profile' }, { useUrlSearchSpaceHandling: true });
+ * // => 'https://example.com?scope=openid%20profile'
+ * ```
+ *
+ * @param url - the URL string to update
+ * @param params - new search parameters to merge into the URL
+ * @param options - optional configuration for filtering, omitting keys, and space encoding
+ * @returns the URL string with updated query parameters
+ */
+export function updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
+  const [basePath, existingQuery] = url.split('?', 2);
+  const existingParams = existingQuery ? new URLSearchParams(existingQuery) : new URLSearchParams();
+  const newParams = makeUrlSearchParams(params, options);
+
+  // Merge: new params override existing
+  for (const [key, value] of newParams.entries()) {
+    existingParams.set(key, value);
+  }
+
+  // Apply omitKeys to the merged result
+  if (options?.omitKeys != null) {
+    useIterableOrValue(options.omitKeys, (key) => existingParams.delete(key as string), false);
+  }
+
+  let queryString = existingParams.toString();
+
+  if (options?.useUrlSearchSpaceHandling) {
+    queryString = queryString.replace(/\+/g, '%20');
+  }
+
+  return queryString ? `${basePath}?${queryString}` : basePath;
+}
+
+/**
  * Merges an array of MakeUrlSearchParamsOptions into a single MakeUrlSearchParamsOptions value.
  *
  * @param options - one or more options objects whose omitKeys sets are combined

@@ -64,6 +64,12 @@ export const docFormState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/form/doc.form.module').then((m) => m.DocFormModule)
 };
 
+export const docBugsState: Ng2StateDeclaration = {
+  url: '/bugs',
+  name: 'doc.bugs.**',
+  loadChildren: () => import('./modules/bugs/doc.bugs.module').then((m) => m.DocBugsModule)
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -75,5 +81,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docTextState,
   docInteractionState,
   docExtensionState,
-  docFormState
+  docFormState,
+  docBugsState
 ];

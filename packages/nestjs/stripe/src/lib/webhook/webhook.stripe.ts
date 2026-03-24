@@ -9,7 +9,7 @@ export enum StripeWebhookEventType {
   CUSTOMER_SUBSCRIPTION_UPDATED = 'customer.subscription.updated',
   CHECKOUT_SESSION_COMPLETED = 'checkout.session.completed',
   CHECKOUT_SESSION_ASYNC_PAYMENT_FAILED = 'checkout.session.async_payment_failed',
-  CHECKOUT_SESSION_ASYNC_PAYMENT_SUCCEEDED = 'checkout.session.async_payment_suceeded',
+  CHECKOUT_SESSION_ASYNC_PAYMENT_SUCCEEDED = 'checkout.session.async_payment_succeeded',
   SUBSCRIPTION_SCHEDULE_ABORTED = 'subscription_schedule.aborted',
   SUBSCRIPTION_SCHEDULE_CANCELLED = 'subscription_schedule.canceled',
   SUBSCRIPTION_SCHEDULE_COMPLETED = 'subscription_schedule.completed',

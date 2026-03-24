@@ -192,6 +192,21 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         console.log('origin: ', origin); // usable by popovers/etc.
         return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
       }
+    }),
+    sourceSelectField({
+      key: 'selectManyFilterable',
+      label: 'Select Many (Filterable)',
+      multiple: true,
+      description: 'This source demonstrates the type-to-filter feature (enabled by default). Open the dropdown and start typing to filter options by label.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+        return of(sources);
+      }
     })
   ];
 
