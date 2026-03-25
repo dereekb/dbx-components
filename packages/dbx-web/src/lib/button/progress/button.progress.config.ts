@@ -101,6 +101,12 @@ export interface DbxProgressButtonConfig {
    * and a centered echo icon overlay appears, mirroring the spinner working animation.
    */
   readonly buttonEcho?: Maybe<DbxButtonEcho>;
+  /**
+   * Whether the button has meaningful text or projected content to display alongside the icon.
+   * When explicitly `false`, the button renders the icon without text-mode margins/padding,
+   * centering the icon properly. When `true` or `undefined`, the button renders the text area normally.
+   */
+  readonly hasTextContent?: Maybe<boolean>;
 }
 
 /**

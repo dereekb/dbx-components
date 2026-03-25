@@ -123,3 +123,36 @@ export function checkNgContentWrapperHasContent(ref: Maybe<ElementRef<Element>>)
 
   return hasContent;
 }
+
+/**
+ * Checks whether an element has any meaningful child nodes (non-whitespace text or element nodes).
+ *
+ * Useful for detecting whether projected content was provided to a component by checking
+ * the host element's child nodes at construction time, before Angular moves them for content projection.
+ *
+ * @param element - The host element to check.
+ * @returns `true` if the element has at least one element child or non-whitespace text node.
+ *
+ * @example
+ * ```typescript
+ * constructor() {
+ *   const el = inject(ElementRef<HTMLElement>);
+ *   this._hasProjectedContent = hasNonTrivialChildNodes(el.nativeElement);
+ * }
+ * ```
+ */
+export function hasNonTrivialChildNodes(element: HTMLElement): boolean {
+  const nodes = element.childNodes;
+  let result = false;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+
+    if (node.nodeType === Node.ELEMENT_NODE || (node.nodeType === Node.TEXT_NODE && node.textContent?.trim())) {
+      result = true;
+      break;
+    }
+  }
+
+  return result;
+}

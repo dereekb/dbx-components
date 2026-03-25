@@ -8,11 +8,20 @@ export class DbxMapboxConfig {
   readonly defaultZoom?: MapboxZoomLevel;
   readonly defaultCenter?: LatLngPointInput;
   readonly defaultStoreRefreshPeriod?: number;
+  /**
+   * Width to use for the mapbox layout drawer (mat-sidenav).
+   *
+   * Overrides the `--mat-sidenav-container-width` CSS token on the layout component.
+   * Defaults to 'auto' so the drawer width is determined by its content rather than
+   * the M3 default of 360px.
+   */
+  readonly drawerWidth?: string;
 }
 
 export const DEFAULT_MAPBOX_STYLE: KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v12';
 export const DEFAULT_MAPBOX_CENTER: LatLngPointInput = [30.2690138665, -97.7408297965];
 export const DEFAULT_MAPBOX_ZOOM: MapboxZoomLevel = 8;
+export const DEFAULT_MAPBOX_LAYOUT_DRAWER_WIDTH = 'auto';
 export const DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD: Milliseconds = 200;
 
 @Injectable()
@@ -29,6 +38,10 @@ export class DbxMapboxService {
 
   get defaultCenter(): LatLngPointInput {
     return this._config.defaultCenter ?? DEFAULT_MAPBOX_CENTER;
+  }
+
+  get drawerWidth(): string {
+    return this._config.drawerWidth ?? DEFAULT_MAPBOX_LAYOUT_DRAWER_WIDTH;
   }
 
   get mapboxMapStoreTimerRefreshPeriod(): number {

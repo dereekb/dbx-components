@@ -51,6 +51,14 @@ $bar-button-progress-bar-height-default: 5px;
         opacity: 0;
         transition: opacity 0.3s ease-in-out;
       }
+
+      &.dbx-icon-no-text {
+        padding-right: 0;
+        margin-right: 0;
+        font-size: var(--mat-icon-button-icon-size, 24px);
+        height: var(--mat-icon-button-icon-size, 24px);
+        width: var(--mat-icon-button-icon-size, 24px);
+      }
     }
 
     span {

@@ -2,6 +2,7 @@ import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChang
 import { Component, ElementRef, type OnDestroy, type OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, type Signal, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
+import { DbxMapboxService } from './mapbox.service';
 import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective, DbxResizedDirective, type DbxThemeColor, type ResizedEvent } from '@dereekb/dbx-web';
 import { SubscriptionObject } from '@dereekb/rxjs';
@@ -29,9 +30,13 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
   styleUrls: ['./mapbox.layout.component.scss'],
   imports: [DbxResizedDirective, NgClass, DbxMapboxLayoutDrawerComponent, MatDrawer, MatDrawerContainer, MatDrawerContent, MatIconModule, MatIconButton, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  standalone: true,
+  host: {
+    '[style.--mat-sidenav-container-width]': 'dbxMapboxService.drawerWidth'
+  }
 })
 export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
+  readonly dbxMapboxService = inject(DbxMapboxService);
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
 
   private readonly _viewResized = new Subject<ResizedEvent>();

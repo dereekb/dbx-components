@@ -101,6 +101,24 @@
   .dbx-fiflex {
     display: inline-flex !important;
   }
+
+  @each $color, $colorConfig in theming.$dbx-theme-colors-main {
+    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
+  }
+
+  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main {
+    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
+  }
+
+  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-secondary {
+    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
+  }
+
+  // tonal mode: use the vibrant theme color as text instead of the contrast color.
+  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
+  .dbx-color-tonal {
+    color: var(#{theming.$dbx-bg-color-var});
+  }
 }
 
 @mixin define-dbx-color-class($name, $color, $contrast, $swap-bg: false) {
@@ -119,38 +137,20 @@
     background: color-mix(in srgb, #{theming.$dbx-bg-color} var(#{theming.$dbx-bg-tone-var}), transparent);
     color: #{theming.$dbx-color};
   }
-
-  // add the css for the default background color
-  @if ($name == 'default') {
-    #{theming.$dbx-color-var}: #{$bg-text};
-    #{theming.$dbx-bg-color-var}: #{$bg-color};
-    background: #{theming.$dbx-bg-color};
-    // color: #{theming.$dbx-color};
-  }
 }
 
 @mixin color($theme-config) {
-  @each $color, $colorConfig in theming.$dbx-theme-colors-main {
-    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
-  }
-
-  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main {
-    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
-  }
-
-  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-secondary {
-    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
-  }
-
-  // tonal mode: use the vibrant theme color as text instead of the contrast color.
-  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
-  .dbx-color-tonal {
-    color: var(#{theming.$dbx-bg-color-var});
-  }
+  // add the css for the default background color
+  $default-config: map.get(theming.$dbx-theme-extra-colors-secondary, 'default');
+  #{theming.$dbx-color-var}: #{map.get($default-config, 'contrast')};
+  #{theming.$dbx-bg-color-var}: #{map.get($default-config, 'color')};
+  background: #{theming.$dbx-bg-color};
 
   // material color overrides
-  // --mdc-text-button-label-text-color: #{theming.$dbx-color-var};
+  // - button
+  --mat-icon-button-icon-color: #{theming.$dbx-color-var};
   --mat-button-text-label-text-color: #{theming.$dbx-color-var};
+  // - list item
   --mat-list-list-item-label-text-color: #{theming.$dbx-color-var};
   --mat-list-list-item-leading-icon-color: #{theming.$dbx-color-var};
 }

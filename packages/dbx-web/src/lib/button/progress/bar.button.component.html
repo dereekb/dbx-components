@@ -1,13 +1,15 @@
 <button [dbxColor]="configSignal()?.buttonColor" class="dbx-base-button dbx-progress-bar-button" mat-button [type]="buttonTypeAttributeSignal()" [ngClass]="buttonCssSignal()" [ngStyle]="configSignal()?.customStyle" [disabled]="buttonDisabledSignal()" [attr.aria-label]="configSignal()?.ariaLabel">
   @if (configSignal()?.buttonIcon) {
-    <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet!" [class.working]="echoActiveSignal()" [ngClass]="configSignal()?.buttonIcon?.customClass!" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!" [inline]="configSignal()?.buttonIcon?.inline!">
+    <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet!" [class.dbx-icon-no-text]="configSignal()?.hasTextContent === false" [class.working]="echoActiveSignal()" [ngClass]="configSignal()?.buttonIcon?.customClass!" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!" [inline]="configSignal()?.buttonIcon?.inline!">
       {{ configSignal()?.buttonIcon?.fontSet! ? '' : configSignal()?.buttonIcon?.fontIcon! }}
     </mat-icon>
   }
-  <span [class.working]="echoActiveSignal()">
-    {{ configSignal()?.text }}
-    <ng-content></ng-content>
-  </span>
+  @if (!configSignal()?.fab && !configSignal()?.iconOnly && !(configSignal()?.hasTextContent === false && configSignal()?.buttonIcon)) {
+    <span [class.working]="echoActiveSignal()">
+      {{ configSignal()?.text }}
+      <ng-content></ng-content>
+    </span>
+  }
   @if (showProgressSignal()) {
     <mat-progress-bar class="bar" [color]="configSignal()?.barColor!" [mode]="modeSignal()" [value]="workingValueSignal()"></mat-progress-bar>
   }

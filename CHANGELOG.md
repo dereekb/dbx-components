@@ -1,3 +1,18 @@
+## [13.6.5](https://github.com/dereekb/dbx-components/compare/v13.6.4-dev...v13.6.5) (2026-03-25)
+
+
+### Bug Fixes
+
+- login button content not rendering ([a13cc472](https://github.com/dereekb/dbx-components/commit/a13cc4725cc59de03a178a368c581dbf48876364))
+
+
+### Code Refactoring
+
+- added configurable drawerWidth to DbxMapboxConfig ([554599b9](https://github.com/dereekb/dbx-components/commit/554599b996eef587f683a36e1dc7cd12a9174e3f))
+- detect projected content for icon-only buttons ([add74404](https://github.com/dereekb/dbx-components/commit/add74404575aeb9c7178cd6f38adfd95de8ae4a6))
+- style fixes ([d37306aa](https://github.com/dereekb/dbx-components/commit/d37306aab3e7dd55407dfcfdbf5535eae4a162c7))
+- style fixes and mdc-to-mat token updates ([c7815e62](https://github.com/dereekb/dbx-components/commit/c7815e62b765fe507f1c21ac17a0b657024fc404))
+
 ## [13.6.4](https://github.com/dereekb/dbx-components/compare/v13.6.3-dev...v13.6.4) (2026-03-24)
 
 
