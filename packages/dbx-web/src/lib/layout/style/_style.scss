@@ -119,14 +119,6 @@
   .dbx-color-tonal {
     color: var(#{theming.$dbx-bg-color-var});
   }
-
-  // material color overrides
-  // - button
-  --mat-icon-button-icon-color: #{theming.$dbx-color-var};
-  --mat-button-text-label-text-color: #{theming.$dbx-color-var};
-  // - list item
-  --mat-list-list-item-label-text-color: #{theming.$dbx-color-var};
-  --mat-list-list-item-leading-icon-color: #{theming.$dbx-color-var};
 }
 
 @mixin define-dbx-color-class($name, $color, $contrast, $swap-bg: false) {
@@ -145,15 +137,24 @@
     background: color-mix(in srgb, #{theming.$dbx-bg-color} var(#{theming.$dbx-bg-tone-var}), transparent);
     color: #{theming.$dbx-color};
   }
+}
 
+@mixin color($theme-config) {
   // add the css for the default background color
-  @if ($name == 'default') {
-    #{theming.$dbx-color-var}: #{$bg-text};
-    #{theming.$dbx-bg-color-var}: #{$bg-color};
-    background: #{theming.$dbx-bg-color};
-    // color: #{theming.$dbx-color};
-  }
+  $default-config: map.get(theming.$dbx-theme-extra-colors-secondary, 'default');
+  #{theming.$dbx-color-var}: #{map.get($default-config, 'contrast')};
+  #{theming.$dbx-bg-color-var}: #{map.get($default-config, 'color')};
+  background: #{theming.$dbx-bg-color};
+
+  // material color overrides
+  // - button
+  --mat-icon-button-icon-color: #{theming.$dbx-color-var};
+  --mat-button-text-label-text-color: #{theming.$dbx-color-var};
+  // - list item
+  --mat-list-list-item-label-text-color: #{theming.$dbx-color-var};
+  --mat-list-list-item-leading-icon-color: #{theming.$dbx-color-var};
 }
 
 @mixin theme($theme-config) {
+  @include color($theme-config);
 }
