@@ -83,15 +83,12 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
 
   readonly showTextContentSignal = computed(() => {
     const config = this.configSignal();
-    if (config?.fab || config?.iconOnly) {
-      return false;
-    }
-
-    if (config?.hasTextContent === false) {
-      return false;
-    }
-
-    return true;
+    // Hide text area for FAB, icon-only, or when an icon is present with no text content.
+    // Do not hide when there is no icon, as projected content (ng-content) may be present
+    // even when hasTextContent is false (e.g. dynamically created components where
+    // projected content detection at constructor time is unreliable).
+    const isIconWithNoTextContent = config?.hasTextContent === false && config?.buttonIcon;
+    return !config?.fab && !config?.iconOnly && !isIconWithNoTextContent;
   });
 
   readonly showTextButtonIconSignal = computed(() => {

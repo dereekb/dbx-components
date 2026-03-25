@@ -4,7 +4,7 @@
       {{ configSignal()?.buttonIcon?.fontSet! ? '' : configSignal()?.buttonIcon?.fontIcon! }}
     </mat-icon>
   }
-  @if (configSignal()?.hasTextContent !== false) {
+  @if (!configSignal()?.fab && !configSignal()?.iconOnly && !(configSignal()?.hasTextContent === false && configSignal()?.buttonIcon)) {
     <span [class.working]="echoActiveSignal()">
       {{ configSignal()?.text }}
       <ng-content></ng-content>
