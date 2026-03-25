@@ -195,13 +195,14 @@ $big-button-height: 46px; // 33% bigger
 
     // icon buttons
     &.mat-mdc-icon-button.dbx-default {
-      color: var(--mat-icon-button-icon-color, var(--mat-sys-primary));
+      --mat-icon-button-icon-color: var(--dbx-button-icon-color, currentColor);
+      color: var(--mat-icon-button-icon-color);
     }
 
     &.mat-mdc-icon-button:not(.dbx-default) {
       background: none;
 
-      --mat-icon-button-icon-color: #{$color-value};
+      --mat-icon-button-icon-color: var(--dbx-button-icon-color, #{$color-value});
       --mat-icon-button-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
       --mat-icon-button-state-layer-color: #{$color-value};
     }

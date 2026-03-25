@@ -101,6 +101,32 @@
   .dbx-fiflex {
     display: inline-flex !important;
   }
+
+  @each $color, $colorConfig in theming.$dbx-theme-colors-main {
+    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
+  }
+
+  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main {
+    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
+  }
+
+  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-secondary {
+    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
+  }
+
+  // tonal mode: use the vibrant theme color as text instead of the contrast color.
+  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
+  .dbx-color-tonal {
+    color: var(#{theming.$dbx-bg-color-var});
+  }
+
+  // material color overrides
+  // - button
+  --mat-icon-button-icon-color: #{theming.$dbx-color-var};
+  --mat-button-text-label-text-color: #{theming.$dbx-color-var};
+  // - list item
+  --mat-list-list-item-label-text-color: #{theming.$dbx-color-var};
+  --mat-list-list-item-leading-icon-color: #{theming.$dbx-color-var};
 }
 
 @mixin define-dbx-color-class($name, $color, $contrast, $swap-bg: false) {
@@ -129,32 +155,5 @@
   }
 }
 
-@mixin color($theme-config) {
-  @each $color, $colorConfig in theming.$dbx-theme-colors-main {
-    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
-  }
-
-  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main {
-    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
-  }
-
-  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-secondary {
-    @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
-  }
-
-  // tonal mode: use the vibrant theme color as text instead of the contrast color.
-  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
-  .dbx-color-tonal {
-    color: var(#{theming.$dbx-bg-color-var});
-  }
-
-  // material color overrides
-  // --mdc-text-button-label-text-color: #{theming.$dbx-color-var};
-  --mat-button-text-label-text-color: #{theming.$dbx-color-var};
-  --mat-list-list-item-label-text-color: #{theming.$dbx-color-var};
-  --mat-list-list-item-leading-icon-color: #{theming.$dbx-color-var};
-}
-
 @mixin theme($theme-config) {
-  @include color($theme-config);
 }
