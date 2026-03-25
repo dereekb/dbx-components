@@ -6,7 +6,6 @@
       </mat-icon>
     }
     <span class="button-text" [class.working]="hideContentSignal()">
-      <!-- TODO: Check ng-content has content, and if there is no ng-content input or text, then showTextContentSignal() should be false. -->
       {{ configSignal()?.text }}
       <ng-content></ng-content>
     </span>

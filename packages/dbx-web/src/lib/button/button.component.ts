@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
-import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
+import { provideDbxButton, AbstractDbxButtonDirective, hasNonTrivialChildNodes } from '@dereekb/dbx-core';
 import { type Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { type DbxProgressButtonConfig } from './progress/button.progress.config';
 import { type DbxThemeColor } from '../layout/style/style';
@@ -56,6 +56,18 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
   standalone: true
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
+  /**
+   * Whether the host element has projected content (checked at construction time,
+   * before Angular moves the nodes for content projection).
+   */
+  private readonly _hasProjectedContent: boolean;
+
+  constructor() {
+    super();
+    const el = inject(ElementRef<HTMLElement>);
+    this._hasProjectedContent = hasNonTrivialChildNodes(el.nativeElement);
+  }
+
   readonly bar = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly type = input<Maybe<DbxButtonType>>();
@@ -133,7 +145,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
 
     const textValue = this.textSignal();
-    const isIconOnlyButton = buttonIcon && !textValue;
+    const hasTextContent = !!textValue || this._hasProjectedContent;
+    const isIconOnlyButton = buttonIcon && !hasTextContent;
     const fab = this.fab() || buttonStyle?.fab;
 
     const mode = this.mode() ?? buttonStyle?.mode;
@@ -149,6 +162,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       customStyle,
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
       text: textValue ?? '',
+      hasTextContent,
       buttonType,
       buttonColor,
       barColor: 'accent',

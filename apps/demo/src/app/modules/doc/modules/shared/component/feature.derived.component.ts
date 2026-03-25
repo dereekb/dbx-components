@@ -9,23 +9,25 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
   template: `
     <div class="doc-feature-derived">
       <dbx-content-box class="doc-feature-derived-content" style="margin-left: 0">
-        <mat-icon class="dbx-icon-spacer">star</mat-icon>
-        @switch (type()) {
-          @case ('integrated') {
-            <span>
-              Derived and integrated from
-              <a [href]="url()" target="_blank">{{ from() }}</a>
-            </span>
+        <div class="dbx-flex-bar">
+          <mat-icon class="dbx-icon-spacer">star</mat-icon>
+          @switch (type()) {
+            @case ('integrated') {
+              <span>
+                Derived and integrated from
+                <a [href]="url()" target="_blank">{{ from() }}</a>
+              </span>
+            }
+            @case ('uses') {
+              <span>
+                Uses
+                <a [href]="url()" target="_blank">{{ from() }}</a>
+              </span>
+            }
           }
-          @case ('uses') {
-            <span>
-              Uses
-              <a [href]="url()" target="_blank">{{ from() }}</a>
-            </span>
-          }
-        }
-        <div>
-          <ng-content></ng-content>
+          <div>
+            <ng-content></ng-content>
+          </div>
         </div>
       </dbx-content-box>
     </div>

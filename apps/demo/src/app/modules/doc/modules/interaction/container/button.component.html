@@ -10,6 +10,7 @@
         <dbx-button [working]="true" text="Test Button"></dbx-button>
         <dbx-button [working]="true" text="Test Bar Button" [bar]="true" [raised]="true"></dbx-button>
       </div>
+
       <p>(Determinate)</p>
       <div class="dbx-button-wrap-group">
         <dbx-button [working]="workingPercentSignal()" text="Test Determinate Button"></dbx-button>
@@ -33,16 +34,22 @@
         <dbx-button icon="settings" text="Test Button" [working]="true"></dbx-button>
       </div>
 
-      <h4>Icon Only</h4>
+      <h4>Icon No Text or Content</h4>
+      <div class="dbx-button-wrap-group">
+        <dbx-button icon="settings"></dbx-button>
+        <dbx-button icon="settings" bar></dbx-button>
+      </div>
+
+      <h4>[iconOnly]=true</h4>
       <div class="dbx-button-wrap-group">
         <dbx-button icon="settings" [iconOnly]="true"></dbx-button>
         <dbx-button icon="settings" [iconOnly]="true" [working]="true"></dbx-button>
       </div>
 
-      <h4>Icon Only - Fab</h4>
+      <h4>[iconOnly]=true & fab</h4>
       <div class="dbx-button-wrap-group">
-        <dbx-button icon="settings" fab iconOnly></dbx-button>
-        <dbx-button icon="settings" fab iconOnly [working]="true"></dbx-button>
+        <dbx-button icon="settings" fab [iconOnly]="true"></dbx-button>
+        <dbx-button icon="settings" fab [iconOnly]="true" [working]="true"></dbx-button>
       </div>
 
       <h4>With Colors (and spinning/working)</h4>
