@@ -3,7 +3,7 @@ import { type DynamicModule, type FactoryProvider, type Provider, type Type } fr
 import { type StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
-import { DEFAULT_BASE_WEBHOOK_PATH , ServerEnvironmentService } from '@dereekb/nestjs';
+import { DEFAULT_BASE_WEBHOOK_PATH, ServerEnvironmentService } from '@dereekb/nestjs';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
@@ -122,7 +122,8 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     const isWebhooksEnabled = config.envConfig.isWebhooksEnabled ?? (appUrl != null && Boolean(config.configureWebhooks));
     const apiPrefixPath: Maybe<WebsitePath> = apiPrefix ? (apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : (`/${apiPrefix}` as WebsitePath)) : undefined;
     const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefixPath ? websiteUrlFromPaths(appUrl, apiPrefixPath) : undefined);
-    const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath) : undefined);
+    const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath] : [DEFAULT_BASE_WEBHOOK_PATH as WebsitePath];
+    const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, webhookPaths) : undefined);
 
     const augmentedEnvConfig: FirebaseServerEnvironmentConfig = {
       ...config.envConfig,
