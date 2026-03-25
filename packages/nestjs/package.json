@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "13.6.4",
+  "version": "13.6.5",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -43,7 +43,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "13.6.4",
+    "@dereekb/util": "13.6.5",
     "discord.js": "^14.25.1",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
