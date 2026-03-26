@@ -1,5 +1,6 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { clientFirebaseFirestoreContextFactory, type FirestoreContext, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
+import { clientFirebaseFirestoreContextFactory, type FirestoreContext, type FirestoreContextCacheFactory, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { Firestore } from '@angular/fire/firestore';
 import { type ClassLikeType } from '@dereekb/util';
@@ -76,6 +77,24 @@ export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
    * False by default.
    */
   readonly provideStorageFileFirestoreCollections?: boolean;
+  /**
+   * Optional cache factory to enable collection-level caching.
+   *
+   * When provided, the Firestore context will create a {@link FirestoreContextCache}
+   * that provides TTL-based caching for document reads across all collections.
+   *
+   * @example
+   * ```ts
+   * import { inMemoryFirestoreContextCacheFactory } from '@dereekb/firebase';
+   *
+   * provideDbxFirestoreCollection({
+   *   appCollectionClass: MyCollections,
+   *   collectionFactory: (ctx) => new MyCollections(ctx),
+   *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
+   * });
+   * ```
+   */
+  readonly firestoreContextCacheFactory?: Maybe<FirestoreContextCacheFactory>;
 }
 
 /**
@@ -85,10 +104,12 @@ export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
  * @returns EnvironmentProviders
  */
 export function provideDbxFirestoreCollection<T>(config: ProvideDbxFirebaseFirestoreCollectionConfig<T>): EnvironmentProviders {
+  const params = config.firestoreContextCacheFactory ? { firestoreContextCacheFactory: config.firestoreContextCacheFactory } : undefined;
+
   const providers: Provider[] = [
     {
       provide: DBX_FIRESTORE_CONTEXT_TOKEN,
-      useFactory: clientFirebaseFirestoreContextFactory,
+      useFactory: (firestore: InstanceType<typeof Firestore>) => clientFirebaseFirestoreContextFactory(firestore, params),
       deps: [Firestore]
     },
     {

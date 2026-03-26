@@ -17,6 +17,7 @@ import {
 import { firestoreFixedItemPageIterationFactory, type FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
+import { type FirestoreCollectionCacheRef, type FirestoreCollectionCacheConfig } from '../cache/cache';
 import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
 import { type ArrayOrValue, arrayToObject, asArray, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront, stringContains } from '@dereekb/util';
 
@@ -879,13 +880,13 @@ export interface FirestoreModelKeyRef {
  * @template A - The accessor type (limited or full)
  */
 export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>
-  extends FirestoreContextReference, FirestoreModelIdentityRef, QueryLikeReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreQueryFactory<T>, LimitedFirestoreDocumentAccessorFactory<T, D, A>, LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>, LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>, FirestoreCollectionQueryFactory<T, D> {}
+  extends FirestoreContextReference, FirestoreModelIdentityRef, QueryLikeReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreQueryFactory<T>, LimitedFirestoreDocumentAccessorFactory<T, D, A>, LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>, LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>, FirestoreCollectionQueryFactory<T, D>, FirestoreCollectionCacheRef<T> {}
 
 // MARK: FirestoreCollection
 /**
  * FirestoreCollection configuration
  */
-export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextReference, FirestoreDrivers, Omit<FirestoreItemPageIterationBaseConfig<T>, 'queryLike'>, Partial<QueryLikeReferenceRef<T>>, FirestoreDocumentAccessorFactoryConfig<T, D> {}
+export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextReference, FirestoreDrivers, Omit<FirestoreItemPageIterationBaseConfig<T>, 'queryLike'>, Partial<QueryLikeReferenceRef<T>>, FirestoreDocumentAccessorFactoryConfig<T, D>, Partial<FirestoreCollectionCacheConfig> {}
 
 /**
  * Full Firestore collection interface with document CRUD, querying, iteration, and context support.
@@ -934,6 +935,9 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
   const { modelIdentity, collection, firestoreContext, firestoreAccessorDriver } = config;
   (config as unknown as Building<QueryLikeReferenceRef<T>>).queryLike = collection;
 
+  const cache = firestoreContext.cache.cacheForCollection<T>(modelIdentity.collectionType, { defaultTtl: config.defaultTtl ?? 0 });
+  (config as Building<typeof config>).cache = cache;
+
   const documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(config);
   const documentAccessorExtension = firestoreDocumentAccessorContextExtension({ documentAccessor, firestoreAccessorDriver });
 
@@ -947,6 +951,7 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
 
   return {
     config,
+    cache,
     modelIdentity,
     collection,
     queryLike: collection,

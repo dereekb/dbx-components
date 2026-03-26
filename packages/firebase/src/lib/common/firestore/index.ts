@@ -1,4 +1,5 @@
 export * from './accessor';
+export * from './cache';
 export * from './snapshot';
 export * from './error';
 export * from './query';
