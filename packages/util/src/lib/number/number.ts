@@ -3,6 +3,16 @@ import { type MapFunction } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 
 /**
+ * A non-negative integer representing a count of items.
+ *
+ * @example
+ * ```ts
+ * const totalUsers: Count = 42;
+ * ```
+ */
+export type Count = number;
+
+/**
  * A string represented within a number.
  */
 export type NumberString = string;

@@ -53,8 +53,8 @@ packageJsonObjects.forEach((x) => {
 // These dependencies MUST be declared in the root package.json, otherwise it will fail.
 const dependenciesToPullFromRootByName = [
   //
-  '@google-cloud/firestore',
-  '@google-cloud/storage'
+  // '@google-cloud/firestore',
+  // '@google-cloud/storage'
 ];
 
 dependenciesToPullFromRootByName.forEach((depName) => {
