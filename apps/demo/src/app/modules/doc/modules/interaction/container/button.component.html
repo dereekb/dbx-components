@@ -351,7 +351,7 @@
       </dbx-content-pit>
 
       <h3>.dbx-button-wrap-group</h3>
-      <p>Allows the buttons to wrap to the next line and have space between each other. Works with dbx-button.</p>
+      <p>Allows the buttons to wrap to the next line and have space between each other. Works with dbx-button and dbx-anchor wrapping dbx-button.</p>
 
       <dbx-content-pit>
         <div class="dbx-button-wrap-group">
@@ -368,6 +368,19 @@
           <button mat-raised-button>Test Button</button>
           <button mat-stroked-button>Test Button</button>
           <button mat-flat-button>Test Button</button>
+        </div>
+      </dbx-content-pit>
+
+      <h3>.dbx-button-wrap-group with dbx-anchor</h3>
+      <p>Also works with dbx-anchor wrapping dbx-button for navigation buttons.</p>
+
+      <dbx-content-pit>
+        <div class="dbx-button-wrap-group">
+          <dbx-anchor><dbx-button icon="link" color="primary" [raised]="true" text="Anchor Button"></dbx-button></dbx-anchor>
+          <dbx-anchor><dbx-button icon="open_in_new" color="accent" [stroked]="true" text="Anchor Stroked"></dbx-button></dbx-anchor>
+          <dbx-button icon="settings" color="warn" text="Plain Button"></dbx-button>
+          <dbx-anchor><dbx-button icon="home" color="success" [flat]="true" text="Anchor Flat"></dbx-button></dbx-anchor>
+          <dbx-anchor><dbx-button icon="star" color="ok" text="Anchor Default"></dbx-button></dbx-anchor>
         </div>
       </dbx-content-pit>
     </doc-feature-example>
