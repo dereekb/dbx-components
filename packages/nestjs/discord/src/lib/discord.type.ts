@@ -1,4 +1,9 @@
 /**
+ * A Discord snowflake ID string.
+ */
+export type DiscordId = string;
+
+/**
  * Bot token used to authenticate the Discord bot with the gateway.
  */
 export type DiscordBotToken = string;
