@@ -75,6 +75,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   let isolate = false;
   let maxWorkers: number | undefined;
+  let pool: VitestTestConfig['pool'] | undefined;
 
   const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
 
@@ -113,12 +114,24 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   const setupFiles: VitestTestConfig['setupFiles'] = setupFileNames.map((fileName) => path.join(pathToRoot, fileName));
 
   if (usesFirebase) {
-    /**
-     * Prevents concurrency issues with firebase-admin when using the emulator.
-     *
-     * Tests can encounter strange issues if run in parallel: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
-     */
-    maxWorkers = 1;
+    const isWatchMode = process.argv.includes('--watch');
+    const configuredMaxWorkers = testConfig?.maxWorkers;
+    const useMultipleWorkers = !isWatchMode && configuredMaxWorkers != null && configuredMaxWorkers > 1;
+
+    if (useMultipleWorkers) {
+      /**
+       * Use forks pool so each worker gets its own process with isolated process.env.
+       *
+       * The firebase test infrastructure calls rollNewGCloudProjectEnvironmentVariable() which
+       * writes to process.env (GCLOUD_PROJECT, GCLOUD_TEST_PROJECT, FIREBASE_CONFIG) during
+       * each test suite's setup. With the default threads pool, worker_threads share process.env,
+       * causing workers to clobber each other's project IDs and Firestore clients.
+       *
+       * See: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
+       */
+      pool = 'forks';
+    }
+
     // TODO: Also check that Firebase is currently running via env variables
   }
 
@@ -140,7 +153,16 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   const jestSequenceHooksBehavior: SequenceHooks = 'stack';
 
   return defineConfig(() => {
-    const env = configureEnv?.();
+    const configuredEnv = configureEnv?.();
+    const env: Record<string, string> = {
+      ...configuredEnv,
+      /**
+       * FIREBASE_CONFIG must be set before any Firebase SDK code runs.
+       * With the forks pool, forked processes may not inherit env vars set by setup files
+       * in the parent process. Setting it here via test.env ensures every worker has it.
+       */
+      ...(usesFirebase ? { FIREBASE_CONFIG: process.env['FIREBASE_CONFIG'] ?? JSON.stringify({ projectId: 'temp' }) } : {})
+    };
     const { suiteName, outputFilePrefix: junitFilePrefix } = junitConfig?.() ?? {};
 
     // https://vitest.dev/guide/reporters.html#junit-reporter
@@ -160,6 +182,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         passWithNoTests: true,
         watch: false,
         globals: true,
+        pool,
         maxWorkers,
         ...testConfig,
         env,
