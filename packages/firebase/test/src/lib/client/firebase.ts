@@ -1,6 +1,6 @@
 import { makeTestingFirestoreDrivers, type TestFirestoreContext, type TestingFirestoreDrivers } from '../common/firestore/firestore';
 import { type Maybe, cachedGetter } from '@dereekb/util';
-import { testContextBuilder } from '@dereekb/util/test';
+import { type TestContextBuilderFunction, type TestContextFixtureClearInstanceFunction, type BuildTestsWithContextFunction } from '@dereekb/util/test';
 import { type TestEnvironmentConfig, initializeTestEnvironment, type RulesTestEnvironment, type RulesTestContext, type TokenOptions, type EmulatorConfig } from '@firebase/rules-unit-testing';
 import { firebaseFirestoreClientDrivers, type FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, type Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
@@ -148,44 +148,84 @@ export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseCont
  * A TestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
+ *
+ * The {@link RulesTestEnvironment} is initialized once per test suite (`beforeAll`) and cleaned up
+ * once (`afterAll`), while fresh drivers and a {@link RulesTestContext} are created per test (`beforeEach`). This avoids
+ * repeated calls to `initializeTestEnvironment` (which hits the emulator's `PUT /internal/setRules` endpoint),
+ * preventing interference between parallel workers sharing the same Firebase Storage emulator. The Storage
+ * emulator maintains rules globally (not per-project), so concurrent `setRules` calls from multiple workers
+ * can momentarily leave the emulator in a transitional state that causes `storage/unauthorized` errors.
  */
-export const firebaseRulesUnitTestBuilder = testContextBuilder<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
-  buildConfig: (input?: Partial<RulesUnitTestingConfig>) => {
-    const config: RulesUnitTestingConfig = {
-      testEnvironment: input?.testEnvironment ?? {},
-      rulesContext: input?.rulesContext
-    };
+export const firebaseRulesUnitTestBuilder: TestContextBuilderFunction<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig> = (inputConfig?: Partial<RulesUnitTestingConfig>) => {
+  const config: RulesUnitTestingConfig = {
+    testEnvironment: inputConfig?.testEnvironment ?? {},
+    rulesContext: inputConfig?.rulesContext
+  };
 
-    return config;
-  },
-  buildFixture: () => new RulesUnitTestFirebaseTestingContextFixture(),
-  setupInstance: async (config) => {
-    const drivers = {
-      ...makeTestingFirestoreDrivers(firebaseFirestoreClientDrivers()),
-      ...makeTestingFirebaseStorageDrivers(firebaseStorageClientDrivers(), { useTestDefaultBucket: true })
-    };
+  return (buildTests: BuildTestsWithContextFunction<RulesUnitTestFirebaseTestingContextFixture>) => {
+    const fixture = new RulesUnitTestFirebaseTestingContextFixture();
 
-    let testEnvironment = config.testEnvironment;
+    let rulesTestEnvironment: RulesTestEnvironment;
 
-    if (config.testEnvironment.collectionNames) {
-      const pathsMap = drivers.firestoreAccessorDriver.initWithCollectionNames(config.testEnvironment.collectionNames);
-      testEnvironment = {
-        ...testEnvironment,
-        firestore: rewriteEmulatorConfigRulesForFuzzedCollectionNames(testEnvironment.firestore, pathsMap)
-      };
-    }
-
-    const rulesTestEnv = await initializeTestEnvironment(config.testEnvironment);
-    const rulesTestContext = rulesTestContextForConfig(rulesTestEnv, config.rulesContext);
-    return new RulesUnitTestTestFirebaseInstance(drivers, rulesTestEnv, rulesTestContext);
-  },
-  teardownInstance: async (instance, config) => {
-    await instance.rulesTestEnvironment.cleanup().catch((e) => {
-      console.warn('firebaseRulesUnitTestBuilder(): Failed to cleanup rules test environment', e);
-      throw e;
+    // Initialize the emulator environment once per test suite.
+    // This is the expensive operation that hits the emulator's REST API (e.g. PUT /internal/setRules).
+    beforeAll(async () => {
+      rulesTestEnvironment = await initializeTestEnvironment(config.testEnvironment);
     });
-  }
-});
+
+    // Clean up the emulator environment once after all tests complete.
+    afterAll(async () => {
+      if (rulesTestEnvironment) {
+        await rulesTestEnvironment.cleanup().catch((e) => {
+          console.warn('firebaseRulesUnitTestBuilder(): Failed to cleanup rules test environment', e);
+          throw e;
+        });
+      }
+    });
+
+    // Create fresh drivers and RulesTestContext per test.
+    // Drivers are recreated per test because the Firestore testing driver fuzzes collection names
+    // (via makeTestingFirestoreAccesorDriver) to provide data isolation between tests.
+    let clearInstance: Maybe<TestContextFixtureClearInstanceFunction> = null;
+
+    beforeEach(async () => {
+      try {
+        const drivers: TestingFirebaseDrivers = {
+          ...makeTestingFirestoreDrivers(firebaseFirestoreClientDrivers()),
+          ...makeTestingFirebaseStorageDrivers(firebaseStorageClientDrivers(), { useTestDefaultBucket: true })
+        };
+
+        if (config.testEnvironment.collectionNames) {
+          drivers.firestoreAccessorDriver.initWithCollectionNames(config.testEnvironment.collectionNames);
+        }
+
+        const rulesTestContext = rulesTestContextForConfig(rulesTestEnvironment, config.rulesContext);
+        const instance = new RulesUnitTestTestFirebaseInstance(drivers, rulesTestEnvironment, rulesTestContext);
+        clearInstance = fixture.setInstance(instance);
+      } catch (e) {
+        console.error('firebaseRulesUnitTestBuilder(): Failed building a test instance. Error: ', e);
+
+        if (clearInstance) {
+          clearInstance();
+          clearInstance = null;
+        }
+
+        throw e;
+      }
+    });
+
+    // Declare tests
+    buildTests(fixture);
+
+    // Clear the instance reference after each test.
+    afterEach(() => {
+      if (clearInstance) {
+        clearInstance();
+        clearInstance = null;
+      }
+    });
+  };
+};
 
 // MARK: Internal
 function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRulesConfig?: Maybe<RulesUnitTestingContextConfig>): RulesTestContext {

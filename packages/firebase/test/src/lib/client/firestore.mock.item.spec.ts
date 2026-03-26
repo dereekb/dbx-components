@@ -3,10 +3,10 @@ import { type DocumentData, type SystemState, type SystemStateDocument } from '@
 import { type CollectionReference, doc, getDoc, setDoc } from 'firebase/firestore';
 import { type MockSystemData, MOCK_SYSTEM_STATE_TYPE } from '../common/mock/mock.item';
 import { type MockItemCollectionFixture, testWithMockItemCollectionFixture } from '../common/mock/mock.item.collection.fixture';
-import { authorizedFirebaseFactory } from './firebase.authorized';
+import { authorizedFirestoreOnlyFactory } from './firebase.authorized';
 
 describe('testWithMockItemFixture', () => {
-  const testWrapper = testWithMockItemCollectionFixture()(authorizedFirebaseFactory);
+  const testWrapper = testWithMockItemCollectionFixture()(authorizedFirestoreOnlyFactory);
 
   testWrapper((f: MockItemCollectionFixture) => {
     it('should create a document', async () => {

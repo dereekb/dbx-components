@@ -1,5 +1,5 @@
-import { AllDateMatchers } from '@dereekb/vitest';
-import { AxeMatchers } from '@dereekb/vitest';
+import type { AllDateMatchers } from './lib/matcher.date.js';
+import type { AxeMatchers } from './lib/matcher.a11y.js';
 
 declare module 'vitest' {
   interface Matchers<T = any> extends AllDateMatchers {}

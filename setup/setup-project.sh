@@ -468,12 +468,12 @@ echo "Adding vitest configurations..."
 npm install -D @nx/vitest@$DEP__NX_VITEST_VERSION @nx/vite@$DEP__NX_VITEST_VERSION @analogjs/vite-plugin-angular@$DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION
 # rm vitest.preset.config.mts
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.preset.config.mts -o vitest.preset.config.mts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.preset.config.mts -o vitest.preset.config.mts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.angular.ts -o vitest.setup.angular.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.firebase.ts -o vitest.setup.firebase.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.nestjs.ts -o vitest.setup.nestjs.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.setup.node.ts -o vitest.setup.node.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.setup.typings.ts -o vitest.setup.typings.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.node.ts -o vitest.setup.node.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/vitest.setup.typings.ts -o vitest.setup.typings.ts
 
 # add env files to ensure that vitest CI tests export properly.
 echo "Adding env files..."
@@ -692,7 +692,7 @@ download_firebase_components_file "tsconfig.spec.json"
 
 # Vitest Setup File
 rm $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts || true
-echo "import '../../../vitest.setup.firebase'" > $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
+echo "import '@dereekb/vitest/setup-firebase'" > $FIREBASE_COMPONENTS_FOLDER/src/test-setup.ts
 
 ## Lib Folder
 rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
@@ -784,7 +784,7 @@ rm $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
 
 # Vitest Setup File
 rm $ANGULAR_APP_FOLDER/src/test-setup.ts || true
-echo "import '../../../vitest.setup.firebase'" > $ANGULAR_APP_FOLDER/src/test-setup.ts
+echo "import '@dereekb/vitest/setup-angular'" > $ANGULAR_APP_FOLDER/src/test-setup.ts
 
 # lib
 mkdir $ANGULAR_APP_FOLDER/src/lib

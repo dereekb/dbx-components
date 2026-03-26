@@ -2,14 +2,46 @@
   "name": "@dereekb/vitest",
   "version": "13.6.6",
   "peerDependencies": {
+    "@analogjs/vite-plugin-angular": ">=2.0.0",
+    "@analogjs/vitest-angular": ">=2.0.0",
+    "@angular/compiler": ">=19.0.0",
+    "@angular/core": ">=19.0.0",
+    "@angular/platform-browser": ">=19.0.0",
+    "@nx/vite": ">=20.0.0",
     "@vitest/expect": "4.1.0",
     "axe-core": "^4.11.1",
     "date-fns": "^4.0.0",
+    "resize-observer-polyfill": "^1.5.0",
+    "vite": ">=6.0.0",
     "vitest": "4.1.0",
     "vitest-axe": "^0.1.0"
   },
   "peerDependenciesMeta": {
+    "@analogjs/vite-plugin-angular": {
+      "optional": true
+    },
+    "@analogjs/vitest-angular": {
+      "optional": true
+    },
+    "@angular/compiler": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "@angular/platform-browser": {
+      "optional": true
+    },
+    "@nx/vite": {
+      "optional": true
+    },
     "axe-core": {
+      "optional": true
+    },
+    "resize-observer-polyfill": {
+      "optional": true
+    },
+    "vite": {
       "optional": true
     },
     "vitest-axe": {
@@ -28,6 +60,30 @@
     "./a11y": {
       "types": "./src/a11y.d.ts",
       "default": "./src/a11y.js"
+    },
+    "./config": {
+      "types": "./src/config.d.ts",
+      "default": "./src/config.js"
+    },
+    "./setup-node": {
+      "types": "./src/setup-node.d.ts",
+      "default": "./src/setup-node.js"
+    },
+    "./setup-nestjs": {
+      "types": "./src/setup-nestjs.d.ts",
+      "default": "./src/setup-nestjs.js"
+    },
+    "./setup-firebase": {
+      "types": "./src/setup-firebase.d.ts",
+      "default": "./src/setup-firebase.js"
+    },
+    "./setup-angular": {
+      "types": "./src/setup-angular.d.ts",
+      "default": "./src/setup-angular.js"
+    },
+    "./setup-typings": {
+      "types": "./src/setup-typings.d.ts",
+      "default": "./src/setup-typings.js"
     }
   }
 }

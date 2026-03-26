@@ -1,3 +1,1 @@
-import './vitest.setup.node';
-
-// Nothing special for nestjs
+import '@dereekb/vitest/setup-nestjs';

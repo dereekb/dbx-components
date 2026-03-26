@@ -1,5 +1,5 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { type MockFirebaseContext, authorizedFirebaseFactory, type MockItemCollectionFixture, testWithMockItemCollectionFixture, MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, mockFirebaseModelServices, type MockItem, type MockItemDocument, type MockItemRoles } from '@dereekb/firebase/test';
+import { type MockFirebaseContext, authorizedFirestoreOnlyFactory, type MockItemCollectionFixture, testWithMockItemCollectionFixture, MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, mockFirebaseModelServices, type MockItem, type MockItemDocument, type MockItemRoles } from '@dereekb/firebase/test';
 import { type GrantedRoleMap, isNoAccessRoleMap } from '@dereekb/model';
 import { type ArrayOrValue, type UsePromiseFunction } from '@dereekb/util';
 import { makeDocuments } from '../firestore';
@@ -16,7 +16,7 @@ describe('firebaseModelsService', () => {
     });
   });
 
-  testWithMockItemCollectionFixture()(authorizedFirebaseFactory)((f: MockItemCollectionFixture) => {
+  testWithMockItemCollectionFixture()(authorizedFirestoreOnlyFactory)((f: MockItemCollectionFixture) => {
     let context: MockFirebaseContext;
     let firestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
     let item: MockItemDocument;
