@@ -79,6 +79,33 @@ function assertHasNoPlaceholderValues(defaultValue, ignoreKeys = new Set()) {
   }
 }
 
+// Copies the resolved value from sourceKey to targetKey if targetKey is still the placeholder
+function copyEnvValueIfUnset(targetKey, sourceKey, defaultValue) {
+  if (env[targetKey] === defaultValue && env[sourceKey] && env[sourceKey] !== defaultValue) {
+    env[targetKey] = env[sourceKey];
+  }
+}
+
+// Processes an array of env fallback configs. Each entry has a source key and one or more target keys.
+// For each target that is still unset (placeholder), copies the resolved value from source.
+//
+// Example usage (place after initWithProcessEnv):
+//
+//   applyEnvFallbacks(
+//     [
+//       { target: 'SERVICE_CRM_REFRESH_TOKEN', source: 'SERVICE_ACCOUNTS_REFRESH_TOKEN' },
+//       { target: ['SERVICE_CRM_CLIENT_ID', 'SERVICE_SIGN_CLIENT_ID'], source: 'SERVICE_ACCOUNTS_CLIENT_ID' }
+//     ],
+//     defaultPlaceholderValue
+//   );
+//
+function applyEnvFallbacks(fallbacks, defaultValue) {
+  fallbacks.forEach(({ target, source }) => {
+    const targets = Array.isArray(target) ? target : [target];
+    targets.forEach((t) => copyEnvValueIfUnset(t, source, defaultValue));
+  });
+}
+
 // ======================================
 // Configure Here using JS
 // ======================================

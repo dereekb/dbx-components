@@ -48,49 +48,49 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"13.0.0"}    # update every major version
-NX_VERSION=${NX_SETUP_VERSIONS:-"22.5.2"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"13.6.5"}    # update every major version
+NX_VERSION=${NX_SETUP_VERSIONS:-"22.6.1"}
 ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^21.0.0"}
 TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-"^5.9.3"}
-FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"15.7.0"}
+FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"15.11.0"}
 NODE_VERSION=${NODE_SETUP_VERSION:-"24"}
 
 echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - node: $NODE_VERSION - from source branch $SOURCE_BRANCH"
 
 # - Package Versions
 # These versions should match those in dbx-component's package.json
-DEP__SHARP_VERSION=^0.34.5
-DEP__ZONE_JS_VERSION=^0.16.0
-DEP__FIREBASE_VERSION=^12.0.0
-DEP__FIREBASE_ADMIN_VERSION=^13.0.0
-DEP__FIREBASE_FUNCTIONS_VERSION=^7.0.0
-DEP__FIREBASE_FUNCTIONS_TEST_VERSION=3.4.1
-DEP__PRETTIER_VERSION=3.8.1
-DEP__PRETTY_QUICK_VERSION=^4.2.2
-DEP__MAILGUN_JS_VERSION=^12.0.0
-DEP__RXJS_VERSION=^7.8.0
-DEP__MAPBOX_GL_VERSION=^3.10.0
-DEP__NGX_FORMLY_CORE_VERSION=^14.0.0
-DEP__NGX_FORMLY_MATERIAL_VERSION=git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d
-DEP__NGX_MAPBOX_GL_VERSION=git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e
-DEP__NG_WEB_APIS_GEOLOCATION_VERSION=^5.1.0
-DEP__NG_WEB_APIS_COMMON_VERSION=^5.1.0
-DEP__ZIP_JS_VERSION=^2.8.11
-DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION=^1.0.2
-DEP__UIROUTER_RX_VERSION=^1.0.0
-DEP__UIROUTER_CORE_VERSION=^6.1.2
-DEP__UIROUTER_ANGULAR_VERSION=21.0.0
-DEP__NGBRACKET_NGX_LAYOUT_VERSION=^21.0.0
-DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0
-DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0
-DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c
-DEP__NGX_FORMLY_VERSION=^14.0.0
-DEP__FIREBASE_TOOLS_VERSION=15.8.0
-DEP__RXFIRE_VERSION=git+https://git@github.com/dereekb/rxfire#606da27059f8fce2563d6e5a79ec4c7d0843a942
-DEP__ANGULAR_CALENDAR_VERSION=^0.32.0
-DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38
-DEP__NX_VITEST_VERSION=$NX_VERSION
-DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION=~2.1.2
+DEP__SHARP_VERSION=^0.34.5                    # sharp
+DEP__ZONE_JS_VERSION=^0.16.0                  # zone.js
+DEP__FIREBASE_VERSION=^12.0.0                 # firebase
+DEP__FIREBASE_ADMIN_VERSION=^13.0.0           # firebase-admin
+DEP__FIREBASE_FUNCTIONS_VERSION=^7.0.0        # firebase-functions
+DEP__FIREBASE_FUNCTIONS_TEST_VERSION=3.4.1    # firebase-functions-test
+DEP__PRETTIER_VERSION=3.8.1                   # prettier
+DEP__PRETTY_QUICK_VERSION=^4.2.2              # pretty-quick
+DEP__MAILGUN_JS_VERSION=^12.0.0               # mailgun.js
+DEP__RXJS_VERSION=^7.8.0                      # rxjs
+DEP__MAPBOX_GL_VERSION=^3.10.0                # mapbox-gl
+DEP__NGX_FORMLY_CORE_VERSION=^14.0.0          # @ngx-formly/core (used for formly sub-packages; core itself uses git ref below)
+DEP__NGX_FORMLY_MATERIAL_VERSION=git+https://git@github.com/dereekb/ngx-formly#02e615006744374a587b5d35de3b2d137e2e05a8  # @ngx-formly/material (forked)
+DEP__NGX_MAPBOX_GL_VERSION=git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e     # ngx-mapbox-gl (forked)
+DEP__NG_WEB_APIS_GEOLOCATION_VERSION=^5.1.0   # @ng-web-apis/geolocation
+DEP__NG_WEB_APIS_COMMON_VERSION=^5.1.0        # @ng-web-apis/common
+DEP__ZIP_JS_VERSION=^2.8.11                   # @zip.js/zip.js
+DEP__PLACEMARKIO_GEO_VIEWPORT_VERSION=^1.0.2  # @placemarkio/geo-viewport
+DEP__UIROUTER_RX_VERSION=^1.0.0              # @uirouter/rx
+DEP__UIROUTER_CORE_VERSION=^6.1.2            # @uirouter/core
+DEP__UIROUTER_ANGULAR_VERSION=21.0.0         # @uirouter/angular
+DEP__NGBRACKET_NGX_LAYOUT_VERSION=^21.0.0    # @ngbracket/ngx-layout
+DEP__NGRX_STORE_DEVTOOLS_VERSION=^21.0.0     # @ngrx/store-devtools
+DEP__FIREBASE_RULES_UNIT_TESTING_VERSION=5.0.0  # @firebase/rules-unit-testing
+DEP__ANGULAR_FIRE_VERSION=21.0.0-rc.0-canary.ac3dd7c  # @angular/fire
+DEP__NGX_FORMLY_VERSION=^14.0.0              # @ngx-formly/* (general formly version)
+DEP__FIREBASE_TOOLS_VERSION=15.11.0          # firebase-tools
+DEP__RXFIRE_VERSION=git+https://git@github.com/dereekb/rxfire#606da27059f8fce2563d6e5a79ec4c7d0843a942  # rxfire (forked)
+DEP__ANGULAR_CALENDAR_VERSION=^0.32.1        # angular-calendar
+DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38  # @types/segment-analytics
+DEP__NX_VITEST_VERSION=$NX_VERSION           # @nx/vitest
+DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION=~2.3.1  # @analogjs/vite-plugin-angular
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
@@ -138,7 +138,7 @@ FIREBASE_EMULATOR_PUBSUB_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 5)
 FIREBASE_EMULATOR_STORAGE_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 6)
 FIREBASE_EMULATOR_FIRESTORE_WEBSOCKET_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 8)
 FIREBASE_LOCALHOST=0.0.0.0
-FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STORAGE_PORT"
+FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_FIRESTORE_WEBSOCKET_PORT"
 
 ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
@@ -434,7 +434,7 @@ rm .env.tmp
 
 mkdir -p ./tools/scripts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/tools/scripts/release.mjs -o tools/scripts/release.mjs.tmp
-sed -e "s|dereekb';|dereekb'; # TODO: Replace with your github username|g" -e "s:dbx-components:$PROJECT_NAME:g" tools/scripts/release.mjs.tmp > tools/scripts/release.mjs
+sed -e "s|dereekb';|dereekb'; // TODO: Replace with your github username|g" -e "s:dbx-components:$PROJECT_NAME:g" tools/scripts/release.mjs.tmp > tools/scripts/release.mjs
 rm tools/scripts/release.mjs.tmp
 
 echo "SECRETS=" > .env.local
@@ -494,6 +494,9 @@ npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^
 
 echo "nx.json: Add vitest configuration"
 npx --yes json -I -f nx.json -e "this.targetDefaults['@nx/vitest:test'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'], configurations: { ci: { ci: true, codeCoverage: true } } }";
+
+echo "nx.json: Disable TUI"
+npx --yes json -I -f nx.json -e "this.tui = { enabled: false }";
 
 git add --all
 git commit --no-verify -m "checkpoint: added vitest configurations"
@@ -599,7 +602,7 @@ sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e
 rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 
 # add settings to tsconfig.base.json
-npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true, target: 'es2022', module: 'ES2022', noUnusedLocals: false, esModuleInterop: false, noImplicitOverride: true }";
+npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, moduleResolution: 'bundler', experimentalDecorators: true, importHelpers: true, target: 'es2022', module: 'ES2022', lib: ['es2022', 'dom'], useDefineForClassFields: true, skipLibCheck: true, skipDefaultLibCheck: true, allowSyntheticDefaultImports: true, resolveJsonModule: true, noUnusedLocals: false, noImplicitOverride: true, strict: true }";
 npx --yes json -I -f $API_APP_FOLDER/tsconfig.json -e "this.compilerOptions={ ...this.compilerOptions, esModuleInterop: false }"; # disable esModuleInterop for API app
 
 git add --all
