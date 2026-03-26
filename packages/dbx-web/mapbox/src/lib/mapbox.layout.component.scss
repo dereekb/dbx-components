@@ -40,6 +40,11 @@ $dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-bu
       ::ng-deep > .mat-mdc-button-persistent-ripple {
         border-radius: unset;
       }
+
+      // override Material's transparent background so dbx-*-bg color classes apply
+      &.dbx-color {
+        background: color-mix(in srgb, var(--dbx-bg-color-current, transparent) var(--dbx-color-bg-tone, 100%), transparent);
+      }
     }
 
     .left-drawer & {
