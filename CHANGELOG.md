@@ -1,3 +1,17 @@
+## [13.6.6](https://github.com/dereekb/dbx-components/compare/v13.6.5-dev...v13.6.6) (2026-03-26)
+
+
+### Bug Fixes
+
+- appWebhookUrl missing globalApiRoutePrefix ([37a39f7b](https://github.com/dereekb/dbx-components/commit/37a39f7b00ff764cfdcc241b6ba3fcc813096e59))
+- mapbox drawer button background not rendering ([59592051](https://github.com/dereekb/dbx-components/commit/59592051d12e98821e54613d26973404c6ba95f8))
+
+
+### Code Refactoring
+
+- added Count semantic number type ([4869d676](https://github.com/dereekb/dbx-components/commit/4869d676711446989f95c0bda7d9de5d24f39df4))
+- synced setup-project.sh dep versions ([d99faf7b](https://github.com/dereekb/dbx-components/commit/d99faf7b27c3c4727dd3265823d07cfe8ac4cbba))
+
 ## [13.6.5](https://github.com/dereekb/dbx-components/compare/v13.6.4-dev...v13.6.5) (2026-03-25)
 
 
