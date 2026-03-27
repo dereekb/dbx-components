@@ -1,3 +1,16 @@
+## [13.6.8](https://github.com/dereekb/dbx-components/compare/v13.6.7-dev...v13.6.8) (2026-03-27)
+
+
+### Bug Fixes
+
+- accordion trackId collision across groups ([a17009f8](https://github.com/dereekb/dbx-components/commit/a17009f8c2d2426f7fe16fe99e5efa006ca32d24))
+
+
+### Code Refactoring
+
+- made mapValuesToItemValues required ([9bbf2298](https://github.com/dereekb/dbx-components/commit/9bbf229856399f96552bac6a3611ad3f33833b69))
+- required key on DbxValueListItem ([3e26491b](https://github.com/dereekb/dbx-components/commit/3e26491b4bc0414080be7f0daef32c076294bf59))
+
 ## [13.6.7](https://github.com/dereekb/dbx-components/compare/v13.6.6-dev...v13.6.7) (2026-03-27)
 
 
