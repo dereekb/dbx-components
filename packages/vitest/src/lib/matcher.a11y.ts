@@ -1,9 +1,9 @@
 import { expect } from 'vitest';
-import * as matchers from 'vitest-axe/matchers';
+import * as matchers from 'vitest-axe/matchers.js';
 import { axe } from 'vitest-axe';
 import type AxeCore from 'axe-core';
 
-export type { AxeMatchers } from 'vitest-axe/matchers';
+export type { AxeMatchers } from 'vitest-axe/matchers.js';
 
 /**
  * Object or wrapper that exposes a native DOM element, such as Angular's `ComponentFixture`.

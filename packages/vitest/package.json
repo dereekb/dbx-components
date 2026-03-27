@@ -16,38 +16,6 @@
     "vitest": "4.1.0",
     "vitest-axe": "^0.1.0"
   },
-  "peerDependenciesMeta": {
-    "@analogjs/vite-plugin-angular": {
-      "optional": true
-    },
-    "@analogjs/vitest-angular": {
-      "optional": true
-    },
-    "@angular/compiler": {
-      "optional": true
-    },
-    "@angular/core": {
-      "optional": true
-    },
-    "@angular/platform-browser": {
-      "optional": true
-    },
-    "@nx/vite": {
-      "optional": true
-    },
-    "axe-core": {
-      "optional": true
-    },
-    "resize-observer-polyfill": {
-      "optional": true
-    },
-    "vite": {
-      "optional": true
-    },
-    "vitest-axe": {
-      "optional": true
-    }
-  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
