@@ -1,6 +1,6 @@
 import { forwardRef, InjectionToken, type Provider, type StaticProvider, type Type } from '@angular/core';
 import { type ClickableAnchor, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { map, type Observable, of } from 'rxjs';
+import { map, type Observable } from 'rxjs';
 import { type Configurable, type DecisionFunction, type Maybe, type ModelKeyRef, type UniqueModel } from '@dereekb/util';
 
 /**
@@ -81,10 +81,10 @@ export function dbxValueListItemDecisionFunction<T>(decisionFunction: DecisionFu
 export type DbxValueAsListItem<T> = T & Omit<DbxValueListItem<DbxValueListItem<T>>, 'itemValue' | 'key'> & { key?: string };
 
 /**
- * Base configuration for a value list view, defining the component to render each item and an optional mapping function for transforming raw values into list items.
+ * Base configuration for a value list view, defining the component to render each item and a mapping function for transforming raw values into list items.
  */
 export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxInjectionComponentConfig<V> {
-  mapValuesToItemValues?(values: T[]): Observable<I[]>;
+  mapValuesToItemValues(values: T[]): Observable<I[]>;
   /**
    * @see DbxListViewMetaIconComponent.metaConfig()
    */
@@ -117,14 +117,6 @@ export function dbxValueListItemKeyForItemValue(itemValue: unknown, index: numbe
 }
 
 /**
- * Default mapping function that wraps each raw value into a {@link DbxValueListItem} with `itemValue` and a `key` derived via {@link dbxValueListItemKeyForItemValue}.
- *
- * @param itemValues The raw values to wrap as list items
- * @returns An observable emitting the values wrapped in {@link DbxValueListItem} objects
- */
-export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueListItem<T>>(itemValues: T[]) => of(itemValues.map((itemValue, index) => ({ itemValue, key: dbxValueListItemKeyForItemValue(itemValue, index) })) as I[]);
-
-/**
  * A {@link DbxValueListItem} combined with its injection component configuration, ready for rendering by the list view.
  */
 export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> = I & {
@@ -145,8 +137,7 @@ export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueLi
  * ```
  */
 export function mapValuesToValuesListItemConfigObs<T, I extends DbxValueListItem<T>, V = unknown>(listViewConfig: AbstractDbxValueListViewConfig<T, I, V>, itemValues: T[]): Observable<DbxValueListItemConfig<T, I, V>[]> {
-  const makeObs = listViewConfig.mapValuesToItemValues ?? DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES;
-  return makeObs(itemValues).pipe(
+  return listViewConfig.mapValuesToItemValues(itemValues).pipe(
     map((listItems: I[]) => {
       const listItemConfigs: DbxValueListItemConfig<T, I, V>[] = addConfigToValueListItems<T, I, V>(listViewConfig, listItems);
       return listItemConfigs;
@@ -161,7 +152,7 @@ export function mapValuesToValuesListItemConfigObs<T, I extends DbxValueListItem
  * @param listItems The list items to augment with configuration
  * @returns The list items extended with injection component configuration attached
  */
-export function addConfigToValueListItems<T, I extends DbxValueListItem<T>, V = unknown>(listViewConfig: AbstractDbxValueListViewConfig<T, I, V>, listItems: I[]): DbxValueListItemConfig<T, I, V>[] {
+export function addConfigToValueListItems<T, I extends DbxValueListItem<T>, V = unknown>(listViewConfig: Omit<AbstractDbxValueListViewConfig<T, I, V>, 'mapValuesToItemValues'>, listItems: I[]): DbxValueListItemConfig<T, I, V>[] {
   const itemConfigs: DbxValueListItemConfig<T, I, V>[] = listItems.map((listItem: I) => {
     const anchor = listItem.anchor;
 

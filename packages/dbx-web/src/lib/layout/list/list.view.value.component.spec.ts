@@ -105,7 +105,8 @@ class TestGroupedListHostComponent {
 
 // MARK: Helpers
 const TEST_LIST_VIEW_CONFIG: AbstractDbxValueListViewConfig<TestItem> = {
-  componentClass: TestItemComponent
+  componentClass: TestItemComponent,
+  mapValuesToItemValues: (values) => of(values.map((item) => ({ itemValue: item, key: item.key })))
 };
 
 /**
