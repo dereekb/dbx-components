@@ -1,3 +1,19 @@
+## [13.6.7](https://github.com/dereekb/dbx-components/compare/v13.6.6-dev...v13.6.7) (2026-03-27)
+
+
+### Checkpoints
+
+- firestore collection cache ([f00f9a0d](https://github.com/dereekb/dbx-components/commit/f00f9a0d96e425f5fc9c5a48d031c7a4912bab61))
+
+
+### Code Refactoring
+
+- dbx-button-wrap-group supports dbx-anchor ([e43922be](https://github.com/dereekb/dbx-components/commit/e43922be7e5d5d8a3c0cdb0bd4ce39f0b3dbe6b7))
+- fixes ([7806860a](https://github.com/dereekb/dbx-components/commit/7806860a5b5cd4fc8c8fa241973937bc80c1c486))
+- flat accordion view with stickyHeaders config ([5f813813](https://github.com/dereekb/dbx-components/commit/5f813813aafc3826fce50ffd287fa326de54485b))
+- moved vitest config and setup into @dereekb/vitest ([3958a96c](https://github.com/dereekb/dbx-components/commit/3958a96c2e4d05b7809ed28b6eed58b3a59415e1))
+- parallel vitest workers for firebase tests ([e06e42a3](https://github.com/dereekb/dbx-components/commit/e06e42a39d3e4c99cabec98023f8bfa64b0f84e7))
+
 ## [13.6.6](https://github.com/dereekb/dbx-components/compare/v13.6.5-dev...v13.6.6) (2026-03-26)
 
 
