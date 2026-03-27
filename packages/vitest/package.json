@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/vitest",
-  "version": "13.6.8",
+  "version": "13.6.9",
   "peerDependencies": {
     "@analogjs/vite-plugin-angular": ">=2.0.0",
     "@analogjs/vitest-angular": ">=2.0.0",
@@ -15,38 +15,6 @@
     "vite": ">=6.0.0",
     "vitest": "4.1.0",
     "vitest-axe": "^0.1.0"
-  },
-  "peerDependenciesMeta": {
-    "@analogjs/vite-plugin-angular": {
-      "optional": true
-    },
-    "@analogjs/vitest-angular": {
-      "optional": true
-    },
-    "@angular/compiler": {
-      "optional": true
-    },
-    "@angular/core": {
-      "optional": true
-    },
-    "@angular/platform-browser": {
-      "optional": true
-    },
-    "@nx/vite": {
-      "optional": true
-    },
-    "axe-core": {
-      "optional": true
-    },
-    "resize-observer-polyfill": {
-      "optional": true
-    },
-    "vite": {
-      "optional": true
-    },
-    "vitest-axe": {
-      "optional": true
-    }
   },
   "exports": {
     ".": {
