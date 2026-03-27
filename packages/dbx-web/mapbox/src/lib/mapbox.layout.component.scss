@@ -43,6 +43,7 @@ $dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-bu
 
       // override Material's transparent background so dbx-*-bg color classes apply
       &.dbx-color {
+        color: var(--dbx-color-current, transparent);
         background: color-mix(in srgb, var(--dbx-bg-color-current, transparent) var(--dbx-color-bg-tone, 100%), transparent);
       }
     }

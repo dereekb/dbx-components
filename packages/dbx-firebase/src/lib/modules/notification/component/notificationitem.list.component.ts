@@ -46,7 +46,7 @@ export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelecti
 export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSelectionListViewDirective<NotificationItem> {
   readonly config: DbxSelectionValueListViewConfig<NotificationItemWithSelection> = {
     componentClass: DbxFirebaseNotificationItemListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.id, icon: y.icon, itemValue: y })))
   };
 }
 

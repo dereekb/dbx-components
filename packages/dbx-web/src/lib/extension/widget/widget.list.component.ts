@@ -57,7 +57,7 @@ export class DbxWidgetListGridViewComponent extends AbstractDbxListGridViewDirec
       gap: '8px'
     },
     componentClass: DbxWidgetListGridViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y, i) => ({ ...y, key: `${y.type}_${i}`, itemValue: y })))
   };
 }
 

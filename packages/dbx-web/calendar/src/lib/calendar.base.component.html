@@ -2,7 +2,7 @@
   <h3 class="dbx-calendar-title">{{ viewDateSignal() | calendarDate: displayTypeSignal() + 'ViewTitle' : 'en' }}</h3>
   <div class="dbx-calendar-header">
     <div class="dbx-calendar-controls" fxLayout="row" fxLayout.xs="column" ngClass.xs="dbx-calendar-controls-compact">
-      <span class="dbx-calendar-controls-left dbx-flex-bar" fxFlex="nogrow">
+      <span class="dbx-calendar-controls-left dbx-flex" fxFlex="nogrow">
         @if (showTodayButtonSignal()) {
           <button mat-stroked-button [disabled]="!canJumpToTodaySignal()" (click)="todayClicked()">Today</button>
         }

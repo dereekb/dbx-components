@@ -25,6 +25,7 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
               </span>
             }
           }
+          <span class="dbx-spacer"></span>
           <div>
             <ng-content></ng-content>
           </div>
