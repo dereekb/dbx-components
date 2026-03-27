@@ -102,6 +102,11 @@
           <doc-item-list-grid [dbxListTitleGroup]="docValueGroupDelegate" [state]="state$" (loadMore)="loadMore()"></doc-item-list-grid>
         </div>
         <h4>Accordion Example</h4>
+        <p>
+          Accordion views disable sticky group headers by default. This example enables them via
+          <code>stickyHeaders: true</code>
+          .
+        </p>
         <div class="dbx-pb3" style="height: 400px">
           <doc-item-list-accordion [dbxListTitleGroup]="docValueGroupDelegate" [state]="state$" (loadMore)="loadMore()"></doc-item-list-accordion>
         </div>

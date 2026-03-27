@@ -35,7 +35,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   template: `
     @switch (selectionMode()) {
       @case ('view') {
-        <dbx-list-view-content [items]="items()"></dbx-list-view-content>
+        <dbx-list-view-content [items]="items()" [stickyHeaders]="stickyHeaders()"></dbx-list-view-content>
       }
       @default {
         <mat-selection-list [disabled]="disabledSignal()" [multiple]="multiple()" (selectionChange)="matSelectionChanged($event)">
@@ -95,7 +95,7 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
 @Component({
   selector: 'dbx-selection-list-view',
   template: `
-    <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()"></dbx-selection-list-view-content>
+    <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-selection-list-view-content>
   `,
   standalone: true,
   imports: [DbxSelectionValueListViewContentComponent],
@@ -110,4 +110,5 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
 
   readonly selectionModeSignal = toSignal(this.selectionMode$, { initialValue: 'select' as DbxListSelectionMode });
   readonly multipleSignal = computed(() => this.config()?.multiple ?? true);
+  readonly stickyHeadersSignal = computed(() => this.config()?.stickyHeaders);
 }

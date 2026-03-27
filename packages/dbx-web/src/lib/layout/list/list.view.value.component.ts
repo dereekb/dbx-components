@@ -20,6 +20,10 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
    * When true, emits click events for all items regardless of whether they have anchors.
    */
   readonly emitAllClicks?: boolean;
+  /**
+   * @see AbstractDbxValueListViewConfig.stickyHeaders
+   */
+  readonly stickyHeaders?: boolean;
 }
 
 /**
@@ -126,7 +130,8 @@ export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackB
     </mat-nav-list>
   `,
   host: {
-    class: 'dbx-list-view'
+    class: 'dbx-list-view',
+    '[class.dbx-list-sticky-headers]': 'stickyHeaders()'
   },
   standalone: true,
   imports: [MatNavList, DbxValueListViewContentGroupComponent],
@@ -141,6 +146,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 
   readonly items = input<Maybe<DbxValueListItemConfig<T, I>[]>>();
   readonly emitAllClicks = input<Maybe<boolean>>();
+  readonly stickyHeaders = input<Maybe<boolean>>(false);
 
   readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
     switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
@@ -179,7 +185,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 @Component({
   selector: 'dbx-list-view',
   template: `
-    <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()"></dbx-list-view-content>
+    <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-list-view-content>
   `,
   standalone: true,
   imports: [DbxValueListViewContentComponent],
@@ -187,4 +193,5 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 })
 export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
   readonly emitAllClicksSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.emitAllClicks);
+  readonly stickyHeadersSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.stickyHeaders);
 }
