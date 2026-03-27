@@ -31,7 +31,7 @@ export class DbxFirebaseOidcEntryClientListComponent extends AbstractDbxSelectio
 export class DbxFirebaseOidcEntryClientListViewComponent extends AbstractDbxSelectionListViewDirective<OidcEntry> {
   readonly config: DbxSelectionValueListViewConfig<OidcEntryWithSelection> = {
     componentClass: DbxFirebaseOidcEntryClientListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y, i) => ({ ...y, key: `oidc_${i}`, itemValue: y })))
   };
 }
 

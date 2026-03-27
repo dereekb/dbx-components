@@ -32,7 +32,7 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
   readonly config: DbxSelectionValueListViewConfig<GuestbookEntryWithSelection> = {
     componentClass: DemoGuestbookEntryListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y, key: y.signed })))
   };
 
   constructor() {

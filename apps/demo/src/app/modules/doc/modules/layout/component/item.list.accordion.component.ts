@@ -35,7 +35,7 @@ export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirecti
 export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionViewDirective<DocValue> {
   readonly config: DbxValueListAccordionViewConfig<DocValueWithSelection> = {
     componentClass: DocItemListAccordionItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, itemValue: y }))),
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.name, itemValue: y }))),
     multi: true,
     stickyHeaders: true
   };

@@ -37,7 +37,7 @@ export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<
 export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective<DocValue> {
   readonly config: DbxValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocCustomItemListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y }))),
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.name, icon: y.icon, itemValue: y }))),
     metaConfig: DbxListViewMetaIconComponent.metaConfig('chevron_right')
   };
 }

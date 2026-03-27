@@ -50,7 +50,7 @@ export class DbxFirebaseDevelopmentSchedulerListComponent extends AbstractDbxSel
 export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDbxSelectionListViewDirective<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {
   readonly config: DbxSelectionValueListViewConfig<ScheduledFunctionDevelopmentFirebaseFunctionListEntryWithSelection> = {
     componentClass: DbxFirebaseDevelopmentSchedulerListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.name, icon: y.icon, itemValue: y })))
   };
 }
 

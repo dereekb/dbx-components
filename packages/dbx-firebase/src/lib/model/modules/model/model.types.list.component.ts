@@ -36,7 +36,7 @@ export class DbxFirebaseModelTypeInstanceListComponent extends AbstractDbxSelect
 export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseModelTypesServiceInstancePair> {
   readonly config: DbxSelectionValueListViewConfig<DbxFirebaseModelTypeInstanceListItem> = {
     componentClass: DbxFirebaseModelTypeInstanceListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ itemValue: y, icon: y.displayInfo.icon ?? y.icon, anchor: y.segueRef })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ itemValue: y, key: y.key, icon: y.displayInfo.icon ?? y.icon, anchor: y.segueRef })))
   };
 }
 

@@ -1,20 +1,7 @@
 import { type Guestbook } from 'demo-firebase';
 import { Component } from '@angular/core';
-import {
-  AbstractDbxSelectionListWrapperDirective,
-  AbstractDbxValueListViewItemComponent,
-  AbstractDbxSelectionListViewDirective,
-  type DbxSelectionValueListViewConfig,
-  provideDbxListView,
-  type DbxValueAsListItem,
-  provideDbxListViewWrapper,
-  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
-  DbxSelectionValueListViewComponentImportsModule,
-  DbxListWrapperComponentImportsModule,
-  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE
-} from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, provideDbxListView, type DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
-
 export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
 
 @Component({
@@ -43,7 +30,7 @@ export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperD
 export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListViewDirective<Guestbook> {
   readonly config: DbxSelectionValueListViewConfig<GuestbookWithSelection> = {
     componentClass: DemoGuestbookListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.name, icon: y.icon, itemValue: y })))
   };
 }
 

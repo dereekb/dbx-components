@@ -64,7 +64,7 @@ export class DbxZipPreviewEntryListComponent extends AbstractDbxSelectionListWra
 export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionListViewDirective<DbxZipPreviewEntryWithSelection> {
   readonly config: DbxSelectionValueListViewConfig<DbxZipPreviewEntryWithSelection> = {
     componentClass: DbxZipPreviewEntryListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: iconForDbxZipPreviewEntryWithSelection(y), itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.value.slashPathDetails.path, icon: iconForDbxZipPreviewEntryWithSelection(y), itemValue: y })))
   };
 }
 

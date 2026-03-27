@@ -83,7 +83,7 @@ export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxVal
         const item = group.items[i];
         entries.push({
           type: 'item',
-          trackId: `__i__${trackByFn(i, item)}`,
+          trackId: `__i__${group.id}__${trackByFn(i, item)}`,
           item
         });
       }

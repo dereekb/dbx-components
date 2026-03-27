@@ -34,7 +34,7 @@ export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<Do
 export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirective<DocValue> {
   readonly config: DbxValueListGridViewConfig<DocValueWithSelection> = {
     componentClass: DocItemListGridViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, key: y.name, icon: y.icon, itemValue: y })))
   };
 }
 

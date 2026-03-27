@@ -91,7 +91,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
       mapLoadingStateResults<DocValue[], DocValueWithSelection[]>(x, {
         mapValue: (values) =>
           values.map((x: DocValue) => {
-            const item: DocValueWithSelection = { ...x, selected: Math.random() > 0.5, disabled: Math.random() > 0.8 };
+            const item: DocValueWithSelection = { ...x, selected: Math.random() > 0.5, key: x.name, disabled: Math.random() > 0.8 };
             return item;
           })
       })
