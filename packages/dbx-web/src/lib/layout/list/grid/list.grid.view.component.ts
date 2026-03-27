@@ -173,7 +173,7 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
 @Component({
   selector: 'dbx-list-grid-view',
   template: `
-    <dbx-list-grid-view-content [items]="itemsSignal()" [grid]="config().grid" [emitAllClicks]="config().emitAllClicks"></dbx-list-grid-view-content>
+    <dbx-list-grid-view-content [items]="itemsSignal()" [grid]="config().grid" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? true"></dbx-list-grid-view-content>
   `,
   standalone: true,
   imports: [DbxValueListGridViewContentComponent],

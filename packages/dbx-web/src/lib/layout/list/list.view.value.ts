@@ -83,6 +83,12 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
    * @see DbxListViewMetaIconComponent.metaConfig()
    */
   metaConfig?: DbxInjectionComponentConfig<any>;
+  /**
+   * Whether group headers should stick to the top of the scroll container.
+   *
+   * Defaults to `true` for list, selection list, and grid views, `false` for accordion views.
+   */
+  readonly stickyHeaders?: boolean;
 }
 
 /**

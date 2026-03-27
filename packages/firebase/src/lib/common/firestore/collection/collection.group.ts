@@ -1,4 +1,6 @@
+import { type Building } from '@dereekb/util';
 import { type FirestoreDocument, firestoreDocumentAccessorContextExtension, type LimitedFirestoreDocumentAccessorFactoryConfig, limitedFirestoreDocumentAccessorFactory, type LimitedFirestoreDocumentAccessorFactoryFunction } from '../accessor/document';
+import { type FirestoreCollectionCacheConfig } from '../cache/cache';
 import { firestoreFixedItemPageIterationFactory, type FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
 import { type FirestoreContextReference } from '../reference';
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
@@ -17,7 +19,7 @@ import { type FirestoreCollectionLike } from './collection';
  * @template T - The data type of the documents in the collection group
  * @template D - The FirestoreDocument type that wraps the data, defaults to FirestoreDocument<T>
  */
-export interface FirestoreCollectionGroupConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextReference, FirestoreDrivers, FirestoreItemPageIterationBaseConfig<T>, LimitedFirestoreDocumentAccessorFactoryConfig<T, D> {}
+export interface FirestoreCollectionGroupConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextReference, FirestoreDrivers, FirestoreItemPageIterationBaseConfig<T>, LimitedFirestoreDocumentAccessorFactoryConfig<T, D>, Partial<FirestoreCollectionCacheConfig> {}
 
 /**
  * Interface for working with documents across a Firestore collection group.
@@ -59,6 +61,9 @@ export interface FirestoreCollectionGroup<T, D extends FirestoreDocument<T> = Fi
 export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D> {
   const { modelIdentity, queryLike, firestoreContext, firestoreAccessorDriver } = config;
 
+  const cache = firestoreContext.cache.cacheForCollection<T>(modelIdentity.collectionType, { defaultTtl: config.defaultTtl ?? 0 });
+  (config as Building<typeof config>).cache = cache;
+
   // Create the document accessor for loading documents
   const documentAccessor: LimitedFirestoreDocumentAccessorFactoryFunction<T, D> = limitedFirestoreDocumentAccessorFactory(config);
 
@@ -79,6 +84,7 @@ export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(
   // Return the fully constructed collection group
   return {
     config,
+    cache,
     queryLike,
     modelIdentity,
     firestoreContext,

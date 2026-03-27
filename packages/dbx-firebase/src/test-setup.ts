@@ -1,1 +1,1 @@
-import '../../../vitest.setup.angular';
+import '@dereekb/vitest/setup-angular';

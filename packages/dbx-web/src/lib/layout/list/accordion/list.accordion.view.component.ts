@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { type DbxValueListItem } from '../list.view.value';
+import { ChangeDetectionStrategy, Component, computed, inject, input, type TrackByFunction } from '@angular/core';
+import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
 import { AbstractDbxValueListViewDirective } from '../list.view.value.directive';
 import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListViewContentComponent, type DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from '../list.view.value.component';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxInjectionComponent } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatAccordion } from '@angular/material/expansion';
 import { type DbxValueListItemGroup } from '../group/list.view.value.group';
 
@@ -19,9 +19,94 @@ export interface DbxValueListAccordionViewConfig<T, I extends DbxValueListItem<T
   readonly multi?: boolean;
 }
 
+// MARK: Render Entries
+/**
+ * Render entry for an item within the flat accordion list.
+ */
+export interface DbxAccordionRenderItemEntry<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
+  readonly type: 'item';
+  readonly trackId: string;
+  readonly item: DbxValueListItemConfig<T, I>;
+}
+
+/**
+ * Render entry for a group header within the flat accordion list.
+ */
+export interface DbxAccordionRenderGroupHeaderEntry {
+  readonly type: 'group-header';
+  readonly trackId: string;
+  readonly headerConfig: DbxInjectionComponentConfig;
+  readonly cssClasses?: string;
+}
+
+/**
+ * Render entry for a group footer within the flat accordion list.
+ */
+export interface DbxAccordionRenderGroupFooterEntry {
+  readonly type: 'group-footer';
+  readonly trackId: string;
+  readonly footerConfig: DbxInjectionComponentConfig;
+}
+
+/**
+ * Discriminated union of all render entry types used by the flat accordion list.
+ */
+export type DbxAccordionRenderEntry<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> = DbxAccordionRenderItemEntry<T, I> | DbxAccordionRenderGroupHeaderEntry | DbxAccordionRenderGroupFooterEntry;
+
+/**
+ * Flattens grouped accordion items into a single array of render entries with stable track IDs.
+ *
+ * @example
+ * ```ts
+ * const entries = flattenAccordionGroups(groups, trackByFn);
+ * ```
+ *
+ * @param groups - the grouped items to flatten
+ * @param trackByFn - the track-by function used to derive stable item identity
+ * @returns a flat array of render entries for use in a single `@for` loop
+ */
+export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxValueListItem<T>>(groups: DbxValueListItemGroup<unknown, T, I>[], trackByFn: TrackByFunction<DbxValueListItemConfig<T, I>>): DbxAccordionRenderEntry<T, I>[] {
+  const entries: DbxAccordionRenderEntry<T, I>[] = [];
+
+  for (const group of groups) {
+    if (group.headerConfig) {
+      entries.push({
+        type: 'group-header',
+        trackId: `__gh__${group.id}`,
+        headerConfig: group.headerConfig,
+        cssClasses: spaceSeparatedCssClasses(group.cssClasses)
+      });
+    }
+
+    if (group.showGroupItems !== false) {
+      for (let i = 0; i < group.items.length; i++) {
+        const item = group.items[i];
+        entries.push({
+          type: 'item',
+          trackId: `__i__${trackByFn(i, item)}`,
+          item
+        });
+      }
+    }
+
+    if (group.footerConfig) {
+      entries.push({
+        type: 'group-footer',
+        trackId: `__gf__${group.id}`,
+        footerConfig: group.footerConfig
+      });
+    }
+  }
+
+  return entries;
+}
+
 // MARK: DbxValueListAccordionViewContentGroupComponent
 /**
  * Renders a single group of items within an accordion view, including optional header and footer injection points.
+ *
+ * @deprecated No longer used by {@link DbxValueListAccordionViewContentComponent}. The content component now renders
+ * a flat list of entries directly. This component is kept exported for backward compatibility.
  *
  * @example
  * ```html
@@ -69,8 +154,9 @@ export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxV
 
 // MARK: DbxValueListAccordionViewContentComponent
 /**
- * Content view that renders grouped list items inside a `mat-accordion`. Each item component is responsible
- * for rendering its own `mat-expansion-panel` structure.
+ * Content view that renders grouped list items inside a `mat-accordion`. Uses a single flat `@for` loop
+ * with stable item identity tracking so that items moving between groups trigger DOM moves instead of
+ * destroy+create cycles.
  *
  * @example
  * ```html
@@ -81,8 +167,22 @@ export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxV
   selector: 'dbx-list-accordion-view-content',
   template: `
     <mat-accordion [multi]="multi() ?? false">
-      @for (group of groupsSignal(); track group.id) {
-        <dbx-list-accordion-view-content-group [group]="group"></dbx-list-accordion-view-content-group>
+      @for (entry of flatEntriesSignal(); track entry.trackId) {
+        @switch (entry.type) {
+          @case ('group-header') {
+            <div class="dbx-list-view-group dbx-list-view-group-header" [class]="entry.cssClasses">
+              <dbx-injection [config]="entry.headerConfig"></dbx-injection>
+            </div>
+          }
+          @case ('item') {
+            <div dbx-injection [config]="entry.item.config"></div>
+          }
+          @case ('group-footer') {
+            <div class="dbx-list-view-group dbx-list-view-group-footer">
+              <dbx-injection [config]="entry.footerConfig"></dbx-injection>
+            </div>
+          }
+        }
       }
     </mat-accordion>
   `,
@@ -90,11 +190,20 @@ export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxV
     class: 'dbx-list-accordion-view'
   },
   standalone: true,
-  imports: [MatAccordion, DbxValueListAccordionViewContentGroupComponent],
+  imports: [MatAccordion, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   readonly multi = input<Maybe<boolean>>();
+
+  readonly trackByFunctionSignal = toSignal(this.trackBy$, { initialValue: DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION });
+
+  readonly flatEntriesSignal = computed(() => {
+    const groups = this.groupsSignal() ?? [];
+    const trackByFn = this.trackByFunctionSignal();
+
+    return flattenAccordionGroups<T, I>(groups as DbxValueListItemGroup<unknown, T, I>[], trackByFn);
+  });
 }
 
 // MARK: DbxValueListAccordionViewComponent
@@ -110,7 +219,7 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
 @Component({
   selector: 'dbx-list-accordion-view',
   template: `
-    <dbx-list-accordion-view-content [items]="itemsSignal()" [multi]="config().multi" [emitAllClicks]="config().emitAllClicks"></dbx-list-accordion-view-content>
+    <dbx-list-accordion-view-content [items]="itemsSignal()" [multi]="config().multi" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? false"></dbx-list-accordion-view-content>
   `,
   standalone: true,
   imports: [DbxValueListAccordionViewContentComponent],

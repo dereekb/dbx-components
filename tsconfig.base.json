@@ -66,7 +66,14 @@
       "demo-components": ["components/demo-components/src/index.ts"],
       "demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/vitest": ["packages/vitest/src/index.ts"],
-      "@dereekb/vitest/a11y": ["packages/vitest/src/a11y.ts"]
+      "@dereekb/vitest/a11y": ["packages/vitest/src/a11y.ts"],
+      "@dereekb/vitest/config": ["packages/vitest/src/config.ts"],
+      "@dereekb/vitest/extend": ["packages/vitest/src/extend.ts"],
+      "@dereekb/vitest/setup-node": ["packages/vitest/src/setup-node.ts"],
+      "@dereekb/vitest/setup-nestjs": ["packages/vitest/src/setup-nestjs.ts"],
+      "@dereekb/vitest/setup-firebase": ["packages/vitest/src/setup-firebase.ts"],
+      "@dereekb/vitest/setup-angular": ["packages/vitest/src/setup-angular.ts"],
+      "@dereekb/vitest/setup-typings": ["packages/vitest/src/setup-typings.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "setup", "dist"]

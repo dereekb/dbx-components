@@ -10,8 +10,13 @@ import { firebaseFirestoreClientDrivers } from './driver';
  *
  * @example
  * ```ts
+ * // Without caching
  * const context = clientFirebaseFirestoreContextFactory(firestore);
- * const collection = context.collection(myCollectionConfig);
+ *
+ * // With caching
+ * const context = clientFirebaseFirestoreContextFactory(firestore, {
+ *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
+ * });
  * ```
  */
 export const clientFirebaseFirestoreContextFactory: FirestoreContextFactory = firestoreContextFactory(firebaseFirestoreClientDrivers());

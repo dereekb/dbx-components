@@ -4,5 +4,8 @@ export default createVitestConfig({
   type: 'firebase',
   pathFromRoot: __dirname,
   projectName: 'firebase-server',
-  requiresFirebaseEnvironment: true
+  requiresFirebaseEnvironment: true,
+  test: {
+    maxWorkers: 3
+  }
 });

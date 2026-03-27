@@ -10,14 +10,17 @@ import {
   makeSingleItemFirestoreCollection,
   type SingleItemFirestoreCollectionConfig,
   type FirestoreCollectionGroup,
+  type FirestoreCollectionGroupConfig,
   makeFirestoreCollectionGroup,
   type RootSingleItemFirestoreCollectionConfig,
   makeRootSingleItemFirestoreCollection,
   type RootSingleItemFirestoreCollection
 } from './collection';
+import { type FirestoreContextCache, type FirestoreContextCacheFactoryRef, type FirestoreContextCacheRef, noopFirestoreContextCache } from './cache/cache';
 import { type FirestoreDrivers } from './driver/driver';
 import { type WriteBatchFactoryReference, type RunTransactionFactoryReference } from './driver';
 import { type DocumentReference, type CollectionReference, type DocumentData, type Firestore, type CollectionGroup } from './types';
+import { type Maybe } from '@dereekb/util';
 import { type QueryLikeReferenceRef } from './reference';
 
 /**
@@ -33,7 +36,7 @@ import { type QueryLikeReferenceRef } from './reference';
  *
  * @template F - The Firestore implementation type (defaults to standard Firestore)
  */
-export interface FirestoreContext<F extends Firestore = Firestore> extends RunTransactionFactoryReference, WriteBatchFactoryReference {
+export interface FirestoreContext<F extends Firestore = Firestore> extends RunTransactionFactoryReference, WriteBatchFactoryReference, FirestoreContextCacheRef {
   /**
    * The underlying Firestore instance.
    */
@@ -139,7 +142,7 @@ export interface FirestoreContext<F extends Firestore = Firestore> extends RunTr
  * @template T - The document data type in the collection
  * @template D - The FirestoreDocument implementation type
  */
-export type FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreCollectionConfig<T, D>, 'firestoreDriverIdentifier' | 'firestoreDriverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver'>;
+export type FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreCollectionConfig<T, D>, 'firestoreDriverIdentifier' | 'firestoreDriverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver' | 'cache'>;
 
 /**
  * Configuration for creating a RootSingleItemFirestoreCollection through a FirestoreContext.
@@ -195,16 +198,33 @@ export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D ex
 export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}
 
 /**
+ * Optional parameters for {@link FirestoreContextFactory} that configure context-level
+ * features like caching. These are separate from the platform drivers because they
+ * are app-level concerns, not platform-level concerns.
+ *
+ * @example
+ * ```ts
+ * const params: FirestoreContextFactoryParams = {
+ *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
+ * };
+ * const context = contextFactory(firestore, params);
+ * ```
+ */
+export interface FirestoreContextFactoryParams extends FirestoreContextCacheFactoryRef {}
+
+/**
  * Factory function type for creating FirestoreContext instances.
  *
- * Takes a Firestore instance and returns a fully configured FirestoreContext that wraps
- * the instance and provides additional functionality through the context interface.
+ * Takes a Firestore instance and optional params, and returns a fully configured
+ * FirestoreContext. The params allow app-level configuration (e.g. caching) to be
+ * provided at the DI injection site rather than at driver creation time.
  *
  * @template F - The Firestore implementation type
  * @param firestore - The Firestore instance to wrap
+ * @param params - Optional context-level configuration (e.g. cache factory)
  * @returns A FirestoreContext instance for the specified Firestore
  */
-export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestore: F) => FirestoreContext;
+export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestore: F, params?: FirestoreContextFactoryParams) => FirestoreContext;
 
 /**
  * Creates a factory function for generating FirestoreContext instances.
@@ -218,7 +238,9 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
  * @returns A factory function that creates FirestoreContext instances
  */
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
-  return (firestore: F) => {
+  return (firestore: F, params?: FirestoreContextFactoryParams) => {
+    const contextCache: FirestoreContextCache = params?.firestoreContextCacheFactory?.() ?? noopFirestoreContextCache();
+
     const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => {
       const collection = (config as Partial<FirestoreContextFirestoreCollectionConfig<T, D>>).collection;
       const queryLike = collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike;
@@ -235,12 +257,13 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
       };
     };
 
-    const firestoreCollection = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>) => makeFirestoreCollection(makeFirestoreCollectionConfig(config) as FirestoreCollectionConfig<T, D>);
-    const firestoreCollectionGroup = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionGroupConfig<T, D>) => makeFirestoreCollectionGroup(makeFirestoreCollectionConfig(config));
+    const firestoreCollection = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>) => makeFirestoreCollection(makeFirestoreCollectionConfig(config) as unknown as FirestoreCollectionConfig<T, D>);
+    const firestoreCollectionGroup = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionGroupConfig<T, D>) => makeFirestoreCollectionGroup(makeFirestoreCollectionConfig(config) as unknown as FirestoreCollectionGroupConfig<T, D>);
 
     const context: FirestoreContext<F> = {
       firestore,
       drivers,
+      cache: contextCache,
       collectionGroup: (collectionId: string) => drivers.firestoreAccessorDriver.collectionGroup(firestore, collectionId),
       collection: (path: string, ...pathSegments: string[]) => drivers.firestoreAccessorDriver.collection(firestore, path, ...pathSegments),
       subcollection: drivers.firestoreAccessorDriver.subcollection,
@@ -248,16 +271,16 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
       batch: drivers.firestoreAccessorDriver.writeBatchFactoryForFirestore(firestore),
       firestoreCollection,
       rootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(inputConfig: FirestoreContextRootSingleItemFirestoreCollectionConfig<T, D>): RootSingleItemFirestoreCollection<T, D> {
-        const config: RootSingleItemFirestoreCollectionConfig<T, D> = makeFirestoreCollectionConfig(inputConfig) as RootSingleItemFirestoreCollectionConfig<T, D>;
+        const config: RootSingleItemFirestoreCollectionConfig<T, D> = makeFirestoreCollectionConfig(inputConfig) as unknown as RootSingleItemFirestoreCollectionConfig<T, D>;
         return makeRootSingleItemFirestoreCollection(config);
       },
       firestoreCollectionGroup,
       firestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(inputConfig: FirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD> {
-        const config: FirestoreCollectionWithParentConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig) as FirestoreCollectionWithParentConfig<T, PT, D, PD>;
+        const config: FirestoreCollectionWithParentConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig) as unknown as FirestoreCollectionWithParentConfig<T, PT, D, PD>;
         return makeFirestoreCollectionWithParent(config);
       },
       singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(inputConfig: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD> {
-        const config: SingleItemFirestoreCollectionConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig) as SingleItemFirestoreCollectionConfig<T, PT, D, PD>;
+        const config: SingleItemFirestoreCollectionConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig) as unknown as SingleItemFirestoreCollectionConfig<T, PT, D, PD>;
         return makeSingleItemFirestoreCollection(config);
       }
     };

@@ -2,7 +2,8 @@
 // any is used with intent here, as the recursive AbstractFirestoreDocument requires its use to terminate.
 
 import { lazyFrom } from '@dereekb/rxjs';
-import { type Observable } from 'rxjs';
+import { type Observable, map, tap } from 'rxjs';
+import { type FirestoreCollectionCache, type FirestoreCollectionDocumentCache, firestoreCollectionDocumentCache, noopFirestoreCollectionDocumentCache } from '../cache/cache';
 import { type FirestoreAccessorDriverRef } from '../driver/accessor';
 import { type FirestoreCollectionNameRef, type FirestoreModelId, type FirestoreModelIdentityCollectionName, type FirestoreModelIdentityModelType, type FirestoreModelIdentityRef, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef, type FirestoreModelTypeRef, type FirestoreModelIdentity, type FirestoreModelTypeModelIdentityRef } from './../collection/collection';
 import { type DocumentReference, type CollectionReference, type Transaction, type WriteBatch, type DocumentSnapshot, type SnapshotOptions, type WriteResult, type FirestoreDataConverter } from '../types';
@@ -34,6 +35,7 @@ import { arrayUpdateWithAccessorFunction } from './array';
  */
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
+  readonly cache: FirestoreCollectionDocumentCache<T>;
   readonly id: FirestoreModelId;
   snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>>;
   snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>>;
@@ -69,6 +71,7 @@ export type FirestoreDocumentData<D extends FirestoreDocument<any>> = D extends 
 export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, I>, I extends FirestoreModelIdentity = FirestoreModelIdentity> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
   private readonly _accessor: FirestoreDocumentDataAccessor<T>;
   private readonly _documentAccessor: LimitedFirestoreDocumentAccessor<T, D>;
+  private readonly _cache: FirestoreCollectionDocumentCache<T>;
 
   readonly stream$ = lazyFrom(() => this._accessor.stream());
   readonly data$: Observable<T> = lazyFrom(() => dataFromSnapshotStream(this.stream$));
@@ -76,10 +79,15 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   constructor(accessor: FirestoreDocumentDataAccessor<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {
     this._accessor = accessor;
     this._documentAccessor = documentAccessor;
+    this._cache = documentAccessor.cacheForDocument(accessor.documentRef);
   }
 
   get accessor(): FirestoreDocumentDataAccessor<T> {
     return this._accessor;
+  }
+
+  get cache(): FirestoreCollectionDocumentCache<T> {
+    return this._cache;
   }
 
   get documentAccessor(): LimitedFirestoreDocumentAccessor<T, D> {
@@ -119,38 +127,63 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   /**
    * Retrieves a DocumentSnapshot of the document as an Observable. Streams based on the input mode.
    *
+   * Passively populates the cache with each emitted snapshot.
+   *
    * @param mode - The stream mode controlling how the Observable emits snapshot updates
    * @returns An Observable that emits DocumentSnapshot values based on the given mode
    */
   snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>> {
-    return snapshotStreamForAccessor(this.accessor, mode);
+    return snapshotStreamForAccessor(this.accessor, mode).pipe(
+      tap((snap) => {
+        const data = snap.data();
+
+        if (data != null) {
+          this._cache.set({ data });
+        }
+      })
+    );
   }
 
   /**
    * Retrieves the data of the DocumentSnapshot of the document as an Observable. Streams based on the input mode.
+   *
+   * Passively populates the cache via {@link snapshotStream}.
    *
    * @param mode - The stream mode controlling how the Observable emits snapshot data updates
    * @param options - Optional SnapshotOptions for reading the document data
    * @returns An Observable that emits the document data or undefined based on the given mode
    */
   snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>> {
-    return snapshotStreamDataForAccessor(this.accessor, mode, options);
+    return this.snapshotStream(mode).pipe(map((snap) => snap.data(options)));
   }
 
   /**
-   * Retrieves a DocumentSnapshot of the document.
+   * Retrieves a DocumentSnapshot of the document from Firestore.
    *
-   * @returns
+   * Passively populates the cache with the fetched snapshot.
+   *
+   * @returns A Promise resolving to the document snapshot
    */
   snapshot(): Promise<DocumentSnapshot<T>> {
-    return this.accessor.get();
+    return this.accessor.get().then((snap) => {
+      const data = snap.data();
+
+      if (data != null) {
+        this._cache.set({ data });
+      }
+
+      return snap;
+    });
   }
 
   /**
-   * Retrieves the data of the DocumentSnapshot of the document.
+   * Retrieves the data of the document, checking the cache first.
    *
-   * @param options
-   * @returns
+   * If a fresh cache entry exists, returns it without hitting Firestore.
+   * Otherwise falls through to {@link snapshot} which populates the cache.
+   *
+   * @param options - Optional SnapshotOptions for reading the document data
+   * @returns A Promise resolving to the document data, or undefined if the document does not exist
    */
   snapshotData(options?: SnapshotOptions): Promise<Maybe<T>> {
     return this.snapshot().then((x) => x.data(options));
@@ -169,46 +202,65 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   /**
    * Creates the document if it does not exist, using the accessor's create functionality.
    *
-   * @param data
-   * @returns
+   * Populates the cache with the written data after a successful create.
+   *
+   * @param data - The document data to create
+   * @returns A Promise that resolves when the create completes
    */
   create(data: T): Promise<WriteResult | void> {
-    return this.accessor.create(data);
+    return this.accessor.create(data).then((result) => {
+      this._cache.set({ data });
+      return result;
+    });
   }
 
   /**
-   * Updates the document using the accessor's update functionalty if the document exists. This differs from Firestore's default
+   * Updates the document using the accessor's update functionality if the document exists. This differs from Firestore's default
    * update implementation which does not use the configured converter. This update function will, allowing the use of
    * snapshotConverterFunctions().
    *
-   * Throws an exception when it does not exist.
+   * Invalidates the cache entry since partial updates don't provide the full document.
+   * Throws an exception when the document does not exist.
    *
    * @param data - Partial document data to update
    * @param params - Optional update parameters
    * @returns A Promise that resolves when the update completes
    */
   update(data: Partial<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
-    return updateWithAccessorUpdateAndConverterFunction(this.accessor, this.converter)(data, params);
+    return updateWithAccessorUpdateAndConverterFunction(this.accessor, this.converter)(data, params).then((result) => {
+      this._cache.invalidate();
+      return result;
+    });
   }
 
   /**
    * Updates the document using the accessor's increment functionality.
    *
+   * Invalidates the cache entry since increment updates don't provide the full document.
+   *
    * @param data - The increment update to apply to numeric fields
    * @returns A Promise that resolves when the increment update completes
    */
   increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<WriteResult | void> {
-    return incrementUpdateWithAccessorFunction<T>(this.accessor)(data);
+    return incrementUpdateWithAccessorFunction<T>(this.accessor)(data).then((result) => {
+      this._cache.invalidate();
+      return result;
+    });
   }
 
   /**
    * Updates the document using the accessor's array field update functionality.
    *
+   * Invalidates the cache entry since array updates don't provide the full document.
+   *
    * @param data - The array field update to apply (union or remove elements)
    * @returns A Promise that resolves when the array update completes
    */
   arrayUpdate(data: FirestoreAccessorArrayUpdate<T>): Promise<WriteResult | void> {
-    return arrayUpdateWithAccessorFunction<T>(this.accessor)(data);
+    return arrayUpdateWithAccessorFunction<T>(this.accessor)(data).then((result) => {
+      this._cache.invalidate();
+      return result;
+    });
   }
 }
 
@@ -234,6 +286,17 @@ export type FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = Fir
  */
 export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDataConverterRef<T>, FirestoreModelTypeModelIdentityRef, FirestoreAccessorDriverRef {
   readonly databaseContext: FirestoreDocumentContext<T>;
+
+  /**
+   * Returns the collection cache for the given document reference.
+   *
+   * Returns a noop cache when operating within a transaction or write batch context,
+   * since cache reads/writes must be bypassed in those contexts.
+   *
+   * @param ref - The document reference to get the cache for
+   * @returns The collection cache (real or noop) for the document
+   */
+  cacheForDocument(ref: DocumentReference<T>): FirestoreCollectionDocumentCache<T>;
 
   /**
    * Loads a document from the datastore.
@@ -346,6 +409,10 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
    * Optional InterceptFirestoreDataConverterFactory to return a modified converter.
    */
   readonly converterFactory?: InterceptFirestoreDataConverterFactory<T>;
+  /**
+   * The collection cache for documents created by this factory.
+   */
+  readonly cache: FirestoreCollectionCache<T>;
   readonly makeDocument: FirestoreDocumentFactoryFunction<T, D>;
 }
 
@@ -356,13 +423,16 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
  * @returns A factory function for creating LimitedFirestoreDocumentAccessor instances
  */
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
-  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputDefaultConverter, converterFactory: inputConverterFactory, modelIdentity } = config;
+  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputDefaultConverter, converterFactory: inputConverterFactory, modelIdentity, cache: inputCache } = config;
   const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collectionName) : modelIdentity.collectionName;
   const converterFactory: FirestoreDataConverterFactory<T> = inputConverterFactory ? (ref) => (ref ? (inputConverterFactory(ref) ?? inputDefaultConverter) : inputDefaultConverter) : () => inputDefaultConverter;
 
   const result = ((context?: FirestoreDocumentContext<T>) => {
     const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();
     const dataAccessorFactory = interceptAccessorFactory ? interceptAccessorFactory(databaseContext.accessorFactory) : databaseContext.accessorFactory;
+
+    // Transaction/batch contexts bypass cache; otherwise bind the collection cache to the document ref
+    const cacheForDocument = context ? () => noopFirestoreCollectionDocumentCache<T>() : (ref: DocumentReference<T>) => firestoreCollectionDocumentCache(inputCache, ref.path);
 
     function loadDocument(ref: DocumentReference<T>) {
       const converter = converterFactory(ref);
@@ -390,6 +460,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
       converter: inputDefaultConverter,
       converterFactory,
       modelIdentity,
+      cacheForDocument,
       loadDocumentFrom(document: FirestoreDocument<T>): D {
         return loadDocument(document.documentRef);
       },

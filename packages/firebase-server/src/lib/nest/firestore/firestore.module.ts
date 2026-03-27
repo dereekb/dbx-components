@@ -1,7 +1,7 @@
 import type * as admin from 'firebase-admin';
 import { type InjectionToken, Module, type ModuleMetadata, type Provider } from '@nestjs/common';
-import { type FirestoreContext } from '@dereekb/firebase';
-import { type ClassLikeType } from '@dereekb/util';
+import { type FirestoreContext, type FirestoreContextCacheFactory, type FirestoreContextFactoryParams } from '@dereekb/firebase';
+import { type ClassLikeType, type Maybe } from '@dereekb/util';
 import { googleCloudFirestoreContextFactory } from '../../firestore/firestore';
 import { FIREBASE_APP_TOKEN } from '../firebase/firebase.module';
 
@@ -32,7 +32,8 @@ export const FIREBASE_FIRESTORE_CONTEXT_TOKEN: InjectionToken = 'FIREBASE_FIREST
 export class FirebaseServerFirestoreModule {}
 
 /**
- * Nest provider module for firebase that includes the FirebaseServerFirestoreModule and provides a value for FIRESTORE_CONTEXT_TOKEN using the googleCloudFirestoreContextFactory.
+ * Nest provider module for firebase that includes the FirebaseServerFirestoreModule and provides
+ * a value for FIRESTORE_CONTEXT_TOKEN using the googleCloudFirestoreContextFactory without caching.
  */
 @Module({
   imports: [FirebaseServerFirestoreModule],
@@ -46,6 +47,54 @@ export class FirebaseServerFirestoreModule {}
   exports: [FirebaseServerFirestoreModule, FIREBASE_FIRESTORE_CONTEXT_TOKEN]
 })
 export class FirebaseServerFirestoreContextModule {}
+
+// MARK: Dynamic Context Module
+/**
+ * Configuration for {@link firebaseServerFirestoreContextModuleMetadata}.
+ */
+export interface FirebaseServerFirestoreContextModuleConfig {
+  /**
+   * Cache factory that creates a {@link FirestoreContextCache} for the context.
+   *
+   * The context cache provides TTL-based caching for document reads. Generally not needed
+   * for short-lived Cloud Function invocations, but useful for long-running processes.
+   */
+  readonly firestoreContextCacheFactory: FirestoreContextCacheFactory;
+}
+
+/**
+ * Generates NestJS {@link ModuleMetadata} for a dynamic Firestore context module
+ * that includes the {@link FirebaseServerFirestoreModule} and provides a
+ * {@link FIREBASE_FIRESTORE_CONTEXT_TOKEN} with cache support.
+ *
+ * If caching is not needed, use {@link FirebaseServerFirestoreContextModule} directly instead.
+ *
+ * @param config - Configuration including the cache factory
+ * @returns Module metadata ready for the `@Module()` decorator
+ *
+ * @example
+ * ```typescript
+ * @Module(firebaseServerFirestoreContextModuleMetadata({
+ *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
+ * }))
+ * export class AppFirestoreContextModule {}
+ * ```
+ */
+export function firebaseServerFirestoreContextModuleMetadata(config: FirebaseServerFirestoreContextModuleConfig): ModuleMetadata {
+  const params: FirestoreContextFactoryParams = { firestoreContextCacheFactory: config.firestoreContextCacheFactory };
+
+  return {
+    imports: [FirebaseServerFirestoreModule],
+    providers: [
+      {
+        provide: FIREBASE_FIRESTORE_CONTEXT_TOKEN,
+        useFactory: (firestore: admin.firestore.Firestore) => googleCloudFirestoreContextFactory(firestore, params),
+        inject: [FIREBASE_FIRESTORE_TOKEN]
+      }
+    ],
+    exports: [FirebaseServerFirestoreModule, FIREBASE_FIRESTORE_CONTEXT_TOKEN]
+  };
+}
 
 // MARK: AppFirestoreCollections
 /**
@@ -88,11 +137,16 @@ export function provideAppFirestoreCollections<T>({ provide, useFactory }: Provi
 }
 
 // MARK: app firestore module
-export interface ProvideAppFirestoreModuleMetadataConfig<T> extends ProvideAppFirestoreCollectionsConfig<T>, Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {}
+export interface ProvideAppFirestoreModuleMetadataConfig<T> extends ProvideAppFirestoreCollectionsConfig<T>, Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'>, Partial<FirebaseServerFirestoreContextModuleConfig> {}
 
 /**
- * Generates NestJS {@link ModuleMetadata} for an app's Firestore module, including the
- * {@link FirebaseServerFirestoreContextModule} import and the app's collections provider.
+ * Generates NestJS {@link ModuleMetadata} for an app's Firestore module, including
+ * the Firestore context module and the app's collections provider.
+ *
+ * When a {@link FirestoreContextCacheFactory} is provided via
+ * {@link ProvideAppFirestoreModuleMetadataConfig.firestoreContextCacheFactory},
+ * a dynamic context module with cache support is used instead of the default
+ * {@link FirebaseServerFirestoreContextModule}.
  *
  * @param config - The Firestore collections config plus optional additional module metadata.
  * @returns NestJS module metadata ready to be passed to the `@Module()` decorator.
@@ -105,11 +159,24 @@ export interface ProvideAppFirestoreModuleMetadataConfig<T> extends ProvideAppFi
  * }))
  * export class AppFirestoreModule {}
  * ```
+ *
+ * @example
+ * ```typescript
+ * // With caching
+ * @Module(appFirestoreModuleMetadata({
+ *   provide: DemoFirestoreCollections,
+ *   useFactory: (context) => new DemoFirestoreCollections(context),
+ *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
+ * }))
+ * export class AppFirestoreModule {}
+ * ```
  */
 export function appFirestoreModuleMetadata<T>(config: ProvideAppFirestoreModuleMetadataConfig<T>): ModuleMetadata {
+  const contextModuleMetadata = config.firestoreContextCacheFactory ? firebaseServerFirestoreContextModuleMetadata({ firestoreContextCacheFactory: config.firestoreContextCacheFactory }) : { imports: [FirebaseServerFirestoreContextModule], exports: [FirebaseServerFirestoreContextModule] };
+
   return {
-    imports: [FirebaseServerFirestoreContextModule, ...(config.imports ?? [])],
-    exports: [FirebaseServerFirestoreContextModule, config.provide, ...(config.exports ?? [])],
-    providers: [...provideAppFirestoreCollections(config), ...(config.providers ?? [])]
+    imports: [...(contextModuleMetadata.imports ?? []), ...(config.imports ?? [])],
+    exports: [...(contextModuleMetadata.exports ?? []), config.provide, ...(config.exports ?? [])],
+    providers: [...(contextModuleMetadata.providers ?? []), ...provideAppFirestoreCollections(config), ...(config.providers ?? [])]
   };
 }

@@ -90,13 +90,18 @@ $list-item-padded-min-height: 42px;
 
   .dbx-list-view-group {
     .dbx-list-view-group-header {
-      z-index: 100;
-      position: sticky;
-      top: 0;
-
       .dbx-list-two-line-item .dbx-list-two-line-item-with-icon {
         padding: 2px 0; // override the padding when there is an icon
       }
+    }
+  }
+
+  .dbx-list-sticky-headers {
+    .dbx-list-view-group .dbx-list-view-group-header,
+    .dbx-list-view-group.dbx-list-view-group-header {
+      z-index: 100;
+      position: sticky;
+      top: 0;
     }
   }
 

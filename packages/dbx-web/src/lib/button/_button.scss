@@ -49,7 +49,8 @@ $big-button-height: 46px; // 33% bigger
   }
 
   .dbx-button-wrap-group {
-    > dbx-button {
+    > dbx-button,
+    > dbx-anchor {
       display: inline-block;
       padding: 0 6px 6px 0;
     }
