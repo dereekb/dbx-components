@@ -43,6 +43,7 @@
     }
   },
   "peerDependencies": {
+    "@dereekb/rxjs": "13.6.9",
     "@dereekb/util": "13.6.9",
     "discord.js": "^14.25.1",
     "@nestjs/common": "^11.1.17",
