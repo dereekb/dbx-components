@@ -1,15 +1,15 @@
 {
   "name": "@dereekb/firebase-server/test",
-  "version": "13.6.9",
+  "version": "13.6.10",
   "peerDependencies": {
-    "@dereekb/analytics": "13.6.9",
-    "@dereekb/date": "13.6.9",
-    "@dereekb/firebase": "13.6.9",
-    "@dereekb/firebase-server": "13.6.9",
-    "@dereekb/model": "13.6.9",
-    "@dereekb/nestjs": "13.6.9",
-    "@dereekb/rxjs": "13.6.9",
-    "@dereekb/util": "13.6.9",
+    "@dereekb/analytics": "13.6.10",
+    "@dereekb/date": "13.6.10",
+    "@dereekb/firebase": "13.6.10",
+    "@dereekb/firebase-server": "13.6.10",
+    "@dereekb/model": "13.6.10",
+    "@dereekb/nestjs": "13.6.10",
+    "@dereekb/rxjs": "13.6.10",
+    "@dereekb/util": "13.6.10",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/storage": "^7.19.0",
     "@nestjs/common": "^11.1.17",
@@ -21,6 +21,6 @@
     "make-error": "^1.3.0"
   },
   "devDependencies": {
-    "@dereekb/nestjs": "13.6.9"
+    "@dereekb/nestjs": "13.6.10"
   }
 }
