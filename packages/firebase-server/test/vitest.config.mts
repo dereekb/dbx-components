@@ -3,5 +3,9 @@ import { createVitestConfig } from '../../../vitest.preset.config.mjs';
 export default createVitestConfig({
   type: 'firebase',
   pathFromRoot: __dirname,
-  projectName: 'firebase-server-test'
+  projectName: 'firebase-server-test',
+  requiresFirebaseEnvironment: true,
+  test: {
+    maxWorkers: 3
+  }
 });
