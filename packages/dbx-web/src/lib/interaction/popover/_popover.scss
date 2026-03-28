@@ -50,8 +50,6 @@ $dbx-popover-header-height: 48px;
 
     .dbx-popover-header-content {
       width: 100%;
-      display: flex;
-      align-items: center;
     }
 
     h3 {
@@ -80,13 +78,6 @@ $dbx-popover-header-height: 48px;
 }
 
 @mixin responsive($theme-config) {
-  .dbx-popover-header {
-    .dbx-popover-header-content {
-      @include theming.if-small-screen($theme-config) {
-        flex-wrap: wrap;
-      }
-    }
-  }
 }
 
 @mixin theme($theme-config) {

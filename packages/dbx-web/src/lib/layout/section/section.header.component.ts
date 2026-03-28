@@ -21,7 +21,7 @@ import { NgTemplateOutlet } from '@angular/common';
 @Component({
   selector: 'dbx-section-header,.dbx-section-header',
   template: `
-    <div class="dbx-section-header-content">
+    <div class="dbx-section-header-content dbx-flex-bar">
       @if (showTitleSignal()) {
         @switch (headerConfigSignal().h ?? 1) {
           @case (1) {

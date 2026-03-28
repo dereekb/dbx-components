@@ -2,7 +2,7 @@ import { type ArrayOrValue, asArray } from '../array/array';
 import { type EmailAddress } from '../contact/email';
 import { type E164PhoneNumberExtensionPair, type E164PhoneNumberWithOptionalExtension, type PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { type IndexRangeInput } from './../value/indexed';
-import { isolateSlashPathFunction, isSlashPathFolder, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
+import { isolateSlashPathFunction, isSlashPathFolder, isValidSlashPath, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, type MapFunction } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 import { escapeStringForRegex, findAllCharacterOccurences, splitStringAtFirstCharacterOccurence } from './replace';
@@ -267,7 +267,7 @@ export function websiteUrlDetails(input: string): WebsiteUrlDetails {
   const portNumber = inputHasPortNumber ? (readPortNumber(input) ?? undefined) : undefined;
 
   const [path, query] = splitStringAtFirstCharacterOccurence(splitPair.path, '?'); // everything after the query is ignored
-  const isWebsiteUrl = pathHasWebsiteDomain && isSlashPathFolder(path + '/');
+  const isWebsiteUrl = pathHasWebsiteDomain && (path === '' || isValidSlashPath(path + '/'));
   const inputHasHttpPrefix = hasHttpPrefix(input);
 
   const result: WebsiteUrlDetails = {

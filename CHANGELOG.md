@@ -1,3 +1,19 @@
+## [13.6.10](https://github.com/dereekb/dbx-components/compare/v13.6.9-dev...v13.6.10) (2026-03-28)
+
+
+### Bug Fixes
+
+- used fixed date in getDateCellTimingFirstEventDateRange test ([8ee25396](https://github.com/dereekb/dbx-components/commit/8ee25396fcf2e69ddc1162b085f163f60ed745ba))
+
+
+### Code Refactoring
+
+- added cross-platform AssetLoader utility ([2acd4d09](https://github.com/dereekb/dbx-components/commit/2acd4d09369971b76bb204a37218f48cf94e189f))
+- added discord public key format validation ([ab202ea9](https://github.com/dereekb/dbx-components/commit/ab202ea9b235338e6af7dc3d51e0aac890babec0))
+- fixed build issue ([c7f88d34](https://github.com/dereekb/dbx-components/commit/c7f88d34a8aed9d2b21db3cbfe5da6e181d7bdfd))
+- unified navbar-like overflow handling with dbx-flex-bar ([ccd2c790](https://github.com/dereekb/dbx-components/commit/ccd2c79086bba0a5e47a37e71e5132d7189cfd30))
+- updated automatic isolate for vitest ([cc5c63fc](https://github.com/dereekb/dbx-components/commit/cc5c63fcc34fdbdea23305a21ca53f04c085672b))
+
 ## [13.6.9](https://github.com/dereekb/dbx-components/compare/v13.6.8-dev...v13.6.9) (2026-03-27)
 
 

@@ -68,6 +68,17 @@ export interface DbxComponentsVitestPresetConfigOptions {
     suiteName?: string;
     outputFilePrefix?: string;
   };
+
+  /**
+   * Name of the environment variable used to detect CI.
+   *
+   * When this env var is `'true'`, isolation defaults to the type-specific value
+   * (e.g. `false` for firebase) for performance. Outside CI, isolation defaults to `true`
+   * so that file changes are always picked up during development.
+   *
+   * Defaults to `'CI'`.
+   */
+  readonly ciEnvVar?: string;
 }
 
 /**
@@ -128,10 +139,18 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
 }
 
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, ciEnvVar = 'CI' } = options;
 
   const rootDir = options.rootDir ?? process.cwd();
   const pathToRoot = path.relative(pathFromRoot, rootDir);
+
+  /**
+   * Whether we're running in CI. Used to determine isolation and pool defaults.
+   *
+   * DBX_VITEST_ISOLATE explicitly overrides isolation regardless of CI detection.
+   * The ciEnvVar (default 'CI') is used to detect CI environments.
+   */
+  const isCI = process.env[ciEnvVar] === 'true';
 
   let environment: VitestTestConfig['environment'] = 'node';
 
@@ -173,9 +192,8 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   }
 
   if (usesFirebase) {
-    const isWatchMode = process.argv.includes('--watch');
     const configuredMaxWorkers = testConfig?.maxWorkers;
-    const useMultipleWorkers = !isWatchMode && configuredMaxWorkers != null && Number(configuredMaxWorkers) > 1;
+    const useMultipleWorkers = process.env['DBX_VITEST_MULTIPLE_WORKERS'] !== 'false' && configuredMaxWorkers != null && Number(configuredMaxWorkers) > 1;
 
     if (useMultipleWorkers) {
       /**
@@ -252,11 +270,14 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         setupFiles,
         reporters,
         /**
-         * Is is important to isolate while using --watch so that all file changes are properly processed/compiled.
+         * It is important to isolate so that all file changes are properly processed/compiled during development.
+         *
+         * In CI, isolation is disabled for performance since modules don't change between runs.
+         * Use DBX_VITEST_ISOLATE env var to explicitly override.
          *
          * See: https://github.com/vitest-dev/vitest/issues/9499
          */
-        isolate: testConfig?.isolate ?? (process.argv.includes('--watch') ? true : isolate),
+        isolate: testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] != null ? process.env['DBX_VITEST_ISOLATE'] === 'true' : isCI ? isolate : true),
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const

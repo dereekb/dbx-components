@@ -1,4 +1,4 @@
-import { type ClassType, type Getter, type WebsitePath, asGetter, makeGetter } from '@dereekb/util';
+import { type ClassType, type Getter, Maybe, type WebsitePath, asGetter, makeGetter } from '@dereekb/util';
 import { type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -8,6 +8,7 @@ import { type StorageBucketId } from '@dereekb/firebase';
 import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { type GlobalRoutePrefixConfig } from './middleware/globalprefix';
 import { buildNestServerRootModule } from './app.module';
+import { type NestServerAssetConfig } from './app.module';
 
 /**
  * A running NestJS server instance backed by Express, paired with a lazy promise getter for the NestJS application context.
@@ -110,6 +111,13 @@ export interface NestServerInstanceConfig<T> {
    * Optional configuration function
    */
   readonly configureNestServerInstance?: ConfigureNestServerInstanceFunction;
+  /**
+   * Optional asset loader configuration.
+   *
+   * When provided, configures the {@link AssetLoader} with the given settings.
+   * The AssetLoader is always provided globally regardless of this config.
+   */
+  readonly assets?: Maybe<NestServerAssetConfig>;
 }
 
 export interface NestFirebaseServerEnvironmentConfig {
@@ -160,7 +168,8 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           forceStorageBucket: config.forceStorageBucket,
           globalApiRoutePrefix: config.globalApiRoutePrefix,
           configureWebhooks: config.configureWebhooks,
-          appCheckEnabled: config.appCheckEnabled !== false // defaults to true in production
+          appCheckEnabled: config.appCheckEnabled !== false, // defaults to true in production
+          assets: config.assets
         });
 
         // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests

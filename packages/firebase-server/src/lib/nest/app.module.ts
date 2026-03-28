@@ -10,6 +10,37 @@ import { DefaultFirebaseServerEnvService } from './env';
 import { firebaseServerEnvTokenProviders, type FirebaseServerEnvironmentConfig } from '../env/env.config';
 import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
 import type * as admin from 'firebase-admin';
+import { AssetLoader, delegatedAssetLoader, fetchAssetLoader } from '@dereekb/rxjs';
+import { nodeJsLocalAssetLoader } from '@dereekb/nestjs';
+
+// MARK: Assets
+
+/**
+ * Default base path for local assets on the server filesystem.
+ */
+export const DEFAULT_SERVER_ASSETS_BASE_PATH = './assets';
+
+/**
+ * Configuration for the server-side asset loader.
+ *
+ * By default, local assets are loaded from {@link DEFAULT_SERVER_ASSETS_BASE_PATH}
+ * via `nodeJsLocalAssetLoader` and remote assets are loaded via `fetchAssetLoader`.
+ *
+ * Override `local` or `remote` to supply custom loader implementations.
+ */
+export interface NestServerAssetConfig {
+  /**
+   * Optional override for the local asset loader.
+   * If omitted, uses `nodeJsLocalAssetLoader` with basePath {@link DEFAULT_SERVER_ASSETS_BASE_PATH}.
+   */
+  readonly local?: AssetLoader;
+
+  /**
+   * Optional override for the remote asset loader.
+   * If omitted, uses `fetchAssetLoader` with default global fetch.
+   */
+  readonly remote?: AssetLoader;
+}
 
 // MARK: Root Module
 export class FirebaseNestServerRootModule {}
@@ -66,6 +97,14 @@ export interface NestServerRootModuleConfig {
    * Defaults to false (production code sets this to true via `appCheckEnabled`).
    */
   readonly appCheckEnabled?: boolean;
+  /**
+   * Optional asset loader configuration.
+   *
+   * When provided, configures the {@link AssetLoader} with the given local base path
+   * and optional remote fetch config. When omitted, the {@link AssetLoader} is still
+   * provided globally with default settings (local base path `'./assets'`).
+   */
+  readonly assets?: Maybe<NestServerAssetConfig>;
 }
 
 // MARK: Result
@@ -178,6 +217,14 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     provide: GlobalRoutePrefixConfig,
     useValue: globalApiRoutePrefixConfig ?? {}
   });
+
+  // Assets — always provide AssetLoader globally
+  const assetConfig = config.assets;
+  const local = assetConfig?.local ?? nodeJsLocalAssetLoader({ basePath: DEFAULT_SERVER_ASSETS_BASE_PATH });
+  const remote = assetConfig?.remote ?? fetchAssetLoader();
+  const loader = delegatedAssetLoader({ local, remote });
+
+  providers.push({ provide: AssetLoader, useValue: loader });
 
   const rootModule: DynamicModule = {
     module: FirebaseNestServerRootModule,

@@ -18,7 +18,7 @@ import { type Maybe } from '@dereekb/util';
   selector: 'dbx-popover-header',
   template: `
     <div class="dbx-popover-header">
-      <div class="dbx-popover-header-content">
+      <div class="dbx-popover-header-content dbx-flex-bar">
         <h3>
           @if (icon()) {
             <mat-icon class="dbx-icon-spacer">{{ icon() }}</mat-icon>

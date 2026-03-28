@@ -1,3 +1,4 @@
+export * from './asset';
 export * from './action';
 export * from './auth';
 export * from './button';

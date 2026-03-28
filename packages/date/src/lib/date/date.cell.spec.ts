@@ -466,7 +466,7 @@ wrapDateTests(() => {
 
   describe('getDateCellTimingFirstEventDateRange()', () => {
     const hours = 4;
-    const startsAt = startOfDay(new Date());
+    const startsAt = new Date('2025-06-15T00:00:00.000Z'); // fixed date away from DST transitions
     const timing = dateCellTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
 
     it('should return the hours in the timing.', () => {
