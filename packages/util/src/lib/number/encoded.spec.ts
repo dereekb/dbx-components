@@ -1,4 +1,4 @@
-import { encodeRadix36Number, decodeRadix36Number, isHex } from './encoded';
+import { encodeRadix36Number, decodeRadix36Number, isHex, isHexWithByteLength } from './encoded';
 
 describe('encodeRadix36Number', () => {
   it('should encode 0 as "0"', () => {
@@ -84,6 +84,29 @@ describe('isHex', () => {
 
   it('should return false for strings with spaces', () => {
     expect(isHex('ab cd')).toBe(false);
+  });
+});
+
+describe('isHexWithByteLength', () => {
+  it('should return true for a valid hex string with the expected byte length', () => {
+    expect(isHexWithByteLength('a'.repeat(64), { byteLength: 32 })).toBe(true);
+    expect(isHexWithByteLength('FF', { byteLength: 1 })).toBe(true);
+    expect(isHexWithByteLength('abcd', { byteLength: 2 })).toBe(true);
+  });
+
+  it('should return false for hex strings with the wrong length', () => {
+    expect(isHexWithByteLength('abc', { byteLength: 32 })).toBe(false);
+    expect(isHexWithByteLength('a'.repeat(62), { byteLength: 32 })).toBe(false);
+    expect(isHexWithByteLength('a'.repeat(66), { byteLength: 32 })).toBe(false);
+  });
+
+  it('should return false for non-hex strings with the correct length', () => {
+    expect(isHexWithByteLength('z'.repeat(64), { byteLength: 32 })).toBe(false);
+    expect(isHexWithByteLength('placeholder'.padEnd(64, 'x'), { byteLength: 32 })).toBe(false);
+  });
+
+  it('should return false for empty strings', () => {
+    expect(isHexWithByteLength('', { byteLength: 0 })).toBe(false);
   });
 });
 

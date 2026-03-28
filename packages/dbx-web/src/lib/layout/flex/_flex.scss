@@ -15,9 +15,13 @@ $dbx-flex-group-columns-count: 6;
 
   .dbx-flex-center {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-items: center;
+  }
+
+  .dbx-flex-column {
+    display: flex;
+    flex-direction: column;
   }
 
   .dbx-flex-group {

@@ -45,7 +45,7 @@ export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopo
     return config?.buttonDisplay ?? { icon: config?.icon ?? 'data_object' };
   });
 
-  readonly buttonStyleSignal = computed(() => this.config()?.buttonStyle);
+  readonly buttonStyleSignal = computed(() => this.config()?.buttonStyle ?? ({ type: 'icon' } as DbxButtonStyle));
 
   protected override _makePopoverRef(origin?: Maybe<ElementRef>): NgPopoverRef<unknown, unknown> {
     if (!origin) {

@@ -80,3 +80,37 @@ export const HEX_PATTERN = /^[0-9a-fA-F]+$/;
 export function isHex(value: string): value is HexString {
   return HEX_PATTERN.test(value);
 }
+
+/**
+ * Configuration for {@link isHexWithByteLength}.
+ */
+export interface IsHexWithByteLengthConfig {
+  /**
+   * The expected number of bytes the hex string should represent.
+   *
+   * Each byte is encoded as 2 hex characters, so the expected string length is `byteLength * 2`.
+   */
+  readonly byteLength: number;
+}
+
+/**
+ * Checks whether the input string is a valid hex string representing exactly the specified number of bytes.
+ *
+ * Each byte is encoded as 2 hex characters, so a 32-byte value requires a 64-character hex string.
+ *
+ * @example
+ * ```ts
+ * // Ed25519 public key is 32 bytes (64 hex chars)
+ * isHexWithByteLength('a'.repeat(64), { byteLength: 32 }); // true
+ * isHexWithByteLength('abc123', { byteLength: 32 });        // false (too short)
+ * isHexWithByteLength('placeholder', { byteLength: 32 });   // false (not hex)
+ * ```
+ *
+ * @param value - The string to check.
+ * @param config - Configuration specifying the expected byte length.
+ * @returns True if the string is valid hex with exactly the expected number of bytes.
+ */
+export function isHexWithByteLength(value: string, config: IsHexWithByteLengthConfig): value is HexString {
+  const expectedLength = config.byteLength * 2;
+  return value.length === expectedLength && HEX_PATTERN.test(value);
+}
