@@ -4,6 +4,7 @@
   "peerDependencies": {
     "@dereekb/analytics": "13.6.9",
     "@dereekb/nestjs": "13.6.9",
+    "@dereekb/rxjs": "13.6.9",
     "@dereekb/util": "13.6.9",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
