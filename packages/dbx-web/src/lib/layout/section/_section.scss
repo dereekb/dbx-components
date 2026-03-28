@@ -96,12 +96,12 @@ $header-left-reserved-space-small-screen: 120px;
       > .dbx-section-header-content {
         height: $content-navbar-height;
         max-height: $content-navbar-height;
-        overflow-x: auto;
-        overflow-y: hidden;
         max-width: 100%;
 
         .dbx-section-header-content-title {
           max-width: calc(80% - #{$header-left-reserved-space});
+          min-width: 48px;
+          flex-shrink: 1;
 
           display: inline-flex !important;
           justify-content: center;

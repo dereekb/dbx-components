@@ -18,7 +18,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 @Component({
   selector: 'dbx-pagebar',
   template: `
-    <mat-toolbar class="dbx-pagebar" [ngClass]="cssClassSignal()">
+    <mat-toolbar class="dbx-pagebar dbx-flex-bar" [ngClass]="cssClassSignal()">
       <ng-content select="[left]"></ng-content>
       <span class="spacer"></span>
       <ng-content select="[right]"></ng-content>

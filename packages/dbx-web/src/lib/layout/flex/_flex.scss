@@ -11,6 +11,16 @@ $dbx-flex-group-columns-count: 6;
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
+
+    // Constrain touch targets to prevent overflow scrollbar (48px default > 40px button)
+    --mat-icon-button-touch-target-size: 40px;
+    --mat-button-text-touch-target-size: 40px;
+    --mat-button-filled-touch-target-size: 40px;
+    --mat-button-outlined-touch-target-size: 40px;
+    --mat-button-tonal-touch-target-size: 40px;
+    --mat-button-protected-touch-target-size: 40px;
+    --mat-fab-touch-target-size: 40px;
+    --mat-fab-small-touch-target-size: 40px;
   }
 
   .dbx-flex-center {
