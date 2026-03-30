@@ -12,7 +12,7 @@ import {
   type FirebasePermissionErrorContextErrorFunction,
   type FirebaseDoesNotExistErrorContextErrorFunction
 } from '@dereekb/firebase';
-import { build, type BuildFunction, type Getter } from '@dereekb/util';
+import { build, type BuildFunction, type Getter, performAsyncTasks } from '@dereekb/util';
 import { type INestApplicationContext } from '@nestjs/common';
 import { type AuthDataRef } from '../auth';
 import { type FirebaseServerAuthService, type FirebaseServerAuthServiceRef } from '../auth/auth.service';
@@ -157,6 +157,66 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
     const use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O> = (select as UseModelInput<FirebaseAppModelContext<A>, Y, T, O>).use ?? ((x) => x as unknown as O);
     return usePromise(use);
   }
+
+  /**
+   * Loads and checks permissions for multiple models of the same type in parallel.
+   *
+   * Uses {@link performAsyncTasks} internally. The `use` function receives the array of
+   * successful {@link ContextGrantedModelRolesReader} values and an array of failed items.
+   *
+   * @param type - the model type to load
+   * @param select - selection params including keys array, roles, and use function
+   * @returns the result of the use function
+   *
+   * @example
+   * ```ts
+   * const result = await nest.useMultipleModels('storageFile', {
+   *   request,
+   *   keys: ['storageFile/abc', 'storageFile/def'],
+   *   roles: 'download',
+   *   throwOnFirstError: false,
+   *   use: (successful, failed) => ({
+   *     documents: successful.map((r) => r.document),
+   *     errors: failed
+   *   })
+   * });
+   * ```
+   */
+  async useMultipleModels<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseMultipleModelsInput<FirebaseAppModelContext<A>, Y, T, O>): Promise<O> {
+    const context: FirebaseAppModelContext<A> = this.makeModelContext(select.request, select.buildFn);
+    const { keys, use, throwOnFirstError, useOnFirstError } = select;
+
+    const taskResult = await performAsyncTasks(
+      keys,
+      async (key) => {
+        const usePromise = useFirebaseModelsService(this.firebaseModelsService, type, {
+          context,
+          key,
+          roles: select.roles,
+          rolesSetIncludes: select.rolesSetIncludes
+        } as unknown as UseFirebaseModelsServiceSelection<Y, T>);
+
+        return usePromise((x) => x) as unknown as Promise<FirebaseModelsServiceSelectionResultRolesReader<Y, T>>;
+      },
+      { throwError: false }
+    );
+
+    const successful = taskResult.results.map(([, reader]) => reader);
+    const errors = taskResult.errors.map(([key, error]) => ({ key, error }) as UseMultipleModelsFailedItem<Y, T>);
+    const hasErrors = errors.length > 0;
+
+    // throwOnFirstError (default when useOnFirstError is not set): throw the first error directly
+    if (hasErrors && (throwOnFirstError ?? !useOnFirstError)) {
+      throw errors[0].error;
+    }
+
+    // useOnFirstError: call use() with empty successes and abortedEarly: true on first error
+    if (hasErrors && useOnFirstError) {
+      return use([], { errors, abortedEarly: true });
+    }
+
+    return use(successful, { errors, abortedEarly: false });
+  }
 }
 
 /**
@@ -173,3 +233,63 @@ export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y
 export type UseModelInput<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>, O> = UseModelInputForRolesReader<C, Y, T> & {
   readonly use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O>;
 };
+
+/**
+ * Extracts the key type from a {@link UseFirebaseModelsServiceSelection} for a given model type.
+ */
+export type UseFirebaseModelsServiceSelectionKeyType<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = UseFirebaseModelsServiceSelection<Y, T> extends { key: infer K } ? K : never;
+
+/**
+ * Input for {@link AbstractFirebaseNestContext.useMultipleModels}.
+ *
+ * Takes an array of keys and a `use` function that receives the successful roles readers
+ * and a {@link UseMultipleModelsFailure} describing any errors. Shared `roles` and `rolesSetIncludes` apply to all keys.
+ */
+export type UseMultipleModelsInput<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>, O> = Omit<UseModelInputForRolesReader<C, Y, T>, 'key'> & {
+  readonly keys: UseFirebaseModelsServiceSelectionKeyType<Y, T>[];
+  readonly use: UseMultipleModelsUseFunction<Y, T, O>;
+  /**
+   * When true, throws the first error directly without calling `use`.
+   *
+   * Defaults to true (unless `useOnFirstError` is set).
+   */
+  readonly throwOnFirstError?: boolean;
+  /**
+   * When true, calls `use` on the first error with an empty successful array
+   * and `abortedEarly: true` in the failure object.
+   *
+   * Takes precedence over `throwOnFirstError` when both are set.
+   */
+  readonly useOnFirstError?: boolean;
+};
+
+/**
+ * Use function for {@link UseMultipleModelsInput}.
+ *
+ * Receives the successful roles readers and a failure object containing any errors.
+ */
+export type UseMultipleModelsUseFunction<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>, O> = (successful: FirebaseModelsServiceSelectionResultRolesReader<Y, T>[], failure: UseMultipleModelsFailure<Y, T>) => Promise<O> | O;
+
+/**
+ * Failure information passed to the {@link UseMultipleModelsUseFunction}.
+ *
+ * Contains the array of failed items and whether the operation was aborted early
+ * (via `useOnFirstError`) before all keys were processed.
+ */
+export interface UseMultipleModelsFailure<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> {
+  readonly errors: UseMultipleModelsFailedItem<Y, T>[];
+  /**
+   * True when the operation was aborted on the first error (via `useOnFirstError`).
+   *
+   * When true, the successful array will be empty and not all keys may have been attempted.
+   */
+  readonly abortedEarly: boolean;
+}
+
+/**
+ * Represents a key that failed permission checking in {@link AbstractFirebaseNestContext.useMultipleModels}.
+ */
+export interface UseMultipleModelsFailedItem<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> {
+  readonly key: UseFirebaseModelsServiceSelectionKeyType<Y, T>;
+  readonly error: unknown;
+}

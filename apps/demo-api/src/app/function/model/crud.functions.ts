@@ -12,7 +12,7 @@ import { createNotification } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
-import { storageFileDownload } from '../storagefile/storagefile.read';
+import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { profileDownloadArchive } from '../profile/profile.read';
 import { createOidcClient } from '../oidc/oidcclient.create';
@@ -45,7 +45,8 @@ export const demoReadModelMap: DemoOnCallReadModelMap = {
     exampleread: systemStateExampleRead
   }),
   storageFile: onCallSpecifierHandler({
-    download: storageFileDownload
+    download: storageFileDownload,
+    downloadMultiple: storageFileDownloadMultiple
   }),
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive
