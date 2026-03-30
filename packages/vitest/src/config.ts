@@ -154,7 +154,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   let environment: VitestTestConfig['environment'] = 'node';
 
-  let isolate = false;
+  let forceIsolate: boolean | undefined;
   let maxWorkers: number | undefined;
   let pool: VitestTestConfig['pool'] | undefined;
 
@@ -174,7 +174,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         throw new Error('projectSpecificSetupFiles is required for angular projects. The setup file should import from @dereekb/vitest/setup-angular.');
       }
       environment = 'jsdom';
-      isolate = true;
+      forceIsolate = true; // always true
       break;
     case 'firebase':
       environment = 'node';
@@ -277,7 +277,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
          *
          * See: https://github.com/vitest-dev/vitest/issues/9499
          */
-        isolate: testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] != null ? process.env['DBX_VITEST_ISOLATE'] === 'true' : isCI ? isolate : true),
+        isolate: forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] != null ? process.env['DBX_VITEST_ISOLATE'] === 'true' : !isCI),
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const

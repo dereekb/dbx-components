@@ -4,6 +4,7 @@ import { firestoreModelKeyType, firestoreModelIdType } from '../../common/model/
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
 import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
+import { type StorageFileKey } from './storagefile.id';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type StorageFileId } from './storagefile.id';
@@ -132,18 +133,26 @@ export interface DeleteAllQueuedStorageFilesResult {
 }
 
 /**
- * Parameters for generating a signed download URL for a StorageFile.
+ * Shared download options for StorageFile downloads.
  *
  * Supports custom expiration, content disposition, and content type overrides.
- * Admin downloads (`asAdmin`) allow longer expiration times. Validated with {@link downloadStorageFileParamsType}.
+ * Admin downloads (`asAdmin`) allow longer expiration times.
  */
-export interface DownloadStorageFileParams extends TargetModelParams {
+export interface DownloadStorageFileOptions {
   readonly expiresAt?: Maybe<Date>;
   readonly expiresIn?: Maybe<Milliseconds>;
   readonly responseDisposition?: Maybe<ContentDispositionString>;
   readonly responseContentType?: Maybe<ContentTypeMimeType>;
   readonly asAdmin?: Maybe<boolean>;
 }
+
+/**
+ * Parameters for generating a signed download URL for a single StorageFile.
+ *
+ * Extends {@link DownloadStorageFileOptions} with target model key.
+ * Validated with {@link downloadStorageFileParamsType}.
+ */
+export interface DownloadStorageFileParams extends TargetModelParams, DownloadStorageFileOptions {}
 
 export const downloadStorageFileParamsType = targetModelParamsType.merge({
   'expiresAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
@@ -161,6 +170,87 @@ export interface DownloadStorageFileResult {
   readonly fileName?: Maybe<string>;
   readonly mimeType?: Maybe<ContentTypeMimeType>;
   readonly expiresAt?: Maybe<UnixDateTimeSecondsNumber>;
+}
+
+// MARK: Download Multiple
+/**
+ * Per-file download options, excluding `asAdmin` which is controlled at the batch level.
+ *
+ * Each per-file option overrides the corresponding default from the parent {@link DownloadMultipleStorageFilesParams}.
+ */
+export interface DownloadMultipleStorageFilesFileParams extends TargetModelParams, Omit<DownloadStorageFileOptions, 'asAdmin'> {}
+
+export const downloadMultipleStorageFilesFileParamsType = targetModelParamsType.merge({
+  'expiresAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'expiresIn?': clearable('number >= 0'),
+  'responseDisposition?': clearable('string'),
+  'responseContentType?': clearable('string')
+}) as Type<DownloadMultipleStorageFilesFileParams>;
+
+/**
+ * Success item in a batch download result.
+ *
+ * Extends the single-file {@link DownloadStorageFileResult} with the document key for correlation.
+ */
+export interface DownloadMultipleStorageFileSuccessItem extends DownloadStorageFileResult {
+  readonly key: StorageFileKey;
+}
+
+/**
+ * Error item in a batch download result.
+ *
+ * Includes the document key and a human-readable error message.
+ */
+export interface DownloadMultipleStorageFileErrorItem {
+  readonly key: StorageFileKey;
+  readonly error: string;
+}
+
+/**
+ * Parameters for batch-downloading multiple StorageFiles.
+ *
+ * Top-level {@link DownloadStorageFileOptions} serve as defaults for all files.
+ * Each item in `files` can override per-file options (except `asAdmin`, which is root-level only).
+ * Validated with {@link downloadMultipleStorageFilesParamsType}.
+ *
+ * @example
+ * ```ts
+ * const params: DownloadMultipleStorageFilesParams = {
+ *   expiresIn: 1800000,
+ *   files: [
+ *     { key: 'storageFile/abc' },
+ *     { key: 'storageFile/def', expiresIn: 60000 }
+ *   ]
+ * };
+ * ```
+ */
+export interface DownloadMultipleStorageFilesParams extends DownloadStorageFileOptions {
+  readonly files: DownloadMultipleStorageFilesFileParams[];
+  /**
+   * When true, throws on the first download failure instead of collecting it in the errors array.
+   */
+  readonly throwOnFirstError?: Maybe<boolean>;
+}
+
+export const downloadMultipleStorageFilesParamsType = type({
+  files: downloadMultipleStorageFilesFileParamsType.array().atLeastLength(1).atMostLength(50),
+  'expiresAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'expiresIn?': clearable('number >= 0'),
+  'responseDisposition?': clearable('string'),
+  'responseContentType?': clearable('string'),
+  'asAdmin?': clearable('boolean'),
+  'throwOnFirstError?': clearable('boolean')
+}) as Type<DownloadMultipleStorageFilesParams>;
+
+/**
+ * Result of a batch StorageFile download.
+ *
+ * Contains separate arrays for successful downloads and failures.
+ * Individual download errors do not fail the entire batch.
+ */
+export interface DownloadMultipleStorageFilesResult {
+  readonly success: DownloadMultipleStorageFileSuccessItem[];
+  readonly errors: DownloadMultipleStorageFileErrorItem[];
 }
 
 /**
@@ -295,6 +385,7 @@ export type StorageFileModelCrudFunctionsConfig = {
     };
     read: {
       download: [DownloadStorageFileParams, DownloadStorageFileResult];
+      downloadMultiple: [DownloadMultipleStorageFilesParams, DownloadMultipleStorageFilesResult];
     };
     delete: {
       _: DeleteStorageFileParams;
@@ -309,7 +400,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download'],
+  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download,downloadMultiple'],
   storageFileGroup: ['update:_,regenerateContent']
 };
 
@@ -333,6 +424,7 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
     };
     readStorageFile: {
       download: ModelFirebaseCrudFunction<DownloadStorageFileParams, DownloadStorageFileResult>;
+      downloadMultiple: ModelFirebaseCrudFunction<DownloadMultipleStorageFilesParams, DownloadMultipleStorageFilesResult>;
     };
     deleteStorageFile: {
       delete: ModelFirebaseCrudFunction<DeleteStorageFileParams>;

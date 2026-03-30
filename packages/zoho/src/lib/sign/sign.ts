@@ -28,8 +28,19 @@ export type ZohoSignFolderId = string;
 
 /**
  * Identifier of a request type (document category) in Zoho Sign.
+ *
+ * Also equivalent to ZohoSignTemplateId.
+ *
+ * @example '286906000001616000'
  */
 export type ZohoSignRequestTypeId = string;
+
+/**
+ * Identifier of a template in Zoho Sign. Also equivalent to ZohoSignRequestTypeId.
+ *
+ * @example '286906000001616000'
+ */
+export type ZohoSignTemplateId = ZohoSignRequestTypeId;
 
 /**
  * Identifier of a field type in Zoho Sign.

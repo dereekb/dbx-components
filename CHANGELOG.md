@@ -1,3 +1,12 @@
+## [13.6.11](https://github.com/dereekb/dbx-components/compare/v13.6.10-dev...v13.6.11) (2026-03-30)
+
+
+### Code Refactoring
+
+- added batch StorageFile download API ([bbcaef10](https://github.com/dereekb/dbx-components/commit/bbcaef10c37c931de21bc8dd983ef1d15e2520d9))
+- fixed vitest automatic isolate ([a0b5fd31](https://github.com/dereekb/dbx-components/commit/a0b5fd313c95db6191b7eb888f50abbbfec8f8dc))
+- zoho sign template id ([0d0bd2e8](https://github.com/dereekb/dbx-components/commit/0d0bd2e8cacf7e2617e2a327e3f31fa767e0ff3b))
+
 ## [13.6.10](https://github.com/dereekb/dbx-components/compare/v13.6.9-dev...v13.6.10) (2026-03-28)
 
 

@@ -33,6 +33,8 @@ import {
   type DownloadStorageFileParams,
   type StorageFileDocument,
   type DownloadStorageFileResult,
+  type DownloadMultipleStorageFilesParams,
+  type DownloadMultipleStorageFilesResult,
   STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE,
   type SyncStorageFileWithGroupsParams,
   type SyncStorageFileWithGroupsResult,
@@ -487,6 +489,75 @@ demoApiFunctionContextFactory((f) => {
 
                     expect(result).toBeDefined();
                     expect(result.url).toBeDefined();
+                  });
+
+                  describe('downloadMultiple', () => {
+                    it('should download a single file successfully', async () => {
+                      const params: DownloadMultipleStorageFilesParams = {
+                        files: [{ key: storageFileDocument.key }]
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'downloadMultiple'))) as DownloadMultipleStorageFilesResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.success).toHaveLength(1);
+                      expect(result.success[0].key).toBe(storageFileDocument.key);
+                      expect(result.success[0].url).toBeDefined();
+                      expect(result.errors).toHaveLength(0);
+                    });
+
+                    it('should return errors for invalid keys without failing the whole call', async () => {
+                      const invalidKey = 'storageFile/nonexistent123';
+                      const params: DownloadMultipleStorageFilesParams = {
+                        files: [{ key: storageFileDocument.key }, { key: invalidKey }]
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'downloadMultiple'))) as DownloadMultipleStorageFilesResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.success).toHaveLength(1);
+                      expect(result.success[0].key).toBe(storageFileDocument.key);
+                      expect(result.errors).toHaveLength(1);
+                      expect(result.errors[0].key).toBe(invalidKey);
+                      expect(result.errors[0].error).toBeDefined();
+                    });
+
+                    it('should return all errors when no keys are valid', async () => {
+                      const params: DownloadMultipleStorageFilesParams = {
+                        files: [{ key: 'storageFile/fake1' }, { key: 'storageFile/fake2' }]
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'downloadMultiple'))) as DownloadMultipleStorageFilesResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.success).toHaveLength(0);
+                      expect(result.errors).toHaveLength(2);
+                    });
+
+                    it('should apply shared expiresIn to all downloads', async () => {
+                      const params: DownloadMultipleStorageFilesParams = {
+                        files: [{ key: storageFileDocument.key }],
+                        expiresIn: 60000
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'downloadMultiple'))) as DownloadMultipleStorageFilesResult;
+
+                      expect(result.success).toHaveLength(1);
+                      expect(result.success[0].expiresAt).toBeDefined();
+                    });
+
+                    it('should allow per-file option overrides', async () => {
+                      const params: DownloadMultipleStorageFilesParams = {
+                        files: [{ key: storageFileDocument.key, expiresIn: 120000 }],
+                        expiresIn: 60000
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'downloadMultiple'))) as DownloadMultipleStorageFilesResult;
+
+                      expect(result.success).toHaveLength(1);
+                      expect(result.success[0].expiresAt).toBeDefined();
+                      expect(result.success[0].url).toBeDefined();
+                    });
                   });
                 });
               });

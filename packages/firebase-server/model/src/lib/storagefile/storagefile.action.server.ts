@@ -43,6 +43,12 @@ import {
   type DownloadStorageFileParams,
   downloadStorageFileParamsType,
   type DownloadStorageFileResult,
+  type DownloadMultipleStorageFilesParams,
+  downloadMultipleStorageFilesParamsType,
+  type DownloadMultipleStorageFilesResult,
+  type DownloadMultipleStorageFileSuccessItem,
+  type DownloadMultipleStorageFileErrorItem,
+  type FirestoreModelKey,
   type SyncStorageFileWithGroupsParams,
   syncStorageFileWithGroupsParamsType,
   type SyncAllFlaggedStorageFilesWithGroupsParams,
@@ -104,7 +110,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { type ContentDispositionString, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -159,6 +165,7 @@ export abstract class StorageFileServerActions {
   abstract deleteAllQueuedStorageFiles(params: DeleteAllQueuedStorageFilesParams): Promise<TransformAndValidateFunctionResult<DeleteAllQueuedStorageFilesParams, () => Promise<DeleteAllQueuedStorageFilesResult>>>;
   abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
   abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument?: Maybe<StorageFileDocument>) => Promise<DownloadStorageFileResult>>>;
+  abstract downloadMultipleStorageFiles(params: DownloadMultipleStorageFilesParams): Promise<TransformAndValidateFunctionResult<DownloadMultipleStorageFilesParams, (storageFileDocuments?: Maybe<StorageFileDocument[]>) => Promise<DownloadMultipleStorageFilesResult>>>;
   abstract createStorageFileGroup(params: CreateStorageFileGroupParams): AsyncStorageFileGroupCreateAction<CreateStorageFileGroupParams>;
   abstract updateStorageFileGroup(params: UpdateStorageFileGroupParams): Promise<TransformAndValidateFunctionResult<UpdateStorageFileGroupParams, (storageFileGroupDocument: StorageFileGroupDocument) => Promise<StorageFileGroupDocument>>>;
   abstract syncStorageFileWithGroups(params: SyncStorageFileWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncStorageFileWithGroupsParams, (storageFileDocument: StorageFileDocument) => Promise<SyncStorageFileWithGroupsResult>>>;
@@ -194,6 +201,7 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
     deleteAllQueuedStorageFiles: deleteAllQueuedStorageFilesFactory(context),
     deleteStorageFile: deleteStorageFileFactory(context),
     downloadStorageFile: downloadStorageFileFactory(context),
+    downloadMultipleStorageFiles: downloadMultipleStorageFilesFactory(context),
     createStorageFileGroup: createStorageFileGroupFactory(context),
     updateStorageFileGroup: updateStorageFileGroupFactory(context),
     syncStorageFileWithGroups: syncStorageFileWithGroupsFactory(context),
@@ -865,34 +873,97 @@ export function deleteStorageFileFactory(context: StorageFileServerActionsContex
   });
 }
 
+// MARK: Download
 /**
- * Factory for the `downloadStorageFile` action.
+ * Per-item input for the internal multiple-download factory.
  *
- * Generates a signed download URL for a {@link StorageFile}'s associated Cloud Storage file.
- * The URL expires after the configured duration. Supports loading the storage file document
- * by key if not provided directly.
+ * Per-file options override the defaults from {@link DownloadMultipleStorageFilesFactoryInput}.
+ * `asAdmin` is not per-file — it is controlled at the batch level only.
+ */
+export interface DownloadMultipleStorageFilesFactoryInputItem {
+  readonly key: FirestoreModelKey;
+  readonly storageFileDocument?: Maybe<StorageFileDocument>;
+  readonly expiresAt?: Maybe<Date>;
+  readonly expiresIn?: Maybe<Milliseconds>;
+  readonly responseDisposition?: Maybe<ContentDispositionString>;
+  readonly responseContentType?: Maybe<ContentTypeMimeType>;
+}
+
+/**
+ * Input configuration for {@link _downloadMultipleStorageFilesFactory}.
+ *
+ * Top-level options serve as defaults. Per-item options in {@link DownloadMultipleStorageFilesFactoryInputItem}
+ * override them when defined.
+ *
+ * @example
+ * ```ts
+ * const result = await downloadMultipleStorageFiles({
+ *   items: [{ key: 'storageFile/abc' }],
+ *   expiresIn: 1800000,
+ *   throwOnFirstError: true
+ * });
+ * ```
+ */
+export interface DownloadMultipleStorageFilesFactoryInput {
+  readonly items: DownloadMultipleStorageFilesFactoryInputItem[];
+  readonly asAdmin?: Maybe<boolean>;
+  readonly expiresAt?: Maybe<Date>;
+  readonly expiresIn?: Maybe<Milliseconds>;
+  readonly responseDisposition?: Maybe<ContentDispositionString>;
+  readonly responseContentType?: Maybe<ContentTypeMimeType>;
+  /**
+   * When true, throws on the first download failure instead of collecting errors.
+   *
+   * Used by the single-download path ({@link downloadStorageFileFactory}).
+   */
+  readonly throwOnFirstError?: Maybe<boolean>;
+  /**
+   * Maximum number of concurrent download operations.
+   *
+   * Defaults to {@link DEFAULT_DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_PARALLEL_TASKS}.
+   */
+  readonly maxParallelTasks?: Maybe<number>;
+}
+
+/**
+ * Default maximum number of concurrent download operations when batch-downloading StorageFiles.
+ */
+export const DEFAULT_DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_PARALLEL_TASKS = 5;
+
+/**
+ * Internal factory that generates signed download URLs for one or more StorageFiles.
+ *
+ * Uses {@link performAsyncTasks} with concurrency limiting to avoid overwhelming Cloud Storage.
+ * Shared expiration/disposition/content-type options are applied uniformly to all items.
+ * When `throwOnFirstError` is true, the first failure throws immediately (single-download behavior).
+ * When false, failures are collected in the errors array (batch behavior).
  *
  * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that generates a signed download URL
+ * @returns an async function that processes a {@link DownloadMultipleStorageFilesFactoryInput} and returns a {@link DownloadMultipleStorageFilesResult}
  */
-export function downloadStorageFileFactory(context: StorageFileServerActionsContext) {
-  const { storageService, firebaseServerActionTransformFunctionFactory, storageFileCollection } = context;
+function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsContext) {
+  const { storageService, storageFileCollection } = context;
 
-  return firebaseServerActionTransformFunctionFactory(downloadStorageFileParamsType, async (params) => {
-    const { key: targetStorageFileDocumentKey, asAdmin, expiresAt, expiresIn: inputExpiresIn, responseDisposition, responseContentType } = params;
+  return async (input: DownloadMultipleStorageFilesFactoryInput): Promise<DownloadMultipleStorageFilesResult> => {
+    const { items, asAdmin, expiresAt, expiresIn: inputExpiresIn, responseDisposition, responseContentType, throwOnFirstError, maxParallelTasks: inputMaxParallelTasks } = input;
 
-    return async (storageFileDocument?: Maybe<StorageFileDocument>) => {
-      // if the StorageFileDocument was not provided, set it from the target key
-      storageFileDocument ??= storageFileCollection.documentAccessor().loadDocumentForKey(targetStorageFileDocumentKey);
+    const taskResult = await performAsyncTasks<DownloadMultipleStorageFilesFactoryInputItem, DownloadMultipleStorageFileSuccessItem>(
+      items,
+      async (item) => {
+        // Load document from key if not provided
+        const storageFileDocument = item.storageFileDocument ?? storageFileCollection.documentAccessor().loadDocumentForKey(item.key);
+        const storageFile = await assertSnapshotData(storageFileDocument);
+        const fileAccessor = storageService.file(storageFile);
 
-      const storageFile = await assertSnapshotData(storageFileDocument);
-      const fileAccessor = storageService.file(storageFile);
+        if (!fileAccessor.getSignedUrl) {
+          throw internalServerError('Signed url function appears to not be available.');
+        }
 
-      let result: DownloadStorageFileResult;
-
-      if (fileAccessor.getSignedUrl) {
-        const expiresIn = inputExpiresIn ?? MS_IN_MINUTE * 30;
-        const expires = expirationDetails({ defaultExpiresFromDateToNow: true, expiresAt, expiresIn });
+        // Per-item options override defaults
+        const itemResponseDisposition = item.responseDisposition ?? responseDisposition;
+        const itemResponseContentType = item.responseContentType ?? responseContentType;
+        const expiresIn = item.expiresIn ?? inputExpiresIn ?? MS_IN_MINUTE * 30;
+        const expires = expirationDetails({ defaultExpiresFromDateToNow: true, expiresAt: item.expiresAt ?? expiresAt, expiresIn });
         let downloadUrlExpiresAt = expires.getExpirationDate() as Date; // always returns a Date when defaultExpiresFromDateToNow and expiresIn are set
 
         // if they're not an admin, limit the expiration to a max of 30 days.
@@ -905,23 +976,104 @@ export function downloadStorageFileFactory(context: StorageFileServerActionsCont
           fileAccessor.getSignedUrl({
             action: 'read',
             expiresAt: downloadUrlExpiresAt,
-            responseDisposition: responseDisposition ?? undefined, // can be set by anyone
-            responseType: asAdmin ? (responseContentType ?? undefined) : undefined // can only be set by admins
+            responseDisposition: itemResponseDisposition ?? undefined, // can be set by anyone
+            responseType: asAdmin ? (itemResponseContentType ?? undefined) : undefined // can only be set by admins
           }),
           fileAccessor.getMetadata()
         ]);
 
-        result = {
+        return {
+          key: item.key,
           url: downloadUrl,
           fileName: metadata.name ? slashPathDetails(metadata.name).end : undefined,
-          mimeType: responseContentType ?? metadata.contentType,
+          mimeType: itemResponseContentType ?? metadata.contentType,
           expiresAt: unixDateTimeSecondsNumberFromDate(downloadUrlExpiresAt)
-        };
-      } else {
-        throw internalServerError('Signed url function appears to not be avalable.');
+        } as DownloadMultipleStorageFileSuccessItem;
+      },
+      {
+        throwError: throwOnFirstError ?? false,
+        maxParallelTasks: inputMaxParallelTasks ?? DEFAULT_DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_PARALLEL_TASKS
       }
+    );
 
-      return result;
+    const success = taskResult.results.map(([, result]) => result);
+    const errors: DownloadMultipleStorageFileErrorItem[] = taskResult.errors.map(([item, error]) => ({
+      key: item.key,
+      error: error instanceof Error ? error.message : 'Download failed'
+    }));
+
+    return { success, errors };
+  };
+}
+
+/**
+ * Factory for the `downloadStorageFile` action.
+ *
+ * Generates a signed download URL for a {@link StorageFile}'s associated Cloud Storage file.
+ * Delegates to {@link _downloadMultipleStorageFilesFactory} with a single item and `throwOnFirstError: true`.
+ *
+ * @param context - the storage file server actions context
+ * @returns an async transform-and-validate function that generates a signed download URL
+ */
+export function downloadStorageFileFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  const downloadMultipleStorageFiles = _downloadMultipleStorageFilesFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(downloadStorageFileParamsType, async (params) => {
+    const { key, asAdmin, expiresAt, expiresIn, responseDisposition, responseContentType } = params;
+
+    return async (storageFileDocument?: Maybe<StorageFileDocument>) => {
+      const result = await downloadMultipleStorageFiles({
+        items: [{ key, storageFileDocument }],
+        asAdmin,
+        expiresAt,
+        expiresIn,
+        responseDisposition,
+        responseContentType,
+        throwOnFirstError: true
+      });
+
+      return result.success[0];
+    };
+  });
+}
+
+/**
+ * Factory for the `downloadMultipleStorageFiles` action.
+ *
+ * Generates signed download URLs for multiple {@link StorageFile} documents in a single call.
+ * By default, individual failures are collected in the errors array rather than failing the entire batch.
+ * Set `throwOnFirstError` in params to throw on the first failure instead.
+ *
+ * @param context - the storage file server actions context
+ * @returns an async transform-and-validate function that generates signed download URLs for multiple files
+ */
+export function downloadMultipleStorageFilesFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  const downloadMultipleStorageFiles = _downloadMultipleStorageFilesFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(downloadMultipleStorageFilesParamsType, async (params) => {
+    const { files, asAdmin, expiresAt, expiresIn, responseDisposition, responseContentType, throwOnFirstError } = params;
+
+    return async (storageFileDocuments?: Maybe<StorageFileDocument[]>) => {
+      const items: DownloadMultipleStorageFilesFactoryInputItem[] = files.map((file, i) => ({
+        key: file.key,
+        storageFileDocument: storageFileDocuments?.[i],
+        expiresAt: file.expiresAt,
+        expiresIn: file.expiresIn,
+        responseDisposition: file.responseDisposition,
+        responseContentType: file.responseContentType
+      }));
+
+      return downloadMultipleStorageFiles({
+        items,
+        asAdmin,
+        expiresAt,
+        expiresIn,
+        responseDisposition,
+        responseContentType,
+        throwOnFirstError: throwOnFirstError ?? false
+      });
     };
   });
 }
