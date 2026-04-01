@@ -1,6 +1,7 @@
 import { type, type Type } from 'arktype';
 import { type FirestoreModelKey, type FirestoreModelKeyRef } from '../../firestore/collection/collection';
 import { firestoreModelIdType, firestoreModelKeyType } from './model.validator';
+import { clearable } from '@dereekb/model';
 
 /**
  * API parameter type that targets a specific Firestore model by its full key path (e.g., `"collection/id"`).
@@ -29,7 +30,7 @@ export interface InferredTargetModelParams extends Partial<FirestoreModelKeyRef>
  * ArkType validator for {@link InferredTargetModelParams}.
  */
 export const inferredTargetModelParamsType = type({
-  'key?': firestoreModelKeyType
+  'key?': clearable(firestoreModelKeyType)
 }) as Type<InferredTargetModelParams>;
 
 /**
@@ -59,5 +60,5 @@ export interface InferredTargetModelIdParams extends Partial<FirestoreModelKeyRe
  * ArkType validator for {@link InferredTargetModelIdParams}.
  */
 export const inferredTargetModelIdParamsType = type({
-  'key?': firestoreModelIdType
+  'key?': clearable(firestoreModelIdType)
 }) as Type<InferredTargetModelIdParams>;

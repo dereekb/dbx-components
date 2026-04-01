@@ -124,6 +124,16 @@ describe('dateRangeParamsType', () => {
     expect(result).not.toBeInstanceOf(type.errors);
   });
 
+  it('should accept a null distance value', () => {
+    const result = dateRangeParamsType({ type: DateRangeType.DAY, date: new Date().toISOString(), distance: null });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should accept an undefined distance value', () => {
+    const result = dateRangeParamsType({ type: DateRangeType.DAY, date: new Date().toISOString(), distance: undefined });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
   it('should reject invalid type', () => {
     const result = dateRangeParamsType({ type: 'invalid_type', date: new Date().toISOString() });
     expect(result).toBeInstanceOf(type.errors);
@@ -157,6 +167,16 @@ describe('dateCellRangeType', () => {
 
   it('should validate a DateCellRange without to', () => {
     const result = dateCellRangeType({ i: 0 });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should accept a null to value', () => {
+    const result = dateCellRangeType({ i: 0, to: null });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should accept an undefined to value', () => {
+    const result = dateCellRangeType({ i: 0, to: undefined });
     expect(result).not.toBeInstanceOf(type.errors);
   });
 
@@ -272,6 +292,16 @@ describe('dateCellScheduleType', () => {
     expect(result).not.toBeInstanceOf(type.errors);
   });
 
+  it('should accept null d and ex values', () => {
+    const result = dateCellScheduleType({ w: '1234567', d: null, ex: null });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should accept undefined d and ex values', () => {
+    const result = dateCellScheduleType({ w: '1234567', d: undefined, ex: undefined });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
   it('should reject an invalid week string', () => {
     const result = dateCellScheduleType({ w: 'not-valid-week' });
     expect(result).toBeInstanceOf(type.errors);
@@ -309,6 +339,28 @@ describe('modelRecurrenceInfoType', () => {
       rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
       start: '2026-01-01T00:00:00.000Z',
       end: '2026-01-15T00:00:00.000Z'
+    });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should accept null timezone and forever values', () => {
+    const result = modelRecurrenceInfoType({
+      timezone: null,
+      rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
+      start: '2026-01-01T00:00:00.000Z',
+      end: '2026-01-15T00:00:00.000Z',
+      forever: null
+    });
+    expect(result).not.toBeInstanceOf(type.errors);
+  });
+
+  it('should accept undefined timezone and forever values', () => {
+    const result = modelRecurrenceInfoType({
+      timezone: undefined,
+      rrule: 'RRULE:FREQ=WEEKLY;COUNT=3',
+      start: '2026-01-01T00:00:00.000Z',
+      end: '2026-01-15T00:00:00.000Z',
+      forever: undefined
     });
     expect(result).not.toBeInstanceOf(type.errors);
   });

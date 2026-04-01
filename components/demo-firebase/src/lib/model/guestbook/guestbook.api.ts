@@ -34,9 +34,9 @@ export interface InsertGuestbookEntryParams extends GuestbookEntryParams {
 }
 
 export const insertGuestbookEntryParamsType = guestbookEntryParamsType.merge({
-  'message?': `string > 0 & string <= ${GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH}`,
-  'signed?': `string > 0 & string <= ${GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH}`,
-  'published?': 'boolean'
+  'message?': clearable(`string > 0 & string <= ${GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH}`),
+  'signed?': clearable(`string > 0 & string <= ${GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH}`),
+  'published?': clearable('boolean')
 }) as Type<InsertGuestbookEntryParams>;
 
 export type LikeGuestbookEntryParams = TargetModelParams;

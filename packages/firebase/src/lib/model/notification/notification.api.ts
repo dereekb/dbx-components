@@ -198,7 +198,7 @@ export interface InitializeNotificationModelParams extends TargetModelParams {
 }
 
 export const initializeNotificationModelParamsType = targetModelParamsType.merge({
-  'throwErrorIfAlreadyInitialized?': 'boolean'
+  'throwErrorIfAlreadyInitialized?': clearable('boolean')
 }) as Type<InitializeNotificationModelParams>;
 
 export interface InitializeAllApplicableNotificationBoxesParams {}

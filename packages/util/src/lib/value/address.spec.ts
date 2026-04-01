@@ -13,6 +13,32 @@ describe('isCompleteUnitedStatesAddress()', () => {
     expect(result).toBe(true);
   });
 
+  it('should return true for an address with a null line2 value.', () => {
+    const address: UnitedStatesAddress = {
+      line1: 'hello world',
+      line2: null as any,
+      city: 'San Antonio',
+      state: 'TX',
+      zip: '78216'
+    };
+
+    const result = isCompleteUnitedStatesAddress(address);
+    expect(result).toBe(true);
+  });
+
+  it('should return true for an address with an undefined line2 value.', () => {
+    const address: UnitedStatesAddress = {
+      line1: 'hello world',
+      line2: undefined,
+      city: 'San Antonio',
+      state: 'TX',
+      zip: '78216'
+    };
+
+    const result = isCompleteUnitedStatesAddress(address);
+    expect(result).toBe(true);
+  });
+
   it('should return false for an incomplete address.', () => {
     const address: UnitedStatesAddress = {
       line1: '',

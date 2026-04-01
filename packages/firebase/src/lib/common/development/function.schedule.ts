@@ -1,3 +1,4 @@
+import { clearable } from '@dereekb/model';
 import { type, type Type } from 'arktype';
 
 /**
@@ -31,7 +32,7 @@ export interface ScheduledFunctionDevelopmentFirebaseFunctionParams {
  */
 export const scheduledFunctionDevelopmentFirebaseFunctionParamsType = type({
   type: "'list' | 'run'",
-  'run?': 'string'
+  'run?': clearable('string')
 }) as Type<ScheduledFunctionDevelopmentFirebaseFunctionParams>;
 
 /**
