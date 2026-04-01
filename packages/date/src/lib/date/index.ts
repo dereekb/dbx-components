@@ -7,6 +7,7 @@ export * from './date.cell';
 export * from './date.cell.week';
 export * from './date.calendar';
 export * from './date.duration';
+export * from './date.duration.data';
 export * from './date.format';
 export * from './date.model';
 export * from './date.hashset';

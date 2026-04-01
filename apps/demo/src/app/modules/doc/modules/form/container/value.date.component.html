@@ -21,5 +21,9 @@
     <doc-feature-example header="dateTimeRangeField()" hint="Combines two dateTimeFields() configured for picking a time range.">
       <doc-form-example-form [dbxFormlyFields]="dateTimeRangeFields" [dbxFormSource]="dateTimeRangeValues$"></doc-form-example-form>
     </doc-feature-example>
+    <doc-feature-example header="timeDurationField()" hint="A numeric input with a time unit selector for entering durations.">
+      <p>Combines a number input with a unit dropdown. Output can be a number in any configured unit, or an HoursAndMinutes object.</p>
+      <doc-form-example-form [dbxFormlyFields]="timeDurationFields" [dbxFormSource]="timeDurationValues$"></doc-form-example-form>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

@@ -81,12 +81,44 @@ export const INVALID_PHONE_NUMBER_MESSAGE = { name: 'validatePhoneNumber', messa
 export const INVALID_PHONE_NUMBER_EXTENSION_MESSAGE = { name: 'validatePhoneNumberExtension', message: 'This is not a valid phone number extension.' };
 
 /**
+ * Returns a validation message indicating the duration is below the minimum allowed.
+ *
+ * @param err - The validation error object containing `min` and `actual` values.
+ * @param field - The Formly field configuration.
+ * @returns A human-readable validation message string.
+ */
+export function durationMinValidationMessage(err: { min: number; actual: number; unit: string }, field: FieldTypeConfig) {
+  return `Duration must be at least ${err.min} ${err.unit} (currently ${err.actual} ${err.unit}).`;
+}
+
+/**
+ * Returns a validation message indicating the duration exceeds the maximum allowed.
+ *
+ * @param err - The validation error object containing `max`, `actual`, and `unit` values.
+ * @param field - The Formly field configuration.
+ * @returns A human-readable validation message string.
+ */
+export function durationMaxValidationMessage(err: { max: number; actual: number; unit: string }, field: FieldTypeConfig) {
+  return `Duration must be at most ${err.max} ${err.unit} (currently ${err.actual} ${err.unit}).`;
+}
+
+/**
+ * Validation message option for duration minimum violations.
+ */
+export const DURATION_MIN_VALIDATION_MESSAGE = { name: 'durationMin', message: durationMinValidationMessage } as ValidationMessageOption;
+
+/**
+ * Validation message option for duration maximum violations.
+ */
+export const DURATION_MAX_VALIDATION_MESSAGE = { name: 'durationMax', message: durationMaxValidationMessage } as ValidationMessageOption;
+
+/**
  * Returns the full set of default validation messages used by the form system.
  *
- * Includes messages for: required, minLength, maxLength, min, max, phone number, and phone number extension.
+ * Includes messages for: required, minLength, maxLength, min, max, phone number, phone number extension, and duration min/max.
  *
  * @returns An array of {@link ValidationMessageOption} objects.
  */
 export function defaultValidationMessages(): ValidationMessageOption[] {
-  return [REQUIRED_VALIDATION_MESSAGE, MIN_LENGTH_VALIDATION_MESSAGE, MAX_LENGTH_VALIDATION_MESSAGE, MIN_VALIDATION_MESSAGE, MAX_VALIDATION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE, INVALID_PHONE_NUMBER_EXTENSION_MESSAGE];
+  return [REQUIRED_VALIDATION_MESSAGE, MIN_LENGTH_VALIDATION_MESSAGE, MAX_LENGTH_VALIDATION_MESSAGE, MIN_VALIDATION_MESSAGE, MAX_VALIDATION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE, INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, DURATION_MIN_VALIDATION_MESSAGE, DURATION_MAX_VALIDATION_MESSAGE];
 }

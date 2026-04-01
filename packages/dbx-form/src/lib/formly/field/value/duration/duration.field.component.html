@@ -1,0 +1,6 @@
+<div class="dbx-form-duration-field">
+  <input matInput type="text" [formControl]="textCtrl" (blur)="onTextBlur()" (keydown.enter)="onTextEnter($event)" class="dbx-form-duration-field-input" placeholder="e.g. 2h30m" [attr.aria-label]="props.label || 'Duration'" />
+  <button mat-icon-button type="button" #pickerButton (click)="openPicker()" class="dbx-form-duration-field-picker-btn" aria-label="Open duration picker">
+    <mat-icon>schedule</mat-icon>
+  </button>
+</div>

@@ -403,6 +403,16 @@ export const MS_IN_HOUR: Milliseconds = MS_IN_MINUTE * 60;
 export const MS_IN_DAY: Milliseconds = MS_IN_HOUR * HOURS_IN_DAY;
 
 /**
+ * Number of days in a week.
+ */
+export const DAYS_IN_WEEK: Days = 7;
+
+/**
+ * Number of milliseconds in a week.
+ */
+export const MS_IN_WEEK: Milliseconds = MS_IN_DAY * DAYS_IN_WEEK;
+
+/**
  * Day of the month, 1-31
  */
 export type DayOfMonth = number;

@@ -6,3 +6,4 @@ export * from './hour';
 export * from './minute';
 export * from './time';
 export * from './date.time';
+export * from './duration';
