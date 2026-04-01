@@ -20,7 +20,7 @@ export class DocExtensionStorageFileComponent {
 
   readonly avatarUploadHandler = storageFileUploadHandler({
     storageService: this.storageService,
-    storageFileUploadConfigFactory: (file) => ({ storagePath: userAvatarUploadsFilePath(this.userId() ?? '0') })
+    storageFileUploadConfigFactory: (_file) => ({ storagePath: userAvatarUploadsFilePath(this.userId() ?? '0') })
   });
 
   readonly filesUploadHandler = storageFileUploadHandler({

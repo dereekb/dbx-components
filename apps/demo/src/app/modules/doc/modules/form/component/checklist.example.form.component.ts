@@ -11,7 +11,7 @@ export type DocFormExampleChecklistFormValue = BooleanKeyValueTransformMap<DocFo
   template: `
     <dbx-formly></dbx-formly>
   `,
-  selector: 'dbx-form-example-checklist-form',
+  selector: 'doc-form-example-checklist-form',
   providers: [provideFormlyContext()],
   standalone: true,
   imports: [DbxFormlyComponent],

@@ -26,7 +26,7 @@ export interface DocInteractionPopoverConfig {
         </dbx-bar>
       </dbx-popover-controls>
       <dbx-popover-scroll-content>
-        <dbx-interaction-example-popover-content (return)="returnAndClose($event)" (close)="close()"></dbx-interaction-example-popover-content>
+        <doc-interaction-example-popover-content (return)="returnAndClose($event)" (closePopover)="close()"></doc-interaction-example-popover-content>
         <p class="dbx-hint">Configured to return "{{ onCloseValue }}" when closed via a backdrop click.</p>
       </dbx-popover-scroll-content>
     </dbx-popover-content>

@@ -174,7 +174,7 @@ export class DocFormValueComponent {
       disableRearrange: true,
       allowAdd: true,
       allowDuplicate: true,
-      allowRemove: ({ i, value }) => !(value as { disable: boolean })?.disable,
+      allowRemove: ({ value }) => !(value as { disable: boolean })?.disable,
       labelForField: ({ value }) => (value as { name: string })?.name,
       addDuplicateToEnd: true
     })

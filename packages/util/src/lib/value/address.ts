@@ -47,7 +47,7 @@ export interface UnitedStatesAddress {
   /**
    * Secondary address line (apartment, suite, etc.).
    */
-  line2?: AddressLineString;
+  line2?: Maybe<AddressLineString>;
   /**
    * City name.
    */
@@ -70,11 +70,11 @@ export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
   /**
    * Contact name associated with this address.
    */
-  name?: string;
+  name?: Maybe<string>;
   /**
    * Phone number associated with this address.
    */
-  phone?: string;
+  phone?: Maybe<string>;
 }
 
 /**

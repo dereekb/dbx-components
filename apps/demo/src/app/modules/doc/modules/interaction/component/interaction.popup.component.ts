@@ -14,7 +14,7 @@ export interface DocInteractionPopupConfig {
   template: `
     <dbx-popup-content>
       <dbx-popup-controls [header]="header" controls></dbx-popup-controls>
-      <dbx-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></dbx-interaction-example-popup-content>
+      <doc-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></doc-interaction-example-popup-content>
     </dbx-popup-content>
   `,
   standalone: true,

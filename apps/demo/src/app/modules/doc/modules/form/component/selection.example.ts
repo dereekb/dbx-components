@@ -11,6 +11,12 @@ export interface DocFormExampleSelectionValue {
   value: number;
 }
 
+/**
+ * Creates an example selection value with a numeric ID.
+ *
+ * @param id - Optional string ID to use; generates a random one if not provided
+ * @returns An object with string id and numeric value
+ */
 export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
   const value = id ? Number(id) : Math.ceil(Math.random() * 1000000000);
 
@@ -22,6 +28,12 @@ export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
 
 export const MAKE_RANDOM_SELECTION_VALUES = randomArrayFactory({ random: { min: 12, max: 25 }, make: () => MAKE_EXAMPLE_SELECTION_VALUE() });
 
+/**
+ * Creates a search function that returns random selection values after the minimum character threshold.
+ *
+ * @param minimumCharacters - Minimum characters required before returning results (default: 3)
+ * @returns A search function for use with searchable value fields
+ */
 export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(minimumCharacters: number = 3): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId, any> {
   const makeRandomDelay = randomNumberFactory(200); // use to show the loading bar.
 
@@ -41,7 +53,7 @@ export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<
     return of(valuesWithMeta);
   },
   makeDisplayForValues: (values) => {
-    const displayValues: SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[] = values.map((x) => ({ ...x, label: `Product: ${x.meta!.value}` }));
+    const displayValues: SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[] = values.map((x) => ({ ...x, label: `Product: ${x.meta?.value}` }));
     const obs: Observable<SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[]> = of(displayValues);
     return obs;
   }

@@ -113,7 +113,7 @@
         "parallel": false
       }
     },
-    "publish-npmjs": {
+    "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/nestjs && npm publish --access public"

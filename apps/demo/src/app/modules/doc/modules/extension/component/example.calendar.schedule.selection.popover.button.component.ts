@@ -4,7 +4,7 @@ import { DbxPopoverService, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
 
 @Component({
-  selector: 'dbx-schedule-selection-calendar-date-popover-button',
+  selector: 'doc-schedule-selection-calendar-date-popover-button',
   template: `
     <dbx-button #buttonPopoverOrigin icon="date_range" [raised]="true" color="accent" text="Custom Button" (buttonClick)="openPopover()"></dbx-button>
   `,

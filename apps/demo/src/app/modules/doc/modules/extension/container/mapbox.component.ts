@@ -301,7 +301,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly markersInView$ = combineLatest([
     // default items
-    of([...this.mapboxDemoMarkers, ...this.mapboxMarkersData.map(this.mapboxMarkerFactory)].map((x, i) => ({ ...x, zoom: 10 }))),
+    of([...this.mapboxDemoMarkers, ...this.mapboxMarkersData.map(this.mapboxMarkerFactory)].map((x) => ({ ...x, zoom: 10 }))),
     // added markers
     this.addedMapboxMarkersData$.pipe(map((x) => x.map(EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY)))
   ]).pipe(
@@ -322,10 +322,14 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   );
   readonly markersInViewSignal = toSignal(this.markersInView$, { initialValue: undefined });
 
-  ngOnInit(): void {
+  private _setDrawerContentToExample() {
     this.dbxMapboxMapStore.setDrawerContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
+  }
+
+  ngOnInit(): void {
+    this._setDrawerContentToExample();
   }
 
   ngOnDestroy(): void {
@@ -341,9 +345,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   addDrawerContent() {
-    this.dbxMapboxMapStore.setDrawerContent({
-      componentClass: DocExtensionMapboxContentExampleComponent
-    });
+    this._setDrawerContentToExample();
   }
 
   readonly randomLatLngBounds = { sw: { lat: -60 }, ne: { lat: 60 } };
@@ -364,9 +366,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   removeMarker() {
-    this.dbxMapboxMapStore.setDrawerContent({
-      componentClass: DocExtensionMapboxContentExampleComponent
-    });
+    this._setDrawerContentToExample();
   }
 
   toggleMarkers() {

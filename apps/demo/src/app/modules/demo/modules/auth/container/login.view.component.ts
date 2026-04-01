@@ -4,7 +4,7 @@ import { type DbxFirebaseLoginMode, DbxFirebaseLoginComponent, DbxFirebaseLoginT
 import { DbxLinkComponent } from '@dereekb/dbx-web';
 
 @Component({
-  selector: 'demo-login-view',
+  selector: 'app-login-view',
   templateUrl: './login.view.component.html',
   standalone: true,
   imports: [DbxFirebaseLoginComponent, DbxLinkComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent],

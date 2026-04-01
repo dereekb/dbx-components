@@ -17,6 +17,6 @@ export class DemoAppOidcClientCreatePageComponent {
 
   onClientCreated(result: CreateOidcClientResult): void {
     const ref = this.demoAppRouterService.oidcClientRef(result.client_id);
-    this.dbxRouterService.go(ref);
+    void this.dbxRouterService.go(ref);
   }
 }

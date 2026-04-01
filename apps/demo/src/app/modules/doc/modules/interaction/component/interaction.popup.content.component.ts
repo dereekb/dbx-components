@@ -2,7 +2,7 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
 import { MatButton } from '@angular/material/button';
 
 @Component({
-  selector: 'dbx-interaction-example-popup-content',
+  selector: 'doc-interaction-example-popup-content',
   template: `
     <div>
       <p>Popup Content</p>

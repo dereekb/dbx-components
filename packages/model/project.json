@@ -53,7 +53,7 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "publish-npmjs": {
+    "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/model && npm publish --access public"

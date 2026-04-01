@@ -71,9 +71,7 @@ export class DocActionDirectivesComponent implements OnDestroy {
   readonly value$ = this._value.asObservable();
   readonly valueSignal = toSignal(this.value$, { initialValue: { test: 0 } });
 
-  constructor() {}
-
-  readonly handleAction: WorkUsingObservable = (value: any) => {
+  readonly handleAction: WorkUsingObservable = (_value: any) => {
     return of(true).pipe(delay(1000));
   };
 

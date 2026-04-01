@@ -12,7 +12,7 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './action.example.tool.component.html',
-  selector: 'dbx-action-example-tools',
+  selector: 'doc-action-example-tools',
   providers: [provideFormlyContext()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,

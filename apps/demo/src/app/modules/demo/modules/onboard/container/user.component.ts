@@ -35,8 +35,8 @@ export class DemoOnboardUserComponent implements OnInit {
   };
 
   readonly handleSuccess: DbxActionSuccessHandlerFunction = () => {
-    this.auth.refreshToken().then(() => {
-      this.dbxRouterService.go('demo.app');
+    void this.auth.refreshToken().then(() => {
+      void this.dbxRouterService.go('demo.app');
     });
   };
 }

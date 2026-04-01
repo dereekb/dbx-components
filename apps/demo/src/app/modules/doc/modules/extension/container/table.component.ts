@@ -27,7 +27,7 @@ const daysInWeek = 7;
 let increase = 0;
 const nextNumberValue = incrementingNumberFactory({});
 const randomValueArray = arrayFactory(nextNumberValue);
-const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ ...x, columnValues: randomValueArray(daysInWeek).map((x) => x + increase) }));
+const _addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ ...x, columnValues: randomValueArray(daysInWeek).map((x) => x + increase) }));
 
 @Component({
   templateUrl: './table.component.html',
@@ -47,7 +47,7 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
 
   readonly isLoading$ = this.exampleTableDataItems.pipe(
     skip(1),
-    map((x) => false),
+    map((_x) => false),
     startWith(true),
     distinctUntilChanged(),
     shareReplay(1)
@@ -96,7 +96,7 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
         }
       };
     },
-    itemAction: function (item: ExampleTableData) {
+    itemAction: function (_item: ExampleTableData) {
       return {
         componentClass: DocExtensionTableItemActionExampleComponent
       };
@@ -156,7 +156,7 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
   };
 
   readonly exampleLoadingContextDelegate: DbxTableContextDataDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
-    loadData: (input) => {
+    loadData: (_input) => {
       return of(beginLoadingPage<DbxTableContextData<DateRangeDayDistanceInput, Date, ExampleTableData>>(0));
     }
   };

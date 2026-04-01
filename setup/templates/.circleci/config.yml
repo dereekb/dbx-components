@@ -233,8 +233,8 @@ jobs:
       # NOTE: npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
       # If your packages depend on each other, publish them in dependency order instead of using run-many.
       # Example sequential publishing:
-      # - run: npx nx run package-a:publish-npmjs && npx nx run package-b:publish-npmjs
-      - run: npx nx run-many -t publish-npmjs
+      # - run: npx nx run package-a:ci-publish-npmjs && npx nx run package-b:ci-publish-npmjs
+      - run: npx nx run-many -t ci-publish-npmjs
 # --- WORKFLOWS ---
 workflows:
   version: 2
