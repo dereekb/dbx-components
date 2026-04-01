@@ -58,7 +58,7 @@ import ResizeObserver from 'resize-observer-polyfill';
 (global as any).ResizeObserver = ResizeObserver;
 
 // https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
-var window;
+let window;
 
 if (!window) {
   window = global;

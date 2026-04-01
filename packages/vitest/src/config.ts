@@ -1,9 +1,9 @@
 /// <reference types='vitest' />
 import angular from '@analogjs/vite-plugin-angular';
-import { defineConfig, ViteUserConfigFn } from 'vitest/config';
+import { defineConfig, type ViteUserConfigFn } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-import { loadEnv, PluginOption } from 'vite';
+import { type loadEnv, type PluginOption } from 'vite';
 import { createRequire } from 'module';
 import path from 'path';
 

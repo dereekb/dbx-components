@@ -145,8 +145,7 @@ export function hasNonTrivialChildNodes(element: HTMLElement): boolean {
   const nodes = element.childNodes;
   let result = false;
 
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
+  for (const node of nodes) {
 
     if (node.nodeType === Node.ELEMENT_NODE || (node.nodeType === Node.TEXT_NODE && node.textContent?.trim())) {
       result = true;

@@ -1,4 +1,4 @@
-import { type AssetPathRef, type AssetLoaderAssetInstance, AssetLoader } from './asset';
+import { type AssetPathRef, type AssetLoaderAssetInstance, type AssetLoader } from './asset';
 
 /**
  * Configuration for {@link delegatedAssetLoader}.

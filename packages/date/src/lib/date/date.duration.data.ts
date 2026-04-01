@@ -1,4 +1,4 @@
-import { type Milliseconds, type TimeUnit, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, MS_IN_WEEK, timeUnitToMilliseconds } from '@dereekb/util';
+import { type Milliseconds, type TimeUnit, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, MS_IN_WEEK } from '@dereekb/util';
 
 // MARK: TimeDurationData
 /**

@@ -20,7 +20,6 @@ import { type FirestoreContextCache, type FirestoreContextCacheFactoryRef, type 
 import { type FirestoreDrivers } from './driver/driver';
 import { type WriteBatchFactoryReference, type RunTransactionFactoryReference } from './driver';
 import { type DocumentReference, type CollectionReference, type DocumentData, type Firestore, type CollectionGroup } from './types';
-import { type Maybe } from '@dereekb/util';
 import { type QueryLikeReferenceRef } from './reference';
 
 /**

@@ -1,4 +1,4 @@
-import { type AssetPathRef, type AssetLoaderGetFn, AssetLoader } from './asset';
+import { type AssetPathRef, type AssetLoaderGetFn, type AssetLoader } from './asset';
 import { assetLoaderFromGetFn } from './asset.loader';
 
 /**
