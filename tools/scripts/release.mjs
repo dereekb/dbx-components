@@ -44,7 +44,7 @@ const TYPE_LABELS = {
   merge: 'Merges',
   release: 'Releases',
   checkpoint: 'Checkpoints',
-  demo: 'Demo',
+  demo: 'Demo'
 };
 
 // -- CLI args ----------------------------------------------------------------
@@ -55,21 +55,21 @@ const argv = await yargs(hideBin(process.argv))
     alias: 'd',
     description: 'Preview the release without making changes',
     type: 'boolean',
-    default: true,
+    default: true
   })
   .option('verbose', {
     description: 'Enable verbose output',
     type: 'boolean',
-    default: false,
+    default: false
   })
   .option('version', {
     description: 'Explicit version to use (skips commit analysis)',
-    type: 'string',
+    type: 'string'
   })
   .option('skip-publish', {
     description: 'Skip the npm publish step',
     type: 'boolean',
-    default: false,
+    default: false
   })
   .parseAsync();
 
@@ -84,10 +84,7 @@ console.log(`\nRelease mode: ${dryRun ? 'DRY RUN' : 'LIVE'}\n`);
 // Find the last stable tag (for version calculation) and its -dev counterpart (for commit comparison).
 // The -dev tags live on develop and mark where release prep happened, so commits after that are new.
 // (main diverges via force-merge, so main..develop includes the full history — the -dev tag is the correct anchor.)
-const allTags = execSync('git tag --list "v*" --sort=-v:refname', { encoding: 'utf-8' })
-  .trim()
-  .split('\n')
-  .filter(Boolean);
+const allTags = execSync('git tag --list "v*" --sort=-v:refname', { encoding: 'utf-8' }).trim().split('\n').filter(Boolean);
 
 const lastStableTag = allTags.find((tag) => {
   const ver = semver.parse(tag.replace(/^v/, ''));
@@ -145,7 +142,7 @@ console.log('Running Nx releaseVersion...\n');
 const { releaseGraph } = await releaseVersion({
   specifier: nextVersion,
   dryRun,
-  verbose,
+  verbose
 });
 
 // -- Step 3: Generate changelog with conventional-changelog ------------------
@@ -162,33 +159,31 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
     host: 'https://github.com',
     owner: githubReponsitoryOwner,
     repository: githubReponsitoryName,
-    linkReferences: true,
+    linkReferences: true
   })
   .writer({
     // Use "- " instead of "* " for list items
-    commitPartial: '- {{#if scope}}**{{scope}}:** {{/if}}{{#if subject}}{{subject}}{{else}}{{header}}{{/if}} ({{#if @root.linkReferences}}[{{shortHash}}]({{@root.host}}/{{@root.owner}}/{{@root.repository}}/commit/{{hash}}){{else}}{{shortHash}}{{/if}}){{#if references}}, closes{{#each references}} {{#if @root.linkReferences}}[{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}]({{@root.host}}/{{#if this.owner}}{{this.owner}}{{else}}{{@root.owner}}{{/if}}/{{#if this.repository}}{{this.repository}}{{else}}{{@root.repository}}{{/if}}/issues/{{this.issue}}){{else}}{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/if}}{{/each}}{{/if}}\n',
+    commitPartial:
+      '- {{#if scope}}**{{scope}}:** {{/if}}{{#if subject}}{{subject}}{{else}}{{header}}{{/if}} ({{#if @root.linkReferences}}[{{shortHash}}]({{@root.host}}/{{@root.owner}}/{{@root.repository}}/commit/{{hash}}){{else}}{{shortHash}}{{/if}}){{#if references}}, closes{{#each references}} {{#if @root.linkReferences}}[{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}]({{@root.host}}/{{#if this.owner}}{{this.owner}}{{else}}{{@root.owner}}{{/if}}/{{#if this.repository}}{{this.repository}}{{else}}{{@root.repository}}{{/if}}/issues/{{this.issue}}){{else}}{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/if}}{{/each}}{{/if}}\n',
     // Override the angular transform to include all commit types, not just feat/fix/perf/revert
     transform: (commit) => {
       const notes = commit.notes.map((note) => ({
         ...note,
-        title: 'BREAKING CHANGES',
+        title: 'BREAKING CHANGES'
       }));
 
       const type = TYPE_LABELS[commit.type] || commit.type;
       const scope = commit.scope === '*' ? '' : commit.scope;
-      const shortHash =
-        typeof commit.hash === 'string' ? commit.hash.substring(0, 8) : commit.shortHash;
+      const shortHash = typeof commit.hash === 'string' ? commit.hash.substring(0, 8) : commit.shortHash;
 
       let { subject } = commit;
 
       if (typeof subject === 'string') {
-        subject = subject.replace(/#([0-9]+)/g, (_, issue) =>
-          `[#${issue}](https://github.com/${githubReponsitoryOwner}/${githubReponsitoryName}/issues/${issue})`
-        );
+        subject = subject.replace(/#([0-9]+)/g, (_, issue) => `[#${issue}](https://github.com/${githubReponsitoryOwner}/${githubReponsitoryName}/issues/${issue})`);
       }
 
       return { notes, type, scope, shortHash, subject, references: commit.references };
-    },
+    }
   })
   .write()) {
   changelogChunks.push(chunk);
@@ -215,7 +210,7 @@ if (!dryRun) {
 // Build the commit message with a detailed body listing each individual commit
 const commitSubject = `release($workspace): v${nextVersion} release`;
 const commitLog = execSync(`git log ${fromTag}..HEAD --format="%s%n%n%b" --no-merges`, {
-  encoding: 'utf-8',
+  encoding: 'utf-8'
 }).trim();
 
 const commitMessage = commitLog ? `${commitSubject}\n\n${commitLog}` : commitSubject;
@@ -237,7 +232,7 @@ if (!dryRun) {
 }
 
 // -- Step 5: Publish (optional) ----------------------------------------------
-// Publishes using the publish-npmjs target
+// Publishes using the ci-publish-npmjs target
 
 if (skipPublish) {
   console.log('Skipping publish (--skip-publish).\n');

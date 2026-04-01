@@ -56,7 +56,7 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
-    "publish-npmjs": {
+    "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"

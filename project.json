@@ -68,6 +68,20 @@
         "command": "npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run workspace:ci-test-firebase-all'"
       }
     },
+    "ci-publish-npmjs-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          { "command": "npx nx run vitest:ci-publish-npmjs && npx nx run util:ci-publish-npmjs && npx nx run rxjs:ci-publish-npmjs" },
+          { "command": "npx nx run date:ci-publish-npmjs && npx nx run model:ci-publish-npmjs && npx nx run browser:ci-publish-npmjs" },
+          { "command": "npx nx run nestjs:ci-publish-npmjs && npx nx run firebase:ci-publish-npmjs && npx nx run firebase-server:ci-publish-npmjs" },
+          { "command": "npx nx run analytics:ci-publish-npmjs && npx nx run zoho:ci-publish-npmjs && npx nx run zoom:ci-publish-npmjs && npx nx run calcom:ci-publish-npmjs" },
+          { "command": "npx nx run dbx-core:ci-publish-npmjs && npx nx run dbx-web:ci-publish-npmjs && npx nx run dbx-analytics:ci-publish-npmjs && npx nx run dbx-form:ci-publish-npmjs" },
+          { "command": "npx nx run dbx-firebase:ci-publish-npmjs" }
+        ],
+        "parallel": false
+      }
+    },
     "update-peer-deps": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -101,7 +101,7 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server --watch'"
       }
     },
-    "publish-npmjs": {
+    "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/firebase-server && npm publish --access public"

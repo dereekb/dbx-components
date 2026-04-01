@@ -79,7 +79,7 @@
         "parallel": false
       }
     },
-    "publish-npmjs": {
+    "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/zoom && npm publish --access public"

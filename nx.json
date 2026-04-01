@@ -44,9 +44,7 @@
       "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"],
       "cache": true
     },
-    "publish-npmjs": {
-      "dependsOn": ["build"]
-    },
+    "ci-publish-npmjs": {},
     "deploy": {
       "dependsOn": ["build"]
     },
