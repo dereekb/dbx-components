@@ -4,7 +4,7 @@ import { firestoreModelKeyType, firestoreModelIdType } from '../../common/model/
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
 import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
-import { type StorageFileKey , type StorageFileId } from './storagefile.id';
+import { type StorageFileKey, type StorageFileId } from './storagefile.id';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type SendNotificationResult } from '../notification/notification.api';
@@ -55,13 +55,13 @@ export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreate
 export interface InitializeStorageFileFromUploadParams extends Pick<StoragePath, 'pathString'> {
   readonly bucketId?: Maybe<StorageBucketId>;
   readonly pathString: StorageSlashPath;
-  readonly expediteProcessing?: boolean;
+  readonly expediteProcessing?: Maybe<boolean>;
 }
 
 export const initializeStorageFileFromUploadParamsType = type({
   'bucketId?': clearable('string'),
   pathString: 'string > 0',
-  'expediteProcessing?': 'boolean'
+  'expediteProcessing?': clearable('boolean')
 }) as Type<InitializeStorageFileFromUploadParams>;
 
 /**
@@ -270,11 +270,11 @@ export const createStorageFileGroupParamsType = type({
 }) as Type<CreateStorageFileGroupParams>;
 
 export interface SyncStorageFileWithGroupsParams extends TargetModelParams {
-  readonly force?: boolean;
+  readonly force?: Maybe<boolean>;
 }
 
 export const syncStorageFileWithGroupsParamsType = targetModelParamsType.merge({
-  'force?': 'boolean'
+  'force?': clearable('boolean')
 }) as Type<SyncStorageFileWithGroupsParams>;
 
 export interface SyncStorageFileWithGroupsResult {
@@ -311,11 +311,11 @@ export const updateStorageFileGroupParamsType = targetModelParamsType.merge({
 }) as Type<UpdateStorageFileGroupParams>;
 
 export interface RegenerateStorageFileGroupContentParams extends TargetModelParams {
-  readonly force?: boolean;
+  readonly force?: Maybe<boolean>;
 }
 
 export const regenerateStorageFileGroupContentParamsType = targetModelParamsType.merge({
-  'force?': 'boolean'
+  'force?': clearable('boolean')
 }) as Type<RegenerateStorageFileGroupContentParams>;
 
 export interface RegenerateStorageFileGroupContentResult {
@@ -335,11 +335,11 @@ export interface RegenerateAllFlaggedStorageFileGroupsContentResult {
  * Used for initializing an uninitialized model like NotificationBox or NotificationSummary.
  */
 export interface InitializeStorageFileModelParams extends TargetModelParams {
-  readonly throwErrorIfAlreadyInitialized?: boolean;
+  readonly throwErrorIfAlreadyInitialized?: Maybe<boolean>;
 }
 
 export const initializeStorageFileModelParamsType = targetModelParamsType.merge({
-  'throwErrorIfAlreadyInitialized?': 'boolean'
+  'throwErrorIfAlreadyInitialized?': clearable('boolean')
 }) as Type<InitializeStorageFileModelParams>;
 
 export interface InitializeAllApplicableStorageFileGroupsParams {}
