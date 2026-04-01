@@ -1,4 +1,4 @@
-import { type SlashPath, type WebsiteUrl, type WebsiteUrlWithPrefix, hasHttpPrefix, isWebsiteUrlWithPrefix } from '@dereekb/util';
+import { type SlashPath, type WebsiteUrlWithPrefix, isWebsiteUrlWithPrefix } from '@dereekb/util';
 import { type AssetLocalPathRef, type AssetRemotePathRef } from './asset';
 
 /**

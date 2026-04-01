@@ -1,7 +1,27 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, type DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import {
+  dateTimeField,
+  DbxDateTimeFieldTimeMode,
+  DbxDateTimeValueMode,
+  dateRangeField,
+  type DbxDateTimePickerConfiguration,
+  dateTimeRangeField,
+  timezoneStringField,
+  fixedDateRangeField,
+  timeDurationField,
+  DbxFormFormlyDateFieldModule,
+  DbxFormFormlyDbxListFieldModule,
+  DbxFormFormlyDurationFieldModule,
+  DbxFormFormlyPickableFieldModule,
+  DbxFormFormlySearchableFieldModule,
+  DbxFormFormlySourceSelectModule,
+  DbxFormTimezoneStringFieldModule,
+  DbxFormlyFieldsContextDirective,
+  DbxFormSourceDirective,
+  DbxFormValueChangeDirective
+} from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, type Observable, delay, interval, map, of } from 'rxjs';
@@ -14,7 +34,7 @@ import { DocFormExampleComponent } from '../component/example.form.component';
 @Component({
   templateUrl: './value.date.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyDurationFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent implements OnDestroy {
@@ -407,6 +427,57 @@ export function schoolInfoJobSettingsEndTimeField() {
       }
     })
   );
+
+  // MARK: Time Duration
+  readonly timeDurationValues$ = of({
+    durationMs: 3600000,
+    durationMinutes: 90,
+    hoursAndMinutes: { hour: 1, minute: 30 },
+    durationSeconds: 3661
+  });
+
+  readonly timeDurationFields: FormlyFieldConfig[] = [
+    timeDurationField({
+      key: 'durationMs',
+      label: 'Duration (output: milliseconds)',
+      outputUnit: 'ms',
+      allowedUnits: ['min', 'h', 'd'],
+      carryOver: true,
+      description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).'
+    }),
+    timeDurationField({
+      key: 'durationMinutes',
+      label: 'Duration (output: minutes)',
+      outputUnit: 'min',
+      min: 0,
+      max: 480,
+      description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.'
+    }),
+    timeDurationField({
+      key: 'hoursAndMinutes',
+      label: 'Duration (HoursAndMinutes output)',
+      valueMode: 'hours_and_minutes',
+      allowedUnits: ['min', 'h'],
+      carryOver: true,
+      description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.'
+    }),
+    timeDurationField({
+      key: 'durationSeconds',
+      label: 'Duration (output: seconds)',
+      outputUnit: 's',
+      allowedUnits: ['s', 'min', 'h'],
+      carryOver: true,
+      description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.'
+    }),
+    timeDurationField({
+      key: 'durationData',
+      label: 'Duration (TimeDurationData output)',
+      valueMode: 'duration_data',
+      allowedUnits: ['s', 'min', 'h', 'd'],
+      carryOver: true,
+      description: 'Output is a TimeDurationData object with individual unit fields.'
+    })
+  ];
 
   ngOnDestroy(): void {
     this._timezone.complete();

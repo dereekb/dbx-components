@@ -1,7 +1,7 @@
 import type * as admin from 'firebase-admin';
 import { type InjectionToken, Module, type ModuleMetadata, type Provider } from '@nestjs/common';
 import { type FirestoreContext, type FirestoreContextCacheFactory, type FirestoreContextFactoryParams } from '@dereekb/firebase';
-import { type ClassLikeType, type Maybe } from '@dereekb/util';
+import { type ClassLikeType } from '@dereekb/util';
 import { googleCloudFirestoreContextFactory } from '../../firestore/firestore';
 import { FIREBASE_APP_TOKEN } from '../firebase/firebase.module';
 

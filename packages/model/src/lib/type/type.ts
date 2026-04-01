@@ -37,6 +37,12 @@ export type Clearable<T> = Maybe<T>;
  *   "phone?": clearable(e164PhoneNumberType),          // Type instance
  *   "items?": clearable(mySchemaType.array()),          // .array() result
  * });
+ *
+ * // For tuple expressions (e.g. intersections), resolve to a Type first:
+ * const zipType = type([/^\d{5}(-\d{4})?$/, '&', `string <= 11`]);
+ * const schema2 = type({
+ *   "zip?": clearable(zipType),
+ * });
  * ```
  *
  * @param definition The ArkType definition string or Type instance to make clearable.

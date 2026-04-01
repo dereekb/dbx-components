@@ -85,6 +85,16 @@ describe('transformStringFunction', () => {
     expect(transformFn(testString)).toBe(customTransform('Hello World'));
   });
 
+  it('should trim and apply a snakeCase transform for tag normalization.', () => {
+    const { snakeCase } = require('change-case-all');
+    const normalizeTag = transformStringFunction({ trim: true, transform: snakeCase as TransformStringFunction });
+
+    expect(normalizeTag('  Hello World  ')).toBe('hello_world');
+    expect(normalizeTag('VIP')).toBe('vip');
+    expect(normalizeTag('  multiple   spaces  ')).toBe('multiple_spaces');
+    expect(normalizeTag('already_snake')).toBe('already_snake');
+  });
+
   it('should prioritize toUppercase over toLowercase when both are true.', () => {
     const transformFn = transformStringFunction({ toLowercase: true, toUppercase: true });
     expect(transformFn(testString)).toBe('  HELLO WORLD  ');

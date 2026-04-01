@@ -4,10 +4,9 @@ import { firestoreModelKeyType, firestoreModelIdType } from '../../common/model/
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
 import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
-import { type StorageFileKey } from './storagefile.id';
+import { type StorageFileKey , type StorageFileId } from './storagefile.id';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
-import { type StorageFileId } from './storagefile.id';
 import { type SendNotificationResult } from '../notification/notification.api';
 import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 

@@ -1,0 +1,14 @@
+<div class="dbx-duration-picker">
+  @for (unit of units; track unit) {
+    <div class="dbx-duration-picker-column">
+      <span class="dbx-duration-picker-label">{{ unitLabel(unit) }}</span>
+      <button mat-icon-button type="button" (mousedown)="onHoldStart('increment', unit, $event)" (mouseup)="stopHold()" (mouseleave)="stopHold()" (keydown.arrowup)="onHoldStart('increment', unit, $event)" (keydown.arrowdown)="onHoldStart('decrement', unit, $event)" (keyup)="onKeyUp($event)" [disabled]="!canIncrement(unit)" aria-label="Increase">
+        <mat-icon>add</mat-icon>
+      </button>
+      <span class="dbx-duration-picker-value">{{ getValue(unit) }}</span>
+      <button mat-icon-button type="button" (mousedown)="onHoldStart('decrement', unit, $event)" (mouseup)="stopHold()" (mouseleave)="stopHold()" (keydown.arrowup)="onHoldStart('increment', unit, $event)" (keydown.arrowdown)="onHoldStart('decrement', unit, $event)" (keyup)="onKeyUp($event)" [disabled]="!canDecrement(unit)" aria-label="Decrease">
+        <mat-icon>remove</mat-icon>
+      </button>
+    </div>
+  }
+</div>

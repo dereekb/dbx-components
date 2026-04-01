@@ -5,7 +5,7 @@ import { isValidDateCellTiming } from './date.cell';
 import { isValidDateCellRange, isValidDateCellRangeSeries } from './date.cell.index';
 import { DateRangeType } from './date.range';
 import { CalendarDateType } from './date.calendar';
-import { ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
+import { ARKTYPE_DATE_DTO_TYPE, clearable } from '@dereekb/model';
 
 // MARK: Timezone
 /**
@@ -59,7 +59,7 @@ export const dateRangeType = type({
 export const dateRangeParamsType = type({
   type: type.enumerated(...Object.values(DateRangeType)),
   date: ARKTYPE_DATE_DTO_TYPE,
-  'distance?': 'number'
+  'distance?': clearable('number')
 });
 
 // MARK: DateCell
@@ -83,7 +83,7 @@ export const dateCellType = type({
  * into the corresponding runtime types.
  */
 export const dateCellRangeType = dateCellType.merge({
-  'to?': 'number.integer >= 0'
+  'to?': clearable('number.integer >= 0')
 });
 
 // MARK: DateCellTiming
@@ -121,8 +121,8 @@ export const calendarDateType = dateDurationSpanType.merge({
  */
 export const dateCellScheduleType = type({
   w: [DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX, '&', 'string'] as const,
-  'd?': 'number.integer >= 0 []',
-  'ex?': 'number.integer >= 0 []'
+  'd?': clearable('number.integer >= 0 []'),
+  'ex?': clearable('number.integer >= 0 []')
 });
 
 // MARK: ModelRecurrenceInfo
@@ -134,11 +134,11 @@ export const dateCellScheduleType = type({
  * or runtime Date objects into the corresponding runtime types.
  */
 export const modelRecurrenceInfoType = type({
-  'timezone?': 'string',
+  'timezone?': clearable('string'),
   rrule: 'string',
   start: ARKTYPE_DATE_DTO_TYPE,
   end: ARKTYPE_DATE_DTO_TYPE,
-  'forever?': 'boolean'
+  'forever?': clearable('boolean')
 });
 
 // MARK: Validators

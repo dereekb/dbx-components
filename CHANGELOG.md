@@ -1,3 +1,18 @@
+## [13.6.12](https://github.com/dereekb/dbx-components/compare/v13.6.11-dev...v13.6.12) (2026-04-01)
+
+
+### Build System
+
+- lint fix ([d3768833](https://github.com/dereekb/dbx-components/commit/d37688338d3021d8d46ad29415a3b9c47f38a34a))
+- lint fix ([31ad7c0f](https://github.com/dereekb/dbx-components/commit/31ad7c0f1a3a8d5abacb884dd4af8ea6e6dafc6f))
+
+
+### Code Refactoring
+
+- added clearable() to optional arktype fields ([ec5f46a6](https://github.com/dereekb/dbx-components/commit/ec5f46a646b07df15a7cb2f98e5b534772c2ab16))
+- added timeDurationField with text parsing and popover picker ([e41c12af](https://github.com/dereekb/dbx-components/commit/e41c12afab184ce3a74c72d584066bb4433781a7))
+- fixes ([0eb0ef3a](https://github.com/dereekb/dbx-components/commit/0eb0ef3a8870fa2d85fbf64b77c35f0bc1f37573))
+
 ## [13.6.11](https://github.com/dereekb/dbx-components/compare/v13.6.10-dev...v13.6.11) (2026-03-30)
 
 

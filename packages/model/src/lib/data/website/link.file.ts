@@ -1,5 +1,6 @@
 import { filterFalsyAndEmptyValues, type ModelTypeString, splitJoinRemainder } from '@dereekb/util';
 import { type } from 'arktype';
+import { clearable } from '../../type';
 import { type WebsiteLink, type WebsiteLinkEncodedData, WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH, WEBSITE_LINK_TYPE_MAX_LENGTH, WEBSITE_LINK_TYPE_REGEX } from './link';
 
 /**
@@ -83,12 +84,22 @@ export interface WebsiteFileLink {
 }
 
 /**
+ * ArkType schema for a {@link WebsiteFileLinkType} value.
+ */
+const websiteFileLinkTypeValueType = type([WEBSITE_FILE_LINK_TYPE_REGEX, '&', `string <= ${WEBSITE_LINK_TYPE_MAX_LENGTH}`] as const);
+
+/**
+ * ArkType schema for a {@link WebsiteFileLinkMimeType} value.
+ */
+const websiteFileLinkMimeValueType = type([WEBSITE_FILE_LINK_MIME_TYPE_REGEX, '&', `string <= ${WEBSITE_FILE_LINK_MIME_TYPE_MAX_LENGTH}`] as const);
+
+/**
  * ArkType schema for a {@link WebsiteFileLink}.
  */
 export const websiteFileLinkType = type({
-  'type?': [WEBSITE_FILE_LINK_TYPE_REGEX, '&', `string <= ${WEBSITE_LINK_TYPE_MAX_LENGTH}`] as const,
-  'mime?': [WEBSITE_FILE_LINK_MIME_TYPE_REGEX, '&', `string <= ${WEBSITE_FILE_LINK_MIME_TYPE_MAX_LENGTH}`] as const,
-  'name?': `string <= ${WEBSITE_FILE_LINK_NAME_MAX_LENGTH}`,
+  'type?': clearable(websiteFileLinkTypeValueType),
+  'mime?': clearable(websiteFileLinkMimeValueType),
+  'name?': clearable(`string <= ${WEBSITE_FILE_LINK_NAME_MAX_LENGTH}`),
   data: [WEBSITE_FILE_LINK_DATA_REGEX, '&', `0 < string <= ${WEBSITE_FILE_LINK_DATA_MAX_LENGTH}`] as const
 });
 

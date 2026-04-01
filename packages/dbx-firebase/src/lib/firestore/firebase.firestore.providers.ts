@@ -1,9 +1,8 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { clientFirebaseFirestoreContextFactory, type FirestoreContext, type FirestoreContextCacheFactory, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe , type ClassLikeType } from '@dereekb/util';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { Firestore } from '@angular/fire/firestore';
-import { type ClassLikeType } from '@dereekb/util';
 
 /**
  * Provider factory for the SystemStateFirestoreCollections.

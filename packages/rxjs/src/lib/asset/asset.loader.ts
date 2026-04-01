@@ -1,5 +1,5 @@
 import { defer, from, type Observable } from 'rxjs';
-import { type AssetPathRef, type AssetLoaderAssetInstance, type AssetLoaderGetFn, AssetLoader } from './asset';
+import { type AssetPathRef, type AssetLoaderAssetInstance, type AssetLoaderGetFn, type AssetLoader } from './asset';
 
 /**
  * Creates an {@link AssetLoaderAssetInstance} from a ref and a Promise-based get function.

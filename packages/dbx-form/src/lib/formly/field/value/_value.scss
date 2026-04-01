@@ -1,6 +1,7 @@
 @use './array/array';
 @use './boolean/boolean';
 @use './date/date';
+@use './duration/duration';
 @use './number/number';
 @use './phone/phone';
 @use './text/text';
@@ -9,6 +10,7 @@
   @include array.core();
   @include boolean.core();
   @include date.core();
+  @include duration.core();
   @include number.core();
   @include phone.core();
   @include text.core();
@@ -21,6 +23,7 @@
   @include array.theme($theme-config);
   @include boolean.theme($theme-config);
   @include date.theme($theme-config);
+  @include duration.theme($theme-config);
   @include number.theme($theme-config);
   @include phone.theme($theme-config);
   @include text.theme($theme-config);

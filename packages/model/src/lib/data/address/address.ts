@@ -1,5 +1,6 @@
 import { US_STATE_CODE_STRING_REGEX } from '@dereekb/util';
 import { type } from 'arktype';
+import { clearable } from '../../type';
 
 /**
  * Maximum character length for address line fields (line1, line2).
@@ -36,9 +37,9 @@ export const ADDRESS_COUNTRY_MAX_LENGTH = 80;
  */
 const baseUnitedStatesAddressType = type({
   line1: `0 < string <= ${ADDRESS_LINE_MAX_LENGTH}`,
-  'line2?': `string <= ${ADDRESS_LINE_MAX_LENGTH}`,
+  'line2?': clearable(`string <= ${ADDRESS_LINE_MAX_LENGTH}`),
   city: `0 < string <= ${ADDRESS_CITY_MAX_LENGTH}`,
-  zip: [/^\d{5}(-\d{4})?$/, '&', `string <= ${ADDRESS_ZIP_MAX_LENGTH}`] as const
+  zip: [/^\d{5}(-\d{4})?$/, '&', `string <= ${ADDRESS_ZIP_MAX_LENGTH}`]
 });
 
 /**

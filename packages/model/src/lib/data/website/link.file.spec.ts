@@ -1,4 +1,5 @@
-import { decodeWebsiteLinkEncodedDataToWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, type WebsiteFileLink, websiteFileLinkToWebsiteLink, websiteLinkToWebsiteLinkFile, WEBSITE_FILE_LINK_WEBSITE_LINK_TYPE } from './link.file';
+import { type } from 'arktype';
+import { decodeWebsiteLinkEncodedDataToWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, type WebsiteFileLink, websiteFileLinkToWebsiteLink, websiteFileLinkType, websiteLinkToWebsiteLinkFile, WEBSITE_FILE_LINK_WEBSITE_LINK_TYPE } from './link.file';
 
 const exampleWithAll: WebsiteFileLink = {
   type: 't',
@@ -10,6 +11,40 @@ const exampleWithAll: WebsiteFileLink = {
 const exampleWithOnlyData: WebsiteFileLink = {
   data: exampleWithAll.data
 };
+
+describe('websiteFileLinkType', () => {
+  describe('validation', () => {
+    it('should validate valid input with all fields', () => {
+      const result = websiteFileLinkType(exampleWithAll);
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should validate valid input with only data', () => {
+      const result = websiteFileLinkType(exampleWithOnlyData);
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should accept null type, mime, and name values', () => {
+      const result = websiteFileLinkType({
+        type: null,
+        mime: null,
+        name: null,
+        data: exampleWithAll.data
+      });
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+
+    it('should accept undefined type, mime, and name values', () => {
+      const result = websiteFileLinkType({
+        type: undefined,
+        mime: undefined,
+        name: undefined,
+        data: exampleWithAll.data
+      });
+      expect(result).not.toBeInstanceOf(type.errors);
+    });
+  });
+});
 
 describe('websiteFileLinkToWebsiteLink', () => {
   it('should convert the input to a WebsiteLink', () => {
