@@ -1,19 +1,19 @@
 {
   "name": "@dereekb/dbx-firebase/oidc",
-  "version": "13.6.11",
+  "version": "13.6.12",
   "peerDependencies": {
     "@angular/common": "21.2.3",
     "@angular/core": "21.2.3",
     "@angular/forms": "21.2.3",
     "@angular/material": "21.2.3",
     "@angular/router": "21.2.3",
-    "@dereekb/dbx-core": "13.6.11",
-    "@dereekb/dbx-firebase": "13.6.11",
-    "@dereekb/dbx-form": "13.6.11",
-    "@dereekb/dbx-web": "13.6.11",
-    "@dereekb/firebase": "13.6.11",
-    "@dereekb/rxjs": "13.6.11",
-    "@dereekb/util": "13.6.11",
+    "@dereekb/dbx-core": "13.6.12",
+    "@dereekb/dbx-firebase": "13.6.12",
+    "@dereekb/dbx-form": "13.6.12",
+    "@dereekb/dbx-web": "13.6.12",
+    "@dereekb/firebase": "13.6.12",
+    "@dereekb/rxjs": "13.6.12",
+    "@dereekb/util": "13.6.12",
     "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
     "rxjs": "^7.8.0"
   }
