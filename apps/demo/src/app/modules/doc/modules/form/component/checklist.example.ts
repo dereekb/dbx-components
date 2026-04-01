@@ -24,6 +24,19 @@ export interface DocFormExampleChecklistFieldsConfig {
   display?: DocFormExampleChecklistFieldsCustomDisplayConfig;
 }
 
+/**
+ * Builds checklist formly fields from a data observable and optional custom display configuration.
+ *
+ * @param config - The checklist fields configuration
+ * @param config.dataObs - Observable of the checklist data
+ * @param config.display - Optional custom display configuration per field
+ * @returns The built formly field configs
+ *
+ * @example
+ * ```ts
+ * const fields = docFormExampleChecklistFields({ dataObs: myData$, display: myDisplay });
+ * ```
+ */
 export function docFormExampleChecklistFields({ dataObs, display }: DocFormExampleChecklistFieldsConfig): FormlyFieldConfig[] {
   const b: DocFormExampleChecklistItemFieldDataSetBuilder = new ChecklistItemFieldDataSetBuilder(dataObs);
 
@@ -71,6 +84,19 @@ export function docFormExampleChecklistFields({ dataObs, display }: DocFormExamp
   return b.build();
 }
 
+/**
+ * Wraps checklist fields in a flex layout section field group.
+ *
+ * @param options - The section options
+ * @param options.key - Optional formly key for the section
+ * @param options.config - The checklist fields configuration
+ * @returns A formly field config wrapping the checklist fields
+ *
+ * @example
+ * ```ts
+ * const section = docFormExampleChecklistFieldsSection({ config: myConfig });
+ * ```
+ */
 export function docFormExampleChecklistFieldsSection({ key = undefined, config }: { key?: string; config: DocFormExampleChecklistFieldsConfig }): FormlyFieldConfig {
   const fields = docFormExampleChecklistFields(config).map((field) => ({ field }));
 

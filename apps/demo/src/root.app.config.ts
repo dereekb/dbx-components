@@ -19,16 +19,28 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
 import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
-import { metaReducers, ROOT_REDUCER } from './app/state/app.state';
+import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
 
 // MARK: DbxAnalytics
-export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
+/**
+ * Factory for the Segment API service configuration, activating analytics only in production.
+ *
+ * @param _injector - Angular injector (unused)
+ * @returns Configured Segment API service config
+ */
+export function dbxAnalyticsSegmentApiServiceConfigFactory(_injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
   const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
   config.active = environment.production;
   config.logging = false; // environment.testing;
   return config;
 }
 
+/**
+ * Factory for the analytics service configuration with Segment listener and Firebase user source.
+ *
+ * @param injector - Angular injector used to resolve Segment and Firebase analytics dependencies
+ * @returns Configured analytics service configuration
+ */
 export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): DbxAnalyticsServiceConfiguration {
   const segmentListener: DbxAnalyticsSegmentServiceListener = injector.get(DbxAnalyticsSegmentServiceListener);
   const dbxFirebaseAnalyticsUserSource: DbxFirebaseAnalyticsUserSource = injector.get(DbxFirebaseAnalyticsUserSource);
@@ -44,7 +56,15 @@ export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): Dbx
 }
 
 // MARK: Router Configs
-export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
+/**
+ * Configures the UIRouter with analytics page view tracking, auth transition hooks, and debug tracing.
+ *
+ * @param router - The UIRouter instance to configure
+ * @param injector - Angular injector for resolving the analytics service
+ * @param _module - The states module (unused)
+ * @returns undefined
+ */
+export function routerConfigFn(router: UIRouter, injector: Injector, _module: StatesModule): any {
   const transitionService = router.transitionService;
   const service: DbxAnalyticsService = injector.get<DbxAnalyticsService>(DbxAnalyticsService);
 
@@ -74,6 +94,11 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
 }
 
 // MARK: DbxFirebase
+/**
+ * Factory for the demo Firebase auth service delegate with claims-based onboarding state.
+ *
+ * @returns Configured auth service delegate
+ */
 export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
   return defaultDbxFirebaseAuthServiceDelegateWithClaimsService({
     claimsService: DEMO_AUTH_CLAIMS_SERVICE,
@@ -85,6 +110,11 @@ export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
   });
 }
 
+/**
+ * Registers the demo model types (guestbook) for the Firebase model types service.
+ *
+ * @returns Configured model types service config
+ */
 export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTypesServiceConfig {
   const guestbook: DbxFirebaseModelTypesServiceEntry<Guestbook> = {
     identity: guestbookIdentity,
@@ -94,7 +124,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
         title: data.name
       };
     },
-    srefBuilder: (injector: Injector) => (key: FirestoreModelKey) => {
+    srefBuilder: (_injector: Injector) => (key: FirestoreModelKey) => {
       const id = firestoreModelId(key);
 
       return {
@@ -113,6 +143,11 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
   return config;
 }
 
+/**
+ * Registers the demo entity widgets (guestbook) with a debug component for the model entities widget service.
+ *
+ * @returns Configured model entities widget service config
+ */
 export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebaseModelEntitiesWidgetServiceConfig {
   const guestbook: DbxFirebaseModelEntitiesWidgetEntry = {
     identity: guestbookIdentity,
@@ -151,7 +186,7 @@ export const appConfig: ApplicationConfig = {
     // ngRx
     provideEffects(),
     provideStore(ROOT_REDUCER, {
-      metaReducers,
+      metaReducers: META_REDUCERS,
       runtimeChecks: {
         strictStateSerializability: true,
         strictActionSerializability: true,

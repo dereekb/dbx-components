@@ -62,7 +62,7 @@ export class DemoProfileViewComponent implements OnInit {
 
   readonly avatarUploadHandler: StorageFileUploadHandler = storageFileUploadHandler({
     storageService: this.storageService,
-    storageFileUploadConfigFactory: (file: File): StorageFileUploadConfig => {
+    storageFileUploadConfigFactory: (_file: File): StorageFileUploadConfig => {
       const uid = this.userIdentifierSignal();
       const storagePath = userAvatarUploadsFilePath(uid);
 

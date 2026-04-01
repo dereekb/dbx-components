@@ -6,13 +6,16 @@ import baseAngularLibraryConfig from '../../eslint.config.angular.mjs';
 export default [
   ...baseAngularLibraryConfig,
   {
+    ignores: ['**/segment.js']
+  },
+  {
     files: ['**/*.ts'],
     rules: {
       '@angular-eslint/directive-selector': [
         'error',
         {
           type: 'attribute',
-          prefix: ['demo', 'doc', 'app'],
+          prefix: ['doc', 'app'],
           style: 'camelCase'
         }
       ],
@@ -20,7 +23,7 @@ export default [
         'error',
         {
           type: 'element',
-          prefix: ['demo', 'doc', 'app'],
+          prefix: ['doc', 'app'],
           style: 'kebab-case'
         }
       ]

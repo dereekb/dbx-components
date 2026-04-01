@@ -94,7 +94,7 @@ export class DemoLayoutComponent {
     },
     {
       title: 'Logout',
-      onClick: () => this.dbxAuthService.logOut() // todo: change to signout confirmation popup
+      onClick: () => void this.dbxAuthService.logOut() // todo: change to signout confirmation popup
     }
   ];
 

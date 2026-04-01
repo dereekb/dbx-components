@@ -2,7 +2,7 @@ import { Component, output, ChangeDetectionStrategy } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 
 @Component({
-  selector: 'dbx-interaction-example-popover-content',
+  selector: 'doc-interaction-example-popover-content',
   template: `
     <div>
       <p>Popover Content</p>
@@ -16,13 +16,13 @@ import { MatButton } from '@angular/material/button';
 })
 export class DocInteractionExamplePopoverContentComponent {
   readonly return = output<number>();
-  readonly close = output<void>();
+  readonly closePopover = output<void>();
 
   returnNumberValue() {
     this.return.emit(Math.random() * 1000);
   }
 
   closeWithoutValue() {
-    this.close.emit();
+    this.closePopover.emit();
   }
 }

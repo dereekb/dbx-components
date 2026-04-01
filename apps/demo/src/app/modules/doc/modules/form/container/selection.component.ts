@@ -40,6 +40,12 @@ import { DocFormExampleComponent } from '../component/example.form.component';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
+/**
+ * Creates a searchable value field search function with a random delay for demo loading state.
+ *
+ * @param obs - Observable of the string search function to use
+ * @returns A search function that delegates to the provided observable
+ */
 export function makeSearchForStringValue(obs: Observable<TestStringSearchFunction>): SearchableValueFieldStringSearchFn<string> {
   const makeRandomDelay = randomNumberFactory(1000); // use to show the loading bar.
 
@@ -568,14 +574,15 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       description: 'Anchors are enabled and set on the field. Result is configured to not show.',
       allowStringValues: false,
       searchOnEmptyText: true,
-      search: (search: string) => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      search: (_search: string) => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE,
       showSelectedValue: false,
       useAnchor: true,
       anchorForValue: (fieldValue) => {
         return {
           onClick: () => {
-            ((this.valueClicked = `Default anchor click: ${fieldValue.value}`), safeDetectChanges(this.cdRef));
+            this.valueClicked = `Default anchor click: ${fieldValue.value}`;
+            safeDetectChanges(this.cdRef);
           }
         };
       }
@@ -587,13 +594,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       allowStringValues: false,
       searchOnEmptyText: true,
       showSelectedValue: false,
-      search: (search: string) =>
+      search: (_search: string) =>
         of(
           [{ value: 'a' }, { value: 'b' }, { value: 'c' }].map((x) => ({
             ...x,
             anchor: {
               onClick: () => {
-                ((this.valueClicked = `Per item value: ${x.value}`), safeDetectChanges(this.cdRef));
+                this.valueClicked = `Per item value: ${x.value}`;
+                safeDetectChanges(this.cdRef);
               }
             }
           }))
@@ -634,7 +642,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this._searchStrings.complete();
-    this._refreshDisplayValues.complete;
+    this._refreshDisplayValues.complete();
   }
 
   refreshDisplayValues() {

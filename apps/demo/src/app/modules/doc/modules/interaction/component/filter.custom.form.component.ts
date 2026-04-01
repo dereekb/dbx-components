@@ -9,7 +9,7 @@ export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
   template: `
     <dbx-formly></dbx-formly>
   `,
-  selector: 'dbx-interaction-test-filter-custom-filter-form',
+  selector: 'doc-interaction-test-filter-custom-filter-form',
   providers: provideFormlyContext(),
   standalone: true,
   imports: [DbxFormlyComponent],

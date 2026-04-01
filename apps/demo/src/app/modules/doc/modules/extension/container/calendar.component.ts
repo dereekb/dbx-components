@@ -205,13 +205,13 @@ export class DocExtensionCalendarComponent implements OnInit {
       };
 
       if (even) {
-        x.customizeDay = (x, y) => {
+        x.customizeDay = (x, _y) => {
           if (x.meta?.state !== CalendarScheduleSelectionDayState.SELECTED) {
             x.backgroundColor = 'red';
           }
         };
       } else {
-        x.customizeDay = (x, y) => {
+        x.customizeDay = (x, _y) => {
           if (x.meta?.state !== CalendarScheduleSelectionDayState.SELECTED) {
             x.backgroundColor = 'green';
           }

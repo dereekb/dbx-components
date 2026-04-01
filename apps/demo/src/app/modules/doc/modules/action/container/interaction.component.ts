@@ -76,13 +76,13 @@ export class DocActionInteractionComponent implements OnDestroy {
       service.sendEventType('Analytics Trigger Example');
       console.log('Triggered');
     },
-    onReady: (service: DbxAnalyticsService, value) => {
+    onReady: (_service: DbxAnalyticsService, _value) => {
       console.log('Ready');
     },
-    onSuccess: (service: DbxAnalyticsService, value) => {
+    onSuccess: (_service: DbxAnalyticsService, _value) => {
       console.log('Success');
     },
-    onError: (service: DbxAnalyticsService, error: Maybe<ReadableError>) => {
+    onError: (_service: DbxAnalyticsService, _error: Maybe<ReadableError>) => {
       console.log('Error');
     }
   };

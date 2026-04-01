@@ -13,7 +13,7 @@ import { DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
 import { publishedGuestbookEntry } from 'demo-firebase';
 
 @Component({
-  selector: 'demo-guestbook-view',
+  selector: 'app-guestbook-view',
   templateUrl: './guestbook.view.component.html',
   imports: [AsyncPipe, DbxLoadingModule, DbxContentContainerDirective, DbxTwoBlockComponent, DemoGuestbookEntryDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxButtonModule, DbxListEmptyContentComponent, DemoGuestbookEntryListComponent, DemoGuestbookEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, MatDividerModule],
   standalone: true,

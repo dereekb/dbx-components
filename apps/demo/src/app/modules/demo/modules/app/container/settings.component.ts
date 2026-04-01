@@ -28,6 +28,6 @@ export class DemoAppSettingsComponent {
   readonly idTokenResultSignal = toSignal(this.dbxFirebaseAuthService.idTokenResult$);
 
   refreshToken() {
-    this.dbxFirebaseAuthService.refreshToken();
+    void this.dbxFirebaseAuthService.refreshToken();
   }
 }

@@ -47,7 +47,9 @@ export class DocExtensionQuizComponent {
     },
     preQuizComponentConfig: {
       componentClass: QuizPreQuizIntroComponent,
-      init: (instance: QuizPreQuizIntroComponent) => {}
+      init: (_instance: QuizPreQuizIntroComponent) => {
+        // no-op: pre-quiz intro requires no initialization
+      }
     } as DbxInjectionComponentConfig<QuizPreQuizIntroComponent>,
     resultsComponentConfig: {
       componentClass: DocExtensionQuizExampleResultComponent

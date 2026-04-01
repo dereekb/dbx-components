@@ -10,7 +10,12 @@ export const initialState: State = {};
 
 export const ROOT_REDUCER = createReducer(initialState);
 
-// console.log all actions
+/**
+ * Meta-reducer that logs all dispatched actions, previous state, and next state to the console.
+ *
+ * @param reducer - The reducer to wrap with logging
+ * @returns A wrapped reducer that logs state transitions
+ */
 export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
   return (state, action) => {
     const result = reducer(state, action);
@@ -28,4 +33,4 @@ export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
  * the root meta-reducer. To add more meta-reducers, provide an array of meta-reducers
  * that will be composed to form the root meta-reducer.
  */
-export const metaReducers: MetaReducer<State>[] = !environment.production ? [logger] : [];
+export const META_REDUCERS: MetaReducer<State>[] = !environment.production ? [logger] : [];

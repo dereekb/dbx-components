@@ -21,6 +21,6 @@ export class DocAuthFirebaseComponent {
   readonly authUserInfoSignal = toSignal(this.authUserInfo$, { initialValue: undefined });
 
   logOut() {
-    this.dbxFirebaseAuthService.logOut();
+    void this.dbxFirebaseAuthService.logOut();
   }
 }

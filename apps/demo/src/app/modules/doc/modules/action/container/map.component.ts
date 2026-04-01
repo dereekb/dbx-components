@@ -46,8 +46,6 @@ export class DocActionMapComponent implements OnDestroy {
   readonly value$ = this._value.asObservable();
   readonly saveThrottleTime = MS_IN_SECOND * 2;
 
-  constructor() {}
-
   ngOnDestroy(): void {
     this._value.complete();
   }

@@ -180,7 +180,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
     };
   };
 
-  readonly isSelectedModifierFunction: DbxValueListItemDecisionFunction<DocValue> = dbxValueListItemDecisionFunction((value: DocValue) => {
+  readonly isSelectedModifierFunction: DbxValueListItemDecisionFunction<DocValue> = dbxValueListItemDecisionFunction((_value: DocValue) => {
     return true; // all are selected.
   });
 
@@ -217,7 +217,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
 
       return 'none';
     },
-    dataForGroupValue: (value, items) => ({
+    dataForGroupValue: (value, _items) => ({
       title: pascalCase(value) + ' Group',
       icon: value !== 'plain' ? 'group_work' : undefined,
       value,

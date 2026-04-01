@@ -17,7 +17,7 @@ export interface DocFormExampleComponentFormConfig {
   template: `
     <dbx-formly></dbx-formly>
   `,
-  selector: 'dbx-form-example-component-form',
+  selector: 'doc-form-example-component-form',
   providers: [provideFormlyContext()],
   standalone: true,
   imports: [DbxFormlyComponent],
