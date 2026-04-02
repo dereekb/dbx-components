@@ -5,6 +5,7 @@ import prettierConfig from 'eslint-config-prettier';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
+import { nestjsEslintPlugin } from './dist/packages/nestjs/eslint/index.esm.js';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -75,6 +76,15 @@ export default [
       '@typescript-eslint/no-unnecessary-condition': 'off', // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
       '@typescript-eslint/no-empty-object-type': 'off', // disabled: empty object types are used intentionally
       '@typescript-eslint/no-empty-interface': 'off' // disabled: empty interfaces are used intentionally for extensibility
+    }
+  },
+  {
+    files: ['**/*.ts'],
+    plugins: {
+      'dereekb-nestjs': nestjsEslintPlugin
+    },
+    rules: {
+      'dereekb-nestjs/require-nest-inject': 'error' // required: emitDecoratorMetadata is disabled; only flags @nestjs/common decorators
     }
   },
   {

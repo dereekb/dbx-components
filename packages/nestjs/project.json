@@ -31,6 +31,9 @@
           },
           {
             "command": "npx nx run nestjs-discord:build-base"
+          },
+          {
+            "command": "npx nx run nestjs-eslint:build-base"
           }
         ],
         "parallel": false
@@ -107,6 +110,10 @@
           {
             "description": "run nestjs-discord tests",
             "command": "npx nx test nestjs-discord"
+          },
+          {
+            "description": "run nestjs-eslint tests",
+            "command": "npx nx test nestjs-eslint"
           }
         ],
         "color": true,

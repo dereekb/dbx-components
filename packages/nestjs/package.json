@@ -40,6 +40,12 @@
       "types": "./discord/index.d.ts",
       "import": "./discord/index.cjs.mjs",
       "default": "./discord/index.cjs.js"
+    },
+    "./eslint": {
+      "module": "./eslint/index.esm.js",
+      "types": "./eslint/index.d.ts",
+      "import": "./eslint/index.cjs.mjs",
+      "default": "./eslint/index.cjs.js"
     }
   },
   "peerDependencies": {
