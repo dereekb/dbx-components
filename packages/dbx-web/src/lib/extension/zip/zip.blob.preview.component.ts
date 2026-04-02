@@ -12,7 +12,7 @@ import { DbxBarHeaderComponent, type DbxListTitleGroupData, DbxListTitleGroupDir
 import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective } from '../../router';
 import { DbxEmbedComponent } from '../../interaction';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { DbxButtonSpacerDirective, DbxIconButtonComponent } from '../../button';
+import { DbxButtonSpacerDirective, DbxButtonComponent } from '../../button';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 
 /**
@@ -42,7 +42,7 @@ export type DbxZipBlobPreviewGroupData = DbxListTitleGroupData<DbxZipBlobPreview
   selector: 'dbx-zip-blob-preview',
   templateUrl: './zip.blob.preview.component.html',
   standalone: true,
-  imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective],
+  imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxZipBlobPreviewComponent {

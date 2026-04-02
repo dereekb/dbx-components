@@ -7,6 +7,7 @@ import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from
 
 const importsAndExports = [
   DbxCoreButtonModule,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- re-exported for backward compatibility
   DbxIconButtonComponent,
   // buttons
   DbxButtonComponent,

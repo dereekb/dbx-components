@@ -19,8 +19,8 @@ $active-background-transparent-color: 0.93;
   .dbx-sidenav {
     height: 100%;
 
-    mat-sidenav {
-      width: $width;
+    > mat-sidenav {
+      width: var(--dbx-sidenav-width, #{$width});
 
       .mat-drawer-inner-container {
         display: flex;
@@ -38,12 +38,12 @@ $active-background-transparent-color: 0.93;
           }
         }
 
-        // directly active links have a side-
+        // directly active links have a side border indicator
         .dbx-anchor-active-eq,
         .dbx-anchor-list-child .dbx-anchor-active {
           .mat-mdc-list-item {
             .mdc-list-item__content {
-              margin-left: calc(#{$mat-mdc-list-item-icon-padding} - var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}));
+              margin-left: calc(#{$mat-mdc-list-item-icon-padding} - var(--dbx-sidenav-active-child-item-border-width, #{$default-active-border-left-width}));
             }
 
             &.mdc-list-item--with-leading-icon {
@@ -53,7 +53,7 @@ $active-background-transparent-color: 0.93;
 
               .mat-mdc-list-item-icon {
                 // Offset the added border by clearing the default padding width (4px)
-                margin-left: calc(#{$mat-mdc-list-item-icon-padding} - var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}));
+                margin-left: calc(#{$mat-mdc-list-item-icon-padding} - var(--dbx-sidenav-active-child-item-border-width, #{$default-active-border-left-width}));
               }
             }
           }
@@ -61,34 +61,42 @@ $active-background-transparent-color: 0.93;
 
         .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
         .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
-          padding-left: calc(#{anchorlist.$active-child-item-left-padding} - var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}));
+          padding-left: calc(#{anchorlist.$active-child-item-left-padding} - var(--dbx-sidenav-active-child-item-border-width, #{$default-active-border-left-width}));
         }
       }
     }
 
     &.dbx-sidenav-mobile {
-      mat-sidenav {
-        width: $mobile-width;
+      > mat-sidenav {
+        width: var(--dbx-sidenav-mobile-width, #{$mobile-width});
       }
     }
 
     &.dbx-sidenav-icon {
-      mat-sidenav {
-        width: $icon-only-width;
+      > mat-sidenav {
+        width: var(--dbx-sidenav-icon-width, #{$icon-only-width});
       }
 
-      mat-sidenav-content {
-        margin-left: $icon-only-width;
+      &.dbx-sidenav-start > mat-sidenav-content {
+        margin-left: var(--dbx-sidenav-icon-width, #{$icon-only-width});
+      }
+
+      &.dbx-sidenav-end > mat-sidenav-content {
+        margin-right: var(--dbx-sidenav-icon-width, #{$icon-only-width});
       }
     }
 
     &.dbx-sidenav-full {
-      mat-sidenav {
-        width: $width;
+      > mat-sidenav {
+        width: var(--dbx-sidenav-width, #{$width});
       }
 
-      mat-sidenav-content {
-        margin-left: $width;
+      &.dbx-sidenav-start > mat-sidenav-content {
+        margin-left: var(--dbx-sidenav-width, #{$width});
+      }
+
+      &.dbx-sidenav-end > mat-sidenav-content {
+        margin-right: var(--dbx-sidenav-width, #{$width});
       }
     }
 
@@ -117,12 +125,36 @@ $active-background-transparent-color: 0.93;
     }
   }
 
+  // MARK: Theming
+  // Available CSS custom properties for dbx-sidenav:
+  //
+  // Layout:
+  //   --dbx-sidenav-width              Full-mode drawer width (default: 240px)
+  //   --dbx-sidenav-mobile-width       Mobile overlay drawer width (default: 80vw)
+  //   --dbx-sidenav-icon-width         Icon rail drawer width (default: 65px)
+  //
+  // Drawer colors:
+  //   --dbx-sidenav-background         Drawer background color
+  //   --dbx-sidenav-text-color         Drawer text color
+  //   --dbx-sidenav-divider-color      Drawer border/divider color
+  //
+  // Active item:
+  //   --dbx-sidenav-active-accent                      Active item accent color
+  //   --dbx-sidenav-active-item-background             Active root item background
+  //   --dbx-sidenav-active-child-item-background       Active child item background
+  //   --dbx-sidenav-active-child-item-border-width     Active item border indicator width (default: 2px)
+  //
+  // Scrim:
+  //   --dbx-sidenav-scrim-color        Backdrop/scrim color for overlay mode
+
   .dbx-sidenav {
+    // scrim color
+    --mat-sidenav-scrim-color: var(--dbx-sidenav-scrim-color, color-mix(in srgb, var(--mat-sys-neutral-variant20) 40%, transparent));
+
     mat-sidenav.mat-drawer {
-      // darken the sidenav background slightly for better contrast with active items
-      --dbx-sidenav-background: color-mix(in srgb, var(--dbx-bg-color-current) 75%, var(--mat-sys-shadow));
-      --mat-sidenav-container-text-color: var(--mat-sys-primary-container);
-      background: var(--dbx-sidenav-background);
+      --mat-sidenav-container-text-color: var(--dbx-sidenav-text-color, var(--mat-sys-primary-container));
+      --mat-sidenav-container-divider-color: var(--dbx-sidenav-divider-color, transparent);
+      background: var(--dbx-sidenav-background, var(--dbx-bg-color-current));
 
       .dbx-anchor-list.mat-mdc-nav-list {
         --dbx-sidenav-active-accent: color-mix(in srgb, var(--dbx-accent-color) 65%, var(--mat-sys-surface));
@@ -136,15 +168,14 @@ $active-background-transparent-color: 0.93;
         }
 
         .dbx-anchor-list-root .dbx-anchor-active .mat-mdc-list-item {
-          // root list items glow when active
-          background: color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent);
+          background: var(--dbx-sidenav-active-item-background, color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent));
         }
 
-        // directly active links have a side-
+        // directly active links have a side border indicator
         .dbx-anchor-active-eq,
         .dbx-anchor-list-child .dbx-anchor-active {
           .mat-mdc-list-item {
-            border-left: var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}) solid var(--dbx-sidenav-active-accent);
+            border-left: var(--dbx-sidenav-active-child-item-border-width, #{$default-active-border-left-width}) solid var(--dbx-sidenav-active-accent);
 
             .mat-mdc-list-item-icon {
               --mat-list-list-item-leading-icon-color: var(--dbx-sidenav-active-accent);
@@ -152,9 +183,20 @@ $active-background-transparent-color: 0.93;
           }
         }
 
+        // end-position sidenavs use border-right instead of border-left
+        .dbx-sidenav-end & {
+          .dbx-anchor-active-eq,
+          .dbx-anchor-list-child .dbx-anchor-active {
+            .mat-mdc-list-item {
+              border-left: none;
+              border-right: var(--dbx-sidenav-active-child-item-border-width, #{$default-active-border-left-width}) solid var(--dbx-sidenav-active-accent);
+            }
+          }
+        }
+
         .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
         .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
-          background: color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent);
+          background: var(--dbx-sidenav-active-child-item-background, color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent));
         }
       }
     }

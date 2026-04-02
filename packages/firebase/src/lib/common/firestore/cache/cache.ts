@@ -1,6 +1,6 @@
 import { EMPTY, type Observable } from 'rxjs';
 import { type Destroyable, type Maybe, type Milliseconds } from '@dereekb/util';
-import { type FirestoreCollectionType , type FirestoreModelKey } from '../collection/collection';
+import { type FirestoreCollectionType, type FirestoreModelKey } from '../collection/collection';
 
 // MARK: Load Options
 /**
@@ -323,12 +323,18 @@ export function firestoreCollectionDocumentCache<T>(collectionCache: FirestoreCo
  */
 const NOOP_FIRESTORE_COLLECTION_DOCUMENT_CACHE: FirestoreCollectionDocumentCache<any> = {
   get: () => undefined,
-  set: () => {},
-  invalidate: () => {}
+  set: () => {
+    // noop
+  },
+  invalidate: () => {
+    // noop
+  }
 };
 
 /**
  * Returns the singleton noop {@link FirestoreCollectionDocumentCache}.
+ *
+ * @returns A noop document cache that discards all operations.
  */
 export function noopFirestoreCollectionDocumentCache<T>(): FirestoreCollectionDocumentCache<T> {
   return NOOP_FIRESTORE_COLLECTION_DOCUMENT_CACHE as FirestoreCollectionDocumentCache<T>;
@@ -405,11 +411,19 @@ const NOOP_FIRESTORE_COLLECTION_CACHE_INSTANCE: FirestoreCollectionCacheInstance
 const NOOP_FIRESTORE_COLLECTION_CACHE: FirestoreCollectionCache<any> = {
   defaultTtl: 0,
   get: () => undefined,
-  set: () => {},
-  invalidate: () => {},
-  clear: () => {},
+  set: () => {
+    // noop
+  },
+  invalidate: () => {
+    // noop
+  },
+  clear: () => {
+    // noop
+  },
   instance: () => NOOP_FIRESTORE_COLLECTION_CACHE_INSTANCE,
-  destroy: () => {}
+  destroy: () => {
+    // noop
+  }
 };
 
 /**
@@ -423,6 +437,8 @@ const NOOP_FIRESTORE_COLLECTION_CACHE: FirestoreCollectionCache<any> = {
  * cache.get('path/to/doc'); // always returns undefined
  * cache.set('path/to/doc', { data }); // no-op
  * ```
+ *
+ * @returns The singleton noop collection cache.
  */
 export function noopFirestoreCollectionCache<T>(): FirestoreCollectionCache<T> {
   return NOOP_FIRESTORE_COLLECTION_CACHE as FirestoreCollectionCache<T>;
@@ -438,12 +454,22 @@ const NOOP_FIRESTORE_CONTEXT_CACHE: FirestoreContextCache = {
   events$: EMPTY,
   disabledTypes: new Set(),
   isEnabled: () => false,
-  setEnabled: () => {},
-  clearAll: () => {},
+  setEnabled: () => {
+    // noop
+  },
+  clearAll: () => {
+    // noop
+  },
   isEnabledForType: () => false,
-  setEnabledForType: () => {},
-  clearForType: () => {},
-  destroy: () => {}
+  setEnabledForType: () => {
+    // noop
+  },
+  clearForType: () => {
+    // noop
+  },
+  destroy: () => {
+    // noop
+  }
 };
 
 /**
@@ -458,6 +484,8 @@ const NOOP_FIRESTORE_CONTEXT_CACHE: FirestoreContextCache = {
  * cache.cacheForCollection('user', { defaultTtl: 0 }); // returns noop collection cache
  * cache.isEnabled(); // false
  * ```
+ *
+ * @returns The singleton noop context cache.
  */
 export function noopFirestoreContextCache(): FirestoreContextCache {
   return NOOP_FIRESTORE_CONTEXT_CACHE;

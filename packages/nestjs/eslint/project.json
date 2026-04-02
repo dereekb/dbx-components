@@ -1,0 +1,46 @@
+{
+  "name": "nestjs-eslint",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nestjs/eslint/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/nestjs/eslint",
+        "outputPath": "dist/packages/nestjs/eslint",
+        "tsConfig": "packages/nestjs/eslint/tsconfig.lib.json",
+        "project": "packages/nestjs/eslint/package.json",
+        "main": "packages/nestjs/eslint/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "swc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/nestjs/eslint"
+      }
+    }
+  }
+}

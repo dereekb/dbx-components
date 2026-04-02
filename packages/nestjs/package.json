@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "13.6.13",
+  "version": "13.6.14",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -40,11 +40,17 @@
       "types": "./discord/index.d.ts",
       "import": "./discord/index.cjs.mjs",
       "default": "./discord/index.cjs.js"
+    },
+    "./eslint": {
+      "module": "./eslint/index.esm.js",
+      "types": "./eslint/index.d.ts",
+      "import": "./eslint/index.cjs.mjs",
+      "default": "./eslint/index.cjs.js"
     }
   },
   "peerDependencies": {
-    "@dereekb/rxjs": "13.6.13",
-    "@dereekb/util": "13.6.13",
+    "@dereekb/rxjs": "13.6.14",
+    "@dereekb/util": "13.6.14",
     "discord.js": "^14.25.1",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",

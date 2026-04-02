@@ -85,7 +85,6 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
  * @param sourceType - the component class to register as the DbxListView provider
  * @returns an array of Angular providers that wire up the component as a DbxListView
  */
- 
 export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {
   // use of any here is allowed as typings are not relevant for providers
   return [

@@ -59,6 +59,7 @@ describe('DbxActionConfirmDirective', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [MatDialogModule],
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- no replacement provider until Angular 23; animate.enter/leave are template-only
       providers: [provideNoopAnimations(), { provide: DbxRouterTransitionService, useValue: { transitions$: EMPTY } }]
     });
   }));

@@ -1,5 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import importPlugin from 'eslint-plugin-import';
+import { nestjsEslintPlugin } from '@dereekb/nestjs/eslint';
 
 export default [
   ...nx.configs['flat/base'],
@@ -55,5 +56,15 @@ export default [
     files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     // Override or add rules here
     rules: {}
+  },
+  // nestjs: require @Inject() on constructor params (emitDecoratorMetadata is disabled)
+  {
+    files: ['**/*.ts'],
+    plugins: {
+      'dereekb-nestjs': nestjsEslintPlugin
+    },
+    rules: {
+      'dereekb-nestjs/require-nest-inject': 'error'
+    }
   }
 ];

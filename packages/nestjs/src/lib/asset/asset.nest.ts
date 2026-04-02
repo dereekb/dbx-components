@@ -36,6 +36,7 @@ export interface AppAssetLoaderModuleMetadataConfig {
  * ```
  *
  * @param config - Local filesystem config and optional remote fetch config.
+ * @returns NestJS {@link ModuleMetadata} that provides an {@link AssetLoader}.
  */
 export function appAssetLoaderModuleMetadata(config: AppAssetLoaderModuleMetadataConfig): ModuleMetadata {
   const local = nodeJsLocalAssetLoader(config.local);

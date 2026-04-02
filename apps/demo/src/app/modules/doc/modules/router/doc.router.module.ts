@@ -10,6 +10,7 @@ import { STATES } from './doc.router.router';
 import { DocRouterCustomAnchorContentComponent } from './component/anchor.content';
 import { DocRouterNavbarAComponent } from './container/navbar.a.component';
 import { DocRouterNavbarBComponent } from './container/navbar.b.component';
+import { DocRouterSidenavComponent } from './container/sidenav.component';
 
 @NgModule({
   imports: [
@@ -26,7 +27,9 @@ import { DocRouterNavbarBComponent } from './container/navbar.b.component';
     DocRouterNavbarComponent,
     //
     DocRouterNavbarAComponent,
-    DocRouterNavbarBComponent
+    DocRouterNavbarBComponent,
+    //
+    DocRouterSidenavComponent
   ]
 })
 export class DocRouterModule {}

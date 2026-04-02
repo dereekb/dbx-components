@@ -1,0 +1,7 @@
+{
+  "name": "@dereekb/nestjs/eslint",
+  "version": "13.6.14",
+  "peerDependencies": {
+    "@typescript-eslint/utils": ">=8.0.0"
+  }
+}

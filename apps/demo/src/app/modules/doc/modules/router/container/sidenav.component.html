@@ -1,0 +1,156 @@
+<dbx-content-container>
+  <doc-feature-layout header="Sidenav" hint="Responsive side navigation that adapts between mobile overlay, icon rail, and full sidebar modes.">
+    <!-- Default (Left) Position: position defaults to 'start' (left in LTR). -->
+    <doc-feature-example header="dbx-sidenav (left)" hint="Default left-aligned sidenav with anchor navigation.">
+      <div class="dbx-sidenav-demo-container">
+        <dbx-sidenav #leftSidenav="sidenav" [anchors]="exampleAnchors" color="primary">
+          <div top>
+            <h4 class="dbx-sidenav-demo-header">Left Nav</h4>
+          </div>
+          <div class="dbx-sidenav-demo-content">
+            <dbx-sidenav-button></dbx-sidenav-button>
+            <p style="padding: 16px">This is the default left-aligned sidenav. Resize the browser to see it adapt between full, icon, and mobile modes.</p>
+          </div>
+        </dbx-sidenav>
+      </div>
+    </doc-feature-example>
+
+    <!-- Right (End) Position: position="end" places the drawer on the right side. -->
+    <doc-feature-example header="dbx-sidenav (right)" hint="Right-aligned sidenav using position='end'.">
+      <div class="dbx-sidenav-demo-container">
+        <dbx-sidenav #rightSidenav="sidenav" [anchors]="exampleAnchors" position="end" color="accent">
+          <div top>
+            <h4 class="dbx-sidenav-demo-header">Right Nav</h4>
+          </div>
+          <div class="dbx-sidenav-demo-content">
+            <div style="display: flex; justify-content: flex-end">
+              <dbx-sidenav-button></dbx-sidenav-button>
+            </div>
+            <p style="padding: 16px">
+              This sidenav is right-aligned using
+              <code>position="end"</code>
+              . It appears on the right side of the container.
+            </p>
+          </div>
+        </dbx-sidenav>
+      </div>
+    </doc-feature-example>
+
+    <!--
+      Custom Width: The --dbx-sidenav-width token is set on the container div so it cascades
+      into the dbx-sidenav component's SCSS, which uses var(--dbx-sidenav-width, 240px) for
+      both the mat-sidenav drawer width and the mat-sidenav-content margin offset.
+    -->
+    <doc-feature-example header="Custom Width" hint="Use --dbx-sidenav-width to customize the full-mode width.">
+      <div class="dbx-sidenav-demo-container" style="--dbx-sidenav-width: 180px">
+        <dbx-sidenav #customWidthSidenav="sidenav" [anchors]="exampleAnchors" color="primary">
+          <div top>
+            <h4 class="dbx-sidenav-demo-header">Narrow</h4>
+          </div>
+          <div class="dbx-sidenav-demo-content">
+            <p style="padding: 16px">
+              This sidenav uses
+              <code>--dbx-sidenav-width: 180px</code>
+              to set a custom width.
+            </p>
+          </div>
+        </dbx-sidenav>
+      </div>
+      <h4>CSS Custom Properties</h4>
+      <ul>
+        <li>
+          <code>--dbx-sidenav-width</code>
+          — Full mode width (default: 240px)
+        </li>
+        <li>
+          <code>--dbx-sidenav-mobile-width</code>
+          — Mobile overlay width (default: 80vw)
+        </li>
+        <li>
+          <code>--dbx-sidenav-icon-width</code>
+          — Icon rail width (default: 65px)
+        </li>
+        <li>
+          <code>--dbx-sidenav-background</code>
+          — Drawer background color
+        </li>
+        <li>
+          <code>--dbx-sidenav-text-color</code>
+          — Drawer text color
+        </li>
+        <li>
+          <code>--dbx-sidenav-divider-color</code>
+          — Drawer border/divider color
+        </li>
+        <li>
+          <code>--dbx-sidenav-scrim-color</code>
+          — Backdrop overlay color
+        </li>
+        <li>
+          <code>--dbx-sidenav-active-accent</code>
+          — Active item accent color
+        </li>
+        <li>
+          <code>--dbx-sidenav-active-item-background</code>
+          — Active root item background
+        </li>
+        <li>
+          <code>--dbx-sidenav-active-child-item-background</code>
+          — Active child item background
+        </li>
+        <li>
+          <code>--dbx-sidenav-active-child-item-border-width</code>
+          — Active item border indicator width (default: 2px)
+        </li>
+      </ul>
+    </doc-feature-example>
+
+    <!--
+      Right Overlay Toggle: Combines three features to create an Advisorey-style layout:
+        - displayMode="mobile" forces the sidenav to always use overlay mode (hidden by default),
+          bypassing the responsive breakpoint logic that would show it as icon rail or full sidebar.
+        - position="end" places the drawer on the right side.
+        - dbx-pagebar with color="primary" provides a colored topbar with a manual toggle button.
+
+      The --dbx-sidenav-mobile-width token is overridden here because the default (80vw) is
+      viewport-relative and too wide when the sidenav is nested inside a demo container.
+      In a full-page layout, the 80vw default is typically appropriate.
+    -->
+    <doc-feature-example header="Right Overlay Toggle" hint="A topbar layout with a right-aligned sidenav that stays hidden until toggled via a button.">
+      <div class="dbx-sidenav-demo-container" style="--dbx-sidenav-mobile-width: 336px">
+        <dbx-sidenav #overlaySidenav="sidenav" [anchors]="exampleAnchors" position="end" displayMode="mobile" color="primary">
+          <div top class="dbx-sidenav-demo-drawer-header">
+            <img class="dbx-sidenav-demo-drawer-avatar" src="https://i.pravatar.cc/80?u=demo" alt="User avatar" />
+            <div class="dbx-sidenav-demo-drawer-user-info">
+              <span class="dbx-sidenav-demo-drawer-user-name">Tester Wandoren</span>
+              <span class="dbx-sidenav-demo-drawer-user-email">tester@demo.app</span>
+            </div>
+          </div>
+          <div class="dbx-sidenav-demo-page">
+            <dbx-pagebar color="primary" style="--dbx-pagebar-height: 73px">
+              <span left>Demo App</span>
+              <button right class="dbx-sidenav-demo-user-button" (click)="overlaySidenav.toggleNav(true)" aria-label="Open menu">
+                <img class="dbx-sidenav-demo-avatar" src="https://i.pravatar.cc/80?u=demo" alt="User avatar" />
+                <span class="dbx-sidenav-demo-user-info">
+                  <span class="dbx-sidenav-demo-user-name">Tester Wandoren</span>
+                  <span class="dbx-sidenav-demo-user-role">demo. Coach</span>
+                </span>
+              </button>
+            </dbx-pagebar>
+            <div class="dbx-sidenav-demo-page-content">
+              <p style="padding: 16px">
+                This layout uses
+                <code>displayMode="mobile"</code>
+                with
+                <code>position="end"</code>
+                and a colored pagebar with a menu toggle button. The pagebar height is increased to 73px via
+                <code>--dbx-pagebar-height</code>
+                . The sidenav is always hidden and opens as a right-side overlay when the menu button is clicked.
+              </p>
+            </div>
+          </div>
+        </dbx-sidenav>
+      </div>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

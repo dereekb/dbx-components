@@ -16,6 +16,12 @@ export const DOC_ROUTER_ROUTES = [
     title: 'Nav Bar',
     detail: 'dbx-anchor',
     ref: 'doc.router.navbar'
+  },
+  {
+    icon: 'view_sidebar',
+    title: 'Sidenav',
+    detail: 'dbx-sidenav',
+    ref: 'doc.router.sidenav'
   }
 ];
 

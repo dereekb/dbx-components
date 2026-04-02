@@ -1,8 +1,8 @@
 <dbx-loading [context]="context">
   <div class="dbx-flex-bar dbx-zip-blob-preview-toolbar">
-    <dbx-icon-button [disabled]="!selectedNodeSignal()" icon="arrow_upward" text="Back" (click)="backClicked()"></dbx-icon-button>
+    <dbx-button [disabled]="!selectedNodeSignal()" icon="arrow_upward" text="Back" (buttonClick)="backClicked()"></dbx-button>
     <dbx-button-spacer></dbx-button-spacer>
-    <dbx-icon-button [disabled]="!selectedNodeSignal()" icon="home" text="Home" (click)="homeClicked()"></dbx-icon-button>
+    <dbx-button [disabled]="!selectedNodeSignal()" icon="home" text="Home" (buttonClick)="homeClicked()"></dbx-button>
     <dbx-spacer></dbx-spacer>
     @if (downloadZipFileBlobButtonConfigSignal()) {
       <dbx-download-blob-button [config]="downloadZipFileBlobButtonConfigSignal()"></dbx-download-blob-button>

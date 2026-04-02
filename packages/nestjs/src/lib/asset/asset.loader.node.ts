@@ -31,6 +31,7 @@ export interface NodeJsLocalAssetLoaderConfig {
  * ```
  *
  * @param config - Filesystem configuration with base path.
+ * @returns An {@link AssetLoader} backed by the local filesystem.
  */
 export function nodeJsLocalAssetLoader(config: NodeJsLocalAssetLoaderConfig): AssetLoader {
   const { basePath } = config;

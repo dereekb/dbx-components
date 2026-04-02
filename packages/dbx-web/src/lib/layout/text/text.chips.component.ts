@@ -59,6 +59,9 @@ export class DbxTextChipsComponent {
 
   /**
    * Returns the themed background CSS class for a chip's color.
+   *
+   * @param chip - the chip to get the color class for
+   * @returns the CSS class name for the chip's background color, or empty string if no color
    */
   chipColorClass(chip: TextChip): string {
     return chip.color ? dbxColorBackground(chip.color) : '';
