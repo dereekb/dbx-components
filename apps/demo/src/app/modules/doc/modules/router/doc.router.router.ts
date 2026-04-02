@@ -6,6 +6,7 @@ import { DocRouterLayoutComponent } from './container/layout.component';
 import { DocRouterNavbarAComponent } from './container/navbar.a.component';
 import { DocRouterNavbarBComponent } from './container/navbar.b.component';
 import { DocRouterNavbarComponent } from './container/navbar.component';
+import { DocRouterSidenavComponent } from './container/sidenav.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/router',
@@ -50,6 +51,12 @@ export const docRouterNavbarBState: Ng2StateDeclaration = {
   component: DocRouterNavbarBComponent
 };
 
+export const docRouterSidenavState: Ng2StateDeclaration = {
+  url: '/sidenav',
+  name: 'doc.router.sidenav',
+  component: DocRouterSidenavComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -58,5 +65,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docRouterAnchorListState,
   docRouterNavbarState,
   docRouterNavbarAState,
-  docRouterNavbarBState
+  docRouterNavbarBState,
+  docRouterSidenavState
 ];

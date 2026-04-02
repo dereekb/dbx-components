@@ -3,12 +3,12 @@ import { type MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/mater
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { AbstractTransitionWatcherDirective, cleanSubscription, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { SideNavDisplayMode } from './sidenav';
+import { type DbxSidenavPosition, SideNavDisplayMode, type SideNavDisplayModeString } from './sidenav';
 import { NgClass } from '@angular/common';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, map, type Observable, shareReplay } from 'rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay } from 'rxjs';
 import { DbxColorDirective } from '../../../layout/style/style.color.directive';
 import { type DbxThemeColor } from '../../../layout/style/style';
 import { type ThemePalette } from '@angular/material/core';
@@ -41,8 +41,8 @@ export interface DbxSidenavSidebarState {
   selector: 'dbx-sidenav',
   exportAs: 'sidenav',
   template: `
-    <mat-sidenav-container class="dbx-sidenav" [ngClass]="sizeCssClassSignal()">
-      <mat-sidenav [dbxColor]="color()" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
+    <mat-sidenav-container class="dbx-sidenav" [ngClass]="cssClassesSignal()">
+      <mat-sidenav [dbxColor]="color()" [position]="position()" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
         <ng-content select="[top]"></ng-content>
         <dbx-anchor-list class="dbx-sidenav-anchor-list" [anchors]="anchors()"></dbx-anchor-list>
         <span class="spacer"></span>
@@ -63,11 +63,20 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
   private readonly _screenMediaService = inject(DbxScreenMediaService);
 
   readonly color = input<ThemePalette | DbxThemeColor>(undefined);
+  readonly position = input<DbxSidenavPosition>('start');
+
+  /**
+   * Overrides the responsive display mode. When set, the sidenav ignores screen-width breakpoints and uses this mode instead.
+   *
+   * Set to `'mobile'` to keep the sidenav always hidden as an overlay that only opens when toggled.
+   */
+  readonly displayMode = input<Maybe<SideNavDisplayModeString>>(undefined);
+
   readonly sidenav = viewChild.required<MatSidenav>(MatSidenav);
 
   readonly anchors = input<Maybe<ClickableAnchorLinkTree[]>>();
 
-  readonly mode$: Observable<SideNavDisplayMode> = this._screenMediaService.widthType$.pipe(
+  readonly responsiveMode$: Observable<SideNavDisplayMode> = this._screenMediaService.widthType$.pipe(
     distinctUntilChanged(),
     map((width) => {
       let mode!: SideNavDisplayMode;
@@ -94,9 +103,19 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
     shareReplay(1)
   );
 
+  private readonly _displayMode$ = toObservable(this.displayMode);
+
+  readonly mode$: Observable<SideNavDisplayMode> = combineLatest([this.responsiveMode$, this._displayMode$]).pipe(
+    map(([responsive, override]) => (override as SideNavDisplayMode) ?? responsive),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly modeSignal = toSignal(this.mode$);
   readonly disableBackdropSignal = computed(() => this.modeSignal() !== SideNavDisplayMode.MOBILE);
   readonly sizeCssClassSignal = computed(() => `dbx-sidenav-${this.modeSignal()}`);
+  readonly positionCssClassSignal = computed(() => (this.position() === 'end' ? 'dbx-sidenav-end' : 'dbx-sidenav-start'));
+  readonly cssClassesSignal = computed(() => `${this.sizeCssClassSignal()} ${this.positionCssClassSignal()}`);
 
   readonly state$ = this.mode$.pipe(
     map((mode) => {

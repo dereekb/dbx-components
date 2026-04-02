@@ -12,3 +12,18 @@ export enum SideNavDisplayMode {
   ICON = 'icon',
   FULL = 'full'
 }
+
+/**
+ * String union type matching the {@link SideNavDisplayMode} enum values.
+ *
+ * Useful for template bindings where string literals are passed directly.
+ */
+export type SideNavDisplayModeString = `${SideNavDisplayMode}`;
+
+/**
+ * Position of the sidenav drawer.
+ *
+ * - `start` - Left side (default, LTR).
+ * - `end` - Right side (LTR).
+ */
+export type DbxSidenavPosition = 'start' | 'end';

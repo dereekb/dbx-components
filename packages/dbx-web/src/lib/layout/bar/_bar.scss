@@ -9,7 +9,7 @@ $bar-fixed-height: 40px;
 // MARK: Mixin
 @mixin core() {
   .dbx-pagebar.mat-toolbar {
-    height: $pagebar-height;
+    height: var(--dbx-pagebar-height, #{$pagebar-height});
   }
 
   .dbx-bar {
@@ -35,11 +35,39 @@ $bar-fixed-height: 40px;
     overflow: hidden;
   }
 
+  // MARK: Bar Colors
+  // Color classes applied by DbxPagebarComponent based on the color input.
+  // Uses Material toolbar CSS tokens for background and text color.
+  // Background uses color-mix with surface-container for consistent dark-mode contrast.
+  .dbx-bar-primary {
+    --mat-toolbar-container-background-color: var(--dbx-primary-color);
+    --mat-toolbar-container-text-color: var(--dbx-primary-color-contrast);
+  }
+
+  .dbx-bar-accent {
+    --mat-toolbar-container-background-color: var(--dbx-accent-color);
+    --mat-toolbar-container-text-color: var(--dbx-accent-color-contrast);
+  }
+
+  .dbx-bar-warn {
+    --mat-toolbar-container-background-color: var(--dbx-warn-color);
+    --mat-toolbar-container-text-color: var(--dbx-warn-color-contrast);
+  }
+
   .dbx-pagebar-hide {
+    // Reset pagebar height for layout calculations (page height = app height - navbar height)
     #{$pagebar-height-var}: 0px;
 
-    .dbx-pagebar {
+    // Only hide direct-descendant pagebars, not nested ones within child sidenavs
+    > dbx-sidenav-pagebar,
+    > .dbx-pagebar {
       display: none;
+    }
+
+    // Restore the pagebar height variable inside nested sidenav containers
+    // so their pagebars render at the correct height
+    .dbx-sidenav mat-sidenav-content {
+      #{$pagebar-height-var}: var(--dbx-pagebar-height, 52px);
     }
   }
 }
