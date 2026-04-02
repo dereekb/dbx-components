@@ -1,6 +1,6 @@
 import { Subject, type Observable, filter } from 'rxjs';
 import { type Maybe, type Milliseconds } from '@dereekb/util';
-import { type FirestoreCollectionType , type FirestoreModelKey } from '../collection/collection';
+import { type FirestoreCollectionType, type FirestoreModelKey } from '../collection/collection';
 import { type FirestoreContextCacheFactory, type FirestoreContextCacheFactoryConfig, type FirestoreCacheEntry, type FirestoreCacheEntryInput, type FirestoreCacheEvent, type FirestoreCollectionCache, type FirestoreCollectionCacheConfig, type FirestoreCollectionCacheInstance, type FirestoreContextCache } from './cache';
 
 /**
@@ -42,6 +42,8 @@ export interface FirestoreCollectionCacheDelegate<T> {
 /**
  * Creates an in-memory {@link FirestoreCollectionCacheDelegate} backed by a Map.
  *
+ * @returns A Map-backed delegate instance.
+ *
  * @example
  * ```ts
  * const delegate = inMemoryFirestoreCollectionCacheDelegate<UserData>();
@@ -65,6 +67,8 @@ export function inMemoryFirestoreCollectionCacheDelegate<T>(): FirestoreCollecti
  *
  * Used by {@link readLoggingFirestoreContextCache} where only event emission matters.
  *
+ * @returns A no-storage delegate that discards all data.
+ *
  * @example
  * ```ts
  * const delegate = noopFirestoreCollectionCacheDelegate<UserData>();
@@ -73,9 +77,15 @@ export function inMemoryFirestoreCollectionCacheDelegate<T>(): FirestoreCollecti
 export function noopFirestoreCollectionCacheDelegate<T>(): FirestoreCollectionCacheDelegate<T> {
   return {
     get: () => undefined,
-    set: () => {},
-    delete: () => {},
-    clear: () => {}
+    set: () => {
+      // noop
+    },
+    delete: () => {
+      // noop
+    },
+    clear: () => {
+      // noop
+    }
   };
 }
 

@@ -167,6 +167,7 @@ const DBX_THEME_COLOR_CSS_VAR_MAP: Record<DbxThemeColor, CssToken> = {
  * ```
  *
  * @param color - the theme color, or nullish/empty for the default
+ * @param returnDefault - when true, returns the default token instead of undefined for unrecognized colors
  * @returns CSS token reference string (e.g., `'--dbx-primary-color'`) or undefined if the color is not valid.
  */
 export function dbxThemeColorCssToken(color: Maybe<DbxThemeColor>, returnDefault: true): CssToken;
@@ -193,6 +194,7 @@ export function dbxThemeColorCssToken(color: Maybe<DbxThemeColor>, returnDefault
  * ```
  *
  * @param color - the theme color, or nullish/empty for the default
+ * @param returnDefault - when true, returns the default token var instead of undefined for unrecognized colors
  * @returns CSS token var() reference string (e.g., `'var(--dbx-primary-color)'`) or undefined if the color is not valid.
  */
 export function dbxThemeColorCssTokenVar(color: Maybe<DbxThemeColor>, returnDefault: true): CssTokenVar;

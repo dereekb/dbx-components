@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- testing the deprecated component itself */
 import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DbxIconButtonComponent } from './icon.button.component';

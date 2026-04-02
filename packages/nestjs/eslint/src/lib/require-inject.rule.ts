@@ -31,6 +31,25 @@ export interface NestjsRequireInjectRuleOptions {
 type AstNode = any;
 
 /**
+ * Info about a type-only import specifier, used for auto-fix.
+ */
+interface TypeOnlyImportInfo {
+  /**
+   * The ImportSpecifier or ImportDeclaration node.
+   */
+  readonly specifier: AstNode;
+  /**
+   * The ImportDeclaration node.
+   */
+  readonly declaration: AstNode;
+  /**
+   * Whether the entire import declaration is type-only (`import type { ... }`).
+   * When false, the individual specifier has `type` modifier (`import { type X }`).
+   */
+  readonly isDeclarationLevel: boolean;
+}
+
+/**
  * Extracts the decorator name from a decorator node.
  *
  * @example
@@ -61,6 +80,26 @@ function getDecoratorName(decorator: AstNode): string {
   }
 
   return '';
+}
+
+/**
+ * Extracts the injection token name from a decorator like @Inject(TokenName).
+ *
+ * @param decorator - The decorator AST node
+ * @returns The token identifier name, or null if not a simple identifier
+ */
+function getInjectTokenFromDecorator(decorator: AstNode): string | null {
+  const expression = decorator.expression;
+
+  if (expression.type === 'CallExpression' && expression.callee.type === 'Identifier' && expression.callee.name === 'Inject') {
+    const firstArg = expression.arguments[0];
+
+    if (firstArg?.type === 'Identifier') {
+      return firstArg.name;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -126,6 +165,7 @@ export interface NestjsRequireInjectRuleDefinition {
     };
     readonly messages: {
       readonly missingInject: string;
+      readonly typeOnlyInjectToken: string;
     };
     readonly schema: readonly object[];
   };
@@ -141,9 +181,12 @@ export interface NestjsRequireInjectRuleDefinition {
  * Only applies to decorators imported from '@nestjs/common', so Angular @Injectable()
  * classes are not affected.
  *
- * Auto-fixes parameters whose type annotation is a simple class reference
- * (e.g. `fooApi: FooApi` becomes `@Inject(FooApi) fooApi: FooApi`).
- * Also adds the `Inject` import to '@nestjs/common' if not already present.
+ * Also flags injection tokens that are type-only imports (`import type { X }` or
+ * `import { type X }`), since those cannot be used as values at runtime.
+ *
+ * Auto-fixes:
+ * - Missing @Inject(): adds `@Inject(ClassName)` for simple class-typed parameters
+ * - Type-only imports: removes the `type` modifier from the import specifier
  *
  * Register as a plugin in your flat ESLint config, then enable individual rules
  * under the chosen plugin prefix (e.g. 'dereekb-nestjs/require-nest-inject').
@@ -157,7 +200,8 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
       recommended: true
     },
     messages: {
-      missingInject: 'Constructor parameter "{{name}}" in @{{classDecorator}}() class must have an @Inject() decorator. Without emitDecoratorMetadata, NestJS cannot infer the injection token and will throw at runtime.'
+      missingInject: 'Constructor parameter "{{name}}" in @{{classDecorator}}() class must have an @Inject() decorator. Without emitDecoratorMetadata, NestJS cannot infer the injection token and will throw at runtime.',
+      typeOnlyInjectToken: '@Inject({{token}}) uses "{{token}}" which is a type-only import. It must be a value import to be used as an injection token at runtime.'
     },
     schema: [
       {
@@ -190,6 +234,12 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
     const nestjsImports = new Set<string>();
 
     /**
+     * Tracks all type-only imports across the file, keyed by local identifier name.
+     * Used to detect when @Inject(Token) uses a type-only import.
+     */
+    const typeOnlyImports = new Map<string, TypeOnlyImportInfo>();
+
+    /**
      * Reference to the '@nestjs/common' ImportDeclaration node, used for adding
      * the Inject import if it's missing during auto-fix.
      */
@@ -197,15 +247,33 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
 
     return {
       ImportDeclaration(node: AstNode) {
-        if (node.source.value !== NESTJS_COMMON_MODULE) {
-          return;
+        const isDeclarationTypeOnly = node.importKind === 'type';
+
+        if (node.source.value === NESTJS_COMMON_MODULE) {
+          nestjsImportNode = node;
         }
 
-        nestjsImportNode = node;
-
         for (const specifier of node.specifiers) {
-          if (specifier.type === 'ImportSpecifier') {
-            nestjsImports.add(specifier.local.name);
+          if (specifier.type !== 'ImportSpecifier') {
+            continue;
+          }
+
+          const localName = specifier.local.name;
+
+          // Track @nestjs/common imports
+          if (node.source.value === NESTJS_COMMON_MODULE) {
+            nestjsImports.add(localName);
+          }
+
+          // Track type-only imports from any source
+          const isTypeOnly = isDeclarationTypeOnly || specifier.importKind === 'type';
+
+          if (isTypeOnly) {
+            typeOnlyImports.set(localName, {
+              specifier,
+              declaration: node,
+              isDeclarationLevel: isDeclarationTypeOnly
+            });
           }
         }
       },
@@ -238,6 +306,7 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
           const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
 
           if (!hasValidDecorator) {
+            // Missing @Inject() entirely
             const tokenName = getInjectTokenName(param);
 
             context.report({
@@ -251,10 +320,8 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
                 ? (fixer: AstNode) => {
                     const fixes = [];
 
-                    // Add @Inject(TokenName) before the parameter
                     fixes.push(fixer.insertTextBefore(param, `@Inject(${tokenName}) `));
 
-                    // Add Inject to the import if not already imported
                     if (!nestjsImports.has('Inject') && nestjsImportNode) {
                       const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
 
@@ -262,7 +329,6 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
                         fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
                       }
 
-                      // Mark it so we only add once per file
                       nestjsImports.add('Inject');
                     }
 
@@ -270,6 +336,40 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
                   }
                 : undefined
             });
+          } else {
+            // Has @Inject() — check if the injection token is a type-only import
+            for (const decorator of paramDecoratorsOnNode) {
+              const tokenName = getInjectTokenFromDecorator(decorator);
+
+              if (tokenName) {
+                const typeImportInfo = typeOnlyImports.get(tokenName);
+
+                if (typeImportInfo) {
+                  context.report({
+                    node: decorator,
+                    messageId: 'typeOnlyInjectToken',
+                    data: { token: tokenName },
+                    fix: (fixer: AstNode) => {
+                      if (typeImportInfo.isDeclarationLevel) {
+                        // `import type { X } from '...'` → `import { X } from '...'`
+                        // Remove 'type ' after 'import '
+                        const importKeywordEnd = typeImportInfo.declaration.range[0] + 'import '.length;
+                        return fixer.removeRange([importKeywordEnd, importKeywordEnd + 'type '.length]);
+                      }
+
+                      // `import { type X }` → `import { X }`
+                      // The specifier range includes 'type X', so remove 'type ' prefix
+                      const specRange = typeImportInfo.specifier.range;
+                      const importedRange = typeImportInfo.specifier.imported.range;
+                      return fixer.removeRange([specRange[0], importedRange[0]]);
+                    }
+                  });
+
+                  // Remove from tracking so we don't report the same import twice
+                  typeOnlyImports.delete(tokenName);
+                }
+              }
+            }
           }
         }
       }

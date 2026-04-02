@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, input, viewChild } from
 import { AbstractFilterPopoverButtonDirective } from './filter.popover.button.directive';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { DbxIconButtonComponent } from '../../button/icon/icon.button.component';
+import { DbxButtonComponent } from '../../button/button.component';
 
 const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
   icon: 'filter_list'
@@ -19,9 +19,9 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
 @Component({
   selector: 'dbx-filter-popover-button',
   template: `
-    <dbx-icon-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplay()" [disabled]="disabled()"></dbx-icon-button>
+    <dbx-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplay()" [disabled]="disabled()" iconOnly></dbx-button>
   `,
-  imports: [DbxIconButtonComponent],
+  imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

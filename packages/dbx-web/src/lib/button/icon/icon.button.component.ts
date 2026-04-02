@@ -46,6 +46,7 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
       <ng-content></ng-content>
     </ng-template>
   `,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- self-reference in the deprecated component
   providers: provideDbxButton(DbxIconButtonComponent),
   host: {
     class: 'dbx-icon-button'

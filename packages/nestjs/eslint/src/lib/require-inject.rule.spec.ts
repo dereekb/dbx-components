@@ -301,4 +301,81 @@ export class GenericService {
       expect(output).not.toContain('@Inject(Map)');
     });
   });
+
+  describe('type-only import detection', () => {
+    it('flags inline type import used as @Inject token', () => {
+      const errors = lintCode(`
+        import { Injectable, Inject } from '@nestjs/common';
+        import { type Reflector } from '@nestjs/core';
+
+        @Injectable()
+        export class BadService {
+          constructor(@Inject(Reflector) reflector: Reflector) {}
+        }
+      `);
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('Reflector');
+      expect(errors[0].message).toContain('type-only import');
+    });
+
+    it('flags declaration-level type import used as @Inject token', () => {
+      const errors = lintCode(`
+        import { Injectable, Inject } from '@nestjs/common';
+        import type { Reflector } from '@nestjs/core';
+
+        @Injectable()
+        export class BadService {
+          constructor(@Inject(Reflector) reflector: Reflector) {}
+        }
+      `);
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('Reflector');
+    });
+
+    it('does not flag value import used as @Inject token', () => {
+      const errors = lintCode(`
+        import { Injectable, Inject } from '@nestjs/common';
+        import { Reflector } from '@nestjs/core';
+
+        @Injectable()
+        export class GoodService {
+          constructor(@Inject(Reflector) reflector: Reflector) {}
+        }
+      `);
+
+      expect(errors).toHaveLength(0);
+    });
+
+    it('auto-fixes inline type import to value import', () => {
+      const input = `
+import { Injectable, Inject } from '@nestjs/common';
+import { type Reflector } from '@nestjs/core';
+
+@Injectable()
+export class FixableService {
+  constructor(@Inject(Reflector) reflector: Reflector) {}
+}`;
+
+      const output = fixCode(input);
+      expect(output).toContain("import { Reflector } from '@nestjs/core'");
+      expect(output).not.toContain('type Reflector');
+    });
+
+    it('auto-fixes declaration-level type import to value import', () => {
+      const input = `
+import { Injectable, Inject } from '@nestjs/common';
+import type { Reflector } from '@nestjs/core';
+
+@Injectable()
+export class FixableService {
+  constructor(@Inject(Reflector) reflector: Reflector) {}
+}`;
+
+      const output = fixCode(input);
+      expect(output).toContain("import { Reflector } from '@nestjs/core'");
+      expect(output).not.toContain('import type');
+    });
+  });
 });
