@@ -17,25 +17,43 @@
     </doc-feature-example>
     <doc-feature-example header="textField()" hint="Used to configure a text field.">
       <p>There are also several helper builders available.</p>
-      <doc-form-example-form [dbxFormlyFields]="textFields"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="textFields"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTextFieldsConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="numberField()" hint="Used to configure a number field.">
-      <doc-form-example-form [dbxFormlyFields]="numberFields"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="numberFields"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeNumberFieldsConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="numberSliderField()" hint="Used to configure a number field using a slider.">
-      <doc-form-example-form [dbxFormlyFields]="numberSliderFields"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="numberSliderFields"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeNumberSliderFieldsConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="textAreaField()" hint="Used to configure a text area.">
-      <doc-form-example-form [dbxFormlyFields]="textAreaField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="textAreaField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTextAreaFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="latLngTextField()" hint="Used to configure a latLng value.">
       <doc-form-example-form [dbxFormlyFields]="latLngTextField"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="toggleField()" hint="">
-      <doc-form-example-form [dbxFormlyFields]="toggleField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="toggleField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeToggleFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="checkboxField()" hint="">
-      <doc-form-example-form [dbxFormlyFields]="checkboxField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="checkboxField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeCheckboxFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <doc-feature-example header="repeatArrayField()" hint="Used to configure an array of a customizable field type.">
       <doc-form-example-form [dbxFormlyFields]="repeatArrayFields" [dbxFormSource]="repeatArrayValue"></doc-form-example-form>

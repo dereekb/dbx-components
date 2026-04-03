@@ -4,7 +4,7 @@ import { textField, type TextFieldConfig } from '../text/text.field';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
 import { type InternationalPhoneFormlyFieldProps } from './phone.field.component';
-import { repeatArrayField, type RepeatArrayFieldConfig } from '../array/array.field';
+import { formlyRepeatArrayField, type RepeatArrayFieldConfig } from '../array/array.field';
 import { isE164PhoneNumber } from '../../../../validator/phone';
 
 /**
@@ -24,7 +24,7 @@ export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, Inter
  * const field = phoneField({ preferredCountries: ['us', 'ca'], required: true });
  * ```
  */
-export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig<InternationalPhoneFormlyFieldProps> {
+export function formlyPhoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig<InternationalPhoneFormlyFieldProps> {
   const { key = 'phone', label = 'Phone Number', preferredCountries, enableSearch, onlyCountries, allowExtension: inputAllowExtension } = config;
   const allowExtension = inputAllowExtension ?? false;
 
@@ -66,11 +66,11 @@ export interface WrappedPhoneAndLabelFieldConfig {
  * const field = wrappedPhoneAndLabelField({ phoneField: { required: true } });
  * ```
  */
-export function wrappedPhoneAndLabelField({ phoneField: phone, labelField: label }: WrappedPhoneAndLabelFieldConfig = {}): FormlyFieldConfig {
+export function formlyWrappedPhoneAndLabelField({ phoneField: phone, labelField: label }: WrappedPhoneAndLabelFieldConfig = {}): FormlyFieldConfig {
   return flexLayoutWrapper(
     [
       {
-        field: phoneField(phone),
+        field: formlyPhoneField(phone),
         size: 2
       },
       {
@@ -110,11 +110,11 @@ export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, W
  * const field = phoneAndLabelSectionField({ header: 'Contact Phone' });
  * ```
  */
-export function phoneAndLabelSectionField({ key, header = 'Phone Number', hint, phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
+export function formlyPhoneAndLabelSectionField({ key, header = 'Phone Number', hint, phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
   return sectionWrapper(
     {
       key,
-      fieldGroup: [wrappedPhoneAndLabelField({ phoneField, labelField })]
+      fieldGroup: [formlyWrappedPhoneAndLabelField({ phoneField, labelField })]
     },
     {
       header,
@@ -142,15 +142,25 @@ export interface PhoneListFieldConfig extends Omit<RepeatArrayFieldConfig, 'repe
  * const field = phoneListField({ phoneAndLabel: { phoneField: { preferredCountries: ['us'] } } });
  * ```
  */
-export function phoneListField(repeatConfig: Partial<PhoneListFieldConfig> = {}): FormlyFieldConfig {
+export function formlyPhoneListField(repeatConfig: Partial<PhoneListFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'phones', label = 'Phone Numbers', addText = 'Add Phone Number', removeText = 'Remove Phone Number', repeatFieldGroup, phoneAndLabel } = repeatConfig;
 
-  return repeatArrayField({
+  return formlyRepeatArrayField({
     ...repeatConfig,
     key,
     label,
     addText,
     removeText,
-    repeatFieldGroup: repeatFieldGroup ?? [wrappedPhoneAndLabelField(phoneAndLabel)]
+    repeatFieldGroup: repeatFieldGroup ?? [formlyWrappedPhoneAndLabelField(phoneAndLabel)]
   });
 }
+
+// MARK: Deprecated Aliases
+/** @deprecated Use formlyPhoneField instead. */
+export const phoneField = formlyPhoneField;
+/** @deprecated Use formlyWrappedPhoneAndLabelField instead. */
+export const wrappedPhoneAndLabelField = formlyWrappedPhoneAndLabelField;
+/** @deprecated Use formlyPhoneAndLabelSectionField instead. */
+export const phoneAndLabelSectionField = formlyPhoneAndLabelSectionField;
+/** @deprecated Use formlyPhoneListField instead. */
+export const phoneListField = formlyPhoneListField;

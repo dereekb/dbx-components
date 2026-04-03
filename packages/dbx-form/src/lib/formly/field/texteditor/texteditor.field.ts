@@ -20,7 +20,7 @@ export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFi
  * const field = textEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
  * ```
  */
-export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfig {
+export function formlyTextEditorField(config: TextEditorFieldConfig): FormlyFieldConfig {
   const { key, minLength, maxLength, materialFormField } = config;
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
@@ -40,3 +40,7 @@ export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfi
 
   return fieldConfig;
 }
+
+// MARK: Deprecated Aliases
+/** @deprecated Use formlyTextEditorField instead. */
+export const textEditorField = formlyTextEditorField;

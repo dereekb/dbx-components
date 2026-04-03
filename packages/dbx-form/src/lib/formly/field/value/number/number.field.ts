@@ -48,7 +48,7 @@ export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldC
  * const parsers = numberFieldTransformParser({ transform: { precision: 2 } });
  * ```
  */
-export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformNumberFunctionConfigRef>) {
+export function formlyNumberFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformNumberFunctionConfigRef>) {
   const { parsers: inputParsers, transform } = config;
   let parsers: FormlyValueParser[] | undefined;
 
@@ -77,9 +77,9 @@ export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef
  * const field = numberField({ key: 'quantity', label: 'Quantity', min: 1, max: 100, step: 1 });
  * ```
  */
-export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
+export function formlyNumberField(config: NumberFieldConfig): FormlyFieldConfig {
   const { key, min, max, step, enforceStep, inputType: type = 'number', materialFormField } = config;
-  const parsers = numberFieldTransformParser(config);
+  const parsers = formlyNumberFieldTransformParser(config);
 
   const validators: ValidatorFn[] = [];
 
@@ -147,9 +147,9 @@ export interface NumberSliderFieldConfig extends NumberFieldConfig {
  * const field = numberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
-export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldConfig {
+export function formlyNumberSliderField(config: NumberSliderFieldConfig): FormlyFieldConfig {
   const { key, min, max, step, enforceStep, inputType: type = 'number', materialFormField, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval, invertSelectionColoring: invertedSelectionColoring = false, displayWith } = config;
-  const parsers = numberFieldTransformParser(config);
+  const parsers = formlyNumberFieldTransformParser(config);
 
   const validators: ValidatorFn[] = [];
   let tickIntervalFromSteps: number | undefined;
@@ -202,6 +202,16 @@ export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'p
  * const field = dollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });
  * ```
  */
-export function dollarAmountField(config: DollarAmountFieldConfig) {
-  return numberField({ ...config, transform: { ...config.transform, precision: config.transform?.precision ?? DOLLAR_AMOUNT_PRECISION } }); // TODO: Add wrapper addon, addonLeft: { text: '$' }
+export function formlyDollarAmountField(config: DollarAmountFieldConfig) {
+  return formlyNumberField({ ...config, transform: { ...config.transform, precision: config.transform?.precision ?? DOLLAR_AMOUNT_PRECISION } }); // TODO: Add wrapper addon, addonLeft: { text: '$' }
 }
+
+// MARK: Deprecated Aliases
+/** @deprecated Use formlyNumberFieldTransformParser instead. */
+export const numberFieldTransformParser = formlyNumberFieldTransformParser;
+/** @deprecated Use formlyNumberField instead. */
+export const numberField = formlyNumberField;
+/** @deprecated Use formlyNumberSliderField instead. */
+export const numberSliderField = formlyNumberSliderField;
+/** @deprecated Use formlyDollarAmountField instead. */
+export const dollarAmountField = formlyDollarAmountField;

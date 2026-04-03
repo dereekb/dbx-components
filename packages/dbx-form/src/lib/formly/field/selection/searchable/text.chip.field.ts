@@ -23,10 +23,10 @@ export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFiel
  *
  * @example
  * ```typescript
- * const field = chipTextField({ key: 'tags', label: 'Tags' });
+ * const field = formlyChipTextField({ key: 'tags', label: 'Tags' });
  * ```
  */
-export function chipTextField(config: ChipTextFieldConfig) {
+export function formlyChipTextField(config: ChipTextFieldConfig) {
   const convertStringValue = config.caseSensitive ? (x: string) => x : (x: string) => x?.toLowerCase();
 
   return searchableChipField({
@@ -39,3 +39,7 @@ export function chipTextField(config: ChipTextFieldConfig) {
     }
   });
 }
+
+// MARK: Deprecated
+/** @deprecated Use formlyChipTextField instead. */
+export const chipTextField = formlyChipTextField;

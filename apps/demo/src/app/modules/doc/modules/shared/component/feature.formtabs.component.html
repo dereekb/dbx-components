@@ -1,0 +1,14 @@
+<div class="doc-feature-form-tabs" [class.mobile]="isMobile()">
+  <div class="doc-feature-form-tabs-column formly-column">
+    <div class="doc-feature-form-tabs-header">ngx-formly</div>
+    <div class="doc-feature-form-tabs-content">
+      <ng-content select="[formly]"></ng-content>
+    </div>
+  </div>
+  <div class="doc-feature-form-tabs-column forge-column">
+    <div class="doc-feature-form-tabs-header">ng-forge</div>
+    <div class="doc-feature-form-tabs-content">
+      <ng-content select="[forge]"></ng-content>
+    </div>
+  </div>
+</div>

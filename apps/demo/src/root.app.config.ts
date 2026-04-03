@@ -9,7 +9,7 @@ import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, 
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DEMO_OIDC_AVAILABLE_SCOPES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, DEMO_APP_OAUTH_INTERACTION_PATH, ProfileFunctions } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
-import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations } from '@dereekb/dbx-form';
+import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
@@ -263,6 +263,7 @@ export const appConfig: ApplicationConfig = {
     // dbx-form, form related
     provideDbxFormConfiguration(),
     provideDbxFormFormlyFieldDeclarations(),
+    provideDbxForgeFormFieldDeclarations(),
     // dbx-firebase
     provideDbxFirebase({
       app: {

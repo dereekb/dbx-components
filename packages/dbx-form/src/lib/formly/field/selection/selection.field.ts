@@ -58,14 +58,14 @@ export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, Descri
  *
  * @example
  * ```typescript
- * const field = valueSelectionField({
+ * const field = formlyValueSelectionField({
  *   key: 'color',
  *   label: 'Color',
  *   options: [{ label: 'Red', value: 'red' }, { label: 'Blue', value: 'blue' }]
  * });
  * ```
  */
-export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): FormlyFieldConfig {
+export function formlyValueSelectionField<T>(config: ValueSelectionFieldConfig<T>): FormlyFieldConfig {
   const { key, native = false, addClearOption = false, selectAllOption: inputSelectAllOption, options: inputOptions, materialFormField } = config;
   let selectAllOptionConfig: Maybe<{ selectAllOption: string }>;
 
@@ -75,7 +75,7 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
     };
   }
 
-  const options = addClearOption ? asObservable(inputOptions).pipe(map(addValueSelectionOptionFunction(typeof addClearOption === 'string' ? addClearOption : undefined))) : inputOptions;
+  const options = addClearOption ? asObservable(inputOptions).pipe(map(formlyAddValueSelectionOptionFunction(typeof addClearOption === 'string' ? addClearOption : undefined))) : inputOptions;
   let parsers: FormlyValueParser[] | undefined = undefined;
 
   parsers = config.multiple !== true ? [firstValue] : [convertMaybeToArray];
@@ -100,7 +100,7 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
  * @param label - Optional label for the clear option
  * @returns A function that transforms selection options by prepending a clear option
  */
-export function addValueSelectionOptionFunction<T>(label?: string | undefined): (options: ValueSelectionOption<T>[]) => ValueSelectionOption<T>[] {
+export function formlyAddValueSelectionOptionFunction<T>(label?: string | undefined): (options: ValueSelectionOption<T>[]) => ValueSelectionOption<T>[] {
   return (options: ValueSelectionOption<T>[]) => {
     const hasClear = options.some((x) => (x as ValueSelectionOptionClear).clear);
 
@@ -111,3 +111,9 @@ export function addValueSelectionOptionFunction<T>(label?: string | undefined): 
     }
   };
 }
+
+// MARK: Deprecated
+/** @deprecated Use formlyValueSelectionField instead. */
+export const valueSelectionField = formlyValueSelectionField;
+/** @deprecated Use formlyAddValueSelectionOptionFunction instead. */
+export const addValueSelectionOptionFunction = formlyAddValueSelectionOptionFunction;

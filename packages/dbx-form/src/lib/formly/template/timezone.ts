@@ -17,7 +17,7 @@ export type TestStringSearchFunction = (text: string) => string[];
  *
  * @returns A {@link SearchableValueFieldStringSearchFn} for searching timezone values.
  */
-export function timezoneStringSearchFunction(): SearchableValueFieldStringSearchFn<string, TimezoneInfo> {
+export function formlyTimezoneStringSearchFunction(): SearchableValueFieldStringSearchFn<string, TimezoneInfo> {
   const timezoneInfos = allTimezoneInfos();
 
   return (search: string) => {
@@ -44,7 +44,7 @@ export function timezoneStringSearchFunction(): SearchableValueFieldStringSearch
  *
  * @param values - The timezone values to convert to display values
  */
-export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<string, TimezoneInfo> = (values: SearchableValueFieldValue<string, TimezoneInfo>[]) => {
+export const FORMLY_DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<string, TimezoneInfo> = (values: SearchableValueFieldValue<string, TimezoneInfo>[]) => {
   const timezoneInfos = allTimezoneInfos();
 
   const displayValues: SearchableValueFieldDisplayValue<string, TimezoneInfo>[] = values.map((x) => {
@@ -72,7 +72,7 @@ export interface TimezoneStringFieldConfig extends Omit<SearchableTextFieldConfi
  * @param config - Optional configuration overrides for the timezone field.
  * @returns A Formly field configuration for timezone selection.
  */
-export function timezoneStringField(config: TimezoneStringFieldConfig = {}): FormlyFieldConfig {
+export function formlyTimezoneStringField(config: TimezoneStringFieldConfig = {}): FormlyFieldConfig {
   return searchableTextField({
     key: 'timezone',
     label: 'Timezone',
@@ -82,7 +82,15 @@ export function timezoneStringField(config: TimezoneStringFieldConfig = {}): For
     searchOnEmptyText: true,
     allowStringValues: false,
     showClearValue: true,
-    search: timezoneStringSearchFunction(),
-    displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
+    search: formlyTimezoneStringSearchFunction(),
+    displayForValue: FORMLY_DISPLAY_FOR_TIMEZONE_STRING_VALUE
   });
 }
+
+// MARK: Deprecated Aliases
+/** @deprecated Use formlyTimezoneStringSearchFunction instead. */
+export const timezoneStringSearchFunction = formlyTimezoneStringSearchFunction;
+/** @deprecated Use FORMLY_DISPLAY_FOR_TIMEZONE_STRING_VALUE instead. */
+export const DISPLAY_FOR_TIMEZONE_STRING_VALUE = FORMLY_DISPLAY_FOR_TIMEZONE_STRING_VALUE;
+/** @deprecated Use formlyTimezoneStringField instead. */
+export const timezoneStringField = formlyTimezoneStringField;

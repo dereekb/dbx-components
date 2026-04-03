@@ -1,0 +1,168 @@
+import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps } from '@ng-forge/dynamic-forms-material';
+import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
+import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
+import { forgeField } from '../../field';
+
+// MARK: Text Field
+/**
+ * Configuration for minimum and maximum text length constraints.
+ */
+export interface ForgeTextFieldLengthConfig {
+  readonly minLength?: number;
+  readonly maxLength?: number;
+}
+
+/**
+ * Configuration for regex pattern validation on a text field.
+ */
+export interface ForgeTextFieldPatternConfig {
+  readonly pattern?: string | RegExp;
+}
+
+/**
+ * HTML input type for a text field.
+ */
+export type ForgeTextFieldInputType = 'text' | 'password' | 'email';
+
+/**
+ * Full configuration for a single-line text input field in forge.
+ *
+ * Combines labeling, validation (pattern, length), and string transformation
+ * into one config object.
+ */
+export interface ForgeTextFieldConfig extends ForgeTextFieldPatternConfig, ForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
+  readonly key: string;
+  readonly label?: string;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly readonly?: boolean;
+  readonly description?: string;
+  /**
+   * HTML input type. Defaults to `'text'`.
+   */
+  readonly inputType?: ForgeTextFieldInputType;
+  /**
+   * String transformation applied as a value parser (e.g., trim, uppercase).
+   */
+  readonly transform?: TransformStringFunctionConfig;
+  readonly defaultValue?: string;
+}
+
+/**
+ * Builds an array of value parsers for a text field, incorporating any configured
+ * string transformation (e.g., trim, lowercase) as a parser prepended to existing parsers.
+ *
+ * @param config - Parser and transform configuration
+ * @returns Array of value parsers, or undefined if none configured
+ *
+ * @example
+ * ```typescript
+ * const parsers = forgeTextFieldTransformParser({ transform: { trim: true, toLowercase: true } });
+ * ```
+ */
+export function forgeTextFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformStringFunctionConfigRef>): FieldValueParser[] | undefined {
+  const { parsers: inputParsers, transform } = config;
+  let parsers: FieldValueParser[] | undefined;
+
+  if (inputParsers) {
+    parsers = inputParsers;
+  }
+
+  if (transform) {
+    const transformParser: FieldValueParser = mapMaybeFunction(transformStringFunction(transform));
+    const existing = parsers ?? [];
+    parsers = [transformParser, ...existing];
+  }
+
+  return parsers;
+}
+
+/**
+ * Creates a forge field definition for a single-line text input.
+ *
+ * @param config - Text field configuration including key, label, validation, and transform options
+ * @returns A validated {@link MatInputField} with type `'input'`
+ *
+ * @example
+ * ```typescript
+ * const field = forgeTextField({ key: 'username', label: 'Username', maxLength: 50, required: true });
+ * ```
+ */
+export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
+  const { key, label, placeholder, required, readonly: isReadonly, description, minLength, maxLength, pattern, inputType = 'text', defaultValue = '' } = config;
+
+  const props: Partial<MatInputProps> = filterFromPOJO({
+    type: inputType,
+    hint: description,
+    placeholder
+  });
+
+  return forgeField(
+    filterFromPOJO({
+      key,
+      type: 'input' as const,
+      label: label ?? '',
+      value: defaultValue,
+      required,
+      readonly: isReadonly,
+      minLength,
+      maxLength,
+      pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
+      props: Object.keys(props).length > 0 ? props : undefined
+    }) as MatInputField
+  );
+}
+
+// MARK: TextArea Field
+/**
+ * Configuration for a multi-line textarea input field in forge.
+ */
+export interface ForgeTextAreaFieldConfig extends ForgeTextFieldPatternConfig, ForgeTextFieldLengthConfig, Partial<TransformStringFunctionConfigRef> {
+  readonly key: string;
+  readonly label?: string;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly readonly?: boolean;
+  readonly description?: string;
+  /**
+   * Number of visible text rows. Defaults to 3.
+   */
+  readonly rows?: number;
+  readonly defaultValue?: string;
+}
+
+/**
+ * Creates a forge field definition for a multi-line textarea input.
+ *
+ * @param config - Textarea field configuration including key, label, rows, and validation options
+ * @returns A validated {@link MatTextareaField} with type `'textarea'`
+ *
+ * @example
+ * ```typescript
+ * const field = forgeTextAreaField({ key: 'bio', label: 'Biography', rows: 5, maxLength: 500 });
+ * ```
+ */
+export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextareaField {
+  const { key, label, placeholder, required, readonly: isReadonly, description, rows = 3, minLength, maxLength, pattern, defaultValue = '' } = config;
+
+  const props: Partial<MatTextareaProps> = filterFromPOJO({
+    hint: description,
+    placeholder,
+    rows
+  });
+
+  return forgeField(
+    filterFromPOJO({
+      key,
+      type: 'textarea' as const,
+      label: label ?? '',
+      value: defaultValue,
+      required,
+      readonly: isReadonly,
+      minLength,
+      maxLength,
+      pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
+      props: Object.keys(props).length > 0 ? props : undefined
+    }) as MatTextareaField
+  );
+}

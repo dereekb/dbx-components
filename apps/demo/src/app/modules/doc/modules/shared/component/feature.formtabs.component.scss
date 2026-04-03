@@ -1,0 +1,28 @@
+.doc-feature-form-tabs {
+  display: flex;
+  gap: 16px;
+
+  &.mobile {
+    flex-direction: column;
+  }
+}
+
+.doc-feature-form-tabs-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-feature-form-tabs-header {
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.2;
+}
+
+.doc-feature-form-tabs-content {
+  padding-top: 4px;
+}

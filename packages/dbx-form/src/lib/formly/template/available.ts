@@ -34,7 +34,7 @@ export interface TextAvailableFieldConfig extends TextFieldConfig, Omit<FieldVal
  * });
  * ```
  */
-export function textIsAvailableField(config: TextAvailableFieldConfig): FormlyFieldConfig {
+export function formlyTextIsAvailableField(config: TextAvailableFieldConfig): FormlyFieldConfig {
   const field = textField(config);
 
   field.asyncValidators = {
@@ -50,3 +50,7 @@ export function textIsAvailableField(config: TextAvailableFieldConfig): FormlyFi
 
   return workingWrapper(field, {});
 }
+
+// MARK: Deprecated Aliases
+/** @deprecated Use formlyTextIsAvailableField instead. */
+export const textIsAvailableField = formlyTextIsAvailableField;

@@ -1,0 +1,231 @@
+import type { MatInputField } from '@ng-forge/dynamic-forms-material';
+import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
+import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
+import { type ForgeTextFieldConfig, forgeTextField } from './text.field';
+
+// MARK: Name Field
+/**
+ * Creates a forge text field pre-configured for a person's full name.
+ *
+ * @param config - Optional overrides; defaults to key `'name'`, label `'Name'`
+ * @returns A {@link MatInputField} for name input
+ *
+ * @example
+ * ```typescript
+ * const field = forgeNameField({ required: true });
+ * ```
+ */
+export function forgeNameField(config: Partial<ForgeTextFieldConfig> = {}): MatInputField {
+  const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength } = config;
+
+  return forgeTextField({
+    ...config,
+    key,
+    label,
+    placeholder,
+    required,
+    minLength,
+    maxLength
+  });
+}
+
+// MARK: Email Field
+/**
+ * Configuration for a forge email address input field.
+ */
+export interface ForgeEmailFieldConfig {
+  readonly key?: string;
+  readonly label?: string;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly readonly?: boolean;
+  readonly description?: string;
+}
+
+/**
+ * Creates a forge text field pre-configured for email address input.
+ *
+ * Uses the `'email'` input type for built-in browser validation.
+ *
+ * @param config - Optional overrides; defaults to key `'email'`, label `'Email Address'`
+ * @returns A {@link MatInputField} with email input type
+ *
+ * @example
+ * ```typescript
+ * const field = forgeEmailField({ required: true });
+ * ```
+ */
+export function forgeEmailField(config: ForgeEmailFieldConfig = {}): MatInputField {
+  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, description } = config;
+
+  return forgeTextField({
+    key,
+    label,
+    placeholder,
+    required,
+    readonly: isReadonly,
+    description,
+    inputType: 'email'
+  });
+}
+
+// MARK: City Field
+/**
+ * Configuration for a forge city input field.
+ */
+export type ForgeCityFieldConfig = Partial<ForgeTextFieldConfig>;
+
+/**
+ * Creates a forge text field pre-configured for city name input.
+ *
+ * @param config - Optional overrides; defaults to key `'city'`, label `'City'`
+ * @returns A {@link MatInputField} for city input
+ *
+ * @example
+ * ```typescript
+ * const field = forgeCityField({ required: true });
+ * ```
+ */
+export function forgeCityField(config: ForgeCityFieldConfig = {}): MatInputField {
+  const { key = 'city', placeholder = '', label = 'City', maxLength = ADDRESS_CITY_MAX_LENGTH, required = false } = config;
+
+  return forgeTextField({
+    ...config,
+    key,
+    placeholder,
+    label,
+    required,
+    maxLength
+  });
+}
+
+// MARK: State Field
+/**
+ * Configuration for a forge US state input field.
+ */
+export interface ForgeStateFieldConfig extends Partial<ForgeTextFieldConfig> {
+  /**
+   * When true, validates and formats as a 2-letter state code (e.g., `'CA'`).
+   */
+  readonly asCode?: boolean;
+}
+
+/**
+ * Creates a forge text field pre-configured for US state input with optional state code validation.
+ *
+ * When `asCode` is true, enforces the 2-letter state code pattern and auto-uppercases input.
+ *
+ * @param config - Optional overrides; defaults to key `'state'`, label `'State'`
+ * @returns A {@link MatInputField} for state input
+ *
+ * @example
+ * ```typescript
+ * const field = forgeStateField({ asCode: true, required: true });
+ * ```
+ */
+export function forgeStateField(config: ForgeStateFieldConfig = {}): MatInputField {
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
+
+  return forgeTextField({
+    ...config,
+    key,
+    placeholder,
+    label,
+    pattern,
+    required,
+    maxLength,
+    transform: {
+      ...transform,
+      toUppercase: asCode || transform?.toUppercase
+    }
+  });
+}
+
+// MARK: Country Field
+/**
+ * Configuration for a forge country input field.
+ */
+export type ForgeCountryFieldConfig = Partial<ForgeTextFieldConfig>;
+
+/**
+ * Creates a forge text field pre-configured for country name input.
+ *
+ * @param config - Optional overrides; defaults to key `'country'`, label `'Country'`
+ * @returns A {@link MatInputField} for country input
+ *
+ * @example
+ * ```typescript
+ * const field = forgeCountryField({ required: true });
+ * ```
+ */
+export function forgeCountryField(config: ForgeCountryFieldConfig = {}): MatInputField {
+  const { key = 'country', placeholder = '', label = 'Country', maxLength = ADDRESS_COUNTRY_MAX_LENGTH, required = false } = config;
+
+  return forgeTextField({
+    ...config,
+    key,
+    placeholder,
+    label,
+    required,
+    maxLength
+  });
+}
+
+// MARK: Zip Code Field
+/**
+ * Configuration for a forge zip/postal code input field.
+ */
+export type ForgeZipCodeFieldConfig = Partial<ForgeTextFieldConfig>;
+
+/**
+ * Creates a forge text field pre-configured for US zip code input with pattern validation.
+ *
+ * @param config - Optional overrides; defaults to key `'zip'`, label `'Zip Code'`
+ * @returns A {@link MatInputField} for zip code input
+ *
+ * @example
+ * ```typescript
+ * const field = forgeZipCodeField({ required: true });
+ * ```
+ */
+export function forgeZipCodeField(config: ForgeZipCodeFieldConfig = {}): MatInputField {
+  const { key = 'zip', placeholder = '', label = 'Zip Code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
+
+  return forgeTextField({
+    ...config,
+    key,
+    placeholder,
+    label,
+    pattern,
+    required,
+    maxLength
+  });
+}
+
+// MARK: LatLng Text Field
+/**
+ * Default placeholder text for a forge latitude/longitude text field.
+ */
+export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
+
+/**
+ * Creates a forge text field pre-configured for latitude/longitude coordinate input with pattern validation.
+ *
+ * @param config - Optional overrides; defaults to key `'latLng'`
+ * @returns A {@link MatInputField} for coordinate input
+ *
+ * @example
+ * ```typescript
+ * const field = forgeLatLngTextField();
+ * ```
+ */
+export function forgeLatLngTextField(config: Partial<ForgeTextFieldConfig> = {}): MatInputField {
+  const { key = 'latLng' } = config;
+
+  return forgeTextField({
+    key,
+    label: 'Coordinates',
+    placeholder: DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER,
+    pattern: LAT_LNG_PATTERN
+  });
+}
