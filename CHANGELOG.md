@@ -1,3 +1,15 @@
+## [13.6.15](https://github.com/dereekb/dbx-components/compare/v13.6.14-dev...v13.6.15) (2026-04-03)
+
+
+### Bug Fixes
+
+- **date:** fix cross-timezone minMaxDateRange index ([1282aae7](https://github.com/dereekb/dbx-components/commit/1282aae7b02dd0ea6dd2ed38273aa2595c4dfdd4))
+
+
+### Code Refactoring
+
+- added allowedModes input to DbxSidenavComponent ([82ea8443](https://github.com/dereekb/dbx-components/commit/82ea84436808fb127c10cfe50068ea493a5395ee))
+
 ## [13.6.14](https://github.com/dereekb/dbx-components/compare/v13.6.13-dev...v13.6.14) (2026-04-02)
 
 

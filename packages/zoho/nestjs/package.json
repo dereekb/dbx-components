@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/zoho/nestjs",
-  "version": "13.6.14",
+  "version": "13.6.15",
   "peerDependencies": {
-    "@dereekb/nestjs": "13.6.14",
-    "@dereekb/rxjs": "13.6.14",
-    "@dereekb/util": "13.6.14",
-    "@dereekb/zoho": "13.6.14",
+    "@dereekb/nestjs": "13.6.15",
+    "@dereekb/rxjs": "13.6.15",
+    "@dereekb/util": "13.6.15",
+    "@dereekb/zoho": "13.6.15",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "express": "^5.0.0"
