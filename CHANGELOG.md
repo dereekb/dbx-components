@@ -1,3 +1,11 @@
+## [13.6.16](https://github.com/dereekb/dbx-components/compare/v13.6.15-dev...v13.6.16) (2026-04-03)
+
+
+### Code Refactoring
+
+- improved dbx-button icon-only styling ([f4b04c47](https://github.com/dereekb/dbx-components/commit/f4b04c477d98533fca17c607d201a71062960153))
+- updated DbxNavbarComponent button mode ([c2a3781b](https://github.com/dereekb/dbx-components/commit/c2a3781b111e8ea518cfde17e808bd77878734ae))
+
 ## [13.6.15](https://github.com/dereekb/dbx-components/compare/v13.6.14-dev...v13.6.15) (2026-04-03)
 
 

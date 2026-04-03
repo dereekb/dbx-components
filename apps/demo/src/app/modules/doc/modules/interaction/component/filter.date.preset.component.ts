@@ -6,18 +6,19 @@ import { type DbxActionFormMapValueFunction, DbxActionFormDirective, DbxFormSour
 import { type DocInteractionTestDateFilterFormValue, DocInteractionTestDateFilterFormComponent } from './filter.date.form.component';
 import { map, shareReplay } from 'rxjs';
 import { type IsModifiedFunction } from '@dereekb/rxjs';
-import { DbxFilterWrapperComponent } from '@dereekb/dbx-web';
+import { DbxPresetFilterListComponent, DbxFilterWrapperComponent } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'doc-interaction-test-date-filter-preset-filter',
   template: `
+    <dbx-preset-filter-list [presets]="presets"></dbx-preset-filter-list>
     <dbx-filter-wrapper dbxActionEnforceModified dbxActionAutoTrigger useInstantTriggerPreset [showButtons]="false" style="display: block; padding: 12px 24px; overflow: hidden">
-      <doc-interaction-test-date-filter-form dbxActionForm [dbxActionFormIsModified]="dateRangeIsModified" [dbxFormSource]="formTemplate$" [dbxActionFormMapValue]="mapFormToFilterValue"></doc-interaction-test-date-filter-form>
+      <doc-interaction-test-date-filter-form dbxActionForm [dbxActionFormIsModified]="dateRangeIsModified" [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [dbxActionFormMapValue]="mapFormToFilterValue"></doc-interaction-test-date-filter-form>
     </dbx-filter-wrapper>
   `,
   providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)],
   standalone: true,
-  imports: [DbxFilterWrapperComponent, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective],
+  imports: [DbxPresetFilterListComponent, DbxFilterWrapperComponent, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestDateFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {

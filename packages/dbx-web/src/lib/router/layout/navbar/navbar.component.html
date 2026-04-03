@@ -15,7 +15,7 @@
     @switch (buttonMode()) {
       <!-- Menu -->
       @case ('menu') {
-        <dbx-button class="nav-menu-button" ariaLabel="open navigation" [buttonDisplay]="buttonDisplaySignal()" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchorsSignal()">
+        <dbx-button class="nav-menu-button" ariaLabel="open navigation" [buttonDisplay]="buttonDisplaySignal()" [iconOnly]="isIconModeSignal()" [fab]="fab()" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchorsSignal()" allowClickPropagation>
           @if (showMenuCaret()) {
             <mat-icon aria-hidden="true">arrow_drop_down</mat-icon>
           }
@@ -36,7 +36,7 @@
       <!-- Rotate -->
       @case ('rotate') {
         <dbx-anchor [anchor]="nextRotateAnchorSignal()?.anchor">
-          <dbx-button class="nav-menu-button" ariaLabel="open navigation" [buttonDisplay]="buttonDisplaySignal()" [disabled]="hasNoAnchorsSignal()"></dbx-button>
+          <dbx-button class="nav-menu-button" ariaLabel="open navigation" [buttonDisplay]="buttonDisplaySignal()" [iconOnly]="isIconModeSignal()" [fab]="fab()" [disabled]="hasNoAnchorsSignal()"></dbx-button>
         </dbx-anchor>
       }
     }

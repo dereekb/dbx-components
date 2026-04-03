@@ -22,13 +22,14 @@ export class DocInteractionTestDateFilterPopoverButtonComponent {
   readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>();
 
   readonly config: DbxFilterButtonConfigWithPresetFilter<DocInteractionTestFilter, DocInteractionTestDateFilterPresetFilterComponent> = {
-    icon: 'event',
-    header: 'Filter Date Range',
+    icon: 'calendar_today',
+    header: 'Date Range',
+    closeButtonText: 'Save',
     presetFilterComponentConfig: {
       componentClass: DocInteractionTestDateFilterPresetFilterComponent
     },
     showCloseButton: true,
-    height: '560px',
+    height: '800px',
     closeOnFilterChange: false,
     connector: this.filterSourceConnector,
     initialFilterObs: this.filterSource.filter$

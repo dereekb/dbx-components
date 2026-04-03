@@ -18,17 +18,25 @@
     &.mat-mdc-button.mat-mdc-icon-button {
       // icon button fixes
       min-width: unset;
-      width: var(--mat-icon-button-state-layer-size, 36px);
+      width: var(--mat-icon-button-state-layer-size, 40px);
+      height: var(--mat-icon-button-state-layer-size, 40px);
       padding: 0;
       --mat-icon-button-icon-size: unset;
       --mat-text-button-with-icon-horizontal-padding: 0px;
-      --mat-icon-button-state-layer-size: 36px;
+      --mat-icon-button-state-layer-size: 40px;
       border-radius: 50%; // sometimes the css order seems to be different, causing the button to lose its radius
+
+      // disabled styling for icon buttons; required because the button uses mat-button directive
+      // instead of mat-icon-button, so Material's icon button disabled tokens aren't applied automatically
+      &:disabled,
+      &.disabled {
+        color: var(--mat-icon-button-disabled-icon-color, color-mix(in srgb, currentColor 38%, transparent));
+      }
 
       .mat-mdc-progress-spinner {
         // fix spinner size. Without this set the spinner will be off-center
         // Angular Material pulls from this value for setting the spinner size when used in a button
-        --mat-icon-button-icon-size: 36px;
+        --mat-icon-button-icon-size: 40px;
       }
     }
 

@@ -1,7 +1,7 @@
 import { type Observable, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { type ScreenMediaWidthType } from '../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
-import { applyBestFit, findNext, type Maybe } from '@dereekb/util';
+import { applyBestFit, findNext, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
 import { type ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type HorizontalConnectionPos } from '@angular/cdk/overlay';
@@ -65,6 +65,8 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
    * Whether or not to show the dropwdown caret for a menu
    */
   readonly showMenuCaret = input<boolean>(false);
+
+  readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly navAlign = input<HorizontalConnectionPos>('center');
 
@@ -144,6 +146,12 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
   );
 
   readonly modeSignal = toSignal(this.mode$);
+  readonly isIconModeSignal = toSignal(
+    this.mode$.pipe(
+      map((x) => x === 'icon'),
+      distinctUntilChanged()
+    )
+  );
   readonly anchorsSignal = toSignal(this.anchors$);
   readonly buttonDisplaySignal = toSignal(this.buttonDisplay$);
   readonly hasNoAnchorsSignal = toSignal(this.hasNoAnchors$);

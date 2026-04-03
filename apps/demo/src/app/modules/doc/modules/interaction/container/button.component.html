@@ -197,7 +197,7 @@
       <dbx-button class="dbx-button-wide" [raised]="true" icon="settings" color="accent" text="Test Button"></dbx-button>
 
       <h4>With Custom Content</h4>
-      <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="barButtonConfigWorkingState">
+      <dbx-button (buttonClick)="clickBar1()" icon="settings" customContent [working]="barButtonConfigWorkingState">
         <div style="width: 400px">
           <p>A</p>
           <p>B</p>
@@ -205,7 +205,7 @@
         </div>
       </dbx-button>
 
-      <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="true">
+      <dbx-button (buttonClick)="clickBar1()" icon="settings" customContent [working]="true">
         <div style="width: 400px">
           <p>A</p>
           <p>B</p>
