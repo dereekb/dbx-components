@@ -86,6 +86,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly customContent = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly allowClickPropagation = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly mode = input<Maybe<ProgressSpinnerMode>>();
@@ -145,7 +146,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
 
     const textValue = this.textSignal();
-    const hasTextContent = !!textValue || this._hasProjectedContent;
+    const hasTextContent = !!textValue || this._hasProjectedContent || this.customContent();
     const isIconOnlyButton = buttonIcon && !hasTextContent;
     const fab = this.fab() || buttonStyle?.fab;
 

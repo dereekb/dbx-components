@@ -35,10 +35,6 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
     const config = this.configSignal();
     const classes = [...this.baseCssClassSignal()];
 
-    if (config?.iconOnly) {
-      classes.push('mat-mdc-icon-button');
-    }
-
     if (config?.fab) {
       classes.push('dbx-progress-spinner-fab');
     }

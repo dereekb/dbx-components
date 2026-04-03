@@ -72,6 +72,9 @@ export abstract class AbstractProgressButtonDirective {
     }
 
     switch (buttonType) {
+      case 'icon':
+        classes.push('mdc-icon-button mat-mdc-icon-button mat-unthemed');
+        break;
       case 'raised':
         classes.push('mat-mdc-raised-button mdc-button--raised');
         break;

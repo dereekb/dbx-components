@@ -4,7 +4,7 @@ import { type FilterWithPreset } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
 
-export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'week' | 'noicon' | 'delete';
+export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'week' | 'next_week' | 'next_two_weeks' | 'next_five_business_days' | 'noicon' | 'delete';
 
 export interface DocInteractionTestFilter extends FilterWithPreset<DocInteractionTestFilterPresets> {
   name?: Maybe<string>;
@@ -66,12 +66,47 @@ export const DOC_INTERACTION_DATE_TEST_PRESETS: ClickableFilterPreset<DocInterac
     })
   },
   {
+    icon: 'calendar_today',
+    title: 'Next Five Business Days',
+    preset: 'next_five_business_days',
+    presetValue: () => ({
+      date: startOfDay(new Date()),
+      toDate: startOfDay(addDays(new Date(), 7))
+    })
+  },
+  {
+    icon: 'calendar_today',
+    title: 'Tomorrow',
+    preset: 'tomorrow',
+    presetValue: () => ({
+      date: startOfDay(addDays(new Date(), 1))
+    })
+  },
+  {
     icon: 'event',
     title: 'This Week',
     preset: 'week',
     presetValue: () => ({
       date: startOfWeek(new Date()),
       toDate: endOfWeek(new Date())
+    })
+  },
+  {
+    icon: 'event',
+    title: 'Next Week',
+    preset: 'next_week',
+    presetValue: () => ({
+      date: startOfWeek(addDays(new Date(), 7)),
+      toDate: endOfWeek(addDays(new Date(), 7))
+    })
+  },
+  {
+    icon: 'event',
+    title: 'Next Two Weeks',
+    preset: 'next_two_weeks',
+    presetValue: () => ({
+      date: startOfDay(new Date()),
+      toDate: endOfWeek(addDays(new Date(), 14))
     })
   }
 ];
