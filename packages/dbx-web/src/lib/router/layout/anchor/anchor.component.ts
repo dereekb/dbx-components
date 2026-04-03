@@ -84,7 +84,6 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
   });
 
   clickAnchor(event?: Maybe<MouseEvent>): void {
-    console.log('click anchor');
     this.anchor()?.onClick?.(event);
   }
 

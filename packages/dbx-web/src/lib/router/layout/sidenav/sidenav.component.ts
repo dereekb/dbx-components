@@ -3,7 +3,7 @@ import { type MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/mater
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { AbstractTransitionWatcherDirective, cleanSubscription, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { type DbxSidenavPosition, SideNavDisplayMode, type SideNavDisplayModeString } from './sidenav';
+import { type DbxSidenavPosition, resolveSideNavDisplayMode, SideNavDisplayMode, type SideNavDisplayModeString } from './sidenav';
 import { NgClass } from '@angular/common';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
@@ -74,7 +74,22 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
   readonly sidenav = viewChild.required<MatSidenav>(MatSidenav);
 
+  /**
+   * Restricts which {@link SideNavDisplayMode} values are permitted.
+   *
+   * When set, any responsive or overridden mode not in this set is rounded down to the nearest
+   * allowed mode in the {@link SIDE_NAV_DISPLAY_MODE_ORDER} hierarchy.
+   *
+   * @example
+   * ```html
+   * <dbx-sidenav [allowedModes]="['mobile', 'full']">
+   * ```
+   */
+  readonly allowedModes = input<Maybe<SideNavDisplayModeString[]>>(undefined);
+
   readonly anchors = input<Maybe<ClickableAnchorLinkTree[]>>();
+
+  private readonly _allowedModes$ = toObservable(this.allowedModes);
 
   readonly responsiveMode$: Observable<SideNavDisplayMode> = this._screenMediaService.widthType$.pipe(
     distinctUntilChanged(),
@@ -105,8 +120,12 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
   private readonly _displayMode$ = toObservable(this.displayMode);
 
-  readonly mode$: Observable<SideNavDisplayMode> = combineLatest([this.responsiveMode$, this._displayMode$]).pipe(
-    map(([responsive, override]) => (override as SideNavDisplayMode) ?? responsive),
+  readonly mode$: Observable<SideNavDisplayMode> = combineLatest([this.responsiveMode$, this._displayMode$, this._allowedModes$]).pipe(
+    map(([responsive, override, allowedModes]) => {
+      const raw = (override as SideNavDisplayMode) ?? responsive;
+      const allowedSet = allowedModes ? new Set<SideNavDisplayMode>(allowedModes as SideNavDisplayMode[]) : undefined;
+      return resolveSideNavDisplayMode(raw, allowedSet);
+    }),
     distinctUntilChanged(),
     shareReplay(1)
   );
