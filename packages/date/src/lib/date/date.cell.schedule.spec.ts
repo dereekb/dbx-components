@@ -26,7 +26,7 @@ import {
   type DateCellScheduleDateRangeInput,
   isFullDateCellScheduleDateRange
 } from './date.cell.schedule';
-import { addDays, addHours, addMinutes, differenceInDays, differenceInMinutes, startOfHour } from 'date-fns';
+import { addDays, addHours, addMinutes, differenceInDays, differenceInMinutes, startOfDay, startOfHour } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING, lastValue, type TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY, type ISO8601DayString } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString, dateTimezoneUtcNormal } from './date.timezone';
@@ -251,7 +251,56 @@ wrapDateTests(() => {
           });
         });
 
-        // TODO: Test min/max date range
+        describe('minMaxDateRange', () => {
+          const jobTimezone: TimezoneString = 'America/Denver';
+          const jobNormalInstance = dateTimezoneUtcNormal(jobTimezone);
+
+          // Job starts March 30, 2026 at 8AM MDT, runs weekdays for ~3 weeks.
+          // Use addHours on start-of-day to get 8AM in the timing's reference frame.
+          const startOfMarch30 = jobNormalInstance.startOfDayInTargetTimezone('2026-03-30');
+          const jobStartsAt = addHours(startOfMarch30, 8);
+          const jobEnd = addHours(jobNormalInstance.startOfDayInTargetTimezone('2026-04-16'), 17);
+
+          // Index 0 = March 30 (Mon), 1 = March 31 (Tue), 2 = April 1 (Wed), 3 = April 2 (Thu), 4 = April 3 (Fri), ...
+
+          it('should correctly compute minAllowedIndex when minMaxDateRange.start is a system-timezone startOfDay date', () => {
+            // Real-world scenario: the calendar store applies date-fns startOfDay() in the system timezone.
+            // The filter must compute the correct min index even when the system timezone differs from the
+            // filter timezone. Construct April 3 noon in local time so it's April 3 in any system timezone.
+            const april3AsBaseDate = startOfDay(new Date(2026, 3, 3, 12, 0, 0)); // midnight April 3 in system tz
+
+            const filter = dateCellScheduleDateFilter({
+              w: `${DateCellScheduleDayCode.WEEKDAY}`,
+              startsAt: jobStartsAt,
+              end: jobEnd,
+              timezone: jobTimezone,
+              minMaxDateRange: { start: april3AsBaseDate }
+            });
+
+            // Indexes 0-3 (March 30 - April 2) should be disallowed
+            expect(filter(0)).toBe(false); // March 30 (Mon)
+            expect(filter(1)).toBe(false); // March 31 (Tue)
+            expect(filter(2)).toBe(false); // April 1 (Wed)
+            expect(filter(3)).toBe(false); // April 2 (Thu)
+
+            // Index 4 (April 3, Fri) and beyond should be allowed (weekdays only)
+            expect(filter(4)).toBe(true); // April 3 (Fri)
+            expect(filter(7)).toBe(true); // April 6 (Mon)
+          });
+
+          it('should correctly compute minAllowedIndex when minMaxDateRange.start is a number (index)', () => {
+            const filter = dateCellScheduleDateFilter({
+              w: `${DateCellScheduleDayCode.WEEKDAY}`,
+              startsAt: jobStartsAt,
+              end: jobEnd,
+              timezone: jobTimezone,
+              minMaxDateRange: { start: 4 }
+            });
+
+            expect(filter(3)).toBe(false);
+            expect(filter(4)).toBe(true);
+          });
+        });
       });
     });
   });

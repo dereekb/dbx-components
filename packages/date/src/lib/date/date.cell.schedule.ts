@@ -27,7 +27,7 @@ import {
 } from '@dereekb/util';
 import { getDay, addMinutes } from 'date-fns';
 import { isDate, requireCurrentTimezone } from './date';
-import { calculateExpectedDateCellTimingDurationPair, type DateCell, type DateCellDurationSpan, type DateCellIndex, type DateCellTiming, type DateCellTimingDateRange, type DateCellTimingStartsAtEndRange, type FullDateCellTiming, isSameFullDateCellTiming, type DateCellTimingEventStartsAt, isFullDateCellTiming, type DateCellTimingTimezoneInput, dateCellTimingTimezoneNormalInstance, type DateCellIndexDatePair } from './date.cell';
+import { calculateExpectedDateCellTimingDurationPair, type DateCell, type DateCellDurationSpan, type DateCellIndex, type DateOrDateCellIndex, type DateCellTiming, type DateCellTimingDateRange, type DateCellTimingStartsAtEndRange, type FullDateCellTiming, isSameFullDateCellTiming, type DateCellTimingEventStartsAt, isFullDateCellTiming, type DateCellTimingTimezoneInput, dateCellTimingTimezoneNormalInstance, type DateCellIndexDatePair } from './date.cell';
 import { type DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, type DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingStartsAtDateFactory, type DateCellTimingRelativeIndexFactory, dateCellTimingDateFactory } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { type DateCellRangeOrDateRange, type DateCellRange, type DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
@@ -864,9 +864,33 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
     end = expectedFinalStartsAt;
   }
 
+  const systemNormalInstance = dateTimezoneUtcNormal({ useSystemTimezone: true });
+
+  /**
+   * Converts a minMaxDateRange Date or index to a day index. For Date inputs, extracts the calendar day
+   * from the system timezone as an ISO8601 day string to avoid cross-timezone day boundary issues.
+   */
+  function _minMaxDateRangeDateOrIndexToIndex(input: DateOrDateCellIndex): DateCellIndex {
+    let result: DateCellIndex;
+
+    if (typeof input === 'number') {
+      result = input;
+    } else {
+      const dayString = formatToISO8601DayStringForUTC(systemNormalInstance.baseDateToTargetDate(input));
+      result = _dateCellTimingRelativeIndexFactory(dayString);
+    }
+
+    return result;
+  }
+
   const indexFloor = setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
-  const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, _dateCellTimingRelativeIndexFactory(minMaxDateRange.start)) : indexFloor; // start date should be the min inde
-  const maxAllowedIndex = end != null ? _dateCellTimingRelativeIndexFactory(end) : minMaxDateRange?.end != null ? _dateCellTimingRelativeIndexFactory(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
+  // When minMaxDateRange contains Date values, the calendar store applies startOfDay() in the system timezone.
+  // If the system timezone differs from the filter timezone (e.g., system in CDT but job in MDT), the Date's UTC
+  // time may map to the wrong day in the filter timezone via baseDateToTargetDate. To fix this, extract the
+  // intended calendar day from the system timezone as an ISO8601 day string, then use the index factory's
+  // string path which correctly computes the day offset in UTC-normal space.
+  const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.start)) : indexFloor;
+  const maxAllowedIndex = end != null ? _dateCellTimingRelativeIndexFactory(end) : minMaxDateRange?.end != null ? Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.end)) : Number.MAX_SAFE_INTEGER;
 
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
