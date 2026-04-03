@@ -105,6 +105,25 @@
       </ul>
     </doc-feature-example>
 
+    <!-- Allowed Modes: Restricts which responsive modes are permitted. Here only mobile and full are allowed, so tablet-width screens round down to mobile instead of showing the icon rail. -->
+    <doc-feature-example header="Allowed Modes" hint="Use [allowedModes] to restrict which responsive modes are permitted. Icon mode is excluded here, so tablet widths round down to mobile.">
+      <div class="dbx-sidenav-demo-container">
+        <dbx-sidenav #allowedModesSidenav="sidenav" [anchors]="exampleAnchors" [allowedModes]="['mobile', 'full']" color="primary">
+          <div top>
+            <h4 class="dbx-sidenav-demo-header">No Icon Mode</h4>
+          </div>
+          <div class="dbx-sidenav-demo-content">
+            <dbx-sidenav-button></dbx-sidenav-button>
+            <p style="padding: 16px">
+              This sidenav uses
+              <code>[allowedModes]="['mobile', 'full']"</code>
+              to skip the icon rail. At tablet widths the mode rounds down to mobile instead of showing the icon rail.
+            </p>
+          </div>
+        </dbx-sidenav>
+      </div>
+    </doc-feature-example>
+
     <!--
       Right Overlay Toggle: Combines three features to create an Advisorey-style layout:
         - displayMode="mobile" forces the sidenav to always use overlay mode (hidden by default),
