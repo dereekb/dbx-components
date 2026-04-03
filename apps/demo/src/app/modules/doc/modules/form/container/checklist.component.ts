@@ -15,6 +15,9 @@ import { JsonPipe } from '@angular/common';
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
+// NOTE: A forge equivalent (forgeChecklistField) is available for simple multi-checkbox checklists.
+// This demo uses a custom formly-based ChecklistItemFieldDataSetBuilder which maps data values
+// to boolean checklist items. A forge equivalent of this custom component is not yet implemented.
 export class DocFormChecklistComponent {
   value?: DocFormExampleChecklistFormValue;
 

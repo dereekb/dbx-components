@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, computed, inject, signal, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, computed, inject, signal, effect, untracked } from '@angular/core';
 import { DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { type DbxFormEvent, DbxFormState } from '../../form/form';
+import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxForgeFormContext } from './forge.context';
@@ -20,7 +20,7 @@ import { DbxForgeFormContext } from './forge.context';
     }
   `,
   host: { class: 'dbx-forge' },
-  providers: [EventDispatcher],
+  providers: [EventDispatcher, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
   imports: [DynamicForm],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
@@ -40,31 +40,38 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
 
   readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
 
-  // Track form value changes and derive state
+  /**
+   * Track form value changes and derive DbxFormEvent state.
+   *
+   * Only `formValue()` is tracked — all other signal reads use `untracked()`
+   * to avoid infinite re-triggering from writing back to signals in this effect.
+   */
   private readonly _formValueEffect = effect(() => {
     const value = this.formValue();
-    this._context.updateValue(value);
 
-    const changesCount = this._changesCount() + 1;
-    this._changesCount.set(changesCount);
+    untracked(() => {
+      this._context.updateValue(value);
 
-    const isReset = changesCount <= 1;
-    this._isReset.set(isReset);
+      const changesCount = this._changesCount() + 1;
+      this._changesCount.set(changesCount);
 
-    // Derive form event state
-    const state: DbxFormEvent = {
-      isComplete: !this.isDisabled(),
-      status: this.isDisabled() ? 'DISABLED' : 'VALID',
-      state: isReset ? DbxFormState.RESET : DbxFormState.USED,
-      pristine: isReset,
-      untouched: isReset,
-      changesCount,
-      isDisabled: this.isDisabled(),
-      disabled: this._disabled(),
-      lastResetAt: this._lastResetAt()
-    };
+      const isReset = changesCount <= 1;
+      this._isReset.set(isReset);
 
-    this._context.updateFormState(state);
+      const state: DbxFormEvent = {
+        isComplete: !this.isDisabled(),
+        status: this.isDisabled() ? 'DISABLED' : 'VALID',
+        state: isReset ? DbxFormState.RESET : DbxFormState.USED,
+        pristine: isReset,
+        untouched: isReset,
+        changesCount,
+        isDisabled: this.isDisabled(),
+        disabled: this._disabled(),
+        lastResetAt: this._lastResetAt()
+      };
+
+      this._context.updateFormState(state);
+    });
   });
 
   ngOnInit(): void {

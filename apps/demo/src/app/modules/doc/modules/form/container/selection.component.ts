@@ -1,6 +1,7 @@
 import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, type Type, type OnInit, inject } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormConfig } from '@ng-forge/dynamic-forms';
 import {
   DbxFormFormlyDbxListFieldModule,
   DbxFormFormlyPickableFieldModule,
@@ -22,6 +23,7 @@ import {
   type SourceSelectLoadSource,
   valueSelectionField,
   type ValueSelectionOptionWithValue,
+  forgeValueSelectionField,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
   isWebsiteUrlValidator
@@ -35,7 +37,9 @@ import { DocSelectionItemListComponent } from '../../layout/component/item.list.
 import { type AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
+import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -125,7 +129,7 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
 @Component({
   templateUrl: './selection.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
@@ -264,6 +268,36 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       native: true
     })
   ];
+
+  readonly forgeSelectionFieldConfig: FormConfig = {
+    fields: [
+      forgeValueSelectionField({
+        key: 'selectOne',
+        label: 'Select One',
+        description: 'This is a simple selection field for picking a single value.',
+        options: VALUE_SELECTION_VALUES
+      }),
+      forgeValueSelectionField({
+        key: 'materialCustomized',
+        label: 'Select One Customized',
+        description: 'This is a simple selection field with material form field customization.',
+        options: VALUE_SELECTION_VALUES
+      }),
+      forgeValueSelectionField({
+        key: 'selectMultiple',
+        label: 'Select Multiple',
+        description: 'This is a simple selection field for picking an array of values.',
+        options: VALUE_SELECTION_VALUES,
+        multiple: true
+      }),
+      forgeValueSelectionField({
+        key: 'selectWithObservable',
+        label: 'Select With Static Data Source',
+        description: 'This select source uses static values.',
+        options: VALUE_SELECTION_VALUES
+      })
+    ]
+  };
 
   readonly numberToLoadPerUpdate = 10;
 

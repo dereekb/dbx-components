@@ -4,7 +4,10 @@
     <h3>Select</h3>
     <p>The typical select fields.</p>
     <doc-feature-example header="valueSelectionField()" hint="A field that lets you select static options.">
-      <doc-form-example-form [dbxFormlyFields]="valueSelectionFields"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="valueSelectionFields"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeSelectionFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
     <h3>Source Select</h3>
     <p>Selection field that provides a button for finding/retrieving additional values through an arbitrary source. The selectable value must always be a key. Several delegate functions handle retrieving values from pre-configured sources, and metadata via the existing values.</p>
