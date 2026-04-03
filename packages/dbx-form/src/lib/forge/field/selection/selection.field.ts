@@ -13,9 +13,9 @@ export interface ForgeValueSelectionFieldConfig<T = unknown> {
   readonly readonly?: boolean;
   readonly description?: string;
   /**
-   * Options to select from.
+   * Options to select from. Accepts any object with label and value properties.
    */
-  readonly options: readonly FieldOption<T>[];
+  readonly options: readonly { label: string; value: T }[];
   /**
    * Allow selecting multiple values and return an array.
    */
@@ -57,7 +57,7 @@ export function forgeValueSelectionField<T = unknown>(config: ForgeValueSelectio
       value: defaultValue,
       required,
       readonly: isReadonly,
-      options,
+      options: options as FieldOption<T>[],
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatSelectField<T>
   );

@@ -1,5 +1,4 @@
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
-import type { FieldDef } from '@ng-forge/dynamic-forms';
 import { forgeTextField, type ForgeTextFieldConfig } from '../field/value/text/text.field';
 import { forgeEmailField, type ForgeEmailFieldConfig } from '../field/value/text/text.additional.field';
 
@@ -103,7 +102,7 @@ export interface ForgeUsernameLoginFieldsConfig {
  * const fields = forgeUsernamePasswordLoginFields({ username: 'email' });
  * ```
  */
-export function forgeUsernamePasswordLoginFields(config: ForgeUsernameLoginFieldsConfig): FieldDef<unknown>[] {
+export function forgeUsernamePasswordLoginFields(config: ForgeUsernameLoginFieldsConfig): MatInputField[] {
   const usernameField = forgeUsernameLoginField(config.username);
   const passwordField = forgeTextPasswordField(config.password);
 
