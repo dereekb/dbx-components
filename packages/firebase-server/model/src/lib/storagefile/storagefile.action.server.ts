@@ -88,7 +88,8 @@ import {
   type StorageFileGroupId,
   type UpdateStorageFileGroupParams,
   updateStorageFileGroupParamsType,
-  type StorageFileGroupEmbeddedFile
+  type StorageFileGroupEmbeddedFile,
+  DownloadStorageFileOptions
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -880,13 +881,9 @@ export function deleteStorageFileFactory(context: StorageFileServerActionsContex
  * Per-file options override the defaults from {@link DownloadMultipleStorageFilesFactoryInput}.
  * `asAdmin` is not per-file — it is controlled at the batch level only.
  */
-export interface DownloadMultipleStorageFilesFactoryInputItem {
+export interface DownloadMultipleStorageFilesFactoryInputItem extends Pick<DownloadStorageFileOptions, 'expiresAt' | 'expiresIn' | 'responseDisposition' | 'responseContentType'> {
   readonly key: FirestoreModelKey;
   readonly storageFileDocument?: Maybe<StorageFileDocument>;
-  readonly expiresAt?: Maybe<Date>;
-  readonly expiresIn?: Maybe<Milliseconds>;
-  readonly responseDisposition?: Maybe<ContentDispositionString>;
-  readonly responseContentType?: Maybe<ContentTypeMimeType>;
 }
 
 /**
@@ -904,13 +901,8 @@ export interface DownloadMultipleStorageFilesFactoryInputItem {
  * });
  * ```
  */
-export interface DownloadMultipleStorageFilesFactoryInput {
+export interface DownloadMultipleStorageFilesFactoryInput extends DownloadStorageFileOptions {
   readonly items: DownloadMultipleStorageFilesFactoryInputItem[];
-  readonly asAdmin?: Maybe<boolean>;
-  readonly expiresAt?: Maybe<Date>;
-  readonly expiresIn?: Maybe<Milliseconds>;
-  readonly responseDisposition?: Maybe<ContentDispositionString>;
-  readonly responseContentType?: Maybe<ContentTypeMimeType>;
   /**
    * When true, throws on the first download failure instead of collecting errors.
    *
