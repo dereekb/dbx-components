@@ -6,10 +6,10 @@
       <p>Any changes to any form inputs will change the state and prevent dbxFormSource from applying any more values.</p>
       <doc-feature-form-tabs>
         <doc-form-example-form formly #a="exampleForm" [dbxFormlyFields]="testFieldsA" [dbxFormSource]="data$"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormSource]="data$"></doc-forge-example-form>
+        <doc-forge-example-form forge #aForge="forgeExampleForm" [config]="forgeTestFieldsConfig" [dbxFormSource]="data$"></doc-forge-example-form>
       </doc-feature-form-tabs>
       <p>Resetting the form will allow dbxFormSource apply the newest emitted value.</p>
-      <button mat-raised-button color="warn" (click)="a.resetForm()">Reset Form</button>
+      <button mat-raised-button color="warn" (click)="a.resetForm(); aForge.resetForm()">Reset Form</button>
 
       <h3>dbxFormSourceMode="always"</h3>
       <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
@@ -24,9 +24,9 @@
       <p>If the loading state has an error, the form is set to an empty value.</p>
       <doc-feature-form-tabs>
         <doc-form-example-form formly #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$"></doc-forge-example-form>
+        <doc-forge-example-form forge #bForge="forgeExampleForm" [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$"></doc-forge-example-form>
       </doc-feature-form-tabs>
-      <button mat-raised-button color="warn" (click)="b.resetForm()">Reset Form</button>
+      <button mat-raised-button color="warn" (click)="b.resetForm(); bForge.resetForm()">Reset Form</button>
 
       <h3>dbxFormLoadingSourceMode="always"</h3>
       <p>In this mode the form will always update to match the latest data, regardless of form state.</p>

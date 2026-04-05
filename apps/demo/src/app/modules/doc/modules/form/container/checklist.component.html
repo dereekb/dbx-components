@@ -1,12 +1,14 @@
 <dbx-content-container>
   <doc-feature-layout header="Checklist Field" hint="A complex form field that is used to map values from the input data to boolean values to form a checklist. The value's display can be configured to display anything.">
     <!-- Examples -->
-    <doc-feature-example header="Formly ChecklistItemFieldDataSetBuilder" hint="Uses a custom formly-based ChecklistItemFieldDataSetBuilder that maps data values to boolean checklist items.">
-      <doc-form-example-checklist-form (dbxFormValueChange)="value = $event" [dbxFormLoadingSource]="dataLoadingState$" [config]="config"></doc-form-example-checklist-form>
-      <p>Value: {{ value | json }}</p>
-    </doc-feature-example>
-    <doc-feature-example header="forgeChecklistField()" hint="A simple multi-checkbox checklist using forge. Selects values from a static list of options.">
-      <doc-forge-example-form [config]="forgeChecklistConfig"></doc-forge-example-form>
+    <doc-feature-example header="Example" hint="The formly version uses ChecklistItemFieldDataSetBuilder to map data values to boolean checklist items. The forge version uses forgeChecklistField() with static options.">
+      <doc-feature-form-tabs>
+        <div formly>
+          <doc-form-example-checklist-form (dbxFormValueChange)="value = $event" [dbxFormLoadingSource]="dataLoadingState$" [config]="config"></doc-form-example-checklist-form>
+          <p>Value: {{ value | json }}</p>
+        </div>
+        <doc-forge-example-form forge [config]="forgeChecklistConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

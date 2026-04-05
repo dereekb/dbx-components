@@ -111,8 +111,9 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   }
 
   private readonly _syncFieldToEditor = effect(() => {
-    const f = this.field();
-    const fieldValue = f ? ((f as any)?.value?.() as Maybe<string>) : undefined;
+    const fieldSignal = this.field();
+    const node = fieldSignal ? (fieldSignal as any)() : undefined;
+    const fieldValue = node?.value?.() as Maybe<string>;
 
     if (fieldValue !== undefined && fieldValue !== this.editorFormControl.value) {
       this.editorFormControl.setValue(fieldValue ?? '', { emitEvent: false });
@@ -122,16 +123,11 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this._editor = new Editor({});
 
-    // Watch for editor value changes and push to FieldTree
-    this._editorValueSub.subscription = this.editor.valueChanges
-      .pipe(
-        debounceTime(50),
-        filter(() => this.editor.view.hasFocus())
-      )
-      .subscribe(() => {
-        const currentValue = this.editorFormControl.value;
-        this._setFieldValue(currentValue);
-      });
+    // Watch for FormControl value changes (updated by ngx-editor's formControl binding)
+    // and push to FieldTree. Use debounceTime to batch rapid changes.
+    this._editorValueSub.subscription = this.editorFormControl.valueChanges.pipe(debounceTime(50)).subscribe((value) => {
+      this._setFieldValue(value);
+    });
   }
 
   ngOnDestroy(): void {
@@ -144,16 +140,17 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   }
 
   private _setFieldValue(value: string): void {
-    const f = this.field();
+    const fieldSignal = this.field();
 
-    if (f && typeof (f as any).setValue === 'function') {
-      (f as any).setValue(value);
-    } else if (f && typeof (f as any).value === 'function') {
-      const sig = (f as any).value;
+    if (!fieldSignal) {
+      return;
+    }
 
-      if (sig.set) {
-        sig.set(value);
-      }
+    // field() returns a signal wrapper; calling it returns the FieldNode
+    const node = (fieldSignal as any)();
+
+    if (node?.value?.set) {
+      node.value.set(value);
     }
   }
 }
