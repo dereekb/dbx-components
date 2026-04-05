@@ -103,9 +103,7 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
             <mat-label>{{ dateLabelSignal() }}</mat-label>
             <input matInput [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [formControl]="dateInputCtrl" (dateChange)="datePicked($event)" />
             @if (!hideDatePickerSignal()) {
-              <button matPrefix mat-icon-button (click)="picker.open()" class="dbx-datetime-row-button" aria-label="Open date picker">
-                <mat-icon>calendar_today</mat-icon>
-              </button>
+              <mat-datepicker-toggle matIconPrefix [for]="picker"></mat-datepicker-toggle>
             }
             <mat-datepicker #picker></mat-datepicker>
             @if (showClearButtonSignal()) {
@@ -170,14 +168,16 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
               } @else {
                 @if (fullDaySignal()) {
                   <small>
-                    <b class="dbx-ok">{{ allDayLabelSignal() }}</b>
-                    {{ displayValueSignal() | date: 'fullDate' }} {{ timezoneAbbreviationSignal() }} ({{ displayValueSignal() | dateDistance }})
+                    @if (validDisplayValueSignal(); as dv) {
+                      <b class="dbx-ok">{{ allDayLabelSignal() }}</b>
+                      {{ dv | date: 'fullDate' }} {{ timezoneAbbreviationSignal() }} ({{ dv | dateDistance }})
+                    }
                   </small>
                 } @else {
                   <small>
-                    @if (displayValueSignal()) {
+                    @if (validDisplayValueSignal(); as dv) {
                       <b class="dbx-ok">{{ atTimeLabelSignal() }}</b>
-                      {{ displayValueSignal() | date: 'medium' }} {{ timezoneAbbreviationSignal() }} ({{ displayValueSignal() | timeDistance }})
+                      {{ dv | date: 'medium' }} {{ timezoneAbbreviationSignal() }} ({{ dv | timeDistance }})
                     }
                   </small>
                 }
@@ -338,9 +338,22 @@ export class ForgeDateTimeFieldComponent {
 
   readonly valueInSystemTimezone$: Observable<Maybe<Date>> = combineLatest([this._fieldValue$.pipe(distinctUntilChanged()), this.timezoneInstance$]).pipe(
     map(([rawValue, timezoneInstance]) => {
-      const valueMode = this.valueModeSignal();
-      const parser = dbxDateTimeInputValueParseFactory(valueMode, timezoneInstance);
-      return parser(rawValue as Maybe<Date | string | number>);
+      if (rawValue == null) return undefined;
+
+      try {
+        const valueMode = this.valueModeSignal();
+        const parser = dbxDateTimeInputValueParseFactory(valueMode, timezoneInstance);
+        const result = parser(rawValue as Maybe<Date | string | number>);
+
+        // Guard against invalid Date objects
+        if (result instanceof Date && isNaN(result.getTime())) {
+          return undefined;
+        }
+
+        return result;
+      } catch {
+        return undefined;
+      }
     }),
     throttleTime(20, undefined, { leading: true, trailing: true }),
     distinctUntilChanged(isSameDateHoursAndMinutes),
@@ -538,6 +551,10 @@ export class ForgeDateTimeFieldComponent {
   readonly fullDaySignal = toSignal(this.fullDay$, { initialValue: false });
   readonly timezoneAbbreviationSignal = toSignal(this.timezoneAbbreviation$);
   readonly hasEmptyDisplayValueSignal = toSignal(this.hasEmptyDisplayValue$, { initialValue: true });
+  readonly validDisplayValueSignal = computed(() => {
+    const v = this.displayValueSignal();
+    return v instanceof Date && !isNaN(v.getTime()) ? v : undefined;
+  });
   readonly currentErrorMessageSignal = toSignal(this.currentErrorMessage$);
   readonly showClearButtonSignal = toSignal(this.showClearButton$, { initialValue: false });
   readonly presetsSignal = toSignal(this.presets$, { initialValue: [] as DateTimePreset[] });
