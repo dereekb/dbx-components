@@ -181,17 +181,119 @@ export class DocFormDateValueComponent implements OnDestroy {
     })
   ];
 
-  // Forge date-time fields (simplified equivalents)
+  // Forge date-time fields — 1:1 parity with formly dateTimeFields
   readonly forgeDateTimeFieldsConfig: FormConfig = {
-    fields: [forgeDateTimeField({ key: 'date', label: 'Date & Time', required: true }) as any, forgeDateTimeField({ key: 'dayOnly', label: 'Day Only', showTime: false }) as any, forgeDateTimeField({ key: 'timeOnly', label: 'Time Only', timeOnly: true }) as any]
+    fields: [
+      forgeDateTimeField({ timezone: this.timezone$, label: 'Date Picker', key: 'datePicker', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE }) as any,
+      forgeDateTimeField({ timezone: this.timezone$, label: 'Day Only W/ String Value', hideDateHint: true, key: 'dayOnlyAsString', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }) as any,
+      forgeDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }) as any,
+      forgeDateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }) as any,
+      forgeDateTimeField({
+        timezone: this.timezone$,
+        label: 'Time For Work Day Today (For Timezone)',
+        alwaysShowDateInput: false,
+        timeDate: new Date(),
+        showClearButton: false,
+        key: 'timeForWorkDayToday',
+        description: 'This date field has a filter that only allows picking a time for todays work day (between 9AM and 5PM).',
+        pickerConfig: {
+          limits: {
+            min: addHours(startOfDay(new Date()), 9),
+            max: addHours(startOfDay(new Date()), 9 + 8)
+          }
+        }
+      }) as any,
+      forgeDateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }) as any,
+      forgeDateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }) as any,
+      forgeDateTimeField({
+        timezone: this.timezone$,
+        label: 'Time Only',
+        key: 'timeOnly',
+        timeOnly: true,
+        description: 'This date field is for picking a time only. The date and timezone hint is also hidden. It has custom time preset values.',
+        hideDateHint: true,
+        showTimezone: false,
+        presets: [
+          { label: '12:00 AM', timeString: '12:00AM' },
+          { label: '12:30 PM', timeString: '12:30PM' },
+          { label: 'Now', logicalDate: 'now' }
+        ]
+      }) as any,
+      forgeDateTimeField({
+        timezone: this.timezone$,
+        label: 'Time For Today (For Timezone)',
+        alwaysShowDateInput: false,
+        timeDate: new Date(),
+        showClearButton: false,
+        key: 'timeForToday',
+        description: 'This date field has a filter that only allows picking a time for today (that is within the last two hours and next two hours).',
+        pickerConfig: {
+          limits: {
+            min: findMaxDate([startOfDay(new Date()), addHours(new Date(), -2)]),
+            max: findMinDate([endOfDay(new Date()), addHours(new Date(), 2)])
+          }
+        }
+      }) as any,
+      forgeDateTimeField({
+        label: 'Changing Configuration',
+        showClearButton: false,
+        key: 'changingConfiguration',
+        description: 'This date field has a filter that changes every second to require a minute more in the future for every second that passes.',
+        pickerConfig: interval(1000).pipe(
+          map((x) => ({
+            limits: {
+              min: addMinutes(new Date(), x)
+            }
+          }))
+        )
+      }) as any,
+      forgeDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }) as any,
+      forgeDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }) as any,
+      forgeDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }) as any,
+      forgeDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }) as any,
+      forgeDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system timezone.', hideDateHint: true }) as any,
+      forgeDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, description: 'This date field picks a minute of day for America/New_York.', hideDateHint: true, timezone: 'America/New_York' }) as any,
+      forgeDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', hideDateHint: true, timezone: 'America/New_York' }) as any,
+      forgeDateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }) as any,
+      forgeDateTimeField({
+        timezone: this.timezone$,
+        key: 'dateWithASchedule',
+        required: true,
+        description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today.',
+        pickerConfig: () => {
+          const config: DbxDateTimePickerConfiguration = {
+            limits: {
+              min: startOfDay(new Date()),
+              max: addDays(new Date(), 14)
+            },
+            schedule: {
+              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as any,
+              d: [0, 1, 2, 3, 4, 5, 6]
+            }
+          };
+          return of(config);
+        }
+      }) as any
+    ]
   };
 
+  // Forge date range — 1:1 parity
   readonly forgeDateRangeFieldsConfig: FormConfig = { fields: [forgeDateRangeField({ key: 'dateRange', label: 'Date Range' }) as any] };
 
-  readonly forgeFixedDateRangeFieldsConfig: FormConfig = { fields: [forgeFixedDateRangeField({ key: 'tenDayFixedDateRange', label: 'Fixed Date Range', required: true }) as any] };
+  // Forge fixed date range — 1:1 parity
+  readonly forgeFixedDateRangeFieldsConfig: FormConfig = {
+    fields: [forgeFixedDateRangeField({ key: 'tenDayFixedDateRange', label: 'Fixed Date Range', required: true, description: 'Required. Picks a 10-day date range.' }) as any]
+  };
 
+  // Forge time duration — 1:1 parity with formly timeDurationFields
   readonly forgeTimeDurationFieldsConfig: FormConfig = {
-    fields: [forgeTimeDurationField({ key: 'durationMs', label: 'Duration (ms)', outputUnit: 'ms', description: 'Output is in milliseconds.' }) as any, forgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (minutes)', outputUnit: 'min', description: 'Output is in minutes.' }) as any]
+    fields: [
+      forgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }) as any,
+      forgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (output: minutes)', outputUnit: 'min', min: 0, max: 480, description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.' }) as any,
+      forgeTimeDurationField({ key: 'hoursAndMinutes', label: 'Duration (HoursAndMinutes output)', valueMode: 'hours_and_minutes', allowedUnits: ['min', 'h'], carryOver: true, description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.' }) as any,
+      forgeTimeDurationField({ key: 'durationSeconds', label: 'Duration (output: seconds)', outputUnit: 's', allowedUnits: ['s', 'min', 'h'], carryOver: true, description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.' }) as any,
+      forgeTimeDurationField({ key: 'durationData', label: 'Duration (TimeDurationData output)', valueMode: 'duration_data', allowedUnits: ['s', 'min', 'h', 'd'], carryOver: true, description: 'Output is a TimeDurationData object with individual unit fields.' }) as any
+    ]
   };
 
   readonly dateTimeRangeValues$ = of({
