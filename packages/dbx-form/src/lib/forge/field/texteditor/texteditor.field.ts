@@ -1,13 +1,25 @@
-// TODO: Implement forge text editor field factory.
-// Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms to support
-// rich text editing, mirroring formlyTextEditorField.
-
+import { filterFromPOJO } from '@dereekb/util';
+import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import { forgeField } from '../field';
+import type { ForgeTextEditorFieldProps, ForgeTextEditorFieldDef } from './texteditor.field.component';
 import type { ForgeTextFieldLengthConfig } from '../value/text/text.field';
 
+// MARK: Field Type Definition
+/**
+ * ng-forge FieldTypeDefinition for the rich text editor field.
+ *
+ * Register via `provideDynamicForm(DBX_TEXT_EDITOR_FIELD_TYPE)`.
+ */
+export const DBX_TEXT_EDITOR_FIELD_TYPE: FieldTypeDefinition<ForgeTextEditorFieldDef> = {
+  name: 'dbx-texteditor',
+  loadComponent: () => import('./texteditor.field.component').then((m) => m.DbxForgeTextEditorFieldComponent),
+  mapper: valueFieldMapper
+};
+
+// MARK: Config
 /**
  * Configuration for a forge rich text editor field.
- *
- * Not yet implemented. Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms.
  */
 export interface ForgeTextEditorFieldConfig extends ForgeTextFieldLengthConfig {
   readonly key: string;
@@ -20,14 +32,35 @@ export interface ForgeTextEditorFieldConfig extends ForgeTextFieldLengthConfig {
 /**
  * Creates a forge field definition for a rich text editor.
  *
- * @throws Error - Not yet implemented. Requires a custom ValueFieldComponent.
+ * Uses ngx-editor under the hood, outputting HTML format.
+ * The field defaults to an empty string.
+ *
+ * @param config - Text editor field configuration
+ * @returns A validated {@link ForgeTextEditorFieldDef}
  *
  * @example
  * ```typescript
- * // Future usage:
- * // const field = forgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
+ * const field = forgeTextEditorField({ key: 'bio', label: 'Biography', maxLength: 2000 });
  * ```
  */
-export function forgeTextEditorField(_config: ForgeTextEditorFieldConfig): never {
-  throw new Error('forgeTextEditorField is not yet implemented. Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms.');
+export function forgeTextEditorField(config: ForgeTextEditorFieldConfig): ForgeTextEditorFieldDef {
+  const { key, label, required, readonly: isReadonly, description, minLength, maxLength } = config;
+
+  return forgeField(
+    filterFromPOJO({
+      key,
+      type: 'dbx-texteditor' as const,
+      label: label ?? '',
+      value: '' as string,
+      required,
+      readonly: isReadonly,
+      minLength,
+      maxLength,
+      props: filterFromPOJO({
+        minLength,
+        maxLength,
+        hint: description
+      }) as ForgeTextEditorFieldProps
+    }) as ForgeTextEditorFieldDef
+  );
 }

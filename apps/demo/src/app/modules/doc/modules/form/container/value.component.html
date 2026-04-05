@@ -3,7 +3,10 @@
     <!-- Examples -->
     <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">
       <h4>Phone Number Only</h4>
-      <doc-form-example-form [dbxFormlyFields]="phoneFields"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="phoneFields"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgePhoneFieldsConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
       <h4>Phone Number List</h4>
       <doc-form-example-form [dbxFormlyFields]="phoneListField"></doc-form-example-form>
       <h4>Phone Dirty State Demo</h4>

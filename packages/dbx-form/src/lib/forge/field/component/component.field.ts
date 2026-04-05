@@ -1,28 +1,70 @@
-// TODO: Implement forge component field factory.
-// Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms to support
-// embedding arbitrary Angular components as form fields, mirroring formlyComponentField.
+import { filterFromPOJO } from '@dereekb/util';
+import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import { forgeField } from '../field';
+import type { ForgeComponentFieldProps, ForgeComponentFieldDef } from './component.field.component';
 
+// MARK: Field Type Definition
 /**
- * Placeholder for forge component field configuration.
+ * ng-forge FieldTypeDefinition for the dynamic component injection field.
  *
- * Not yet implemented. Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms.
+ * Register via `provideDynamicForm(DBX_COMPONENT_FIELD_TYPE)`.
  */
-export interface ForgeComponentFieldConfig {
+export const DBX_COMPONENT_FIELD_TYPE: FieldTypeDefinition<ForgeComponentFieldDef> = {
+  name: 'dbx-component',
+  loadComponent: () => import('./component.field.component').then((m) => m.DbxForgeComponentFieldComponent),
+  mapper: valueFieldMapper
+};
+
+// MARK: Config
+/**
+ * Configuration for a forge field that renders a custom Angular component.
+ */
+export interface ForgeComponentFieldConfig<T = unknown> {
+  /**
+   * Key for the field. Optional for display-only components.
+   */
   readonly key?: string;
+  /**
+   * Label for the field.
+   */
   readonly label?: string;
+  /**
+   * The injection component configuration describing which component to render.
+   */
+  readonly componentField: DbxInjectionComponentConfig<T>;
 }
 
 /**
  * Creates a forge field definition that renders a custom Angular component.
  *
- * @throws Error - Not yet implemented. Requires a custom ValueFieldComponent.
+ * Uses {@link DbxInjectionComponent} to dynamically inject any Angular component
+ * into the form. This is useful for embedding complex custom UI within a dynamic form.
+ *
+ * @param config - Component field configuration
+ * @returns A validated {@link ForgeComponentFieldDef}
  *
  * @example
  * ```typescript
- * // Future usage:
- * // const field = forgeComponentField({ componentClass: MyCustomFormComponent });
+ * const field = forgeComponentField({
+ *   key: 'custom',
+ *   componentField: { componentClass: MyCustomFormComponent, data: { someInput: 'value' } }
+ * });
  * ```
  */
-export function forgeComponentField(_config: ForgeComponentFieldConfig): never {
-  throw new Error('forgeComponentField is not yet implemented. Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms.');
+export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConfig<T>): ForgeComponentFieldDef<T> {
+  const { key, label, componentField } = config;
+
+  return forgeField(
+    filterFromPOJO({
+      key: key || '_component',
+      type: 'dbx-component' as const,
+      label: label ?? '',
+      value: undefined as unknown,
+      props: {
+        componentField
+      } as ForgeComponentFieldProps<T>
+    }) as ForgeComponentFieldDef<T>
+  );
 }

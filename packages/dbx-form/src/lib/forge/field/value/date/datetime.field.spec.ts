@@ -60,25 +60,33 @@ describe('forgeDateField()', () => {
 });
 
 describe('forgeDateTimeField()', () => {
-  it('should throw an error indicating it is not yet implemented', () => {
-    expect(() => forgeDateTimeField({ key: 'datetime' })).toThrow('Not yet implemented');
+  it('should create a datetime field with correct type', () => {
+    const field = forgeDateTimeField({ key: 'datetime' });
+    expect(field.key).toBe('datetime');
+    expect(field.type).toBeDefined();
   });
 });
 
 describe('forgeDateRangeField()', () => {
-  it('should throw an error indicating it is not yet implemented', () => {
-    expect(() => forgeDateRangeField({ key: 'dateRange' })).toThrow('Not yet implemented');
+  it('should create a date range field with correct key', () => {
+    const field = forgeDateRangeField({ key: 'dateRange' });
+    expect(field.key).toBe('dateRange');
+    expect(field.type).toBeDefined();
   });
 });
 
 describe('forgeDateTimeRangeField()', () => {
-  it('should throw an error indicating it is not yet implemented', () => {
-    expect(() => forgeDateTimeRangeField({ key: 'dateTimeRange' })).toThrow('Not yet implemented');
+  it('should create a date time range field with correct key', () => {
+    const field = forgeDateTimeRangeField({ key: 'dateTimeRange' });
+    expect(field.key).toBe('dateTimeRange');
+    expect(field.type).toBeDefined();
   });
 });
 
 describe('forgeFixedDateRangeField()', () => {
-  it('should throw an error indicating it is not yet implemented', () => {
-    expect(() => forgeFixedDateRangeField({ key: 'fixedRange' })).toThrow('Not yet implemented');
+  it('should create a fixed date range field with correct key', () => {
+    const field = forgeFixedDateRangeField({ key: 'fixedRange' });
+    expect(field.key).toBe('fixedRange');
+    expect(field.type).toBeDefined();
   });
 });

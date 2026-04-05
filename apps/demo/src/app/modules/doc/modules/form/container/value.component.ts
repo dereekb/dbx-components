@@ -36,6 +36,9 @@ import {
   forgeStateField,
   forgeCountryField,
   forgeZipCodeField,
+  forgePhoneField,
+  forgeWrappedPhoneAndLabelField,
+  forgePhoneAndLabelSectionField,
   DbxFormFormlyTextFieldModule,
   DbxFormFormlyWrapperModule,
   DbxFormFormlyPhoneFieldModule,
@@ -256,6 +259,20 @@ export class DocFormValueComponent {
       key: 'section'
     })
   ];
+
+  readonly forgePhoneFieldsConfig: FormConfig = {
+    fields: [
+      forgePhoneField({ key: 'phone' }) as any,
+      forgeWrappedPhoneAndLabelField({
+        phoneField: {
+          key: 'labeledPhoneKey'
+        }
+      }) as any,
+      forgePhoneAndLabelSectionField({
+        key: 'section'
+      }) as any
+    ]
+  };
 
   readonly phoneListField: FormlyFieldConfig[] = [phoneListField()];
 
