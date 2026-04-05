@@ -180,8 +180,8 @@ export interface ForgeDateTimeFieldComponentProps {
       width: 100%;
     }
     .dbx-forge-datetime-col {
-      flex: 1 1 auto;
-      min-width: 140px;
+      flex: 1 1 0%;
+      min-width: 100px;
     }
     .dbx-forge-datetime-col-full {
       flex: 1 1 100%;
