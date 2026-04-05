@@ -1,4 +1,5 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component, type OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -11,6 +12,10 @@ import {
   timezoneStringField,
   fixedDateRangeField,
   timeDurationField,
+  forgeDateTimeField,
+  forgeDateRangeField,
+  forgeFixedDateRangeField,
+  forgeTimeDurationField,
   DbxFormFormlyDateFieldModule,
   DbxFormFormlyDbxListFieldModule,
   DbxFormFormlyDurationFieldModule,
@@ -29,12 +34,31 @@ import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWee
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
+import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
 
 @Component({
   templateUrl: './value.date.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyDurationFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule],
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DocFeatureFormTabsComponent,
+    DocFormExampleComponent,
+    DocFormForgeExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxFormValueChangeDirective,
+    DbxFormFormlyDateFieldModule,
+    DbxFormFormlyDbxListFieldModule,
+    DbxFormFormlyDurationFieldModule,
+    DbxFormFormlyPickableFieldModule,
+    DbxFormFormlySearchableFieldModule,
+    DbxFormFormlySourceSelectModule,
+    DbxFormTimezoneStringFieldModule
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent implements OnDestroy {
@@ -156,6 +180,19 @@ export class DocFormDateValueComponent implements OnDestroy {
       }
     })
   ];
+
+  // Forge date-time fields (simplified equivalents)
+  readonly forgeDateTimeFieldsConfig: FormConfig = {
+    fields: [forgeDateTimeField({ key: 'date', label: 'Date & Time', required: true }) as any, forgeDateTimeField({ key: 'dayOnly', label: 'Day Only', showTime: false }) as any, forgeDateTimeField({ key: 'timeOnly', label: 'Time Only', timeOnly: true }) as any]
+  };
+
+  readonly forgeDateRangeFieldsConfig: FormConfig = { fields: [forgeDateRangeField({ key: 'dateRange', label: 'Date Range' }) as any] };
+
+  readonly forgeFixedDateRangeFieldsConfig: FormConfig = { fields: [forgeFixedDateRangeField({ key: 'tenDayFixedDateRange', label: 'Fixed Date Range', required: true }) as any] };
+
+  readonly forgeTimeDurationFieldsConfig: FormConfig = {
+    fields: [forgeTimeDurationField({ key: 'durationMs', label: 'Duration (ms)', outputUnit: 'ms', description: 'Output is in milliseconds.' }) as any, forgeTimeDurationField({ key: 'durationMinutes', label: 'Duration (minutes)', outputUnit: 'min', description: 'Output is in minutes.' }) as any]
+  };
 
   readonly dateTimeRangeValues$ = of({
     sat: addHours(startOfDay(new Date()), 8),

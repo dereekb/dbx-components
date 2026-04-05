@@ -1,24 +1,65 @@
-// TODO: Implement forge source-select field factories.
-// Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms to support
-// the source-select field patterns from formly.
+import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
+import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import { forgeField } from '../../field';
+import { type ForgeSourceSelectFieldProps, type ForgeSourceSelectFieldDef } from './sourceselect.field.component';
 
+// MARK: Field Type Definition
 /**
- * Placeholder for forge source-select field configuration.
+ * ng-forge FieldTypeDefinition for the source select field.
  *
- * Not yet implemented. Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms.
+ * Register via `provideDynamicForm(DBX_SOURCE_SELECT_FIELD_TYPE)`.
  */
-export interface ForgeSourceSelectFieldConfig {
+export const DBX_SOURCE_SELECT_FIELD_TYPE: FieldTypeDefinition<ForgeSourceSelectFieldDef> = {
+  name: 'dbx-source-select',
+  loadComponent: () => import('./sourceselect.field.component').then((m) => m.DbxForgeSourceSelectFieldComponent),
+  mapper: valueFieldMapper
+};
+
+// MARK: Source Select Field
+/**
+ * Configuration for a forge source select field.
+ */
+export interface ForgeSourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, M = unknown> extends ForgeSourceSelectFieldProps<T, M> {
   readonly key: string;
   readonly label?: string;
   readonly required?: boolean;
+  readonly readonly?: boolean;
   readonly description?: string;
 }
 
 /**
- * Creates a forge source-select field.
+ * Creates a forge field definition for a source select field.
  *
- * @throws Error - Not yet implemented. Requires a custom ValueFieldComponent.
+ * @param config - Source select field configuration
+ * @returns A validated {@link ForgeSourceSelectFieldDef}
+ *
+ * @example
+ * ```typescript
+ * const field = forgeSourceSelectField({
+ *   key: 'source',
+ *   label: 'Source',
+ *   valueReader: (meta) => meta.id,
+ *   metaLoader: (values) => myService.loadMeta(values),
+ *   displayForValue: (values) => of(values.map(v => ({ ...v, label: v.meta.name })))
+ * });
+ * ```
  */
-export function forgeSourceSelectField(_config: ForgeSourceSelectFieldConfig): never {
-  throw new Error('forgeSourceSelectField is not yet implemented. Requires a custom ValueFieldComponent for @ng-forge/dynamic-forms.');
+export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: ForgeSourceSelectFieldConfig<T, M>): ForgeSourceSelectFieldDef<T, M> {
+  const { key, label, required, readonly: isReadonly, description, ...selectProps } = config;
+
+  return forgeField(
+    filterFromPOJO({
+      key,
+      type: 'dbx-source-select' as const,
+      label: label ?? '',
+      value: undefined as unknown as T | T[],
+      required,
+      readonly: isReadonly,
+      props: filterFromPOJO({
+        ...selectProps,
+        hint: description
+      }) as ForgeSourceSelectFieldProps<T, M>
+    }) as ForgeSourceSelectFieldDef<T, M>
+  );
 }

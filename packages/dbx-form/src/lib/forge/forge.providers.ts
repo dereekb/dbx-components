@@ -8,6 +8,9 @@ import { dateRangeFieldMapper } from './field/value/date/daterange.field.compone
 import { fixedDateRangeFieldMapper } from './field/value/date/fixeddaterange.field.component';
 import { timeDurationFieldMapper } from './field/value/duration/duration.field.component';
 import { DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE } from './field/selection/searchable/searchable.field';
+import { DBX_PICKABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_LIST_FIELD_TYPE } from './field/selection/pickable/pickable.field';
+import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field';
+import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
 import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
 import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
 
@@ -75,7 +78,7 @@ const ForgeTimeDurationFieldType: FieldTypeDefinition = {
 /**
  * All custom dbx-form forge field type definitions.
  */
-export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [ForgePhoneFieldType, ForgeDateTimeFieldType, ForgeDateRangeFieldType, ForgeFixedDateRangeFieldType, ForgeTimeDurationFieldType, DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE, DBX_TEXT_EDITOR_FIELD_TYPE, DBX_COMPONENT_FIELD_TYPE];
+export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [ForgePhoneFieldType, ForgeDateTimeFieldType, ForgeDateRangeFieldType, ForgeFixedDateRangeFieldType, ForgeTimeDurationFieldType, DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_LIST_FIELD_TYPE, DBX_LIST_SELECTION_FIELD_TYPE, DBX_SOURCE_SELECT_FIELD_TYPE, DBX_TEXT_EDITOR_FIELD_TYPE, DBX_COMPONENT_FIELD_TYPE];
 
 /**
  * Registers ng-forge dynamic form field declarations with Material Design field types

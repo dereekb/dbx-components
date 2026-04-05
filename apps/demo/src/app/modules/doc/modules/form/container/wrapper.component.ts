@@ -1,16 +1,46 @@
 import { MatDialog } from '@angular/material/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper, toggleField, DbxFormFormlyWrapperModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormFormlyTextFieldModule } from '@dereekb/dbx-form';
+import {
+  expandWrapper,
+  flexLayoutWrapper,
+  infoWrapper,
+  nameField,
+  sectionWrapper,
+  subsectionWrapper,
+  toggleWrapper,
+  cityField,
+  stateField,
+  zipCodeField,
+  countryField,
+  styleWrapper,
+  toggleField,
+  forgeRow,
+  forgeSectionGroup,
+  forgeSubsectionGroup,
+  forgeNameField,
+  forgeCityField,
+  forgeStateField,
+  forgeZipCodeField,
+  forgeCountryField,
+  forgeToggleField,
+  DbxFormFormlyWrapperModule,
+  DbxFormFormlyBooleanFieldModule,
+  DbxFormlyFieldsContextDirective,
+  DbxFormFormlyTextFieldModule
+} from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
+import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
 
 @Component({
   templateUrl: './wrapper.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormWrapperComponent {
@@ -100,4 +130,25 @@ export class DocFormWrapperComponent {
   ];
 
   readonly flexFiveField: FormlyFieldConfig[] = [flexLayoutWrapper([nameField(), cityField(), stateField(), zipCodeField(), countryField()], { breakpoint: 'large', size: 1, relative: true })];
+
+  // Forge wrapper equivalents
+  readonly forgeSectionFieldConfig: FormConfig = {
+    fields: [
+      forgeSectionGroup({
+        fields: [forgeNameField({})]
+      })
+    ]
+  };
+
+  readonly forgeSubsectionFieldConfig: FormConfig = {
+    fields: [
+      forgeSubsectionGroup({
+        fields: [forgeNameField({})]
+      })
+    ]
+  };
+
+  readonly forgeFlexFieldConfig: FormConfig = { fields: [forgeRow({ fields: [forgeCityField({}), forgeStateField({}), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })] })] };
+
+  readonly forgeFlexThreeFieldConfig: FormConfig = { fields: [forgeRow({ fields: [forgeCityField({}), forgeStateField({}), forgeZipCodeField({})] })] };
 }
