@@ -260,14 +260,22 @@ export class DocFormValueComponent {
     })
   ];
 
-  readonly forgePhoneFieldsConfig: FormConfig = {
+  readonly forgePhoneFieldConfig: FormConfig = {
+    fields: [forgePhoneField({ key: 'phone' }) as any]
+  };
+
+  readonly forgeWrappedPhoneFieldConfig: FormConfig = {
     fields: [
-      forgePhoneField({ key: 'phone' }) as any,
       forgeWrappedPhoneAndLabelField({
         phoneField: {
           key: 'labeledPhoneKey'
         }
-      }) as any,
+      }) as any
+    ]
+  };
+
+  readonly forgePhoneAndLabelSectionFieldConfig: FormConfig = {
+    fields: [
       forgePhoneAndLabelSectionField({
         key: 'section'
       }) as any

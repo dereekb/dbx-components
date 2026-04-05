@@ -5,7 +5,11 @@
       <h4>Phone Number Only</h4>
       <doc-feature-form-tabs>
         <doc-form-example-form formly [dbxFormlyFields]="phoneFields"></doc-form-example-form>
-        <doc-forge-example-form forge [config]="forgePhoneFieldsConfig"></doc-forge-example-form>
+        <div forge>
+          <doc-forge-example-form [config]="forgePhoneFieldConfig"></doc-forge-example-form>
+          <doc-forge-example-form [config]="forgeWrappedPhoneFieldConfig"></doc-forge-example-form>
+          <doc-forge-example-form [config]="forgePhoneAndLabelSectionFieldConfig"></doc-forge-example-form>
+        </div>
       </doc-feature-form-tabs>
       <h4>Phone Number List</h4>
       <doc-form-example-form [dbxFormlyFields]="phoneListField"></doc-form-example-form>
