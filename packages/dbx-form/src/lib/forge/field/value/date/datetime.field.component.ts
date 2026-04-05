@@ -69,81 +69,76 @@ export interface ForgeDateTimeFieldComponentProps {
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, MatMenuModule, MatDividerModule, ReactiveFormsModule, FormsModule, NgTemplateOutlet, DatePipe, DateDistancePipe, TimeDistancePipe, GetValuePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="dbx-datetime-field dbx-forge-datetime-field">
+    <div class="dbx-forge-datetime-field-wrapper">
       <!-- Field Label -->
       @if (fieldLabel()) {
-        <div class="dbx-forge-datetime-label-row">
-          <span class="dbx-label dbx-forge-field-label">
-            {{ fieldLabel() }}
-            @if (isRequired()) {
-              <span class="dbx-required-marker">*</span>
-            }
-          </span>
-        </div>
+        <span class="dbx-label dbx-forge-field-label">
+          {{ fieldLabel() }}
+          @if (isRequired()) {
+            <span class="dbx-required-marker">*</span>
+          }
+        </span>
       }
-      <!-- Date Input -->
-      @if (showDateInput()) {
-        <div class="dbx-forge-datetime-row" [class.dbx-forge-datetime-row-full]="isDateOnly()">
-          <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-row-field">
-            <mat-label>{{ dateLabel() }}</mat-label>
-            <input matInput [matDatepicker]="picker" [matDatepickerFilter]="pickerFilter()" [min]="dateMin()" [max]="dateMax()" [formControl]="dateCtrl" (dateChange)="onDatePicked($event)" />
-            @if (!hideDatePicker()) {
-              <mat-datepicker-toggle matIconPrefix [for]="picker"></mat-datepicker-toggle>
-            }
-            <mat-datepicker #picker></mat-datepicker>
-            @if (showClearButton() && hasValue()) {
-              <button matSuffix mat-icon-button aria-label="Clear date and time" (click)="clearValue()">
-                <mat-icon>clear</mat-icon>
-              </button>
-            }
-            @if (!showTimeInput()) {
-              <span matTextSuffix>
-                <ng-container [ngTemplateOutlet]="tzSuffix"></ng-container>
-              </span>
-            }
-          </mat-form-field>
-        </div>
-      }
-      <!-- Time Input -->
-      @if (showTimeInput() || showAddTimeButton()) {
-        <div class="dbx-forge-datetime-row">
-          @if (showTimeInput()) {
-            <mat-menu #timemenu="matMenu">
-              @if (timeMode() === 'optional') {
-                <button mat-menu-item (click)="removeTime()"><span>Remove Time</span></button>
-                <mat-divider></mat-divider>
+      <!-- Date + Time row -->
+      <div class="dbx-datetime-field dbx-forge-datetime-inputs">
+        @if (showDateInput()) {
+          <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnly()">
+            <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
+              <mat-label>{{ dateLabel() }}</mat-label>
+              <input matInput [matDatepicker]="picker" [matDatepickerFilter]="pickerFilter()" [min]="dateMin()" [max]="dateMax()" [formControl]="dateCtrl" (dateChange)="onDatePicked($event)" />
+              @if (!hideDatePicker()) {
+                <mat-datepicker-toggle matIconPrefix [for]="picker"></mat-datepicker-toggle>
               }
-              @for (preset of presetItems(); track $index) {
-                <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
+              <mat-datepicker #picker></mat-datepicker>
+              @if (showClearButton() && hasValue()) {
+                <button matSuffix mat-icon-button aria-label="Clear date and time" (click)="clearValue()">
+                  <mat-icon>clear</mat-icon>
+                </button>
               }
-            </mat-menu>
-            <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-row-field">
-              <mat-label>{{ timeLabel() }}</mat-label>
-              <input matInput [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
-              <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets">
-                <mat-icon>timer</mat-icon>
-              </button>
-              <span matTextSuffix>
-                <ng-container [ngTemplateOutlet]="tzSuffix"></ng-container>
-              </span>
-              @if (timeCtrl.hasError('pattern')) {
-                <mat-error>The input time is not recognizable.</mat-error>
+              @if (!showTimeInput()) {
+                <span matTextSuffix><ng-container [ngTemplateOutlet]="tzSuffix"></ng-container></span>
               }
             </mat-form-field>
-          }
-          @if (showAddTimeButton()) {
-            <div class="dbx-forge-add-time-wrapper">
-              <button mat-button (click)="addTime()">
-                <mat-icon>timer</mat-icon>
-                Add Time
-              </button>
-            </div>
-          }
-        </div>
-      }
+          </div>
+        }
+        @if (showTimeInput() || showAddTimeButton()) {
+          <div class="dbx-forge-datetime-col">
+            @if (showTimeInput()) {
+              <mat-menu #timemenu="matMenu">
+                @if (timeMode() === 'optional') {
+                  <button mat-menu-item (click)="removeTime()"><span>Remove Time</span></button>
+                  <mat-divider></mat-divider>
+                }
+                @for (preset of presetItems(); track $index) {
+                  <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
+                }
+              </mat-menu>
+              <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
+                <mat-label>{{ timeLabel() }}</mat-label>
+                <input matInput [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
+                <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets">
+                  <mat-icon>timer</mat-icon>
+                </button>
+                <span matTextSuffix><ng-container [ngTemplateOutlet]="tzSuffix"></ng-container></span>
+                @if (timeCtrl.hasError('pattern')) {
+                  <mat-error>The input time is not recognizable.</mat-error>
+                }
+              </mat-form-field>
+            }
+            @if (showAddTimeButton()) {
+              <div class="dbx-forge-add-time-wrapper">
+                <button mat-button (click)="addTime()">
+                  <mat-icon>timer</mat-icon>
+                  Add Time
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
       <!-- Date Hint -->
       @if (!hideDateHint()) {
-        <div class="dbx-forge-datetime-hint-row">
+        <div class="dbx-forge-datetime-hint">
           @if (!hasValue()) {
             <span class="dbx-small dbx-hint">No date/time set</span>
           } @else if (displayDate(); as dv) {
@@ -163,9 +158,7 @@ export interface ForgeDateTimeFieldComponentProps {
       }
       <!-- Description -->
       @if (description()) {
-        <div class="dbx-forge-datetime-desc-row">
-          <p class="dbx-hint">{{ description() }}</p>
-        </div>
+        <p class="dbx-hint dbx-forge-datetime-desc">{{ description() }}</p>
       }
     </div>
 
@@ -176,24 +169,25 @@ export interface ForgeDateTimeFieldComponentProps {
     </ng-template>
   `,
   styles: `
-    .dbx-forge-datetime-field {
+    .dbx-forge-datetime-field-wrapper {
+      width: 100%;
+    }
+    .dbx-forge-datetime-inputs {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       align-items: flex-start;
+      width: 100%;
     }
-    .dbx-forge-datetime-row {
+    .dbx-forge-datetime-col {
       flex: 1 1 auto;
       min-width: 140px;
     }
-    .dbx-forge-datetime-row-full {
+    .dbx-forge-datetime-col-full {
       flex: 1 1 100%;
     }
-    .dbx-forge-datetime-row-field {
+    .dbx-forge-datetime-col-field {
       width: 100%;
-    }
-    .dbx-forge-datetime-label-row {
-      flex: 1 1 100%;
     }
     .dbx-forge-field-label {
       font-weight: 500;
@@ -201,11 +195,7 @@ export interface ForgeDateTimeFieldComponentProps {
     .dbx-required-marker {
       color: var(--mat-sys-error, red);
     }
-    .dbx-forge-datetime-hint-row,
-    .dbx-forge-datetime-desc-row {
-      flex: 1 1 100%;
-    }
-    .dbx-forge-datetime-desc-row .dbx-hint {
+    .dbx-forge-datetime-desc {
       font-size: 12px;
       margin-top: 0;
     }
