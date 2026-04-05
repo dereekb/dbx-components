@@ -4,38 +4,57 @@
     <doc-feature-example header="dbxFormSource" hint="Used to pass data into a form.">
       <p>By default the dbxFormSource will only set the input observable value when the form is in a reset state (occurs when the form has new values).</p>
       <p>Any changes to any form inputs will change the state and prevent dbxFormSource from applying any more values.</p>
-      <doc-form-example-form #a="exampleForm" [dbxFormlyFields]="testFieldsA" [dbxFormSource]="data$"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly #a="exampleForm" [dbxFormlyFields]="testFieldsA" [dbxFormSource]="data$"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormSource]="data$"></doc-forge-example-form>
+      </doc-feature-form-tabs>
       <p>Resetting the form will allow dbxFormSource apply the newest emitted value.</p>
       <button mat-raised-button color="warn" (click)="a.resetForm()">Reset Form</button>
 
       <h3>dbxFormSourceMode="always"</h3>
       <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
-      <doc-form-example-form [dbxFormlyFields]="testFieldsB" [dbxFormSource]="data$" dbxFormSourceMode="always"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsB" [dbxFormSource]="data$" dbxFormSourceMode="always"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormSource]="data$" dbxFormSourceMode="always"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="dbxFormLoadingSource" hint="Used to pass a loading state's success value into a form.">
       <p>dbxFormLoadingSource behaves the same way as dbxFormSource, but only sets the value when the loading state has finished loading.</p>
       <p>If the loading state has an error, the form is set to an empty value.</p>
-      <doc-form-example-form #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$"></doc-forge-example-form>
+      </doc-feature-form-tabs>
       <button mat-raised-button color="warn" (click)="b.resetForm()">Reset Form</button>
 
       <h3>dbxFormLoadingSourceMode="always"</h3>
       <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
-      <doc-form-example-form [dbxFormlyFields]="testFieldsD" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsD" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="dbxFormValueChange" hint="Emits form value changed events.">
       <p>If the form is complete, the value of the form is emitted, otherwise emits undefined.</p>
-      <doc-form-example-form [dbxFormlyFields]="testFieldsE" (dbxFormValueChange)="value = $event" [dbxFormSource]="data$"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsE" (dbxFormValueChange)="value = $event" [dbxFormSource]="data$"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" (dbxFormValueChange)="forgeValue = $event" [dbxFormSource]="data$"></doc-forge-example-form>
+      </doc-feature-form-tabs>
 
       <dbx-content-border>
-        <p>Changed: {{ value | json }}</p>
+        <p>Formly Changed: {{ value | json }}</p>
+        <p>Forge Changed: {{ forgeValue | json }}</p>
       </dbx-content-border>
     </doc-feature-example>
     <doc-feature-example header="AbstractFormlyFormDirective" hint="This is the base directive most forms will extend from, or a subclass of this type.">
       <h3>Disabled</h3>
       <p>Disabled is an input on an AbstractFormlyFormDirective subclass and can be used to disable the form.</p>
-      <doc-form-example-form [dbxFormlyFields]="testFieldsF" [dbxFormSource]="data$" [disabled]="true"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="testFieldsF" [dbxFormSource]="data$" [disabled]="true"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeTestFieldsConfig" [dbxFormSource]="data$" [disabled]="true"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

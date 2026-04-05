@@ -1,23 +1,23 @@
 import { type Observable, of, map } from 'rxjs';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type DocFormExampleChecklistValues, type DocFormExampleChecklistFieldsConfig } from '../component/checklist.example';
 import { successResult } from '@dereekb/rxjs';
 import { type DocFormExampleChecklistFormValue, DocFormExampleChecklistFormComponent } from '../component/checklist.example.form.component';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
+import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
+import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, forgeChecklistField } from '@dereekb/dbx-form';
 import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './checklist.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleChecklistFormComponent, DocFormForgeExampleComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-// NOTE: A forge equivalent (forgeChecklistField) is available for simple multi-checkbox checklists.
-// This demo uses a custom formly-based ChecklistItemFieldDataSetBuilder which maps data values
-// to boolean checklist items. A forge equivalent of this custom component is not yet implemented.
 export class DocFormChecklistComponent {
   value?: DocFormExampleChecklistFormValue;
 
@@ -36,5 +36,20 @@ export class DocFormChecklistComponent {
 
   readonly config: DocFormExampleChecklistFieldsConfig = {
     dataObs: this.data$
+  };
+
+  readonly forgeChecklistConfig: FormConfig = {
+    fields: [
+      forgeChecklistField({
+        key: 'items',
+        label: 'Simple Checklist',
+        description: 'A simple multi-checkbox checklist using forgeChecklistField().',
+        options: [
+          { label: 'Item A', value: 'itemA' },
+          { label: 'Item B', value: 'itemB' },
+          { label: 'Item C', value: 'itemC' }
+        ]
+      })
+    ]
   };
 }
