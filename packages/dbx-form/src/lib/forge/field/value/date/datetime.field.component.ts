@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, inject, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { type AbstractControl, FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule, type MatDatepickerInputEvent } from '@angular/material/datepicker';
@@ -8,19 +8,26 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
+import { type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString } from '@dereekb/util';
-import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, utcDayForDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, findMinDate, findMaxDate } from '@dereekb/date';
-import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject } from '@dereekb/rxjs';
-import { type Observable, of, Subscription } from 'rxjs';
-import { startOfDay, addMinutes } from 'date-fns';
-import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory } from '../../../../formly/field/value/date/date.value';
-import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration } from '../../../../formly/field/value/date/datetime.field.component';
+import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, type LogicalDate } from '@dereekb/util';
+import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, utcDayForDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, findMinDate, findMaxDate, isSameDate } from '@dereekb/date';
+import { type ObservableOrValueGetter, asObservableFromGetter, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
+import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, Subscription } from 'rxjs';
+import { switchMap, shareReplay, map, startWith, tap, distinctUntilChanged, debounceTime, throttleTime, combineLatestWith, filter, first, skip } from 'rxjs/operators';
+import { startOfDay, addMinutes, addDays } from 'date-fns';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory, dbxDateTimeIsSameDateTimeFieldValue } from '../../../../formly/field/value/date/date.value';
+import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration, type DbxDateTimeFieldSyncType, DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR, DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DateTimePresetConfiguration, type DateTimePreset, dateTimePreset } from '../../../../formly/field/value/date/datetime';
+import { DbxDateTimeFieldMenuPresetsService } from '../../../../formly/field/value/date/datetime.field.service';
 import { DateDistancePipe, TimeDistancePipe, GetValuePipe } from '@dereekb/dbx-core';
+import { type ErrorStateMatcher } from '@angular/material/core';
+import { toggleDisableFormControl } from '../../../../form/form';
+import { type ForgeDateTimeSyncField } from './datetime.field';
+import { buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPresets, computeErrorMessage, computeDateKeyboardStep, computeTimeKeyboardStep, navigateDate, type DateTimeCalcInput } from './datetime.calc';
 
 /**
  * Custom props for the forge date-time field.
@@ -47,127 +54,35 @@ export interface ForgeDateTimeFieldComponentProps {
   readonly autofillDateWhenTimeIsPicked?: boolean;
   readonly presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
   readonly timeDate?: Maybe<ObservableOrValueGetter<Maybe<DateOrDayString>>>;
+  readonly fullDayFieldName?: string;
   readonly fullDayInUTC?: boolean;
   readonly minuteStep?: Maybe<number>;
   readonly inputOutputDebounceTime?: Milliseconds;
   readonly appearance?: 'fill' | 'outline';
   readonly hint?: DynamicText;
+  readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<ForgeDateTimeSyncField>>;
   /** @deprecated Use `timeMode` instead. */
   readonly showTime?: boolean;
 }
 
+// MARK: Time Output Constants
+const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
+
 /**
- * Forge date-time field component — redesigned for clean signal-based data flow.
+ * Forge date-time field component.
  *
- * Instead of complex observable pipelines, this uses computed signals for derived state
- * and effects for synchronization. Value parsing and output formatting reuse the same
- * utility functions as the formly implementation.
+ * Hybrid signal + observable architecture: uses signals for primary/derived state and template
+ * bindings, with observable pipelines for timing-sensitive operations (throttling, debouncing,
+ * display refresh). Reuses the same value parsing/output utilities as the formly implementation.
+ *
+ * Registered as custom field type 'datetime' via `forge.providers.ts`.
  */
 @Component({
   selector: 'dbx-forge-datetime-field',
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, MatMenuModule, MatDividerModule, ReactiveFormsModule, FormsModule, NgTemplateOutlet, DatePipe, DateDistancePipe, TimeDistancePipe, GetValuePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="dbx-forge-datetime-field-wrapper">
-      <!-- Field Label -->
-      @if (fieldLabel()) {
-        <span class="dbx-label dbx-forge-field-label">
-          {{ fieldLabel() }}
-          @if (isRequired()) {
-            <span class="dbx-required-marker">*</span>
-          }
-        </span>
-      }
-      <!-- Date + Time row -->
-      <div class="dbx-datetime-field dbx-forge-datetime-inputs">
-        @if (showDateInput()) {
-          <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnly()">
-            <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
-              <mat-label>{{ dateLabel() }}</mat-label>
-              <input matInput [matDatepicker]="picker" [matDatepickerFilter]="pickerFilter()" [min]="dateMin()" [max]="dateMax()" [formControl]="dateCtrl" (dateChange)="onDatePicked($event)" />
-              @if (!hideDatePicker()) {
-                <mat-datepicker-toggle matIconPrefix [for]="picker"></mat-datepicker-toggle>
-              }
-              <mat-datepicker #picker></mat-datepicker>
-              @if (showClearButton() && hasValue()) {
-                <button matSuffix mat-icon-button aria-label="Clear date and time" (click)="clearValue()">
-                  <mat-icon>clear</mat-icon>
-                </button>
-              }
-              @if (!showTimeInput()) {
-                <span matTextSuffix><ng-container [ngTemplateOutlet]="tzSuffix"></ng-container></span>
-              }
-            </mat-form-field>
-          </div>
-        }
-        @if (showTimeInput() || showAddTimeButton()) {
-          <div class="dbx-forge-datetime-col">
-            @if (showTimeInput()) {
-              <mat-menu #timemenu="matMenu">
-                @if (timeMode() === 'optional') {
-                  <button mat-menu-item (click)="removeTime()"><span>Remove Time</span></button>
-                  <mat-divider></mat-divider>
-                }
-                @for (preset of presetItems(); track $index) {
-                  <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
-                }
-              </mat-menu>
-              <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
-                <mat-label>{{ timeLabel() }}</mat-label>
-                <input matInput [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
-                <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets">
-                  <mat-icon>timer</mat-icon>
-                </button>
-                <span matTextSuffix><ng-container [ngTemplateOutlet]="tzSuffix"></ng-container></span>
-                @if (timeCtrl.hasError('pattern')) {
-                  <mat-error>The input time is not recognizable.</mat-error>
-                }
-              </mat-form-field>
-            }
-            @if (showAddTimeButton()) {
-              <div class="dbx-forge-add-time-wrapper">
-                <button mat-button (click)="addTime()">
-                  <mat-icon>timer</mat-icon>
-                  Add Time
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </div>
-      <!-- Date Hint -->
-      @if (!hideDateHint()) {
-        <div class="dbx-forge-datetime-hint">
-          @if (!hasValue()) {
-            <span class="dbx-small dbx-hint">No date/time set</span>
-          } @else if (displayDate(); as dv) {
-            @if (isFullDay()) {
-              <small>
-                <b class="dbx-ok">{{ allDayLabel() }}</b>
-                {{ dv | date: 'fullDate' }} {{ tzAbbreviation() }} ({{ dv | dateDistance }})
-              </small>
-            } @else {
-              <small>
-                <b class="dbx-ok">{{ atTimeLabel() }}</b>
-                {{ dv | date: 'medium' }} {{ tzAbbreviation() }} ({{ dv | timeDistance }})
-              </small>
-            }
-          }
-        </div>
-      }
-      <!-- Description -->
-      @if (description()) {
-        <p class="dbx-hint dbx-forge-datetime-desc">{{ description() }}</p>
-      }
-    </div>
-
-    <ng-template #tzSuffix>
-      @if (showTimezone()) {
-        <span class="dbx-datetime-timezone dbx-faint">{{ tzAbbreviation() }}</span>
-      }
-    </ng-template>
-  `,
+  templateUrl: './datetime.field.component.html',
   styles: `
     .dbx-forge-datetime-field-wrapper {
       width: 100%;
@@ -181,7 +96,7 @@ export interface ForgeDateTimeFieldComponentProps {
     }
     .dbx-forge-datetime-col {
       flex: 1 1 0%;
-      min-width: 100px;
+      min-width: 180px;
     }
     .dbx-forge-datetime-col-full {
       flex: 1 1 100%;
@@ -192,7 +107,7 @@ export interface ForgeDateTimeFieldComponentProps {
     .dbx-forge-field-label {
       font-weight: 500;
     }
-    .dbx-required-marker {
+    .dbx-forge-required-marker {
       color: var(--mat-sys-error, red);
     }
     .dbx-forge-datetime-desc {
@@ -204,17 +119,33 @@ export interface ForgeDateTimeFieldComponentProps {
       align-items: center;
       min-height: 56px;
     }
-    .dbx-datetime-timezone {
+    .dbx-forge-datetime-timezone {
       padding: 0 6px;
       pointer-events: none;
+    }
+    .dbx-forge-datetime-hint {
+      padding: 0 2px;
+    }
+    .dbx-forge-datetime-error {
+      padding: 0 2px;
+    }
+    @media (max-width: 599px) {
+      .dbx-forge-datetime-inputs {
+        flex-direction: column;
+      }
+      .dbx-forge-datetime-col {
+        flex: 1 1 100%;
+      }
     }
   `
 })
 export class ForgeDateTimeFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly presetsService = inject(DbxDateTimeFieldMenuPresetsService, { optional: true });
+  private readonly fieldSignalContext = inject<FieldSignalContext>(FIELD_SIGNAL_CONTEXT);
 
-  // ng-forge ValueFieldComponent inputs
+  // MARK: ng-forge ValueFieldComponent inputs
   readonly field: InputSignal<FieldTree<unknown>> = input.required<FieldTree<unknown>>();
   readonly key: InputSignal<string> = input.required<string>();
   readonly label: InputSignal<DynamicText | undefined> = input<DynamicText | undefined>();
@@ -226,25 +157,47 @@ export class ForgeDateTimeFieldComponent {
   readonly validationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
-  // Form controls
+  // MARK: Form controls
   readonly dateCtrl = new FormControl<Maybe<Date>>(null);
   readonly timeCtrl = new FormControl<Maybe<ReadableTimeString>>(null, {
     validators: [Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)]
   });
 
-  // Internal state
+  // MARK: Internal signals
   private readonly _fullDay = signal(false);
   private readonly _timezone = signal<Maybe<TimezoneString>>(undefined);
   private readonly _pickerConfig = signal<Maybe<DbxDateTimePickerConfiguration>>(undefined);
   private readonly _timeDate = signal<Maybe<Date>>(undefined);
   private readonly _presetConfigs = signal<DateTimePresetConfiguration[]>([]);
-  private _syncing = false;
+  private readonly _isCleared = signal(false);
+
+  // MARK: Subscription management
+  private readonly _sub = new SubscriptionObject();
+  private readonly _valueSub = new SubscriptionObject();
+  private readonly _autoFillDateSync = new SubscriptionObject();
+  private readonly _resyncTimeInputSub = new SubscriptionObject();
   private _timezoneSub?: Subscription;
   private _pickerConfigSub?: Subscription;
   private _timeDateSub?: Subscription;
   private _presetsSub?: Subscription;
 
-  // MARK: Computed Signals — derived from props
+  // MARK: Subjects for event coordination
+  private readonly _offset = new BehaviorSubject<number>(0);
+  private readonly _updateTime = new Subject<void>();
+  private readonly _resyncTimeInput = new Subject<void>();
+  private readonly _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<ForgeDateTimeSyncField>>>>(undefined);
+
+  // MARK: Error state matcher
+  readonly timeErrorStateMatcher: ErrorStateMatcher = {
+    isErrorState: (control: AbstractControl | null) => {
+      if (control) {
+        return (control.invalid && (control.dirty || control.touched)) || this.hasErrorSignal() === true;
+      }
+      return false;
+    }
+  };
+
+  // MARK: Computed signals — derived from props
   readonly fieldLabel = computed(() => {
     const l = this.label();
     return typeof l === 'string' && l ? l : undefined;
@@ -252,12 +205,16 @@ export class ForgeDateTimeFieldComponent {
 
   readonly isRequired = computed(() => {
     try {
-      const f = this.field();
-      return (f as any)?.required?.() ?? false;
+      const f = this.field() as any;
+      return (f?.required?.() as boolean) ?? false;
     } catch {
       return false;
     }
   });
+
+  readonly isDateRequired = computed(() => this.isRequired());
+
+  readonly isTimeRequired = computed(() => this.isRequired() && this.timeMode() === DbxDateTimeFieldTimeMode.REQUIRED);
 
   readonly description = computed(() => {
     const h = this.props()?.hint;
@@ -294,8 +251,10 @@ export class ForgeDateTimeFieldComponent {
   readonly showTimezone = computed(() => this.props()?.showTimezone ?? true);
   readonly showClearButton = computed(() => this.props()?.showClearButton !== false);
   readonly minuteStep = computed(() => this.props()?.minuteStep ?? 5);
+  readonly alwaysShowDateInput = computed(() => this.props()?.alwaysShowDateInput ?? true);
+  readonly autofillDateWhenTimeIsPicked = computed(() => this.props()?.autofillDateWhenTimeIsPicked ?? this.alwaysShowDateInput() === false);
 
-  // Timezone
+  // MARK: Timezone signals
   readonly resolvedTimezone = computed(() => this._timezone() ?? guessCurrentTimezone());
 
   readonly timezoneInstance = computed<Maybe<DateTimezoneUtcNormalInstance>>(() => {
@@ -303,62 +262,302 @@ export class ForgeDateTimeFieldComponent {
     return tz ? dateTimezoneUtcNormal({ timezone: tz }) : undefined;
   });
 
-  readonly tzAbbreviation = computed(() => {
-    const tz = this.resolvedTimezone();
-    const date = this.dateCtrl.value ?? this._timeDate() ?? new Date();
-    return getTimezoneAbbreviation(tz, date);
-  });
-
-  // Picker config
-  readonly dateMin = computed<Date | null>(() => {
-    const config = this._pickerConfig();
-    const minFromProps = this.props()?.minDate;
-    const candidates = [config?.limits?.min ? dateFromLogicalDate(config.limits.min) : undefined, minFromProps ? safeToJsDate(minFromProps) : undefined].filter(Boolean) as Date[];
-    return candidates.length > 0 ? (findMaxDate(candidates) ?? null) : null;
-  });
-
-  readonly dateMax = computed<Date | null>(() => {
-    const config = this._pickerConfig();
-    const maxFromProps = this.props()?.maxDate;
-    const candidates = [config?.limits?.max ? dateFromLogicalDate(config.limits.max) : undefined, maxFromProps ? safeToJsDate(maxFromProps) : undefined].filter(Boolean) as Date[];
-    return candidates.length > 0 ? (findMinDate(candidates) ?? null) : null;
-  });
-
-  readonly pickerFilter = computed<(d: Date | null) => boolean>(() => {
-    const config = this._pickerConfig();
-    if (config) {
-      const filter = dateTimeMinuteWholeDayDecisionFunction(config, false);
-      return (d: Date | null) => (d != null ? filter(d) : true);
-    }
-    return () => true;
-  });
-
-  // Presets
-  readonly presetItems = computed<DateTimePreset[]>(() => this._presetConfigs().map(dateTimePreset));
-
-  // Value parsing — reads raw FieldTree value and converts to system-timezone Date
-  readonly parsedValue = computed<Maybe<Date>>(() => {
+  // MARK: Field value reading
+  // FieldTree<unknown> is callable — calling it returns FieldState which has .value, .disabled, etc.
+  // We use (field as any) to access these signal properties since FieldTree's type definition
+  // hides them behind the callable interface.
+  readonly fieldValue = computed(() => {
     try {
-      const f = this.field();
-      const raw = (f as any)?.value?.() as unknown;
-      if (raw == null) return undefined;
-
-      const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
-      const result = parser(raw as Maybe<Date | string | number>);
-      if (result instanceof Date && isNaN(result.getTime())) return undefined;
-      return result;
+      const f = this.field() as any;
+      return f?.value?.() as unknown;
     } catch {
       return undefined;
     }
   });
 
-  readonly hasValue = computed(() => this.parsedValue() != null);
-
-  // Display value — safe for template pipes
-  readonly displayDate = computed<Maybe<Date>>(() => {
-    const v = this.parsedValue();
-    return v instanceof Date && !isNaN(v.getTime()) ? v : undefined;
+  readonly isDisabled = computed(() => {
+    try {
+      const f = this.field() as any;
+      return (f?.disabled?.() as boolean) ?? false;
+    } catch {
+      return false;
+    }
   });
+
+  // MARK: Observable pipelines
+
+  // Parse field value to system timezone Date
+  readonly fieldValue$ = toObservable(this.fieldValue);
+
+  readonly timezoneInstance$ = toObservable(this.timezoneInstance);
+
+  readonly valueInSystemTimezone$: Observable<Maybe<Date>> = this.fieldValue$.pipe(
+    combineLatestWith(this.timezoneInstance$),
+    map(([raw, timezoneInstance]) => {
+      if (raw == null) return undefined;
+      const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), timezoneInstance);
+      const result = parser(raw as Maybe<Date | string | number>);
+      if (result instanceof Date && isNaN(result.getTime())) return undefined;
+      return result;
+    }),
+    throttleTime(20, undefined, { leading: true, trailing: true }),
+    distinctUntilChanged(isSameDateHoursAndMinutes),
+    shareReplay(1)
+  );
+
+  // Display value with 10-second refresh interval
+  readonly refreshInterval$ = interval(10 * 1000);
+
+  readonly displayValue$: Observable<Maybe<Date>> = this.refreshInterval$.pipe(
+    startWith(0),
+    map(() => new Date().getMinutes()),
+    distinctUntilChanged(),
+    switchMap(() => this.valueInSystemTimezone$),
+    shareReplay(1)
+  );
+
+  // Time string from parsed value
+  readonly timeString$: Observable<ReadableTimeString | ''> = this.valueInSystemTimezone$.pipe(
+    map((x) => (x ? toLocalReadableTimeString(x) : '')),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // Date input control value stream
+  readonly currentDate$ = this.dateCtrl.valueChanges.pipe(startWith(this.dateCtrl.value), shareReplay(1));
+  readonly date$ = this.currentDate$.pipe(filterMaybe(), shareReplay(1));
+
+  // Effective date value: merges date control changes with incoming form value
+  readonly dateValue$: Observable<Maybe<Date>> = this.date$.pipe(
+    map((x: Maybe<Date>) => (x ? startOfDay(x) : null)),
+    distinctUntilChanged<Maybe<Date>>(isSameDateDay),
+    shareReplay(1)
+  );
+
+  // Time input stream gated by _updateTime subject
+  readonly timeInput$: Observable<ReadableTimeString> = this._updateTime.pipe(
+    debounceTime(5),
+    map(() => this.timeCtrl.value || ''),
+    distinctUntilChanged()
+  );
+
+  // Resync time input debounced
+  readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
+
+  // Timezone abbreviation
+  readonly tzAbbreviation$ = combineLatest([this.currentDate$, toObservable(this.resolvedTimezone), toObservable(this._timeDate)]).pipe(
+    map(([date, timezone, timeDate]) => getTimezoneAbbreviation(timezone, timeDate ?? date ?? new Date())),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // Cleared state
+  readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null))]).pipe(
+    switchMap(([date, time]) => {
+      const isTimeCleared = Boolean(!date && !time);
+      return toObservable(this._isCleared).pipe(startWith(isTimeCleared));
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // Sync config processing
+  readonly syncConfigObs$ = this._syncConfigObs.pipe(switchMapMaybeDefault(), shareReplay(1));
+
+  readonly parsedSyncConfigs$ = this.syncConfigObs$.pipe(
+    map((x) => {
+      if (!x) return [];
+      return filterMaybeArrayValues(
+        asArray(x).map((syncField) => {
+          const form = this.fieldSignalContext.form;
+          const sibling = (form as any)?.[syncField.syncWith];
+          if (sibling?.value) {
+            return { syncType: syncField.syncType, fieldTree: sibling };
+          }
+          return undefined;
+        })
+      );
+    }),
+    shareReplay(1)
+  );
+
+  private _syncConfigValueObs(type: DbxDateTimeFieldSyncType): Observable<Date | null> {
+    return this.parsedSyncConfigs$.pipe(
+      switchMap((configs) => {
+        const config = configs.find((c) => c.syncType === type);
+        if (config) {
+          return toObservable(
+            computed(() => {
+              const val = config.fieldTree.value();
+              return safeToJsDate(val as any) ?? null;
+            })
+          );
+        }
+        return of(null);
+      }),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
+  }
+
+  readonly syncConfigBeforeValue$ = this._syncConfigValueObs('before');
+  readonly syncConfigAfterValue$ = this._syncConfigValueObs('after');
+
+  // Picker config merged with sync constraints
+  readonly pickerConfig$ = toObservable(this._pickerConfig);
+
+  readonly dateTimePickerConfig$: Observable<Maybe<DbxDateTimePickerConfiguration>> = combineLatest([this.pickerConfig$, this.syncConfigBeforeValue$, this.syncConfigAfterValue$]).pipe(
+    map(([config, syncBefore, syncAfter]) => mergePickerConfig(config, syncBefore, syncAfter)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly dateInputMin$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.min ?? null) as Date | null),
+    distinctUntilChanged<Date | null>(isSameDate),
+    shareReplay(1)
+  );
+
+  readonly dateInputMax$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.max ?? null) as Date | null),
+    distinctUntilChanged<Date | null>(isSameDate),
+    shareReplay(1)
+  );
+
+  readonly dateMinAndMaxIsSameDay$: Observable<boolean> = combineLatest([this.dateInputMin$, this.dateInputMax$]).pipe(
+    map(([a, b]) => Boolean(a && b) && isSameDateDay(a, b)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly pickerFilter$: Observable<(d: Date | null) => boolean> = this.dateTimePickerConfig$.pipe(
+    map((x) => {
+      if (x) {
+        const fn = dateTimeMinuteWholeDayDecisionFunction(x, false);
+        return (d: Date | null) => (d != null ? fn(d) : true);
+      }
+      return () => true;
+    }),
+    shareReplay(1)
+  );
+
+  // Show date input reactively based on restricted range
+  readonly showDateInput$: Observable<boolean> = this.dateMinAndMaxIsSameDay$.pipe(
+    map((sameDay) => this.showDateInput() && (this.alwaysShowDateInput() || !sameDay)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // Raw datetime calculation
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.isTimeOnly() ? of(null) : this.dateValue$, this.timeInput$.pipe(startWith(null)), toObservable(this._fullDay), toObservable(this._timeDate), this.isTimeCleared$]).pipe(
+    map(([date, timeString, fullDay, timeDate, isTimeCleared]) => {
+      const input: DateTimeCalcInput = {
+        dateValue: date,
+        timeString,
+        isFullDay: fullDay,
+        fullDayInUTC: this.props()?.fullDayInUTC ?? false,
+        isTimeOnly: this.isTimeOnly(),
+        timeMode: this.timeMode(),
+        timeDate,
+        isCleared: isTimeCleared
+      };
+      return buildCombinedDateTime(input);
+    }),
+    distinctUntilChanged(isSameDateHoursAndMinutes),
+    shareReplay(1)
+  );
+
+  // Time output with offset accumulation and throttling
+  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.dateTimePickerConfig$]).pipe(
+    throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
+    distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0 && current[2] === next[2]),
+    tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
+    map(([date, stepsOffset, config]) => {
+      if (date != null && stepsOffset) {
+        return applyTimeOffset(date, stepsOffset, this.minuteStep(), config);
+      }
+      return date;
+    }),
+    distinctUntilChanged(isSameDateHoursAndMinutes),
+    shareReplay(1)
+  );
+
+  // Picker instance for validation
+  readonly dateTimePickerInstance$ = this.dateTimePickerConfig$.pipe(
+    map((config) => new DateTimeMinuteInstance({ ...config, roundDownToMinute: true })),
+    shareReplay(1)
+  );
+
+  // Presets pipeline
+  readonly allPresets$ = toObservable(this._presetConfigs).pipe(
+    map((configs) => configs.map(dateTimePreset)),
+    shareReplay(1)
+  );
+
+  readonly presets$: Observable<DateTimePreset[]> = combineLatest([this.allPresets$, toObservable(this._fullDay)]).pipe(
+    switchMap(([allPresets, fullDay]) => {
+      if (this.isTimeOnly()) return of(allPresets);
+      if (fullDay) return of([]);
+
+      return combineLatest([this.dateValue$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$]).pipe(map(([selectedDate, config]) => filterPresets(allPresets, selectedDate, false, false, config)));
+    }),
+    shareReplay(1)
+  );
+
+  // Error tracking
+  readonly hasEmptyDisplayValue$ = this.displayValue$.pipe(
+    map((x) => !x),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly currentErrorMessage$ = toObservable(
+    computed(() => {
+      const f = this.field() as any;
+      if (!f) return undefined;
+      const invalid = f.invalid?.() as boolean;
+      if (!invalid) return undefined;
+      const errors = f.errors?.() as Array<{ type?: string }> | undefined;
+      if (!errors || errors.length === 0) return undefined;
+      // Convert ValidationError.WithFieldTree[] to a record
+      const errorRecord: Record<string, unknown> = {};
+      for (const err of errors) {
+        if (err.type) errorRecord[err.type] = true;
+      }
+      return computeErrorMessage(errorRecord, this.isRequired());
+    })
+  ).pipe(shareReplay(1));
+
+  readonly hasError$ = this.currentErrorMessage$.pipe(
+    map((x) => Boolean(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // Show clear button
+  readonly showClearButton$ = this.hasEmptyDisplayValue$.pipe(
+    map((empty) => Boolean(this.showClearButton() && !empty)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // MARK: Template signals via toSignal()
+  readonly dateValueSignal = toSignal(this.dateValue$);
+  readonly displayValueSignal = toSignal(this.displayValue$);
+  readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: () => true as boolean });
+  readonly dateInputMinSignal = toSignal(this.dateInputMin$, { initialValue: null });
+  readonly dateInputMaxSignal = toSignal(this.dateInputMax$, { initialValue: null });
+  readonly showDateInputSignal = toSignal(this.showDateInput$);
+  readonly showTimeInputSignal = this.showTimeInput;
+  readonly showAddTimeButtonSignal = this.showAddTimeButton;
+  readonly fullDaySignal = this._fullDay.asReadonly();
+  readonly tzAbbreviationSignal = toSignal(this.tzAbbreviation$);
+  readonly hasValueSignal = toSignal(this.hasEmptyDisplayValue$.pipe(map((x) => !x)));
+  readonly currentErrorMessageSignal = toSignal(this.currentErrorMessage$);
+  readonly hasErrorSignal = toSignal(this.hasError$);
+  readonly showClearButtonSignal = toSignal(this.showClearButton$);
+  readonly presetsSignal = toSignal(this.presets$);
+  readonly isDisabledSignal = this.isDisabled;
 
   constructor() {
     // Initialize fullDay from timeMode
@@ -394,176 +593,272 @@ export class ForgeDateTimeFieldComponent {
       this._presetsSub?.unsubscribe();
       if (p?.presets) {
         this._presetsSub = asObservableFromGetter(p.presets).subscribe((configs) => this._presetConfigs.set(configs));
+      } else if (this.presetsService) {
+        this._presetsSub = this.presetsService.configurations$.subscribe((configs) => this._presetConfigs.set(configs));
       }
+
+      // Sync fields
+      this._syncConfigObs.next(p?.getSyncFieldsObs?.());
+
+      // Full day field name (read from sibling FieldTree)
+      if (p?.fullDayFieldName) {
+        const sibling = (this.fieldSignalContext.form as any)?.[p.fullDayFieldName];
+        if (sibling?.value) {
+          // Sync fullDay signal from sibling field
+          this._fullDay.set(Boolean(sibling.value()));
+        }
+      }
+    });
+
+    // Disabled state propagation
+    effect(() => {
+      const disabled = this.isDisabled();
+      toggleDisableFormControl(this.dateCtrl, disabled);
+      toggleDisableFormControl(this.timeCtrl, disabled);
     });
 
     // Sync inbound: FieldTree value → form controls
     effect(() => {
-      const date = this.parsedValue();
-      if (this._syncing) return;
-      this._syncing = true;
-
-      if (date) {
-        const currentDateCtrl = this.dateCtrl.value;
-        if (!currentDateCtrl || !isSameDateDay(currentDateCtrl, date)) {
-          this.dateCtrl.setValue(date, { emitEvent: false });
-        }
-
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const timeStr = `${hours}:${minutes}`;
-        if (timeStr !== this.timeCtrl.value) {
-          this.timeCtrl.setValue(toLocalReadableTimeString(date), { emitEvent: false });
-        }
-      } else {
+      // Read the parsed value reactively
+      const raw = this.fieldValue();
+      if (raw == null) {
         if (this.dateCtrl.value != null) this.dateCtrl.setValue(null, { emitEvent: false });
         if (this.timeCtrl.value) this.timeCtrl.setValue(null, { emitEvent: false });
+        return;
       }
 
-      this._syncing = false;
+      const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
+      const date = parser(raw as Maybe<Date | string | number>);
+      if (!date || (date instanceof Date && isNaN(date.getTime()))) return;
+
+      const currentDateCtrl = this.dateCtrl.value;
+      if (!currentDateCtrl || !isSameDateDay(currentDateCtrl, date)) {
+        this.dateCtrl.setValue(date, { emitEvent: false });
+      }
+
+      const timeStr = toLocalReadableTimeString(date);
+      if (timeStr !== this.timeCtrl.value) {
+        this.timeCtrl.setValue(timeStr, { emitEvent: false });
+      }
     });
 
-    // Sync outbound: form controls → FieldTree
-    const dateSub = this.dateCtrl.valueChanges.subscribe(() => this._syncOutbound());
-    const timeSub = this.timeCtrl.valueChanges.subscribe(() => this._syncOutbound());
+    // Main output subscription: timeOutput$ → field value
+    this._sub.subscription = this.valueInSystemTimezone$
+      .pipe(
+        combineLatestWith(this.timezoneInstance$.pipe(map((tz) => dbxDateTimeOutputValueFactory(this.valueMode(), tz)))),
+        throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
+        switchMap(([currentValue, valueFactory]) => {
+          return this.timeOutput$.pipe(
+            throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }),
+            skipAllInitialMaybe(),
+            distinctUntilChanged(isSameDateHoursAndMinutes),
+            map((x) => valueFactory(x)),
+            filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x, currentValue))
+          );
+        })
+      )
+      .subscribe((value) => {
+        this._setFieldValue(value);
+      });
 
+    // Time value sync (midnight edge case)
+    let hasSetMidnightFromInput = false;
+
+    this._valueSub.subscription = this.valueInSystemTimezone$
+      .pipe(
+        map((x) => (x ? isSameDate(x, startOfDay(x)) : false)),
+        distinctUntilChanged(),
+        switchMap((isInputValueAtMidnight) => {
+          hasSetMidnightFromInput = false;
+          return this.timeString$.pipe(map((timeString) => [timeString, isInputValueAtMidnight] as [string, boolean]));
+        })
+      )
+      .subscribe(([x, isInputValueAtMidnight]) => {
+        if (!this.timeCtrl.value && x === '12:00AM' && (!isInputValueAtMidnight || (isInputValueAtMidnight && hasSetMidnightFromInput))) {
+          return;
+        }
+        if (x === '12:00AM' && isInputValueAtMidnight) {
+          hasSetMidnightFromInput = true;
+        }
+        this.setTime(x);
+      });
+
+    // Auto-fill date from restricted range
+    if (this.autofillDateWhenTimeIsPicked()) {
+      this._autoFillDateSync.subscription = this.dateMinAndMaxIsSameDay$
+        .pipe(
+          switchMap((canAutofill) => {
+            if (canAutofill) {
+              return this._updateTime.pipe(
+                debounceTime(200),
+                switchMap(() => this.dateInputMin$),
+                filterMaybe()
+              );
+            }
+            return of(null);
+          })
+        )
+        .subscribe((autoDate) => {
+          if (autoDate != null) {
+            this.dateCtrl.setValue(autoDate);
+          }
+        });
+    }
+
+    // Resync time input on focus out
+    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap(() => combineLatest([this.currentDate$, this.timeString$]).pipe(first()))).subscribe(([currentDate, timeString]) => {
+      if (currentDate != null) {
+        this.timeCtrl.setValue(timeString || null, { emitEvent: false });
+      }
+    });
+
+    // Outbound sync: form controls → FieldTree via _updateTime
+    const dateSub = this.dateCtrl.valueChanges.subscribe(() => this._updateTime.next());
+    const timeSub = this.timeCtrl.valueChanges.subscribe(() => this._updateTime.next());
+
+    // Config update time sync
+    const configSyncSub = this.dateTimePickerConfig$.pipe(skip(1)).subscribe(() => this._updateTime.next());
+
+    // Cleanup
     this.destroyRef.onDestroy(() => {
       dateSub.unsubscribe();
       timeSub.unsubscribe();
+      configSyncSub.unsubscribe();
+      this._sub.destroy();
+      this._valueSub.destroy();
+      this._autoFillDateSync.destroy();
+      this._resyncTimeInputSub.destroy();
       this._timezoneSub?.unsubscribe();
       this._pickerConfigSub?.unsubscribe();
       this._timeDateSub?.unsubscribe();
       this._presetsSub?.unsubscribe();
+      this._offset.complete();
+      this._updateTime.complete();
+      this._resyncTimeInput.complete();
+      this._syncConfigObs.complete();
     });
   }
 
   // MARK: Actions
   onDatePicked(event: MatDatepickerInputEvent<Date>): void {
-    this.dateCtrl.setValue(event.value);
+    const date = event.value;
+    if (date) {
+      this.dateCtrl.setValue(date);
+      this._updateTime.next();
+    }
+  }
+
+  onDateKeydown(event: KeyboardEvent): void {
+    const step = computeDateKeyboardStep(event);
+    if (!step) return;
+
+    event.preventDefault();
+
+    combineLatest([this.date$, this.dateTimePickerConfig$])
+      .pipe(first())
+      .subscribe(([date, config]) => {
+        const nextDate = navigateDate(date, step, config);
+        if (nextDate != null) {
+          this.dateCtrl.setValue(nextDate);
+          this._updateTime.next();
+        }
+      });
+  }
+
+  onTimeKeydown(event: KeyboardEvent): void {
+    const step = computeTimeKeyboardStep(event);
+    if (!step) return;
+
+    event.preventDefault();
+    this._offset.next(this._offset.value + step.offset * step.direction);
+    this._updateTime.next();
+  }
+
+  onTimeFocus(): void {
+    // no-op (placeholder for potential future use)
+  }
+
+  onTimeBlur(): void {
+    if (!this.timeCtrl.hasError('pattern')) {
+      this._updateTime.next();
+      this._resyncTimeInput.next();
+    }
   }
 
   clearValue(): void {
+    this._isCleared.set(true);
     this.dateCtrl.setValue(null);
     this.timeCtrl.setValue(null);
     this._setFieldValue(undefined);
+    // Reset cleared state after a tick so future edits work
+    setTimeout(() => this._isCleared.set(false), 0);
   }
 
   addTime(): void {
     this._fullDay.set(false);
+    this._syncFullDayToSibling(false);
   }
 
   removeTime(): void {
     this._fullDay.set(true);
     this.timeCtrl.setValue(null);
-    this._syncOutbound();
+    this._updateTime.next();
+    this._syncFullDayToSibling(true);
   }
 
   selectPreset(preset: DateTimePreset): void {
     const value = preset.value();
     if (value.logicalDate) {
       const date = dateFromLogicalDate(value.logicalDate);
-      if (date) this.timeCtrl.setValue(toLocalReadableTimeString(date));
+      if (date) {
+        this.setTime(toLocalReadableTimeString(date));
+      }
     } else if (value.timeString) {
-      this.timeCtrl.setValue(value.timeString);
+      this.setTime(value.timeString);
     }
   }
 
-  onTimeFocus(): void {
-    const el = document.activeElement as HTMLInputElement;
-    if (el?.select) el.select();
-  }
-
-  onTimeBlur(): void {
-    this._syncOutbound();
-  }
-
-  onTimeKeydown(event: KeyboardEvent): void {
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      event.preventDefault();
-      const step = event.key === 'ArrowUp' ? this.minuteStep() : -this.minuteStep();
-      this._adjustTime(step);
+  setTime(time: ReadableTimeString): void {
+    if (this.timeCtrl.value !== time) {
+      this.timeCtrl.setValue(time);
+      this._offset.next(0);
+      this._updateTime.next();
     }
   }
 
-  // MARK: Internal
-  private _adjustTime(minutesDelta: number): void {
-    const currentDate = this._buildCombinedDate();
-    if (!currentDate) return;
-
-    let newDate = addMinutes(currentDate, minutesDelta);
-
-    // Clamp to picker config limits
-    const config = this._pickerConfig();
-    if (config) {
-      const instance = new DateTimeMinuteInstance({ date: newDate, ...config, roundDownToMinute: true });
-      newDate = instance.clamp(newDate);
-    }
-
-    this.dateCtrl.setValue(newDate, { emitEvent: false });
-    this.timeCtrl.setValue(toLocalReadableTimeString(newDate), { emitEvent: false });
-    this._syncOutbound();
-  }
-
-  private _buildCombinedDate(): Maybe<Date> {
-    const dateValue = this.dateCtrl.value;
-    const timeValue = this.timeCtrl.value;
-    const fullDay = this._fullDay();
-    const timeDate = this._timeDate();
-
-    let baseDate = dateValue;
-    if (!baseDate && this.isTimeOnly()) {
-      baseDate = timeDate ?? new Date();
-    }
-    if (!baseDate) return undefined;
-
-    if (fullDay) {
-      return this.props()?.fullDayInUTC ? utcDayForDate(baseDate) : startOfDay(baseDate);
-    }
-
-    if (timeValue) {
-      const combined = readableTimeStringToDate(timeValue, { date: baseDate, useSystemTimezone: true });
-      return combined ?? baseDate;
-    }
-
-    if (!this.isTimeOnly() && this.timeMode() !== DbxDateTimeFieldTimeMode.REQUIRED) {
-      return baseDate;
-    }
-
-    return undefined;
-  }
-
-  private _syncOutbound(): void {
-    if (this._syncing) return;
-    this._syncing = true;
-
-    const combinedDate = this._buildCombinedDate();
-    const outputFactory = dbxDateTimeOutputValueFactory(this.valueMode(), this.timezoneInstance());
-    const outputValue = outputFactory(combinedDate);
-    this._setFieldValue(outputValue);
-
-    this._syncing = false;
-  }
+  // MARK: Internal helpers
 
   private _setFieldValue(value: unknown): void {
-    const f = this.field();
-    if (!f) return;
-
     try {
-      if (typeof (f as any).setValue === 'function') {
-        (f as any).setValue(value);
-      } else if (typeof (f as any).value === 'function') {
-        const sig = (f as any).value;
-        if (sig.set) sig.set(value);
+      const f = this.field() as any;
+      if (f?.value?.set) {
+        f.value.set(value);
       }
     } catch {
-      // Silently handle field update errors
+      // Silently handle if FieldTree value is not writable
+    }
+  }
+
+  private _syncFullDayToSibling(fullDay: boolean): void {
+    const fieldName = this.props()?.fullDayFieldName;
+    if (!fieldName) return;
+
+    try {
+      const sibling = (this.fieldSignalContext.form as any)?.[fieldName];
+      if (sibling?.value?.set) {
+        sibling.value.set(fullDay);
+      }
+    } catch {
+      // Silently handle if sibling field is not writable
     }
   }
 }
 
 // MARK: Mapper
+
 /**
  * Custom mapper for the datetime field type.
+ * Called by ng-forge's DynamicForm to create the inputs for the component.
  */
 export function dateTimeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

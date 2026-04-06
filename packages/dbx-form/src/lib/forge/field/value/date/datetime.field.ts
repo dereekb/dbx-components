@@ -1,14 +1,37 @@
 import type { MatDatepickerField, MatDatepickerProps } from '@ng-forge/dynamic-forms-material';
 import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
-import { filterFromPOJO, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
+import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeField } from '../../field';
 import type { ForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import type { ForgeDateRangeFieldComponentProps, ForgeDateRangeValue } from './daterange.field.component';
 import type { ForgeFixedDateRangeFieldComponentProps, ForgeFixedDateRangeValue } from './fixeddaterange.field.component';
-import { type DbxDateTimePickerConfiguration, DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
+import { type DbxDateTimePickerConfiguration, DbxDateTimeFieldTimeMode, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type DateTimePresetConfiguration } from '../../../../formly/field/value/date/datetime';
 import { type ObservableOrValueGetter } from '@dereekb/rxjs';
+import type { Observable } from 'rxjs';
+
+// MARK: Sync Field Types
+
+/**
+ * Sync field configuration for forge datetime fields.
+ *
+ * Same as formly's {@link DbxDateTimeFieldSyncField} but re-exported here so forge consumers
+ * don't need to import from the formly module.
+ */
+export interface ForgeDateTimeSyncField {
+  /**
+   * Sibling field key/path to sync with.
+   */
+  readonly syncWith: string;
+  /**
+   * How to sync against the other field.
+   *
+   * - `'before'`: The synced field's value acts as a minimum for this field.
+   * - `'after'`: The synced field's value acts as a maximum for this field.
+   */
+  readonly syncType: DbxDateTimeFieldSyncType;
+}
 
 // MARK: Date Field
 /**
@@ -211,6 +234,15 @@ export interface ForgeDateTimeFieldConfig {
    */
   readonly inputOutputDebounceTime?: number;
 
+  // --- Sync fields ---
+  /**
+   * Used for syncing with one or more sibling date fields.
+   *
+   * When provided, allows this datetime field to constrain its min/max date range
+   * based on the values of other date fields in the same form.
+   */
+  readonly getSyncFieldsObs?: () => Observable<ArrayOrValue<ForgeDateTimeSyncField>>;
+
   // --- Deprecated/unsupported in forge (kept for interface parity) ---
   /**
    * Whether to include a time input alongside the date picker.
@@ -269,9 +301,11 @@ export function forgeDateTimeField(config: ForgeDateTimeFieldConfig): ForgeDateT
     presets: rest.presets,
     timeDate: rest.timeDate,
     autofillDateWhenTimeIsPicked: rest.autofillDateWhenTimeIsPicked,
+    fullDayFieldName: rest.fullDayFieldName,
     fullDayInUTC: rest.fullDayInUTC,
     minuteStep: rest.minuteStep,
     inputOutputDebounceTime: rest.inputOutputDebounceTime,
+    getSyncFieldsObs: rest.getSyncFieldsObs,
     hint: description
   });
 

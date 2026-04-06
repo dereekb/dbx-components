@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField } from './datetime.field';
+import { of } from 'rxjs';
+import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
+import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
+import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type ForgeDateTimeSyncField } from './datetime.field';
 
 describe('forgeDateField()', () => {
   it('should create a datepicker field with correct type', () => {
@@ -63,7 +66,86 @@ describe('forgeDateTimeField()', () => {
   it('should create a datetime field with correct type', () => {
     const field = forgeDateTimeField({ key: 'datetime' });
     expect(field.key).toBe('datetime');
-    expect(field.type).toBeDefined();
+    expect(field.type).toBe('datetime');
+  });
+
+  it('should set required when specified', () => {
+    const field = forgeDateTimeField({ key: 'datetime', required: true });
+    expect(field.required).toBe(true);
+  });
+
+  it('should set readonly when specified', () => {
+    const field = forgeDateTimeField({ key: 'datetime', readonly: true });
+    expect(field.readonly).toBe(true);
+  });
+
+  it('should map description to hint in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', description: 'Pick a date and time' });
+    expect(field.props?.hint).toBe('Pick a date and time');
+  });
+
+  it('should set timeMode in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL });
+    expect(field.props?.timeMode).toBe(DbxDateTimeFieldTimeMode.OPTIONAL);
+  });
+
+  it('should set valueMode in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', valueMode: DbxDateTimeValueMode.DATE_STRING });
+    expect(field.props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
+  });
+
+  it('should set timezone in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', timezone: 'America/New_York' });
+    expect(field.props?.timezone).toBe('America/New_York');
+  });
+
+  it('should set custom labels in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', dateLabel: 'Start Date', timeLabel: 'Start Time' });
+    expect(field.props?.dateLabel).toBe('Start Date');
+    expect(field.props?.timeLabel).toBe('Start Time');
+  });
+
+  it('should set pickerConfig in props', () => {
+    const config = { limits: { isFuture: true } };
+    const field = forgeDateTimeField({ key: 'datetime', pickerConfig: config });
+    expect(field.props?.pickerConfig).toBe(config);
+  });
+
+  it('should set fullDayFieldName in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', fullDayFieldName: 'isAllDay' });
+    expect(field.props?.fullDayFieldName).toBe('isAllDay');
+  });
+
+  it('should set getSyncFieldsObs in props', () => {
+    const syncFields: ForgeDateTimeSyncField[] = [{ syncWith: 'endDate', syncType: 'after' }];
+    const getSyncFieldsObs = () => of(syncFields);
+    const field = forgeDateTimeField({ key: 'datetime', getSyncFieldsObs });
+    expect(field.props?.getSyncFieldsObs).toBe(getSyncFieldsObs);
+  });
+
+  it('should map showTime=false to timeMode=none for backward compatibility', () => {
+    const field = forgeDateTimeField({ key: 'datetime', showTime: false });
+    expect(field.props?.timeMode).toBe('none');
+  });
+
+  it('should not override explicit timeMode with showTime', () => {
+    const field = forgeDateTimeField({ key: 'datetime', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, showTime: false });
+    expect(field.props?.timeMode).toBe(DbxDateTimeFieldTimeMode.OPTIONAL);
+  });
+
+  it('should set minuteStep in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', minuteStep: 15 });
+    expect(field.props?.minuteStep).toBe(15);
+  });
+
+  it('should set autofillDateWhenTimeIsPicked in props', () => {
+    const field = forgeDateTimeField({ key: 'datetime', autofillDateWhenTimeIsPicked: true });
+    expect(field.props?.autofillDateWhenTimeIsPicked).toBe(true);
+  });
+
+  it('should provide empty label when not specified', () => {
+    const field = forgeDateTimeField({ key: 'datetime' });
+    expect(field.label).toBe('');
   });
 });
 
