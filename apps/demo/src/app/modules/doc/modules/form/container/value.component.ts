@@ -263,7 +263,7 @@ export class DocFormValueComponent {
   readonly forgePhoneFieldsConfig: FormConfig = {
     fields: [
       forgePhoneField({ key: 'phone' }) as any,
-      forgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'Extension support is not yet available in the forge phone field.' }) as any,
+      forgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }) as any,
       forgeWrappedPhoneAndLabelField({
         phoneField: {
           key: 'labeledPhoneKey'

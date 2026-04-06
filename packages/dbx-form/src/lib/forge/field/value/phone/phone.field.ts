@@ -37,6 +37,10 @@ export interface ForgePhoneFieldConfig {
    * Whether or not to enable the search feature. True by default.
    */
   readonly enableSearch?: boolean;
+  /**
+   * Whether or not to allow adding an extension. False by default.
+   */
+  readonly allowExtension?: boolean;
 }
 
 /**
@@ -54,13 +58,14 @@ export interface ForgePhoneFieldConfig {
  * ```
  */
 export function forgePhoneField(config: ForgePhoneFieldConfig): FieldDef<ForgePhoneFieldProps> {
-  const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch } = config;
+  const { key, label = 'Phone Number', required, readonly: isReadonly, description, defaultValue = '', preferredCountries, onlyCountries, enableSearch, allowExtension } = config;
 
   const props: Partial<ForgePhoneFieldProps> = filterFromPOJO({
     hint: description,
     preferredCountries,
     onlyCountries,
-    enableSearch
+    enableSearch,
+    allowExtension
   });
 
   return forgeField(

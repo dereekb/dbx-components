@@ -8,7 +8,8 @@ import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PRO
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
-import type { Maybe } from '@dereekb/util';
+import { type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, type E164PhoneNumber, type E164PhoneNumberExtensionPair } from '@dereekb/util';
+import { isPhoneExtension } from '../../../../validator/phone';
 
 /**
  * Custom props for the forge phone field.
@@ -26,6 +27,10 @@ export interface ForgePhoneFieldProps {
    * Whether or not to enable the search feature. True by default.
    */
   readonly enableSearch?: boolean;
+  /**
+   * Whether or not to allow adding an extension. False by default.
+   */
+  readonly allowExtension?: boolean;
   /**
    * Material form field appearance.
    */
@@ -56,17 +61,25 @@ export const FORGE_DEFAULT_PREFERRED_COUNTRIES = ['us'];
   imports: [MatFormFieldModule, MatInputModule, ReactiveFormsModule, NgxMatInputTelComponent, DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic">
-      @if (label()) {
-        <mat-label>{{ label() | dynamicText | async }}</mat-label>
+    <div class="dbx-form-phone-field">
+      <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic">
+        @if (label()) {
+          <mat-label>{{ label() | dynamicText | async }}</mat-label>
+        }
+        <ngx-mat-input-tel name="phone" [formControl]="phoneCtrl" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''"></ngx-mat-input-tel>
+        @if (errorsToDisplay()[0]; as error) {
+          <mat-error>{{ error.message }}</mat-error>
+        } @else if (props()?.hint; as hint) {
+          <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
+        }
+      </mat-form-field>
+      @if (allowExtension()) {
+        <div class="dbx-form-phone-field-extension-content">
+          <span class="dbx-hint dbx-button-spacer">Ext.</span>
+          <input name="phone-extension" class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" [formControl]="extensionCtrl" aria-label="Phone extension" />
+        </div>
       }
-      <ngx-mat-input-tel name="phone" [formControl]="phoneCtrl" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''"></ngx-mat-input-tel>
-      @if (errorsToDisplay()[0]; as error) {
-        <mat-error>{{ error.message }}</mat-error>
-      } @else if (props()?.hint; as hint) {
-        <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
-      }
-    </mat-form-field>
+    </div>
   `
 })
 export class ForgePhoneFieldComponent {
@@ -90,11 +103,13 @@ export class ForgePhoneFieldComponent {
    * with the ng-forge Signal Forms field tree.
    */
   readonly phoneCtrl = new FormControl<string>('');
+  readonly extensionCtrl = new FormControl<string>('', { validators: [isPhoneExtension()] });
 
   // Computed props
   readonly preferredCountries: Signal<string[]> = computed(() => this.props()?.preferredCountries ?? FORGE_DEFAULT_PREFERRED_COUNTRIES);
   readonly onlyCountries: Signal<string[]> = computed(() => this.props()?.onlyCountries ?? []);
   readonly enableSearch: Signal<boolean> = computed(() => this.props()?.enableSearch ?? true);
+  readonly allowExtension: Signal<boolean> = computed(() => this.props()?.allowExtension ?? false);
   readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
 
   // Error handling
@@ -116,10 +131,22 @@ export class ForgePhoneFieldComponent {
 
       if (!this._syncing) {
         this._syncing = true;
-        const currentCtrlValue = this.phoneCtrl.value;
 
-        if (signalValue !== currentCtrlValue) {
-          this.phoneCtrl.setValue(signalValue ?? '', { emitEvent: false });
+        if (signalValue) {
+          const pair = e164PhoneNumberExtensionPair(signalValue);
+          const phone = pair.number ?? '';
+          const extension = pair.extension ?? '';
+
+          if (phone !== this.phoneCtrl.value) {
+            this.phoneCtrl.setValue(phone, { emitEvent: false });
+          }
+
+          if (extension !== this.extensionCtrl.value) {
+            this.extensionCtrl.setValue(extension, { emitEvent: false });
+          }
+        } else if (this.phoneCtrl.value !== '') {
+          this.phoneCtrl.setValue('', { emitEvent: false });
+          this.extensionCtrl.setValue('', { emitEvent: false });
         }
 
         this._syncing = false;
@@ -127,27 +154,49 @@ export class ForgePhoneFieldComponent {
     });
 
     // Sync FormControl -> Signal Forms field (outbound)
-    const sub = this.phoneCtrl.valueChanges.subscribe((value) => {
-      if (!this._syncing) {
-        this._syncing = true;
+    const phoneSub = this.phoneCtrl.valueChanges.subscribe((phone) => {
+      this._syncOutbound(phone, this.extensionCtrl.value);
+    });
 
-        const fieldTree = this.field();
-        const fieldState = fieldTree();
-        const currentSignalValue = fieldState.value();
-
-        if (value !== currentSignalValue) {
-          fieldState.value.set(value ?? '');
-          fieldState.markAsTouched();
-          fieldState.markAsDirty();
-        }
-
-        this._syncing = false;
-      }
+    const extSub = this.extensionCtrl.valueChanges.subscribe((ext) => {
+      this._syncOutbound(this.phoneCtrl.value, ext);
     });
 
     this.destroyRef.onDestroy(() => {
-      sub.unsubscribe();
+      phoneSub.unsubscribe();
+      extSub.unsubscribe();
     });
+  }
+
+  private _syncOutbound(phone: Maybe<string>, extension: Maybe<string>): void {
+    if (this._syncing) {
+      return;
+    }
+
+    this._syncing = true;
+
+    const fieldTree = this.field();
+    const fieldState = fieldTree();
+    let outputValue: string;
+
+    if (phone && this.allowExtension()) {
+      outputValue = e164PhoneNumberFromE164PhoneNumberExtensionPair({
+        number: phone as E164PhoneNumber,
+        extension: extension ?? undefined
+      } as E164PhoneNumberExtensionPair);
+    } else {
+      outputValue = phone ?? '';
+    }
+
+    const currentSignalValue = fieldState.value();
+
+    if (outputValue !== currentSignalValue) {
+      fieldState.value.set(outputValue);
+      fieldState.markAsTouched();
+      fieldState.markAsDirty();
+    }
+
+    this._syncing = false;
   }
 }
 
