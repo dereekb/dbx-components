@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, input, computed, effect, type Signa
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { NgxMatInputTelComponent } from 'ngx-mat-input-tel';
-// MatInputModule removed - ngx-mat-input-tel provides its own mat-form-field
+import { MatInputModule } from '@angular/material/input';
 import { AsyncPipe } from '@angular/common';
 import { DynamicTextPipe, type DynamicText, type ValidationMessages, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES } from '@ng-forge/dynamic-forms';
 import { resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
@@ -58,24 +58,40 @@ export const FORGE_DEFAULT_PREFERRED_COUNTRIES = ['us'];
 @Component({
   selector: 'dbx-forge-phone-field',
   standalone: true,
-  imports: [MatFormFieldModule, ReactiveFormsModule, NgxMatInputTelComponent, DynamicTextPipe, AsyncPipe],
+  imports: [MatFormFieldModule, MatInputModule, ReactiveFormsModule, NgxMatInputTelComponent, DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="dbx-form-phone-field">
-      <ngx-mat-input-tel name="phone" class="dbx-form-phone-field-phone-content" [formControl]="phoneCtrl" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''"></ngx-mat-input-tel>
-      @if (allowExtension()) {
-        <div class="dbx-form-phone-field-extension-content">
-          <span class="dbx-hint dbx-button-spacer">Ext.</span>
-          <input name="phone-extension" class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" [formControl]="extensionCtrl" aria-label="Phone extension" />
-        </div>
+    <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic">
+      @if (label()) {
+        <mat-label>{{ label() | dynamicText | async }}</mat-label>
       }
-    </div>
-    @if (errorsToDisplay()[0]; as error) {
-      <mat-error>{{ error.message }}</mat-error>
-    } @else if (props()?.hint; as hint) {
-      <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
-    }
-  `
+      <div class="dbx-form-phone-field">
+        <ngx-mat-input-tel name="phone" class="dbx-form-phone-field-phone-content" [formControl]="phoneCtrl" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''"></ngx-mat-input-tel>
+        @if (allowExtension()) {
+          <div class="dbx-form-phone-field-extension-content">
+            <span class="dbx-hint dbx-button-spacer">Ext.</span>
+            <input name="phone-extension" class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" [formControl]="extensionCtrl" aria-label="Phone extension" />
+          </div>
+        }
+      </div>
+      @if (errorsToDisplay()[0]; as error) {
+        <mat-error>{{ error.message }}</mat-error>
+      } @else if (props()?.hint; as hint) {
+        <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
+      }
+    </mat-form-field>
+  `,
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 100%;
+      }
+      :host mat-form-field {
+        width: 100%;
+      }
+    `
+  ]
 })
 export class ForgePhoneFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });
