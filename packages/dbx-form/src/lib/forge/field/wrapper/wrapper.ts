@@ -1,10 +1,18 @@
 import type { RowField, GroupField, FieldDef, RowAllowedChildren, GroupAllowedChildren } from '@ng-forge/dynamic-forms';
 
+let _forgeRowCounter = 0;
+
 // MARK: Row
 /**
  * Configuration for a forge row layout that arranges fields horizontally.
  */
 export interface ForgeRowConfig {
+  /**
+   * Optional key for the row. Defaults to a unique auto-generated key.
+   *
+   * Must be unique within the form config to avoid ng-forge duplicate key errors.
+   */
+  readonly key?: string;
   /**
    * Fields to render inside this row. Each field may specify a `col` for grid sizing.
    */
@@ -37,7 +45,7 @@ export interface ForgeRowConfig {
 export function forgeRow(config: ForgeRowConfig): RowField {
   const result: RowField = {
     type: 'row',
-    key: '_row',
+    key: config.key ?? `_row_${_forgeRowCounter++}`,
     fields: config.fields as unknown as RowAllowedChildren[]
   };
 

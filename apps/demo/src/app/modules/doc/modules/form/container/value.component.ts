@@ -260,24 +260,26 @@ export class DocFormValueComponent {
     })
   ];
 
-  readonly forgePhoneFieldConfig: FormConfig = {
-    fields: [forgePhoneField({ key: 'phone' }) as any]
-  };
-
-  readonly forgeWrappedPhoneFieldConfig: FormConfig = {
+  readonly forgePhoneFieldsConfig: FormConfig = {
     fields: [
+      forgePhoneField({ key: 'phone' }) as any,
+      forgePhoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'Extension support is not yet available in the forge phone field.' }) as any,
       forgeWrappedPhoneAndLabelField({
         phoneField: {
           key: 'labeledPhoneKey'
+        },
+        labelField: {
+          key: 'labeledPhoneLabel'
         }
-      }) as any
-    ]
-  };
-
-  readonly forgePhoneAndLabelSectionFieldConfig: FormConfig = {
-    fields: [
+      }) as any,
       forgePhoneAndLabelSectionField({
-        key: 'section'
+        key: 'section',
+        phoneField: {
+          key: 'sectionPhone'
+        },
+        labelField: {
+          key: 'sectionLabel'
+        }
       }) as any
     ]
   };
