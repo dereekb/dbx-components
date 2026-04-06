@@ -833,18 +833,15 @@ describe('ForgeDateTimeFieldComponent', () => {
       expect(output).not.toBeNull();
       expect(output instanceof Date).toBe(true);
 
-      // Verify the main output subscription processes this value.
-      // After additional settle, the host formValue should have a non-empty value for this key.
+      // Wait enough time for all throttle timers to fire (outer: 10ms, inner: 20ms).
+      await settle(fixture);
       await settle(fixture);
       await settle(fixture);
 
       const formOutput = host.formValue();
-      // The formValue may or may not have propagated through the FieldTree depending on timing.
-      // At minimum, the timeOutput$ confirmed the pipeline produces a valid Date.
-      // If the value propagated, it should be a Date (valueMode: DATE is default).
-      if (formOutput.dateWithASchedule) {
-        expect(formOutput.dateWithASchedule instanceof Date || typeof formOutput.dateWithASchedule === 'object').toBe(true);
-      }
+      expect(formOutput.dateWithASchedule).toBeDefined();
+      expect(formOutput.dateWithASchedule).not.toBe('');
+      expect(formOutput.dateWithASchedule instanceof Date).toBe(true);
 
       fixture.destroy();
     });

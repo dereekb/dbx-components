@@ -206,8 +206,8 @@ export class ForgeDateTimeFieldComponent {
 
   readonly isRequired = computed(() => {
     try {
-      const f = this.field() as any;
-      return (f?.required?.() as boolean) ?? false;
+      const state = this.field()?.() as any;
+      return (state?.required?.() as boolean) ?? false;
     } catch {
       return false;
     }
@@ -265,12 +265,11 @@ export class ForgeDateTimeFieldComponent {
 
   // MARK: Field value reading
   // FieldTree<unknown> is callable — calling it returns FieldState which has .value, .disabled, etc.
-  // We use (field as any) to access these signal properties since FieldTree's type definition
-  // hides them behind the callable interface.
+  // We call field()() to first unwrap the InputSignal (→ FieldTree), then call the FieldTree (→ FieldState).
   readonly fieldValue = computed(() => {
     try {
-      const f = this.field() as any;
-      return f?.value?.() as unknown;
+      const state = this.field()?.() as any;
+      return state?.value?.() as unknown;
     } catch {
       return undefined;
     }
@@ -278,8 +277,8 @@ export class ForgeDateTimeFieldComponent {
 
   readonly isDisabled = computed(() => {
     try {
-      const f = this.field() as any;
-      return (f?.disabled?.() as boolean) ?? false;
+      const state = this.field()?.() as any;
+      return (state?.disabled?.() as boolean) ?? false;
     } catch {
       return false;
     }
@@ -374,9 +373,10 @@ export class ForgeDateTimeFieldComponent {
       return filterMaybeArrayValues(
         asArray(x).map((syncField) => {
           const form = this.fieldSignalContext.form;
-          const sibling = (form as any)?.[syncField.syncWith];
-          if (sibling?.value) {
-            return { syncType: syncField.syncType, fieldTree: sibling };
+          const siblingTree = (form as any)?.[syncField.syncWith];
+          const siblingState = siblingTree?.() as any;
+          if (siblingState?.value) {
+            return { syncType: syncField.syncType, fieldState: siblingState };
           }
           return undefined;
         })
@@ -395,7 +395,7 @@ export class ForgeDateTimeFieldComponent {
           return interval(500).pipe(
             startWith(0),
             map(() => {
-              const val = config.fieldTree.value();
+              const val = config.fieldState.value();
               return safeToJsDate(val as any) ?? null;
             }),
             distinctUntilChanged()
@@ -523,7 +523,7 @@ export class ForgeDateTimeFieldComponent {
 
   readonly currentErrorMessage$ = toObservable(
     computed(() => {
-      const f = this.field() as any;
+      const f = this.field()?.() as any;
       if (!f) return undefined;
       const invalid = f.invalid?.() as boolean;
       if (!invalid) return undefined;
@@ -620,10 +620,11 @@ export class ForgeDateTimeFieldComponent {
 
       // Full day field name (read from sibling FieldTree)
       if (p?.fullDayFieldName) {
-        const sibling = (this.fieldSignalContext.form as any)?.[p.fullDayFieldName];
-        if (sibling?.value) {
+        const siblingTree = (this.fieldSignalContext.form as any)?.[p.fullDayFieldName];
+        const siblingState = siblingTree?.() as any;
+        if (siblingState?.value) {
           // Sync fullDay signal from sibling field
-          this._fullDay.set(Boolean(sibling.value()));
+          this._fullDay.set(Boolean(siblingState.value()));
         }
       }
     });
@@ -700,6 +701,10 @@ export class ForgeDateTimeFieldComponent {
       .subscribe(([x, isInputValueAtMidnight]) => {
         // Do not overwrite time while user is actively editing the time input
         if (this._isTimeInputFocused()) {
+          return;
+        }
+        // Skip empty time strings to avoid overwriting a cleared null with ''
+        if (!x) {
           return;
         }
         if (!this.timeCtrl.value && x === '12:00AM' && (!isInputValueAtMidnight || (isInputValueAtMidnight && hasSetMidnightFromInput))) {
@@ -877,9 +882,9 @@ export class ForgeDateTimeFieldComponent {
 
   private _setFieldValue(value: unknown): void {
     try {
-      const f = this.field() as any;
-      if (f?.value?.set) {
-        f.value.set(value);
+      const state = this.field()?.() as any;
+      if (state?.value?.set) {
+        state.value.set(value);
       }
     } catch {
       // Silently handle if FieldTree value is not writable
@@ -891,9 +896,10 @@ export class ForgeDateTimeFieldComponent {
     if (!fieldName) return;
 
     try {
-      const sibling = (this.fieldSignalContext.form as any)?.[fieldName];
-      if (sibling?.value?.set) {
-        sibling.value.set(fullDay);
+      const siblingTree = (this.fieldSignalContext.form as any)?.[fieldName];
+      const siblingState = siblingTree?.() as any;
+      if (siblingState?.value?.set) {
+        siblingState.value.set(fullDay);
       }
     } catch {
       // Silently handle if sibling field is not writable
