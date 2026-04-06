@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, inject, signal, untracked } from '@angular/core';
 import { type AbstractControl, FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -170,6 +170,7 @@ export class ForgeDateTimeFieldComponent {
   private readonly _timeDate = signal<Maybe<Date>>(undefined);
   private readonly _presetConfigs = signal<DateTimePresetConfiguration[]>([]);
   private readonly _isCleared = signal(false);
+  private readonly _isTimeInputFocused = signal(false);
 
   // MARK: Subscription management
   private readonly _sub = new SubscriptionObject();
@@ -351,11 +352,14 @@ export class ForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  // Cleared state
+  // Observable versions of signals (must be at class level for injection context)
+  private readonly _isCleared$ = toObservable(this._isCleared);
+  private readonly _timeDate$ = toObservable(this._timeDate);
+
   readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null))]).pipe(
     switchMap(([date, time]) => {
       const isTimeCleared = Boolean(!date && !time);
-      return toObservable(this._isCleared).pipe(startWith(isTimeCleared));
+      return this._isCleared$.pipe(startWith(isTimeCleared));
     }),
     distinctUntilChanged(),
     shareReplay(1)
@@ -386,11 +390,15 @@ export class ForgeDateTimeFieldComponent {
       switchMap((configs) => {
         const config = configs.find((c) => c.syncType === type);
         if (config) {
-          return toObservable(
-            computed(() => {
+          // Poll the sibling field's signal value since toObservable() cannot be used
+          // inside switchMap (outside injection context).
+          return interval(500).pipe(
+            startWith(0),
+            map(() => {
               const val = config.fieldTree.value();
               return safeToJsDate(val as any) ?? null;
-            })
+            }),
+            distinctUntilChanged()
           );
         }
         return of(null);
@@ -499,7 +507,9 @@ export class ForgeDateTimeFieldComponent {
       if (this.isTimeOnly()) return of(allPresets);
       if (fullDay) return of([]);
 
-      return combineLatest([this.dateValue$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$]).pipe(map(([selectedDate, config]) => filterPresets(allPresets, selectedDate, false, false, config)));
+      // Use currentDate$ (includes null) so the combineLatest emits even when no date is set.
+      // Fall back to timeDate, then today, so presets are always available for time selection.
+      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(map(([selectedDate, config, timeDate]) => filterPresets(allPresets, selectedDate ?? timeDate ?? startOfDay(new Date()), false, false, config)));
     }),
     shareReplay(1)
   );
@@ -617,13 +627,16 @@ export class ForgeDateTimeFieldComponent {
       toggleDisableFormControl(this.timeCtrl, disabled);
     });
 
-    // Sync inbound: FieldTree value → form controls
+    // Sync inbound: FieldTree value → form controls.
+    // Uses untracked() for _isTimeInputFocused to avoid re-running on focus changes.
     effect(() => {
-      // Read the parsed value reactively
       const raw = this.fieldValue();
+      const isTimeFocused = untracked(() => this._isTimeInputFocused());
+
       if (raw == null) {
         if (this.dateCtrl.value != null) this.dateCtrl.setValue(null, { emitEvent: false });
-        if (this.timeCtrl.value) this.timeCtrl.setValue(null, { emitEvent: false });
+        // Do not clear time control while user is actively editing it
+        if (this.timeCtrl.value && !isTimeFocused) this.timeCtrl.setValue(null, { emitEvent: false });
         return;
       }
 
@@ -636,9 +649,12 @@ export class ForgeDateTimeFieldComponent {
         this.dateCtrl.setValue(date, { emitEvent: false });
       }
 
-      const timeStr = toLocalReadableTimeString(date);
-      if (timeStr !== this.timeCtrl.value) {
-        this.timeCtrl.setValue(timeStr, { emitEvent: false });
+      // Do not overwrite time control while user is actively editing it
+      if (!isTimeFocused) {
+        const timeStr = toLocalReadableTimeString(date);
+        if (timeStr !== this.timeCtrl.value) {
+          this.timeCtrl.setValue(timeStr, { emitEvent: false });
+        }
       }
     });
 
@@ -674,6 +690,10 @@ export class ForgeDateTimeFieldComponent {
         })
       )
       .subscribe(([x, isInputValueAtMidnight]) => {
+        // Do not overwrite time while user is actively editing the time input
+        if (this._isTimeInputFocused()) {
+          return;
+        }
         if (!this.timeCtrl.value && x === '12:00AM' && (!isInputValueAtMidnight || (isInputValueAtMidnight && hasSetMidnightFromInput))) {
           return;
         }
@@ -705,9 +725,27 @@ export class ForgeDateTimeFieldComponent {
         });
     }
 
-    // Resync time input on focus out
+    // Auto-fill date with today when user enters a time and no date is set (non-timeOnly fields only).
+    // Uses timeDate or today as the fallback date.
+    if (!this.isTimeOnly()) {
+      const autoFillDateOnTimeSub = this._updateTime
+        .pipe(
+          debounceTime(50),
+          filter(() => !this.dateCtrl.value && !!this.timeCtrl.value && !this.isTimeOnly())
+        )
+        .subscribe(() => {
+          const fallbackDate = this._timeDate() ?? startOfDay(new Date());
+          this.dateCtrl.setValue(fallbackDate);
+        });
+
+      this.destroyRef.onDestroy(() => autoFillDateOnTimeSub.unsubscribe());
+    }
+
+    // Resync time input on focus out — normalizes the display string from the stored value.
+    // Skip resync if timeString$ is empty but the user has typed a time (the output pipeline
+    // hasn't written back to the field tree yet).
     this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap(() => combineLatest([this.currentDate$, this.timeString$]).pipe(first()))).subscribe(([currentDate, timeString]) => {
-      if (currentDate != null) {
+      if (currentDate != null && (timeString || !this.timeCtrl.value)) {
         this.timeCtrl.setValue(timeString || null, { emitEvent: false });
       }
     });
@@ -775,10 +813,11 @@ export class ForgeDateTimeFieldComponent {
   }
 
   onTimeFocus(): void {
-    // no-op (placeholder for potential future use)
+    this._isTimeInputFocused.set(true);
   }
 
   onTimeBlur(): void {
+    this._isTimeInputFocused.set(false);
     if (!this.timeCtrl.hasError('pattern')) {
       this._updateTime.next();
       this._resyncTimeInput.next();
