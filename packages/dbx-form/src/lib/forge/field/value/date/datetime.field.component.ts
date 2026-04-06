@@ -584,7 +584,15 @@ export class ForgeDateTimeFieldComponent {
       // Timezone
       this._timezoneSub?.unsubscribe();
       if (p?.timezone && !p?.fullDayInUTC) {
-        this._timezoneSub = asObservableFromGetter(p.timezone).subscribe((tz) => this._timezone.set(tz));
+        this._timezoneSub = asObservableFromGetter(p.timezone).subscribe((tz) => {
+          const changed = this._timezone() !== tz;
+          this._timezone.set(tz);
+          // Re-trigger the output pipeline when timezone changes so the stored value
+          // is re-converted with the new timezone.
+          if (changed) {
+            this._updateTime.next();
+          }
+        });
       }
 
       // Picker config

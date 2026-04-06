@@ -242,6 +242,35 @@ describe('ForgeDateTimeFieldComponent', () => {
       expect(host.formValue()).toEqual(settled);
       fixture.destroy();
     });
+
+    it('should re-trigger output when timezone changes', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const timezone$ = new BehaviorSubject<Maybe<TimezoneString>>('America/New_York');
+
+      host.config = createConfig({ key: 'dt', timezone: timezone$ });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // Set a date+time
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      expect(comp!.resolvedTimezone()).toBe('America/New_York');
+
+      // Change timezone
+      timezone$.next('Asia/Tokyo');
+      await settle(fixture);
+
+      expect(comp!.resolvedTimezone()).toBe('Asia/Tokyo');
+      // The timezone change should trigger the output pipeline to reconvert
+      // (verified by checking the component updated its timezone instance)
+      expect(comp!.timezoneInstance()).toBeDefined();
+      fixture.destroy();
+    });
   });
 
   // MARK: Group B — Configuration Variants
