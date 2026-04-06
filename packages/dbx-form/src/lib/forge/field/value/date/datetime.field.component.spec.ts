@@ -4,7 +4,7 @@ import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetect
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { type FormConfig, DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
@@ -1059,6 +1059,182 @@ describe('ForgeDateTimeFieldComponent', () => {
       // Day-only mode = fullDay = no presets
       const presets = comp!.presetsSignal();
       expect(presets === undefined || presets?.length === 0).toBe(true);
+      fixture.destroy();
+    });
+  });
+
+  // MARK: Group F — Arrow Key Time Navigation
+  describe('arrow key time navigation', () => {
+    function makeKeyEvent(key: string, modifiers: Partial<{ altKey: boolean; shiftKey: boolean; ctrlKey: boolean }> = {}): KeyboardEvent {
+      return { key, ctrlKey: false, shiftKey: false, altKey: false, ...modifiers, preventDefault: () => {} } as unknown as KeyboardEvent;
+    }
+
+    /**
+     * Helper that waits for the next NEW emission from timeOutput$ after triggering an arrow key.
+     * Uses skip(1) to skip the cached shareReplay value.
+     */
+    async function pressArrowAndWaitForOutput(comp: ForgeDateTimeFieldComponent, event: KeyboardEvent): Promise<Date | undefined> {
+      return new Promise<Date | undefined>((resolve) => {
+        const sub = comp.timeOutput$.pipe(skip(1), first()).subscribe((val) => resolve(val ?? undefined));
+        comp.onTimeKeydown(event);
+        // Safety timeout in case no emission happens
+        setTimeout(() => {
+          sub.unsubscribe();
+          resolve(undefined);
+        }, 2000);
+      });
+    }
+
+    it('should increment time on ArrowUp (default 5 min step)', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      const result = await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowUp'));
+      expect(result).toBeDefined();
+      expect(result!.getMinutes()).toBe(5); // 2:00PM + 5min = 2:05PM
+      expect(result!.getHours()).toBe(14);
+      fixture.destroy();
+    });
+
+    it('should decrement time on ArrowDown (default 5 min step)', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      const result = await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowDown'));
+      expect(result).toBeDefined();
+      expect(result!.getMinutes()).toBe(55); // 2:00PM - 5min = 1:55PM
+      expect(result!.getHours()).toBe(13);
+      fixture.destroy();
+    });
+
+    it('should use 5x offset with Shift modifier', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      // Shift+ArrowUp = 5 steps × 5 min = 25 min
+      const result = await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowUp', { shiftKey: true }));
+      expect(result).toBeDefined();
+      expect(result!.getHours()).toBe(14);
+      expect(result!.getMinutes()).toBe(25); // 2:25PM
+      fixture.destroy();
+    });
+
+    it('should use 60x offset with Alt modifier', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      // Alt+ArrowUp = 60 steps × 5 min = 300 min = 5 hours
+      const result = await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowUp', { altKey: true }));
+      expect(result).toBeDefined();
+      expect(result!.getHours()).toBe(19); // 2PM + 5h = 7PM
+      expect(result!.getMinutes()).toBe(0);
+      fixture.destroy();
+    });
+
+    it('should use 300x offset with Alt+Shift modifier', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      // Alt+Shift+ArrowDown = 300 steps × 5 min = 1500 min = 25 hours
+      const result = await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowDown', { altKey: true, shiftKey: true }));
+      expect(result).toBeDefined();
+      // 2PM - 25h crosses into previous day
+      expect(result).not.toBeUndefined();
+      fixture.destroy();
+    });
+
+    it('should ignore non-arrow keys', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt' });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      // Press Enter — should not trigger offset
+      comp!.onTimeKeydown(makeKeyEvent('Enter'));
+      await settle(fixture);
+
+      expect(comp!.timeCtrl.value).toBe('2:00PM');
+      fixture.destroy();
+    });
+
+    it('should respect custom minuteStep', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt', minuteStep: 15 });
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+      expect(comp!.minuteStep()).toBe(15);
+
+      comp!.dateCtrl.setValue(startOfDay(new Date()));
+      comp!.setTime('2:00PM');
+      await settle(fixture);
+
+      // ArrowUp = 1 step × 15 min
+      const result = await pressArrowAndWaitForOutput(comp!, makeKeyEvent('ArrowUp'));
+      expect(result).toBeDefined();
+      expect(result!.getHours()).toBe(14);
+      expect(result!.getMinutes()).toBe(15); // 2:15PM
       fixture.destroy();
     });
   });
