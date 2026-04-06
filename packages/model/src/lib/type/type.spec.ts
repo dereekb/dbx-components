@@ -1,6 +1,45 @@
-import { type } from 'arktype';
-import { clearable } from './type';
+import { type, type Type } from 'arktype';
+import { clearable, emptyType, EMPTY_ARKTYPE_TYPE } from './type';
 import { ARKTYPE_DATE_DTO_TYPE } from './date';
+
+describe('emptyType()', () => {
+  it('should return the EMPTY_ARKTYPE_TYPE singleton', () => {
+    const result = emptyType();
+    expect(result).toBe(EMPTY_ARKTYPE_TYPE);
+  });
+
+  it('should return the same reference for different type parameters', () => {
+    interface ParamsA {}
+    interface ParamsB {}
+
+    const a = emptyType<ParamsA>();
+    const b = emptyType<ParamsB>();
+    expect(a).toBe(b);
+  });
+
+  it('should accept an empty object', () => {
+    const schema = emptyType();
+    const result = schema({});
+    expect(result instanceof type.errors).toBe(false);
+  });
+
+  it('should accept an object with extra keys', () => {
+    const schema = emptyType();
+    const result = schema({ extra: 'value' });
+    expect(result instanceof type.errors).toBe(false);
+  });
+
+  describe('usage as a typed param type', () => {
+    interface ResyncAllParams {}
+
+    const resyncAllParamsType: Type<ResyncAllParams> = emptyType<ResyncAllParams>();
+
+    it('should validate an empty object', () => {
+      const result = resyncAllParamsType({});
+      expect(result instanceof type.errors).toBe(false);
+    });
+  });
+});
 
 describe('clearable()', () => {
   describe('with a simple type (number)', () => {
