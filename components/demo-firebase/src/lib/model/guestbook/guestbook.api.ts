@@ -1,8 +1,9 @@
-import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 import { type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
+import { GuestbookKey } from './guestbook.id';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
@@ -46,6 +47,31 @@ export const likeGuestbookEntryParamsType = targetModelParamsType as Type<LikeGu
 export type SubscribeToGuestbookNotificationsParams = AbstractSubscribeToNotificationBoxParams;
 
 export const subscribeToGuestbookNotificationsParamsType = abstractSubscribeToNotificationBoxParamsType as Type<SubscribeToGuestbookNotificationsParams>;
+
+// MARK: Query
+/**
+ * Query parameters for searching guestbooks.
+ */
+export interface QueryGuestbooksParams extends OnCallQueryModelRequestParams {
+  /**
+   * Filter by published status. When omitted, returns all guestbooks.
+   */
+  readonly published?: boolean;
+}
+
+/**
+ * Query parameters for searching guestbook entries.
+ */
+export interface QueryGuestbookEntriesParams extends OnCallQueryModelRequestParams {
+  /**
+   * Key of the parent guestbook to query entries from. Required.
+   */
+  readonly guestbook: GuestbookKey;
+  /**
+   * Filter by published status. When omitted, returns all entries.
+   */
+  readonly published?: boolean;
+}
 
 export type GuestbookFunctionTypeMap = {};
 

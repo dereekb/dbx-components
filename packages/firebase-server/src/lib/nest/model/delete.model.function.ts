@@ -1,5 +1,5 @@
 import { type PromiseOrValue, serverError } from '@dereekb/util';
-import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallDeleteModelParams, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
+import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallDeleteModelParams, type ModelFirebaseCrudFunctionSpecifierRef, UNKNOWN_MODEL_TYPE_ERROR_CODE } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { type NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
@@ -100,13 +100,13 @@ export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>, config: OnCal
  * Creates a bad-request error indicating the requested model type is not valid for deletion.
  *
  * @param modelType - The unrecognized model type string.
- * @returns A bad-request error with UNKNOWN_TYPE_ERROR code.
+ * @returns A bad-request error with {@link UNKNOWN_MODEL_TYPE_ERROR_CODE} code.
  */
 export function deleteModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(
     serverError({
       status: 400,
-      code: 'UNKNOWN_TYPE_ERROR',
+      code: UNKNOWN_MODEL_TYPE_ERROR_CODE,
       message: 'Invalid type to delete.',
       data: {
         modelType

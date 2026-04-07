@@ -1,5 +1,5 @@
 import { type PromiseOrValue, serverError } from '@dereekb/util';
-import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallUpdateModelParams, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
+import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallUpdateModelParams, type ModelFirebaseCrudFunctionSpecifierRef, UNKNOWN_MODEL_TYPE_ERROR_CODE } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
 import { type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
 import { type NestContextCallableRequestWithAuth, type NestContextCallableRequestWithOptionalAuth } from '../function/nest';
@@ -103,13 +103,13 @@ export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCal
  * Creates a bad-request error indicating the requested model type is not valid for updating.
  *
  * @param modelType - The unrecognized model type string.
- * @returns A bad-request error with UNKNOWN_TYPE_ERROR code.
+ * @returns A bad-request error with {@link UNKNOWN_MODEL_TYPE_ERROR_CODE} code.
  */
 export function updateModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(
     serverError({
       status: 400,
-      code: 'UNKNOWN_TYPE_ERROR',
+      code: UNKNOWN_MODEL_TYPE_ERROR_CODE,
       message: 'Invalid type to update.',
       data: {
         modelType

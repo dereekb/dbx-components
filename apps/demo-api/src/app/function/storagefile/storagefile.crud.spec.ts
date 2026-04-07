@@ -49,10 +49,11 @@ import {
   storageFilePurposeAndUserQuery,
   type StorageFilePurpose,
   type FirebaseAuthUserId,
-  type StorageFilePurposeSubgroup
+  type StorageFilePurposeSubgroup,
+  MODEL_NOT_AVAILABLE_ERROR_CODE
 } from '@dereekb/firebase';
 import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
-import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
 import AdmZip from 'adm-zip';

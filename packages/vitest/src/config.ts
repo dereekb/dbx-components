@@ -245,6 +245,11 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     // https://vitest.dev/guide/reporters.html#junit-reporter
     const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { suiteName, includeConsoleOutput: false, outputFile: `${rootDir}/.reports/junit/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
 
+    // set isolate
+    const isolate = forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] != null ? process.env['DBX_VITEST_ISOLATE'] === 'true' : !isCI);
+
+    console.log({ isolate });
+
     return {
       root: pathFromRoot,
       cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,
@@ -277,7 +282,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
          *
          * See: https://github.com/vitest-dev/vitest/issues/9499
          */
-        isolate: forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] != null ? process.env['DBX_VITEST_ISOLATE'] === 'true' : !isCI),
+        isolate,
         coverage: {
           reportsDirectory: `${pathToRoot}/coverage/${projectName}`,
           provider: 'v8' as const

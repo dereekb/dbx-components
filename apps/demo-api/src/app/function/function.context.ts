@@ -11,6 +11,8 @@ import {
   type OnCallDeleteModelFunction,
   type OnCallCreateModelFunction,
   type OnCallCreateModelMap,
+  type OnCallQueryModelFunction,
+  type OnCallQueryModelMap,
   type OnScheduleWithNestContext,
   type OnCallDevelopmentFunction,
   type OnCallDevelopmentFunctionMap,
@@ -21,7 +23,7 @@ import {
   onScheduleHandlerWithNestApplicationFactory,
   onScheduleHandlerWithNestContextFactory
 } from '@dereekb/firebase-server';
-import { type OnCallCreateModelResult } from '@dereekb/firebase';
+import { type OnCallCreateModelResult, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';
@@ -113,6 +115,9 @@ export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, 
 
 export type DemoDeleteModelFunction<I, O = void> = OnCallDeleteModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, DemoCallModelTypes>;
+
+export type DemoQueryModelFunction<I extends OnCallQueryModelRequestParams, O> = OnCallQueryModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallQueryModelMap = OnCallQueryModelMap<DemoApiNestContext, DemoCallModelTypes>;
 
 // MARK: Schedule Functions
 export type DemoScheduleFunction = OnScheduleWithNestContext<DemoApiNestContext>;
