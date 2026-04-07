@@ -53,12 +53,21 @@ export interface ForgeComponentFieldConfig<T = unknown> {
  * });
  * ```
  */
+/**
+ * Counter for generating unique keys when no explicit key is provided.
+ *
+ * Each invocation gets a unique key so that ng-forge's field reconciliation
+ * (`reconcileFields`) treats a config change as a new field rather than
+ * preserving the stale instance whose captured `props` never update.
+ */
+let _componentFieldCounter = 0;
+
 export function forgeComponentField<T = unknown>(config: ForgeComponentFieldConfig<T>): ForgeComponentFieldDef<T> {
   const { key, label, componentField } = config;
 
   return forgeField(
     filterFromPOJO({
-      key: key || '_component',
+      key: key || `_component_${++_componentFieldCounter}`,
       type: 'dbx-component' as const,
       label: label ?? '',
       value: undefined as unknown,
