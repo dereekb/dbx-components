@@ -184,6 +184,17 @@ export class DocFormValueComponent {
     ]
   };
 
+  readonly forgeToggleNoBoxFieldConfig: FormConfig = {
+    fields: [
+      forgeToggleField({
+        key: 'toggle',
+        label: 'Toggle Me',
+        description: 'this is a toggle field without a styled box',
+        styledBox: false
+      })
+    ]
+  };
+
   readonly checkboxField: FormlyFieldConfig[] = [
     checkboxField({
       key: 'checkbox',

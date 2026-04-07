@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { DOLLAR_AMOUNT_PRECISION } from '@dereekb/util';
 import { forgeNumberField, forgeNumberSliderField, forgeDollarAmountField } from './number.field';
+import { FORGE_SLIDER_FIELD_TYPE } from './slider.field.component';
 
 describe('forgeNumberField()', () => {
   it('should create an input field with number type in props', () => {
@@ -44,14 +45,19 @@ describe('forgeNumberField()', () => {
     expect(field.props?.placeholder).toBe('0');
   });
 
-  it('should default value to 0', () => {
+  it('should have no default value when none is specified', () => {
     const field = forgeNumberField({ key: 'qty' });
-    expect(field.value).toBe(0);
+    expect(field.value).toBeUndefined();
   });
 
   it('should use defaultValue when provided', () => {
     const field = forgeNumberField({ key: 'qty', defaultValue: 42 });
     expect(field.value).toBe(42);
+  });
+
+  it('should allow defaultValue of 0', () => {
+    const field = forgeNumberField({ key: 'qty', defaultValue: 0 });
+    expect(field.value).toBe(0);
   });
 
   it('should provide empty label when not specified', () => {
@@ -61,9 +67,9 @@ describe('forgeNumberField()', () => {
 });
 
 describe('forgeNumberSliderField()', () => {
-  it('should create a slider field with correct type', () => {
+  it('should create a slider field with dbx-slider type', () => {
     const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', max: 10 });
-    expect(field.type).toBe('slider');
+    expect(field.type).toBe(FORGE_SLIDER_FIELD_TYPE);
     expect(field.key).toBe('rating');
     expect(field.label).toBe('Rating');
   });
@@ -110,9 +116,9 @@ describe('forgeNumberSliderField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should default value to 0', () => {
+  it('should have no default value when none is specified', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
-    expect(field.value).toBe(0);
+    expect(field.value).toBeUndefined();
   });
 
   it('should use defaultValue when provided', () => {
@@ -120,9 +126,19 @@ describe('forgeNumberSliderField()', () => {
     expect(field.value).toBe(5);
   });
 
+  it('should allow defaultValue of 0', () => {
+    const field = forgeNumberSliderField({ key: 'rating', max: 10, defaultValue: 0 });
+    expect(field.value).toBe(0);
+  });
+
   it('should provide empty label when not specified', () => {
     const field = forgeNumberSliderField({ key: 'rating', max: 10 });
     expect(field.label).toBe('');
+  });
+
+  it('should set description as hint in props', () => {
+    const field = forgeNumberSliderField({ key: 'rating', max: 10, description: 'A hint' });
+    expect(field.props?.hint).toBe('A hint');
   });
 });
 
@@ -141,6 +157,11 @@ describe('forgeDollarAmountField()', () => {
   it('should set required when specified', () => {
     const field = forgeDollarAmountField({ key: 'price', required: true });
     expect(field.required).toBe(true);
+  });
+
+  it('should have no default value when none is specified', () => {
+    const field = forgeDollarAmountField({ key: 'price' });
+    expect(field.value).toBeUndefined();
   });
 
   it('should use defaultValue when provided', () => {

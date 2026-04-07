@@ -1,6 +1,13 @@
 import type { FieldDef } from '@ng-forge/dynamic-forms';
 
 /**
+ * CSS class applied to forge fields when `styledBox` is enabled.
+ *
+ * Mirrors the Material outlined form-field appearance for fields that don't use `<mat-form-field>` (checkbox, toggle, slider).
+ */
+export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
+
+/**
  * Validates the configuration on the input forge field definition.
  *
  * Ensures the field has a key set. Throws an error if the key is missing.

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { forgeToggleField, forgeCheckboxField } from './boolean.field';
+import { FORGE_STYLED_BOX_CLASS } from '../../field';
 
 describe('forgeToggleField()', () => {
   it('should create a toggle field with correct type', () => {
@@ -32,6 +33,21 @@ describe('forgeToggleField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeToggleField({ key: 'active' });
     expect(field.label).toBe('');
+  });
+
+  it('should set description as hint in props', () => {
+    const field = forgeToggleField({ key: 'active', description: 'A hint' });
+    expect(field.props?.hint).toBe('A hint');
+  });
+
+  it('should apply styled box className by default', () => {
+    const field = forgeToggleField({ key: 'active' });
+    expect(field.className).toBe(FORGE_STYLED_BOX_CLASS);
+  });
+
+  it('should not apply styled box className when styledBox is false', () => {
+    const field = forgeToggleField({ key: 'active', styledBox: false });
+    expect(field.className).toBeUndefined();
   });
 });
 
@@ -66,5 +82,20 @@ describe('forgeCheckboxField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeCheckboxField({ key: 'agree' });
     expect(field.label).toBe('');
+  });
+
+  it('should set description as hint in props', () => {
+    const field = forgeCheckboxField({ key: 'agree', description: 'A hint' });
+    expect(field.props?.hint).toBe('A hint');
+  });
+
+  it('should apply styled box className by default', () => {
+    const field = forgeCheckboxField({ key: 'agree' });
+    expect(field.className).toBe(FORGE_STYLED_BOX_CLASS);
+  });
+
+  it('should not apply styled box className when styledBox is false', () => {
+    const field = forgeCheckboxField({ key: 'agree', styledBox: false });
+    expect(field.className).toBeUndefined();
   });
 });

@@ -1,6 +1,7 @@
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { forgeField } from '../../field';
+import { FORGE_SLIDER_FIELD_TYPE, type ForgeSliderFieldProps } from './slider.field.component';
 
 // MARK: Number Field
 /**
@@ -58,7 +59,7 @@ export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField 
       key,
       type: 'input' as const,
       label: label ?? '',
-      value: defaultValue ?? 0,
+      value: defaultValue,
       required,
       readonly: isReadonly,
       min,
@@ -91,10 +92,13 @@ export interface ForgeNumberSliderFieldConfig extends ForgeNumberFieldConfig {
 }
 
 /**
- * Creates a forge field definition for a Material slider input.
+ * Creates a forge field definition for a Material slider wrapped in a `<mat-form-field>`.
+ *
+ * Uses the custom `dbx-slider` field type that provides the outlined label, hint,
+ * and error display via `<mat-form-field>`.
  *
  * @param config - Slider field configuration including max (required), thumb label, and tick interval
- * @returns A validated {@link MatSliderField} with type `'slider'`
+ * @returns A validated field definition with type `'dbx-slider'`
  *
  * @example
  * ```typescript
@@ -112,7 +116,8 @@ export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): Ma
 
   const tickInterval: number | undefined = inputTickInterval === false ? undefined : (inputTickInterval ?? tickIntervalFromSteps ?? undefined);
 
-  const props: Partial<MatSliderProps> = filterFromPOJO({
+  const props: Partial<ForgeSliderFieldProps> = filterFromPOJO({
+    hint: description,
     min,
     max,
     step,
@@ -123,9 +128,9 @@ export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): Ma
   return forgeField(
     filterFromPOJO({
       key,
-      type: 'slider' as const,
+      type: FORGE_SLIDER_FIELD_TYPE as any,
       label: label ?? '',
-      value: defaultValue ?? 0,
+      value: defaultValue,
       required,
       readonly: isReadonly,
       props: Object.keys(props).length > 0 ? props : undefined

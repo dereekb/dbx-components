@@ -13,6 +13,14 @@ import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field
 import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
 import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
 import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
+import { DBX_FORGE_SECTION_HEADER_FIELD_TYPE } from './field/wrapper/section/section.header.field';
+import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field';
+import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
+import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
+import { DBX_FORGE_AUTOTOUCH_FIELD_TYPE } from './field/wrapper/autotouch/autotouch.field';
+import { DBX_FORGE_DRAG_ARRAY_FIELD_TYPE } from './field/value/array/dragarray.field';
+import { FORGE_SLIDER_FIELD_TYPE } from './field/value/number/slider.field.component';
+import { sliderFieldMapper } from './field/value/number/slider.field.component';
 
 /**
  * Forge phone field type definition.
@@ -76,9 +84,42 @@ const ForgeTimeDurationFieldType: FieldTypeDefinition = {
 };
 
 /**
+ * Forge slider field type definition.
+ *
+ * Registers a custom slider component that wraps `<mat-slider>` inside `<mat-form-field>`
+ * for consistent outlined appearance with label, hint, and error display.
+ */
+const ForgeSliderFieldType: FieldTypeDefinition = {
+  name: FORGE_SLIDER_FIELD_TYPE,
+  loadComponent: () => import('./field/value/number/slider.field.component').then((m) => m.ForgeSliderFieldComponent),
+  mapper: sliderFieldMapper
+};
+
+/**
  * All custom dbx-form forge field type definitions.
  */
-export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [ForgePhoneFieldType, ForgeDateTimeFieldType, ForgeDateRangeFieldType, ForgeFixedDateRangeFieldType, ForgeTimeDurationFieldType, DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_CHIP_FIELD_TYPE, DBX_PICKABLE_LIST_FIELD_TYPE, DBX_LIST_SELECTION_FIELD_TYPE, DBX_SOURCE_SELECT_FIELD_TYPE, DBX_TEXT_EDITOR_FIELD_TYPE, DBX_COMPONENT_FIELD_TYPE];
+export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
+  ForgePhoneFieldType,
+  ForgeDateTimeFieldType,
+  ForgeDateRangeFieldType,
+  ForgeFixedDateRangeFieldType,
+  ForgeTimeDurationFieldType,
+  ForgeSliderFieldType,
+  DBX_SEARCHABLE_TEXT_FIELD_TYPE,
+  DBX_SEARCHABLE_CHIP_FIELD_TYPE,
+  DBX_PICKABLE_CHIP_FIELD_TYPE,
+  DBX_PICKABLE_LIST_FIELD_TYPE,
+  DBX_LIST_SELECTION_FIELD_TYPE,
+  DBX_SOURCE_SELECT_FIELD_TYPE,
+  DBX_TEXT_EDITOR_FIELD_TYPE,
+  DBX_COMPONENT_FIELD_TYPE,
+  DBX_FORGE_SECTION_HEADER_FIELD_TYPE,
+  DBX_FORGE_EXPAND_FIELD_TYPE,
+  DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
+  DBX_FORGE_WORKING_FIELD_TYPE,
+  DBX_FORGE_AUTOTOUCH_FIELD_TYPE,
+  DBX_FORGE_DRAG_ARRAY_FIELD_TYPE
+];
 
 /**
  * Registers ng-forge dynamic form field declarations with Material Design field types
