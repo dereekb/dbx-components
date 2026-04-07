@@ -106,4 +106,12 @@ export const demoCallModelMap: OnCallModelMap = {
   delete: onCallDeleteModel(demoDeleteModelMap)
 };
 
-export const demoCallModel = onCallWithDemoNestContext(onCallModel(demoCallModelMap));
+/**
+ * The raw onCallModel dispatch function with _apiDetails attached.
+ *
+ * Used by the Model API and MCP controllers to dispatch requests
+ * and introspect the handler metadata tree.
+ */
+export const demoCallModelFn = onCallModel(demoCallModelMap);
+
+export const demoCallModel = onCallWithDemoNestContext(demoCallModelFn);
