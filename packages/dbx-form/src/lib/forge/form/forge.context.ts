@@ -1,9 +1,47 @@
 import { Injectable, type OnDestroy, type Provider } from '@angular/core';
-import { BehaviorSubject, type Observable, shareReplay } from 'rxjs';
+import { BehaviorSubject, combineLatest, type Observable, shareReplay, filter, map } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
+
+/**
+ * Recursively strips keys that start with `_` from a form value object.
+ *
+ * ng-forge wrapper/layout fields (sections, toggles, expand, rows) use auto-generated
+ * keys prefixed with `_` (e.g. `_section_1`, `_toggle_2`). These are layout artifacts
+ * and should not appear in the final form output.
+ *
+ * - Object values under `_` keys are "unwrapped": their contents are merged into the parent.
+ * - Primitive values under `_` keys (e.g. toggle booleans) are dropped entirely.
+ * - Non-underscore keys are preserved, with recursive cleaning of nested objects.
+ *
+ * @example
+ * ```
+ * stripForgeInternalKeys({ _toggle_1: false, _section_6: { name: "Bob" } })
+ * // → { name: "Bob" }
+ * ```
+ */
+export function stripForgeInternalKeys<T>(value: T): T {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+
+  const result: Record<string, unknown> = {};
+
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (key.startsWith('_')) {
+      if (val != null && typeof val === 'object' && !Array.isArray(val)) {
+        Object.assign(result, stripForgeInternalKeys(val));
+      }
+      // Primitive _ keys (toggle booleans, etc.) are dropped
+    } else {
+      result[key] = stripForgeInternalKeys(val);
+    }
+  }
+
+  return result as T;
+}
 
 /**
  * Context service managing a ng-forge dynamic form's connection to the DbxForm system.
@@ -17,10 +55,28 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
   readonly lockSet = new LockSet();
 
+  /**
+   * When true (default), {@link getValue} only emits values when the form is valid.
+   * Set to false to emit all values regardless of validation state.
+   */
+  requireValid = true;
+
+  /**
+   * When true (default), keys starting with `_` are stripped from the form value
+   * before it is emitted by {@link getValue}. These keys are layout artifacts from
+   * ng-forge wrappers (sections, toggles, expand groups, rows) and are not part of
+   * the domain model.
+   *
+   * Object values under `_` keys are unwrapped (contents merged into parent);
+   * primitive `_` values (e.g. toggle booleans) are dropped entirely.
+   */
+  stripInternalKeys = true;
+
   private readonly _config = new BehaviorSubject<Maybe<FormConfig>>(undefined);
   private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
   private readonly _formState = new BehaviorSubject<DbxFormEvent>(DbxForgeFormContext.INITIAL_STATE);
   private readonly _value = new BehaviorSubject<Maybe<T>>(undefined);
+  private readonly _isValid = new BehaviorSubject<boolean>(false);
   private readonly _setValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
   private readonly _reset = new BehaviorSubject<Date>(new Date());
 
@@ -42,10 +98,21 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   }
 
   updateValue(value: T): void {
-    this._value.next(value);
+    this._value.next(this.stripInternalKeys ? stripForgeInternalKeys(value) : value);
+  }
+
+  updateIsValid(valid: boolean): void {
+    this._isValid.next(valid);
   }
 
   getValue(): Observable<T> {
+    if (this.requireValid) {
+      return combineLatest([this._value.pipe(filterMaybe()), this._isValid]).pipe(
+        filter(([, valid]) => valid),
+        map(([value]) => value)
+      );
+    }
+
     return this._value.pipe(filterMaybe());
   }
 
@@ -76,6 +143,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
       this._disabled.complete();
       this._formState.complete();
       this._value.complete();
+      this._isValid.complete();
       this._setValue.complete();
       this._reset.complete();
     });

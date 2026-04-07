@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, computed, inject, signal, effect, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, type OnDestroy, computed, inject, signal, effect, untracked, viewChild } from '@angular/core';
 import { DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
@@ -29,6 +29,8 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   private readonly _context = inject(DbxForgeFormContext<T>);
   private readonly _subs = new SubscriptionObject();
 
+  readonly dynamicForm = viewChild(DynamicForm);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly formValue = signal<any>({});
   readonly configSignal = toSignal(this._context.config$, { initialValue: undefined });
@@ -41,7 +43,13 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
 
   /**
-   * Track form value changes and derive DbxFormEvent state.
+   * Computed validity from the ng-forge DynamicForm's valid signal.
+   * Returns false when the DynamicForm has not yet been created.
+   */
+  readonly formValid = computed(() => this.dynamicForm()?.valid() ?? false);
+
+  /**
+   * Track form value changes and update the context value + changes count.
    *
    * Only `formValue()` is tracked — all other signal reads use `untracked()`
    * to avoid infinite re-triggering from writing back to signals in this effect.
@@ -58,21 +66,44 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
       const isReset = changesCount <= 1;
       this._isReset.set(isReset);
 
-      const state: DbxFormEvent = {
-        isComplete: !this.isDisabled(),
-        status: this.isDisabled() ? 'DISABLED' : 'VALID',
-        state: isReset ? DbxFormState.RESET : DbxFormState.USED,
-        pristine: isReset,
-        untouched: isReset,
-        changesCount,
-        isDisabled: this.isDisabled(),
-        disabled: this._disabled(),
-        lastResetAt: this._lastResetAt()
-      };
-
-      this._context.updateFormState(state);
+      this._emitFormState();
     });
   });
+
+  /**
+   * Track validity changes from the DynamicForm and update the context.
+   *
+   * Separated from the value effect so that validity changes (e.g. async validators resolving)
+   * update isComplete and status without incrementing changesCount.
+   */
+  private readonly _validityEffect = effect(() => {
+    const isValid = this.formValid();
+
+    untracked(() => {
+      this._context.updateIsValid(isValid);
+      this._emitFormState();
+    });
+  });
+
+  private _emitFormState(): void {
+    const isValid = this.formValid();
+    const isReset = this._isReset();
+    const changesCount = this._changesCount();
+
+    const state: DbxFormEvent = {
+      isComplete: !this.isDisabled() && isValid,
+      status: this.isDisabled() ? 'DISABLED' : isValid ? 'VALID' : 'INVALID',
+      state: isReset ? DbxFormState.RESET : DbxFormState.USED,
+      pristine: isReset,
+      untouched: isReset,
+      changesCount,
+      isDisabled: this.isDisabled(),
+      disabled: this._disabled(),
+      lastResetAt: this._lastResetAt()
+    };
+
+    this._context.updateFormState(state);
+  }
 
   ngOnInit(): void {
     // Listen for setValue from context
