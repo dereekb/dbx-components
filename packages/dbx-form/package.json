@@ -16,6 +16,7 @@
     "@dereekb/model": "13.6.17",
     "@dereekb/rxjs": "13.6.17",
     "@dereekb/util": "13.6.17",
+    "@dereekb/vitest": "13.6.17",
     "@ng-web-apis/geolocation": "^5.1.0",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/component-store": "^21.0.0",

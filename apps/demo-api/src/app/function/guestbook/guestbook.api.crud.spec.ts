@@ -1,7 +1,6 @@
 import request from 'supertest';
 import { type CreateGuestbookParams, type QueryGuestbooksParams, guestbookIdentity } from 'demo-firebase';
-import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from '../../../test/fixture';
-import { demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture.oidc';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext, demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture';
 import { type OnCallCreateModelResult, type OnCallQueryModelResult, onCallCreateModelParams, onCallQueryModelParams } from '@dereekb/firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {

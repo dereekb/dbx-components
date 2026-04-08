@@ -8,6 +8,7 @@
     "@dereekb/date": "13.6.17",
     "@dereekb/dbx-web": "13.6.17",
     "@dereekb/util": "13.6.17",
+    "@dereekb/vitest": "13.6.17",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/component-store": "^21.0.0",
     "angular-calendar": "^0.32.1",

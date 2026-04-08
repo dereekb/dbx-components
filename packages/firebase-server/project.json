@@ -15,9 +15,6 @@
             "command": "npx nx run firebase-server:build-base"
           },
           {
-            "command": "npx nx run firebase-server-test:build-base"
-          },
-          {
             "command": "npx nx run firebase-server-mailgun:build-base"
           },
           {
@@ -28,6 +25,9 @@
           },
           {
             "command": "npx nx run firebase-server-oidc:build-base"
+          },
+          {
+            "command": "npx nx run firebase-server-test:build-base"
           }
         ],
         "parallel": false

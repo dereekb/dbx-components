@@ -15,6 +15,7 @@ import {
   modelTestContextFactory,
   ModelTestContextFixture,
   ModelTestContextInstance,
+  oAuthAuthorizedSuperTestContextFactory,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
 import { type BuildTestsWithContextFunction, type TestContextFixture } from '@dereekb/util/test';
@@ -1152,3 +1153,11 @@ export const demoStorageFileGroupContextFactory = () =>
   });
 
 export const demoStorageFileGroupContext = demoStorageFileGroupContextFactory();
+
+// MARK: Oidc
+/**
+ * Factory that performs a full OAuth authorization code flow for demo-api tests.
+ *
+ * Scopes are auto-resolved from `OidcAccountService.providerConfig.claims`.
+ */
+export const demoOAuthAuthorizedSuperTestContext = oAuthAuthorizedSuperTestContextFactory();

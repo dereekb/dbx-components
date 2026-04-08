@@ -51,12 +51,12 @@
   "peerDependencies": {
     "@dereekb/rxjs": "13.6.17",
     "@dereekb/util": "13.6.17",
-    "discord.js": "^14.25.1",
     "@nestjs/common": "^11.1.17",
     "@nestjs/config": "^4.0.3",
     "@typeform/api-client": "^2.5.1",
     "@vapi-ai/server-sdk": "^0.11.0",
     "body-parser": "^2.0.0",
+    "discord.js": "^14.25.1",
     "express": "^5.0.0",
     "form-data": "^4.0.0",
     "mailgun.js": "^12.0.0",
@@ -64,5 +64,12 @@
     "raw-body": "^3.0.0",
     "stripe": "^20.4.1"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@angular/core": "21.2.3",
+    "@nestjs/core": "^11.1.17",
+    "@typescript-eslint/parser": "8.56.1",
+    "eslint": "9.39.3",
+    "rxjs": "^7.8.0"
+  }
 }
