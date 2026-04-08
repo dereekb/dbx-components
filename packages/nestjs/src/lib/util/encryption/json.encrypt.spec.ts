@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { selectiveFieldEncryptor } from '@dereekb/util';
 import { isValidAES256GCMEncryptionSecret, resolveEncryptionKey, encryptValue, decryptValue, createAES256GCMEncryption, createAesStringEncryptionProvider } from './json.encrypt';
 

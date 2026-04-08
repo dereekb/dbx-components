@@ -4,8 +4,8 @@ import { defineConfig, type ViteUserConfigFn } from 'vitest/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { type loadEnv, type PluginOption } from 'vite';
-import { createRequire } from 'module';
-import path from 'path';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
 type SequenceHooks = NonNullable<VitestTestConfig['sequence']>['hooks'];
@@ -260,9 +260,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     const reporters: VitestTestConfig['reporters'] = ['default', ['junit', { suiteName, includeConsoleOutput: false, outputFile: `${rootDir}/.reports/junit/${junitFilePrefix ?? ''}${projectName}.junit.xml` }]];
 
     // set isolate
-    const isolate = forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] != null ? process.env['DBX_VITEST_ISOLATE'] === 'true' : !isCI);
-
-    console.log({ isolate });
+    const isolate = forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] == null ? !isCI : process.env['DBX_VITEST_ISOLATE'] === 'true');
 
     return {
       root: pathFromRoot,

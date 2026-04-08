@@ -416,6 +416,7 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
           await app.auth().deleteUser(uid);
         } catch (e) {
           // Ignore teardown errors (e.g., app already deleted during stale Vitest reload)
+          console.warn(`authorizedUserContextFactory(): Failed to destroy user ${instance.uid}`, e);
         }
       }
     });

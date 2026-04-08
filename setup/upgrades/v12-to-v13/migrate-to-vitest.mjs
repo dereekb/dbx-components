@@ -3,7 +3,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile, writeFile, unlink } from 'fs/promises';
-import { join } from 'path';
+import { join } from 'node:path';
 
 const execAsync = promisify(exec);
 

@@ -1,9 +1,9 @@
 import request from 'supertest';
 import { type INestApplication } from '@nestjs/common';
 import { AbstractTestContextFixture, useTestContextFixture } from '@dereekb/util/test';
-import { FirebaseAdminNestTestContextFixture, type FirebaseAdminNestTestContext } from '../firebase/firebase.admin.nest';
+import { FirebaseAdminNestTestContextFixture } from '../firebase/firebase.admin.nest';
 import { type OAuthTestFlowConfig, setupAndPerformFullOAuthFlow } from './oidc.test.flow';
-import { AuthorizedUserTestContext, AuthorizedUserTestContextFixture } from '../firebase';
+import { AuthorizedUserTestContextFixture } from '../firebase';
 
 // MARK: Config
 /**

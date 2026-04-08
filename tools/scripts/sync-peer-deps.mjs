@@ -9,8 +9,8 @@
  * Usage: node tools/scripts/sync-peer-deps.mjs [--dry-run] [--skip-internal]
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve, relative } from 'path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve, relative } from 'node:path';
 import { glob } from 'glob';
 
 const ROOT_DIR = resolve(import.meta.dirname, '..', '..');

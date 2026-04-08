@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import type { OidcTokenEndpointAuthMethod } from '@dereekb/firebase';

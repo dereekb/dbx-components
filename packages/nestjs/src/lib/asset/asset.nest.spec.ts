@@ -1,6 +1,6 @@
 import { AssetLoader, localAsset, remoteAsset } from '@dereekb/rxjs';
 import { firstValueFrom } from 'rxjs';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import { appAssetLoaderModuleMetadata } from './asset.nest';
 
 /**

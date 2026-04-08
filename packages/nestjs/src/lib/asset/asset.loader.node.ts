@@ -1,7 +1,7 @@
 import { type SlashPath } from '@dereekb/util';
 import { type AssetPathRef, type AssetLocalPathRef, type AssetLoaderGetFn, type AssetLoader, assetLoaderFromGetFn } from '@dereekb/rxjs';
 import { readFile } from 'fs/promises';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
 /**
  * Configuration for {@link nodeJsLocalAssetLoader}.

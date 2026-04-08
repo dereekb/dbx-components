@@ -46,7 +46,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(guestbookIdentity, params))) as OnCallCreateModelResult;
 
         const accessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
-        const document = accessor.loadDocumentForKey(result.modelKeys[0] as string);
+        const document = accessor.loadDocumentForKey(result.modelKeys[0]);
         await document.accessor.set({ name, published, locked: false });
 
         return result;

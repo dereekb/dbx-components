@@ -1,6 +1,6 @@
 import { type ZoomConfig, type ZoomFactoryConfig } from '@dereekb/zoom';
 
-export type ZoomServiceApiConfig = ZoomConfig & {};
+export type ZoomServiceApiConfig = ZoomConfig;
 
 /**
  * Configuration for ZoomService

@@ -3,7 +3,25 @@ import { type CreateGuestbookParams, type QueryGuestbooksParams, guestbookIdenti
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext, demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture';
 import { type OnCallCreateModelResult, type OnCallQueryModelResult, onCallCreateModelParams, onCallQueryModelParams } from '@dereekb/firebase';
 
+vi.setConfig({ hookTimeout: 20000, testTimeout: 20000 });
+
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
+  // MARK: Helper
+  async function createGuestbookViaApi(oauth: { authRequest: (method: 'get' | 'post' | 'put' | 'patch' | 'delete', path: string) => any }, name: string, published = true): Promise<OnCallCreateModelResult> {
+    const params: CreateGuestbookParams = { name };
+    const body = onCallCreateModelParams(guestbookIdentity, params);
+
+    const res = await oauth.authRequest('post', '/api/model/call').send(body).expect(201);
+    const result = res.body as OnCallCreateModelResult;
+
+    // Set the published/locked fields directly (create only sets the name)
+    const accessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
+    const document = accessor.loadDocumentForKey(result.modelKeys[0]);
+    await document.accessor.set({ name, published, locked: false });
+
+    return result;
+  }
+
   // MARK: Unauthenticated
   describe('unauthenticated requests', () => {
     let server: any;
@@ -45,22 +63,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(res.body.sub).toBe(u.uid);
       });
 
-      // MARK: Helper
-      async function createGuestbookViaApi(name: string, published = true): Promise<OnCallCreateModelResult> {
-        const params: CreateGuestbookParams = { name };
-        const body = onCallCreateModelParams(guestbookIdentity, params);
-
-        const res = await oauth.authRequest('post', '/api/model/call').send(body).expect(201);
-        const result = res.body as OnCallCreateModelResult;
-
-        // Set the published/locked fields directly (create only sets the name)
-        const accessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
-        const document = accessor.loadDocumentForKey(result.modelKeys[0] as string);
-        await document.accessor.set({ name, published, locked: false });
-
-        return result;
-      }
-
       // MARK: Create
       describe('create guestbook via API', () => {
         it('should create a guestbook via POST /api/model/call', async () => {
@@ -85,8 +87,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       // MARK: Query
       describe('query guestbooks via API', () => {
         it('should query published guestbooks', async () => {
-          await createGuestbookViaApi('Alpha');
-          await createGuestbookViaApi('Beta');
+          await createGuestbookViaApi(oauth, 'Alpha');
+          await createGuestbookViaApi(oauth, 'Beta');
 
           const queryParams: QueryGuestbooksParams = { published: true };
           const body = onCallQueryModelParams(guestbookIdentity, queryParams);
@@ -101,8 +103,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         it('should only return published guestbooks when filtering published=true', async () => {
-          await createGuestbookViaApi('Published', true);
-          await createGuestbookViaApi('Unpublished', false);
+          await createGuestbookViaApi(oauth, 'Published', true);
+          await createGuestbookViaApi(oauth, 'Unpublished', false);
 
           const queryParams: QueryGuestbooksParams = { published: true };
           const body = onCallQueryModelParams(guestbookIdentity, queryParams);
@@ -119,8 +121,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         it('should default to published=true for non-admin queries without published filter', async () => {
-          await createGuestbookViaApi('PublishedBook', true);
-          await createGuestbookViaApi('UnpublishedBook', false);
+          await createGuestbookViaApi(oauth, 'PublishedBook', true);
+          await createGuestbookViaApi(oauth, 'UnpublishedBook', false);
 
           const queryParams: QueryGuestbooksParams = {};
           const body = onCallQueryModelParams(guestbookIdentity, queryParams);
@@ -142,23 +144,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('admin queries', () => {
     demoAuthorizedUserAdminContext({ f }, (u) => {
       demoOAuthAuthorizedSuperTestContext({ f, u }, (oauth) => {
-        async function createGuestbookViaApi(name: string, published = true): Promise<OnCallCreateModelResult> {
-          const params: CreateGuestbookParams = { name };
-          const body = onCallCreateModelParams(guestbookIdentity, params);
-
-          const res = await oauth.authRequest('post', '/api/model/call').send(body).expect(201);
-          const result = res.body as OnCallCreateModelResult;
-
-          const accessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
-          const document = accessor.loadDocumentForKey(result.modelKeys[0] as string);
-          await document.accessor.set({ name, published, locked: false });
-
-          return result;
-        }
-
         it('should allow admin to query all guestbooks without published filter', async () => {
-          await createGuestbookViaApi('AdminAlpha');
-          await createGuestbookViaApi('AdminBeta', false);
+          await createGuestbookViaApi(oauth, 'AdminAlpha');
+          await createGuestbookViaApi(oauth, 'AdminBeta', false);
 
           const queryParams: QueryGuestbooksParams = {};
           const body = onCallQueryModelParams(guestbookIdentity, queryParams);

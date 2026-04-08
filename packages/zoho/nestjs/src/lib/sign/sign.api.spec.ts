@@ -4,8 +4,8 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { ZohoSignApi } from './sign.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import { type ZohoSignRequest, type ZohoSignRequestData } from '@dereekb/zoho';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 
