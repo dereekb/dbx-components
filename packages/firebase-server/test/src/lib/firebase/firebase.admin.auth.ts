@@ -410,9 +410,13 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
         return instance;
       },
       destroyInstance: async (instance: I) => {
-        const app = instance.testContext.app;
-        const uid = instance.uid;
-        await app.auth().deleteUser(uid);
+        try {
+          const app = instance.testContext.app;
+          const uid = instance.uid;
+          await app.auth().deleteUser(uid);
+        } catch (e) {
+          // Ignore teardown errors (e.g., app already deleted during stale Vitest reload)
+        }
       }
     });
   };

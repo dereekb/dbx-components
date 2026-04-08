@@ -1,12 +1,12 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { ModelApiDispatchService, ModelApiDispatchConfig, getModelApiDetails } from '@dereekb/firebase-server';
+import { ModelApiCallModelDispatchService, ModelApiDispatchConfig, ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS, getModelApiDetails } from '@dereekb/firebase-server';
 import { demoCallModelFn } from '../../function/model/crud.functions';
 import { mapDemoApiNestContext } from '../../function/function.context';
 import { ModelApiController } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('ModelApiDispatchService', () => {
-    let dispatchService: ModelApiDispatchService;
+    let dispatchService: ModelApiCallModelDispatchService;
 
     beforeEach(() => {
       const config: ModelApiDispatchConfig = {
@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         makeNestContext: mapDemoApiNestContext
       };
 
-      dispatchService = new ModelApiDispatchService(config, f.instance.nest as any);
+      dispatchService = new ModelApiCallModelDispatchService(config, f.instance.nest as any);
     });
 
     describe('getApiDetails()', () => {
@@ -35,15 +35,21 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
   describe('ModelApiController', () => {
     let controller: ModelApiController;
-    let mockDispatchService: ModelApiDispatchService;
+    let mockDispatchService: ModelApiCallModelDispatchService;
+    let mockAccessService: ModelApiGetService;
 
     beforeEach(() => {
       mockDispatchService = {
         dispatch: vi.fn().mockResolvedValue({ success: true }),
         getApiDetails: vi.fn().mockReturnValue(undefined)
-      } as unknown as ModelApiDispatchService;
+      } as unknown as ModelApiCallModelDispatchService;
 
-      controller = new ModelApiController(mockDispatchService);
+      mockAccessService = {
+        readDocument: vi.fn().mockResolvedValue({ key: 'test/123', data: { name: 'test' } }),
+        readDocuments: vi.fn().mockResolvedValue({ results: [], errors: [] })
+      } as unknown as ModelApiGetService;
+
+      controller = new ModelApiController(mockDispatchService, mockAccessService);
     });
 
     // MARK: Direct Dispatch
@@ -67,106 +73,147 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
     });
 
-    // MARK: Read Routes (GET)
-    describe('handleReadRequest()', () => {
-      it('should dispatch read with modelType from path', async () => {
-        const req = _mockRequest('GET', { uid: 'test-user' }, { path: 'systemState' });
+    // MARK: Document Access (Get)
+    describe('getOne()', () => {
+      it('should call readDocument with modelType, key, and auth', async () => {
+        const req = _mockRequest('GET', { uid: 'test-user' });
 
-        await controller.handleReadRequest(req);
+        await controller.getOne('guestbook', 'gb/abc123', req);
 
-        expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'read', modelType: 'systemState', specifier: '_', data: {} }, { uid: 'test-user' }, req);
+        expect(mockAccessService.readDocument).toHaveBeenCalledWith('guestbook', 'gb/abc123', { uid: 'test-user' });
       });
 
-      it('should dispatch read with specifier from path', async () => {
-        const req = _mockRequest('GET', { uid: 'test-user' }, { path: 'systemState/exampleread' });
+      it('should throw 400 when key is missing', async () => {
+        const req = _mockRequest('GET', { uid: 'test-user' });
 
-        await controller.handleReadRequest(req);
-
-        expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'read', modelType: 'systemState', specifier: 'exampleread', data: {} }, { uid: 'test-user' }, req);
+        await expect(controller.getOne('guestbook', undefined, req)).rejects.toThrow();
       });
 
-      it('should source data from query params', async () => {
-        const req = _mockRequest('GET', { uid: 'test-user' }, { path: 'profile' });
-        req.query = { key: 'abc123' };
+      it('should pass undefined auth when request has no auth', async () => {
+        const req = _mockRequest('GET');
 
-        await controller.handleReadRequest(req);
+        await controller.getOne('guestbook', 'gb/abc123', req);
 
-        expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'read', modelType: 'profile', specifier: '_', data: { key: 'abc123' } }, { uid: 'test-user' }, req);
-      });
-
-      it('should throw 400 when path has no model type', async () => {
-        const req = _mockRequest('GET', { uid: 'test-user' }, { path: '' });
-
-        await expect(controller.handleReadRequest(req)).rejects.toThrow();
+        expect(mockAccessService.readDocument).toHaveBeenCalledWith('guestbook', 'gb/abc123', undefined);
       });
     });
 
-    // MARK: Write Routes (POST / PUT / DELETE)
-    describe('handleWriteRequest()', () => {
-      it('should map POST to create', async () => {
-        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'guestbook' });
+    describe('getMany()', () => {
+      it('should call readDocuments with modelType, keys, and auth', async () => {
+        const body = { keys: ['gb/abc', 'gb/def'] };
+        const req = _mockRequest('POST', { uid: 'test-user' });
+
+        await controller.getMany('guestbook', body, req);
+
+        expect(mockAccessService.readDocuments).toHaveBeenCalledWith('guestbook', ['gb/abc', 'gb/def'], { uid: 'test-user' });
+      });
+
+      it('should throw 400 when keys array is empty', async () => {
+        const body = { keys: [] };
+        const req = _mockRequest('POST', { uid: 'test-user' });
+
+        await expect(controller.getMany('guestbook', body, req)).rejects.toThrow();
+      });
+
+      it('should throw 400 when keys is not an array', async () => {
+        const body = { keys: 'not-an-array' } as any;
+        const req = _mockRequest('POST', { uid: 'test-user' });
+
+        await expect(controller.getMany('guestbook', body, req)).rejects.toThrow();
+      });
+
+      it(`should throw 400 when keys exceeds ${MAX_MODEL_ACCESS_MULTI_READ_KEYS}`, async () => {
+        const body = { keys: Array.from({ length: MAX_MODEL_ACCESS_MULTI_READ_KEYS + 1 }, (_, i) => `gb/${i}`) };
+        const req = _mockRequest('POST', { uid: 'test-user' });
+
+        await expect(controller.getMany('guestbook', body, req)).rejects.toThrow();
+      });
+    });
+
+    // MARK: Path-Based Dispatch
+    describe('handleDispatchRequest()', () => {
+      it('should dispatch POST with modelType, call, and specifier from path', async () => {
+        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'guestbook/create' });
         req.body = { name: 'test' };
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'create', modelType: 'guestbook', specifier: '_', data: { name: 'test' } }, { uid: 'test-user' }, req);
       });
 
-      it('should map POST with specifier to create', async () => {
-        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'storageFile/fromUpload' });
+      it('should dispatch POST with specifier from path', async () => {
+        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'storageFile/create/fromUpload' });
         req.body = { file: 'x' };
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'create', modelType: 'storageFile', specifier: 'fromUpload', data: { file: 'x' } }, { uid: 'test-user' }, req);
       });
 
-      it('should map PUT to update', async () => {
-        const req = _mockRequest('PUT', { uid: 'test-user' }, { path: 'profile' });
+      it('should dispatch PUT with call from path', async () => {
+        const req = _mockRequest('PUT', { uid: 'test-user' }, { path: 'profile/update' });
         req.body = { bio: 'hello' };
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'update', modelType: 'profile', specifier: '_', data: { bio: 'hello' } }, { uid: 'test-user' }, req);
       });
 
-      it('should map PUT with specifier to update', async () => {
-        const req = _mockRequest('PUT', { uid: 'test-user' }, { path: 'profile/username' });
+      it('should dispatch PUT with specifier from path', async () => {
+        const req = _mockRequest('PUT', { uid: 'test-user' }, { path: 'profile/update/username' });
         req.body = { username: 'newname' };
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'update', modelType: 'profile', specifier: 'username', data: { username: 'newname' } }, { uid: 'test-user' }, req);
       });
 
-      it('should map DELETE to delete', async () => {
-        const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'oidcEntry' });
+      it('should allow DELETE only when call is delete', async () => {
+        const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'oidcEntry/delete' });
         req.body = { id: '123' };
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'delete', modelType: 'oidcEntry', specifier: '_', data: { id: '123' } }, { uid: 'test-user' }, req);
       });
 
-      it('should map DELETE with specifier', async () => {
-        const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'oidcEntry/client' });
+      it('should allow DELETE with specifier', async () => {
+        const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'oidcEntry/delete/client' });
         req.body = { id: '123' };
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith({ call: 'delete', modelType: 'oidcEntry', specifier: 'client', data: { id: '123' } }, { uid: 'test-user' }, req);
       });
 
-      it('should throw 405 for unsupported HTTP methods', async () => {
-        const req = _mockRequest('PATCH', { uid: 'test-user' }, { path: 'profile' });
+      it('should throw 405 when DELETE is used with a non-delete call', async () => {
+        const req = _mockRequest('DELETE', { uid: 'test-user' }, { path: 'profile/update' });
 
-        await expect(controller.handleWriteRequest(req)).rejects.toThrow();
+        await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
+      });
+
+      it('should throw 405 for GET method', async () => {
+        const req = _mockRequest('GET', { uid: 'test-user' }, { path: 'profile/read' });
+
+        await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
+      });
+
+      it('should throw 405 for PATCH method', async () => {
+        const req = _mockRequest('PATCH', { uid: 'test-user' }, { path: 'profile/update' });
+
+        await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
       });
 
       it('should throw 400 when path has no model type', async () => {
         const req = _mockRequest('POST', { uid: 'test-user' }, { path: '' });
 
-        await expect(controller.handleWriteRequest(req)).rejects.toThrow();
+        await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
+      });
+
+      it('should throw 400 when path has no call type', async () => {
+        const req = _mockRequest('POST', { uid: 'test-user' }, { path: 'guestbook' });
+
+        await expect(controller.handleDispatchRequest(req)).rejects.toThrow();
       });
     });
 
@@ -174,19 +221,19 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     describe('auth propagation', () => {
       it('should pass auth from req.auth to dispatch service', async () => {
         const auth = { uid: 'test-user-123' };
-        const req = _mockRequest('POST', auth, { path: 'guestbook' });
+        const req = _mockRequest('POST', auth, { path: 'guestbook/create' });
         req.body = {};
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith(expect.anything(), auth, req);
       });
 
       it('should pass undefined auth when request has no auth', async () => {
-        const req = _mockRequest('POST', undefined, { path: 'guestbook' });
+        const req = _mockRequest('POST', undefined, { path: 'guestbook/create' });
         req.body = {};
 
-        await controller.handleWriteRequest(req);
+        await controller.handleDispatchRequest(req);
 
         expect(mockDispatchService.dispatch).toHaveBeenCalledWith(expect.anything(), undefined, req);
       });
@@ -207,6 +254,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         const result = await controller.directDispatch({ call: 'create', modelType: 'guestbook', data: {} } as any, req);
         expect(result).toEqual({ modelKeys: ['abc'] });
+      });
+
+      it('should convert access service errors to HttpException', async () => {
+        (mockAccessService.readDocument as any).mockRejectedValue({ status: 404, message: 'Not found', code: 'NOT_FOUND' });
+        const req = _mockRequest('GET', { uid: 'test-user' });
+
+        await expect(controller.getOne('guestbook', 'gb/missing', req)).rejects.toThrow();
       });
     });
   });

@@ -4,7 +4,7 @@ import { INestApplication, NestApplicationOptions, type Abstract, type INestAppl
 import { type StorageBucketId } from '@dereekb/firebase';
 import { type FirebaseServerEnvironmentConfig, GlobalRoutePrefixConfig, type NestAppPromiseGetter, type NestServerInstanceConfig, buildNestServerRootModule } from '@dereekb/firebase-server';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { type ArrayOrValue, asGetter, cachedGetter, type ClassType, type Getter, Maybe } from '@dereekb/util';
+import { type ArrayOrValue, asArray, asGetter, cachedGetter, type ClassType, type Getter, Maybe } from '@dereekb/util';
 
 /**
  * NestJS injection token used to provide the {@link NestServerInstanceConfig} to the test's
@@ -257,20 +257,16 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
     buildTests,
     initInstance: async () => {
       const additionalProviders: Provider[] = makeProviders(f.instance) ?? [];
-      const defaultStorageBucket = config.defaultStorageBucket ?? f.instance.app.options.storageBucket;
 
       const { rootModule } = buildNestServerRootModule({
-        modules: nestModules,
-        firebaseAppGetter: config.injectFirebaseServerAppTokenProvider ? asGetter(f.instance.app) : undefined,
-        additionalProviders,
-        envConfig,
-        configureEnvService: config.injectServerEnvServiceProvider,
-        defaultStorageBucket,
-        forceStorageBucket: config.forceStorageBucket,
         // Shared config from production — tests pick up the same global prefix, webhooks, etc.
-        globalApiRoutePrefix: serverInstanceConfig?.globalApiRoutePrefix,
-        configureWebhooks: serverInstanceConfig?.configureWebhooks,
-        appCheckEnabled: false // disabled in tests
+        ...serverInstanceConfig,
+        modules: [...asArray(nestModules), ...asArray(serverInstanceConfig?.modules)],
+        firebaseAppGetter: config.injectFirebaseServerAppTokenProvider ? asGetter(f.instance.app) : undefined,
+        providers: additionalProviders,
+        envConfig,
+        defaultStorageBucket: config.defaultStorageBucket ?? f.instance.app.options.storageBucket,
+        appCheckEnabled: false // always disabled in tests
       });
 
       // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests

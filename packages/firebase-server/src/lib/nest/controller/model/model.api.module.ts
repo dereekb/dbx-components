@@ -1,8 +1,9 @@
 import { type ModuleMetadata, type INestApplicationContext } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { type ClassType } from '@dereekb/util';
+import { ModelApiGetService } from './model.api.get.service';
 import { ModelApiController } from './model.api.controller';
-import { ModelApiDispatchService, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
+import { ModelApiCallModelDispatchService, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
 
 // MARK: Config
 /**
@@ -42,15 +43,19 @@ export function modelApiModuleMetadata(metadataConfig: ModelApiModuleMetadataCon
   return {
     imports: [dependencyModule, ...(imports ?? [])],
     controllers: [ModelApiController],
-    exports: [ModelApiDispatchService, ...(exports ?? [])],
+    exports: [ModelApiGetService, ModelApiCallModelDispatchService, ...(exports ?? [])],
     providers: [
-      ModelApiDispatchService,
+      ModelApiGetService,
+      ModelApiCallModelDispatchService,
       {
         provide: MODEL_API_NEST_APPLICATION_CONTEXT,
         useFactory: (moduleRef: ModuleRef) => {
-          // ModuleRef implements INestApplicationContext — use it directly
-          // as the application context for dispatch.
-          return moduleRef as unknown as INestApplicationContext;
+          // Wrap ModuleRef so .get() searches the entire module tree (strict: false)
+          // rather than just this module's scope. The callable function chain expects
+          // a full app-level context where all providers (e.g., server actions) are resolvable.
+          return {
+            get: (typeOrToken: any, options?: any) => moduleRef.get(typeOrToken, { strict: false, ...options })
+          } as INestApplicationContext;
         },
         inject: [ModuleRef]
       },

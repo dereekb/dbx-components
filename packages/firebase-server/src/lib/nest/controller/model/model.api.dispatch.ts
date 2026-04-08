@@ -62,7 +62,7 @@ export const MODEL_API_NEST_APPLICATION_CONTEXT = 'MODEL_API_NEST_APPLICATION_CO
  * the callModel function.
  */
 @Injectable()
-export class ModelApiDispatchService {
+export class ModelApiCallModelDispatchService {
   constructor(
     @Inject(ModelApiDispatchConfig) private readonly config: ModelApiDispatchConfig,
     @Inject(MODEL_API_NEST_APPLICATION_CONTEXT) private readonly nestApplication: INestApplicationContext

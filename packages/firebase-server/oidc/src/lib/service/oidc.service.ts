@@ -9,7 +9,7 @@ import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
-import { cachedGetter, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { cachedGetter, filterUndefinedValues, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
 import { type DecodedIdToken } from 'firebase-admin/auth';
 import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
@@ -60,7 +60,15 @@ export class OidcService {
       return undefined;
     }
 
+    // Extract account claims baked into the access token at issuance time.
+    // These are the claims built by OidcAccountServiceDelegate.buildClaimsForUser()
+    // (e.g., `a` for admin, `o` for onboarded) based on the granted scopes.
+    // Read the account claims baked into the token at issuance time via extraAccessTokenClaims.
+    const accountClaims = (accessToken as any).extra ?? {};
+
     const token: DecodedIdToken = {
+      // Account claims from the token (e.g., admin, onboarded)
+      ...accountClaims,
       // Standard JWT claims — sourced from the access token
       aud: firstValue(accessToken.aud),
       iss: this.config.issuer,
@@ -87,7 +95,8 @@ export class OidcService {
       oidcValidatedToken: {
         sub: accessToken.accountId,
         scope: accessToken.scope,
-        client_id: accessToken.clientId
+        client_id: accessToken.clientId,
+        ...accountClaims
       }
     };
   }
@@ -201,7 +210,27 @@ export class OidcService {
       cookies: {
         keys: cookieKeys
       },
-      ...(config.renderError ? { renderError: config.renderError } : {})
+      ...(config.renderError ? { renderError: config.renderError } : {}),
+      // Bake account claims into the access token at issuance time so they're
+      // available via `accessToken.extra` during verification without an extra DB call.
+      extraTokenClaims: async (_ctx: unknown, token: any) => {
+        const accountId = token.accountId;
+        const scope = token.scope;
+
+        if (accountId && scope) {
+          const account = await this.accountService.userContext(accountId).findAccount();
+
+          if (account) {
+            const claims = await account.claims('access_token', scope);
+            const { sub: _sub, ...extraClaims } = claims;
+
+            // Filter out undefined values — the Firestore adapter cannot serialize them.
+            return filterUndefinedValues(extraClaims);
+          }
+        }
+
+        return {};
+      }
     };
   }
 
