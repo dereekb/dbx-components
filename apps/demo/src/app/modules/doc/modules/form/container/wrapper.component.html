@@ -2,11 +2,17 @@
   <doc-feature-layout header="" hint="">
     <!-- Examples -->
     <doc-feature-example header="expandWrapper()" hint="Wraps a field with content that can be expanded to reveal optional fields.">
-      <doc-form-example-form [config]="expandField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [config]="expandField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeExpandFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="toggleWrapper()" hint="Wraps a field and adds a slider that can be toggled to hide or reveal fields.">
-      <doc-form-example-form [dbxFormlyFields]="toggleField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="toggleField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeToggleFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="sectionWrapper()" hint="Wraps a field with a dbx-section.">
@@ -24,11 +30,17 @@
     </doc-feature-example>
 
     <doc-feature-example header="infoWrapper()" hint="Wraps a field with content that attaches an info button.">
-      <doc-form-example-form [dbxFormlyFields]="infoField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="infoField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeInfoFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="styleWrapper()" hint="Wraps a field with arbitrary styles and classes.">
-      <doc-form-example-form [dbxFormlyFields]="styleField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="styleField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeStyleFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
 
     <doc-feature-example header="flexLayoutWrapper()" hint="Wraps one or more fields to be displayed with flex layout. The flex layout can be configured per item. A screen width breakpoints can also be set to control if/when to collapse each item to full width.">
@@ -44,7 +56,10 @@
       <h4>3 Per Row and Break To Column - At small width the break will change the flex to a column</h4>
       <doc-form-example-form [dbxFormlyFields]="flexThreeFieldBreakToColumn"></doc-form-example-form>
       <h4>5 Per Row - Retain size down to large width - with relative enabled to expand content</h4>
-      <doc-form-example-form [dbxFormlyFields]="flexFiveField"></doc-form-example-form>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="flexFiveField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeFlexFiveFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

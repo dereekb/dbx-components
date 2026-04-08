@@ -39,7 +39,10 @@ export interface ForgeComponentFieldDef<T = unknown> extends BaseValueField<Forg
   `,
   imports: [DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  standalone: true,
+  host: {
+    '[class]': 'className()'
+  }
 })
 export class DbxForgeComponentFieldComponent<T = unknown> {
   // ng-forge ValueFieldComponent inputs

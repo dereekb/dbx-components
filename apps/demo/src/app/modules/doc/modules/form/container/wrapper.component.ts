@@ -15,8 +15,14 @@ import {
   styleWrapper,
   toggleField,
   forgeRow,
+  forgeFlexRow,
   forgeSectionGroup,
   forgeSubsectionGroup,
+  forgeExpandWrapper,
+  forgeToggleWrapper,
+  forgeInfoWrapper,
+  forgeStyledGroup,
+  forgeWithClassName,
   forgeNameField,
   forgeCityField,
   forgeStateField,
@@ -132,23 +138,95 @@ export class DocFormWrapperComponent {
   readonly flexFiveField: FormlyFieldConfig[] = [flexLayoutWrapper([nameField(), cityField(), stateField(), zipCodeField(), countryField()], { breakpoint: 'large', size: 1, relative: true })];
 
   // Forge wrapper equivalents
-  readonly forgeSectionFieldConfig: FormConfig = {
+  readonly forgeExpandFieldConfig: FormConfig = {
     fields: [
-      forgeSectionGroup({
+      forgeExpandWrapper({
+        label: 'Add Name',
+        buttonType: 'button',
         fields: [forgeNameField({})]
       })
     ]
-  };
+  } as unknown as FormConfig;
+
+  readonly forgeToggleFieldConfig: FormConfig = {
+    fields: [
+      forgeToggleWrapper({
+        label: 'Toggle',
+        fields: [forgeNameField({})]
+      })
+    ]
+  } as unknown as FormConfig;
+
+  readonly forgeSectionFieldConfig: FormConfig = {
+    fields: [
+      forgeSectionGroup({
+        header: 'Header',
+        hint: 'Section Field Hint',
+        fields: [forgeNameField({})]
+      }),
+      forgeSectionGroup({
+        header: 'Header with star and configured size',
+        h: 1,
+        icon: 'star',
+        hint: 'Section Field Hint Inline',
+        fields: [forgeNameField({ key: 'name2' })]
+      })
+    ]
+  } as unknown as FormConfig;
 
   readonly forgeSubsectionFieldConfig: FormConfig = {
     fields: [
       forgeSubsectionGroup({
+        header: 'Header',
+        hint: 'Section Field Hint',
         fields: [forgeNameField({})]
       })
     ]
-  };
+  } as unknown as FormConfig;
 
-  readonly forgeFlexFieldConfig: FormConfig = { fields: [forgeRow({ fields: [forgeCityField({}), forgeStateField({}), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })] })] };
+  readonly forgeInfoFieldConfig: FormConfig = {
+    fields: [
+      forgeInfoWrapper({
+        field: forgeNameField({}),
+        onInfoClick: () => {
+          // this.matDialog.open()
+        }
+      })
+    ]
+  } as unknown as FormConfig;
 
-  readonly forgeFlexThreeFieldConfig: FormConfig = { fields: [forgeRow({ fields: [forgeCityField({}), forgeStateField({}), forgeZipCodeField({})] })] };
+  readonly forgeStyleFieldConfig: FormConfig = {
+    fields: [
+      forgeStyledGroup({
+        fields: [forgeNameField({})],
+        className: 'dbx-content-border'
+      })
+    ]
+  } as unknown as FormConfig;
+
+  readonly forgeFlexFieldConfig: FormConfig = {
+    fields: [
+      forgeFlexRow({
+        fields: [forgeCityField({}), forgeStateField({ description: 'State Description' }), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })]
+      })
+    ]
+  } as unknown as FormConfig;
+
+  readonly forgeFlexThreeFieldConfig: FormConfig = {
+    fields: [
+      forgeFlexRow({
+        fields: [{ field: forgeCityField({}), size: 4 }, forgeStateField({}), forgeZipCodeField({})],
+        defaultSize: 1
+      })
+    ]
+  } as unknown as FormConfig;
+
+  readonly forgeFlexFiveFieldConfig: FormConfig = {
+    fields: [
+      forgeFlexRow({
+        fields: [forgeNameField({}), forgeCityField({}), forgeStateField({}), forgeZipCodeField({}), forgeCountryField({})],
+        relative: true
+      })
+    ]
+  } as unknown as FormConfig;
 }

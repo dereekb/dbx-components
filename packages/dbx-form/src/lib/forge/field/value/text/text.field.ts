@@ -93,8 +93,7 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
 
   const props: Partial<MatInputProps> = filterFromPOJO({
     type: inputType,
-    hint: description,
-    placeholder
+    hint: description
   });
 
   return forgeField(
@@ -102,6 +101,7 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
       key,
       type: 'input' as const,
       label: label ?? '',
+      placeholder,
       value: defaultValue,
       required,
       readonly: isReadonly,
@@ -147,7 +147,6 @@ export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextare
 
   const props: Partial<MatTextareaProps> = filterFromPOJO({
     hint: description,
-    placeholder,
     rows
   });
 
@@ -156,6 +155,7 @@ export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextare
       key,
       type: 'textarea' as const,
       label: label ?? '',
+      placeholder,
       value: defaultValue,
       required,
       readonly: isReadonly,

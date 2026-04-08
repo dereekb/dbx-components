@@ -1,5 +1,5 @@
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { type FormConfig } from '@ng-forge/dynamic-forms';
+import { type FormConfig, type LogicConfig } from '@ng-forge/dynamic-forms';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { nameField, textAreaField, textField, toggleField, valueSelectionField, type ValueSelectionOption, forgeToggleField, forgeNameField, forgeTextField, forgeTextAreaField, forgeValueSelectionField, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
@@ -28,19 +28,19 @@ export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormExpressionComponent {
-  // Forge equivalent — basic fields without expression logic (forge uses Signal Forms reactivity)
+  // Forge equivalent — uses ng-forge logic configs for conditional hide/show
   readonly forgeBasicFieldsConfig: FormConfig = {
     fields: [
-      forgeToggleField({ key: 'toggle', label: 'Hide Toggle', description: 'This field is watched by another field to see when this is toggled on.' }),
-      forgeNameField({}),
+      forgeToggleField({ key: 'toggle', label: 'Hide Toggle', description: 'this field is watched by another field to see when this is toggled on.' }),
+      { ...forgeNameField({}), logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'notEquals', value: true } }] satisfies LogicConfig[] },
       forgeValueSelectionField({
         key: 'show',
         label: 'Select One',
-        description: 'This selection is watched by the other fields.',
+        description: 'This selection is watched by the other fields to toggle showing/hiding based on the selected value.',
         options: SHOW_VALUE_SELECTION_VALUES.filter((x): x is { label: string; value: string } => 'value' in x)
       }),
-      forgeTextField({ key: 'text', label: 'Text' }),
-      forgeTextAreaField({ key: 'textarea', label: 'Text Area' })
+      { ...forgeTextField({ key: 'text', label: 'Text' }), logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'show', operator: 'notEquals', value: 'text' } }] satisfies LogicConfig[] },
+      { ...forgeTextAreaField({ key: 'textarea', label: 'Text Area' }), logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'show', operator: 'notEquals', value: 'textarea' } }] satisfies LogicConfig[] }
     ]
   };
 
