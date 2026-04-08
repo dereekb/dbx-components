@@ -95,6 +95,40 @@ describe('iteration.rxjs', () => {
     });
   });
 
+  describe('next() after end', () => {
+    it(
+      'should not re-accumulate items when next() is called after the iteration has ended.',
+      callbackTest((done) => {
+        const maxPageLoadLimit = 1;
+        const limitedIteration: ItemPageIterationInstance<number[], TestPageIteratorFilter> = iterator.instance({ maxPageLoadLimit });
+        const limitedAccumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<number[]>> = itemAccumulator(limitedIteration);
+
+        // Load the first (and only allowed) page
+        limitedIteration.nextPage().then(() => {
+          const obs = flattenAccumulatorResultItemArray(limitedAccumulator);
+
+          obs.pipe(first()).subscribe((valuesBeforeNext) => {
+            const countBefore = valuesBeforeNext.length;
+            expect(countBefore).toBe(TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE);
+
+            // Call next() after the iteration can't load more — should be a no-op
+            limitedIteration.next();
+
+            // Wait a tick for any potential re-emission to propagate
+            setTimeout(() => {
+              obs.pipe(first()).subscribe((valuesAfterNext) => {
+                expect(valuesAfterNext.length).toBe(countBefore);
+                limitedIteration.destroy();
+                limitedAccumulator.destroy();
+                done();
+              });
+            }, 50);
+          });
+        });
+      })
+    );
+  });
+
   describe('accumulatorFlattenPageListLoadingState', () => {
     it(
       `should aggregate the array of results into a single array as the value of the loading state.`,

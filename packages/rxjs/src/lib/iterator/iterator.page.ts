@@ -253,7 +253,16 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
           if (inputState != null) {
             const end = inputState.value != null ? isItemPageIteratorResultEndResult(inputState.value as ItemPageIteratorResult<V>) : undefined;
-            state = { ...inputState, hasNextPage: invertMaybeBoolean(end) };
+            const hasNextPage = invertMaybeBoolean(end);
+
+            // Reuse the same reference when hasNextPage hasn't changed to avoid
+            // tricking downstream distinctUntilChanged/scan into treating a
+            // re-emitted result as a new page (which causes duplicate accumulation).
+            if ((inputState as PageLoadingState<ItemPageIteratorResult<V>>).hasNextPage === hasNextPage) {
+              state = inputState as PageLoadingState<ItemPageIteratorResult<V>>;
+            } else {
+              state = { ...inputState, hasNextPage };
+            }
           }
 
           return { n: request.n, state };

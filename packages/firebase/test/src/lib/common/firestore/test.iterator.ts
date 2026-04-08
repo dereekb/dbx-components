@@ -93,6 +93,72 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
               });
             })
           );
+
+          it(
+            'should reach end when limit equals total document count.',
+            callbackTest((done) => {
+              const limit = testDocumentCount; // exactly matches item count
+
+              const iteration = firestoreIteration({ limit });
+              const accumulator = firebaseQuerySnapshotAccumulator(iteration);
+
+              // First page should return all items but not yet know it's the end
+              iteration.nextPage().then(() => {
+                // Load the next page which should discover end via empty snapshot
+                iteration.nextPage().then(() => {
+                  sub.subscription = iteration.latestState$
+                    .pipe(
+                      filter((x) => isLoadingStateFinishedLoading(x)),
+                      first()
+                    )
+                    .subscribe((state) => {
+                      expect(state.hasNextPage).toBe(false);
+
+                      // Verify all items loaded without duplicates
+                      flattenAccumulatorResultItemArray(accumulator)
+                        .pipe(first())
+                        .subscribe((values) => {
+                          expect(values.length).toBe(testDocumentCount);
+                          expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
+                          done();
+                        });
+                    });
+                });
+              });
+            })
+          );
+
+          it(
+            'should reach end when loading all pages with limit as a divisor of total count.',
+            callbackTest((done) => {
+              const limit = 5; // divides evenly into testDocumentCount (10)
+              const expectedPages = testDocumentCount / limit; // 2 full pages + 1 empty to discover end
+
+              const iteration = firestoreIteration({ limit });
+              const accumulator = firebaseQuerySnapshotAccumulator(iteration);
+
+              // Load pages until the iterator reaches the end
+              iteratorNextPageUntilPage(iteration, expectedPages + 1).then((page) => {
+                sub.subscription = iteration.latestState$
+                  .pipe(
+                    filter((x) => isLoadingStateFinishedLoading(x)),
+                    first()
+                  )
+                  .subscribe((state) => {
+                    expect(state.hasNextPage).toBe(false);
+
+                    // Verify all items loaded without duplicates
+                    flattenAccumulatorResultItemArray(accumulator)
+                      .pipe(first())
+                      .subscribe((values) => {
+                        expect(values.length).toBe(testDocumentCount);
+                        expect(arrayContainsDuplicateValue(values.map((x) => x.id))).toBe(false);
+                        done();
+                      });
+                  });
+              });
+            })
+          );
         });
 
         describe('with inferEndOfResultsFromPageSize=false', () => {
