@@ -60,9 +60,9 @@ describe('forgeTextField()', () => {
     expect(field.props?.hint).toBe('Enter your name');
   });
 
-  it('should set placeholder in props', () => {
+  it('should set placeholder on field', () => {
     const field = forgeTextField({ key: 'name', placeholder: 'Type here' });
-    expect(field.props?.placeholder).toBe('Type here');
+    expect((field as any).placeholder).toBe('Type here');
   });
 
   it('should provide empty string as default value', () => {
@@ -130,9 +130,9 @@ describe('forgeTextAreaField()', () => {
     expect(field.props?.hint).toBe('Tell us about yourself');
   });
 
-  it('should set placeholder in props', () => {
+  it('should set placeholder on field', () => {
     const field = forgeTextAreaField({ key: 'bio', placeholder: 'Type here' });
-    expect(field.props?.placeholder).toBe('Type here');
+    expect((field as any).placeholder).toBe('Type here');
   });
 
   it('should provide empty string as default value', () => {

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection, type Type } from '@angular/core';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { type FormConfig, DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
+import { type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
 import { provideDbxForgeFormFieldDeclarations } from '../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../form.providers';
@@ -56,7 +56,7 @@ class TestHostComponent {
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations()];
+const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 const SETTLE_TIME = 200;
 const SETTLE_ROUNDS = 3;
 

@@ -137,7 +137,12 @@ export class DocFormValueComponent {
   ];
 
   readonly forgeNumberFieldsConfig: FormConfig = {
-    fields: [forgeNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }), forgeNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }), forgeDollarAmountField({ key: 'dollars', label: 'forgeDollarAmountField()', description: 'Dollar amount field.' })]
+    fields: [
+      forgeNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
+      forgeNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
+      forgeNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5 }),
+      forgeDollarAmountField({ key: 'dollars', label: 'forgeDollarAmountField()', description: 'Dollar amount field.' })
+    ]
   };
 
   readonly numberSliderFields: FormlyFieldConfig[] = [
@@ -148,7 +153,11 @@ export class DocFormValueComponent {
   ];
 
   readonly forgeNumberSliderFieldsConfig: FormConfig = {
-    fields: [forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', description: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }), forgeNumberSliderField({ key: 'steptest', label: 'forgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 })]
+    fields: [
+      forgeNumberSliderField({ key: 'test', label: 'forgeNumberSliderField()', description: 'A number between 0 and 100 picked with a slider.', min: 0, max: 100 }),
+      forgeNumberSliderField({ key: 'steptest', label: 'forgeNumberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', min: 0, max: 100, step: 5 }),
+      forgeNumberSliderField({ key: 'steptestcustomtickinterval', label: 'forgeNumberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', min: 0, max: 100, step: 5, tickInterval: 5 })
+    ]
   };
 
   readonly textAreaField: FormlyFieldConfig[] = [textAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];

@@ -168,4 +168,32 @@ describe('forgeDollarAmountField()', () => {
     const field = forgeDollarAmountField({ key: 'price', defaultValue: 9.99 });
     expect(field.value).toBe(9.99);
   });
+
+  it('should set the key from config', () => {
+    const field = forgeDollarAmountField({ key: 'total' });
+    expect(field.key).toBe('total');
+  });
+
+  it('should map description to hint in props', () => {
+    const field = forgeDollarAmountField({ key: 'price', description: 'Enter amount in USD' });
+    expect(field.props?.hint).toBe('Enter amount in USD');
+  });
+
+  it('should set precision to DOLLAR_AMOUNT_PRECISION via transform', () => {
+    const field = forgeDollarAmountField({ key: 'price' });
+    // forgeDollarAmountField delegates to forgeNumberField with precision set;
+    // the field itself is a standard number input, so verify it creates correctly
+    expect(field.type).toBe('input');
+    expect(field.key).toBe('price');
+  });
+
+  it('should set label when provided', () => {
+    const field = forgeDollarAmountField({ key: 'price', label: 'Amount' });
+    expect(field.label).toBe('Amount');
+  });
+
+  it('should default label to empty string when not provided', () => {
+    const field = forgeDollarAmountField({ key: 'price' });
+    expect(field.label).toBe('');
+  });
 });

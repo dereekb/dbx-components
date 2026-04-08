@@ -44,6 +44,58 @@ export function stripForgeInternalKeys<T>(value: T): T {
 }
 
 /**
+ * Returns true if a value is considered "empty" for forge form output purposes.
+ *
+ * Empty means: `null`, `undefined`, or empty string `""`.
+ * Note: `false`, `0`, empty arrays `[]`, and other falsy values are NOT empty.
+ */
+function isEmptyFormValue(val: unknown): boolean {
+  return val === null || val === undefined || val === '';
+}
+
+/**
+ * Recursively strips keys whose values are empty (`null`, `undefined`, or `""`)
+ * from a form value object. Also removes keys whose values become empty objects
+ * `{}` after recursive stripping.
+ *
+ * This normalizes ng-forge output to match ngx-formly behavior, where the model
+ * only includes keys that have been explicitly set by the user.
+ *
+ * @example
+ * ```
+ * stripEmptyForgeValues({ name: "", age: null, active: false, count: 0 })
+ * // → { active: false, count: 0 }
+ *
+ * stripEmptyForgeValues({ section: { a: "", b: "" } })
+ * // → {}
+ * ```
+ */
+export function stripEmptyForgeValues<T>(value: T): T {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+
+  const result: Record<string, unknown> = {};
+
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (isEmptyFormValue(val)) {
+      continue;
+    }
+
+    if (typeof val === 'object' && !Array.isArray(val)) {
+      const cleaned = stripEmptyForgeValues(val);
+      if (cleaned != null && Object.keys(cleaned as object).length > 0) {
+        result[key] = cleaned;
+      }
+    } else {
+      result[key] = val;
+    }
+  }
+
+  return result as T;
+}
+
+/**
  * Context service managing a ng-forge dynamic form's connection to the DbxForm system.
  *
  * Bridges ng-forge's signal-based form state to the existing DbxForm/DbxMutableForm
@@ -72,6 +124,16 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
    */
   stripInternalKeys = true;
 
+  /**
+   * When true (default), keys whose values are empty (`null`, `undefined`, or `""`)
+   * are stripped from the form value before emission. This normalizes ng-forge output
+   * to match ngx-formly behavior, where the model only includes keys that have been
+   * explicitly set by the user.
+   *
+   * Note: `false`, `0`, and empty arrays are NOT considered empty and are preserved.
+   */
+  stripEmptyValues = true;
+
   private readonly _config = new BehaviorSubject<Maybe<FormConfig>>(undefined);
   private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
   private readonly _formState = new BehaviorSubject<DbxFormEvent>(DbxForgeFormContext.INITIAL_STATE);
@@ -98,7 +160,9 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   }
 
   updateValue(value: T): void {
-    this._value.next(this.stripInternalKeys ? stripForgeInternalKeys(value) : value);
+    let cleaned = this.stripInternalKeys ? stripForgeInternalKeys(value) : value;
+    cleaned = this.stripEmptyValues ? stripEmptyForgeValues(cleaned) : cleaned;
+    this._value.next(cleaned);
   }
 
   updateIsValid(valid: boolean): void {

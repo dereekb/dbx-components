@@ -3,7 +3,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { type FormConfig, DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
+import { type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, of, first, skip } from 'rxjs';
 import { startOfDay, addHours, addDays } from 'date-fns';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
@@ -33,7 +33,7 @@ class TestForgeDateTimeHostComponent {
 }
 
 // MARK: Test Providers (zoneless)
-const FORGE_DATETIME_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations()];
+const FORGE_DATETIME_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 // MARK: Helpers
 

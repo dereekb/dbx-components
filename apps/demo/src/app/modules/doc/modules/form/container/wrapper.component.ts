@@ -151,7 +151,6 @@ export class DocFormWrapperComponent {
   readonly forgeToggleFieldConfig: FormConfig = {
     fields: [
       forgeToggleWrapper({
-        label: 'Toggle',
         fields: [forgeNameField({})]
       })
     ]
@@ -199,7 +198,7 @@ export class DocFormWrapperComponent {
     fields: [
       forgeStyledGroup({
         fields: [forgeNameField({})],
-        className: 'dbx-content-border'
+        className: 'dbx-content-border doc-style-wrapper-example'
       })
     ]
   } as unknown as FormConfig;

@@ -24,6 +24,13 @@ import {
   valueSelectionField,
   type ValueSelectionOptionWithValue,
   forgeValueSelectionField,
+  forgeSourceSelectField,
+  forgeListSelectionField,
+  forgePickableChipField,
+  forgePickableListField,
+  forgeSearchableChipField,
+  forgeSearchableStringChipField,
+  forgeSearchableTextField,
   DbxFormlyFieldsContextDirective,
   DbxFormSourceDirective,
   isWebsiteUrlValidator
@@ -292,10 +299,195 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       }),
       forgeValueSelectionField({
         key: 'selectWithObservable',
-        label: 'Select With Static Data Source',
-        description: 'This select source uses static values.',
+        label: 'Select With Observable Data Source',
+        description: 'This select source uses an observable for values.',
         options: VALUE_SELECTION_VALUES
       })
+    ]
+  };
+
+  // MARK: Forge Source Select
+  readonly forgeSourceSelectFieldConfig: FormConfig = {
+    fields: [
+      forgeSourceSelectField<number, ValueSelectionOptionWithValue<number>>({
+        key: 'selectOne',
+        label: 'Select One',
+        description: 'This is a source selection field for picking a single value from various sources.',
+        valueReader: (x) => x.value,
+        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+        displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+        loadSources: () => {
+          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+          sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+          return of(sources);
+        }
+      }) as any,
+      forgeSourceSelectField({
+        key: 'selectMany',
+        label: 'Select Many',
+        multiple: true,
+        description: 'This is a source selection field for picking a multiple values from various sources.',
+        valueReader: (x: any) => x.value,
+        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+        loadSources: () => {
+          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+          sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+          return of(sources);
+        }
+      }) as any,
+      forgeSourceSelectField({
+        key: 'selectManyLoading',
+        label: 'Select Many Loading',
+        multiple: true,
+        description: 'This source demonstrates the loading bar showing while a source is being loaded.',
+        valueReader: (x: any) => x.value,
+        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+        loadSources: () => {
+          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+          sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) });
+          return of(sources);
+        }
+      }) as any
+    ]
+  };
+
+  // MARK: Forge Pickable Chip
+  readonly forgePickableItemChipFieldConfig: FormConfig = {
+    fields: [
+      forgePickableChipField({
+        key: 'stringItemChips',
+        label: 'String Item Chips',
+        description: 'This is a simple string item chip picker.',
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableChipField({
+        key: 'stringItemChips',
+        label: 'Read Only String Item Chips',
+        description: 'This is read only.',
+        readonly: true,
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableChipField({
+        key: 'singleStringItemChips',
+        label: 'Single Selection',
+        description: 'This field only allows selecting one item at a time and returns the value by itself',
+        multiSelect: false,
+        asArrayValue: false,
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableChipField({
+        key: 'stringItemChipsWithFilter',
+        label: 'String Item Chips With Filter',
+        filterLabel: 'Filter',
+        description: 'You can filter these items by their label.',
+        filterValues: filterPickableItemFieldValuesByLabel,
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any
+    ]
+  };
+
+  // MARK: Forge Pickable List
+  readonly forgePickableItemListFieldConfig: FormConfig = {
+    fields: [
+      forgePickableListField({
+        key: 'stringItemList',
+        label: 'String Item List',
+        description: 'This is a simple string item list picker.',
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableListField({
+        key: 'stringItemList',
+        label: 'Read Only String Item List',
+        readonly: true,
+        description: 'This is read only.',
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableListField({
+        key: 'stringItemListSingleValue',
+        label: 'String Item List With Single Value Selection',
+        description: 'You can only select one value at a time. The value is returned as an array anyways.',
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE,
+        multiSelect: false,
+        asArrayValue: true
+      }) as any
+    ]
+  };
+
+  // MARK: Forge Searchable Chip
+  readonly forgeSearchableChipFieldConfig: FormConfig = {
+    fields: [
+      forgeSearchableStringChipField({
+        key: 'typeAndPickChips',
+        label: 'Search And Pick Strings',
+        description: 'This input can search for string, but also have an arbitrary value input.',
+        searchOnEmptyText: true,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableStringChipField({
+        key: 'typeAndPickChips',
+        label: 'Read Only Text Field',
+        description: 'This input is read-only.',
+        readonly: true,
+        searchOnEmptyText: true,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableChipField({
+        key: 'pickOnly',
+        label: 'Only Pick Strings',
+        description: 'This input does not allow arbitrary strings to be input.',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any
+    ]
+  };
+
+  // MARK: Forge Searchable Text
+  readonly forgeSearchableTextFieldConfig: FormConfig = {
+    fields: [
+      forgeSearchableTextField({
+        key: 'strings',
+        label: 'Type, Search And Pick A String Value',
+        description: 'Type in a string and select it, or search for string values.',
+        allowStringValues: true,
+        searchOnEmptyText: true,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableTextField({
+        key: 'strings',
+        label: 'Read-only Text Field',
+        description: 'View is read only.',
+        readonly: true,
+        allowStringValues: true,
+        searchOnEmptyText: true,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableTextField({
+        key: 'pickStrings',
+        label: 'Search And Pick A String Value only.',
+        description: 'Search for values only.',
+        allowStringValues: false,
+        searchOnEmptyText: false,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any
     ]
   };
 
@@ -333,6 +525,20 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       listComponentClass: of(DocSelectionItemListComponent as unknown as Type<AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>)
     })
   ];
+
+  readonly forgeDbxListFieldConfig: FormConfig = {
+    fields: [
+      forgeListSelectionField<DocValue & IndexRef, AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>({
+        key: 'dbxlist',
+        label: 'DbxList Label',
+        description: 'Uses a dbxList-related view/wrapper to display a list and select items. Selected items are keyed via a readKey function.',
+        state$: this.state$,
+        readKey: readIndexNumber,
+        loadMore: () => this.loadMore(),
+        listComponentClass: of(DocSelectionItemListComponent as unknown as Type<AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>)
+      }) as any
+    ]
+  };
 
   readonly initialItemChipFieldsValues$ = of({
     staticLabeledValuesExample: [0, 2, 19].map(String)

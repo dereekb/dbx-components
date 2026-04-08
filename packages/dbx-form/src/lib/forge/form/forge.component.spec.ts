@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { type FormConfig, DynamicForm, EventDispatcher } from '@ng-forge/dynamic-forms';
+import { type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map } from 'rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent } from './forge.component';
-import { DbxForgeFormContext, provideDbxForgeFormContext, stripForgeInternalKeys } from './forge.context';
+import { DbxForgeFormContext, provideDbxForgeFormContext, stripForgeInternalKeys, stripEmptyForgeValues } from './forge.context';
 import { forgeTextField } from '../field/value/text/text.field';
 import { forgeToggleWrapper } from '../field/wrapper/wrapper';
 
@@ -30,7 +30,7 @@ class TestForgeFormHostComponent {
 }
 
 // MARK: Helpers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations()];
+const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 const SETTLE_TIME = 300;
 
 function delay(ms: number): Promise<void> {
@@ -251,8 +251,13 @@ describe('DbxForgeFormComponent', () => {
 
       await settle(fixture);
 
+      // Set a non-empty value so it survives empty value stripping
+      context.setValue({ name: 'Test' } as any);
+      await settle(fixture);
+
       const value = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
       expect(value).toHaveProperty('name');
+      expect((value as any).name).toBe('Test');
 
       fixture.destroy();
     });
@@ -338,5 +343,93 @@ describe('stripForgeInternalKeys()', () => {
       profile: { _toggle_1: true, name: 'Bob' }
     });
     expect(result).toEqual({ profile: { name: 'Bob' } });
+  });
+});
+
+// MARK: stripEmptyForgeValues unit tests
+describe('stripEmptyForgeValues()', () => {
+  it('should strip empty string values', () => {
+    const result = stripEmptyForgeValues({ name: '', age: 25 });
+    expect(result).toEqual({ age: 25 });
+  });
+
+  it('should strip null values', () => {
+    const result = stripEmptyForgeValues({ name: null, active: true });
+    expect(result).toEqual({ active: true });
+  });
+
+  it('should strip undefined values', () => {
+    const result = stripEmptyForgeValues({ name: undefined, count: 0 });
+    expect(result).toEqual({ count: 0 });
+  });
+
+  it('should preserve false values', () => {
+    const result = stripEmptyForgeValues({ toggle: false, name: '' });
+    expect(result).toEqual({ toggle: false });
+  });
+
+  it('should preserve zero values', () => {
+    const result = stripEmptyForgeValues({ count: 0, label: '' });
+    expect(result).toEqual({ count: 0 });
+  });
+
+  it('should preserve empty arrays', () => {
+    const result = stripEmptyForgeValues({ items: [], name: '' });
+    expect(result).toEqual({ items: [] });
+  });
+
+  it('should preserve non-empty arrays', () => {
+    const result = stripEmptyForgeValues({ items: [1, 2, 3] });
+    expect(result).toEqual({ items: [1, 2, 3] });
+  });
+
+  it('should recursively strip nested empty values', () => {
+    const result = stripEmptyForgeValues({ profile: { name: '', email: '' } });
+    expect(result).toEqual({});
+  });
+
+  it('should keep nested objects with non-empty values', () => {
+    const result = stripEmptyForgeValues({ profile: { name: 'Bob', email: '' } });
+    expect(result).toEqual({ profile: { name: 'Bob' } });
+  });
+
+  it('should handle deeply nested objects', () => {
+    const result = stripEmptyForgeValues({
+      a: { b: { c: '', d: 'keep' }, e: null }
+    });
+    expect(result).toEqual({ a: { b: { d: 'keep' } } });
+  });
+
+  it('should return null/undefined as-is', () => {
+    expect(stripEmptyForgeValues(null)).toBe(null);
+    expect(stripEmptyForgeValues(undefined)).toBe(undefined);
+  });
+
+  it('should return primitives as-is', () => {
+    expect(stripEmptyForgeValues('hello' as any)).toBe('hello');
+    expect(stripEmptyForgeValues(42 as any)).toBe(42);
+  });
+
+  it('should return empty object when all values are empty', () => {
+    const result = stripEmptyForgeValues({ a: '', b: null, c: undefined });
+    expect(result).toEqual({});
+  });
+
+  it('should work with combined stripForgeInternalKeys output', () => {
+    const afterInternalStrip = stripForgeInternalKeys({
+      _toggle_1: false,
+      _section_6: { name: '', email: '' }
+    });
+    const result = stripEmptyForgeValues(afterInternalStrip);
+    expect(result).toEqual({});
+  });
+
+  it('should preserve values from combined strip when non-empty', () => {
+    const afterInternalStrip = stripForgeInternalKeys({
+      _toggle_1: false,
+      _section_6: { name: 'Bob', email: '' }
+    });
+    const result = stripEmptyForgeValues(afterInternalStrip);
+    expect(result).toEqual({ name: 'Bob' });
   });
 });
