@@ -48,6 +48,13 @@ export interface ZohoRateLimitedFetchHandlerConfig {
    */
   readonly resetPeriod?: Milliseconds;
   /**
+   * Maximum number of automatic retries when a 429 Too Many Requests response is received.
+   *
+   * Defaults to 1. Set to 0 to disable retries entirely, which causes the 429 error to be
+   * immediately thrown to the caller instead of waiting for the rate limit reset.
+   */
+  readonly maxRetries?: number;
+  /**
    * Optional callback invoked when a 429 Too Many Requests response is received.
    *
    * Defaults to {@link DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION}.
@@ -108,6 +115,7 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
 
   return rateLimitedFetchHandler({
     rateLimiter,
+    maxRetries: config?.maxRetries,
     /**
      * Inspects each response for Zoho rate limit headers and updates the limiter accordingly.
      * Returns `true` to signal a retry when a 429 status is received.
