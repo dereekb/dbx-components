@@ -1,25 +1,26 @@
-import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
-import { DynamicForm, type FormConfig } from '@ng-forge/dynamic-forms';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { DynamicForm } from '@ng-forge/dynamic-forms';
+import { ForgeWrapperFieldDirective } from './wrapper.field';
 
 /**
  * Reusable component that renders a nested ng-forge `DynamicForm` for wrapper fields.
  *
- * This component encapsulates the `<form [dynamic-form]>` rendering and two-way
- * value binding so that wrapper field components only need to place
- * `<dbx-forge-wrapper-content>` inside their layout template.
+ * Injects the parent {@link ForgeWrapperFieldDirective} to read the child form config
+ * and two-way bind the form value. Wrapper field components provide themselves as
+ * `ForgeWrapperFieldDirective` via {@link provideDbxForgeWrapperFieldDirective}.
  *
  * @example
  * ```html
  * <dbx-section [headerConfig]="headerConfigSignal()">
- *   <dbx-forge-wrapper-content [config]="childConfigSignal()" [(value)]="childValueSignal" />
+ *   <dbx-forge-wrapper-content />
  * </dbx-section>
  * ```
  */
 @Component({
   selector: 'dbx-forge-wrapper-content',
   template: `
-    @if (config()) {
-      <form [dynamic-form]="config()!" [(value)]="value"></form>
+    @if (wrapper.childConfigSignal()) {
+      <form [dynamic-form]="wrapper.childConfigSignal()!" [(value)]="wrapper.childValueSignal"></form>
     }
   `,
   imports: [DynamicForm],
@@ -27,14 +28,5 @@ import { DynamicForm, type FormConfig } from '@ng-forge/dynamic-forms';
   standalone: true
 })
 export class ForgeWrapperContentComponent {
-  /**
-   * The ng-forge FormConfig describing the child fields to render.
-   */
-  readonly config = input.required<FormConfig>();
-
-  /**
-   * Two-way bound form value. The parent wrapper component reads/writes
-   * this signal to stay in sync with the nested form.
-   */
-  readonly value = model<Record<string, unknown> | undefined>(undefined);
+  readonly wrapper = inject(ForgeWrapperFieldDirective);
 }

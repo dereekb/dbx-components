@@ -1,4 +1,4 @@
-import { computed, Directive, effect, input, signal, untracked, type Signal } from '@angular/core';
+import { computed, Directive, effect, forwardRef, input, signal, untracked, type Provider, type Signal, type Type, type WritableSignal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldDef, FieldMeta, FormConfig, ValidationMessages } from '@ng-forge/dynamic-forms';
 
@@ -16,31 +16,79 @@ export interface ForgeWrapperFieldProps {
 }
 
 /**
+ * Abstract DI token for forge wrapper field directives.
+ *
+ * Exposes the child form config and value signals that
+ * {@link ForgeWrapperContentComponent} needs to render the nested `DynamicForm`.
+ * Concrete wrapper components extend {@link AbstractForgeWrapperFieldComponent}
+ * and register themselves via {@link provideDbxForgeWrapperFieldDirective}.
+ */
+@Directive()
+export abstract class ForgeWrapperFieldDirective {
+  /**
+   * FormConfig derived from the wrapper's child field definitions.
+   */
+  abstract readonly childConfigSignal: Signal<FormConfig>;
+
+  /**
+   * The current value of the nested child form.
+   */
+  abstract readonly childValueSignal: WritableSignal<Record<string, unknown> | undefined>;
+}
+
+/**
+ * Creates Angular providers that register a concrete wrapper field component
+ * as a {@link ForgeWrapperFieldDirective} for DI.
+ *
+ * @param sourceType - The concrete wrapper component class to provide.
+ * @returns An array of Angular providers.
+ *
+ * @example
+ * ```typescript
+ * @Component({
+ *   providers: provideDbxForgeWrapperFieldDirective(ForgeDbxSectionFieldWrapperComponent),
+ *   ...
+ * })
+ * export class ForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> {}
+ * ```
+ */
+export function provideDbxForgeWrapperFieldDirective<S extends ForgeWrapperFieldDirective>(sourceType: Type<S>): Provider[] {
+  return [
+    {
+      provide: ForgeWrapperFieldDirective,
+      useExisting: forwardRef(() => sourceType)
+    }
+  ];
+}
+
+/**
  * Abstract base class for forge wrapper field components.
  *
  * Provides the standard ng-forge ValueFieldComponent inputs and manages
  * two-way value synchronization between the parent field tree and a nested
  * `DynamicForm` rendered by {@link ForgeWrapperContentComponent}.
  *
- * Subclasses only need to define their template, wrapping
- * `<dbx-forge-wrapper-content>` with whatever layout component they need
- * (e.g. `<dbx-section>`, `<dbx-subsection>`).
+ * Subclasses only need to define their template, placing
+ * `<dbx-forge-wrapper-content />` inside their layout component
+ * (e.g. `<dbx-section>`, `<dbx-subsection>`). The content component
+ * automatically picks up config and value via DI.
  *
  * @example
  * ```typescript
  * @Component({
  *   template: `
  *     <dbx-section [headerConfig]="headerConfigSignal()">
- *       <dbx-forge-wrapper-content [config]="childConfigSignal()" [(value)]="childValueSignal" />
+ *       <dbx-forge-wrapper-content />
  *     </dbx-section>
  *   `,
+ *   providers: provideDbxForgeWrapperFieldDirective(ForgeDbxSectionFieldWrapperComponent),
  *   ...
  * })
- * export class ForgeSectionFieldComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> { ... }
+ * export class ForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> { ... }
  * ```
  */
 @Directive()
-export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWrapperFieldProps> {
+export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWrapperFieldProps> extends ForgeWrapperFieldDirective {
   // MARK: ng-forge ValueFieldComponent Inputs
   readonly field = input.required<FieldTree<Record<string, unknown>>>();
   readonly key = input.required<string>();
@@ -54,16 +102,8 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWra
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   // MARK: Child Form State
-  /**
-   * The current value of the nested child form. Two-way bound to
-   * `ForgeWrapperContentComponent` via `[(value)]`.
-   */
   readonly childValueSignal = signal<Record<string, unknown> | undefined>(undefined);
 
-  /**
-   * FormConfig derived from the wrapper's `props.fields`.
-   * Passed to `ForgeWrapperContentComponent` via `[config]`.
-   */
   readonly childConfigSignal: Signal<FormConfig> = computed(() => {
     const fields = this.props()?.fields;
 
@@ -77,6 +117,8 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWra
   private _initialized = false;
 
   constructor() {
+    super();
+
     // Initialize child value from parent field tree on first read
     effect(() => {
       const fieldState = this.field()();

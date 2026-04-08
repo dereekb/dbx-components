@@ -41,7 +41,7 @@ export interface ForgeSectionFieldDef extends BaseValueField<ForgeSectionFieldPr
  */
 export const DBX_FORGE_SECTION_FIELD_TYPE: FieldTypeDefinition<ForgeSectionFieldDef> = {
   name: FORGE_SECTION_FIELD_TYPE_NAME,
-  loadComponent: () => import('./section.field.component').then((m) => m.ForgeSectionFieldComponent),
+  loadComponent: () => import('./section.field.component').then((m) => m.ForgeDbxSectionFieldWrapperComponent),
   mapper: valueFieldMapper
 };
 

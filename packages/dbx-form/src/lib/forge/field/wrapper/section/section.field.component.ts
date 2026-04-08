@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { DbxSectionComponent, DbxSubSectionComponent, type DbxSectionHeaderConfig } from '@dereekb/dbx-web';
-import { AbstractForgeWrapperFieldComponent } from '../wrapper.field';
+import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
 import { ForgeWrapperContentComponent } from '../wrapper.content.component';
 import type { ForgeSectionFieldProps } from './section.field';
 
@@ -16,14 +16,15 @@ import type { ForgeSectionFieldProps } from './section.field';
   template: `
     @if (subsectionSignal()) {
       <dbx-subsection [headerConfig]="headerConfigSignal()">
-        <dbx-forge-wrapper-content [config]="childConfigSignal()" [(value)]="childValueSignal" />
+        <dbx-forge-wrapper-content />
       </dbx-subsection>
     } @else {
       <dbx-section [headerConfig]="headerConfigSignal()" [elevate]="elevateSignal()">
-        <dbx-forge-wrapper-content [config]="childConfigSignal()" [(value)]="childValueSignal" />
+        <dbx-forge-wrapper-content />
       </dbx-section>
     }
   `,
+  providers: provideDbxForgeWrapperFieldDirective(ForgeDbxSectionFieldWrapperComponent),
   imports: [DbxSectionComponent, DbxSubSectionComponent, ForgeWrapperContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
@@ -31,7 +32,7 @@ import type { ForgeSectionFieldProps } from './section.field';
     '[class]': 'className()'
   }
 })
-export class ForgeSectionFieldComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> {
+export class ForgeDbxSectionFieldWrapperComponent extends AbstractForgeWrapperFieldComponent<ForgeSectionFieldProps> {
   readonly headerConfigSignal = computed((): DbxSectionHeaderConfig => {
     return this.props()?.headerConfig ?? {};
   });
