@@ -1,3 +1,13 @@
+## [13.6.17](https://github.com/dereekb/dbx-components/compare/v13.6.16-dev...v13.6.17) (2026-04-08)
+
+
+### Code Refactoring
+
+- added EMPTY_ARKTYPE_TYPE and emptyType() utility ([b37e1376](https://github.com/dereekb/dbx-components/commit/b37e1376c90e3966bf8052fdcbfe6256affba41e))
+- added encrypted pdf utility ([ebb2f8e1](https://github.com/dereekb/dbx-components/commit/ebb2f8e18f4e7337b4a8f03fff908510c1756f19))
+- added maxRetries config to ZohoRateLimitedFetchHandlerConfig ([71cb5b23](https://github.com/dereekb/dbx-components/commit/71cb5b2303ed647a95020e1c2d9a8ed3b867262c))
+- exported download multiple files min/max constants ([84195b16](https://github.com/dereekb/dbx-components/commit/84195b1687cc72297648d9f66878cdf37a9b8432))
+
 ## [13.6.16](https://github.com/dereekb/dbx-components/compare/v13.6.15-dev...v13.6.16) (2026-04-03)
 
 

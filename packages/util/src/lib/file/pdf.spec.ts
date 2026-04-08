@@ -1,4 +1,6 @@
-import { bufferHasValidPdfMarkings } from './pdf';
+import { bufferHasValidPdfMarkings, isPdfPasswordProtected } from './pdf';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
 describe('bufferHasValidPdfMarkings', () => {
   it('should return true for a buffer with valid PDF markers', () => {
@@ -28,5 +30,31 @@ describe('bufferHasValidPdfMarkings', () => {
     const content = 'prefix %PDF-1.4 some content %%EOF';
     const buffer = Buffer.from(content);
     expect(bufferHasValidPdfMarkings(buffer)).toBe(false);
+  });
+});
+
+describe('isPdfPasswordProtected', () => {
+  const encryptedPdfPath = resolve(__dirname, '../../../../../apps/demo-api/src/test/assets/encryptedpdf.pdf');
+
+  it('should return true for a password-protected PDF', () => {
+    const buffer = readFileSync(encryptedPdfPath);
+    expect(isPdfPasswordProtected(buffer)).toBe(true);
+  });
+
+  it('should return true for a buffer containing /Encrypt', () => {
+    const content = '%PDF-1.4 /Encrypt some content %%EOF';
+    const buffer = Buffer.from(content);
+    expect(isPdfPasswordProtected(buffer)).toBe(true);
+  });
+
+  it('should return false for a normal PDF without /Encrypt', () => {
+    const content = '%PDF-1.4 some content %%EOF';
+    const buffer = Buffer.from(content);
+    expect(isPdfPasswordProtected(buffer)).toBe(false);
+  });
+
+  it('should return false for an empty buffer', () => {
+    const buffer = Buffer.from('');
+    expect(isPdfPasswordProtected(buffer)).toBe(false);
   });
 });

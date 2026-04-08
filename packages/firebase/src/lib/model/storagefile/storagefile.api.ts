@@ -10,6 +10,9 @@ import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, ty
 import { type SendNotificationResult } from '../notification/notification.api';
 import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 
+export const DOWNLOAD_MULTIPLE_STORAGE_FILES_MIN_FILES = 1;
+export const DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_FILES = 50;
+
 /**
  * Parameters for directly creating a new StorageFile document (no upload initialization).
  *
@@ -232,7 +235,7 @@ export interface DownloadMultipleStorageFilesParams extends DownloadStorageFileO
 }
 
 export const downloadMultipleStorageFilesParamsType = type({
-  files: downloadMultipleStorageFilesFileParamsType.array().atLeastLength(1).atMostLength(50),
+  files: downloadMultipleStorageFilesFileParamsType.array().atLeastLength(DOWNLOAD_MULTIPLE_STORAGE_FILES_MIN_FILES).atMostLength(DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_FILES),
   'expiresAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'expiresIn?': clearable('number >= 0'),
   'responseDisposition?': clearable('string'),

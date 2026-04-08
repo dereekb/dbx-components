@@ -1,6 +1,6 @@
 {
   "name": "demo-api",
-  "version": "13.6.16",
+  "version": "13.6.17",
   "dependencies": {
     "mailgun.js": "^12.0.0"
   },
@@ -8,13 +8,13 @@
     "node": ">=24.0.0"
   },
   "peerDependencies": {
-    "@dereekb/date": "13.6.16",
-    "@dereekb/firebase": "13.6.16",
-    "@dereekb/firebase-server": "13.6.16",
-    "@dereekb/model": "13.6.16",
-    "@dereekb/nestjs": "13.6.16",
-    "@dereekb/util": "13.6.16",
-    "@dereekb/zoom": "13.6.16",
+    "@dereekb/date": "13.6.17",
+    "@dereekb/firebase": "13.6.17",
+    "@dereekb/firebase-server": "13.6.17",
+    "@dereekb/model": "13.6.17",
+    "@dereekb/nestjs": "13.6.17",
+    "@dereekb/util": "13.6.17",
+    "@dereekb/zoom": "13.6.17",
     "@nestjs/common": "^11.1.17",
     "firebase-admin": "^13.0.0",
     "firebase-functions": "^7.0.0",

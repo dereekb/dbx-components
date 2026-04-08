@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type type, type Type } from 'arktype';
+import { type, type Type } from 'arktype';
 
 /**
  * A value that can be set to a value of `T`, or cleared by setting to `null` or `undefined`.
@@ -20,6 +20,34 @@ import { type type, type Type } from 'arktype';
  * ```
  */
 export type Clearable<T> = Maybe<T>;
+
+/**
+ * Singleton ArkType schema that accepts any empty object (`{}`).
+ *
+ * Used as the canonical "no params" type for model API actions that require an ArkType schema but have no meaningful input fields.
+ *
+ * @example
+ * ```typescript
+ * export const doSomethingParamsType = emptyType<DoSomethingParams>();
+ * ```
+ */
+export const EMPTY_ARKTYPE_TYPE: Type<{}> = type({}) as Type<{}>;
+
+/**
+ * Returns the shared {@link EMPTY_ARKTYPE_TYPE} cast to the requested type, providing a typed empty-object schema
+ * without creating a new ArkType instance each time.
+ *
+ * @returns the singleton empty type schema typed as `Type<T>`
+ *
+ * @example
+ * ```typescript
+ * export interface ResyncAllParams {}  // has no params currently
+ * export const resyncAllParamsType = emptyType<ResyncAllParams>();
+ * ```
+ */
+export function emptyType<T = {}>(): Type<T> {
+  return EMPTY_ARKTYPE_TYPE as Type<T>;
+}
 
 /**
  * Creates an ArkType schema that accepts the given ArkType definition OR null/undefined.
