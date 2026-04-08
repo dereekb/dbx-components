@@ -218,7 +218,7 @@ export class DbxDetachService {
     }
 
     const target = outletElement ?? entry.lastOutlet;
-    if (!target || !target.isConnected) {
+    if (!target?.isConnected) {
       // No outlet available or it's been removed from the DOM
       return;
     }

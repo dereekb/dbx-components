@@ -1,4 +1,4 @@
-import { type ComponentRef, Injector, type ViewContainerRef } from '@angular/core';
+import { type ComponentRef, type Injector, type ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
 import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig, dbxInjectionComponentConfigIsEqual } from './injection';
 import { type Initialized, type Destroyable, type Maybe } from '@dereekb/util';
