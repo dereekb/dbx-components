@@ -26,15 +26,19 @@ export class DbxMapboxInjectionStoreInjectionBlockDirective {}
 export function provideMapboxInjectionStoreIfParentIsUnavailable(): Provider {
   return {
     provide: DbxMapboxInjectionStore,
-    useFactory: (parentInjector: Injector, dbxMapboxInjectionStoreInjectionBlock?: DbxMapboxInjectionStoreProviderBlock, dbxMapboxInjectionStore?: DbxMapboxInjectionStore) => {
+    useFactory: (dbxMapboxInjectionStoreInjectionBlock?: DbxMapboxInjectionStoreProviderBlock, dbxMapboxInjectionStore?: DbxMapboxInjectionStore) => {
       if (!dbxMapboxInjectionStore || (dbxMapboxInjectionStore && dbxMapboxInjectionStoreInjectionBlock?.dbxMapboxInjectionStore === dbxMapboxInjectionStore)) {
         // create a new dbxMapboxInjectionStore to use
+        const parentInjector = inject(Injector);
         const injector = Injector.create({ providers: [{ provide: DbxMapboxInjectionStore }], parent: parentInjector });
         dbxMapboxInjectionStore = injector.get(DbxMapboxInjectionStore);
       }
 
       return dbxMapboxInjectionStore;
     },
-    deps: [Injector, [new Optional(), DbxMapboxInjectionStoreProviderBlock], [new Optional(), new SkipSelf(), DbxMapboxInjectionStore]]
+    deps: [
+      [new Optional(), DbxMapboxInjectionStoreProviderBlock],
+      [new Optional(), new SkipSelf(), DbxMapboxInjectionStore]
+    ]
   };
 }

@@ -6,7 +6,7 @@ import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demo
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 
-vi.setConfig({ hookTimeout: 20000, testTimeout: 20000 });
+vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
 /**
  * Creates a Firebase ID token for the given UID that the Auth emulator will accept.

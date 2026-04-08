@@ -198,7 +198,10 @@
     "@rollup/rollup-darwin-arm64": "4.59.0",
     "@rollup/rollup-darwin-x64": "4.59.0",
     "@rollup/rollup-linux-x64-gnu": "4.59.0",
-    "@rollup/rollup-win32-x64-msvc": "4.59.0"
+    "@rollup/rollup-win32-x64-msvc": "4.59.0",
+    "@img/sharp-darwin-arm64": "0.34.5",
+    "@img/sharp-darwin-x64": "0.34.5",
+    "@img/sharp-linux-x64": "0.34.5"
   },
   "engines": {
     "node": ">=24.0.0"

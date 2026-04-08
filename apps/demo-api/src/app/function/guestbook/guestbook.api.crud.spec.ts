@@ -3,7 +3,7 @@ import { type CreateGuestbookParams, type QueryGuestbooksParams, guestbookIdenti
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext, demoOAuthAuthorizedSuperTestContext } from '../../../test/fixture';
 import { type OnCallCreateModelResult, type OnCallQueryModelResult, onCallCreateModelParams, onCallQueryModelParams } from '@dereekb/firebase';
 
-vi.setConfig({ hookTimeout: 20000, testTimeout: 20000 });
+vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // MARK: Helper

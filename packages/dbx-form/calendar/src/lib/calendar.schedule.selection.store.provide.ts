@@ -26,15 +26,19 @@ export class DbxCalendarScheduleSelectionStoreInjectionBlockDirective {}
 export function provideCalendarScheduleSelectionStoreIfParentIsUnavailable(): Provider {
   return {
     provide: DbxCalendarScheduleSelectionStore,
-    useFactory: (parentInjector: Injector, dbxCalendarScheduleSelectionStoreInjectionBlock?: DbxCalendarScheduleSelectionStoreProviderBlock, dbxCalendarScheduleSelectionStore?: DbxCalendarScheduleSelectionStore) => {
+    useFactory: (dbxCalendarScheduleSelectionStoreInjectionBlock?: DbxCalendarScheduleSelectionStoreProviderBlock, dbxCalendarScheduleSelectionStore?: DbxCalendarScheduleSelectionStore) => {
       if (!dbxCalendarScheduleSelectionStore || (dbxCalendarScheduleSelectionStore && dbxCalendarScheduleSelectionStoreInjectionBlock?.dbxCalendarScheduleSelectionStore === dbxCalendarScheduleSelectionStore)) {
         // create a new dbxCalendarScheduleSelectionStore to use
+        const parentInjector = inject(Injector);
         const injector = Injector.create({ providers: [{ provide: DbxCalendarScheduleSelectionStore }], parent: parentInjector });
         dbxCalendarScheduleSelectionStore = injector.get(DbxCalendarScheduleSelectionStore);
       }
 
       return dbxCalendarScheduleSelectionStore;
     },
-    deps: [Injector, [new Optional(), DbxCalendarScheduleSelectionStoreProviderBlock], [new Optional(), new SkipSelf(), DbxCalendarScheduleSelectionStore]]
+    deps: [
+      [new Optional(), DbxCalendarScheduleSelectionStoreProviderBlock],
+      [new Optional(), new SkipSelf(), DbxCalendarScheduleSelectionStore]
+    ]
   };
 }
