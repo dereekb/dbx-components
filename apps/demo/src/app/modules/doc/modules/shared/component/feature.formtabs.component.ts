@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -9,7 +9,7 @@ import { map } from 'rxjs';
  *
  * @example
  * ```html
- * <doc-feature-form-tabs>
+ * <doc-feature-form-tabs formlyFn="formlyTextField()" forgeFn="forgeTextField()">
  *   <doc-form-example-form formly [dbxFormlyFields]="textFields"></doc-form-example-form>
  *   <doc-forge-example-form forge [config]="forgeTextFieldsConfig"></doc-forge-example-form>
  * </doc-feature-form-tabs>
@@ -25,4 +25,7 @@ import { map } from 'rxjs';
 export class DocFeatureFormTabsComponent {
   private readonly _breakpointObserver = inject(BreakpointObserver);
   readonly isMobile = toSignal(this._breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait]).pipe(map((result) => result.matches)), { initialValue: false });
+
+  readonly formlyFn = input<string>();
+  readonly forgeFn = input<string>();
 }

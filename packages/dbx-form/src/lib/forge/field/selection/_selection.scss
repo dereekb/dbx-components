@@ -1,0 +1,9 @@
+@use './searchable/searchable';
+
+@mixin all-selection-core() {
+  @include searchable.core();
+}
+
+@mixin all-selection-theme($theme-config) {
+  @include searchable.theme($theme-config);
+}

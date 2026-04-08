@@ -1,4 +1,4 @@
-import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField, forgeUsernamePasswordLoginFields, forgeWebsiteUrlField } from '@dereekb/dbx-form';
+import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule, DbxFormSourceDirective, websiteUrlField, forgeUsernamePasswordLoginFields, forgeWebsiteUrlField, forgeTimezoneStringField } from '@dereekb/dbx-form';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
@@ -31,6 +31,10 @@ export class DocFormTemplateComponent {
   });
 
   readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
+
+  readonly forgeTimezoneSelectionConfig: FormConfig = {
+    fields: [forgeTimezoneStringField()]
+  };
 
   readonly websiteUrlFields: FormlyFieldConfig[] = [
     websiteUrlField({

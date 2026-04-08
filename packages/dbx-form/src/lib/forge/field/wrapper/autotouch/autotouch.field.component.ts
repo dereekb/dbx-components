@@ -7,12 +7,7 @@ import type { ForgeAutoTouchFieldProps } from './autotouch.field';
 /**
  * Forge ValueFieldComponent that implements auto-touch behavior.
  *
- * This is a hidden component with no visual output. It monitors the form's
- * value signal and marks the watched field as touched when its value changes
- * and the field is not pristine. This triggers validation message display.
- *
- * Injected into the form via the standard ng-forge field rendering pipeline,
- * but renders nothing (hidden: true on the field definition).
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
 @Component({
   selector: 'dbx-forge-autotouch-field',

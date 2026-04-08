@@ -21,6 +21,16 @@
   padding-bottom: 4px;
   border-bottom: 1px solid currentColor;
   opacity: 0.2;
+
+  .doc-feature-form-tabs-fn {
+    display: block;
+    font-family: monospace;
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
 }
 
 .doc-feature-form-tabs-content {

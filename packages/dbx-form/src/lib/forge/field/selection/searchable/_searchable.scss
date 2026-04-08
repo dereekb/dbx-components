@@ -1,0 +1,19 @@
+@mixin core() {
+  dbx-forge-searchable-text-field,
+  dbx-forge-searchable-chip-field {
+    display: block;
+    width: 100%;
+  }
+
+  .dbx-searchable-field {
+    width: 100%;
+
+    > .dbx-searchable-text-field-input,
+    > .dbx-searchable-chip-field-input {
+      width: 100%;
+    }
+  }
+}
+
+@mixin theme($theme-config) {
+}

@@ -4,10 +4,15 @@ import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
 
 // MARK: Field Type
+/**
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
+ */
 export const FORGE_AUTOTOUCH_FIELD_TYPE_NAME = 'dbx-forge-autotouch' as const;
 
 /**
  * Props interface for the forge autotouch field.
+ *
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
 export interface ForgeAutoTouchFieldProps {
   /**
@@ -18,6 +23,8 @@ export interface ForgeAutoTouchFieldProps {
 
 /**
  * Forge field definition for autotouch behavior.
+ *
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
 export interface ForgeAutoTouchFieldDef extends BaseValueField<ForgeAutoTouchFieldProps, unknown> {
   readonly type: typeof FORGE_AUTOTOUCH_FIELD_TYPE_NAME;
@@ -25,6 +32,8 @@ export interface ForgeAutoTouchFieldDef extends BaseValueField<ForgeAutoTouchFie
 
 /**
  * ng-forge FieldTypeDefinition for the autotouch field.
+ *
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
 export const DBX_FORGE_AUTOTOUCH_FIELD_TYPE: FieldTypeDefinition<ForgeAutoTouchFieldDef> = {
   name: FORGE_AUTOTOUCH_FIELD_TYPE_NAME,
@@ -37,6 +46,8 @@ let _forgeAutoTouchCounter = 0;
 // MARK: Config
 /**
  * Configuration for creating a forge autotouch field.
+ *
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  */
 export interface ForgeAutoTouchFieldConfig {
   /**
@@ -53,9 +64,7 @@ export interface ForgeAutoTouchFieldConfig {
  * Creates a forge autotouch field that marks a sibling field as touched
  * when its value changes.
  *
- * This is a hidden behavioral field with no visual output. It monitors
- * the form value for changes and marks the target field as touched,
- * triggering validation display.
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  *
  * @param config - AutoTouch configuration
  * @returns A {@link ForgeAutoTouchFieldDef}

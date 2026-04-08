@@ -367,7 +367,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         displayForValue: DISPLAY_FOR_STRING_VALUE
       }) as any,
       forgePickableChipField({
-        key: 'stringItemChips',
+        key: 'stringItemChipsReadonly',
         label: 'Read Only String Item Chips',
         description: 'This is read only.',
         readonly: true,
@@ -406,7 +406,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         displayForValue: DISPLAY_FOR_STRING_VALUE
       }) as any,
       forgePickableListField({
-        key: 'stringItemList',
+        key: 'stringItemListReadonly',
         label: 'Read Only String Item List',
         readonly: true,
         description: 'This is read only.',
@@ -437,7 +437,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         displayForValue: DISPLAY_FOR_STRING_VALUE
       }) as any,
       forgeSearchableStringChipField({
-        key: 'typeAndPickChips',
+        key: 'typeAndPickChipsReadonly',
         label: 'Read Only Text Field',
         description: 'This input is read-only.',
         readonly: true,
@@ -470,7 +470,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         displayForValue: DISPLAY_FOR_STRING_VALUE
       }) as any,
       forgeSearchableTextField({
-        key: 'strings',
+        key: 'stringsReadonly',
         label: 'Read-only Text Field',
         description: 'View is read only.',
         readonly: true,

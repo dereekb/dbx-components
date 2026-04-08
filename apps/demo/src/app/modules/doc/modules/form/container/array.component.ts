@@ -79,7 +79,7 @@ export class DocFormArrayComponent {
         maxLength: 2
       }) as any
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeDragArrayAdvancedConfig: FormConfig = {
     fields: [
@@ -96,5 +96,5 @@ export class DocFormArrayComponent {
         addDuplicateToEnd: true
       }) as any
     ]
-  } as unknown as FormConfig;
+  };
 }

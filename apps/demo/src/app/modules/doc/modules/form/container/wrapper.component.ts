@@ -14,6 +14,7 @@ import {
   countryField,
   styleWrapper,
   toggleField,
+  formlyTextIsAvailableField,
   forgeFlexRow,
   forgeDbxSectionFieldWrapper,
   forgeDbxSubsectionFieldWrapper,
@@ -40,6 +41,7 @@ import {
 } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -173,6 +175,7 @@ export class DocFormWrapperComponent {
         h: 1,
         icon: 'star',
         hint: 'Section Field Hint Inline',
+        hintInline: true,
         fields: [forgeNameField({ key: 'name2' })]
       })
     ]
@@ -246,10 +249,29 @@ export class DocFormWrapperComponent {
     ]
   };
 
+  readonly workingField: FormlyFieldConfig[] = [
+    formlyTextIsAvailableField({
+      key: 'username',
+      label: 'Username',
+      description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
+      checkValueIsAvailable: (value: string) => {
+        return new Observable<boolean>((subscriber) => {
+          const timer = setTimeout(() => {
+            subscriber.next(value !== 'taken');
+            subscriber.complete();
+          }, 2000);
+
+          return () => clearTimeout(timer);
+        });
+      },
+      isNotAvailableErrorMessage: 'This username is already taken.'
+    })
+  ];
+
   readonly forgeWorkingFieldConfig: FormConfig = {
     fields: [
       forgeWorkingFieldWrapper({
-        fields: [forgeNameField({})]
+        fields: [forgeNameField({ key: 'username', label: 'Username', description: 'Working wrapper around a text field.' })]
       })
     ]
   };

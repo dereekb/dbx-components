@@ -331,6 +331,8 @@ export function forgeWithClassName<T extends FieldDef<unknown>>(field: T, classN
 
 /**
  * Configuration for a styled group.
+ *
+ * @deprecated Use {@link ForgeStyleFieldConfig} with {@link forgeStyleWrapper} instead for dynamic class/style support.
  */
 export interface ForgeStyledGroupConfig {
   /**
@@ -352,6 +354,8 @@ export interface ForgeStyledGroupConfig {
  *
  * This is the forge equivalent of the formly `formlyStyleWrapper` for grouping
  * multiple fields under a common CSS class.
+ *
+ * @deprecated Use {@link forgeStyleWrapper} instead for proper wrapper support with dynamic class/style.
  *
  * @param config - Styled group configuration
  * @returns A {@link GroupField} with `className` set
@@ -571,6 +575,8 @@ export function forgeExpandWrapper(config: ForgeExpandWrapperConfig): RowField {
 // MARK: Info Wrapper
 /**
  * Configuration for a forge info wrapper that adds an info button beside a field.
+ *
+ * @deprecated Use {@link ForgeInfoWrapperFieldConfig} with {@link forgeInfoFieldWrapper} instead.
  */
 export interface ForgeInfoWrapperConfig {
   /**
@@ -601,7 +607,7 @@ export interface ForgeInfoWrapperConfig {
  * Returns a RowField with the main field on the left and an info icon button
  * on the right. Clicking the button invokes the provided callback.
  *
- * This is the forge equivalent of the formly `formlyInfoWrapper`.
+ * @deprecated Use {@link forgeInfoFieldWrapper} instead for proper wrapper support with group wrapping.
  *
  * @param config - Info wrapper configuration
  * @returns A {@link RowField} containing the field and info button
@@ -631,7 +637,7 @@ export function forgeInfoWrapper(config: ForgeInfoWrapperConfig): RowField {
  * Returns a GroupField containing the original field and a working indicator
  * component that shows a progress bar when the field has pending validation.
  *
- * This is the forge equivalent of the formly `formlyWorkingWrapper`.
+ * @deprecated Use {@link forgeWorkingFieldWrapper} instead for proper wrapper support.
  *
  * @param field - The field to wrap with a working indicator
  * @returns A {@link GroupField} containing the field and working indicator
@@ -659,17 +665,10 @@ export function forgeWorkingWrapper(field: FieldDef<unknown>): GroupField {
  * Returns a RowField containing the original field and a hidden autotouch
  * component that monitors value changes and triggers touch state.
  *
- * This is the forge equivalent of the formly `formlyAutoTouchWrapper`.
+ * @deprecated Auto-touch behavior is no longer needed with ng-forge signal forms.
  *
  * @param field - The field to wrap with auto-touch behavior
  * @returns A {@link RowField} containing the field and autotouch component
- *
- * @example
- * ```typescript
- * const withAutoTouch = forgeAutoTouchWrapper(
- *   forgeTextField({ key: 'name', label: 'Name' })
- * );
- * ```
  */
 export function forgeAutoTouchWrapper(field: FieldDef<unknown>): RowField {
   const autoTouchField = forgeAutoTouchField({ watchFieldKey: field.key });
