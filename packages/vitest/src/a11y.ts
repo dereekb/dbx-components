@@ -19,16 +19,14 @@
  * expect(results).toHaveNoViolations();
  * ```
  */
-import 'vitest';
 import { expect } from 'vitest';
 
-import { type AxeMatchers , allA11yMatchers } from './lib/matcher.a11y.js';
+import { type AxeMatchers, allA11yMatchers } from './lib/matcher.a11y.js';
 
 expect.extend(allA11yMatchers);
 
 declare module 'vitest' {
-   
   interface Assertion extends AxeMatchers {}
-   
+
   interface AsymmetricMatchersContaining extends AxeMatchers {}
 }

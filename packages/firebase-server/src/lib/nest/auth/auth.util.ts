@@ -1,5 +1,5 @@
 import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, type UserRelated } from '@dereekb/firebase';
-import { type ArrayOrValue, type AuthRole, containsAllValues, asArray, ErrorMessageOrPartialServerError, Maybe } from '@dereekb/util';
+import { type ArrayOrValue, type AuthRole, containsAllValues, asArray, type ErrorMessageOrPartialServerError, type Maybe } from '@dereekb/util';
 import { forbiddenError } from '../../function/error';
 import { type NestContextCallableRequestWithOptionalAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
@@ -8,6 +8,7 @@ import { type AbstractFirebaseNestContext } from '../nest.provider';
  * Asserts that the caller has admin privileges in the request.
  *
  * @param request - The callable request to check for admin privileges.
+ * @param messageOrError - Optional custom error message or partial server error for the forbidden response.
  * @throws {HttpsError} Throws forbidden (403) if the caller is not an admin.
  */
 export function assertIsAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
@@ -33,6 +34,7 @@ export function isAdminInRequest<N extends AbstractFirebaseNestContext<any, any>
  *
  * @param request - The callable request containing the target UID.
  * @param requireUid - If true, a UID must be present in the request data.
+ * @param messageOrError - Optional custom error message or partial server error for the forbidden response.
  * @returns The resolved target UID (from request data or auth).
  * @throws {HttpsError} Throws forbidden (403) if the caller is not authorized.
  */
@@ -68,6 +70,7 @@ export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestC
  * Asserts that the caller has signed the Terms of Service.
  *
  * @param request - The callable request to check for ToS status.
+ * @param messageOrError - Optional custom error message or partial server error for the forbidden response.
  * @throws {HttpsError} Throws forbidden (403) if ToS has not been signed.
  */
 export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
@@ -95,6 +98,7 @@ export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any,
  *
  * @param request - The callable request to check for auth roles.
  * @param authRoles - One or more roles that must all be present.
+ * @param messageOrError - Optional custom error message or partial server error for the forbidden response.
  * @throws {HttpsError} Throws forbidden (403) if any required role is missing.
  */
 export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, authRoles: ArrayOrValue<AuthRole>, messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
@@ -168,6 +172,7 @@ export interface ResolveAdminOnlyValueConfig<N extends AbstractFirebaseNestConte
  * - If the caller didn't provide a value, undefined is returned (no restriction).
  * - Any value is allowed.
  *
+ * @param config - Configuration specifying the request, value, defaults, and admin-only predicate.
  * @returns The resolved value, or undefined for admins who didn't provide a value.
  * @throws {HttpsError} Throws forbidden (403) if a non-admin attempts to use an admin-only value.
  *

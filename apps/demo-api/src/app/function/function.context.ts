@@ -36,43 +36,43 @@ import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
  */
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get actionContext(): DemoFirebaseServerActionsContext {
-    return this.nest.get(DemoFirebaseServerActionsContext);
+    return this.nestApplication.get(DemoFirebaseServerActionsContext);
   }
 
   get authService(): DemoApiAuthService {
-    return this.nest.get(DemoApiAuthService);
+    return this.nestApplication.get(DemoApiAuthService);
   }
 
   get demoFirestoreCollections(): DemoFirestoreCollections {
-    return this.nest.get(DemoFirestoreCollections);
+    return this.nestApplication.get(DemoFirestoreCollections);
   }
 
   get notificationInitActions(): NotificationInitServerActions {
-    return this.nest.get(NotificationInitServerActions);
+    return this.nestApplication.get(NotificationInitServerActions);
   }
 
   get notificationActions(): NotificationServerActions {
-    return this.nest.get(NotificationServerActions);
+    return this.nestApplication.get(NotificationServerActions);
   }
 
   get profileActions(): ProfileServerActions {
-    return this.nest.get(ProfileServerActions);
+    return this.nestApplication.get(ProfileServerActions);
   }
 
   get guestbookActions(): GuestbookServerActions {
-    return this.nest.get(GuestbookServerActions);
+    return this.nestApplication.get(GuestbookServerActions);
   }
 
   get storageFileServerActions(): StorageFileServerActions {
-    return this.nest.get(StorageFileServerActions);
+    return this.nestApplication.get(StorageFileServerActions);
   }
 
   get storageFileInitActions(): StorageFileInitServerActions {
-    return this.nest.get(StorageFileInitServerActions);
+    return this.nestApplication.get(StorageFileInitServerActions);
   }
 
   get oidcModelServerActions(): OidcModelServerActions {
-    return this.nest.get(OidcModelServerActions);
+    return this.nestApplication.get(OidcModelServerActions);
   }
 
   get firebaseModelsService() {

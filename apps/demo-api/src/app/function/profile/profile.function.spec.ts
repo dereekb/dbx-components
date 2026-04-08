@@ -20,6 +20,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // describeCallableRequestTest wraps a jest describe along with the following:
   // - Build our profileSetUsername function using our testing context instances's Nest App for each test, and the profileSetUsername factory.
   // - wrap the function to make it a usable function and exposed as profileSetUsernameWrappedFn
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   describeCallableRequestTest('profileSetUsername', { f, fn: profileSetUsername }, (profileSetUsernameWrappedFn) => {
     // with our DemoApiFunctionContextFixture, we can easily create a new user for this test case.
     demoAuthorizedUserContext({ f }, (u) => {
@@ -44,6 +45,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       // second user
       demoAuthorizedUserContext({ f }, (u2) => {
         itShouldFail('if the username is already taken.', async () => {
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
           const fn = f.fnWrapper.wrapCallableRequest(profileSetUsername(f.nestAppPromiseGetter));
 
           const params: SetProfileUsernameParams = {

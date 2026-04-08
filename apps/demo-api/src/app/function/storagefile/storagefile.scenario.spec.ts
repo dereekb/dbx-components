@@ -19,7 +19,7 @@ demoApiFunctionContextFactory((f) => {
             const testFileContent = content;
 
             const filePath = userTestFileUploadsFilePath(uid, fileName);
-            const testFile = await f.storageContext.file(filePath);
+            const testFile = f.storageContext.file(filePath);
             const testFileStoragePath = testFile.storagePath;
 
             const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.

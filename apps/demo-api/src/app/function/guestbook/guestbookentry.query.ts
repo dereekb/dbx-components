@@ -1,5 +1,5 @@
 import { publishedGuestbookEntry, type GuestbookEntry, type QueryGuestbookEntriesParams } from 'demo-firebase';
-import { type OnCallQueryModelResult, orderBy, type FirestoreQueryConstraint } from '@dereekb/firebase';
+import { type OnCallQueryModelResult, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
 

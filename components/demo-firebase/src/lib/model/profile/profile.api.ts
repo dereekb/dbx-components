@@ -46,17 +46,17 @@ export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 /**
  * We set the key here to allow both the functions server and the type map/client access this shared key.
  */
-export const profileSetUsernameKey = 'profileSetUsername';
+export const PROFILE_SET_USERNAME_KEY = 'profileSetUsername';
 
 /**
  * This is our FirebaseFunctionTypeMap for Profile. It defines all the functions that are available.
  */
 export type ProfileFunctionTypeMap = {
-  [profileSetUsernameKey]: [SetProfileUsernameParams, void];
+  [PROFILE_SET_USERNAME_KEY]: [SetProfileUsernameParams, void];
 };
 
 export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<ProfileFunctionTypeMap> = {
-  [profileSetUsernameKey]: null
+  [PROFILE_SET_USERNAME_KEY]: null
 };
 
 export type ProfileModelCrudFunctionsConfig = {
@@ -92,7 +92,7 @@ export const profileFunctionMap = callModelFirebaseFunctionMapFactory(profileFun
  * Declared as an abstract class so we can inject it into our Angular app using this token.
  */
 export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig> {
-  abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
+  abstract [PROFILE_SET_USERNAME_KEY]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
   abstract profile: {
     readProfile: {
       downloadArchive: ModelFirebaseReadFunction<DownloadProfileArchiveParams, DownloadProfileArchiveResult>;

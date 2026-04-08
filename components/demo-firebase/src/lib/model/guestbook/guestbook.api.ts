@@ -3,7 +3,7 @@ import { type, type Type } from 'arktype';
 import { type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
-import { GuestbookKey } from './guestbook.id';
+import { type GuestbookKey } from './guestbook.id';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 

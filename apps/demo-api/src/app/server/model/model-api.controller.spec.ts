@@ -1,8 +1,7 @@
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
-import { ModelApiCallModelDispatchService, ModelApiDispatchConfig, ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS, getModelApiDetails } from '@dereekb/firebase-server';
+import { ModelApiCallModelDispatchService, type ModelApiDispatchConfig, type ModelApiGetService, MAX_MODEL_ACCESS_MULTI_READ_KEYS, getModelApiDetails, ModelApiController } from '@dereekb/firebase-server';
 import { demoCallModelFn } from '../../function/model/crud.functions';
 import { mapDemoApiNestContext } from '../../function/function.context';
-import { ModelApiController } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('ModelApiDispatchService', () => {

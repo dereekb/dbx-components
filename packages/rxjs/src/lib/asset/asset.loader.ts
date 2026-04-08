@@ -15,6 +15,7 @@ import { type AssetPathRef, type AssetLoaderAssetInstance, type AssetLoaderGetFn
  *
  * @param ref - The asset path reference this instance represents.
  * @param getFn - Promise-based function that loads the asset bytes.
+ * @returns An {@link AssetLoaderAssetInstance} with a cold observable that invokes getFn on each subscription.
  */
 export function assetLoaderAssetInstance(ref: AssetPathRef, getFn: AssetLoaderGetFn): AssetLoaderAssetInstance {
   return {
@@ -38,6 +39,7 @@ export function assetLoaderAssetInstance(ref: AssetPathRef, getFn: AssetLoaderGe
  * ```
  *
  * @param getFn - Promise-based function that loads any asset's bytes.
+ * @returns An {@link AssetLoader} that creates instances using the provided get function.
  */
 export function assetLoaderFromGetFn(getFn: AssetLoaderGetFn): AssetLoader {
   const loader: AssetLoader = {

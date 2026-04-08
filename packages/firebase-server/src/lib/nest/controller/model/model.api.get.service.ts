@@ -1,7 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
-import { Injectable, Inject } from '@nestjs/common';
-import { type INestApplicationContext } from '@nestjs/common';
+import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
 import { ModelApiDispatchConfig, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
@@ -126,6 +125,9 @@ export class ModelApiGetService {
    * Builds an {@link AuthDataRef} compatible with `useModel()` from the HTTP request auth.
    *
    * Uses the same synthetic auth pattern as {@link ModelApiDispatchService.dispatch}.
+   *
+   * @param auth - The Firebase server auth data from the HTTP request, or undefined for unauthenticated requests.
+   * @returns An object containing a synthetic {@link AuthData} for use with `useModel()`, or undefined auth.
    */
   private _makeAuthRef(auth: Maybe<FirebaseServerAuthData>): { auth?: AuthData } {
     return {

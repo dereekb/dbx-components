@@ -18,6 +18,7 @@ import { DbxCoreAssetLoader, DBX_ASSET_LOADER_CONFIG_TOKEN, type DbxCoreAssetLoa
  * ```
  *
  * @param config - Optional configuration for the asset loader. Defaults to loading from `/assets/`.
+ * @returns Angular environment providers that register the {@link AssetLoader} and its configuration.
  */
 export function provideDbxAssetLoader(config: DbxCoreAssetLoaderConfig = {}): EnvironmentProviders {
   const providers: Provider[] = [

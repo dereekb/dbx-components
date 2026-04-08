@@ -19,6 +19,7 @@ import { assetLoaderFromGetFn } from './asset.loader';
  * ```
  *
  * @param assets - Map of asset refs to their raw byte data.
+ * @returns An {@link AssetLoader} backed by the provided in-memory map.
  */
 export function memoryAssetLoader(assets: Map<AssetPathRef, ArrayBuffer>): AssetLoader {
   const getFn: AssetLoaderGetFn = async (ref: AssetPathRef): Promise<ArrayBuffer> => {

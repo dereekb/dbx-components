@@ -1,5 +1,4 @@
-import { type INestApplication, Inject, Logger, type MiddlewareConsumer, Module, Optional, type DynamicModule } from '@nestjs/common';
-import { OidcAuthBearerTokenMiddleware } from './oauth-auth.middleware';
+import { type INestApplication, Logger } from '@nestjs/common';
 import { type SlashPath, type Configurable } from '@dereekb/util';
 import { type Request, type Response, type NextFunction } from 'express';
 import { OidcService } from '../service/oidc.service';
@@ -38,6 +37,8 @@ const _logger = new Logger('applyOidcAuthMiddleware');
  *
  * This is an alternative to {@link ConfigureOidcAuthMiddlewareModule} for cases where
  * NestJS module scoping makes the module approach impractical.
+ *
+ * @param nestApp - The NestJS application instance used to resolve dependencies and register the middleware.
  *
  * @example
  * ```ts

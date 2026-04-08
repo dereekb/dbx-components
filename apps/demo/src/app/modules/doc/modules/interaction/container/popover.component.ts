@@ -1,4 +1,3 @@
-import { safeDetectChanges } from '@dereekb/dbx-core';
 import { type NgPopoverCloseEvent } from 'ng-overlay-container';
 import { ChangeDetectorRef, ElementRef, Component, inject, type AfterViewInit, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { DbxPopoverService, DbxContentContainerDirective, DbxSpacerDirective } from '@dereekb/dbx-web';
@@ -45,7 +44,7 @@ export class DocInteractionPopoverComponent implements AfterViewInit {
       .afterClosed$.pipe(first())
       .subscribe((x) => {
         this.result = x;
-        safeDetectChanges(this.cdRef);
+        this.cdRef.detectChanges();
       });
   }
 }

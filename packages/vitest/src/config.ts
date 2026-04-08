@@ -113,6 +113,11 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  * //   returns '/path/to/workspace/vitest.setup.firebase.ts'
  * resolveVitestSetupFile('setup-firebase', rootDir, pathFromRoot);
  * ```
+ *
+ * @param name - The setup file entry point name (e.g., 'setup-firebase', 'setup-angular').
+ * @param rootDir - Absolute path to the workspace root directory.
+ * @param pathFromRoot - Relative path from the workspace root to the consuming project.
+ * @returns Absolute or relative file path to the resolved setup file.
  */
 function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: string): string {
   const _require = createRequire(path.resolve(rootDir, 'noop.js'));
@@ -138,6 +143,15 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
   return result;
 }
 
+/**
+ * Creates a complete Vitest configuration tailored for dbx-components projects.
+ *
+ * Handles environment detection (CI vs local), pool/isolation defaults, setup file
+ * resolution, JUnit reporting, and workspace-specific path aliasing.
+ *
+ * @param options - Project-specific configuration options including project name, type, and paths.
+ * @returns A Vitest {@link UserConfig} ready for use in `vitest.config.ts`.
+ */
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
   const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, ciEnvVar = 'CI' } = options;
 

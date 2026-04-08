@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithKeyAndStore, type DbxFirebaseModelEntityWithStore } from './model.entities';
 import { MatAccordion } from '@angular/material/expansion';
-import { DbxIconButtonComponent, DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesEntityComponent } from './model.entities.entity.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, combineLatestWith, defaultIfEmpty, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
@@ -39,12 +39,12 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
       }
       @if (showViewUnregisteredEntitiesButtonSignal()) {
         <div class="dbx-pt3 text-center">
-          <dbx-icon-button icon="visibility" [text]="'View ' + unregisteredEntitiesCountSignal() + ' Hidden Entities'" (buttonClick)="clickShowUnregisteredEntities()"></dbx-icon-button>
+          <dbx-button icon="visibility" [text]="'View ' + unregisteredEntitiesCountSignal() + ' Hidden Entities'" (buttonClick)="clickShowUnregisteredEntities()"></dbx-button>
         </div>
       }
     </dbx-loading>
   `,
-  imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxIconButtonComponent],
+  imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

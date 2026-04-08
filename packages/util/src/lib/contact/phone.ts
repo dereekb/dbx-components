@@ -158,7 +158,7 @@ export function e164PhoneNumberFromE164PhoneNumberExtensionPair(input: E164Phone
 /**
  * Regex matching common phone number formatting characters to strip: parentheses, hyphens, spaces, and dots.
  */
-const PHONE_NUMBER_FORMATTING_CHARACTERS_REGEX = /[() \-\.]/g;
+const PHONE_NUMBER_FORMATTING_CHARACTERS_REGEX = /[() \-.]/g;
 
 /**
  * Attempts to convert a raw phone number string into a valid {@link E164PhoneNumber}.

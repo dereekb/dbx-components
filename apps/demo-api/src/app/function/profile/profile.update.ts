@@ -6,7 +6,7 @@ import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 import { firestoreModelKey } from '@dereekb/firebase';
 
 export const profileUpdate: DemoUpdateModelFunction<UpdateProfileParams> = async (request) => {
-  const { nest, auth, data } = request;
+  const { nest, auth: _auth, data } = request;
   const updateProfile = await nest.profileActions.updateProfile(data);
   const profileDocument: ProfileDocument = await profileForUserRequest(request);
   await updateProfile(profileDocument);
@@ -26,7 +26,7 @@ export const profileUpdateUsername: DemoUpdateModelFunction<SetProfileUsernamePa
 };
 
 export const profileUpdateOnboarding: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
-  const { nest, auth, data } = request;
+  const { nest, auth, data: _data } = request;
   const uid = auth.uid;
 
   if (uid) {

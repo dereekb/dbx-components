@@ -1,8 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type CallableRequest } from 'firebase-functions/v2/https';
-import { Injectable, Inject } from '@nestjs/common';
-import { type INestApplicationContext } from '@nestjs/common';
+import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type Request } from 'express';
 import { type OnCallWithNestContext, type OnCallWithNestContextRequest, setNestContextOnRequest } from '../../function/call';
 import { injectNestApplicationContextIntoRequest } from '../../function/nest';
@@ -96,6 +95,8 @@ export class ModelApiCallModelDispatchService {
 
   /**
    * Returns the model-first API details view, or undefined if no handlers have _apiDetails.
+   *
+   * @returns The aggregated API details describing all registered model call handlers, or undefined if unavailable.
    */
   getApiDetails(): Maybe<ModelApiDetailsResult> {
     return getModelApiDetails(this.config.callModelFn);
