@@ -1,7 +1,8 @@
+import type { FieldDef } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { forgeField } from '../../field';
-import { FORGE_SLIDER_FIELD_TYPE, type ForgeSliderFieldProps } from './slider.field.component';
+import { forgeFormFieldWrapper } from '../../wrapper/formfield/formfield.field';
 
 // MARK: Number Field
 /**
@@ -92,20 +93,22 @@ export interface ForgeNumberSliderFieldConfig extends ForgeNumberFieldConfig {
 }
 
 /**
- * Creates a forge field definition for a Material slider wrapped in a `<mat-form-field>`.
+ * Creates a forge field definition for a Material slider wrapped in a form-field wrapper.
  *
- * Uses the custom `dbx-slider` field type that provides the outlined label, hint,
- * and error display via `<mat-form-field>`.
+ * The wrapper provides the Material outlined form-field appearance (notched outline with
+ * floating label, hint/error subscript). The inner slider uses the ng-forge built-in
+ * `slider` type. The wrapper key uses `_` prefix so `stripForgeInternalKeys` flattens
+ * the child slider's value into the parent form.
  *
  * @param config - Slider field configuration including max (required), thumb label, and tick interval
- * @returns A validated field definition with type `'dbx-slider'`
+ * @returns A {@link ForgeFormFieldWrapperFieldDef} wrapping a slider field
  *
  * @example
  * ```typescript
  * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
-export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): MatSliderField {
+export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): FieldDef<unknown> {
   const { key, label, required, readonly: isReadonly, description, min, max, step, defaultValue, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
 
   let tickIntervalFromSteps: number | undefined;
@@ -116,8 +119,9 @@ export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): Ma
 
   const tickInterval: number | undefined = inputTickInterval === false ? undefined : (inputTickInterval ?? tickIntervalFromSteps ?? undefined);
 
-  const props: Partial<ForgeSliderFieldProps> = filterFromPOJO({
-    hint: description,
+  // Create the inner slider using ng-forge built-in 'slider' type.
+  // Label and hint are omitted here — the wrapper provides those.
+  const sliderProps: Partial<MatSliderProps> = filterFromPOJO({
     min,
     max,
     step,
@@ -125,17 +129,25 @@ export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): Ma
     tickInterval
   });
 
-  return forgeField(
+  const sliderField: MatSliderField = forgeField(
     filterFromPOJO({
       key,
-      type: FORGE_SLIDER_FIELD_TYPE as any,
-      label: label ?? '',
+      type: 'slider' as const,
+      label: '',
       value: defaultValue,
       required,
       readonly: isReadonly,
-      props: Object.keys(props).length > 0 ? props : undefined
+      min,
+      max,
+      props: Object.keys(sliderProps).length > 0 ? sliderProps : undefined
     }) as MatSliderField
   );
+
+  return forgeFormFieldWrapper({
+    label: label ?? '',
+    hint: description,
+    fields: [sliderField as unknown as FieldDef<unknown>]
+  });
 }
 
 // MARK: Dollar Amount Field

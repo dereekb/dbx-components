@@ -1,0 +1,30 @@
+@use '../../../style/theming';
+
+// MARK: Variables
+$dbx-forge-form-field-slider-thumb-margin: 22px;
+
+// MARK: Mixin
+@mixin core() {
+  // Forge form-field wrapper: suppress child field label/hint/error inside the wrapper.
+  // The wrapper provides its own label (notched outline), hint, and error subscript.
+  dbx-forge-form-field-wrapper {
+    .slider-label,
+    mat-error,
+    [matError],
+    .mat-hint,
+    .df-mat-error,
+    .df-mat-hint {
+      display: none !important;
+    }
+  }
+
+  // Slider margin fix for the form-field wrapper (mirrors the formly number slider fix).
+  // Adds margin so the slider thumb doesn't overlap the outlined border.
+  dbx-forge-form-field-wrapper .mat-mdc-slider {
+    margin: $dbx-forge-form-field-slider-thumb-margin $dbx-forge-form-field-slider-thumb-margin 0;
+    width: calc(100% - #{$dbx-forge-form-field-slider-thumb-margin * 2}) !important;
+  }
+}
+
+@mixin theme($theme-config) {
+}

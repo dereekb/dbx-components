@@ -14,16 +14,20 @@ import {
   countryField,
   styleWrapper,
   toggleField,
-  forgeRow,
   forgeFlexRow,
   forgeDbxSectionFieldWrapper,
   forgeDbxSubsectionFieldWrapper,
   forgeExpandWrapper,
   forgeToggleWrapper,
-  forgeInfoWrapper,
-  forgeStyledGroup,
-  forgeWithClassName,
+  forgeInfoFieldWrapper,
+  forgeStyleWrapper,
+  forgeWorkingFieldWrapper,
+  forgeFormFieldWrapper,
   forgeNameField,
+  forgeNumberField,
+  forgeNumberSliderField,
+  formlyNumberSliderField,
+  DbxFormFormlyNumberFieldModule,
   forgeCityField,
   forgeStateField,
   forgeZipCodeField,
@@ -35,6 +39,7 @@ import {
   DbxFormFormlyTextFieldModule
 } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { Validators } from '@angular/forms';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -46,7 +51,7 @@ import { DocFormForgeExampleComponent } from '../component/forge.example.form.co
 @Component({
   templateUrl: './wrapper.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormWrapperComponent {
@@ -146,7 +151,7 @@ export class DocFormWrapperComponent {
         fields: [forgeNameField({})]
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeToggleFieldConfig: FormConfig = {
     fields: [
@@ -154,7 +159,7 @@ export class DocFormWrapperComponent {
         fields: [forgeNameField({})]
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeSectionFieldConfig: FormConfig = {
     fields: [
@@ -171,7 +176,7 @@ export class DocFormWrapperComponent {
         fields: [forgeNameField({ key: 'name2' })]
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeSubsectionFieldConfig: FormConfig = {
     fields: [
@@ -181,27 +186,39 @@ export class DocFormWrapperComponent {
         fields: [forgeNameField({})]
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeInfoFieldConfig: FormConfig = {
     fields: [
-      forgeInfoWrapper({
-        field: forgeNameField({}),
+      forgeInfoFieldWrapper({
         onInfoClick: () => {
           // this.matDialog.open()
-        }
+        },
+        fields: [forgeNameField({})]
       })
     ]
-  } as unknown as FormConfig;
+  };
+
+  readonly forgeInfoGroupFieldConfig: FormConfig = {
+    fields: [
+      forgeInfoFieldWrapper({
+        onInfoClick: () => {
+          // this.matDialog.open()
+        },
+        fields: [forgeNameField({}), forgeCityField({})]
+      })
+    ]
+  };
 
   readonly forgeStyleFieldConfig: FormConfig = {
     fields: [
-      forgeStyledGroup({
-        fields: [forgeNameField({})],
-        className: 'dbx-content-border doc-style-wrapper-example'
+      forgeStyleWrapper({
+        classGetter: 'dbx-content-border doc-style-wrapper-example',
+        styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' },
+        fields: [forgeNameField({})]
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeFlexFieldConfig: FormConfig = {
     fields: [
@@ -209,7 +226,7 @@ export class DocFormWrapperComponent {
         fields: [forgeCityField({}), forgeStateField({ description: 'State Description' }), forgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })]
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeFlexThreeFieldConfig: FormConfig = {
     fields: [
@@ -218,7 +235,7 @@ export class DocFormWrapperComponent {
         defaultSize: 1
       })
     ]
-  } as unknown as FormConfig;
+  };
 
   readonly forgeFlexFiveFieldConfig: FormConfig = {
     fields: [
@@ -227,5 +244,60 @@ export class DocFormWrapperComponent {
         relative: true
       })
     ]
-  } as unknown as FormConfig;
+  };
+
+  readonly forgeWorkingFieldConfig: FormConfig = {
+    fields: [
+      forgeWorkingFieldWrapper({
+        fields: [forgeNameField({})]
+      })
+    ]
+  };
+
+  // Form-field wrapper demos
+  readonly formFieldWrapperFields: FormlyFieldConfig[] = [
+    nameField({ required: true }),
+    {
+      ...formlyNumberSliderField({ key: 'rating', label: 'Rating', description: 'Must be above 50.', min: 0, max: 100 }),
+      validators: { validation: [Validators.min(51)] },
+      validation: { messages: { min: 'Rating must be above 50.' } }
+    },
+    formlyNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
+  ];
+
+  readonly forgeFormFieldWrapperSliderConfig: FormConfig = {
+    fields: [
+      forgeFormFieldWrapper({
+        label: 'Rating',
+        hint: 'Must be above 50.',
+        fields: [
+          {
+            key: 'rating',
+            type: 'slider',
+            label: '',
+            max: 100,
+            validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
+            validationMessages: { minRating: 'Rating must be above 50.' },
+            props: { min: 0, max: 100, thumbLabel: true }
+          } as any
+        ]
+      }),
+      forgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
+    ]
+  };
+
+  readonly forgeFormFieldWrapperTextConfig: FormConfig = {
+    fields: [
+      forgeFormFieldWrapper({
+        label: 'Wrapped Text Field',
+        hint: 'A text field inside a form-field wrapper.',
+        fields: [forgeNameField({ label: '' })]
+      }),
+      forgeFormFieldWrapper({
+        label: 'Wrapped Number Field',
+        hint: 'A number field inside a form-field wrapper.',
+        fields: [forgeNumberField({ key: 'count', label: '', min: 0, max: 100 }) as any]
+      })
+    ]
+  };
 }

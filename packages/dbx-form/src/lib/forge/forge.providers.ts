@@ -13,10 +13,14 @@ import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field
 import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
 import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
 import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
+import { DBX_FORGE_FORM_FIELD_WRAPPER_TYPE } from './field/wrapper/formfield/formfield.field';
 import { DBX_FORGE_SECTION_FIELD_TYPE } from './field/wrapper/section/section.field';
 import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field';
 import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
+import { DBX_FORGE_INFO_WRAPPER_FIELD_TYPE } from './field/wrapper/info/info.wrapper.field';
+import { DBX_FORGE_STYLE_FIELD_TYPE } from './field/wrapper/style/style.field';
 import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
+import { DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE } from './field/wrapper/working/working.wrapper.field';
 import { DBX_FORGE_AUTOTOUCH_FIELD_TYPE } from './field/wrapper/autotouch/autotouch.field';
 import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
 import { FORGE_SLIDER_FIELD_TYPE } from './field/value/number/slider.field.component';
@@ -113,10 +117,14 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   DBX_SOURCE_SELECT_FIELD_TYPE,
   DBX_TEXT_EDITOR_FIELD_TYPE,
   DBX_COMPONENT_FIELD_TYPE,
+  DBX_FORGE_FORM_FIELD_WRAPPER_TYPE,
   DBX_FORGE_SECTION_FIELD_TYPE,
   DBX_FORGE_EXPAND_FIELD_TYPE,
   DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
+  DBX_FORGE_INFO_WRAPPER_FIELD_TYPE,
+  DBX_FORGE_STYLE_FIELD_TYPE,
   DBX_FORGE_WORKING_FIELD_TYPE,
+  DBX_FORGE_WORKING_WRAPPER_FIELD_TYPE,
   DBX_FORGE_AUTOTOUCH_FIELD_TYPE,
   DBX_FORGE_ARRAY_FIELD_TYPE
 ];

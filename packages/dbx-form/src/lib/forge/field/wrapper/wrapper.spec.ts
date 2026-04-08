@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { forgeRow, forgeGroup, forgeSectionGroup, forgeSubsectionGroup, forgeFlexRow, flexSizeToCol, forgeWithClassName, forgeStyledGroup, forgeToggleWrapper, forgeExpandWrapper, forgeInfoWrapper, forgeWorkingWrapper, forgeAutoTouchWrapper } from './wrapper';
 import { forgeDbxSectionFieldWrapper, forgeDbxSubsectionFieldWrapper, FORGE_SECTION_FIELD_TYPE_NAME } from './section/section.field';
+import { forgeFormFieldWrapper, FORGE_FORM_FIELD_WRAPPER_TYPE_NAME } from './formfield/formfield.field';
 import { forgeExpandField, FORGE_EXPAND_FIELD_TYPE_NAME } from './expand/expand.field';
 import { forgeInfoButtonField, FORGE_INFO_BUTTON_FIELD_TYPE_NAME } from './info/info.field';
+import { forgeInfoFieldWrapper, FORGE_INFO_WRAPPER_FIELD_TYPE_NAME } from './info/info.wrapper.field';
+import { forgeStyleWrapper, FORGE_STYLE_FIELD_TYPE_NAME } from './style/style.field';
 import { forgeWorkingField, FORGE_WORKING_FIELD_TYPE_NAME } from './working/working.field';
+import { forgeWorkingFieldWrapper, FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME } from './working/working.wrapper.field';
 import { forgeAutoTouchField, FORGE_AUTOTOUCH_FIELD_TYPE_NAME } from './autotouch/autotouch.field';
 
 // MARK: forgeRow
@@ -569,7 +573,116 @@ describe('forgeWorkingWrapper()', () => {
   });
 });
 
-// MARK: forgeAutoTouchField
+// MARK: forgeInfoFieldWrapper
+describe('forgeInfoFieldWrapper()', () => {
+  it('should create a field with the correct type', () => {
+    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {} });
+    expect(field.type).toBe(FORGE_INFO_WRAPPER_FIELD_TYPE_NAME);
+  });
+
+  it('should auto-generate a key with _info_wrapper_ prefix', () => {
+    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {} });
+    expect(field.key).toContain('_info_wrapper_');
+  });
+
+  it('should use a custom key when provided', () => {
+    const field = forgeInfoFieldWrapper({ key: '_my_info', fields: [], onInfoClick: () => {} });
+    expect(field.key).toBe('_my_info');
+  });
+
+  it('should pass onInfoClick through props', () => {
+    const fn = () => {};
+    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: fn });
+    expect(field.props?.onInfoClick).toBe(fn);
+  });
+
+  it('should pass ariaLabel through props', () => {
+    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {}, ariaLabel: 'Help' });
+    expect(field.props?.ariaLabel).toBe('Help');
+  });
+
+  it('should pass child fields through props', () => {
+    const childFields = [{ key: 'a', type: 'input' as const, label: 'A' }];
+    const field = forgeInfoFieldWrapper({ fields: childFields, onInfoClick: () => {} });
+    expect(field.props?.fields).toBe(childFields);
+  });
+
+  it('should initialize value as empty object', () => {
+    const field = forgeInfoFieldWrapper({ fields: [], onInfoClick: () => {} });
+    expect(field.value).toEqual({});
+  });
+});
+
+// MARK: forgeStyleWrapper
+describe('forgeStyleWrapper()', () => {
+  it('should create a field with the correct type', () => {
+    const field = forgeStyleWrapper({ fields: [] });
+    expect(field.type).toBe(FORGE_STYLE_FIELD_TYPE_NAME);
+  });
+
+  it('should auto-generate a key with _style_ prefix', () => {
+    const field = forgeStyleWrapper({ fields: [] });
+    expect(field.key).toContain('_style_');
+  });
+
+  it('should use a custom key when provided', () => {
+    const field = forgeStyleWrapper({ key: '_my_style', fields: [] });
+    expect(field.key).toBe('_my_style');
+  });
+
+  it('should pass classGetter through props', () => {
+    const field = forgeStyleWrapper({ fields: [], classGetter: 'my-class' });
+    expect(field.props?.classGetter).toBe('my-class');
+  });
+
+  it('should pass styleGetter through props', () => {
+    const styles = { background: 'red' };
+    const field = forgeStyleWrapper({ fields: [], styleGetter: styles });
+    expect(field.props?.styleGetter).toBe(styles);
+  });
+
+  it('should pass child fields through props', () => {
+    const childFields = [{ key: 'a', type: 'input' as const, label: 'A' }];
+    const field = forgeStyleWrapper({ fields: childFields });
+    expect(field.props?.fields).toBe(childFields);
+  });
+
+  it('should initialize value as empty object', () => {
+    const field = forgeStyleWrapper({ fields: [] });
+    expect(field.value).toEqual({});
+  });
+});
+
+// MARK: forgeWorkingFieldWrapper
+describe('forgeWorkingFieldWrapper()', () => {
+  it('should create a field with the correct type', () => {
+    const field = forgeWorkingFieldWrapper({ fields: [] });
+    expect(field.type).toBe(FORGE_WORKING_WRAPPER_FIELD_TYPE_NAME);
+  });
+
+  it('should auto-generate a key with _working_wrapper_ prefix', () => {
+    const field = forgeWorkingFieldWrapper({ fields: [] });
+    expect(field.key).toContain('_working_wrapper_');
+  });
+
+  it('should use a custom key when provided', () => {
+    const field = forgeWorkingFieldWrapper({ key: '_my_working', fields: [] });
+    expect(field.key).toBe('_my_working');
+  });
+
+  it('should pass child fields through props', () => {
+    const childFields = [{ key: 'a', type: 'input' as const, label: 'A' }];
+    const field = forgeWorkingFieldWrapper({ fields: childFields });
+    expect(field.props?.fields).toBe(childFields);
+  });
+
+  it('should initialize value as empty object', () => {
+    const field = forgeWorkingFieldWrapper({ fields: [] });
+    expect(field.value).toEqual({});
+  });
+});
+
+// MARK: forgeAutoTouchField (deprecated)
 describe('forgeAutoTouchField()', () => {
   it('should create a field with the correct type', () => {
     const field = forgeAutoTouchField({ watchFieldKey: 'name' });
@@ -592,7 +705,7 @@ describe('forgeAutoTouchField()', () => {
   });
 });
 
-// MARK: forgeAutoTouchWrapper
+// MARK: forgeAutoTouchWrapper (deprecated)
 describe('forgeAutoTouchWrapper()', () => {
   it('should create a row field', () => {
     const row = forgeAutoTouchWrapper({ key: 'name', type: 'input' as const, label: 'Name' });
@@ -608,5 +721,49 @@ describe('forgeAutoTouchWrapper()', () => {
 
     const autoTouchField = row.fields[1] as Record<string, unknown>;
     expect(autoTouchField.type).toBe(FORGE_AUTOTOUCH_FIELD_TYPE_NAME);
+  });
+});
+
+// MARK: forgeFormFieldWrapper
+describe('forgeFormFieldWrapper()', () => {
+  it('should create a field with the correct type', () => {
+    const field = forgeFormFieldWrapper({ fields: [] });
+    expect(field.type).toBe(FORGE_FORM_FIELD_WRAPPER_TYPE_NAME);
+  });
+
+  it('should auto-generate a key with _formfield_ prefix', () => {
+    const field = forgeFormFieldWrapper({ fields: [] });
+    expect(field.key).toContain('_formfield_');
+  });
+
+  it('should use a custom key when provided', () => {
+    const field = forgeFormFieldWrapper({ key: '_my_field', fields: [] });
+    expect(field.key).toBe('_my_field');
+  });
+
+  it('should set label at the field level', () => {
+    const field = forgeFormFieldWrapper({ label: 'My Label', fields: [] });
+    expect(field.label).toBe('My Label');
+  });
+
+  it('should default label to empty string', () => {
+    const field = forgeFormFieldWrapper({ fields: [] });
+    expect(field.label).toBe('');
+  });
+
+  it('should pass hint through props', () => {
+    const field = forgeFormFieldWrapper({ hint: 'A hint', fields: [] });
+    expect(field.props?.hint).toBe('A hint');
+  });
+
+  it('should pass child fields through props', () => {
+    const childFields = [{ key: 'a', type: 'input' as const, label: 'A' }];
+    const field = forgeFormFieldWrapper({ fields: childFields as any });
+    expect(field.props?.fields).toBe(childFields);
+  });
+
+  it('should initialize value as empty object', () => {
+    const field = forgeFormFieldWrapper({ fields: [] });
+    expect(field.value).toEqual({});
   });
 });
