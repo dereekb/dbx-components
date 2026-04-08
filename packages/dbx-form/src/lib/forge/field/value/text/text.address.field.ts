@@ -1,9 +1,10 @@
-import type { FieldDef, GroupField } from '@ng-forge/dynamic-forms';
+import type { FieldDef } from '@ng-forge/dynamic-forms';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 import { forgeTextField, type ForgeTextFieldConfig } from './text.field';
 import { forgeCityField, type ForgeCityFieldConfig, forgeCountryField, type ForgeCountryFieldConfig, forgeStateField, type ForgeStateFieldConfig, forgeZipCodeField, type ForgeZipCodeFieldConfig } from './text.additional.field';
-import { forgeRow, forgeSectionGroup } from '../../wrapper/wrapper';
+import { forgeRow } from '../../wrapper/wrapper';
+import { forgeDbxSectionFieldWrapper, type ForgeSectionFieldDef } from '../../wrapper/section/section.field';
 import { forgeArrayField, type ForgeArrayFieldDef } from '../array/array.field';
 
 // MARK: Address Config
@@ -145,10 +146,10 @@ export interface ForgeAddressFieldConfig extends ForgeAddressFieldsConfig {
  * const field = forgeAddressField({ required: true, includeCountry: true });
  * ```
  */
-export function forgeAddressField(config: Partial<ForgeAddressFieldConfig> = {}): GroupField {
+export function forgeAddressField(config: Partial<ForgeAddressFieldConfig> = {}): ForgeSectionFieldDef {
   const { key = 'address', header = 'Address', hint } = config;
 
-  return forgeSectionGroup({
+  return forgeDbxSectionFieldWrapper({
     key,
     header,
     hint,

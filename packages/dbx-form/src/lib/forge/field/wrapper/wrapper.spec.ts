@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { forgeRow, forgeSectionGroup, forgeSubsectionGroup, forgeFlexRow, flexSizeToCol, forgeWithClassName, forgeStyledGroup, forgeToggleWrapper, forgeExpandWrapper, forgeInfoWrapper, forgeWorkingWrapper, forgeAutoTouchWrapper } from './wrapper';
-import { forgeSectionHeaderField, FORGE_SECTION_HEADER_FIELD_TYPE_NAME } from './section/section.header.field';
+import { forgeRow, forgeGroup, forgeSectionGroup, forgeSubsectionGroup, forgeFlexRow, flexSizeToCol, forgeWithClassName, forgeStyledGroup, forgeToggleWrapper, forgeExpandWrapper, forgeInfoWrapper, forgeWorkingWrapper, forgeAutoTouchWrapper } from './wrapper';
+import { forgeDbxSectionFieldWrapper, forgeDbxSubsectionFieldWrapper, FORGE_SECTION_FIELD_TYPE_NAME } from './section/section.field';
 import { forgeExpandField, FORGE_EXPAND_FIELD_TYPE_NAME } from './expand/expand.field';
 import { forgeInfoButtonField, FORGE_INFO_BUTTON_FIELD_TYPE_NAME } from './info/info.field';
 import { forgeWorkingField, FORGE_WORKING_FIELD_TYPE_NAME } from './working/working.field';
@@ -118,174 +118,138 @@ describe('forgeFlexRow()', () => {
   });
 });
 
-// MARK: forgeSectionGroup
-describe('forgeSectionGroup()', () => {
+// MARK: forgeGroup
+describe('forgeGroup()', () => {
   it('should create a group field with correct type', () => {
-    const group = forgeSectionGroup({ fields: [] });
+    const group = forgeGroup({ fields: [] });
     expect(group.type).toBe('group');
   });
 
-  it('should default key to _section_ prefix when not specified', () => {
-    const group = forgeSectionGroup({ fields: [] });
-    expect((group.key as string).startsWith('_section_')).toBe(true);
+  it('should set an auto-generated key with _group_ prefix', () => {
+    const group = forgeGroup({ fields: [] });
+    expect((group.key as string).startsWith('_group_')).toBe(true);
   });
 
   it('should use provided key', () => {
-    const group = forgeSectionGroup({ key: 'address', fields: [] });
-    expect(group.key).toBe('address');
+    const group = forgeGroup({ key: 'myGroup', fields: [] });
+    expect(group.key).toBe('myGroup');
   });
 
   it('should include the provided fields', () => {
     const fields = [
-      { key: 'street', type: 'input' as const, label: 'Street' },
-      { key: 'city', type: 'input' as const, label: 'City' }
+      { key: 'a', type: 'input' as const, label: 'A' },
+      { key: 'b', type: 'input' as const, label: 'B' }
     ];
-    const group = forgeSectionGroup({ fields });
+    const group = forgeGroup({ fields });
     expect(group.fields).toEqual(fields);
   });
 
   it('should set className when provided', () => {
-    const group = forgeSectionGroup({ fields: [], className: 'my-section' });
-    expect((group as unknown as Record<string, unknown>).className).toBe('my-section');
-  });
-
-  it('should not set className when not provided', () => {
-    const group = forgeSectionGroup({ fields: [] });
-    expect((group as unknown as Record<string, unknown>).className).toBeUndefined();
-  });
-
-  it('should prepend a section header field when header is provided', () => {
-    const group = forgeSectionGroup({
-      header: 'My Section',
-      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
-    });
-    expect(group.fields.length).toBe(2);
-    expect((group.fields[0] as Record<string, unknown>).type).toBe(FORGE_SECTION_HEADER_FIELD_TYPE_NAME);
-  });
-
-  it('should not prepend header when header is not provided', () => {
-    const group = forgeSectionGroup({
-      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
-    });
-    expect(group.fields.length).toBe(1);
-  });
-
-  it('should default section header to h3', () => {
-    const group = forgeSectionGroup({
-      header: 'Test',
-      fields: []
-    });
-    const headerField = group.fields[0] as Record<string, unknown>;
-    const props = headerField.props as { headerConfig: { h: number } };
-    expect(props.headerConfig.h).toBe(3);
-  });
-
-  it('should pass hint and icon to the section header', () => {
-    const group = forgeSectionGroup({
-      header: 'Test',
-      hint: 'A hint',
-      icon: 'star',
-      fields: []
-    });
-    const headerField = group.fields[0] as Record<string, unknown>;
-    const props = headerField.props as { headerConfig: { header: string; hint: string; icon: string } };
-    expect(props.headerConfig.header).toBe('Test');
-    expect(props.headerConfig.hint).toBe('A hint');
-    expect(props.headerConfig.icon).toBe('star');
+    const group = forgeGroup({ fields: [], className: 'my-class' });
+    expect((group as unknown as Record<string, unknown>).className).toBe('my-class');
   });
 
   it('should set logic when provided', () => {
     const logic = [{ type: 'hidden' as const, condition: true }];
-    const group = forgeSectionGroup({ fields: [], logic });
+    const group = forgeGroup({ fields: [], logic });
     expect((group as unknown as Record<string, unknown>).logic).toEqual(logic);
   });
 });
 
-// MARK: forgeSubsectionGroup
-describe('forgeSubsectionGroup()', () => {
-  it('should create a group field with correct type', () => {
-    const group = forgeSubsectionGroup({ fields: [] });
-    expect(group.type).toBe('group');
+// MARK: forgeDbxSectionFieldWrapper
+describe('forgeDbxSectionFieldWrapper()', () => {
+  it('should create a section field with the correct type', () => {
+    const field = forgeDbxSectionFieldWrapper({ fields: [] });
+    expect(field.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
   });
 
-  it('should default key to _subsection_ prefix when not specified', () => {
-    const group = forgeSubsectionGroup({ fields: [] });
-    expect((group.key as string).startsWith('_subsection_')).toBe(true);
-  });
-
-  it('should use provided key', () => {
-    const group = forgeSubsectionGroup({ key: 'names', fields: [] });
-    expect(group.key).toBe('names');
-  });
-
-  it('should include the provided fields', () => {
-    const fields = [
-      { key: 'firstName', type: 'input' as const, label: 'First Name' },
-      { key: 'lastName', type: 'input' as const, label: 'Last Name' }
-    ];
-    const group = forgeSubsectionGroup({ fields });
-    expect(group.fields).toEqual(fields);
-  });
-
-  it('should set className when provided', () => {
-    const group = forgeSubsectionGroup({ fields: [], className: 'my-subsection' });
-    expect((group as unknown as Record<string, unknown>).className).toBe('my-subsection');
-  });
-
-  it('should not set className when not provided', () => {
-    const group = forgeSubsectionGroup({ fields: [] });
-    expect((group as unknown as Record<string, unknown>).className).toBeUndefined();
-  });
-
-  it('should prepend a subsection header field when header is provided', () => {
-    const group = forgeSubsectionGroup({
-      header: 'My Subsection',
-      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
-    });
-    expect(group.fields.length).toBe(2);
-    expect((group.fields[0] as Record<string, unknown>).type).toBe(FORGE_SECTION_HEADER_FIELD_TYPE_NAME);
-  });
-
-  it('should default subsection header to h4', () => {
-    const group = forgeSubsectionGroup({
-      header: 'Test',
-      fields: []
-    });
-    const headerField = group.fields[0] as Record<string, unknown>;
-    const props = headerField.props as { headerConfig: { h: number } };
-    expect(props.headerConfig.h).toBe(4);
-  });
-
-  it('should set logic when provided', () => {
-    const logic = [{ type: 'hidden' as const, condition: false }];
-    const group = forgeSubsectionGroup({ fields: [], logic });
-    expect((group as unknown as Record<string, unknown>).logic).toEqual(logic);
-  });
-});
-
-// MARK: forgeSectionHeaderField
-describe('forgeSectionHeaderField()', () => {
-  it('should create a field with the correct type', () => {
-    const field = forgeSectionHeaderField({ header: 'Test' });
-    expect(field.type).toBe(FORGE_SECTION_HEADER_FIELD_TYPE_NAME);
-  });
-
-  it('should auto-generate a key', () => {
-    const field = forgeSectionHeaderField({ header: 'Test' });
-    expect(field.key).toContain('_section_header_');
+  it('should auto-generate a key with _section_ prefix', () => {
+    const field = forgeDbxSectionFieldWrapper({ fields: [] });
+    expect(field.key).toContain('_section_');
   });
 
   it('should use a custom key when provided', () => {
-    const field = forgeSectionHeaderField({ header: 'Test', key: 'my_header' });
-    expect(field.key).toBe('my_header');
+    const field = forgeDbxSectionFieldWrapper({ key: 'my_section', fields: [] });
+    expect(field.key).toBe('my_section');
   });
 
   it('should pass header config through props', () => {
-    const field = forgeSectionHeaderField({ header: 'Title', hint: 'Hint', icon: 'info', h: 2 });
+    const field = forgeDbxSectionFieldWrapper({ header: 'Title', hint: 'Hint', icon: 'info', h: 2, fields: [] });
     expect(field.props?.headerConfig.header).toBe('Title');
     expect(field.props?.headerConfig.hint).toBe('Hint');
     expect(field.props?.headerConfig.icon).toBe('info');
     expect(field.props?.headerConfig.h).toBe(2);
+  });
+
+  it('should default heading level to 3', () => {
+    const field = forgeDbxSectionFieldWrapper({ header: 'Test', fields: [] });
+    expect(field.props?.headerConfig.h).toBe(3);
+  });
+
+  it('should pass child fields through props', () => {
+    const childFields = [{ key: 'a', type: 'input' as const, label: 'A' }];
+    const field = forgeDbxSectionFieldWrapper({ fields: childFields });
+    expect(field.props?.fields).toBe(childFields);
+  });
+
+  it('should not set subsection by default', () => {
+    const field = forgeDbxSectionFieldWrapper({ fields: [] });
+    expect(field.props?.subsection).toBeUndefined();
+  });
+
+  it('should set subsection when specified', () => {
+    const field = forgeDbxSectionFieldWrapper({ subsection: true, fields: [] });
+    expect(field.props?.subsection).toBe(true);
+  });
+
+  it('should default heading to 4 when subsection is true', () => {
+    const field = forgeDbxSectionFieldWrapper({ subsection: true, header: 'Sub', fields: [] });
+    expect(field.props?.headerConfig.h).toBe(4);
+  });
+
+  it('should set elevate when specified', () => {
+    const field = forgeDbxSectionFieldWrapper({ elevate: true, fields: [] });
+    expect(field.props?.elevate).toBe(true);
+  });
+});
+
+// MARK: forgeDbxSubsectionFieldWrapper
+describe('forgeDbxSubsectionFieldWrapper()', () => {
+  it('should create a section field with subsection true', () => {
+    const field = forgeDbxSubsectionFieldWrapper({ fields: [] });
+    expect(field.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
+    expect(field.props?.subsection).toBe(true);
+  });
+
+  it('should default heading level to 4', () => {
+    const field = forgeDbxSubsectionFieldWrapper({ header: 'Test', fields: [] });
+    expect(field.props?.headerConfig.h).toBe(4);
+  });
+});
+
+// MARK: forgeSectionGroup (deprecated)
+describe('forgeSectionGroup()', () => {
+  it('should delegate to forgeDbxSectionFieldWrapper', () => {
+    const group = forgeSectionGroup({
+      header: 'Header',
+      hint: 'Hint',
+      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
+    });
+    expect(group.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
+    expect(group.props?.headerConfig.header).toBe('Header');
+    expect(group.props?.headerConfig.hint).toBe('Hint');
+  });
+});
+
+// MARK: forgeSubsectionGroup (deprecated)
+describe('forgeSubsectionGroup()', () => {
+  it('should delegate to forgeDbxSubsectionFieldWrapper', () => {
+    const group = forgeSubsectionGroup({
+      header: 'Header',
+      fields: [{ key: 'a', type: 'input' as const, label: 'A' }]
+    });
+    expect(group.type).toBe(FORGE_SECTION_FIELD_TYPE_NAME);
+    expect(group.props?.subsection).toBe(true);
   });
 });
 

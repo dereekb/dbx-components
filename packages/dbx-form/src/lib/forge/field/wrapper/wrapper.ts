@@ -1,10 +1,10 @@
 import type { RowField, GroupField, FieldDef, RowAllowedChildren, GroupAllowedChildren, ConditionalExpression } from '@ng-forge/dynamic-forms';
-import { forgeSectionHeaderField } from './section/section.header.field';
+import type { DbxSectionHeaderHType } from '@dereekb/dbx-web';
+import { forgeDbxSectionFieldWrapper, forgeDbxSubsectionFieldWrapper, type ForgeSectionFieldDef } from './section/section.field';
 import { forgeExpandField, type ForgeExpandButtonType } from './expand/expand.field';
 import { forgeInfoButtonField } from './info/info.field';
 import { forgeWorkingField } from './working/working.field';
 import { forgeAutoTouchField } from './autotouch/autotouch.field';
-import type { DbxSectionHeaderHType } from '@dereekb/dbx-web';
 
 /**
  * Logic configuration for container fields (group, row, array).
@@ -18,8 +18,7 @@ export interface ForgeContainerLogicConfig {
 }
 
 let _forgeRowCounter = 0;
-let _forgeSectionCounter = 0;
-let _forgeSubsectionCounter = 0;
+let _forgeGroupCounter = 0;
 let _forgeToggleCounter = 0;
 let _forgeExpandCounter = 0;
 
@@ -198,17 +197,17 @@ export function forgeFlexRow(config: ForgeFlexRowConfig): RowField {
   });
 }
 
-// MARK: Section Group
+// MARK: Group
 /**
- * Configuration for a forge section group layout.
+ * Configuration for a forge group layout.
  */
-export interface ForgeSectionGroupConfig {
+export interface ForgeGroupConfig {
   /**
-   * Optional key for the group. Groups with keys create nested objects in the form model.
+   * Optional key for the group.
    */
   readonly key?: string;
   /**
-   * Fields contained in this section group.
+   * Fields contained in this group.
    */
   readonly fields: FieldDef<unknown>[];
   /**
@@ -216,155 +215,97 @@ export interface ForgeSectionGroupConfig {
    */
   readonly className?: string;
   /**
-   * Optional section header text. When provided, a header field is prepended to the group.
-   */
-  readonly header?: string;
-  /**
-   * Optional hint text displayed below or inline with the header.
-   * Only used when `header` is provided.
-   */
-  readonly hint?: string;
-  /**
-   * Optional Material icon name displayed before the header text.
-   * Only used when `header` is provided.
-   */
-  readonly icon?: string;
-  /**
-   * Heading level for the section header. Defaults to 3.
-   * Only used when `header` is provided.
-   */
-  readonly h?: DbxSectionHeaderHType;
-  /**
    * Optional conditional visibility logic for this group.
    */
   readonly logic?: ForgeContainerLogicConfig[];
 }
 
 /**
- * Creates a forge group layout field for a logical section of fields.
+ * Creates a plain forge group layout field.
  *
  * Groups collect child field values into a nested object when a `key` is provided.
  * When used without a key, the group serves as a visual/logical grouping only.
  *
- * When `header` is provided, a {@link forgeSectionHeaderField} is prepended to
- * render the section heading with optional icon and hint.
+ * For sections with headers, use {@link forgeDbxSectionFieldWrapper} instead.
  *
- * This is the forge equivalent of the formly `formlySectionWrapper`.
- *
- * @param config - Section group configuration with fields and optional key/className/header
+ * @param config - Group configuration with fields and optional key/className
  * @returns A {@link GroupField} with type `'group'`
- *
- * @example
- * ```typescript
- * const section = forgeSectionGroup({
- *   key: 'address',
- *   header: 'Address',
- *   hint: 'Enter your mailing address',
- *   icon: 'home',
- *   fields: [
- *     forgeTextField({ key: 'street', label: 'Street' }),
- *     forgeTextField({ key: 'city', label: 'City' })
- *   ]
- * });
- * ```
  */
-export function forgeSectionGroup(config: ForgeSectionGroupConfig): GroupField {
-  const fields: FieldDef<unknown>[] = buildSectionFields(config.header, config.fields, config.h ?? 3, config.hint, config.icon);
-
+export function forgeGroup(config: ForgeGroupConfig): GroupField {
   return {
     type: 'group',
-    key: config.key ?? `_section_${_forgeSectionCounter++}`,
-    fields: fields as unknown as GroupAllowedChildren[],
+    key: config.key ?? `_group_${_forgeGroupCounter++}`,
+    fields: config.fields as unknown as GroupAllowedChildren[],
     ...(config.className != null && { className: config.className }),
     ...(config.logic != null && { logic: config.logic })
   } as GroupField;
+}
+
+// MARK: Section Group
+/**
+ * Configuration for a forge section group layout.
+ *
+ * @deprecated Use {@link ForgeSectionFieldConfig} with {@link forgeDbxSectionFieldWrapper} instead
+ * for proper `<dbx-section>` wrapping.
+ */
+export interface ForgeSectionGroupConfig {
+  readonly key?: string;
+  readonly fields: FieldDef<unknown>[];
+  readonly className?: string;
+  readonly header?: string;
+  readonly hint?: string;
+  readonly icon?: string;
+  readonly h?: DbxSectionHeaderHType;
+  readonly logic?: ForgeContainerLogicConfig[];
+}
+
+/**
+ * Creates a forge section field that wraps child fields inside `<dbx-section>`.
+ *
+ * @deprecated Use {@link forgeDbxSectionFieldWrapper} directly instead.
+ */
+export function forgeSectionGroup(config: ForgeSectionGroupConfig): ForgeSectionFieldDef {
+  return forgeDbxSectionFieldWrapper({
+    key: config.key,
+    header: config.header,
+    h: config.h,
+    hint: config.hint,
+    icon: config.icon,
+    fields: config.fields
+  });
 }
 
 // MARK: Subsection Group
 /**
  * Configuration for a forge subsection group layout.
+ *
+ * @deprecated Use {@link ForgeSectionFieldConfig} with {@link forgeDbxSectionFieldWrapper} and `subsection: true` instead.
  */
 export interface ForgeSubsectionGroupConfig {
-  /**
-   * Optional key for the subsection group.
-   */
   readonly key?: string;
-  /**
-   * Fields contained in this subsection group.
-   */
   readonly fields: FieldDef<unknown>[];
-  /**
-   * Optional CSS class name applied to the subsection container.
-   */
   readonly className?: string;
-  /**
-   * Optional subsection header text. When provided, a header field is prepended.
-   */
   readonly header?: string;
-  /**
-   * Optional hint text for the header.
-   */
   readonly hint?: string;
-  /**
-   * Optional Material icon name for the header.
-   */
   readonly icon?: string;
-  /**
-   * Heading level for the subsection header. Defaults to 4.
-   */
   readonly h?: DbxSectionHeaderHType;
-  /**
-   * Optional conditional visibility logic for this group.
-   */
   readonly logic?: ForgeContainerLogicConfig[];
 }
 
 /**
- * Creates a forge group layout field for a subsection of fields.
+ * Creates a forge subsection field that wraps child fields inside `<dbx-subsection>`.
  *
- * Subsection groups are a semantic variant of section groups, typically used
- * for smaller groupings within a section. This is the forge equivalent of
- * the formly `formlySubsectionWrapper`.
- *
- * When `header` is provided, a {@link forgeSectionHeaderField} is prepended
- * with heading level defaulting to 4.
- *
- * @param config - Subsection group configuration with fields and optional key/className/header
- * @returns A {@link GroupField} with type `'group'`
- *
- * @example
- * ```typescript
- * const subsection = forgeSubsectionGroup({
- *   header: 'Name',
- *   fields: [
- *     forgeTextField({ key: 'firstName', label: 'First Name' }),
- *     forgeTextField({ key: 'lastName', label: 'Last Name' })
- *   ]
- * });
- * ```
+ * @deprecated Use {@link forgeDbxSubsectionFieldWrapper} or `forgeDbxSectionFieldWrapper({ subsection: true })` instead.
  */
-export function forgeSubsectionGroup(config: ForgeSubsectionGroupConfig): GroupField {
-  const fields: FieldDef<unknown>[] = buildSectionFields(config.header, config.fields, config.h ?? 4, config.hint, config.icon);
-
-  return {
-    type: 'group',
-    key: config.key ?? `_subsection_${_forgeSubsectionCounter++}`,
-    fields: fields as unknown as GroupAllowedChildren[],
-    ...(config.className != null && { className: config.className }),
-    ...(config.logic != null && { logic: config.logic })
-  } as GroupField;
-}
-
-/**
- * Builds the fields array for a section/subsection group, optionally prepending a header field.
- */
-function buildSectionFields(header: string | undefined, fields: FieldDef<unknown>[], h: DbxSectionHeaderHType, hint?: string, icon?: string): FieldDef<unknown>[] {
-  if (header) {
-    const headerField = forgeSectionHeaderField({ header, h, hint, icon });
-    return [headerField as FieldDef<unknown>, ...fields];
-  }
-
-  return fields;
+export function forgeSubsectionGroup(config: ForgeSubsectionGroupConfig): ForgeSectionFieldDef {
+  return forgeDbxSubsectionFieldWrapper({
+    key: config.key,
+    header: config.header,
+    h: config.h,
+    hint: config.hint,
+    icon: config.icon,
+    fields: config.fields
+  });
 }
 
 // MARK: Style Utilities
@@ -427,7 +368,7 @@ export interface ForgeStyledGroupConfig {
  * ```
  */
 export function forgeStyledGroup(config: ForgeStyledGroupConfig): GroupField {
-  return forgeSectionGroup({
+  return forgeGroup({
     key: config.key,
     fields: config.fields,
     className: config.className
@@ -517,7 +458,7 @@ export function forgeToggleWrapper(config: ForgeToggleWrapperConfig): RowField {
     }
   };
 
-  const contentGroup = forgeSectionGroup({
+  const contentGroup = forgeGroup({
     key: config.contentKey,
     fields: config.fields,
     logic: [hiddenCondition]
@@ -615,7 +556,7 @@ export function forgeExpandWrapper(config: ForgeExpandWrapperConfig): RowField {
     }
   };
 
-  const contentGroup = forgeSectionGroup({
+  const contentGroup = forgeGroup({
     key: config.contentKey,
     fields: config.fields,
     logic: [hiddenCondition]
@@ -705,7 +646,7 @@ export function forgeInfoWrapper(config: ForgeInfoWrapperConfig): RowField {
 export function forgeWorkingWrapper(field: FieldDef<unknown>): GroupField {
   const workingField = forgeWorkingField({ watchFieldKey: field.key });
 
-  return forgeSectionGroup({
+  return forgeGroup({
     fields: [field, workingField as FieldDef<unknown>],
     className: 'dbx-forge-working-wrapper'
   });

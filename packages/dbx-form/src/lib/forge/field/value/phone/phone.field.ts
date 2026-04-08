@@ -1,7 +1,8 @@
 import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
-import { forgeRow, forgeSectionGroup } from '../../wrapper/wrapper';
+import { forgeRow } from '../../wrapper/wrapper';
+import { forgeDbxSectionFieldWrapper } from '../../wrapper/section/section.field';
 import { forgeTextField } from '../text/text.field';
 import { forgeArrayField, type ForgeArrayTemplateField, type ForgeArrayFieldDef } from '../array/array.field';
 import type { ForgePhoneFieldProps } from './phone.field.component';
@@ -148,7 +149,7 @@ export interface ForgePhoneAndLabelSectionFieldConfig extends ForgeWrappedPhoneA
 export function forgePhoneAndLabelSectionField(config: ForgePhoneAndLabelSectionFieldConfig = {}): FieldDef<unknown> {
   const { key, phoneField, labelField } = config;
 
-  return forgeSectionGroup({
+  return forgeDbxSectionFieldWrapper({
     key,
     fields: [forgeWrappedPhoneAndLabelField({ phoneField, labelField })]
   });

@@ -13,7 +13,7 @@ import { DBX_LIST_SELECTION_FIELD_TYPE } from './field/selection/list/list.field
 import { DBX_SOURCE_SELECT_FIELD_TYPE } from './field/selection/sourceselect/sourceselect.field';
 import { DBX_TEXT_EDITOR_FIELD_TYPE } from './field/texteditor/texteditor.field';
 import { DBX_COMPONENT_FIELD_TYPE } from './field/component/component.field';
-import { DBX_FORGE_SECTION_HEADER_FIELD_TYPE } from './field/wrapper/section/section.header.field';
+import { DBX_FORGE_SECTION_FIELD_TYPE } from './field/wrapper/section/section.field';
 import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field';
 import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
 import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
@@ -113,7 +113,7 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   DBX_SOURCE_SELECT_FIELD_TYPE,
   DBX_TEXT_EDITOR_FIELD_TYPE,
   DBX_COMPONENT_FIELD_TYPE,
-  DBX_FORGE_SECTION_HEADER_FIELD_TYPE,
+  DBX_FORGE_SECTION_FIELD_TYPE,
   DBX_FORGE_EXPAND_FIELD_TYPE,
   DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
   DBX_FORGE_WORKING_FIELD_TYPE,

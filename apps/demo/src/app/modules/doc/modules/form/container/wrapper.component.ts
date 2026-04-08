@@ -16,8 +16,8 @@ import {
   toggleField,
   forgeRow,
   forgeFlexRow,
-  forgeSectionGroup,
-  forgeSubsectionGroup,
+  forgeDbxSectionFieldWrapper,
+  forgeDbxSubsectionFieldWrapper,
   forgeExpandWrapper,
   forgeToggleWrapper,
   forgeInfoWrapper,
@@ -158,12 +158,12 @@ export class DocFormWrapperComponent {
 
   readonly forgeSectionFieldConfig: FormConfig = {
     fields: [
-      forgeSectionGroup({
+      forgeDbxSectionFieldWrapper({
         header: 'Header',
         hint: 'Section Field Hint',
         fields: [forgeNameField({})]
       }),
-      forgeSectionGroup({
+      forgeDbxSectionFieldWrapper({
         header: 'Header with star and configured size',
         h: 1,
         icon: 'star',
@@ -175,7 +175,7 @@ export class DocFormWrapperComponent {
 
   readonly forgeSubsectionFieldConfig: FormConfig = {
     fields: [
-      forgeSubsectionGroup({
+      forgeDbxSubsectionFieldWrapper({
         header: 'Header',
         hint: 'Section Field Hint',
         fields: [forgeNameField({})]
