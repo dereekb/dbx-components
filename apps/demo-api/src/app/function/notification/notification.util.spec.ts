@@ -261,6 +261,7 @@ demoApiFunctionContextFactory((f) => {
 
                                     function describeNotificationShouldBeSentToUser(expectation: LikeNotificationShouldBeSentExpectation) {
                                       it('should send the expected notifications to the user', async () => {
+                                        // eslint-disable-next-line prefer-const
                                         let [notificationBox, notification] = await Promise.all([assertSnapshotData(nb.document), assertSnapshotData(nbn.document)]);
 
                                         expect(notification.es).toBe(NotificationSendState.QUEUED);

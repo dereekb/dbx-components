@@ -36,7 +36,7 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
         const to: MailgunRecipient[] = messages.map((x) => {
           const { recipient: inputRecipient } = x.inputContext;
           const { title, openingMessage, action, actionUrl, from: contentFrom } = x.content;
-          const { subject = title, replyTo, replyToEmail, from = contentFrom } = x.emailContent ?? {};
+          const { subject = title, replyTo: _replyTo, replyToEmail: _replyToEmail, from: _from = contentFrom } = x.emailContent ?? {};
 
           const userVariables: DemoMailgunBasicTemplateData = {
             ...x.content.templateVariables,

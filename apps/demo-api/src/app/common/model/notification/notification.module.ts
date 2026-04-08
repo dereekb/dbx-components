@@ -8,6 +8,7 @@ import { demoNotificationSendServiceFactory } from './notification.send.service'
 import { demoNotificationInitServerActionsContextConfig } from './notification.init';
 import { demoNotificationTaskServiceFactory } from './notification.task.service';
 
+// eslint-disable-next-line @typescript-eslint/max-params
 export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) => ({ ...context, notificationTemplateService, notificationSendService, notificationTaskService });
 
 /**

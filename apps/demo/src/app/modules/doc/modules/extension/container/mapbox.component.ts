@@ -24,10 +24,9 @@ import {
   DbxMapboxMarkersComponent,
   DbxMapboxMenuComponent
 } from '@dereekb/dbx-web/mapbox';
-import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';
+import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first, tap } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
-import { tapDetectChanges } from '@dereekb/dbx-core';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
@@ -145,7 +144,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly boundSizingRatio$ = combineLatest([this.boundSizing$, this.mapCanvasSize$]).pipe(
     map(([point, vector]) => ({ x: point.lng / vector.x, y: point.lat / vector.y })),
-    tapDetectChanges(this.cdRef),
+    tap(() => this.cdRef.detectChanges()),
     shareReplay(1)
   );
   readonly boundSizingRatioSignal = toSignal(this.boundSizingRatio$, { initialValue: undefined });
@@ -153,7 +152,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly viewportBoundFunction$ = this.dbxMapboxMapStore.viewportBoundFunction$;
   readonly viewportBoundFunctionCalc$ = combineLatest([this.center$, this.zoom$, this.viewportBoundFunction$]).pipe(
     map(([c, z, fn]) => fn({ center: c, zoom: z })),
-    tapDetectChanges(this.cdRef),
+    tap(() => this.cdRef.detectChanges()),
     shareReplay(1)
   );
   readonly viewportBoundFunctionCalcSignal = toSignal(this.viewportBoundFunctionCalc$, { initialValue: undefined });

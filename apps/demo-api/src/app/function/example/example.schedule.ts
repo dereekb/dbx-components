@@ -15,5 +15,5 @@ export const exampleUsageOfSchedule: DemoScheduleFunction = async (request) => {
 };
 
 export const hourlySchedule: DemoScheduleFunction = async (request) => {
-  const { nest } = request;
+  const { nest: _nest } = request;
 };

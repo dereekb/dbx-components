@@ -1,7 +1,7 @@
 import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type RotateOidcClientSecretResult, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey } from '@dereekb/firebase';
 import type { ClientMetadata } from 'oidc-provider';
 import { nanoid } from 'nanoid';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { type OidcService } from './oidc.service';
 
 // MARK: Service

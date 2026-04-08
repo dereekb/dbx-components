@@ -5,6 +5,14 @@ import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, det
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
 
+/**
+ * Builds the StorageFileInitializeFromUploadService for the demo API.
+ * Configures upload handlers for user test files and user avatar images,
+ * including Sharp-based image resizing for avatars.
+ *
+ * @param demoFirebaseServerActionsContext - server actions context providing storage, profile, and storage file collections
+ * @returns a configured upload service with determiners and initializers for all supported file types
+ */
 export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): StorageFileInitializeFromUploadService {
   const { storageService, profileCollection, storageFileCollection } = demoFirebaseServerActionsContext;
   const storageFileDocumentAccessor = storageFileCollection.documentAccessor();

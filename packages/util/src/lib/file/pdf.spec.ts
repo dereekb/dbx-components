@@ -1,6 +1,6 @@
 import { bufferHasValidPdfMarkings, isPdfPasswordProtected } from './pdf';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 describe('bufferHasValidPdfMarkings', () => {
   it('should return true for a buffer with valid PDF markers', () => {

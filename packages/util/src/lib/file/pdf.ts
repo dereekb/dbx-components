@@ -41,6 +41,5 @@ export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'las
  * @returns true if the buffer contains a `/Encrypt` entry indicating password protection.
  */
 export function isPdfPasswordProtected(buffer: Pick<Buffer<ArrayBuffer>, 'includes'>) {
-  const result = buffer.includes('/Encrypt');
-  return result;
+  return buffer.includes('/Encrypt');
 }

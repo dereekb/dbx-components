@@ -19,6 +19,7 @@
     "@dereekb/firebase": "13.6.17",
     "@dereekb/rxjs": "13.6.17",
     "@dereekb/util": "13.6.17",
+    "@dereekb/vitest": "13.6.17",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/effects": "^21.0.0",
     "@ngrx/store": "^21.0.0",

@@ -1,4 +1,4 @@
-import { type ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import {
   listItemModifier,
   type ListItemModifier,
@@ -114,7 +114,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
               anchor = {
                 onClick: () => {
                   this.clickedItem = x;
-                  safeDetectChanges(this.cdRef);
+                  this.cdRef.detectChanges();
                 }
               };
             } else if (n === 2) {
@@ -166,7 +166,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
     item.anchor = {
       onClick: () => {
         this.clickedModifiedAnchorItem = item.itemValue;
-        safeDetectChanges(this.cdRef);
+        this.cdRef.detectChanges();
       }
     };
   });
@@ -175,7 +175,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
     return {
       onClick: () => {
         this.clickedModifiedAnchorItem = itemValue;
-        safeDetectChanges(this.cdRef);
+        this.cdRef.detectChanges();
       }
     };
   };

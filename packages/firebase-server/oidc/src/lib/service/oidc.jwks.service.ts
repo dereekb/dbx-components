@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { randomBytes, generateKeyPairSync } from 'crypto';
+import { randomBytes, generateKeyPairSync } from 'node:crypto';
 import { resolveEncryptionKey, encryptValue, decryptValue, type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
 import { type FirebaseStorageAccessorFile, iterateFirestoreDocumentSnapshotPairs, type FirestoreDocumentSnapshotDataPairWithData, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { type JwksKey, type JsonWebKeyWithKid, type JwksKeyDocument } from '../model/jwks/jwks';
@@ -121,13 +121,11 @@ export class JwksService {
    * @returns the generated key pair result containing the stored JwksKey and signing key
    */
   async generateKeyPair(): Promise<GenerateKeyPairResult> {
-     
     const { publicKey, privateKey } = generateKeyPairSync('rsa' as any, {
       modulusLength: 2048,
       publicKeyEncoding: { type: 'spki', format: 'jwk' } as any,
       privateKeyEncoding: { type: 'pkcs8', format: 'jwk' } as any
     });
-     
 
     const kid = randomBytes(16).toString('hex');
 

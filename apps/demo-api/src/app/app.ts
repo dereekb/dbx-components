@@ -1,8 +1,8 @@
 import { demoCallModel } from './function/model/crud.functions';
-import { profileSetUsernameKey } from 'demo-firebase';
+import { PROFILE_SET_USERNAME_KEY } from 'demo-firebase';
 import { type NestAppPromiseGetter, nestServerInstance, type NestServerInstanceConfig } from '@dereekb/firebase-server';
 import { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
-import { FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/oidc';
+import { FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, applyOidcAuthMiddleware } from '@dereekb/firebase-server/oidc';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
 import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
@@ -10,13 +10,14 @@ import { type INestApplication } from '@nestjs/common';
 
 export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppModule> = {
   moduleClass: DemoApiAppModule,
+  modules: [],
   configureWebhooks: true,
   globalApiRoutePrefix: {
     globalApiRoutePrefix: '/api',
     exclude: [...FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE]
   },
-  configureNestServerInstance: (_nestApp: INestApplication) => {
-    // Additional INestApplication-level configuration can go here
+  configureNestServerInstance: (nestApp: INestApplication) => {
+    applyOidcAuthMiddleware(nestApp);
   }
 };
 
@@ -25,8 +26,8 @@ export const { initNestServer } = nestServerInstance(DEMO_API_NEST_SERVER_CONFIG
 /**
  * Builder for all functions in the app.
  *
- * @param server
- * @returns
+ * @param nest - lazy getter for the NestJS application instance
+ * @returns an object mapping function keys to their Cloud Function handlers
  */
 export function allAppFunctions(nest: NestAppPromiseGetter) {
   return {
@@ -38,7 +39,8 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
     // ---
     // API Calls
     // Profile
-    [profileSetUsernameKey]: profileSetUsername(nest)
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    [PROFILE_SET_USERNAME_KEY]: profileSetUsername(nest)
     // Guestbook
   };
 }
@@ -46,7 +48,8 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
 /**
  * Builder for all scheduled functions in the app.
  *
- * @param nest
+ * @param nest - lazy getter for the NestJS application instance
+ * @returns an object mapping schedule keys to their scheduled Cloud Function handlers
  */
 export function allScheduledAppFunctions(nest: NestAppPromiseGetter) {
   return {

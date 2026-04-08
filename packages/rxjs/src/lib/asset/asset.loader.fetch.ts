@@ -32,6 +32,7 @@ export interface FetchAssetLoaderConfig {
  * ```
  *
  * @param config - Optional fetch configuration with custom fetch function.
+ * @returns An {@link AssetLoader} that loads remote assets via HTTP fetch.
  */
 export function fetchAssetLoader(config: FetchAssetLoaderConfig = {}): AssetLoader {
   const fetchFn = config.fetch ?? globalThis.fetch;

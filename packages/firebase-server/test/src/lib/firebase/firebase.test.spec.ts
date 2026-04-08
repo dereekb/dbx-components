@@ -1,4 +1,5 @@
-import { ALREADY_EXISTS_ERROR_CODE, UNAVAILABLE_ERROR_CODE, unavailableError } from '@dereekb/firebase-server';
+import { ALREADY_EXISTS_ERROR_CODE, UNAVAILABLE_ERROR_CODE } from '@dereekb/firebase';
+import { unavailableError } from '@dereekb/firebase-server';
 import { ExpectedHttpErrorWithSpecificServerErrorCode, expectFailAssertHttpErrorServerErrorCode } from './firebase.test';
 import { ExpectedErrorOfSpecificTypeError, expectFail, itShouldFail, expectFailAssertErrorType } from '@dereekb/util/test';
 

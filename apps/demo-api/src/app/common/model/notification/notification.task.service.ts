@@ -20,6 +20,13 @@ import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
 import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
+/**
+ * Builds the NotificationTaskService for the demo API, registering all task handlers
+ * including the example multi-step task, the unique task variant, and storage file processing.
+ *
+ * @param demoFirebaseServerActionsContext - server actions context providing Firestore and storage access
+ * @returns a configured NotificationTaskService with all demo task handlers
+ */
 export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationTaskService {
   /**
    * The result data parsed from the datastore should be strings only, so restore the values to their expected types.
@@ -100,7 +107,7 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
     flow: [
       {
         checkpoint: 'part_a',
-        fn: async (notificationTask) => {
+        fn: async (_notificationTask) => {
           // Do something...
 
           return {
@@ -110,7 +117,7 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
       },
       {
         checkpoint: 'part_b',
-        fn: async (notificationTask) => {
+        fn: async (_notificationTask) => {
           // Do something else...
 
           return {
@@ -133,6 +140,13 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
   return notificationSendService;
 }
 
+/**
+ * Creates the storage file processing notification task handler for the demo API.
+ * Configures subtask processors for user test file uploads with multi-step processing flow.
+ *
+ * @param demoFirebaseServerActionsContext - server actions context providing storage and Firestore access
+ * @returns a notification task handler config for storage file processing
+ */
 export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext) {
   const testFileProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask> = {
     target: USER_TEST_FILE_PURPOSE,

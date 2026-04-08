@@ -19,10 +19,10 @@
  *   --remove-unused  Also remove peer/devDependencies not found in imports
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve, relative, dirname } from 'path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve, relative, dirname } from 'node:path';
 import { glob } from 'glob';
-import { builtinModules } from 'module';
+import { builtinModules } from 'node:module';
 
 const ROOT_DIR = resolve(import.meta.dirname, '..', '..');
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -37,24 +37,15 @@ const rootPkg = JSON.parse(readFileSync(resolve(ROOT_DIR, 'package.json'), 'utf-
 const rootVersion = rootPkg.version;
 const rootVersions = {
   ...rootPkg.dependencies,
-  ...rootPkg.devDependencies,
+  ...rootPkg.devDependencies
 };
 
 // Node built-in modules (skip these — they don't need to be in package.json)
-const NODE_BUILTINS = new Set([
-  ...builtinModules,
-  ...builtinModules.map((m) => `node:${m}`),
-]);
+const NODE_BUILTINS = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)]);
 
 // Test-runner packages excluded from devDependencies
 // (these are workspace-level devDependencies, not per-package)
-const TEST_RUNNER_PACKAGES = new Set([
-  'vitest',
-  '@vitest/expect',
-  '@vitest/runner',
-  '@vitest/utils',
-  '@vitest/spy',
-]);
+const TEST_RUNNER_PACKAGES = new Set(['vitest', '@vitest/expect', '@vitest/runner', '@vitest/utils', '@vitest/spy']);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -155,7 +146,7 @@ function resolveVersion(pkgName) {
  */
 function sortKeys(obj) {
   const sorted = {};
-  
+
   for (const key of Object.keys(obj).sort()) {
     sorted[key] = obj[key];
   }
@@ -201,7 +192,7 @@ for (const pkgPath of targetFiles) {
   const tsFiles = glob.sync('**/*.ts', {
     cwd: pkgDir,
     ignore: ['**/node_modules/**', '**/dist/**'],
-    absolute: true,
+    absolute: true
   });
 
   if (tsFiles.length === 0) continue;

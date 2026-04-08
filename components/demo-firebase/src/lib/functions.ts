@@ -48,6 +48,14 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;
 }
 
+/**
+ * Creates a DemoFirebaseFunctionsGetter instance from the given Firebase Functions reference.
+ *
+ * Uses the DEMO_FIREBASE_FUNCTIONS_CONFIG to lazily initialize all function getters.
+ *
+ * @param functions - The Firebase Functions instance to bind to.
+ * @returns A DemoFirebaseFunctionsGetter with lazy accessors for each function group.
+ */
 export function makeDemoFirebaseFunctions(functions: Functions): DemoFirebaseFunctionsGetter {
   const factory = lazyFirebaseFunctionsFactory<DemoFirebaseFunctionsMap>(DEMO_FIREBASE_FUNCTIONS_CONFIG);
   return factory(functions) as DemoFirebaseFunctionsGetter;

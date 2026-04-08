@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 import { type UntypedCalcomWebhookEvent } from './webhook.calcom.type';
 
 export interface CalcomWebhookEventVerificationResult {

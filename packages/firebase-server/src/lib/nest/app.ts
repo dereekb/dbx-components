@@ -1,13 +1,11 @@
-import { type ClassType, type Getter, type Maybe, type WebsitePath, asGetter, makeGetter } from '@dereekb/util';
-import { type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider } from '@nestjs/common';
+import { type ClassType, type Getter, asArray, asGetter, makeGetter } from '@dereekb/util';
+import { type INestApplication, type INestApplicationContext, type NestApplicationOptions } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 import type * as admin from 'firebase-admin';
-import { type StorageBucketId } from '@dereekb/firebase';
 import { type FirebaseServerEnvironmentConfig } from '../env/env.config';
-import { type GlobalRoutePrefixConfig } from './middleware/globalprefix';
-import { buildNestServerRootModule , type NestServerAssetConfig } from './app.module';
+import { buildNestServerRootModule, type NestServerRootModuleConfig } from './app.module';
 
 /**
  * A running NestJS server instance backed by Express, paired with a lazy promise getter for the NestJS application context.
@@ -65,58 +63,19 @@ export type ConfigureNestServerInstanceFunction = (nestApp: INestApplication) =>
  * });
  * ```
  */
-export interface NestServerInstanceConfig<T> {
+export interface NestServerInstanceConfig<T> extends Omit<NestServerRootModuleConfig, 'firebaseAppGetter'> {
   /**
    * Module to instantiate.
    */
   readonly moduleClass: ClassType<T>;
   /**
-   * Additional providers to provide globally.
-   */
-  readonly providers?: Provider<unknown>[];
-  /**
-   * Whether or not to configure FirebaseServerEnvService to be provided globally.
-   */
-  readonly configureEnvService?: boolean;
-  /**
-   * Whether or not to configure webhook usage.
-   *
-   * This will configure the webhook routes.
-   */
-  readonly configureWebhooks?: boolean;
-  /**
-   * Default storage bucket to use. If provided, overrides what the app uses in the default FirebaseServerStorageContextModule and default FirebaseStorageContext.
-   */
-  readonly defaultStorageBucket?: StorageBucketId;
-  /**
-   * Whether or not to force using the default storage bucket.
-   */
-  readonly forceStorageBucket?: boolean;
-  /**
-   * Whether or not to verify API calls with app check. Is true by default.
-   */
-  readonly appCheckEnabled?: boolean;
-  /**
    * Additional nest application options.
    */
   readonly applicationOptions?: NestApplicationOptions;
   /**
-   * Global routing prefix or options.
-   *
-   * Example: '/api'
-   */
-  readonly globalApiRoutePrefix?: WebsitePath | GlobalRoutePrefixConfig;
-  /**
    * Optional configuration function
    */
   readonly configureNestServerInstance?: ConfigureNestServerInstanceFunction;
-  /**
-   * Optional asset loader configuration.
-   *
-   * When provided, configures the {@link AssetLoader} with the given settings.
-   * The AssetLoader is always provided globally regardless of this config.
-   */
-  readonly assets?: Maybe<NestServerAssetConfig>;
 }
 
 export interface NestFirebaseServerEnvironmentConfig {
@@ -158,17 +117,12 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
       const server = express();
       const createNestServer = async (expressInstance: express.Express) => {
         const { rootModule, globalApiRoutePrefixConfig } = buildNestServerRootModule({
-          modules: moduleClass,
+          ...config,
+          modules: [moduleClass, ...asArray(config.modules)],
           firebaseAppGetter: asGetter(firebaseApp),
-          additionalProviders: config.providers as Provider[] | undefined,
           envConfig: env?.environment,
-          configureEnvService: config.configureEnvService,
           defaultStorageBucket: config.defaultStorageBucket ?? firebaseApp.options.storageBucket,
-          forceStorageBucket: config.forceStorageBucket,
-          globalApiRoutePrefix: config.globalApiRoutePrefix,
-          configureWebhooks: config.configureWebhooks,
-          appCheckEnabled: config.appCheckEnabled !== false, // defaults to true in production
-          assets: config.assets
+          appCheckEnabled: config.appCheckEnabled !== false // defaults to true in production
         });
 
         // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests

@@ -4,7 +4,7 @@ import { assertValidZohoConfig } from '../zoho.config';
 /**
  * API configuration for connecting to the Zoho CRM service endpoint.
  */
-export type ZohoCrmServiceApiConfig = ZohoCrmConfig & {};
+export type ZohoCrmServiceApiConfig = ZohoCrmConfig;
 
 /**
  * Abstract configuration class for the NestJS Zoho CRM service.

@@ -3,7 +3,7 @@ import { type DynamicModule, type FactoryProvider, type Provider, type Type } fr
 import { type StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
-import { DEFAULT_BASE_WEBHOOK_PATH, ServerEnvironmentService , nodeJsLocalAssetLoader } from '@dereekb/nestjs';
+import { DEFAULT_BASE_WEBHOOK_PATH, ServerEnvironmentService, nodeJsLocalAssetLoader } from '@dereekb/nestjs';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
@@ -55,7 +55,7 @@ export interface NestServerRootModuleConfig {
   /**
    * Module(s) to import into the root module.
    */
-  readonly modules: ArrayOrValue<ClassType | DynamicModule>;
+  readonly modules?: Maybe<ArrayOrValue<ClassType | DynamicModule>>;
   /**
    * Getter for the Firebase Admin app instance.
    * When provided, the `FIREBASE_APP_TOKEN` is made available globally.
@@ -64,7 +64,7 @@ export interface NestServerRootModuleConfig {
   /**
    * Additional providers to include globally.
    */
-  readonly additionalProviders?: Provider[];
+  readonly providers?: Provider[];
   /**
    * Environment configuration. When provided, injects env tokens via `firebaseServerEnvTokenProviders`.
    */
@@ -85,6 +85,8 @@ export interface NestServerRootModuleConfig {
   /**
    * Global route prefix configuration.
    * The `GlobalRoutePrefixConfig` token is always provided (empty object when no config given).
+   *
+   * Example: '/api'
    */
   readonly globalApiRoutePrefix?: WebsitePath | GlobalRoutePrefixConfig;
   /**
@@ -188,8 +190,8 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
   }
 
   // Additional providers
-  if (config.additionalProviders) {
-    pushItemOrArrayItemsIntoArray(providers, config.additionalProviders);
+  if (config.providers) {
+    pushItemOrArrayItemsIntoArray(providers, config.providers);
   }
 
   // Webhook middleware

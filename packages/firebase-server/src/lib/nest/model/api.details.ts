@@ -1,5 +1,5 @@
 import { type Configurable, type Maybe } from '@dereekb/util';
-import { type OnCallFunctionType, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
+import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
 // MARK: JSON Schema
@@ -14,11 +14,47 @@ export interface JsonSchemaRef {
   toJsonSchema(options?: object): object;
 }
 
+// MARK: MCP Types
+/**
+ * A natural language summary of an MCP tool operation result.
+ */
+export type McpToolResponseSummary = string;
+
+// MARK: MCP Response Content
+/**
+ * Minimal structural type for MCP tool response content.
+ *
+ * Mirrors the shape of MCP SDK's CallToolResult without importing the SDK directly,
+ * so api.details.ts remains dependency-free.
+ */
+export interface McpToolResponseContent {
+  readonly content: ReadonlyArray<McpToolResponseContentBlock>;
+  readonly structuredContent?: unknown;
+  readonly isError?: boolean;
+}
+
+/**
+ * A single content block in an MCP tool response.
+ */
+export interface McpToolResponseContentBlock {
+  readonly type: string;
+  readonly text?: string;
+  readonly mimeType?: string;
+  readonly data?: string;
+}
+
 // MARK: Handler-Level API Details
 /**
  * MCP-specific customization for a model function.
  *
  * When omitted, defaults are auto-generated from the handler's position in the call model tree.
+ *
+ * Response formatting uses a tiered system:
+ * - **Tier 1 (default)**: Auto-generated summary from the result shape. No config needed.
+ * - **Tier 2**: Provide {@link summarizeResponse} to return a natural language string. The framework wraps it into MCP content + structuredContent automatically.
+ * - **Tier 3**: Provide {@link formatResponse} for complete control over the MCP response content blocks.
+ *
+ * Resolution order: formatResponse > summarizeResponse > auto-generated default.
  */
 export interface OnCallModelFunctionMcpDetails {
   /**
@@ -29,6 +65,27 @@ export interface OnCallModelFunctionMcpDetails {
    * Custom tool name override.
    */
   readonly name?: string;
+  /**
+   * Tier 2 response formatter: returns a natural language summary string.
+   *
+   * The framework wraps the string into a text content block and attaches the raw result
+   * as structuredContent automatically.
+   *
+   * @param result - The handler's return value.
+   * @param params - The OnCallTypedModelParams that were dispatched.
+   * @returns A human-readable summary of the operation result.
+   */
+  readonly summarizeResponse?: (result: unknown, params: OnCallTypedModelParams) => McpToolResponseSummary;
+  /**
+   * Tier 3 response formatter: complete control over the MCP tool response.
+   *
+   * When provided, takes precedence over {@link summarizeResponse} and the auto-generated default.
+   *
+   * @param result - The handler's return value.
+   * @param params - The OnCallTypedModelParams that were dispatched.
+   * @returns The full MCP tool response content.
+   */
+  readonly formatResponse?: (result: unknown, params: OnCallTypedModelParams) => McpToolResponseContent;
 }
 
 /**

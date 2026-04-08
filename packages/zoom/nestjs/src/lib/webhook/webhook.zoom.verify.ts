@@ -1,5 +1,5 @@
 import { type Request } from 'express';
-import { createHmac } from 'crypto';
+import { createHmac } from 'node:crypto';
 import { type ZoomSecretToken } from '@dereekb/zoom';
 import { type UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
 

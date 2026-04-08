@@ -11,9 +11,9 @@
  *   node tools/scripts/release.mjs --skip-publish           # skip npm publish step
  */
 
-import { createRequire } from 'module';
+import { createRequire } from 'node:module';
 import { execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { ConventionalChangelog } from 'conventional-changelog';
 import { Bumper } from 'conventional-recommended-bump';
 import semver from 'semver';

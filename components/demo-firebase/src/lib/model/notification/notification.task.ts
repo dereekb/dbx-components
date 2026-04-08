@@ -30,6 +30,15 @@ export interface ExampleNotificationTaskInput extends Omit<ExampleNotificationTa
   readonly completedCheckpoints?: Maybe<ExampleNotificationTaskCheckpoint[]>;
 }
 
+/**
+ * Creates a notification task template for the example notification type.
+ *
+ * The template targets the given profile for both the notification model
+ * (where the notification box is resolved) and the target model.
+ *
+ * @param input - Configuration containing the profile document and optional completed checkpoints.
+ * @returns A CreateNotificationTaskTemplate ready for submission to the notification task service.
+ */
 export function exampleNotificationTaskTemplate(input: ExampleNotificationTaskInput): CreateNotificationTaskTemplate {
   const { profileDocument } = input;
   const uid = profileDocument.id;
@@ -88,6 +97,16 @@ export interface ExampleUniqueNotificationTaskInput extends Omit<ExampleUniqueNo
   readonly overrideExistingTask?: boolean;
 }
 
+/**
+ * Creates a unique notification task template for the example unique notification type.
+ *
+ * Unique tasks ensure only one active task of this type exists per target.
+ * The template targets the given profile for both the notification model
+ * and the target model.
+ *
+ * @param input - Configuration containing the profile document, optional checkpoints, and override flag.
+ * @returns A CreateNotificationTaskTemplate configured as unique.
+ */
 export function exampleUniqueNotificationTaskTemplate(input: ExampleUniqueNotificationTaskInput): CreateNotificationTaskTemplate {
   const { profileDocument, overrideExistingTask } = input;
   const uid = profileDocument.id;

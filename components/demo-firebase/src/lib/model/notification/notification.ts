@@ -35,6 +35,15 @@ export interface ExampleNotificationInput extends Omit<ExampleNotificationData, 
   readonly profileDocument: ProfileDocument;
 }
 
+/**
+ * Creates a notification template for the example notification type.
+ *
+ * The template targets the given profile for both the notification model
+ * (where the notification box is resolved) and the target model.
+ *
+ * @param input - Configuration containing the profile document and optional skipSend flag.
+ * @returns A CreateNotificationTemplate ready for submission to the notification service.
+ */
 export function exampleNotificationTemplate(input: ExampleNotificationInput): CreateNotificationTemplate {
   const { profileDocument, skipSend } = input;
   const uid = profileDocument.id;
@@ -72,6 +81,15 @@ export interface GuestbookEntryCreatedNotificationInput {
   readonly guestbookKey: ReadFirestoreModelKeyInput<Guestbook>;
 }
 
+/**
+ * Creates a notification template for when a new guestbook entry is created.
+ *
+ * The notification is scoped to the parent guestbook, so all users
+ * subscribed to that guestbook's notification box will be notified.
+ *
+ * @param input - Configuration containing the guestbook key.
+ * @returns A CreateNotificationTemplate for the guestbook entry creation event.
+ */
 export function guestbookEntryCreatedNotificationTemplate(input: GuestbookEntryCreatedNotificationInput): CreateNotificationTemplate {
   const { guestbookKey } = input;
 
@@ -99,6 +117,16 @@ export interface GuestbookEntryLikedNotificationInput {
   readonly guestbookEntryKey: ReadFirestoreModelKeyInput<GuestbookEntry>;
 }
 
+/**
+ * Creates a notification template for when a guestbook entry is liked.
+ *
+ * Derives the parent guestbook key and entry creator UID from the entry key.
+ * The notification is scoped to the parent guestbook, targets the liked entry,
+ * and opts the entry creator into summary notifications by default.
+ *
+ * @param input - Configuration containing the guestbook entry key.
+ * @returns A CreateNotificationTemplate for the guestbook entry liked event.
+ */
 export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLikedNotificationInput): CreateNotificationTemplate {
   const { guestbookEntryKey } = input;
   const guestbookEntryModelKey = readFirestoreModelKey(guestbookEntryKey) as GuestbookEntryKey;

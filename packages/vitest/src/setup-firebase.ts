@@ -17,6 +17,9 @@ process.env['FIREBASE_CONFIG'] = JSON.stringify({ projectId: 'temp' });
  * These occur when the Firebase SDK has pending internal operations during test teardown:
  * - Client SDK (firebase/firestore): "Firestore shutting down" (FirebaseError code: 'aborted')
  * - Server SDK (@google-cloud/firestore): "The client has already been terminated"
+ *
+ * @param reason - The unhandled rejection reason to inspect.
+ * @returns True if the error is a known Firestore teardown error that can be safely suppressed.
  */
 function isFirestoreTeardownError(reason: unknown): boolean {
   let result = false;

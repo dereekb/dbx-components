@@ -1569,7 +1569,7 @@ demoApiFunctionContextFactory((f) => {
 
                   function initNotification(sendType: NotificationSendType, loadParams?: () => Partial<CreateNotificationTemplate>) {
                     beforeEach(async () => {
-                      const partialParams = await loadParams?.();
+                      const partialParams = loadParams?.();
 
                       const baseTemplate = exampleNotificationTemplate({
                         profileDocument: p.document

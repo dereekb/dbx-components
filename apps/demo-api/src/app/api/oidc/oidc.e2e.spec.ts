@@ -1,10 +1,12 @@
 import request from 'supertest';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
 import { SignJWT, exportJWK, generateKeyPair } from 'jose';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
+
+vi.setConfig({ hookTimeout: 20000, testTimeout: 20000 });
 
 /**
  * Creates a Firebase ID token for the given UID that the Auth emulator will accept.

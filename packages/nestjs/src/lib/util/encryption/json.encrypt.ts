@@ -1,5 +1,5 @@
 import { getValueFromGetter, isHex, type EncryptedString, type StringEncryptionProvider, type Getter, type GetterOrValue } from '@dereekb/util';
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
 // MARK: Constants
 /**

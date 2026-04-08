@@ -50,6 +50,13 @@ export const FIREBASE_AUTH_CREDENTIAL_ALREADY_IN_USE_ERROR = 'auth/credential-al
  * Error code when an email address is already in use by another account during linking.
  */
 export const FIREBASE_AUTH_EMAIL_ALREADY_IN_USE_ERROR = 'auth/email-already-in-use';
+/**
+ * Error code when the quota for updating account information has been exceeded.
+ *
+ * This typically occurs when too many account update operations (e.g., updateUser, setCustomUserClaims)
+ * are performed in a short time window.
+ */
+export const FIREBASE_AUTH_QUOTA_EXCEEDED_ERROR = 'auth/quota-exceeded';
 
 /**
  * Converts a {@link FirebaseAuthError} into a user-friendly {@link ReadableError} with a human-readable message.
@@ -110,6 +117,12 @@ export function firebaseAuthErrorToReadableError(inputError: FirebaseAuthError):
       error = {
         code,
         message: 'This email address is already in use by another account.'
+      };
+      break;
+    case FIREBASE_AUTH_QUOTA_EXCEEDED_ERROR:
+      error = {
+        code,
+        message: 'Too many account update requests. Please try again later.'
       };
       break;
     default:
