@@ -1,9 +1,9 @@
-import type { FieldDef, SimplifiedArrayField, ArrayAllowedChildren, BaseValueField } from '@ng-forge/dynamic-forms';
+import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
 import { forgeField } from '../../field';
 import { forgeRow, forgeSectionGroup } from '../../wrapper/wrapper';
 import { forgeTextField } from '../text/text.field';
-import { forgeRepeatArrayField } from '../array/array.field';
+import { forgeArrayField, type ForgeArrayTemplateField, type ForgeArrayFieldDef } from '../array/array.field';
 import type { ForgePhoneFieldProps } from './phone.field.component';
 
 // MARK: Phone Field
@@ -165,37 +165,35 @@ export interface ForgePhoneListFieldConfig {
    *
    * If not provided, defaults to the phone and label field pair.
    */
-  readonly template?: ArrayAllowedChildren | readonly ArrayAllowedChildren[];
+  readonly template?: ForgeArrayTemplateField | readonly ForgeArrayTemplateField[];
   readonly minLength?: number;
   readonly maxLength?: number;
-  readonly addButtonLabel?: string;
-  readonly removeButtonLabel?: string;
+  readonly addText?: string;
+  readonly removeText?: string;
 }
 
 /**
- * Creates a forge simplified array field for collecting multiple phone number entries.
- *
- * Uses the ng-forge SimplifiedArrayField with add/remove buttons.
+ * Creates a forge drag array field for collecting multiple phone number entries.
  *
  * @param config - Phone list field configuration
- * @returns A {@link SimplifiedArrayField}
+ * @returns A {@link ForgeArrayFieldDef}
  *
  * @example
  * ```typescript
  * const field = forgePhoneListField({ maxLength: 3 });
  * ```
  */
-export function forgePhoneListField(config: ForgePhoneListFieldConfig = {}): SimplifiedArrayField {
-  const { key = 'phones', template, minLength, maxLength, addButtonLabel = 'Add Phone Number', removeButtonLabel = 'Remove Phone Number' } = config;
+export function forgePhoneListField(config: ForgePhoneListFieldConfig = {}): ForgeArrayFieldDef {
+  const { key = 'phones', template, minLength, maxLength, addText = 'Add Phone Number', removeText = 'Remove Phone Number' } = config;
 
-  const defaultTemplate: ArrayAllowedChildren[] = [forgePhoneField({ key: 'phone' }) as ArrayAllowedChildren, forgeTextField({ key: 'label', label: 'Label' }) as ArrayAllowedChildren];
+  const defaultTemplate: ForgeArrayTemplateField[] = [forgePhoneField({ key: 'phone' }), forgeTextField({ key: 'label', label: 'Label' })];
 
-  return forgeRepeatArrayField({
+  return forgeArrayField({
     key,
     template: template ?? defaultTemplate,
     minLength,
     maxLength,
-    addButton: { label: addButtonLabel },
-    removeButton: { label: removeButtonLabel }
+    addText,
+    removeText
   });
 }

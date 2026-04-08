@@ -11,7 +11,6 @@ import {
   nameField,
   phoneAndLabelSectionField,
   wrappedPhoneAndLabelField,
-  repeatArrayField,
   stateField,
   textAreaField,
   textField,
@@ -39,6 +38,8 @@ import {
   forgePhoneField,
   forgeWrappedPhoneAndLabelField,
   forgePhoneAndLabelSectionField,
+  forgeAddressField,
+  forgeAddressListField,
   DbxFormFormlyTextFieldModule,
   DbxFormFormlyWrapperModule,
   DbxFormFormlyPhoneFieldModule,
@@ -50,7 +51,7 @@ import {
   DbxActionFormDirective
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
-import { addSuffixFunction, randomBoolean } from '@dereekb/util';
+import { addSuffixFunction } from '@dereekb/util';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay } from 'rxjs';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
@@ -168,12 +169,23 @@ export class DocFormValueComponent {
 
   readonly latLngTextField: FormlyFieldConfig[] = [latLngTextField()];
 
-  readonly addressFields: FormlyFieldConfig[] = [
-    //
-    addressField(),
-    addressField({ key: 'slim', hint: 'Line 1 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false }),
-    addressListField()
-  ];
+  readonly addressField: FormlyFieldConfig[] = [addressField()];
+
+  readonly forgeAddressFieldConfig: FormConfig = {
+    fields: [forgeAddressField() as any]
+  };
+
+  readonly slimAddressField: FormlyFieldConfig[] = [addressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false })];
+
+  readonly forgeSlimAddressFieldConfig: FormConfig = {
+    fields: [forgeAddressField({ key: 'slim', hint: 'Line 2 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false }) as any]
+  };
+
+  readonly addressListFields: FormlyFieldConfig[] = [addressListField()];
+
+  readonly forgeAddressListFieldConfig: FormConfig = {
+    fields: [forgeAddressListField() as any]
+  };
 
   readonly toggleField: FormlyFieldConfig[] = [
     toggleField({
@@ -221,51 +233,6 @@ export class DocFormValueComponent {
       })
     ]
   };
-
-  readonly repeatArrayValue = {
-    test2: [
-      {
-        name: 'hello',
-        disable: false
-      },
-      {
-        name: 'start with disable=true',
-        disable: true
-      }
-    ]
-  };
-
-  readonly repeatArrayFields: FormlyFieldConfig[] = [
-    repeatArrayField({
-      key: 'test',
-      label: 'Test Field',
-      description: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
-      addText: 'Add Test Field',
-      removeText: 'Remove Test Field',
-      repeatFieldGroup: [nameField(), emailField(), phoneAndLabelSectionField(), addressListField()],
-      maxLength: 2
-    }),
-    repeatArrayField<{ name: string; disable: boolean }>({
-      key: 'test2',
-      label: 'Field With Add and Remove Diabled Via Field',
-      description: 'Shows the remove button being disabled when a value is a certain value, and shows the duplicate button.',
-      duplicateText: 'Make Copy',
-      repeatFieldGroup: [
-        nameField(),
-        toggleField({
-          key: 'disable',
-          label: 'Disable Remove'
-        })
-      ],
-      addTemplate: (i) => ({ name: `New Item ${i}`, disable: randomBoolean() }),
-      disableRearrange: true,
-      allowAdd: true,
-      allowDuplicate: true,
-      allowRemove: ({ value }) => !(value as { disable: boolean })?.disable,
-      labelForField: ({ value }) => (value as { name: string })?.name,
-      addDuplicateToEnd: true
-    })
-  ];
 
   readonly phoneFields: FormlyFieldConfig[] = [
     phoneField(),

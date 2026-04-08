@@ -24,6 +24,12 @@ export const DOC_FORM_ROUTES = [
     ref: 'doc.form.date'
   },
   {
+    icon: 'data_array',
+    title: 'Array Fields',
+    detail: 'array form fields',
+    ref: 'doc.form.array'
+  },
+  {
     icon: 'highlight_alt',
     title: 'Selection Fields',
     detail: 'selection form fields',

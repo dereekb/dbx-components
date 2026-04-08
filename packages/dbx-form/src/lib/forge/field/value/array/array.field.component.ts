@@ -6,17 +6,17 @@ import { type FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages, FormConfig } from '@ng-forge/dynamic-forms';
 import { DynamicForm } from '@ng-forge/dynamic-forms';
 import { type FactoryWithRequiredInput } from '@dereekb/util';
-import type { ForgeDragArrayFieldProps, ForgeDragArrayItemPair } from './dragarray.field';
+import type { ForgeArrayFieldProps, ForgeArrayItemPair } from './array.field';
 
 /**
  * Internal state for a single array item.
  */
-interface DragArrayItem {
+interface ForgeArrayItem {
   readonly trackId: number;
   value: unknown;
 }
 
-let _dragArrayItemTrackId = 0;
+let _forgeArrayItemTrackId = 0;
 
 /**
  * Forge ValueFieldComponent that renders a drag-and-drop array.
@@ -27,13 +27,13 @@ let _dragArrayItemTrackId = 0;
  * This is the forge equivalent of formly's `DbxFormRepeatArrayTypeComponent`.
  */
 @Component({
-  selector: 'dbx-forge-drag-array-field',
+  selector: 'dbx-forge-array-field',
   template: `
     <div class="dbx-form-repeat-array">
       <div cdkDropList [cdkDropListDisabled]="disableRearrangeSignal()" (cdkDropListDropped)="drop($event)">
         @for (item of itemsSignal(); track item.trackId; let i = $index) {
           <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
-            <div class="dbx-form-repeat-array-drag-placeholder" cdkDragPlaceholder></div>
+            <ng-template cdkDragPlaceholder><div class="dbx-form-repeat-array-drag-placeholder"></div></ng-template>
             <div class="dbx-form-repeat-array-bar">
               @if (!disableRearrangeSignal()) {
                 <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" aria-label="Drag to reorder">
@@ -75,7 +75,7 @@ let _dragArrayItemTrackId = 0;
     '[class]': 'className()'
   }
 })
-export class ForgeDragArrayFieldComponent<T = unknown> {
+export class ForgeArrayFieldComponent<T = unknown> {
   // ng-forge ValueFieldComponent inputs
   readonly field = input.required<FieldTree<unknown[]>>();
   readonly key = input.required<string>();
@@ -83,12 +83,12 @@ export class ForgeDragArrayFieldComponent<T = unknown> {
   readonly placeholder = input<DynamicText | undefined>();
   readonly className = input<string>('');
   readonly tabIndex = input<number | undefined>();
-  readonly props = input<ForgeDragArrayFieldProps<T> | undefined>();
+  readonly props = input<ForgeArrayFieldProps<T> | undefined>();
   readonly meta = input<FieldMeta | undefined>();
   readonly validationMessages = input<ValidationMessages | undefined>();
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
-  readonly itemsSignal = signal<DragArrayItem[]>([]);
+  readonly itemsSignal = signal<ForgeArrayItem[]>([]);
 
   private _initialized = false;
 
@@ -134,7 +134,7 @@ export class ForgeDragArrayFieldComponent<T = unknown> {
         this._initialized = true;
         this.itemsSignal.set(
           values.map((value) => ({
-            trackId: _dragArrayItemTrackId++,
+            trackId: _forgeArrayItemTrackId++,
             value
           }))
         );
@@ -160,8 +160,8 @@ export class ForgeDragArrayFieldComponent<T = unknown> {
       return `${index + 1}. ${labelForField}`;
     }
 
-    const pair: ForgeDragArrayItemPair<T> = { index, value: value as T };
-    return `${index + 1}. ${(labelForField as FactoryWithRequiredInput<string, ForgeDragArrayItemPair<T>>)(pair)}`;
+    const pair: ForgeArrayItemPair<T> = { index, value: value as T };
+    return `${index + 1}. ${(labelForField as FactoryWithRequiredInput<string, ForgeArrayItemPair<T>>)(pair)}`;
   }
 
   onItemValueChange(index: number, newValue: unknown): void {
@@ -176,7 +176,7 @@ export class ForgeDragArrayFieldComponent<T = unknown> {
 
   addItem(): void {
     const items = [...this.itemsSignal()];
-    items.push({ trackId: _dragArrayItemTrackId++, value: {} });
+    items.push({ trackId: _forgeArrayItemTrackId++, value: {} });
     this.itemsSignal.set(items);
     this._syncToFieldTree();
   }
@@ -196,8 +196,8 @@ export class ForgeDragArrayFieldComponent<T = unknown> {
       return;
     }
 
-    const duplicate: DragArrayItem = {
-      trackId: _dragArrayItemTrackId++,
+    const duplicate: ForgeArrayItem = {
+      trackId: _forgeArrayItemTrackId++,
       value: structuredClone(source.value)
     };
 

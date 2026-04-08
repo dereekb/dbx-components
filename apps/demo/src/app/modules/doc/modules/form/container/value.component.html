@@ -61,11 +61,22 @@
         <doc-forge-example-form forge [config]="forgeCheckboxFieldConfig"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
-    <doc-feature-example header="repeatArrayField()" hint="Used to configure an array of a customizable field type.">
-      <doc-form-example-form [dbxFormlyFields]="repeatArrayFields" [dbxFormSource]="repeatArrayValue"></doc-form-example-form>
-    </doc-feature-example>
     <doc-feature-example header="addressField()" hint="Used to configure an address.">
-      <doc-form-example-form [dbxFormlyFields]="addressFields"></doc-form-example-form>
+      <h4>Default Address</h4>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="addressField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeAddressFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+      <h4>Slim Address</h4>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="slimAddressField"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeSlimAddressFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+      <h4>Address List</h4>
+      <doc-feature-form-tabs>
+        <doc-form-example-form formly [dbxFormlyFields]="addressListFields"></doc-form-example-form>
+        <doc-forge-example-form forge [config]="forgeAddressListFieldConfig"></doc-forge-example-form>
+      </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

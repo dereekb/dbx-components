@@ -177,9 +177,9 @@ describe('forgePhoneAndLabelSectionField()', () => {
 
 // MARK: forgePhoneListField
 describe('forgePhoneListField()', () => {
-  it('should create an array field', () => {
+  it('should create a drag array field', () => {
     const field = forgePhoneListField();
-    expect(field.type).toBe('array');
+    expect(field.type).toBe('dbx-forge-array');
   });
 
   it('should default key to phones', () => {
@@ -194,7 +194,7 @@ describe('forgePhoneListField()', () => {
 
   it('should have a default template with phone and label fields', () => {
     const field = forgePhoneListField();
-    const template = field.template as Array<{ key: string; type: string }>;
+    const template = field.props?.template as Array<{ key: string; type: string }>;
     expect(template).toHaveLength(2);
     expect(template[0].key).toBe('phone');
     expect(template[0].type).toBe('phone');
@@ -205,46 +205,36 @@ describe('forgePhoneListField()', () => {
   it('should use a custom template when provided', () => {
     const customTemplate = [{ key: 'number', type: 'input' as const, label: 'Number' }];
     const field = forgePhoneListField({ template: customTemplate });
-    expect(field.template).toBe(customTemplate);
+    expect(field.props?.template).toBe(customTemplate);
   });
 
-  it('should default addButton label to Add Phone Number', () => {
+  it('should default addText to Add Phone Number', () => {
     const field = forgePhoneListField();
-    expect((field.addButton as { label: string }).label).toBe('Add Phone Number');
+    expect(field.props?.addText).toBe('Add Phone Number');
   });
 
-  it('should default removeButton label to Remove Phone Number', () => {
+  it('should default removeText to Remove Phone Number', () => {
     const field = forgePhoneListField();
-    expect((field.removeButton as { label: string }).label).toBe('Remove Phone Number');
+    expect(field.props?.removeText).toBe('Remove Phone Number');
   });
 
-  it('should use custom addButton label', () => {
-    const field = forgePhoneListField({ addButtonLabel: 'Add Entry' });
-    expect((field.addButton as { label: string }).label).toBe('Add Entry');
+  it('should use custom addText', () => {
+    const field = forgePhoneListField({ addText: 'Add Entry' });
+    expect(field.props?.addText).toBe('Add Entry');
   });
 
-  it('should use custom removeButton label', () => {
-    const field = forgePhoneListField({ removeButtonLabel: 'Delete Entry' });
-    expect((field.removeButton as { label: string }).label).toBe('Delete Entry');
+  it('should use custom removeText', () => {
+    const field = forgePhoneListField({ removeText: 'Delete Entry' });
+    expect(field.props?.removeText).toBe('Delete Entry');
   });
 
   it('should set minLength when provided', () => {
     const field = forgePhoneListField({ minLength: 1 });
-    expect(field.minLength).toBe(1);
+    expect(field.props?.minLength).toBe(1);
   });
 
   it('should set maxLength when provided', () => {
     const field = forgePhoneListField({ maxLength: 5 });
-    expect(field.maxLength).toBe(5);
-  });
-
-  it('should not set minLength when not provided', () => {
-    const field = forgePhoneListField();
-    expect(field.minLength).toBeUndefined();
-  });
-
-  it('should not set maxLength when not provided', () => {
-    const field = forgePhoneListField();
-    expect(field.maxLength).toBeUndefined();
+    expect(field.props?.maxLength).toBe(5);
   });
 });

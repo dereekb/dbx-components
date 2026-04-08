@@ -1,76 +1,221 @@
-import type { ArrayAllowedChildren, SimplifiedArrayField, ArrayButtonConfig } from '@ng-forge/dynamic-forms';
+import type { FieldTypeDefinition, BaseValueField, ArrayAllowedChildren, FieldDef } from '@ng-forge/dynamic-forms';
+import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import { filterFromPOJO, type FactoryWithRequiredInput } from '@dereekb/util';
+import { forgeField } from '../../field';
 
-// MARK: Repeat Array Field
+// MARK: Types
 /**
- * Configuration for a forge repeat array field that allows users to dynamically
- * add and remove groups of fields.
+ * Any field type accepted as a drag array template item.
+ * Includes both ng-forge built-in fields and custom FieldDef types.
  */
-export interface ForgeRepeatArrayFieldConfig {
-  readonly key: string;
-  /**
-   * Template defining the structure of a single array item.
-   *
-   * - Single field (ArrayAllowedChildren) for primitive array items
-   * - Array of fields (ArrayAllowedChildren[]) for object array items
-   */
-  readonly template: ArrayAllowedChildren | readonly ArrayAllowedChildren[];
-  /**
-   * Initial values for the array. Each element creates one array item.
-   */
-  readonly value?: readonly unknown[];
-  /**
-   * Minimum number of items required in the array.
-   */
-  readonly minLength?: number;
-  /**
-   * Maximum number of items allowed in the array.
-   */
-  readonly maxLength?: number;
-  /**
-   * Configuration for the add button, or false to disable it.
-   */
-  readonly addButton?: ArrayButtonConfig | false;
-  /**
-   * Configuration for the remove button on each item, or false to disable it.
-   */
-  readonly removeButton?: ArrayButtonConfig | false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ForgeArrayTemplateField = ArrayAllowedChildren | FieldDef<any>;
+
+// MARK: Field Type
+export const FORGE_ARRAY_FIELD_TYPE_NAME = 'dbx-forge-array' as const;
+
+/**
+ * Pair representing an array item with its index and optional value.
+ */
+export interface ForgeArrayItemPair<T = unknown> {
+  readonly index: number;
+  readonly value?: T;
 }
 
 /**
- * Creates a forge field definition for a repeatable array of field groups.
+ * Props interface for the forge drag array field.
+ */
+export interface ForgeArrayFieldProps<T = unknown> {
+  /**
+   * Template defining the structure of a single array item.
+   */
+  readonly template: ForgeArrayTemplateField | readonly ForgeArrayTemplateField[];
+  /**
+   * Label for each array item. Can be a static string or a function.
+   */
+  readonly labelForField?: string | FactoryWithRequiredInput<string, ForgeArrayItemPair<T>>;
+  /**
+   * Text for the add button. Defaults to 'Add'.
+   */
+  readonly addText?: string;
+  /**
+   * Text for the remove button. Defaults to 'Remove'.
+   */
+  readonly removeText?: string;
+  /**
+   * Text for the duplicate button.
+   */
+  readonly duplicateText?: string;
+  /**
+   * Whether the add button is shown. Defaults to true.
+   */
+  readonly allowAdd?: boolean;
+  /**
+   * Whether items can be removed. Defaults to true.
+   */
+  readonly allowRemove?: boolean;
+  /**
+   * Whether items can be duplicated. Defaults to false.
+   */
+  readonly allowDuplicate?: boolean;
+  /**
+   * Whether drag/drop reordering is disabled. Defaults to false.
+   */
+  readonly disableRearrange?: boolean;
+  /**
+   * Whether duplicated items go to the end. Defaults to false.
+   */
+  readonly addDuplicateToEnd?: boolean;
+  /**
+   * Maximum number of items. No limit when undefined.
+   */
+  readonly maxLength?: number;
+  /**
+   * Minimum number of items. No minimum when undefined.
+   */
+  readonly minLength?: number;
+}
+
+/**
+ * Forge field definition for a drag-and-drop array.
+ */
+export interface ForgeArrayFieldDef<T = unknown> extends BaseValueField<ForgeArrayFieldProps<T>, unknown[]> {
+  readonly type: typeof FORGE_ARRAY_FIELD_TYPE_NAME;
+}
+
+/**
+ * ng-forge FieldTypeDefinition for the drag array field.
+ */
+export const DBX_FORGE_ARRAY_FIELD_TYPE: FieldTypeDefinition<ForgeArrayFieldDef> = {
+  name: FORGE_ARRAY_FIELD_TYPE_NAME,
+  loadComponent: () => import('./array.field.component').then((m) => m.ForgeArrayFieldComponent),
+  mapper: valueFieldMapper
+};
+
+// MARK: Config
+/**
+ * Configuration for creating a forge drag array field.
+ */
+export interface ForgeArrayFieldConfig<T = unknown> {
+  /**
+   * Key for the array field.
+   */
+  readonly key: string;
+  /**
+   * Optional label for the array section.
+   */
+  readonly label?: string;
+  /**
+   * Optional description text.
+   */
+  readonly description?: string;
+  /**
+   * Template defining the structure of a single array item.
+   *
+   * - Single field for primitive array items
+   * - Array of fields for object array items
+   */
+  readonly template: ForgeArrayTemplateField | readonly ForgeArrayTemplateField[];
+  /**
+   * Initial array values.
+   */
+  readonly value?: readonly unknown[];
+  /**
+   * Label for each item. Static string or function receiving index/value.
+   */
+  readonly labelForField?: string | FactoryWithRequiredInput<string, ForgeArrayItemPair<T>>;
+  /**
+   * Add button text. Defaults to 'Add'.
+   */
+  readonly addText?: string;
+  /**
+   * Remove button text. Defaults to 'Remove'.
+   */
+  readonly removeText?: string;
+  /**
+   * Duplicate button text.
+   */
+  readonly duplicateText?: string;
+  /**
+   * Whether the add button is shown. Defaults to true.
+   */
+  readonly allowAdd?: boolean;
+  /**
+   * Whether items can be removed. Defaults to true.
+   */
+  readonly allowRemove?: boolean;
+  /**
+   * Whether items can be duplicated. Defaults to false.
+   */
+  readonly allowDuplicate?: boolean;
+  /**
+   * Whether drag/drop reordering is disabled. Defaults to false.
+   */
+  readonly disableRearrange?: boolean;
+  /**
+   * Whether duplicated items go to the end. Defaults to false.
+   */
+  readonly addDuplicateToEnd?: boolean;
+  /**
+   * Maximum number of items.
+   */
+  readonly maxLength?: number;
+  /**
+   * Minimum number of items.
+   */
+  readonly minLength?: number;
+}
+
+/**
+ * Creates a forge drag-and-drop array field with CDK drag/drop reordering,
+ * add/remove/duplicate controls, and per-item labeling.
  *
- * Uses the ng-forge SimplifiedArrayField with template-based item definitions
- * and auto-generated add/remove buttons.
+ * Each array item renders as a nested mini dynamic form using the provided template.
+ * Items can be reordered via drag/drop handles, added, removed, and duplicated.
  *
- * @param config - Repeat array configuration including the template and constraints
- * @returns A {@link SimplifiedArrayField}
+ * This is the forge equivalent of the formly `formlyRepeatArrayField` with
+ * `DbxFormRepeatArrayTypeComponent`.
+ *
+ * @param config - Drag array field configuration
+ * @returns A {@link ForgeArrayFieldDef}
  *
  * @example
  * ```typescript
- * const field = forgeRepeatArrayField({
- *   key: 'items',
+ * const field = forgeArrayField({
+ *   key: 'phones',
+ *   label: 'Phone Numbers',
+ *   addText: 'Add Phone',
  *   template: [
- *     forgeTextField({ key: 'name', label: 'Name' }),
- *     forgeNumberField({ key: 'quantity', label: 'Qty' })
- *   ],
- *   addButton: { label: 'Add Item' },
- *   removeButton: { label: 'Remove Item' }
+ *     forgeTextField({ key: 'number', label: 'Number' }),
+ *     forgeTextField({ key: 'label', label: 'Label' })
+ *   ]
  * });
  * ```
  */
-export function forgeRepeatArrayField(config: ForgeRepeatArrayFieldConfig): SimplifiedArrayField {
-  const { key, template, value, minLength, maxLength, addButton, removeButton } = config;
+export function forgeArrayField<T = unknown>(config: ForgeArrayFieldConfig<T>): ForgeArrayFieldDef<T> {
+  const { key, label, description, template, value, labelForField, addText, removeText, duplicateText, allowAdd, allowRemove, allowDuplicate, disableRearrange, addDuplicateToEnd, maxLength, minLength } = config;
 
-  const result: SimplifiedArrayField = {
-    key,
-    type: 'array' as const,
-    template,
-    ...(value != null && { value }),
-    ...(minLength != null && { minLength }),
-    ...(maxLength != null && { maxLength }),
-    ...(addButton !== undefined && { addButton }),
-    ...(removeButton !== undefined && { removeButton })
-  };
-
-  return result;
+  return forgeField(
+    filterFromPOJO({
+      key,
+      type: FORGE_ARRAY_FIELD_TYPE_NAME,
+      label: label ?? '',
+      ...(description != null && { description }),
+      value: value ?? ([] as unknown[]),
+      props: filterFromPOJO({
+        template,
+        labelForField,
+        addText,
+        removeText,
+        duplicateText,
+        allowAdd,
+        allowRemove,
+        allowDuplicate,
+        disableRearrange,
+        addDuplicateToEnd,
+        maxLength,
+        minLength
+      }) as ForgeArrayFieldProps<T>
+    }) as ForgeArrayFieldDef<T>
+  );
 }

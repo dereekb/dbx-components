@@ -1,83 +1,131 @@
 import { describe, it, expect } from 'vitest';
-import { forgeRepeatArrayField } from './array.field';
-import { forgeTextField } from '../text/text.field';
-import { forgeNumberField } from '../number/number.field';
+import { forgeArrayField, FORGE_ARRAY_FIELD_TYPE_NAME } from './array.field';
 
-describe('forgeRepeatArrayField()', () => {
-  it('should create an array field with correct type and key', () => {
-    const template = forgeTextField({ key: 'item', label: 'Item' });
-    const field = forgeRepeatArrayField({ key: 'items', template });
-    expect(field.type).toBe('array');
-    expect(field.key).toBe('items');
+describe('forgeArrayField()', () => {
+  it('should create a field with the correct type', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' }
+    });
+    expect(field.type).toBe(FORGE_ARRAY_FIELD_TYPE_NAME);
   });
 
-  it('should accept a single field as template', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'names', template });
-    expect(field.template).toBe(template);
+  it('should use the provided key', () => {
+    const field = forgeArrayField({
+      key: 'phones',
+      template: { key: 'number', type: 'input' as const, label: 'Number' }
+    });
+    expect(field.key).toBe('phones');
   });
 
-  it('should accept an array of fields as template', () => {
-    const template = [forgeTextField({ key: 'name', label: 'Name' }), forgeNumberField({ key: 'qty', label: 'Qty' })];
-
-    const field = forgeRepeatArrayField({ key: 'items', template });
-    expect(field.template).toBe(template);
+  it('should default value to empty array', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' }
+    });
+    expect(field.value).toEqual([]);
   });
 
-  it('should set value when provided', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template, value: ['a', 'b'] });
-    expect(field.value).toEqual(['a', 'b']);
+  it('should use provided initial values', () => {
+    const values = [{ name: 'Alice' }, { name: 'Bob' }];
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      value: values
+    });
+    expect(field.value).toEqual(values);
   });
 
-  it('should not include value when not provided', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template });
-    expect(field.value).toBeUndefined();
+  it('should pass template through props', () => {
+    const template = [
+      { key: 'name', type: 'input' as const, label: 'Name' },
+      { key: 'age', type: 'input' as const, label: 'Age' }
+    ];
+    const field = forgeArrayField({ key: 'items', template });
+    expect(field.props?.template).toEqual(template);
   });
 
-  it('should set minLength when specified', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template, minLength: 1 });
-    expect(field.minLength).toBe(1);
+  it('should pass single-field template', () => {
+    const template = { key: 'tag', type: 'input' as const, label: 'Tag' };
+    const field = forgeArrayField({ key: 'tags', template });
+    expect(field.props?.template).toEqual(template);
   });
 
-  it('should set maxLength when specified', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template, maxLength: 5 });
-    expect(field.maxLength).toBe(5);
+  it('should pass addText through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      addText: 'Add Item'
+    });
+    expect(field.props?.addText).toBe('Add Item');
   });
 
-  it('should not include minLength and maxLength when not specified', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template });
-    expect(field.minLength).toBeUndefined();
-    expect(field.maxLength).toBeUndefined();
+  it('should pass removeText through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      removeText: 'Delete'
+    });
+    expect(field.props?.removeText).toBe('Delete');
   });
 
-  it('should set addButton config when provided', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const addButton = { label: 'Add Item' };
-    const field = forgeRepeatArrayField({ key: 'items', template, addButton });
-    expect(field.addButton).toEqual(addButton);
+  it('should pass disableRearrange through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      disableRearrange: true
+    });
+    expect(field.props?.disableRearrange).toBe(true);
   });
 
-  it('should set removeButton config when provided', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const removeButton = { label: 'Remove' };
-    const field = forgeRepeatArrayField({ key: 'items', template, removeButton });
-    expect(field.removeButton).toEqual(removeButton);
+  it('should pass maxLength through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      maxLength: 5
+    });
+    expect(field.props?.maxLength).toBe(5);
   });
 
-  it('should disable addButton when set to false', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template, addButton: false });
-    expect(field.addButton).toBe(false);
+  it('should pass allowDuplicate through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      allowDuplicate: true,
+      duplicateText: 'Copy'
+    });
+    expect(field.props?.allowDuplicate).toBe(true);
+    expect(field.props?.duplicateText).toBe('Copy');
   });
 
-  it('should disable removeButton when set to false', () => {
-    const template = forgeTextField({ key: 'name', label: 'Name' });
-    const field = forgeRepeatArrayField({ key: 'items', template, removeButton: false });
-    expect(field.removeButton).toBe(false);
+  it('should pass labelForField string through props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      labelForField: 'Item'
+    });
+    expect(field.props?.labelForField).toBe('Item');
+  });
+
+  it('should pass labelForField function through props', () => {
+    const labelFn = (pair: { index: number }) => `Entry ${pair.index}`;
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' },
+      labelForField: labelFn
+    });
+    expect(field.props?.labelForField).toBe(labelFn);
+  });
+
+  it('should not include undefined optional props', () => {
+    const field = forgeArrayField({
+      key: 'items',
+      template: { key: 'name', type: 'input' as const, label: 'Name' }
+    });
+
+    // Only template should be present in props
+    expect(field.props?.template).toBeDefined();
+    expect(field.props?.addText).toBeUndefined();
+    expect(field.props?.maxLength).toBeUndefined();
   });
 });

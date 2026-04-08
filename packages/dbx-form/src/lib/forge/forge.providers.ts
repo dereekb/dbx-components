@@ -18,7 +18,7 @@ import { DBX_FORGE_EXPAND_FIELD_TYPE } from './field/wrapper/expand/expand.field
 import { DBX_FORGE_INFO_BUTTON_FIELD_TYPE } from './field/wrapper/info/info.field';
 import { DBX_FORGE_WORKING_FIELD_TYPE } from './field/wrapper/working/working.field';
 import { DBX_FORGE_AUTOTOUCH_FIELD_TYPE } from './field/wrapper/autotouch/autotouch.field';
-import { DBX_FORGE_DRAG_ARRAY_FIELD_TYPE } from './field/value/array/dragarray.field';
+import { DBX_FORGE_ARRAY_FIELD_TYPE } from './field/value/array/array.field';
 import { FORGE_SLIDER_FIELD_TYPE } from './field/value/number/slider.field.component';
 import { sliderFieldMapper } from './field/value/number/slider.field.component';
 
@@ -118,7 +118,7 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   DBX_FORGE_INFO_BUTTON_FIELD_TYPE,
   DBX_FORGE_WORKING_FIELD_TYPE,
   DBX_FORGE_AUTOTOUCH_FIELD_TYPE,
-  DBX_FORGE_DRAG_ARRAY_FIELD_TYPE
+  DBX_FORGE_ARRAY_FIELD_TYPE
 ];
 
 /**
