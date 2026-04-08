@@ -6,6 +6,12 @@ export const DOC_INTERACTION_ROUTES = [
     ref: 'doc.interaction.button'
   },
   {
+    icon: 'picture_in_picture_alt',
+    title: 'Detach',
+    detail: 'dbx-detach',
+    ref: 'doc.interaction.detach'
+  },
+  {
     icon: 'warning',
     title: 'Error',
     detail: 'dbx-error',

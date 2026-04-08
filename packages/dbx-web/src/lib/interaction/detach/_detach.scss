@@ -1,0 +1,67 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$dbx-detach-controls-height: 33px;
+$dbx-detach-content-padding: 8px;
+$dbx-detach-content-padding-top: 2px;
+$dbx-detach-controls-vertical-padding: 4px;
+$dbx-detach-border-radius: 4px;
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-detach-content {
+    box-sizing: border-box;
+    overflow: hidden;
+    max-height: theming.$app-height;
+  }
+
+  .dbx-detach-content-container {
+    max-height: calc(#{theming.$app-height} - #{$dbx-detach-controls-height});
+    padding: $dbx-detach-content-padding;
+    padding-top: $dbx-detach-content-padding-top;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+
+  .dbx-detach-controls {
+    height: $dbx-detach-controls-height;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: $dbx-detach-controls-vertical-padding $dbx-detach-content-padding;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+  }
+
+  .dbx-detach-control-buttons {
+    min-width: 220px;
+    display: inline-block;
+    text-align: right;
+
+    button.mdc-button.mat-mdc-button {
+      min-height: 28px;
+    }
+  }
+
+  .dbx-detach-controls {
+    color: var(--mat-sys-on-surface);
+    background: var(--mat-sys-surface);
+  }
+
+  .dbx-detach-controls-header {
+    @include theming.limit-text();
+  }
+
+  .dbx-detach-overlay {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .dbx-detach-overlay-host {
+    display: block;
+    height: 100%;
+  }
+}
+
+@mixin theme($theme-config) {
+}

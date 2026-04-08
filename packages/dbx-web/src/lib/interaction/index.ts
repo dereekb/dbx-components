@@ -1,3 +1,4 @@
+export * from './detach';
 export * from './dialog';
 export * from './filter';
 export * from './iframe';

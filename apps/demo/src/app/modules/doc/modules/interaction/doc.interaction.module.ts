@@ -1,4 +1,5 @@
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE, DocInteractionCustomErrorWidgetComponent } from './component/error.custom.widget.component';
+import { DocInteractionExampleDetachContentComponent } from './component/interaction.detach.content.component';
 import { DocInteractionExamplePopupContentComponent } from './component/interaction.popup.content.component';
 import { DocInteractionExamplePopupComponent } from './component/interaction.popup.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './component/filter.preset.component';
@@ -6,6 +7,7 @@ import { DocInteractionTestFilterCustomFilterComponent } from './component/filte
 import { DocInteractionPromptComponent } from './container/prompt.component';
 import { DocInteractionPopoverComponent } from './container/popover.component';
 import { DocInteractionPopupComponent } from './container/popup.component';
+import { DocInteractionDetachComponent } from './container/detach.component';
 import { DocInteractionLayoutComponent } from './container/layout.component';
 import { NgModule, inject } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
@@ -48,6 +50,7 @@ import { DocInteractionIframeComponent } from './container/iframe.component';
     DocInteractionExampleDialogComponent,
     DocInteractionExamplePopoverComponent,
     DocInteractionExamplePopoverContentComponent,
+    DocInteractionExampleDetachContentComponent,
     DocInteractionExamplePopupComponent,
     DocInteractionExamplePopupContentComponent,
     DocInteractionCustomInlineErrorWidgetComponent,
@@ -55,6 +58,7 @@ import { DocInteractionIframeComponent } from './container/iframe.component';
     // container
     DocInteractionLayoutComponent,
     DocInteractionHomeComponent,
+    DocInteractionDetachComponent,
     DocInteractionIframeComponent,
     // DocInteractionLoadingComponent,    // standalone
     DocInteractionButtonComponent,
