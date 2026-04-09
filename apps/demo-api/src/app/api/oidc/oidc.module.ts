@@ -19,6 +19,14 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
 };
 
 // MARK: Factories
+/**
+ * Creates the OidcAccountService for the demo API, configuring how OIDC claims
+ * are built from Firebase Auth user records and custom auth claims.
+ * Supports the openid, profile, email, and demo scopes.
+ *
+ * @param demoApiAuthService - the demo auth service used as the underlying auth provider
+ * @returns an OidcAccountService configured with the demo-specific claim builder
+ */
 export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthService): OidcAccountService {
   const delegate: DemoOidcAccountServiceDelegate = {
     providerConfig: DEMO_OIDC_PROVIDER_CONFIG,
@@ -37,9 +45,9 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
       }
 
       if (scopes.has('email') && user.email) {
-          claims.email = user.email;
-          claims.email_verified = user.emailVerified ?? false;
-        }
+        claims.email = user.email;
+        claims.email_verified = user.emailVerified ?? false;
+      }
 
       if (scopes.has('demo')) {
         const authClaims = await userContext.loadClaims<DemoApiAuthClaims>();
@@ -55,6 +63,13 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
   return new OidcAccountService(demoApiAuthService, delegate);
 }
 
+/**
+ * Creates the JWKS storage config pointing to the jwks.json file in Firebase Storage.
+ * The OIDC provider uses this to persist and retrieve its signing key set.
+ *
+ * @param firebaseServerStorageService - the Firebase storage service for accessing cloud storage files
+ * @returns a JwksServiceStorageConfig with the storage accessor file reference
+ */
 export function demoJwksServiceStorageConfigFactory(firebaseServerStorageService: FirebaseServerStorageService): JwksServiceStorageConfig {
   return {
     jwksStorageAccessorFile: firebaseServerStorageService.file('jwks.json')

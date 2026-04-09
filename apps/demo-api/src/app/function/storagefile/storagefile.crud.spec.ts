@@ -49,10 +49,11 @@ import {
   storageFilePurposeAndUserQuery,
   type StorageFilePurpose,
   type FirebaseAuthUserId,
-  type StorageFilePurposeSubgroup
+  type StorageFilePurposeSubgroup,
+  MODEL_NOT_AVAILABLE_ERROR_CODE
 } from '@dereekb/firebase';
 import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
-import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { readFile } from 'fs/promises';
 import AdmZip from 'adm-zip';
@@ -74,7 +75,7 @@ demoApiFunctionContextFactory((f) => {
           let detailsAccessor: StoredFileReader;
 
           const uploadFile = async (path: string, data: StorageRawDataString = 'test', contentType = 'text/plain') => {
-            const file = await f.storageContext.file(path);
+            const file = f.storageContext.file(path);
             await file.upload(data, { contentType, stringFormat: 'raw' });
 
             return {
@@ -408,7 +409,7 @@ demoApiFunctionContextFactory((f) => {
 
                 beforeEach(async () => {
                   const testFilePath = 'uploads/unknown/unknown.txt';
-                  unknownFile = await f.storageContext.file(testFilePath);
+                  unknownFile = f.storageContext.file(testFilePath);
                   unknownFileStoragePath = unknownFile.storagePath;
 
                   const contentType = 'text/plain';
@@ -434,7 +435,7 @@ demoApiFunctionContextFactory((f) => {
                   const uid = au.uid;
 
                   const testFilePath = userTestFileUploadsFilePath(uid, 'test.txt');
-                  testFile = await f.storageContext.file(testFilePath);
+                  testFile = f.storageContext.file(testFilePath);
                   testFileStoragePath = testFile.storagePath;
 
                   const contentType = 'text/plain';
@@ -573,7 +574,7 @@ demoApiFunctionContextFactory((f) => {
                     const uid = au.uid;
 
                     const testFilePath = userAvatarUploadsFilePath(uid);
-                    testFile = await f.storageContext.file(testFilePath);
+                    testFile = f.storageContext.file(testFilePath);
                     testFileStoragePath = testFile.storagePath;
 
                     const contentType = 'text/plain';
@@ -609,7 +610,7 @@ demoApiFunctionContextFactory((f) => {
                 const uid = au.uid;
 
                 const filePath = userTestFileUploadsFilePath(uid, 'test.any');
-                const testFile = await f.storageContext.file(filePath);
+                const testFile = f.storageContext.file(filePath);
                 const testFileStoragePath = testFile.storagePath;
 
                 const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
@@ -627,7 +628,7 @@ demoApiFunctionContextFactory((f) => {
                 const uid = au.uid;
 
                 const filePath = userAvatarUploadsFilePath(uid);
-                const testFile = await f.storageContext.file(filePath);
+                const testFile = f.storageContext.file(filePath);
                 const testFileStoragePath = testFile.storagePath;
 
                 const testAssetsFolderPath = `${__dirname}/../../../test/assets/`;
@@ -655,7 +656,7 @@ demoApiFunctionContextFactory((f) => {
                   const uid = getValueFromGetter(overrideUid) ?? au.uid;
 
                   const filePath = userTestFileUploadsFilePath(uid, 'test.any');
-                  const testFile = await f.storageContext.file(filePath);
+                  const testFile = f.storageContext.file(filePath);
                   const testFileStoragePath = testFile.storagePath;
 
                   const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
@@ -673,7 +674,7 @@ demoApiFunctionContextFactory((f) => {
                   const uid = getValueFromGetter(overrideUid) ?? au.uid;
 
                   const filePath = userAvatarUploadsFilePath(uid);
-                  const testFile = await f.storageContext.file(filePath);
+                  const testFile = f.storageContext.file(filePath);
                   const testFileStoragePath = testFile.storagePath;
 
                   const testAssetsFolderPath = `${__dirname}/../../../test/assets/`;
@@ -694,7 +695,7 @@ demoApiFunctionContextFactory((f) => {
           describe('processStorageFile()', () => {
             describe('non-existent StorageFileDocument', () => {
               itShouldFail('to process the non-existent StorageFileDocument', async () => {
-                const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
+                const storageFile = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
 
                 const processStorageFileParams: ProcessStorageFileParams = {
                   key: storageFile.key
@@ -706,7 +707,7 @@ demoApiFunctionContextFactory((f) => {
 
             describe('non-existent file associated with StorageFileDocument', () => {
               itShouldFail('to process the non-existent StorageFileDocument', async () => {
-                const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
+                const storageFile = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
 
                 const processStorageFileParams: ProcessStorageFileParams = {
                   key: storageFile.key
@@ -1153,7 +1154,7 @@ demoApiFunctionContextFactory((f) => {
             const testFileContent = content;
 
             const filePath = userTestFileUploadsFilePath(uid, 'test.any');
-            const testFile = await f.storageContext.file(filePath);
+            const testFile = f.storageContext.file(filePath);
             const testFileStoragePath = testFile.storagePath;
 
             const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.

@@ -3,6 +3,14 @@ import { type DemoFirebaseServerActionsContext } from '../../firebase/action.con
 import { type NotificationBoxRecipient, firestoreModelKey, newNotificationBoxRecipientForUid } from '@dereekb/firebase';
 import { guestbookIdentity, profileIdentity } from 'demo-firebase';
 
+/**
+ * Builds the notification initialization config that teaches the notification system
+ * how to create NotificationBox documents for demo models (Profile and Guestbook).
+ * Determines the initial owner and recipients when a notification box is first created.
+ *
+ * @param context - server actions context providing Firestore collection accessors
+ * @returns a config with initialization functions for notification boxes and summaries
+ */
 export function demoNotificationInitServerActionsContextConfig(context: DemoFirebaseServerActionsContext): NotificationInitServerActionsContextConfig {
   const { profileCollection, guestbookCollection } = context;
 

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { type ZoomAccessToken, type ZoomAccessTokenCache } from '@dereekb/zoom';
 import { type Maybe, type Configurable, filterMaybeArrayValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
-import { dirname } from 'path';
-import { readFile, writeFile, rm, mkdirSync } from 'fs';
+import { dirname } from 'node:path';
+import { readFile, writeFile, rm, mkdirSync } from 'node:fs';
 
 /**
  * Service used for retrieving ZoomAccessTokenCache for Zoom services.

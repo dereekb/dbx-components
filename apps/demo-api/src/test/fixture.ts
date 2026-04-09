@@ -15,6 +15,7 @@ import {
   modelTestContextFactory,
   ModelTestContextFixture,
   ModelTestContextInstance,
+  oAuthAuthorizedSuperTestContextFactory,
   setupFirebaseAdminFunctionTestSingleton
 } from '@dereekb/firebase-server/test';
 import { type BuildTestsWithContextFunction, type TestContextFixture } from '@dereekb/util/test';
@@ -78,6 +79,11 @@ import { assertSnapshotData } from '@dereekb/firebase-server';
 })
 export class TestDemoApiAppModule {}
 
+/**
+ * Initializes the Firebase Admin test environment for demo API integration tests.
+ * Configures emulator connections for auth, Firestore, and storage, then sets up
+ * the shared function test singleton.
+ */
 export function initDemoApiTestEnvironment() {
   initFirebaseAdminTestEnvironment({
     emulators: {
@@ -442,7 +448,7 @@ export const demoProfileContextFactory = () =>
   modelTestContextFactory<Profile, ProfileDocument, DemoApiProfileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, ProfileFirestoreCollection>({
     makeFixture: (f) => new DemoApiProfileTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.profileCollection,
-    makeRef: async (collection: FirestoreCollection<Profile, ProfileDocument>, params, p) => {
+    makeRef: async (collection: FirestoreCollection<Profile, ProfileDocument>, params, _p) => {
       return collection.documentAccessor().documentRefForId(params.u.uid);
     },
     makeInstance: (delegate, ref, testInstance) => new DemoApiProfileTestContextInstance(delegate, ref, testInstance)
@@ -461,7 +467,7 @@ export const demoGuestbookContextFactory = () =>
   modelTestContextFactory<Guestbook, GuestbookDocument, DemoApiGuestbookTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
     makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.guestbookCollection,
-    collectionForDocument: (fi, doc) => {
+    collectionForDocument: (fi, _doc) => {
       return fi.demoFirestoreCollections.guestbookCollection;
     },
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookTestContextInstance(delegate, ref, testInstance),
@@ -602,7 +608,7 @@ export const demoNotificationUserContextFactory = () =>
     makeFixture: (f) => new DemoApiNotificationUserTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationUserCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationUserTestContextInstance(delegate, ref, testInstance),
-    makeRef: async (collection, params, p) => {
+    makeRef: async (collection, params, _p) => {
       return collection.documentAccessor().loadDocumentForId(params.u.uid).documentRef;
     },
     initDocument: async (instance, params) => {
@@ -642,7 +648,7 @@ export const demoNotificationSummaryContextFactory = () =>
     makeFixture: (f) => new DemoApiNotificationSummaryTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationSummaryCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationSummaryTestContextInstance(delegate, ref, testInstance),
-    makeRef: async (collection, params, p) => {
+    makeRef: async (collection, params, _p) => {
       const flatModelKey = params.for.documentTwoWayFlatKey;
       return collection.documentAccessor().loadDocumentForId(flatModelKey).documentRef;
     },
@@ -771,7 +777,7 @@ export const demoNotificationBoxContextFactory = () =>
     makeFixture: (f) => new DemoApiNotificationBoxTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationBoxCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationBoxTestContextInstance(delegate, ref, testInstance),
-    makeRef: async (collection, params, p) => {
+    makeRef: async (collection, params, _p) => {
       const flatModelKey = params.for.documentTwoWayFlatKey;
       return collection.documentAccessor().loadDocumentForId(flatModelKey).documentRef;
     },
@@ -827,6 +833,8 @@ export class DemoApiNotificationTestContextFixture<F extends FirebaseAdminFuncti
 export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Notification, NotificationDocument, DemoApiFunctionContextFixtureInstance<F>> {
   /**
    * Sends the notification.
+   *
+   * @returns the result of sending all queued notifications
    */
   async sendAllQueuedNotifications() {
     const sendAllQueuedNotifications = await this.testContext.notificationServerActions.sendQueuedNotifications({});
@@ -835,6 +843,8 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
 
   /**
    * Cleanup all sent notifications
+   *
+   * @returns the result of the cleanup operation
    */
   async cleanupAllSentNotifications() {
     const params: CleanupSentNotificationsParams = {};
@@ -844,6 +854,9 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
 
   /**
    * Sends the notification.
+   *
+   * @param params - optional send parameters (key is automatically set from the test context document)
+   * @returns the result of sending the notification
    */
   async sendNotification(params?: Maybe<Omit<SendNotificationParams, 'key'>>) {
     const sendNotification = await this.testContext.notificationServerActions.sendNotification({ ...params, key: this.documentKey });
@@ -860,7 +873,7 @@ export const demoNotificationContextFactory = () =>
       return fi.demoFirestoreCollections.notificationCollectionFactory(parentDocument);
     },
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationTestContextInstance(delegate, ref, testInstance),
-    makeRef: async (collection, params, p) => {
+    makeRef: async (collection, params, _p) => {
       const template = await getValueFromGetter(params.template);
 
       if (!template) {
@@ -1008,7 +1021,7 @@ export const demoStorageFileContextFactory = () =>
   modelTestContextFactory<StorageFile, StorageFileDocument, DemoApiStorageFileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileFirestoreCollection>({
     makeFixture: (f) => new DemoApiStorageFileTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.storageFileCollection,
-    collectionForDocument: (fi, doc) => fi.demoFirestoreCollections.storageFileCollection,
+    collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.storageFileCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiStorageFileTestContextInstance(delegate, ref, testInstance),
     makeRef: async (collection, params, p) => {
       let ref: StorageFileDocument;
@@ -1024,7 +1037,7 @@ export const demoStorageFileContextFactory = () =>
       return ref.documentRef;
     },
     initDocument: async (instance, params) => {
-      const p = instance.testContext;
+      const _p = instance.testContext;
 
       if (params.processStorageFile) {
         await instance.process(typeof params.processStorageFile === 'boolean' ? {} : params.processStorageFile);
@@ -1118,9 +1131,9 @@ export const demoStorageFileGroupContextFactory = () =>
   modelTestContextFactory<StorageFileGroup, StorageFileGroupDocument, DemoApiStorageFileGroupTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileGroupTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileGroupTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileGroupFirestoreCollection>({
     makeFixture: (f) => new DemoApiStorageFileGroupTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.storageFileGroupCollection,
-    collectionForDocument: (fi, doc) => fi.demoFirestoreCollections.storageFileGroupCollection,
+    collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.storageFileGroupCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiStorageFileGroupTestContextInstance(delegate, ref, testInstance),
-    makeRef: async (collection, params, p) => {
+    makeRef: async (collection, params, _p) => {
       let ref: StorageFileGroupDocument;
 
       if (params.storageFileGroupId) {
@@ -1133,7 +1146,7 @@ export const demoStorageFileGroupContextFactory = () =>
       return ref.documentRef;
     },
     initDocument: async (instance, params) => {
-      const p = instance.testContext;
+      const _p = instance.testContext;
 
       if (params.createIfNeeded === true || params.initIfNeeded === true) {
         const exists = await instance.document.exists();
@@ -1152,3 +1165,11 @@ export const demoStorageFileGroupContextFactory = () =>
   });
 
 export const demoStorageFileGroupContext = demoStorageFileGroupContextFactory();
+
+// MARK: Oidc
+/**
+ * Factory that performs a full OAuth authorization code flow for demo-api tests.
+ *
+ * Scopes are auto-resolved from `OidcAccountService.providerConfig.claims`.
+ */
+export const demoOAuthAuthorizedSuperTestContext = oAuthAuthorizedSuperTestContextFactory();

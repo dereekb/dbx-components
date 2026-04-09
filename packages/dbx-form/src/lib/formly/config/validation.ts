@@ -84,10 +84,13 @@ export const INVALID_PHONE_NUMBER_EXTENSION_MESSAGE = { name: 'validatePhoneNumb
  * Returns a validation message indicating the duration is below the minimum allowed.
  *
  * @param err - The validation error object containing `min` and `actual` values.
- * @param field - The Formly field configuration.
+ * @param err.min - The minimum allowed duration value.
+ * @param err.actual - The actual duration value that failed validation.
+ * @param err.unit - The duration unit label (e.g. "minutes", "hours").
+ * @param _field - The Formly field configuration.
  * @returns A human-readable validation message string.
  */
-export function durationMinValidationMessage(err: { min: number; actual: number; unit: string }, field: FieldTypeConfig) {
+export function durationMinValidationMessage(err: { min: number; actual: number; unit: string }, _field: FieldTypeConfig) {
   return `Duration must be at least ${err.min} ${err.unit} (currently ${err.actual} ${err.unit}).`;
 }
 
@@ -95,10 +98,13 @@ export function durationMinValidationMessage(err: { min: number; actual: number;
  * Returns a validation message indicating the duration exceeds the maximum allowed.
  *
  * @param err - The validation error object containing `max`, `actual`, and `unit` values.
- * @param field - The Formly field configuration.
+ * @param err.max - The maximum allowed duration value.
+ * @param err.actual - The actual duration value that failed validation.
+ * @param err.unit - The duration unit label (e.g. "minutes", "hours").
+ * @param _field - The Formly field configuration.
  * @returns A human-readable validation message string.
  */
-export function durationMaxValidationMessage(err: { max: number; actual: number; unit: string }, field: FieldTypeConfig) {
+export function durationMaxValidationMessage(err: { max: number; actual: number; unit: string }, _field: FieldTypeConfig) {
   return `Duration must be at most ${err.max} ${err.unit} (currently ${err.actual} ${err.unit}).`;
 }
 

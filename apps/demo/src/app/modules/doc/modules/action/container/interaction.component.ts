@@ -1,7 +1,7 @@
 import { MatDialog } from '@angular/material/dialog';
 import { type DbxActionDialogFunction, DbxPopoverService, type DbxActionPopoverFunction, type DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, inject } from '@angular/core';
-import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective, type DbxActionButtonEchoConfig } from '@dereekb/dbx-core';
+import { DbxActionContextMachine, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective, type DbxActionButtonEchoConfig } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
@@ -115,7 +115,7 @@ export class DocActionInteractionComponent implements OnDestroy {
     return new DbxActionContextMachine({
       oneTimeUse: true,
       handleValueReady: (value: any) => {
-        safeDetectChanges(this.cdRef);
+        this.cdRef.detectChanges();
         return of(0).pipe(
           delay(1000),
           tap(() => {

@@ -151,6 +151,9 @@ const DURATION_COMPONENT_REGEX = /(\d+(?:\.\d+)?)\s*(w|wk|weeks?|d|days?|h|hr|ho
 
 /**
  * Maps parsed unit strings to their canonical TimeUnit value.
+ *
+ * @param unitStr - The raw unit string from a parsed duration component (e.g., 'hr', 'minutes', 'ms').
+ * @returns The canonical {@link TimeUnit} corresponding to the input string.
  */
 function normalizeUnitString(unitStr: string): TimeUnit {
   const lower = unitStr.toLowerCase();

@@ -11,6 +11,7 @@ import { type AssetLocalPathRef, type AssetRemotePathRef } from './asset';
  * ```
  *
  * @param path - Relative path from the environment's base asset directory.
+ * @returns A local asset reference with the given path.
  */
 export function localAsset(path: SlashPath): AssetLocalPathRef {
   return { sourceType: 'local', path };
@@ -29,6 +30,7 @@ export function localAsset(path: SlashPath): AssetLocalPathRef {
  * ```
  *
  * @param url - Absolute URL with http/https prefix to fetch the asset from.
+ * @returns A remote asset reference with the given URL.
  * @throws Error if the URL does not have a valid http/https prefix.
  */
 export function remoteAsset(url: WebsiteUrlWithPrefix): AssetRemotePathRef {
@@ -80,6 +82,7 @@ export interface AssetFolderBuilder {
  * ```
  *
  * @param folder - Base folder path for the assets.
+ * @returns A fluent builder for creating local asset refs within the specified folder.
  */
 export function assetFolder(folder: SlashPath): AssetFolderBuilder {
   const normalizedFolder = folder.endsWith('/') ? folder : folder + '/';
@@ -140,6 +143,7 @@ export interface RemoteAssetBuilder {
  * ```
  *
  * @param baseUrl - Base URL with http/https prefix.
+ * @returns A fluent builder for creating remote asset refs under the specified base URL.
  * @throws Error if the base URL does not have a valid http/https prefix.
  */
 export function remoteAssetBaseUrl(baseUrl: WebsiteUrlWithPrefix): RemoteAssetBuilder {

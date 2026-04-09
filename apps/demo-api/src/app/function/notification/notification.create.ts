@@ -6,7 +6,7 @@ export const createNotification: DemoCreateModelFunction<{}> = withApiDetails({
   optionalAuth: true,
   mcp: { description: 'Create a notification (no auth required)' },
   fn: async (request) => {
-    const { nest, auth, data } = request;
+    const { nest: _nest, auth: _auth, data: _data } = request;
 
     // Does nothing. This is just to demonstrate withApiDetails with optionalAuth.
 

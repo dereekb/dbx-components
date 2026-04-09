@@ -22,6 +22,9 @@ export abstract class ProfileServerActions {
 
 /**
  * Factory for generating ProfileServerActions for a given context.
+ *
+ * @param context - the server actions context providing Firestore collections and auth utilities
+ * @returns a concrete ProfileServerActions implementation bound to the given context
  */
 export function profileServerActions(context: ProfileServerActionsContext): ProfileServerActions {
   return {
@@ -33,6 +36,16 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
 }
 
 // MARK: Actions
+/**
+ * Creates a factory that initializes a new Profile document for a given user UID.
+ * Runs within a transaction to avoid duplicate profiles, and auto-generates a unique username.
+ * Also creates the associated private profile data document.
+ *
+ * @param context
+ * @param context.profileCollection - the Firestore collection accessor for profile documents
+ * @param context.profilePrivateDataCollectionFactory - factory for creating private profile data subcollections
+ * @returns an async function that takes a UID and returns the created or existing ProfileDocument
+ */
 export function initProfileForUidFactory({ profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
@@ -66,11 +79,24 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
         });
       }
 
-      return profile!;
+      return profile as ProfileDocument;
     });
   };
 }
 
+/**
+ * Creates a server action factory that sets a profile's username within a transaction.
+ * Normalizes the username to lowercase and checks for conflicts with existing profiles.
+ * Updates the private data's usernameSetAt timestamp when changed.
+ *
+ * @param context
+ * @param context.firebaseServerActionTransformFunctionFactory - factory for creating validated action transform functions
+ * @param context.profileCollection - the Firestore collection accessor for profile documents
+ * @param context.profilePrivateDataCollectionFactory - factory for creating private profile data subcollections
+ * @returns an action transform function that validates params and updates the username
+ *
+ * @throws usernameAlreadyTakenError when the requested username belongs to another profile
+ */
 export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
@@ -87,8 +113,8 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
         const conflictingDoc = await queryProfile(profileWithUsername(username)).getFirstDoc(transaction);
 
         if (conflictingDoc && conflictingDoc.id !== documentRef.id) {
-            throw usernameAlreadyTakenError(username);
-          }
+          throw usernameAlreadyTakenError(username);
+        }
 
         const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
         const profilePrivateDataDocument = profilePrivateDataCollectionFactory(documentInTransaction).loadDocumentForTransaction(transaction);
@@ -117,6 +143,15 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
   });
 }
 
+/**
+ * Creates a server action factory that updates editable profile fields (currently bio).
+ * Performs a merge-set so only the provided fields are overwritten.
+ *
+ * @param context
+ * @param context.firebaseServerActionTransformFunctionFactory - factory for creating validated action transform functions
+ * @param context.profileCollection - the Firestore collection accessor for profile documents
+ * @returns an action transform function that validates params and updates the profile
+ */
 export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection }: ProfileServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(updateProfileParamsType, async (params) => {
     const { bio } = params;
@@ -131,6 +166,15 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
   });
 }
 
+/**
+ * Creates a server action factory that generates a test notification for a profile.
+ * Guards against creating too many test notifications (max 6) and optionally expedites sending.
+ *
+ * @param context - server actions context providing notification and expedite services
+ * @returns an action transform function that creates a test notification document
+ *
+ * @throws {Error} When the profile already has more than 6 test notifications
+ */
 export function createTestNotificationFactory(context: ProfileServerActionsContext) {
   const { notificationExpediteService, firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
 

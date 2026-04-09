@@ -9,3 +9,4 @@ export * from './create.model.function';
 export * from './read.model.function';
 export * from './update.model.function';
 export * from './delete.model.function';
+export * from './query.model.function';

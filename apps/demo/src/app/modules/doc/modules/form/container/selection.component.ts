@@ -1,4 +1,3 @@
-import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnDestroy, type Type, type OnInit, inject } from '@angular/core';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
@@ -582,7 +581,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         return {
           onClick: () => {
             this.valueClicked = `Default anchor click: ${fieldValue.value}`;
-            safeDetectChanges(this.cdRef);
+            this.cdRef.detectChanges();
           }
         };
       }
@@ -601,7 +600,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
             anchor: {
               onClick: () => {
                 this.valueClicked = `Per item value: ${x.value}`;
-                safeDetectChanges(this.cdRef);
+                this.cdRef.detectChanges();
               }
             }
           }))
@@ -628,7 +627,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         return {
           onClick: () => {
             this.valueClicked = `Meta item click: ${fieldValue.value}`;
-            safeDetectChanges(this.cdRef);
+            this.cdRef.detectChanges();
           }
         };
       },

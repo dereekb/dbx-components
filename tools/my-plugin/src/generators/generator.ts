@@ -1,10 +1,4 @@
-import {
-  formatFiles,
-  getProjects,
-  ProjectConfiguration,
-  Tree,
-  updateProjectConfiguration,
-} from '@nx/devkit';
+import { formatFiles, getProjects, ProjectConfiguration, Tree, updateProjectConfiguration } from '@nx/devkit';
 
 import { TemporaryBuildTargetGeneratorSchema } from './schema';
 
@@ -14,12 +8,7 @@ import { TemporaryBuildTargetGeneratorSchema } from './schema';
 const SCHEMA_TAG = 'x-g-by-btf';
 const TSCONFIG_TAG = 'x-g-by-btf-tsconfig';
 
-function manipulateProjectTarget(
-  tree: Tree,
-  project: ProjectConfiguration,
-  remove = false
-) {
-
+function manipulateProjectTarget(tree: Tree, project: ProjectConfiguration, remove = false) {
   let tsConfigName = 'tsconfig.json';
 
   // Find the tsconfig used by the build so angular has the proper target
@@ -52,10 +41,7 @@ function manipulateProjectTarget(
     }
     // Remove nothing
     else {
-      console.log(
-        `[${project.root}]`,
-        `Skipping tsconfig removal, not tagged or does not exist`
-      );
+      console.log(`[${project.root}]`, `Skipping tsconfig removal, not tagged or does not exist`);
     }
 
     // Add build target or tsconfig if it doesn't exist and tag it for clean removal
@@ -69,7 +55,7 @@ function manipulateProjectTarget(
         project.targets.build.options = {
           ...project.targets.build.options,
           tsConfig: tsconfigPath,
-          [TSCONFIG_TAG]: true,
+          [TSCONFIG_TAG]: true
         };
         console.log(`[${project.root}]`, `Added tsconfig only`);
       } else {
@@ -82,20 +68,26 @@ function manipulateProjectTarget(
         build: {
           options: {
             tsConfig: tsconfigPath,
-            [SCHEMA_TAG]: true,
-          },
+            [SCHEMA_TAG]: true
+          }
         },
-        ...project.targets,
+        ...project.targets
       };
       console.log(`[${project.root}]`, `Added build target`);
     }
   }
 }
 
-export async function temporaryBuildTarget(
-  tree: Tree,
-  options: TemporaryBuildTargetGeneratorSchema
-) {
+/**
+ * Nx generator that adds or removes a temporary build target on all workspace projects.
+ * Used to ensure every project has a build target with a tsConfig reference,
+ * which some tooling (e.g., Angular compiler) requires. Tags added targets
+ * so they can be cleanly removed later.
+ *
+ * @param tree - the Nx virtual file system tree
+ * @param options - generator options; set `remove` to true to strip previously added targets
+ */
+export async function temporaryBuildTarget(tree: Tree, options: TemporaryBuildTargetGeneratorSchema) {
   const projects = getProjects(tree);
 
   for (const [name, project] of projects) {

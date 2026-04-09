@@ -78,12 +78,25 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
   }
 });
 
+/**
+ * Returns the root Firestore collection reference for Guestbook documents.
+ *
+ * @param context - The FirestoreContext used to resolve the collection.
+ * @returns A typed CollectionReference for the guestbook collection.
+ */
 export function guestbookCollectionReference(context: FirestoreContext): CollectionReference<Guestbook> {
   return context.collection(guestbookIdentity.collectionName);
 }
 
 export type GuestbookFirestoreCollection = FirestoreCollection<Guestbook, GuestbookDocument>;
 
+/**
+ * Creates the Firestore collection accessor for Guestbook documents,
+ * wiring the converter, model identity, and document factory together.
+ *
+ * @param firestoreContext - The FirestoreContext used to build the collection.
+ * @returns A GuestbookFirestoreCollection for querying and accessing guestbook documents.
+ */
 export function guestbookFirestoreCollection(firestoreContext: FirestoreContext): GuestbookFirestoreCollection {
   return firestoreContext.firestoreCollection({
     converter: guestbookConverter,
@@ -146,6 +159,13 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
   }
 });
 
+/**
+ * Creates a factory function that returns the subcollection reference for
+ * GuestbookEntry documents under a given Guestbook parent document.
+ *
+ * @param context - The FirestoreContext used to resolve the subcollection.
+ * @returns A function that accepts a GuestbookDocument and returns its GuestbookEntry subcollection reference.
+ */
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {
     return context.subcollection(guestbook.documentRef, guestbookEntryIdentity.collectionName);
@@ -157,6 +177,13 @@ export const guestbookEntryAccessorFactory = copyUserRelatedDataAccessorFactoryF
 export type GuestbookEntryFirestoreCollection = FirestoreCollectionWithParent<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument>;
 export type GuestbookEntryFirestoreCollectionFactory = (parent: GuestbookDocument) => GuestbookEntryFirestoreCollection;
 
+/**
+ * Creates a factory that produces GuestbookEntry Firestore collection accessors
+ * scoped to a specific parent Guestbook document.
+ *
+ * @param firestoreContext - The FirestoreContext used to build the subcollection.
+ * @returns A factory function that accepts a GuestbookDocument parent and returns its GuestbookEntry collection.
+ */
 export function guestbookEntryFirestoreCollectionFactory(firestoreContext: FirestoreContext): GuestbookEntryFirestoreCollectionFactory {
   const factory = guestbookEntryCollectionReferenceFactory(firestoreContext);
 
@@ -173,12 +200,26 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
   };
 }
 
+/**
+ * Returns the collection group reference for all GuestbookEntry documents
+ * across every parent Guestbook, enabling cross-guestbook queries.
+ *
+ * @param context - The FirestoreContext used to resolve the collection group.
+ * @returns A CollectionGroup reference for GuestbookEntry documents.
+ */
 export function guestbookEntryCollectionReference(context: FirestoreContext): CollectionGroup<GuestbookEntry> {
   return context.collectionGroup(guestbookEntryIdentity.collectionName);
 }
 
 export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<GuestbookEntry, GuestbookEntryDocument>;
 
+/**
+ * Creates the Firestore collection group accessor for GuestbookEntry documents,
+ * allowing queries across all guestbook entry subcollections.
+ *
+ * @param firestoreContext - The FirestoreContext used to build the collection group.
+ * @returns A GuestbookEntryFirestoreCollectionGroup for cross-parent guestbook entry queries.
+ */
 export function guestbookEntryFirestoreCollectionGroup(firestoreContext: FirestoreContext): GuestbookEntryFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     converter: guestbookEntryConverter,

@@ -1,7 +1,14 @@
 {
   "name": "@dereekb/nestjs/eslint",
-  "version": "13.6.17",
+  "version": "13.7.0",
   "peerDependencies": {
-    "@typescript-eslint/utils": ">=8.0.0"
+    "@typescript-eslint/utils": "8.56.1"
+  },
+  "devDependencies": {
+    "@angular/core": "21.2.3",
+    "@nestjs/common": "^11.1.17",
+    "@nestjs/core": "^11.1.17",
+    "@typescript-eslint/parser": "8.56.1",
+    "eslint": "9.39.3"
   }
 }

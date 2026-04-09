@@ -2,8 +2,8 @@ import { systemStateExampleRead } from './../system/systemstate.read';
 import { createGuestbook } from '../guestbook/guestbook.create';
 import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateUsername, profileUpdateOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
-import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
-import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function.context';
+import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
+import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, onCallWithDemoNestContext } from '../function.context';
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
 import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
@@ -18,6 +18,8 @@ import { profileDownloadArchive } from '../profile/profile.read';
 import { createOidcClient } from '../oidc/oidcclient.create';
 import { updateOidcClient, rotateOidcClientSecret } from '../oidc/oidcclient.update';
 import { deleteOidcClient } from '../oidc/oidcclient.delete';
+import { queryGuestbooks } from '../guestbook/guestbook.query';
+import { queryGuestbookEntries } from '../guestbook/guestbookentry.query';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -98,12 +100,27 @@ export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
   })
 };
 
+// MARK: Query
+export const demoQueryModelMap: DemoOnCallQueryModelMap = {
+  guestbook: queryGuestbooks,
+  guestbookEntry: queryGuestbookEntries
+};
+
 // MARK: Call
 export const demoCallModelMap: OnCallModelMap = {
   create: onCallCreateModel(demoCreateModelMap),
   read: onCallReadModel(demoReadModelMap),
   update: onCallUpdateModel(demoUpdateModelMap),
-  delete: onCallDeleteModel(demoDeleteModelMap)
+  delete: onCallDeleteModel(demoDeleteModelMap),
+  query: onCallQueryModel(demoQueryModelMap)
 };
 
-export const demoCallModel = onCallWithDemoNestContext(onCallModel(demoCallModelMap));
+/**
+ * The raw onCallModel dispatch function with _apiDetails attached.
+ *
+ * Used by the Model API and MCP controllers to dispatch requests
+ * and introspect the handler metadata tree.
+ */
+export const demoCallModelFn = onCallModel(demoCallModelMap);
+
+export const demoCallModel = onCallWithDemoNestContext(demoCallModelFn);

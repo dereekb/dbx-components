@@ -1,15 +1,17 @@
 import { NgModule } from '@angular/core';
+import { DbxDetachInteractionModule } from './detach/detach.module';
 import { DbxDialogModule } from './dialog/dialog.module';
 import { DbxPromptModule } from './prompt/prompt.module';
 import { DbxPopupInteractionModule } from './popup/popup.module';
 import { DbxPopoverInteractionModule } from './popover/popover.module';
 import { DbxFilterInteractionModule } from './filter/filter.module';
 
-const importsAndExports = [DbxPromptModule, DbxDialogModule, DbxFilterInteractionModule, DbxPopoverInteractionModule, DbxPopupInteractionModule];
+const importsAndExports = [DbxDetachInteractionModule, DbxPromptModule, DbxDialogModule, DbxFilterInteractionModule, DbxPopoverInteractionModule, DbxPopupInteractionModule];
 
 /**
  * @deprecated import individual modules instead.
  *
+ * @see DbxDetachInteractionModule
  * @see DbxDialogModule
  * @see DbxFilterInteractionModule
  * @see DbxPromptModule

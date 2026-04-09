@@ -1,6 +1,6 @@
 import { type CalcomConfig, type CalcomFactoryConfig } from '@dereekb/calcom';
 
-export type CalcomServiceApiConfig = CalcomConfig & {};
+export type CalcomServiceApiConfig = CalcomConfig;
 
 /**
  * Configuration for CalcomService

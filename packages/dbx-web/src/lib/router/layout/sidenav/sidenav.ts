@@ -51,6 +51,10 @@ export type DbxSidenavPosition = 'start' | 'end';
  * resolveSideNavDisplayMode(SideNavDisplayMode.ICON, new Set([SideNavDisplayMode.MOBILE, SideNavDisplayMode.FULL]));
  * // => SideNavDisplayMode.MOBILE
  * ```
+ *
+ * @param mode - The requested display mode to resolve.
+ * @param allowedModes - Set of modes that are permitted; if null/undefined, all modes are allowed.
+ * @returns The resolved display mode, falling back to the nearest lower allowed mode or NONE.
  */
 export function resolveSideNavDisplayMode(mode: SideNavDisplayMode, allowedModes: Maybe<Set<SideNavDisplayMode>>): SideNavDisplayMode {
   let result: SideNavDisplayMode;

@@ -4,7 +4,14 @@ import { type DemoFirebaseServerActionsContext } from '../../firebase/action.con
 import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
 
 // MARK: Test
-export function demoNotificationTestFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
+/**
+ * Creates a notification template config for test notifications with static content.
+ * Used in integration tests to verify the notification pipeline.
+ *
+ * @param _context - server actions context (unused but kept for factory signature consistency)
+ * @returns a notification template service config for the test notification type
+ */
+export function demoNotificationTestFactory(_context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
@@ -27,7 +34,15 @@ export function demoNotificationTestFactory(context: DemoFirebaseServerActionsCo
     }
   };
 }
-export function demoExampleNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
+/**
+ * Creates a notification template config for example notifications.
+ * Supports optional send skipping via the notification data's skipSend flag,
+ * and includes onSendAttempted/onSendSuccess lifecycle hooks.
+ *
+ * @param _context - server actions context (unused but kept for factory signature consistency)
+ * @returns a notification template service config for the example notification type
+ */
+export function demoExampleNotificationFactory(_context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<ExampleNotificationData>) => {
@@ -66,6 +81,13 @@ export function demoExampleNotificationFactory(context: DemoFirebaseServerAction
   };
 }
 
+/**
+ * Creates a notification template config for guestbook entry creation events.
+ * Builds a notification message linking to the newly created guestbook entry.
+ *
+ * @param context - server actions context used to resolve the client URL for action links
+ * @returns a notification template service config for the guestbook entry created type
+ */
 export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
@@ -93,6 +115,13 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
   };
 }
 
+/**
+ * Creates a notification template config for guestbook entry like events.
+ * Builds a notification message linking to the liked guestbook entry.
+ *
+ * @param context - server actions context used to resolve the client URL for action links
+ * @returns a notification template service config for the guestbook entry liked type
+ */
 export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,

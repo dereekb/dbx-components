@@ -1,6 +1,7 @@
 import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DocInteractionHomeComponent } from './container/home.component';
 import { DocInteractionLayoutComponent } from './container/layout.component';
+import { DocInteractionDetachComponent } from './container/detach.component';
 import { DocInteractionDialogComponent } from './container/dialog.component';
 import { DocInteractionPopoverComponent } from './container/popover.component';
 import { DocInteractionPopupComponent } from './container/popup.component';
@@ -23,6 +24,12 @@ export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.interaction.home',
   component: DocInteractionHomeComponent
+};
+
+export const docInteractionDetachState: Ng2StateDeclaration = {
+  url: '/detach',
+  name: 'doc.interaction.detach',
+  component: DocInteractionDetachComponent
 };
 
 export const docInteractionButtonState: Ng2StateDeclaration = {
@@ -89,6 +96,7 @@ export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
   homeState,
+  docInteractionDetachState,
   docInteractionButtonState,
   docInteractionErrorState,
   docInteractionLoadingState,

@@ -147,7 +147,7 @@ export class DbxFormSourceDirective<T = unknown> {
       subscription = dbxFormSourceObservableFromStream(guardedStream$, formSource, mode).subscribe((x) => {
         isSettingValue = true;
         this.form.setValue(x);
-        Promise.resolve().then(() => (isSettingValue = false));
+        void Promise.resolve().then(() => (isSettingValue = false));
       });
     }
 

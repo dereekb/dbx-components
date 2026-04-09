@@ -1,9 +1,9 @@
-import { type ComponentRef, Injector, runInInjectionContext, type ViewContainerRef } from '@angular/core';
+import { type ComponentRef, type Injector, type ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
-import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA, dbxInjectionComponentConfigIsEqual } from './injection';
+import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig, dbxInjectionComponentConfigIsEqual } from './injection';
 import { type Initialized, type Destroyable, type Maybe } from '@dereekb/util';
 import { type MaybeObservableOrValueGetter, SubscriptionObject, filterMaybe, maybeValueFromObservableOrValueGetter, skipAllInitialMaybe } from '@dereekb/rxjs';
-import { mergeStaticProviders } from './injection.util';
+import { createInjectorForInjectionComponentConfig, initInjectionComponent } from './injection.util';
 
 /**
  * Core runtime engine for the dbx-injection system. Manages the lifecycle of dynamically injected
@@ -115,34 +115,15 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
   private _initComponent(config: DbxInjectionComponentConfig<T>, content: ViewContainerRef): void {
     content.clear();
 
-    const { init, injector: inputInjector, providers, ngModuleRef, componentClass, data } = config;
+    const { componentClass, ngModuleRef } = config;
 
     if (!componentClass) {
       throw new Error('DbxInjectionInstance: componentClass was expected in the config but it was unavailable.');
     }
 
-    const parentInjector = inputInjector ?? this._injector;
-    let injector: Injector | undefined = parentInjector;
-
-    if (providers || data) {
-      const dataProvider = {
-        provide: DBX_INJECTION_COMPONENT_DATA,
-        useValue: data
-      };
-
-      injector = Injector.create({
-        parent: parentInjector,
-        providers: mergeStaticProviders(dataProvider, providers)
-      });
-    }
-
+    const injector = createInjectorForInjectionComponentConfig({ config, parentInjector: this._injector });
     const componentRef: ComponentRef<T> = content.createComponent(componentClass, { injector, ngModuleRef });
-    const instance = componentRef.instance;
-
-    if (init) {
-      runInInjectionContext(componentRef.injector, () => init(instance));
-    }
-
+    initInjectionComponent(componentRef, config);
     this.componentRef = componentRef;
   }
 

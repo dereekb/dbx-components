@@ -82,3 +82,4 @@ vitest.config.*.timestamp*
 setup/.tmp
 
 .claude/worktrees
+.agents

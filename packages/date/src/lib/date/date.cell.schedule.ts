@@ -869,6 +869,9 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   /**
    * Converts a minMaxDateRange Date or index to a day index. For Date inputs, extracts the calendar day
    * from the system timezone as an ISO8601 day string to avoid cross-timezone day boundary issues.
+   *
+   * @param input - A Date or numeric day index to convert.
+   * @returns The corresponding zero-based day cell index relative to the schedule start.
    */
   function _minMaxDateRangeDateOrIndexToIndex(input: DateOrDateCellIndex): DateCellIndex {
     let result: DateCellIndex;

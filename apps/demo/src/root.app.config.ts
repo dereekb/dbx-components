@@ -15,7 +15,7 @@ import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
-import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { STATES } from './app/app.router';
 import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
@@ -182,7 +182,8 @@ export const appConfig: ApplicationConfig = {
       config: routerConfigFn
     }),
     // browser
-    provideAnimations(),
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Angular animations provider migration to animate.enter/animate.leave requires broader refactoring
+    provideAnimationsAsync(),
     // ngRx
     provideEffects(),
     provideStore(ROOT_REDUCER, {

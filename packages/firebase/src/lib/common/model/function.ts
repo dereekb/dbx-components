@@ -5,7 +5,7 @@ import { type FirestoreModelKey, type FirestoreModelType, type FirestoreModelTyp
 /**
  * Standard CRUD call types used by the `callModel` Firebase function pattern.
  */
-export type KnownOnCallFunctionType = 'create' | 'read' | 'update' | 'delete';
+export type KnownOnCallFunctionType = 'create' | 'read' | 'update' | 'delete' | 'query';
 
 /**
  * Call type identifier — one of the standard CRUD types or a custom string.
@@ -117,6 +117,11 @@ export const onCallUpdateModelParams = onCallTypedModelParamsFunction('update');
 export const onCallDeleteModelParams = onCallTypedModelParamsFunction('delete');
 
 /**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'query'
+ */
+export const onCallQueryModelParams = onCallTypedModelParamsFunction('query');
+
+/**
  * Key used on the front-end and backend that refers to the call function.
  */
 export const CALL_MODEL_APP_FUNCTION_KEY = 'callModel';
@@ -140,6 +145,85 @@ export type OnCallUpdateModelParams<T = unknown> = OnCallTypedModelParams<T>;
  * OnCallTypedModelParams for Delete calls.
  */
 export type OnCallDeleteModelParams<T = unknown> = OnCallTypedModelParams<T>;
+
+/**
+ * OnCallTypedModelParams for Query calls.
+ */
+export type OnCallQueryModelParams<T extends OnCallQueryModelRequestParams = OnCallQueryModelRequestParams> = OnCallTypedModelParams<T>;
+
+/**
+ * Default maximum items per page for query operations.
+ */
+export const DEFAULT_ON_CALL_QUERY_MODEL_LIMIT = 50;
+
+/**
+ * Absolute maximum items per page for query operations. Prevents unbounded queries.
+ */
+export const MAX_ON_CALL_QUERY_MODEL_LIMIT = 200;
+
+/**
+ * Base request parameters that all query handler input types must include.
+ *
+ * Provides cursor-based pagination fields. Custom query handlers extend this
+ * with additional filter fields specific to their model type.
+ *
+ * @example
+ * ```typescript
+ * interface QueryGuestbooksParams extends OnCallQueryModelRequestParams {
+ *   readonly name?: string;
+ *   readonly published?: boolean;
+ * }
+ * ```
+ */
+export interface OnCallQueryModelRequestParams {
+  /**
+   * Maximum number of items to return per page.
+   *
+   * Clamped server-side to {@link MAX_ON_CALL_QUERY_MODEL_LIMIT}.
+   * Defaults to {@link DEFAULT_ON_CALL_QUERY_MODEL_LIMIT} when omitted.
+   */
+  readonly limit?: number;
+  /**
+   * Firestore model key of the last document from the previous page.
+   *
+   * When provided, the query resumes after the document at this key.
+   * Obtained from {@link OnCallQueryModelResult.cursorDocumentKey}.
+   */
+  readonly cursorDocumentKey?: FirestoreModelKey;
+}
+
+/**
+ * Standard result returned by model query operations.
+ *
+ * Includes the matched documents and cursor information for pagination.
+ *
+ * @typeParam T - The document data type.
+ */
+export interface OnCallQueryModelResult<T = unknown> {
+  /**
+   * The matched documents' data for this page.
+   */
+  readonly results: readonly T[];
+  /**
+   * The keys of the matched documents, in the same order as {@link results}.
+   */
+  readonly keys: readonly FirestoreModelKey[];
+  /**
+   * Total number of results returned in this page.
+   */
+  readonly count: number;
+  /**
+   * Firestore model key of the last document in this page.
+   *
+   * Pass this value as the `cursorDocumentKey` field in the next query request to fetch the next page.
+   * Undefined when there are no more results.
+   */
+  readonly cursorDocumentKey?: FirestoreModelKey;
+  /**
+   * Whether there are more results after this page.
+   */
+  readonly hasMore: boolean;
+}
 
 // MARK: Result
 /**

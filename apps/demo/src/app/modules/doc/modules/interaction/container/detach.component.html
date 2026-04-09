@@ -1,0 +1,11 @@
+<dbx-content-container>
+  <doc-feature-layout header="Detach" hint="A detach component can move its content between an inline position and a floating overlay.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-detach" hint="Content starts inline. Click the detach button to move it to a floating overlay. State is preserved across transitions and page navigation.">
+      <!-- Init the detached component (creates it in the service if not already existing) -->
+      <div [dbxDetachInit]="detachConfig" dbxDetachInitKey="demo-detach"></div>
+      <!-- Outlet renders the component at this location -->
+      <dbx-detach-outlet key="demo-detach" [detachOnDestroy]="true"></dbx-detach-outlet>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

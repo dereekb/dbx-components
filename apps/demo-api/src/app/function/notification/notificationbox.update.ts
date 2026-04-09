@@ -5,7 +5,7 @@ import { type DemoUpdateModelFunction } from '../function.context';
 export const updateNotificationBox: DemoUpdateModelFunction<UpdateNotificationBoxParams> = withApiDetails({
   inputType: updateNotificationBoxParamsType,
   fn: async (request) => {
-    const { nest, auth, data } = request;
+    const { nest, auth: _auth, data } = request;
 
     const updateNotificationBox = await nest.notificationActions.updateNotificationBox(data);
     const notificationBoxDocument = await nest.useModel('notificationBox', {
@@ -22,7 +22,7 @@ export const updateNotificationBox: DemoUpdateModelFunction<UpdateNotificationBo
 export const updateNotificationBoxRecipient: DemoUpdateModelFunction<UpdateNotificationBoxRecipientParams> = withApiDetails({
   inputType: updateNotificationBoxRecipientParamsType,
   fn: async (request) => {
-    const { nest, auth, data } = request;
+    const { nest, auth: _auth, data } = request;
 
     const updateNotificationBoxRecipient = await nest.notificationActions.updateNotificationBoxRecipient(data);
     const notificationBoxDocument = await nest.useModel('notificationBox', {

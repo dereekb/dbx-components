@@ -239,6 +239,8 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
               const time = new Date();
               const docs = snapshot.docs;
 
+              const end = snapshot.empty || (inferEndOfResultsFromPageSize && docs.length < limitCount);
+
               const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
                 value: {
                   time,
@@ -252,7 +254,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
                     return driver.streamDocs(batchQuery, options?.options);
                   }
                 },
-                end: snapshot.empty || (inferEndOfResultsFromPageSize && docs.length < limitCount)
+                end
               };
 
               return result;

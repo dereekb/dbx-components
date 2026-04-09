@@ -1,6 +1,6 @@
 import { type ErrorMessageOrPartialServerError, isServerError, type Maybe, partialServerError, type ServerError, type StringErrorCode, type ThrowErrorFunction } from '@dereekb/util';
 import type * as admin from 'firebase-admin';
-import { DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE, type FirebaseErrorCode } from '@dereekb/firebase';
+import { DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE, type FirebaseErrorCode, UNAUTHENTICATED_ERROR_CODE, FORBIDDEN_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, NOT_FOUND_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, BAD_REQUEST_ERROR_CODE, CONFLICT_ERROR_CODE, ALREADY_EXISTS_ERROR_CODE, UNAVAILABLE_ERROR_CODE, UNAVAILABLE_OR_DEACTIVATED_FUNCTION_ERROR_CODE, INTERNAL_SERVER_ERROR_CODE } from '@dereekb/firebase';
 import { HttpsError } from 'firebase-functions/https';
 
 /**
@@ -29,20 +29,12 @@ export function unauthenticatedContextHasNoUidError() {
 
 // MARK: General Errors
 /**
- * Standard error code constants and factory functions for creating typed {@link HttpsError} instances.
- *
- * Each factory wraps the Firebase `HttpsError` with a consistent shape: an HTTP status code,
- * a string error code, and an optional {@link ServerError} detail object.
- */
-export const UNAUTHENTICATED_ERROR_CODE = 'UNAUTHENTICATED';
-
-/**
  * Creates an unauthenticated (401) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new unauthenticated (401) {@link HttpsError}.
  */
-export function unauthenticatedError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function unauthenticatedError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('unauthenticated', serverError.message ?? 'unauthenticated', {
     status: 401,
@@ -52,15 +44,13 @@ export function unauthenticatedError(messageOrError?: ErrorMessageOrPartialServe
   });
 }
 
-export const FORBIDDEN_ERROR_CODE = 'FORBIDDEN';
-
 /**
  * Creates a forbidden (403) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new forbidden (403) {@link HttpsError}.
  */
-export function forbiddenError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function forbiddenError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('permission-denied', serverError.message ?? 'forbidden', {
     status: 403,
@@ -70,15 +60,13 @@ export function forbiddenError(messageOrError?: ErrorMessageOrPartialServerError
   });
 }
 
-export const PERMISSION_DENIED_ERROR_CODE = 'PERMISSION_DENIED';
-
 /**
  * Creates a permission-denied (403) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new permission-denied (403) {@link HttpsError}.
  */
-export function permissionDeniedError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function permissionDeniedError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('permission-denied', serverError.message ?? 'permission denied', {
     status: 403,
@@ -88,15 +76,13 @@ export function permissionDeniedError(messageOrError?: ErrorMessageOrPartialServ
   });
 }
 
-export const NOT_FOUND_ERROR_CODE = 'NOT_FOUND';
-
 /**
  * Creates a not-found (404) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new not-found (404) {@link HttpsError}.
  */
-export function notFoundError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function notFoundError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('not-found', serverError.message ?? 'not found', {
     status: 404,
@@ -106,15 +92,13 @@ export function notFoundError(messageOrError?: ErrorMessageOrPartialServerError)
   });
 }
 
-export const MODEL_NOT_AVAILABLE_ERROR_CODE = 'MODEL_NOT_AVAILABLE';
-
 /**
  * Creates a model-not-available (404) {@link HttpsError}, used when a Firestore document does not exist.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new model-not-available (404) {@link HttpsError}.
  */
-export function modelNotAvailableError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function modelNotAvailableError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('not-found', serverError.message ?? 'model was not available', {
     status: 404,
@@ -124,15 +108,13 @@ export function modelNotAvailableError(messageOrError?: ErrorMessageOrPartialSer
   });
 }
 
-export const BAD_REQUEST_ERROR_CODE = 'BAD_REQUEST';
-
 /**
  * Creates a bad-request (400) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new bad-request (400) {@link HttpsError}.
  */
-export function badRequestError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function badRequestError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('invalid-argument', serverError.message ?? 'bad request', {
     status: 400,
@@ -142,15 +124,13 @@ export function badRequestError(messageOrError?: ErrorMessageOrPartialServerErro
   });
 }
 
-export const CONFLICT_ERROR_CODE = 'CONFLICT';
-
 /**
  * Creates a precondition-conflict (409) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new precondition-conflict (409) {@link HttpsError}.
  */
-export function preconditionConflictError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function preconditionConflictError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('failed-precondition', serverError.message ?? 'conflict', {
     status: 409,
@@ -160,15 +140,13 @@ export function preconditionConflictError(messageOrError?: ErrorMessageOrPartial
   });
 }
 
-export const ALREADY_EXISTS_ERROR_CODE = 'ALREADY_EXISTS';
-
 /**
  * Creates an already-exists (409) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new already-exists (409) {@link HttpsError}.
  */
-export function alreadyExistsError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function alreadyExistsError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('already-exists', serverError.message ?? 'already exists', {
     status: 409,
@@ -178,15 +156,13 @@ export function alreadyExistsError(messageOrError?: ErrorMessageOrPartialServerE
   });
 }
 
-export const UNAVAILABLE_ERROR_CODE = 'UNAVAILABLE';
-
 /**
  * Creates an unavailable (503) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new unavailable (503) {@link HttpsError}.
  */
-export function unavailableError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function unavailableError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('unavailable', serverError.message ?? 'service unavailable', {
     status: 503,
@@ -196,15 +172,13 @@ export function unavailableError(messageOrError?: ErrorMessageOrPartialServerErr
   });
 }
 
-export const UNAVAILABLE_OR_DEACTIVATED_FUNCTION_ERROR_CODE = 'UNAVAILABLE_OR_DEACTIVATED_FUNCTION';
-
 /**
  * Creates an unimplemented (501) {@link HttpsError} for deactivated or unavailable functions.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new unimplemented (501) {@link HttpsError}.
  */
-export function unavailableOrDeactivatedFunctionError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function unavailableOrDeactivatedFunctionError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('unimplemented', serverError.message ?? 'the requested function is not available or has been deactivated for use', {
     status: 501,
@@ -214,15 +188,13 @@ export function unavailableOrDeactivatedFunctionError(messageOrError?: ErrorMess
   });
 }
 
-export const INTERNAL_SERVER_ERROR_CODE = 'INTERNAL_ERROR';
-
 /**
  * Creates an internal-error (500) {@link HttpsError}.
  *
  * @param messageOrError - Optional error message string or partial server error object.
  * @returns A new internal-error (500) {@link HttpsError}.
  */
-export function internalServerError(messageOrError?: ErrorMessageOrPartialServerError) {
+export function internalServerError(messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
   const serverError = partialServerError(messageOrError);
   return new HttpsError('internal', serverError.message ?? 'internal error', {
     status: 500,

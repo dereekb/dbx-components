@@ -1,7 +1,7 @@
 import { type ZohoSignConfig, type ZohoSignFactoryConfig } from '@dereekb/zoho';
 import { assertValidZohoConfig } from '../zoho.config';
 
-export type ZohoSignServiceApiConfig = ZohoSignConfig & {};
+export type ZohoSignServiceApiConfig = ZohoSignConfig;
 
 /**
  * Configuration for ZohoSignService

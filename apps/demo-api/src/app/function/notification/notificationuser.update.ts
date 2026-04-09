@@ -5,7 +5,7 @@ import { type DemoUpdateModelFunction } from '../function.context';
 export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationUserParams> = withApiDetails({
   inputType: updateNotificationUserParamsType,
   fn: async (request) => {
-    const { nest, auth, data } = request;
+    const { nest, auth: _auth, data } = request;
 
     const updateNotificationUser = await nest.notificationActions.updateNotificationUser(data);
     const notificationUserDocument = await nest.useModel('notificationUser', {
@@ -22,7 +22,7 @@ export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationU
 export const resyncNotificationUser: DemoUpdateModelFunction<ResyncNotificationUserParams, ResyncNotificationUserResult> = withApiDetails({
   inputType: resyncNotificationUserParamsType,
   fn: async (request) => {
-    const { nest, auth, data } = request;
+    const { nest, auth: _auth, data } = request;
 
     const resyncNotificationUser = await nest.notificationActions.resyncNotificationUser(data);
     const notificationUserDocument = await nest.useModel('notificationUser', {

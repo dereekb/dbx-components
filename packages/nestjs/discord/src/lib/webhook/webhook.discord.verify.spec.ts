@@ -1,4 +1,4 @@
-import { generateKeyPairSync, sign } from 'crypto';
+import { generateKeyPairSync, sign } from 'node:crypto';
 import { discordWebhookEventVerifier } from './webhook.discord.verify';
 import { type Request } from 'express';
 

@@ -1,6 +1,6 @@
 import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { ChangeDetectorRef, Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnDestroy, type OnInit, inject, ChangeDetectionStrategy, viewChild, computed, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
@@ -27,7 +27,6 @@ import {
 import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
-import { tapDetectChanges } from '@dereekb/dbx-core';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
@@ -80,9 +79,9 @@ import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereek
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
-  readonly cdRef = inject(ChangeDetectorRef);
 
-  drawerIsOpen = false;
+  readonly mapboxLayoutChild = viewChild(DbxMapboxLayoutComponent);
+  readonly drawerIsOpenSignal = computed(() => this.mapboxLayoutChild()?.isOpenAndHasContentSignal() ?? false);
 
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
   readonly side$ = this._side.asObservable();
@@ -100,7 +99,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly showMarkers$ = this._showMarkers.asObservable();
   readonly showMarkersSignal = toSignal(this.showMarkers$, { initialValue: true });
 
-  menuValue?: Maybe<number> = undefined;
+  readonly menuValueSignal = signal<Maybe<number>>(undefined);
 
   readonly mapService$ = this.dbxMapboxMapStore.mapService$;
   readonly mapServiceSignal = toSignal(this.mapService$, { initialValue: undefined });
@@ -145,7 +144,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly boundSizingRatio$ = combineLatest([this.boundSizing$, this.mapCanvasSize$]).pipe(
     map(([point, vector]) => ({ x: point.lng / vector.x, y: point.lat / vector.y })),
-    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
   readonly boundSizingRatioSignal = toSignal(this.boundSizingRatio$, { initialValue: undefined });
@@ -153,7 +151,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly viewportBoundFunction$ = this.dbxMapboxMapStore.viewportBoundFunction$;
   readonly viewportBoundFunctionCalc$ = combineLatest([this.center$, this.zoom$, this.viewportBoundFunction$]).pipe(
     map(([c, z, fn]) => fn({ center: c, zoom: z })),
-    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
   readonly viewportBoundFunctionCalcSignal = toSignal(this.viewportBoundFunctionCalc$, { initialValue: undefined });
@@ -340,10 +337,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     this._showMarkers.complete();
   }
 
-  onOpenedChange(toggle: boolean) {
-    this.drawerIsOpen = toggle;
-  }
-
   addDrawerContent() {
     this._setDrawerContentToExample();
   }
@@ -454,6 +447,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   clickMenuItem(value: number) {
-    this.menuValue = value;
+    this.menuValueSignal.set(value);
   }
 }

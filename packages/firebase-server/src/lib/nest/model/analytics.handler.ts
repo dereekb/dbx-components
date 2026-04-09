@@ -75,6 +75,8 @@ export const ON_CALL_MODEL_ANALYTICS_SERVICE = 'ON_CALL_MODEL_ANALYTICS_SERVICE'
  *
  * Used as the default fallback by {@link OnCallModelAnalyticsResolver} when no analytics
  * service is registered.
+ *
+ * @returns An {@link OnCallModelAnalyticsService} that discards all analytics events.
  */
 export function noopOnCallModelAnalyticsService(): OnCallModelAnalyticsService {
   return { handleOnCallAnalyticsEvent: () => undefined };

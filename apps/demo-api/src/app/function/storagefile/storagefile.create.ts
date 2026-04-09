@@ -5,7 +5,7 @@ import { type CreateStorageFileParams, type InitializeAllStorageFilesFromUploads
 export const storageFileCreate: DemoCreateModelFunction<CreateStorageFileParams> = async (request) => {
   const { nest, data } = request;
 
-  await assertIsAdminInRequest(request);
+  assertIsAdminInRequest(request);
 
   const createStorageFile = await nest.storageFileServerActions.createStorageFile(data);
   const result = await createStorageFile();
@@ -28,7 +28,7 @@ export const storageFileInitializeFromUpload: DemoCreateModelFunction<Initialize
 export const storageFileInitializeAllFromUploads: DemoCreateModelFunction<InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult> = async (request) => {
   const { nest, data } = request;
 
-  await assertIsAdminInRequest(request);
+  assertIsAdminInRequest(request);
 
   const initializeAllStorageFilesFromUploads = await nest.storageFileServerActions.initializeAllStorageFilesFromUploads(data);
   return initializeAllStorageFilesFromUploads();

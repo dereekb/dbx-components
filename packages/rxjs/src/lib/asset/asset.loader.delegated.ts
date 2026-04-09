@@ -35,6 +35,7 @@ export interface DelegatedAssetLoaderConfig {
  * ```
  *
  * @param config - Specifies the local and remote delegate loaders.
+ * @returns An {@link AssetLoader} that routes requests to the appropriate delegate based on source type.
  */
 export function delegatedAssetLoader(config: DelegatedAssetLoaderConfig): AssetLoader {
   const { local, remote } = config;

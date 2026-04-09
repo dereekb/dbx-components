@@ -26,8 +26,9 @@ export class DbxMapboxMapStoreInjectionBlockDirective {}
 export function provideMapboxStoreIfParentIsUnavailable(): Provider {
   return {
     provide: DbxMapboxMapStore,
-    useFactory: (parentInjector: Injector, dbxMapboxMapStoreInjectionBlock?: DbxMapboxMapStoreProviderBlock, dbxMapboxMapStore?: DbxMapboxMapStore) => {
+    useFactory: (dbxMapboxMapStoreInjectionBlock?: DbxMapboxMapStoreProviderBlock, dbxMapboxMapStore?: DbxMapboxMapStore) => {
       if (!dbxMapboxMapStore || (dbxMapboxMapStore && dbxMapboxMapStoreInjectionBlock?.dbxMapboxMapStore === dbxMapboxMapStore)) {
+        const parentInjector = inject(Injector);
         // create a new dbxMapboxMapStore to use
         const injector = Injector.create({ providers: [{ provide: DbxMapboxMapStore }], parent: parentInjector });
         dbxMapboxMapStore = injector.get(DbxMapboxMapStore);
@@ -35,6 +36,9 @@ export function provideMapboxStoreIfParentIsUnavailable(): Provider {
 
       return dbxMapboxMapStore;
     },
-    deps: [Injector, [new Optional(), DbxMapboxMapStoreProviderBlock], [new Optional(), new SkipSelf(), DbxMapboxMapStore]]
+    deps: [
+      [new Optional(), DbxMapboxMapStoreProviderBlock],
+      [new Optional(), new SkipSelf(), DbxMapboxMapStore]
+    ]
   };
 }

@@ -12,13 +12,13 @@ import { ModuleRef } from '@nestjs/core';
 
 // MARK: Function
 /**
- * Maps CRUD call type strings (e.g., 'create', 'read', 'update', 'delete') to their
+ * Maps call type strings (e.g., 'create', 'read', 'update', 'delete', 'query') to their
  * corresponding handler functions.
  *
- * Used by {@link onCallModel} to dispatch incoming requests to the correct CRUD handler.
+ * Used by {@link onCallModel} to dispatch incoming requests to the correct handler.
  */
 export type OnCallModelMap = {
-  readonly [call: OnCallFunctionType]: OnCallWithNestContext<any, OnCallTypedModelParams>;
+  readonly [call: OnCallFunctionType]: OnCallWithNestContext<any, OnCallTypedModelParams<any>>;
 };
 
 /**
@@ -60,7 +60,8 @@ export interface OnCallModelConfig {
  *   create: onCallCreateModel({ profile: createProfile, guestbook: createGuestbook }),
  *   read: onCallReadModel({ profile: readProfile }),
  *   update: onCallUpdateModel({ profile: updateProfile }),
- *   delete: onCallDeleteModel({ guestbook: deleteGuestbook })
+ *   delete: onCallDeleteModel({ guestbook: deleteGuestbook }),
+ *   query: onCallQueryModel({ profile: queryProfiles })
  * });
  * ```
  */
@@ -193,7 +194,9 @@ export interface OnCallWithCallTypeModelConfig<N> {
    */
   readonly callType: string;
   /**
-   * The CRUD category used by {@link AssertModelCrudRequestFunction}.
+   * The operation category used by {@link AssertModelCrudRequestFunction}.
+   *
+   * One of: 'call', 'create', 'read', 'update', 'delete', 'query'.
    */
   readonly crudType: AssertModelCrudRequestFunctionContextCrudType;
   /**

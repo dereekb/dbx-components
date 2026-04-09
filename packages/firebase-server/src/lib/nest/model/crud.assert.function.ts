@@ -8,7 +8,7 @@ import { type OnCallFunctionType, type FirestoreModelType } from '@dereekb/fireb
  * Used by {@link AssertModelCrudRequestFunction} to let assertions branch on operation type,
  * enabling cross-cutting rules like "block all deletes for archived models."
  */
-export type AssertModelCrudRequestFunctionContextCrudType = 'call' | 'create' | 'read' | 'update' | 'delete';
+export type AssertModelCrudRequestFunctionContextCrudType = 'call' | 'create' | 'read' | 'update' | 'delete' | 'query';
 
 /**
  * Context passed to a {@link AssertModelCrudRequestFunction} before a CRUD handler executes.

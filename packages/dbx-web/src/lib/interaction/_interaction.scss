@@ -1,3 +1,4 @@
+@use './detach/detach';
 @use './dialog/dialog';
 @use './filter/filter';
 @use './iframe/iframe';
@@ -8,6 +9,7 @@
 @use './upload/upload';
 
 @mixin all-interaction-core() {
+  @include detach.core();
   @include dialog.core();
   @include filter.core();
   @include iframe.core();
@@ -22,6 +24,7 @@
 }
 
 @mixin all-interaction-theme($theme-config) {
+  @include detach.theme($theme-config);
   @include dialog.theme($theme-config);
   @include filter.theme($theme-config);
   @include iframe.theme($theme-config);

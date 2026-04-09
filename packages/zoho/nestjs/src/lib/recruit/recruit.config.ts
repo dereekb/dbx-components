@@ -4,7 +4,7 @@ import { assertValidZohoConfig } from '../zoho.config';
 /**
  * API configuration for connecting to the Zoho Recruit service endpoint.
  */
-export type ZohoRecruitServiceApiConfig = ZohoRecruitConfig & {};
+export type ZohoRecruitServiceApiConfig = ZohoRecruitConfig;
 
 /**
  * Abstract configuration class for the NestJS Zoho Recruit service.

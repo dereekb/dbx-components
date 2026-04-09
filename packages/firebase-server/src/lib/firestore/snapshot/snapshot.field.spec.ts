@@ -1,6 +1,6 @@
 import { modelFieldMapFunctions } from '@dereekb/util';
 import { shouldFail, expectFail } from '@dereekb/util/test';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { firestoreEncryptedField, optionalFirestoreEncryptedField } from './snapshot.field.encrypt';
 
 // generate a random 32-byte hex key for tests

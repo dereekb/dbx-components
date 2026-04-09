@@ -10,7 +10,7 @@ export class DemoApiFirebaseServerAuthUserContext extends AbstractFirebaseServer
 export class DemoApiFirebaseServerAuthContext extends AbstractFirebaseServerAuthContext<DemoApiFirebaseServerAuthContext, DemoApiFirebaseServerAuthUserContext, DemoApiAuthService> {}
 
 export class DemoApiFirebaseServerNewUserService extends AbstractMailgunContentFirebaseServerNewUserService<DemoApiFirebaseServerAuthUserContext> {
-  protected async buildNewUserMailgunContentRequest(user: FirebaseServerAuthNewUserSetupDetails<DemoApiFirebaseServerAuthUserContext>): Promise<NewUserMailgunContentRequest> {
+  protected async buildNewUserMailgunContentRequest(_user: FirebaseServerAuthNewUserSetupDetails<DemoApiFirebaseServerAuthUserContext>): Promise<NewUserMailgunContentRequest> {
     const request: NewUserMailgunContentRequest = {
       subject: 'Invite to dbx-components Demo',
       template: 'invite'

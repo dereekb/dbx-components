@@ -21,7 +21,7 @@ demoApiFunctionContextFactory((f) => {
 
                 function initNotificationTask(loadParams?: () => Partial<CreateNotificationTemplate>) {
                   beforeEach(async () => {
-                    const partialParams = await loadParams?.();
+                    const partialParams = loadParams?.();
 
                     const baseTemplate = exampleNotificationTaskTemplate({
                       profileDocument: p.document

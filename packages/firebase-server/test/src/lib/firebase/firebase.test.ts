@@ -1,6 +1,6 @@
 import { type ClassLikeType, type ServerError } from '@dereekb/util';
 import { type ExpectFailAssertionFunction, ExpectedErrorOfSpecificTypeError } from '@dereekb/util/test';
-import { HttpsError } from 'firebase-functions/v1/https';
+import { HttpsError } from 'firebase-functions/https';
 import { BaseError } from 'make-error';
 
 /**

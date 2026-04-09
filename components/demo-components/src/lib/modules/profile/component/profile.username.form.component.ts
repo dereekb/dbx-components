@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormTextAvailableFieldModule , DbxFormlyComponent } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormTextAvailableFieldModule, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { DemoProfileService } from '../profile.service';
 import { profileUsernameFields } from './profile.form';
@@ -22,7 +22,7 @@ export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDire
   readonly profileService = inject(DemoProfileService);
 
   readonly fields: FormlyFieldConfig[] = profileUsernameFields({
-    checkUsernameIsAvailable: (username) => {
+    checkUsernameIsAvailable: (_username) => {
       // not allowed to check this way, no permissions for users to list available usernames
       return of(true); // this.profileService.isUsernameAvailable(username);
     }

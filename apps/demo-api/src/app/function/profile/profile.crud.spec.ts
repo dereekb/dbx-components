@@ -8,6 +8,7 @@ demoApiFunctionContextFactory((f) => {
       demoAuthorizedUserAdminContext({ f }, (u) => {
         demoProfileContext({ f, u }, (p) => {
           // TODO: Test the profile test notifications
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           it('todo', () => {});
         });
       });

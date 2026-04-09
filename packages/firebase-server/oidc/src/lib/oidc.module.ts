@@ -8,7 +8,7 @@ import { oidcEntryFirestoreCollection, type FirestoreContext } from '@dereekb/fi
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { hasHttpPrefix } from '@dereekb/util';
-import { ConfigureOidcAuthMiddlewareModule, OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
+import { OidcAuthMiddlewareConfig } from './middleware/oauth-auth.module';
 import { OidcEncryptionService } from './service/oidc.encryption.service';
 import { OidcClientService } from './service/oidc.client.service';
 import { OidcProviderConfigService } from './service/oidc.config.service';
@@ -178,9 +178,9 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
   const dependencyModuleImport = [dependencyModule];
 
   return {
-    imports: [ConfigModule, FirebaseServerFirestoreContextModule, ConfigureOidcAuthMiddlewareModule, ...dependencyModuleImport, ...(imports ?? [])],
+    imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
     controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
-    exports: [OidcClientService, OidcModuleConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
+    exports: [OidcClientService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
     providers: [
       {
         provide: OidcModuleConfig,
