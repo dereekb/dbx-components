@@ -1,3 +1,26 @@
+# [13.7.0](https://github.com/dereekb/dbx-components/compare/v13.6.17-dev...v13.7.0) (2026-04-09)
+
+
+### Bug Fixes
+
+- prevented duplicate item accumulation on page re-emission ([5c41aee4](https://github.com/dereekb/dbx-components/commit/5c41aee4ccab715342e6b29566207acca53937de))
+
+
+### Build System
+
+- lint fix ([366d95f4](https://github.com/dereekb/dbx-components/commit/366d95f48e9fb0c0fe802415b315851d672b53fa))
+
+
+### Code Refactoring
+
+- misc fixes ([ee820bd5](https://github.com/dereekb/dbx-components/commit/ee820bd5e03e09fa5d7033e3e762e729963e5556))
+
+
+### Features
+
+- added dbx-detach interaction type ([39024659](https://github.com/dereekb/dbx-components/commit/390246598dbffb7cc90a754bc8f59bdaa2a389d0))
+- callModel api ([#42](https://github.com/dereekb/dbx-components/issues/42)) ([a0a05fd5](https://github.com/dereekb/dbx-components/commit/a0a05fd549d927548dd7569067828dbe62d90ae8)), closes [#42](https://github.com/dereekb/dbx-components/issues/42)
+
 ## [13.6.17](https://github.com/dereekb/dbx-components/compare/v13.6.16-dev...v13.6.17) (2026-04-08)
 
 
