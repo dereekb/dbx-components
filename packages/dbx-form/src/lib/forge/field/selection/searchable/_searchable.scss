@@ -37,6 +37,34 @@
       }
     }
   }
+
+  .dbx-searchable-text-field-value {
+    width: 100%;
+  }
+
+  // Hide search input when a value is selected and the field is not focused.
+  // Uses the same CSS class names as the formly searchable text field.
+  .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value {
+    cursor: pointer;
+
+    .dbx-searchable-text-field-value {
+      margin-bottom: -6px;
+    }
+
+    .dbx-searchable-text-field-input {
+      margin-top: 0;
+      height: 0;
+      opacity: 0;
+    }
+  }
+
+  // Reveal the search input when the ancestor form-field wrapper has focus.
+  // The forge wrapper uses :focus-within instead of the .mat-focused class.
+  .dbx-forge-form-field-wrapper:focus-within .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value .dbx-searchable-text-field-input {
+    margin-top: 8px;
+    opacity: unset;
+    height: unset;
+  }
 }
 
 @mixin theme($theme-config) {

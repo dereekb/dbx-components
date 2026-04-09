@@ -1,13 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatOptionModule } from '@angular/material/core';
-import { MatDivider } from '@angular/material/divider';
 import { type Maybe, type PrimativeKey } from '@dereekb/util';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
-import { SubscriptionObject, type LoadingState } from '@dereekb/rxjs';
-import { DbxLoadingModule } from '@dereekb/dbx-web';
+import { SubscriptionObject } from '@dereekb/rxjs';
 import { BehaviorSubject, map, shareReplay, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
@@ -24,17 +22,19 @@ import { AbstractForgeSearchableFieldDirective, type ForgeSearchableTextFieldPro
 @Component({
   selector: 'dbx-forge-searchable-text-field',
   templateUrl: './searchable-text.field.component.html',
-  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, MatDivider, DbxLoadingModule, DbxSearchableFieldAutocompleteItemComponent, DbxInjectionComponent],
+  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, ForgeSearchableTextFieldProps<T, M, H>> {
   readonly field = input.required<FieldTree<T>>();
+  readonly textInputRef = viewChild<ElementRef<HTMLInputElement>>('textInput');
 
   private readonly _singleValueSyncSub = new SubscriptionObject();
   private readonly _valuesSubject = new BehaviorSubject<T[]>([]);
 
   readonly showClearValueSignal = computed(() => this.props()?.showClearValue ?? true);
+  readonly searchLabelSignal = computed(() => this.props()?.searchLabel ?? 'Search');
 
   readonly fieldValueSignal = computed(() => {
     const fieldGetter = this.field();
@@ -80,13 +80,24 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
     this._valuesSubject.complete();
   }
 
+  focusInput(): void {
+    this.textInputRef()?.nativeElement?.focus();
+  }
+
   selected(event: MatAutocompleteSelectedEvent): void {
     const value = event.option.value as SearchableValueFieldDisplayValue<T> | { _ignore?: true } | { _clear?: true };
 
     if ((value as any)._clear) {
       this._setFieldValue(undefined);
+      this.inputCtrl.setValue('', { emitEvent: false });
     } else if (!(value as any)._ignore) {
-      this._setFieldValue((value as SearchableValueFieldDisplayValue<T>).value);
+      const displayValue = value as SearchableValueFieldDisplayValue<T>;
+      this._setFieldValue(displayValue.value);
+      // Reset input to the display label immediately. When re-selecting the same
+      // value the FieldTree signal does not change, so _singleValueSyncSub never
+      // re-fires and the input would otherwise keep whatever mat-autocomplete
+      // wrote (the object's toString → "[object Object]").
+      this.inputCtrl.setValue(displayValue.label ?? '', { emitEvent: false });
     }
   }
 

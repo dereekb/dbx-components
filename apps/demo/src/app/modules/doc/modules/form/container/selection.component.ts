@@ -944,6 +944,78 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
 
   readonly _refreshDisplayValues = new Subject();
 
+  // MARK: Forge Searchable Text with Anchors
+  readonly forgeSearchableTextFieldWithAnchorsConfig: FormConfig = {
+    fields: [
+      forgeSearchableTextField({
+        key: 'anchor1',
+        label: 'Anchor Segue',
+        description: 'Anchors are enabled and set on the field. Result is configured to not show.',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        search: (_search: string) => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE,
+        showSelectedValue: false,
+        useAnchor: true,
+        anchorForValue: (fieldValue) => {
+          return {
+            onClick: () => {
+              this.valueClicked = `Default anchor click: ${fieldValue.value}`;
+              safeDetectChanges(this.cdRef);
+            }
+          };
+        }
+      }) as any,
+      forgeSearchableTextField({
+        key: 'anchor2',
+        label: 'Anchor Segue',
+        description: 'Anchors are set on each item. Result is configured to not show.',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        showSelectedValue: false,
+        search: (_search: string) =>
+          of(
+            [{ value: 'a' }, { value: 'b' }, { value: 'c' }].map((x) => ({
+              ...x,
+              anchor: {
+                onClick: () => {
+                  this.valueClicked = `Per item value: ${x.value}`;
+                  safeDetectChanges(this.cdRef);
+                }
+              }
+            }))
+          ),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableTextField({
+        key: 'anchor3',
+        label: 'Anchor Segue For Metadata Items',
+        description: `Metadata items are passed in. Note that the simple displayForValue function we used doesn't search remotely and just fills in default data if meta is missing.`,
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        showSelectedValue: false,
+        search: (search: string) =>
+          of(this.exampleMetadataValues).pipe(
+            map((s) => {
+              const filteredSchools = EMBEDDED_SCHOOLS_FILTER_FUNCTION(search, s);
+              const result: SearchableValueFieldValue<string, ExampleSearchableMetadata>[] = filteredSchools.map((meta) => ({ meta, value: meta.key }));
+              return result;
+            })
+          ),
+        displayForValue: DISPLAY_FOR_EXAMPLE_METADATA_VALUE,
+        anchorForValue: (fieldValue) => {
+          return {
+            onClick: () => {
+              this.valueClicked = `Meta item click: ${fieldValue.value}`;
+              safeDetectChanges(this.cdRef);
+            }
+          };
+        },
+        refreshDisplayValues$: this._refreshDisplayValues
+      }) as any
+    ]
+  };
+
   readonly searchableTextFieldsWithAnchors: FormlyFieldConfig[] = [
     searchableTextField({
       key: 'anchor1',

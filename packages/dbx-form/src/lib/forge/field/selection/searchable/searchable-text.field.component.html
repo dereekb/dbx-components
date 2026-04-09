@@ -1,22 +1,18 @@
-<div class="dbx-searchable-field dbx-searchable-text-field">
-  @if (labelSignal()) {
-    <span class="dbx-label">{{ labelSignal() }}</span>
-  }
-  <div class="dbx-searchable-text-field-input">
-    <input #textInput [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
-    <mat-divider></mat-divider>
-  </div>
+<div class="dbx-searchable-text-field" (click)="focusInput()" [class.dbx-searchable-text-field-has-value]="hasValueSignal()" [class.dbx-searchable-text-field-show-value]="showSelectedDisplayValueSignal()">
   @if (showSelectedDisplayValueSignal()) {
     @let sv = selectedDisplayValueSignal();
     @if (sv) {
-      <div class="dbx-searchable-text-selected-value">
+      <div class="dbx-searchable-text-field-value">
         <dbx-searchable-field-autocomplete-item [displayValue]="sv"></dbx-searchable-field-autocomplete-item>
       </div>
     }
   }
-  @if (hintSignal()) {
-    <div class="dbx-form-description">{{ hintSignal() }}</div>
-  }
+  <div class="dbx-searchable-text-field-input">
+    @if (searchLabelSignal()) {
+      <div class="dbx-label">{{ searchLabelSignal() }}</div>
+    }
+    <input #textInput [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" />
+  </div>
 </div>
 <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
   @if (showClearValueSignal() && hasValueSignal()) {

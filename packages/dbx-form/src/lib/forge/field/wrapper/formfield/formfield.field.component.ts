@@ -118,6 +118,8 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
       .dbx-forge-form-field-content {
         position: relative;
         padding: var(--mat-form-field-container-vertical-padding, 16px) 16px 8px;
+        min-height: 56px;
+        box-sizing: border-box;
       }
 
       /* --- Subscript area --- */
