@@ -138,9 +138,9 @@ describe('forgeWrappedPhoneAndLabelField()', () => {
 
 // MARK: forgePhoneAndLabelSectionField
 describe('forgePhoneAndLabelSectionField()', () => {
-  it('should create a group field', () => {
+  it('should create a section wrapper field', () => {
     const field = forgePhoneAndLabelSectionField();
-    expect(field.type).toBe('group');
+    expect(field.type).toBe('dbx-forge-section');
   });
 
   it('should default key to _section_ prefix when not specified', () => {
@@ -155,21 +155,21 @@ describe('forgePhoneAndLabelSectionField()', () => {
 
   it('should contain one child field which is a row', () => {
     const field = forgePhoneAndLabelSectionField();
-    const fields = (field as unknown as { fields: Array<{ type: string }> }).fields;
+    const fields = (field as unknown as { props: { fields: Array<{ type: string }> } }).props.fields;
     expect(fields).toHaveLength(1);
     expect(fields[0].type).toBe('row');
   });
 
   it('should propagate phoneField config to the inner row', () => {
     const field = forgePhoneAndLabelSectionField({ phoneField: { required: true } });
-    const innerRow = (field as unknown as { fields: Array<{ fields: Array<{ key: string; required?: boolean }> }> }).fields[0];
+    const innerRow = (field as unknown as { props: { fields: Array<{ fields: Array<{ key: string; required?: boolean }> }> } }).props.fields[0];
     expect(innerRow.fields[0].key).toBe('phone');
     expect(innerRow.fields[0].required).toBe(true);
   });
 
   it('should propagate labelField config to the inner row', () => {
     const field = forgePhoneAndLabelSectionField({ labelField: { key: 'type', label: 'Type' } });
-    const innerRow = (field as unknown as { fields: Array<{ fields: Array<{ key: string; label?: string }> }> }).fields[0];
+    const innerRow = (field as unknown as { props: { fields: Array<{ fields: Array<{ key: string; label?: string }> }> } }).props.fields[0];
     expect(innerRow.fields[1].key).toBe('type');
     expect(innerRow.fields[1].label).toBe('Type');
   });

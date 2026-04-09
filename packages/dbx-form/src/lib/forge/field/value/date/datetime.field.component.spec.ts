@@ -69,7 +69,6 @@ async function settle(fixture: ComponentFixture<TestForgeDateTimeHostComponent>,
   fixture.detectChanges();
   await delay(ms);
   fixture.detectChanges();
-  await fixture.whenStable();
   // Allow any trailing microtasks from signal effects to flush
   await delay(50);
   fixture.detectChanges();

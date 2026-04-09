@@ -14,19 +14,7 @@ import type { ForgeExpandFieldProps } from './expand.field';
  */
 @Component({
   selector: 'dbx-forge-expand-field',
-  template: `
-    @if (buttonTypeSignal() === 'button') {
-      <button mat-stroked-button type="button" class="dbx-forge-expand-button" (click)="toggle()" [attr.aria-expanded]="isOpenSignal()">
-        <mat-icon>{{ iconSignal() }}</mat-icon>
-        {{ labelSignal() }}
-      </button>
-    } @else {
-      <span class="dbx-forge-expand-text" role="button" tabindex="0" (click)="toggle()" (keydown.enter)="toggle()" (keydown.space)="toggle()" [attr.aria-expanded]="isOpenSignal()">
-        <mat-icon class="dbx-forge-expand-text-icon">{{ iconSignal() }}</mat-icon>
-        {{ labelSignal() }}
-      </span>
-    }
-  `,
+  templateUrl: './expand.field.component.html',
   styles: `
     :host {
       display: block;

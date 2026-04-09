@@ -56,20 +56,7 @@ export interface ForgeListSelectionFieldDef<T = unknown, C extends AbstractDbxSe
  */
 @Component({
   selector: 'dbx-forge-list-selection-field',
-  template: `
-    <div class="dbx-list-item-field" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()">
-      @if (labelSignal()) {
-        <span class="dbx-label dbx-label-padded">{{ labelSignal() }}</span>
-      }
-      <div class="dbx-list-item-field-content">
-        <dbx-injection [config]="configSignal()"></dbx-injection>
-      </div>
-      <mat-divider></mat-divider>
-      @if (hintSignal()) {
-        <div class="dbx-form-description">{{ hintSignal() }}</div>
-      }
-    </div>
-  `,
+  templateUrl: './list.field.component.html',
   imports: [DbxListModifierModule, DbxInjectionComponent, MatDividerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true

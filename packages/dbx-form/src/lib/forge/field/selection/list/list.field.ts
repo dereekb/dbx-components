@@ -28,16 +28,27 @@ export interface ForgeListSelectionFieldConfig<T = unknown, C extends AbstractDb
   readonly required?: boolean;
   readonly readonly?: boolean;
   readonly description?: string;
+  /**
+   * Whether to wrap this field in the Material-style outlined form-field wrapper.
+   *
+   * When `true`, the field is wrapped in `forgeFormFieldWrapper()` which provides a notched
+   * outline with floating label and hint/error subscript. When `false`, the field renders
+   * with its own built-in label and description.
+   *
+   * Defaults to `true`.
+   */
+  readonly wrapInFormField?: boolean;
 }
 
 /**
  * Creates a forge field definition for a list selection field.
  *
  * @param config - List selection field configuration
- * @returns A validated {@link ForgeListSelectionFieldDef}
+ * @returns A {@link ForgeFormFieldWrapperFieldDef} when wrapped (default), or a raw {@link ForgeListSelectionFieldDef} when `wrapInFormField` is `false`
  *
  * @example
  * ```typescript
+ * // With form-field wrapper (default)
  * const field = forgeListSelectionField({
  *   key: 'selectedItems',
  *   label: 'Items',
@@ -45,24 +56,40 @@ export interface ForgeListSelectionFieldConfig<T = unknown, C extends AbstractDb
  *   readKey: (item) => item.id,
  *   state$: items$
  * });
+ *
+ * // Without form-field wrapper
+ * const unwrapped = forgeListSelectionField({
+ *   key: 'selectedItems',
+ *   label: 'Items',
+ *   wrapInFormField: false,
+ *   listComponentClass: of(MyListComponent),
+ *   readKey: (item) => item.id,
+ *   state$: items$
+ * });
  * ```
  */
-export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: ForgeListSelectionFieldConfig<T, C, K>): ForgeFormFieldWrapperFieldDef<ForgeListSelectionFieldDef<T, C, K>> {
-  const { key, label, required, readonly: isReadonly, description, ...listProps } = config;
+export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: ForgeListSelectionFieldConfig<T, C, K>): ForgeFormFieldWrapperFieldDef<ForgeListSelectionFieldDef<T, C, K>> | ForgeListSelectionFieldDef<T, C, K> {
+  const { key, label, required, readonly: isReadonly, description, wrapInFormField = true, ...listProps } = config;
+  const useWrapper = wrapInFormField !== false;
 
   const innerField = forgeField(
     filterFromPOJO({
       key,
       type: 'dbx-list-selection' as const,
-      label: '',
+      label: useWrapper ? '' : (label ?? ''),
       value: undefined as unknown as K[],
       required,
       readonly: isReadonly,
       props: filterFromPOJO({
-        ...listProps
+        ...listProps,
+        hint: useWrapper ? listProps.hint : (description ?? listProps.hint)
       }) as ForgeListSelectionFieldProps<T, C, K>
     }) as ForgeListSelectionFieldDef<T, C, K>
   );
+
+  if (!useWrapper) {
+    return innerField;
+  }
 
   return forgeFormFieldWrapper<ForgeListSelectionFieldDef<T, C, K>>({
     label: label ?? '',

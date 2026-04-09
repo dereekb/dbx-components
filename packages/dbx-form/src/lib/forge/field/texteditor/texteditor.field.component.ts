@@ -47,22 +47,7 @@ export interface ForgeTextEditorFieldDef extends BaseValueField<ForgeTextEditorF
  */
 @Component({
   selector: 'dbx-forge-texteditor-field',
-  template: `
-    <div class="dbx-texteditor-field" [ngClass]="compactClassSignal()">
-      @if (labelSignal()) {
-        <span class="dbx-label">{{ labelSignal() }}</span>
-      }
-      <div class="dbx-texteditor-field-input">
-        <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholderSignal()" [formControl]="editorFormControl"></ngx-editor>
-      </div>
-      <div class="dbx-texteditor-field-menu">
-        <ngx-editor-menu [editor]="editor"></ngx-editor-menu>
-      </div>
-      @if (descriptionSignal()) {
-        <div class="dbx-form-description">{{ descriptionSignal() }}</div>
-      }
-    </div>
-  `,
+  templateUrl: './texteditor.field.component.html',
   imports: [NgClass, NgxEditorModule, FormsModule, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true

@@ -15,18 +15,7 @@ import type { ForgeInfoWrapperFieldProps } from './info.wrapper.field';
  */
 @Component({
   selector: 'dbx-forge-info-wrapper-field',
-  template: `
-    <div class="dbx-form-info-wrapper dbx-flex-bar">
-      <div class="dbx-form-info-wrapper-content dbx-flex-grow">
-        <dbx-forge-wrapper-content />
-      </div>
-      <div class="dbx-form-info-wrapper-info dbx-flex-noshrink dbx-flex-column dbx-flex-center">
-        <button mat-icon-button type="button" (click)="onClick()" [attr.aria-label]="ariaLabelSignal()">
-          <mat-icon>info</mat-icon>
-        </button>
-      </div>
-    </div>
-  `,
+  templateUrl: './info.wrapper.field.component.html',
   providers: provideDbxForgeWrapperFieldDirective(ForgeInfoWrapperFieldComponent),
   imports: [ForgeWrapperContentComponent, MatIconButton, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -42,7 +42,6 @@ async function settle(fixture: ComponentFixture<any>, rounds = 3): Promise<void>
     fixture.detectChanges();
     await delay(SETTLE_TIME);
     fixture.detectChanges();
-    await fixture.whenStable();
   }
 
   await delay(50);

@@ -45,21 +45,7 @@ export const FORGE_SLIDER_FIELD_TYPE = 'dbx-slider';
   host: {
     '[class]': 'className()'
   },
-  template: `
-    <div class="dbx-forge-slider-outline">
-      @if (label()) {
-        <span class="dbx-forge-slider-label">{{ label() | dynamicText | async }}</span>
-      }
-      <mat-slider [min]="min()" [max]="max()" [step]="step()" [discrete]="discrete()" [showTickMarks]="showTickMarks()" [color]="color()">
-        <input matSliderThumb [value]="currentValue()" (valueChange)="onValueChange($event)" />
-      </mat-slider>
-    </div>
-    @if (errorsToDisplay()[0]; as error) {
-      <div class="dbx-forge-slider-subscript dbx-forge-slider-error">{{ error.message }}</div>
-    } @else if (props()?.hint; as hint) {
-      <div class="dbx-forge-slider-subscript">{{ hint | dynamicText | async }}</div>
-    }
-  `,
+  templateUrl: './slider.field.component.html',
   styles: [
     `
       :host {

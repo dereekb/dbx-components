@@ -82,22 +82,7 @@ export interface ForgeTimeDurationFieldComponentProps {
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, FormsModule, ReactiveFormsModule, DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic" class="dbx-forge-timeduration-field">
-      @if (label()) {
-        <mat-label>{{ label() | dynamicText | async }}</mat-label>
-      }
-      <input matInput type="text" [formControl]="textCtrl" (blur)="onTextBlur()" (keydown.enter)="onTextEnter($event)" placeholder="e.g. 2h30m" />
-      <button mat-icon-button matSuffix type="button" #pickerButton (click)="openPicker()" aria-label="Open duration picker">
-        <mat-icon>schedule</mat-icon>
-      </button>
-      @if (errorsToDisplay()[0]; as error) {
-        <mat-error>{{ error.message }}</mat-error>
-      } @else if (props()?.hint; as hint) {
-        <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
-      }
-    </mat-form-field>
-  `
+  templateUrl: './duration.field.component.html'
 })
 export class ForgeTimeDurationFieldComponent {
   private readonly materialConfig = inject(MATERIAL_CONFIG, { optional: true });

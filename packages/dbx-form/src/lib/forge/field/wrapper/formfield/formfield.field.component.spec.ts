@@ -113,7 +113,7 @@ describe('ForgeFormFieldWrapperComponent', () => {
       await settle(fixture);
 
       const host = fixture.nativeElement as HTMLElement;
-      const subscript = host.querySelector('.dbx-forge-form-field-subscript');
+      const subscript = host.querySelector('.mat-mdc-form-field-hint');
       expect(subscript).toBeTruthy();
       expect(subscript?.textContent?.trim()).toBe('Pick a rating');
 
@@ -172,7 +172,7 @@ describe('ForgeFormFieldWrapperComponent', () => {
       const label = host.querySelector('.dbx-forge-form-field-outline-label');
       expect(label?.textContent?.trim()).toBe('Custom Wrapper');
 
-      const subscript = host.querySelector('.dbx-forge-form-field-subscript');
+      const subscript = host.querySelector('.mat-mdc-form-field-hint');
       expect(subscript?.textContent?.trim()).toBe('A hint');
 
       fixture.destroy();
@@ -254,7 +254,7 @@ describe('ForgeFormFieldWrapperComponent', () => {
       await settle(fixture);
 
       const host = fixture.nativeElement as HTMLElement;
-      const errorEl = host.querySelector('.dbx-forge-form-field-subscript-error');
+      const errorEl = host.querySelector('.mat-mdc-form-field-error');
 
       if (errorEl) {
         expect(errorEl.textContent?.trim()).toBe('Rating must be above 50.');
@@ -276,10 +276,10 @@ describe('ForgeFormFieldWrapperComponent', () => {
       await settle(fixture);
 
       const host = fixture.nativeElement as HTMLElement;
-      const errorEl = host.querySelector('.dbx-forge-form-field-subscript-error');
+      const errorEl = host.querySelector('.mat-mdc-form-field-error');
       expect(errorEl).toBeFalsy();
 
-      const hintEl = host.querySelector('.dbx-forge-form-field-subscript');
+      const hintEl = host.querySelector('.mat-mdc-form-field-hint');
 
       if (hintEl) {
         expect(hintEl.textContent?.trim()).toBe('Must be above 50.');

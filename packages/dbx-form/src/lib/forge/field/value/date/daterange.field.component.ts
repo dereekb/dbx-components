@@ -70,39 +70,7 @@ export interface ForgeDateRangeFieldComponentProps {
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, ReactiveFormsModule, DynamicTextPipe, AsyncPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="dbx-forge-daterange-field">
-      <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic" class="dbx-forge-daterange-start">
-        <mat-label>{{ startLabelSignal() }}</mat-label>
-        <input matInput [matDatepicker]="startPicker" [formControl]="startDateCtrl" [min]="minDateSignal()" [max]="maxDateSignal()" />
-        <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
-        <mat-datepicker #startPicker></mat-datepicker>
-      </mat-form-field>
-      @if (showTimeSignal()) {
-        <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic" class="dbx-forge-daterange-start-time">
-          <mat-label>Start Time</mat-label>
-          <input matInput type="time" [formControl]="startTimeCtrl" />
-        </mat-form-field>
-      }
-      <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic" class="dbx-forge-daterange-end">
-        <mat-label>{{ endLabelSignal() }}</mat-label>
-        <input matInput [matDatepicker]="endPicker" [formControl]="endDateCtrl" [min]="minDateSignal()" [max]="maxDateSignal()" />
-        <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
-        <mat-datepicker #endPicker></mat-datepicker>
-      </mat-form-field>
-      @if (showTimeSignal()) {
-        <mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic" class="dbx-forge-daterange-end-time">
-          <mat-label>End Time</mat-label>
-          <input matInput type="time" [formControl]="endTimeCtrl" />
-        </mat-form-field>
-      }
-      @if (errorsToDisplay()[0]; as error) {
-        <mat-error>{{ error.message }}</mat-error>
-      } @else if (props()?.hint; as hint) {
-        <mat-hint>{{ hint | dynamicText | async }}</mat-hint>
-      }
-    </div>
-  `,
+  templateUrl: './daterange.field.component.html',
   styles: `
     .dbx-forge-daterange-field {
       display: flex;

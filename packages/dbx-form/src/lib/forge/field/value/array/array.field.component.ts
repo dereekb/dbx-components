@@ -28,46 +28,7 @@ let _forgeArrayItemTrackId = 0;
  */
 @Component({
   selector: 'dbx-forge-array-field',
-  template: `
-    <div class="dbx-form-repeat-array">
-      <div cdkDropList [cdkDropListDisabled]="disableRearrangeSignal()" (cdkDropListDropped)="drop($event)">
-        @for (item of itemsSignal(); track item.trackId; let i = $index) {
-          <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
-            <ng-template cdkDragPlaceholder><div class="dbx-form-repeat-array-drag-placeholder"></div></ng-template>
-            <div class="dbx-form-repeat-array-bar">
-              @if (!disableRearrangeSignal()) {
-                <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" aria-label="Drag to reorder">
-                  <mat-icon>drag_handle</mat-icon>
-                </button>
-              }
-              <span class="dbx-form-repeat-array-label">{{ labelForItem(i, item.value) }}</span>
-              <span class="spacer"></span>
-              @if (allowDuplicateSignal()) {
-                <button mat-button type="button" color="primary" (click)="duplicateItem(i)">
-                  {{ duplicateTextSignal() }}
-                </button>
-              }
-              @if (allowRemoveSignal()) {
-                <button mat-button type="button" color="warn" (click)="removeItem(i)">
-                  {{ removeTextSignal() }}
-                </button>
-              }
-            </div>
-            <div class="dbx-form-repeat-array-field-content">
-              <form [dynamic-form]="templateConfigSignal()" [value]="asPartial(item.value)" (valueChange)="onItemValueChange(i, $event)"></form>
-            </div>
-          </div>
-        }
-      </div>
-      @if (showAddButtonSignal()) {
-        <div class="dbx-form-repeat-array-footer">
-          <button mat-button type="button" color="primary" (click)="addItem()">
-            {{ addTextSignal() }}
-          </button>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './array.field.component.html',
   imports: [CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, DynamicForm],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
