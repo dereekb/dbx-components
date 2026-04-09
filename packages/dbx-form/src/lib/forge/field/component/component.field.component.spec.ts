@@ -57,23 +57,25 @@ class TestHostComponent {
 
 // MARK: Helpers
 const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
-const SETTLE_TIME = 200;
-const SETTLE_ROUNDS = 3;
-
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function settle(fixture: ComponentFixture<any>, rounds: number = SETTLE_ROUNDS): Promise<void> {
-  for (let i = 0; i < rounds; i++) {
-    fixture.detectChanges();
-    await delay(SETTLE_TIME);
-    fixture.detectChanges();
-    await fixture.whenStable();
-  }
-
-  await delay(50);
+/**
+ * Settles the fixture by running change detection and waiting for stability.
+ *
+ * The 100ms delay is needed because ng-forge lazy-loads field components via
+ * dynamic import (`loadComponent`). whenStable() resolves before the import
+ * promise settles and the component is instantiated in the DOM, so we need
+ * a short window for the async import to complete and a second CD pass to
+ * render the loaded component.
+ */
+async function settle(fixture: ComponentFixture<any>): Promise<void> {
   fixture.detectChanges();
+  await fixture.whenStable();
+  await delay(100);
+  fixture.detectChanges();
+  await fixture.whenStable();
 }
 
 function createConfig(componentClass: Type<unknown>): FormConfig {

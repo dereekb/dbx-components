@@ -32,22 +32,25 @@ class TestFormFieldWrapperHostComponent {
 
 // MARK: Helpers
 const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
-const SETTLE_TIME = 300;
-
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function settle(fixture: ComponentFixture<unknown>, rounds = 3): Promise<void> {
-  for (let i = 0; i < rounds; i++) {
-    fixture.detectChanges();
-    await delay(SETTLE_TIME);
-    fixture.detectChanges();
-    await fixture.whenStable();
-  }
-
-  await delay(50);
+/**
+ * Settles the fixture by running change detection and waiting for stability.
+ *
+ * The 100ms delay is needed because ng-forge lazy-loads field components via
+ * dynamic import (`loadComponent`). whenStable() resolves before the import
+ * promise settles and the component is instantiated in the DOM, so we need
+ * a short window for the async import to complete and a second CD pass to
+ * render the loaded component.
+ */
+async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
+  await fixture.whenStable();
+  await delay(100);
+  fixture.detectChanges();
+  await fixture.whenStable();
 }
 
 // MARK: Tests
@@ -217,7 +220,7 @@ describe('ForgeFormFieldWrapperComponent', () => {
     });
   });
 
-  describe('error display with expression validator', () => {
+  describe('validation gating with forgeFormFieldWrapper()', () => {
     function createSliderWithValidatorConfig() {
       return {
         fields: [
@@ -240,6 +243,92 @@ describe('ForgeFormFieldWrapperComponent', () => {
         ]
       };
     }
+
+    it('should not emit getValue() when requireValid=true and wrapped field is invalid', async () => {
+      const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);
+      const context = fixture.componentInstance.context;
+      // requireValid defaults to true — do not set it to false
+      context.config = createSliderWithValidatorConfig();
+
+      await settle(fixture);
+
+      // Set a value below 50 (fails the expression validator)
+      context.setValue({ rating: 35 } as any);
+      await settle(fixture);
+
+      const result = await firstValueFrom(
+        context.getValue().pipe(
+          timeout(500),
+          first(),
+          map((value) => ({ received: true, value })),
+          catchError(() => of({ received: false, value: undefined }))
+        )
+      );
+
+      // getValue() should NOT emit because the form is invalid
+      expect(result.received).toBe(false);
+
+      fixture.destroy();
+    });
+
+    it('should emit getValue() when requireValid=true and wrapped field is valid', async () => {
+      const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);
+      const context = fixture.componentInstance.context;
+
+      // Use a default value above 50 so the validator passes immediately
+      context.config = {
+        fields: [
+          forgeFormFieldWrapper({
+            label: 'Rating',
+            fields: [
+              {
+                key: 'rating',
+                type: 'slider',
+                label: '',
+                max: 100,
+                value: 75,
+                validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
+                validationMessages: { minRating: 'Rating must be above 50.' },
+                props: { min: 0, max: 100, thumbLabel: true }
+              } as any
+            ]
+          }) as any
+        ]
+      };
+
+      await settle(fixture);
+
+      const result = await firstValueFrom(
+        context.getValue().pipe(
+          timeout(500),
+          first(),
+          map((value) => ({ received: true, value })),
+          catchError(() => of({ received: false, value: undefined }))
+        )
+      );
+
+      expect(result.received).toBe(true);
+      expect((result.value as Record<string, unknown>)?.rating).toBe(75);
+
+      fixture.destroy();
+    });
+
+    it('should report isComplete=false in stream$ when wrapped field is invalid', async () => {
+      const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createSliderWithValidatorConfig();
+
+      await settle(fixture);
+
+      context.setValue({ rating: 35 } as any);
+      await settle(fixture);
+
+      const event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(false);
+      expect(event.status).toBe('INVALID');
+
+      fixture.destroy();
+    });
 
     it('should show error in subscript when validation fails and field is touched', async () => {
       const fixture = TestBed.createComponent(TestFormFieldWrapperHostComponent);

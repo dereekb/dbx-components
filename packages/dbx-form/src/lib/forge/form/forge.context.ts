@@ -1,4 +1,4 @@
-import { Injectable, type OnDestroy, type Provider } from '@angular/core';
+import { Injectable, type OnDestroy, type Provider, type Signal, signal, computed } from '@angular/core';
 import { BehaviorSubject, combineLatest, type Observable, shareReplay, filter, map } from 'rxjs';
 import { type DbxMutableForm, type DbxFormEvent, type DbxFormDisabledKey, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../../form/form';
 import { type BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
@@ -134,6 +134,51 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
    */
   stripEmptyValues = true;
 
+  /**
+   * Tracks validity signals from nested wrapper forms (e.g. forgeFormFieldWrapper,
+   * forgeDbxSectionFieldWrapper). These wrappers create isolated DynamicForm instances
+   * whose validity is not visible to the parent DynamicForm.valid() signal.
+   *
+   * Wrapper components register their nested form's validity via {@link registerWrapperValidity},
+   * and the combined result is exposed as {@link allWrappersValid}.
+   */
+  private readonly _wrapperValidSignals = new Set<Signal<boolean>>();
+  private readonly _wrapperValidSignalsVersion = signal(0);
+
+  /**
+   * Computed signal that is `true` when all registered wrapper nested forms are valid.
+   * Returns `true` when no wrappers are registered.
+   */
+  readonly allWrappersValid = computed(() => {
+    this._wrapperValidSignalsVersion(); // depend on version to retrigger when wrappers register/unregister
+    for (const s of this._wrapperValidSignals) {
+      if (!s()) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  /**
+   * Registers a wrapper's nested form validity signal for tracking.
+   *
+   * Call this from wrapper content components so that validation errors in nested
+   * DynamicForm instances propagate to the parent form's validity state.
+   *
+   * @param valid - The wrapper's nested form validity signal.
+   * @returns A cleanup function that unregisters the signal. Call on component destroy.
+   */
+  registerWrapperValidity(valid: Signal<boolean>): () => void {
+    this._wrapperValidSignals.add(valid);
+    this._wrapperValidSignalsVersion.update((v) => v + 1);
+
+    return () => {
+      this._wrapperValidSignals.delete(valid);
+      this._wrapperValidSignalsVersion.update((v) => v + 1);
+    };
+  }
+
   private readonly _config = new BehaviorSubject<Maybe<FormConfig>>(undefined);
   private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
   private readonly _formState = new BehaviorSubject<DbxFormEvent>(DbxForgeFormContext.INITIAL_STATE);
@@ -145,6 +190,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
   readonly stream$: Observable<DbxFormEvent> = this._formState.asObservable();
   readonly setValue$ = this._setValue.asObservable();
+  readonly disabled$ = this._disabled.asObservable();
   readonly reset$ = this._reset.asObservable();
 
   set config(config: Maybe<FormConfig>) {

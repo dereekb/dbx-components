@@ -31,21 +31,16 @@ class TestForgeFormHostComponent {
 
 // MARK: Helpers
 const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), provideNoopAnimations(), { provide: DynamicFormLogger, useClass: NoopLogger }];
-const SETTLE_TIME = 300;
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function settle(fixture: ComponentFixture<any>, rounds = 3): Promise<void> {
-  for (let i = 0; i < rounds; i++) {
-    fixture.detectChanges();
-    await delay(SETTLE_TIME);
-    fixture.detectChanges();
-  }
-
-  await delay(50);
+/**
+ * Settles the fixture by running change detection and waiting for stability.
+ *
+ * No extra delay needed — the forge form component uses signal effects that
+ * resolve within a single whenStable() cycle for basic form state and value tests.
+ */
+async function settle(fixture: ComponentFixture<any>): Promise<void> {
   fixture.detectChanges();
+  await fixture.whenStable();
 }
 
 function createRequiredFieldConfig(): FormConfig {
@@ -284,6 +279,120 @@ describe('DbxForgeFormComponent', () => {
       const keys = Object.keys(value as object);
       const underscoreKeys = keys.filter((k) => k.startsWith('_'));
       expect(underscoreKeys.length).toBeGreaterThan(0);
+
+      fixture.destroy();
+    });
+  });
+
+  describe('disabled state', () => {
+    it('should report isDisabled=true and status=DISABLED when form is disabled', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      const event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isDisabled).toBe(true);
+      expect(event.status).toBe('DISABLED');
+      expect(event.isComplete).toBe(false);
+
+      fixture.destroy();
+    });
+
+    it('should restore isDisabled=false after re-enabling', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      context.setDisabled(undefined, false);
+      await settle(fixture);
+
+      const event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isDisabled).toBe(false);
+      expect(event.isComplete).toBe(true);
+
+      fixture.destroy();
+    });
+
+    it('should track multiple disable keys independently', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      context.setDisabled('key_a', true);
+      context.setDisabled('key_b', true);
+      await settle(fixture);
+
+      let event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isDisabled).toBe(true);
+
+      // Remove one key — still disabled
+      context.setDisabled('key_a', false);
+      await settle(fixture);
+
+      event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isDisabled).toBe(true);
+
+      // Remove last key — now enabled
+      context.setDisabled('key_b', false);
+      await settle(fixture);
+
+      event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isDisabled).toBe(false);
+
+      fixture.destroy();
+    });
+
+    it('should report isComplete=false even when valid but disabled', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createRequiredFieldConfig();
+
+      await settle(fixture);
+
+      context.setValue({ name: 'Valid' } as any);
+      await settle(fixture);
+
+      // Confirm valid and complete
+      let event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(true);
+      expect(event.status).toBe('VALID');
+
+      // Disable
+      context.setDisabled(undefined, true);
+      await settle(fixture);
+
+      event = await firstValueFrom(context.stream$.pipe(first()));
+      expect(event.isComplete).toBe(false);
+      expect(event.isDisabled).toBe(true);
+      expect(event.status).toBe('DISABLED');
+
+      fixture.destroy();
+    });
+
+    it('should expose disabled state via getDisabled()', async () => {
+      const fixture = TestBed.createComponent(TestForgeFormHostComponent);
+      const context = fixture.componentInstance.context;
+      context.config = createOptionalFieldConfig();
+
+      await settle(fixture);
+
+      context.setDisabled('test_key', true);
+      await settle(fixture);
+
+      const disabled = await firstValueFrom(context.getDisabled().pipe(first()));
+      expect(disabled).toContain('test_key');
 
       fixture.destroy();
     });

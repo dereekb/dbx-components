@@ -27,7 +27,8 @@ import { DbxForgeFormContext } from './forge.context';
 })
 export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   private readonly _context = inject(DbxForgeFormContext<T>);
-  private readonly _subs = new SubscriptionObject();
+  private readonly _setValueSub = new SubscriptionObject();
+  private readonly _disabledSub = new SubscriptionObject();
 
   readonly dynamicForm = viewChild(DynamicForm);
 
@@ -43,10 +44,15 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
 
   /**
-   * Computed validity from the ng-forge DynamicForm's valid signal.
-   * Returns false when the DynamicForm has not yet been created.
+   * Computed validity combining the ng-forge DynamicForm's valid signal with
+   * validity from all registered wrapper nested forms.
+   *
+   * Wrapper fields (forgeFormFieldWrapper, forgeDbxSectionFieldWrapper, etc.) create
+   * isolated DynamicForm instances whose validity is not visible to the parent
+   * DynamicForm.valid(). They register their nested validity via
+   * {@link DbxForgeFormContext.registerWrapperValidity}, and this computed combines both sources.
    */
-  readonly formValid = computed(() => this.dynamicForm()?.valid() ?? false);
+  readonly formValid = computed(() => (this.dynamicForm()?.valid() ?? false) && this._context.allWrappersValid());
 
   /**
    * Track form value changes and update the context value + changes count.
@@ -107,11 +113,17 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Listen for setValue from context
-    this._subs.subscription = this._context.setValue$.subscribe((value) => {
+    this._setValueSub.subscription = this._context.setValue$.subscribe((value) => {
       if (value != null) {
         this.formValue.set(value as T);
         this._resetState();
       }
+    });
+
+    // Listen for disabled state changes from context
+    this._disabledSub.subscription = this._context.disabled$.subscribe((disabled) => {
+      this._disabled.set(disabled);
+      this._emitFormState();
     });
   }
 
@@ -122,6 +134,7 @@ export class DbxForgeFormComponent<T = unknown> implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this._subs.destroy();
+    this._setValueSub.destroy();
+    this._disabledSub.destroy();
   }
 }
