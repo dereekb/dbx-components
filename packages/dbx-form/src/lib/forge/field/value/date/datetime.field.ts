@@ -1,17 +1,17 @@
 import type { MatDatepickerField, MatDatepickerProps } from '@ng-forge/dynamic-forms-material';
-import type { FieldDef, BaseValueField } from '@ng-forge/dynamic-forms';
+import type { FieldDef, BaseValueField, RowField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, type ArrayOrValue, type Maybe, type TimezoneString, type DateOrDayString } from '@dereekb/util';
 import { forgeField } from '../../field';
+import { forgeFlexRow } from '../../wrapper/wrapper';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { ForgeDateTimeFieldComponentProps } from './datetime.field.component';
-import type { ForgeDateRangeFieldComponentProps, ForgeDateRangeValue } from './daterange.field.component';
 import type { ForgeFixedDateRangeFieldComponentProps, ForgeFixedDateRangeValue } from './fixeddaterange.field.component';
 import { type DbxDateTimePickerConfiguration, DbxDateTimeFieldTimeMode, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 import { type DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
 import { type DateTimePresetConfiguration } from '../../../../formly/field/value/date/datetime';
 import { type DbxFixedDateRangeDateRangeInput, type DbxFixedDateRangePickerConfiguration, type DbxFixedDateRangeSelectionMode } from '../../../../formly/field/value/date/fixeddaterange.field.component';
 import { type ObservableOrValueGetter } from '@dereekb/rxjs';
-import type { Observable } from 'rxjs';
+import { of, type Observable } from 'rxjs';
 
 // MARK: Sync Field Types
 
@@ -326,102 +326,155 @@ export function forgeDateTimeField(config: ForgeDateTimeFieldConfig): ForgeDateT
 
 // MARK: Date Range Field
 /**
- * The custom forge field type name for the date range field.
+ * Configuration for a single date within a forge date range (no time mode or sync).
+ *
+ * Mirrors formly's `DateDateRangeFieldDateConfig`.
  */
-export const FORGE_DATERANGE_FIELD_TYPE = 'daterange' as const;
+export type ForgeDateRangeFieldDateConfig = Omit<ForgeDateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
 
 /**
- * Field definition type for a forge date range field.
+ * Configuration for a forge date range field with separate start and end date pickers.
+ *
+ * Mirrors formly's `DateDateRangeFieldConfig`. Each start/end sub-config is passed
+ * through to {@link forgeDateTimeField}, so all datetime features (timezone, presets,
+ * pickerConfig, etc.) are available per-field.
  */
-export type ForgeDateRangeFieldDef = BaseValueField<ForgeDateRangeFieldComponentProps, ForgeDateRangeValue> & {
-  readonly type: typeof FORGE_DATERANGE_FIELD_TYPE;
-};
-
-/**
- * Configuration for a forge date range field with start and end date selection.
- */
-export interface ForgeDateRangeFieldConfig {
-  readonly key: string;
-  readonly label?: string;
+export interface ForgeDateRangeFieldConfig extends Pick<ForgeDateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
   readonly required?: boolean;
-  readonly readonly?: boolean;
-  readonly description?: string;
-  /**
-   * Label for the start date input.
-   */
-  readonly startLabel?: string;
-  /**
-   * Label for the end date input.
-   */
-  readonly endLabel?: string;
-  /**
-   * Whether to include time inputs alongside the date pickers.
-   */
-  readonly showTime?: boolean;
-  /**
-   * Minimum selectable date for both start and end.
-   */
-  readonly minDate?: Date | string;
-  /**
-   * Maximum selectable date for both start and end.
-   */
-  readonly maxDate?: Date | string;
+  readonly start?: Partial<ForgeDateRangeFieldDateConfig>;
+  readonly end?: Partial<ForgeDateRangeFieldDateConfig>;
 }
 
 /**
- * Creates a forge field definition for a date range field.
+ * Creates a pair of date pickers for selecting a date range (start and end dates)
+ * arranged in a flex row. The pickers are synchronized so the start date stays before the end date.
  *
- * @param config - Date range field configuration
- * @returns A {@link ForgeDateRangeFieldDef}
+ * This is the forge equivalent of formly's `formlyDateRangeField()`.
+ *
+ * @param config - Date range configuration with optional start/end overrides
+ * @returns A {@link RowField} containing the start and end date field pair
  *
  * @example
  * ```typescript
- * const field = forgeDateRangeField({ key: 'eventDates', label: 'Event Dates', showTime: true });
+ * const field = forgeDateRangeField({ required: true, start: { key: 'from' }, end: { key: 'to' } });
  * ```
  */
-export function forgeDateRangeField(config: ForgeDateRangeFieldConfig): ForgeDateRangeFieldDef {
-  const { key, label, required, readonly: isReadonly, description, startLabel, endLabel, showTime, minDate, maxDate } = config;
+export function forgeDateRangeField(config: ForgeDateRangeFieldConfig = {}): RowField {
+  const { required: inputRequired, start, end, timeDate, timezone, showTimezone, presets, valueMode, minuteStep } = config;
+  const required = inputRequired ?? start?.required ?? false;
 
-  const props: ForgeDateRangeFieldComponentProps = filterFromPOJO({
-    startLabel,
-    endLabel,
-    showTime,
-    minDate,
-    maxDate,
-    hint: description
+  const startFieldKey = start?.key ?? 'start';
+  const endFieldKey = end?.key ?? 'end';
+
+  const startField = forgeDateTimeField({
+    dateLabel: 'Start',
+    timeMode: DbxDateTimeFieldTimeMode.NONE,
+    getSyncFieldsObs: () => of([{ syncWith: endFieldKey, syncType: 'after' as const }]),
+    presets,
+    allDayLabel: '',
+    timeDate,
+    timezone,
+    showTimezone,
+    valueMode,
+    minuteStep,
+    ...start,
+    required,
+    key: startFieldKey
   });
 
-  return forgeField(
-    filterFromPOJO({
-      key,
-      type: FORGE_DATERANGE_FIELD_TYPE,
-      label: label ?? '',
-      value: undefined as unknown as ForgeDateRangeValue,
-      required,
-      readonly: isReadonly,
-      props: Object.keys(props).length > 0 ? props : undefined
-    }) as ForgeDateRangeFieldDef
-  );
+  const endField = forgeDateTimeField({
+    dateLabel: 'End',
+    timeMode: DbxDateTimeFieldTimeMode.NONE,
+    getSyncFieldsObs: () => of([{ syncWith: startFieldKey, syncType: 'before' as const }]),
+    presets,
+    allDayLabel: '',
+    timeDate,
+    timezone,
+    showTimezone,
+    valueMode,
+    minuteStep,
+    ...end,
+    required,
+    key: endFieldKey
+  });
+
+  return forgeFlexRow({
+    fields: [startField as unknown as FieldDef<unknown>, endField as unknown as FieldDef<unknown>],
+    relative: true
+  });
 }
 
 // MARK: Date-Time Range Field
 /**
- * Configuration for a forge date-time range field (convenience wrapper for date range with time).
+ * Configuration for a single time within a forge date-time range (no full-day options).
+ *
+ * Mirrors formly's `DateTimeRangeFieldTimeConfig`.
  */
-export interface ForgeDateTimeRangeFieldConfig extends ForgeDateRangeFieldConfig {}
+export type ForgeDateTimeRangeFieldTimeConfig = Omit<ForgeDateRangeFieldDateConfig, 'allDayLabel' | 'fullDayFieldName' | 'fullDayInUTC'>;
 
 /**
- * Creates a forge field definition for a date-time range field.
+ * Configuration for a forge date-time range field with separate start and end time pickers.
  *
- * This is a convenience wrapper that creates a date range field with time inputs enabled.
- *
- * @param config - Date-time range field configuration
- * @returns A {@link ForgeDateRangeFieldDef}
+ * Mirrors formly's `DateDateTimeRangeFieldConfig`.
  */
-export function forgeDateTimeRangeField(config: ForgeDateTimeRangeFieldConfig): ForgeDateRangeFieldDef {
+export interface ForgeDateTimeRangeFieldConfig extends Pick<ForgeDateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
+  readonly required?: boolean;
+  readonly start?: Partial<ForgeDateTimeRangeFieldTimeConfig>;
+  readonly end?: Partial<ForgeDateTimeRangeFieldTimeConfig>;
+}
+
+/**
+ * Creates a pair of time-only pickers for selecting a time range (start and end times)
+ * arranged in a flex row.
+ *
+ * This is the forge equivalent of formly's `formlyDateTimeRangeField()`.
+ *
+ * @param inputConfig - Time range configuration with optional start/end overrides
+ * @returns A {@link RowField} containing the start and end time field pair
+ *
+ * @example
+ * ```typescript
+ * const field = forgeDateTimeRangeField({ required: true });
+ * ```
+ */
+export function forgeDateTimeRangeField(inputConfig: ForgeDateTimeRangeFieldConfig = {}): RowField {
+  const { required = false, start: inputStart, end: inputEnd, timezone, timeDate, showTimezone, presets, valueMode, minuteStep } = inputConfig;
+
+  function dateTimeRangeFieldConfig(config: Maybe<Partial<ForgeDateTimeRangeFieldTimeConfig>>): Partial<ForgeDateTimeFieldConfig> {
+    return {
+      valueMode,
+      minuteStep,
+      ...config,
+      required,
+      timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
+      getSyncFieldsObs: undefined,
+      timeOnly: true,
+      hideDateHint: true
+    };
+  }
+
+  const startKey = inputStart?.key ?? 'start';
+  const endKey = inputEnd?.key ?? 'end';
+
+  const start: Partial<ForgeDateTimeFieldConfig> = {
+    label: 'Start Time',
+    ...dateTimeRangeFieldConfig(inputStart),
+    key: startKey
+  };
+
+  const end: Partial<ForgeDateTimeFieldConfig> = {
+    label: 'End Time',
+    ...dateTimeRangeFieldConfig(inputEnd),
+    key: endKey
+  };
+
   return forgeDateRangeField({
-    ...config,
-    showTime: config.showTime ?? true
+    timezone,
+    timeDate,
+    showTimezone,
+    presets,
+    start,
+    end
   });
 }
 

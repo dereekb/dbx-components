@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
 import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
-import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type ForgeDateTimeSyncField } from './datetime.field';
+import { forgeDateField, forgeDateTimeField, forgeDateRangeField, forgeDateTimeRangeField, forgeFixedDateRangeField, type ForgeDateTimeSyncField, type ForgeDateTimeFieldDef } from './datetime.field';
+import type { RowField } from '@ng-forge/dynamic-forms';
 
 describe('forgeDateField()', () => {
   it('should create a datepicker field with correct type', () => {
@@ -150,18 +151,187 @@ describe('forgeDateTimeField()', () => {
 });
 
 describe('forgeDateRangeField()', () => {
-  it('should create a date range field with correct key', () => {
-    const field = forgeDateRangeField({ key: 'dateRange' });
-    expect(field.key).toBe('dateRange');
-    expect(field.type).toBeDefined();
+  function getChildFields(row: RowField): ForgeDateTimeFieldDef[] {
+    return (row as any).fields as ForgeDateTimeFieldDef[];
+  }
+
+  it('should create a row field', () => {
+    const field = forgeDateRangeField();
+    expect(field.type).toBe('row');
+  });
+
+  it('should contain two datetime child fields', () => {
+    const field = forgeDateRangeField();
+    const children = getChildFields(field);
+    expect(children.length).toBe(2);
+    expect(children[0].type).toBe('datetime');
+    expect(children[1].type).toBe('datetime');
+  });
+
+  it('should use default keys start and end', () => {
+    const field = forgeDateRangeField();
+    const children = getChildFields(field);
+    expect(children[0].key).toBe('start');
+    expect(children[1].key).toBe('end');
+  });
+
+  it('should allow custom start and end keys', () => {
+    const field = forgeDateRangeField({ start: { key: 'from' }, end: { key: 'to' } });
+    const children = getChildFields(field);
+    expect(children[0].key).toBe('from');
+    expect(children[1].key).toBe('to');
+  });
+
+  it('should set timeMode to NONE on both fields', () => {
+    const field = forgeDateRangeField();
+    const children = getChildFields(field);
+    expect(children[0].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.NONE);
+    expect(children[1].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.NONE);
+  });
+
+  it('should set sync fields so start syncs with end and vice versa', async () => {
+    const field = forgeDateRangeField();
+    const children = getChildFields(field);
+
+    const startSync = await firstValueFrom(children[0].props!.getSyncFieldsObs!());
+    expect(startSync).toEqual([{ syncWith: 'end', syncType: 'after' }]);
+
+    const endSync = await firstValueFrom(children[1].props!.getSyncFieldsObs!());
+    expect(endSync).toEqual([{ syncWith: 'start', syncType: 'before' }]);
+  });
+
+  it('should use custom keys in sync fields', async () => {
+    const field = forgeDateRangeField({ start: { key: 'from' }, end: { key: 'to' } });
+    const children = getChildFields(field);
+
+    const startSync = await firstValueFrom(children[0].props!.getSyncFieldsObs!());
+    expect(startSync).toEqual([{ syncWith: 'to', syncType: 'after' }]);
+
+    const endSync = await firstValueFrom(children[1].props!.getSyncFieldsObs!());
+    expect(endSync).toEqual([{ syncWith: 'from', syncType: 'before' }]);
+  });
+
+  it('should propagate required to both fields', () => {
+    const field = forgeDateRangeField({ required: true });
+    const children = getChildFields(field);
+    expect(children[0].required).toBe(true);
+    expect(children[1].required).toBe(true);
+  });
+
+  it('should propagate shared config to both fields', () => {
+    const field = forgeDateRangeField({
+      timezone: 'America/New_York',
+      valueMode: DbxDateTimeValueMode.DATE_STRING
+    });
+    const children = getChildFields(field);
+    expect(children[0].props?.timezone).toBe('America/New_York');
+    expect(children[0].props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
+    expect(children[1].props?.timezone).toBe('America/New_York');
+    expect(children[1].props?.valueMode).toBe(DbxDateTimeValueMode.DATE_STRING);
+  });
+
+  it('should allow per-field overrides', () => {
+    const pickerConfig = { limits: { isFuture: true } };
+    const field = forgeDateRangeField({
+      start: { key: 'startDate', description: 'Start description', pickerConfig },
+      end: { key: 'endDate', description: 'End description' }
+    });
+    const children = getChildFields(field);
+    expect(children[0].props?.hint).toBe('Start description');
+    expect(children[0].props?.pickerConfig).toBe(pickerConfig);
+    expect(children[1].props?.hint).toBe('End description');
+  });
+
+  it('should set dateLabel to Start and End', () => {
+    const field = forgeDateRangeField();
+    const children = getChildFields(field);
+    expect(children[0].props?.dateLabel).toBe('Start');
+    expect(children[1].props?.dateLabel).toBe('End');
   });
 });
 
 describe('forgeDateTimeRangeField()', () => {
-  it('should create a date time range field with correct key', () => {
-    const field = forgeDateTimeRangeField({ key: 'dateTimeRange' });
-    expect(field.key).toBe('dateTimeRange');
-    expect(field.type).toBeDefined();
+  function getChildFields(row: RowField): ForgeDateTimeFieldDef[] {
+    return (row as any).fields as ForgeDateTimeFieldDef[];
+  }
+
+  it('should create a row field', () => {
+    const field = forgeDateTimeRangeField();
+    expect(field.type).toBe('row');
+  });
+
+  it('should contain two datetime child fields', () => {
+    const field = forgeDateTimeRangeField();
+    const children = getChildFields(field);
+    expect(children.length).toBe(2);
+    expect(children[0].type).toBe('datetime');
+    expect(children[1].type).toBe('datetime');
+  });
+
+  it('should use default keys start and end', () => {
+    const field = forgeDateTimeRangeField();
+    const children = getChildFields(field);
+    expect(children[0].key).toBe('start');
+    expect(children[1].key).toBe('end');
+  });
+
+  it('should set timeOnly and timeMode REQUIRED on both fields', () => {
+    const field = forgeDateTimeRangeField();
+    const children = getChildFields(field);
+    expect(children[0].props?.timeOnly).toBe(true);
+    expect(children[0].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+    expect(children[1].props?.timeOnly).toBe(true);
+    expect(children[1].props?.timeMode).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+  });
+
+  it('should set hideDateHint on both fields', () => {
+    const field = forgeDateTimeRangeField();
+    const children = getChildFields(field);
+    expect(children[0].props?.hideDateHint).toBe(true);
+    expect(children[1].props?.hideDateHint).toBe(true);
+  });
+
+  it('should use Start Time and End Time labels', () => {
+    const field = forgeDateTimeRangeField();
+    const children = getChildFields(field);
+    expect(children[0].label).toBe('Start Time');
+    expect(children[1].label).toBe('End Time');
+  });
+
+  it('should propagate required to both fields', () => {
+    const field = forgeDateTimeRangeField({ required: true });
+    const children = getChildFields(field);
+    expect(children[0].required).toBe(true);
+    expect(children[1].required).toBe(true);
+  });
+
+  it('should propagate shared config to both fields', () => {
+    const field = forgeDateTimeRangeField({
+      timezone: 'America/Chicago',
+      valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY
+    });
+    const children = getChildFields(field);
+    expect(children[0].props?.timezone).toBe('America/Chicago');
+    expect(children[0].props?.valueMode).toBe(DbxDateTimeValueMode.MINUTE_OF_DAY);
+    expect(children[1].props?.timezone).toBe('America/Chicago');
+    expect(children[1].props?.valueMode).toBe(DbxDateTimeValueMode.MINUTE_OF_DAY);
+  });
+
+  it('should allow custom start and end keys', () => {
+    const field = forgeDateTimeRangeField({ start: { key: 'sat' }, end: { key: 'eat' } });
+    const children = getChildFields(field);
+    expect(children[0].key).toBe('sat');
+    expect(children[1].key).toBe('eat');
+  });
+
+  it('should allow custom labels per field', () => {
+    const field = forgeDateTimeRangeField({
+      start: { key: 'sat', label: 'Custom Start' },
+      end: { key: 'eat', label: 'Custom End' }
+    });
+    const children = getChildFields(field);
+    expect(children[0].label).toBe('Custom Start');
+    expect(children[1].label).toBe('Custom End');
   });
 });
 

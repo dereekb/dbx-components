@@ -17,7 +17,6 @@ declare module '@ng-forge/dynamic-forms' {
     // Value fields
     phone: BaseValueField<unknown, unknown>;
     datetime: BaseValueField<unknown, unknown>;
-    daterange: BaseValueField<unknown, unknown>;
     fixeddaterange: BaseValueField<unknown, unknown>;
     timeduration: BaseValueField<unknown, unknown>;
     'dbx-slider': BaseValueField<ForgeSliderFieldProps, number>;

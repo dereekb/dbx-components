@@ -277,8 +277,43 @@ export class DocFormDateValueComponent implements OnDestroy {
     ]
   };
 
-  // Forge date range — 1:1 parity
-  readonly forgeDateRangeFieldsConfig: FormConfig = { fields: [forgeDateRangeField({ key: 'dateRange', label: 'Date Range' }) as any] };
+  // Forge date range — 1:1 parity with formly dateRangeFields
+  readonly forgeDateRangeFieldsConfig: FormConfig = {
+    fields: [
+      forgeDateRangeField({}) as any,
+      forgeDateRangeField({
+        start: {
+          key: 'startLimited',
+          description: 'Must start on a M/T and no later than 14 days ago',
+          pickerConfig: () => {
+            const config: DbxDateTimePickerConfiguration = {
+              limits: {
+                min: addDays(startOfDay(new Date()), -14)
+              },
+              schedule: {
+                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateCellScheduleEncodedWeek
+              }
+            };
+
+            return of(config);
+          }
+        },
+        end: {
+          key: 'endLimited',
+          description: 'Must end on a W/T/F',
+          pickerConfig: () => {
+            const config: DbxDateTimePickerConfiguration = {
+              schedule: {
+                w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateCellScheduleEncodedWeek
+              }
+            };
+
+            return of(config);
+          }
+        }
+      }) as any
+    ]
+  };
 
   // Forge fixed date range — 1:1 parity
   readonly forgeFixedDateRangeFieldsConfig: FormConfig = {

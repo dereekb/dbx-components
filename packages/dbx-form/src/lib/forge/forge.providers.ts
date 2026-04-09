@@ -1,10 +1,9 @@
 import { type FieldTypeDefinition, provideDynamicForm } from '@ng-forge/dynamic-forms';
 import { withMaterialFields } from '@ng-forge/dynamic-forms-material';
 import { phoneFieldMapper } from './field/value/phone/phone.field.component';
-import { FORGE_DATETIME_FIELD_TYPE, FORGE_DATERANGE_FIELD_TYPE, FORGE_FIXEDDATERANGE_FIELD_TYPE } from './field/value/date/datetime.field';
+import { FORGE_DATETIME_FIELD_TYPE, FORGE_FIXEDDATERANGE_FIELD_TYPE } from './field/value/date/datetime.field';
 import { FORGE_TIMEDURATION_FIELD_TYPE } from './field/value/duration/duration.field';
 import { dateTimeFieldMapper } from './field/value/date/datetime.field.component';
-import { dateRangeFieldMapper } from './field/value/date/daterange.field.component';
 import { fixedDateRangeFieldMapper } from './field/value/date/fixeddaterange.field.component';
 import { timeDurationFieldMapper } from './field/value/duration/duration.field.component';
 import { DBX_SEARCHABLE_TEXT_FIELD_TYPE, DBX_SEARCHABLE_CHIP_FIELD_TYPE } from './field/selection/searchable/searchable.field';
@@ -52,18 +51,6 @@ const ForgeDateTimeFieldType: FieldTypeDefinition = {
 };
 
 /**
- * Forge date range field type definition.
- *
- * Registers the custom date range field component with ng-forge's dynamic form system.
- * Provides start and end date selection with optional time inputs.
- */
-const ForgeDateRangeFieldType: FieldTypeDefinition = {
-  name: FORGE_DATERANGE_FIELD_TYPE,
-  loadComponent: () => import('./field/value/date/daterange.field.component').then((m) => m.ForgeDateRangeFieldComponent),
-  mapper: dateRangeFieldMapper
-};
-
-/**
  * Forge fixed date range field type definition.
  *
  * Registers the custom fixed date range field component with ng-forge's dynamic form system.
@@ -105,7 +92,6 @@ const ForgeSliderFieldType: FieldTypeDefinition = {
 export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
   ForgePhoneFieldType,
   ForgeDateTimeFieldType,
-  ForgeDateRangeFieldType,
   ForgeFixedDateRangeFieldType,
   ForgeTimeDurationFieldType,
   ForgeSliderFieldType,
@@ -131,7 +117,7 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
 
 /**
  * Registers ng-forge dynamic form field declarations with Material Design field types
- * and custom dbx field types (phone, datetime, daterange, fixeddaterange, timeduration,
+ * and custom dbx field types (phone, datetime, fixeddaterange, timeduration,
  * searchable text, searchable chip, text editor, component).
  *
  * Add this to your app's providers alongside provideDbxFormConfiguration().
