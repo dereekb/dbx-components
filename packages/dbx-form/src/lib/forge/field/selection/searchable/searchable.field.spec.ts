@@ -1,10 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { of } from 'rxjs';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
+import type { ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import type { FieldDef } from '@ng-forge/dynamic-forms';
 
 // MARK: Shared Stubs
 const stubSearch = (_text: string) => of([{ value: 'a' }]);
 const stubDisplayForValue = (values: { value: string }[]) => of(values.map((v) => ({ ...v, label: String(v.value) })));
+
+// MARK: Helpers
+/**
+ * Extracts the inner field from a ForgeFormFieldWrapperFieldDef.
+ * The wrapper nests the actual field inside `props.fields[0]`.
+ */
+function getInnerField(wrapper: ForgeFormFieldWrapperFieldDef): FieldDef<unknown> {
+  const fields = wrapper.props?.fields;
+  expect(fields).toBeDefined();
+  expect(fields!.length).toBeGreaterThan(0);
+  return fields![0];
+}
 
 // MARK: forgeSearchableTextField
 describe('forgeSearchableTextField()', () => {
@@ -16,89 +30,98 @@ describe('forgeSearchableTextField()', () => {
     } as Parameters<typeof forgeSearchableTextField>[0];
   }
 
-  it('should set the correct type', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.type).toBe('dbx-searchable-text');
+  // -- Wrapper-level tests --
+
+  it('should set the wrapper type to dbx-forge-form-field', () => {
+    const wrapper = forgeSearchableTextField(minimalConfig());
+    expect(wrapper.type).toBe('dbx-forge-form-field');
   });
 
-  it('should set the key', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.key).toBe('assignee');
+  it('should set the label on the wrapper when provided', () => {
+    const wrapper = forgeSearchableTextField({ ...minimalConfig(), label: 'Assignee' });
+    expect(wrapper.label).toBe('Assignee');
   });
 
-  it('should set the label when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), label: 'Assignee' });
-    expect(field.label).toBe('Assignee');
+  it('should default wrapper label to empty string when not provided', () => {
+    const wrapper = forgeSearchableTextField(minimalConfig());
+    expect(wrapper.label).toBe('');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.label).toBe('');
+  it('should map description to wrapper props.hint', () => {
+    const wrapper = forgeSearchableTextField({ ...minimalConfig(), description: 'Search for a person' });
+    expect(wrapper.props?.hint).toBe('Search for a person');
   });
 
-  it('should set required when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), required: true });
-    expect(field.required).toBe(true);
+  it('should not set hint on wrapper when description is not provided', () => {
+    const wrapper = forgeSearchableTextField(minimalConfig());
+    expect(wrapper.props?.hint).toBeUndefined();
   });
 
-  it('should not set required when not provided', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.required).toBeUndefined();
+  // -- Inner field tests --
+
+  it('should set the correct inner field type', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.type).toBe('dbx-searchable-text');
   });
 
-  it('should set readonly when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), readonly: true });
-    expect(field.readonly).toBe(true);
+  it('should set the key on the inner field', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.key).toBe('assignee');
   });
 
-  it('should map description to props.hint', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), description: 'Search for a person' });
-    expect(field.props?.hint).toBe('Search for a person');
+  it('should set required on the inner field when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), required: true }));
+    expect(inner.required).toBe(true);
   });
 
-  it('should not set hint when description is not provided', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.props?.hint).toBeUndefined();
+  it('should not set required on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.required).toBeUndefined();
   });
 
-  it('should propagate search through props', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.props?.search).toBe(stubSearch);
+  it('should set readonly on the inner field when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), readonly: true }));
+    expect(inner.readonly).toBe(true);
   });
 
-  it('should propagate displayForValue through props', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.props?.displayForValue).toBe(stubDisplayForValue);
+  it('should propagate search through inner field props', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.search).toBe(stubSearch);
   });
 
-  it('should propagate allowStringValues through props when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), allowStringValues: true });
-    expect(field.props?.allowStringValues).toBe(true);
+  it('should propagate displayForValue through inner field props', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
-  it('should not set allowStringValues when not provided', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.props?.allowStringValues).toBeUndefined();
+  it('should propagate allowStringValues through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), allowStringValues: true }));
+    expect(inner.props?.allowStringValues).toBe(true);
   });
 
-  it('should propagate searchOnEmptyText through props when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), searchOnEmptyText: true });
-    expect(field.props?.searchOnEmptyText).toBe(true);
+  it('should not set allowStringValues on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.allowStringValues).toBeUndefined();
   });
 
-  it('should not set searchOnEmptyText when not provided', () => {
-    const field = forgeSearchableTextField(minimalConfig());
-    expect(field.props?.searchOnEmptyText).toBeUndefined();
+  it('should propagate searchOnEmptyText through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), searchOnEmptyText: true }));
+    expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 
-  it('should propagate showClearValue through props when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), showClearValue: false });
-    expect(field.props?.showClearValue).toBe(false);
+  it('should not set searchOnEmptyText on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableTextField(minimalConfig()));
+    expect(inner.props?.searchOnEmptyText).toBeUndefined();
   });
 
-  it('should propagate searchLabel through props when provided', () => {
-    const field = forgeSearchableTextField({ ...minimalConfig(), searchLabel: 'Find...' });
-    expect(field.props?.searchLabel).toBe('Find...');
+  it('should propagate showClearValue through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), showClearValue: false }));
+    expect(inner.props?.showClearValue).toBe(false);
+  });
+
+  it('should propagate searchLabel through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableTextField({ ...minimalConfig(), searchLabel: 'Find...' }));
+    expect(inner.props?.searchLabel).toBe('Find...');
   });
 });
 
@@ -112,94 +135,114 @@ describe('forgeSearchableChipField()', () => {
     } as Parameters<typeof forgeSearchableChipField>[0];
   }
 
-  it('should set the correct type', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.type).toBe('dbx-searchable-chip');
+  // -- Wrapper-level tests --
+
+  it('should set the wrapper type to dbx-forge-form-field', () => {
+    const wrapper = forgeSearchableChipField(minimalConfig());
+    expect(wrapper.type).toBe('dbx-forge-form-field');
   });
 
-  it('should set the key', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.key).toBe('tags');
+  it('should set the label on the wrapper when provided', () => {
+    const wrapper = forgeSearchableChipField({ ...minimalConfig(), label: 'Tags' });
+    expect(wrapper.label).toBe('Tags');
   });
 
-  it('should set the label when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), label: 'Tags' });
-    expect(field.label).toBe('Tags');
+  it('should default wrapper label to empty string when not provided', () => {
+    const wrapper = forgeSearchableChipField(minimalConfig());
+    expect(wrapper.label).toBe('');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.label).toBe('');
+  it('should map description to wrapper props.hint', () => {
+    const wrapper = forgeSearchableChipField({ ...minimalConfig(), description: 'Add tags' });
+    expect(wrapper.props?.hint).toBe('Add tags');
   });
 
-  it('should set required when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), required: true });
-    expect(field.required).toBe(true);
+  it('should not set hint on wrapper when description is not provided', () => {
+    const wrapper = forgeSearchableChipField(minimalConfig());
+    expect(wrapper.props?.hint).toBeUndefined();
   });
 
-  it('should not set required when not provided', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.required).toBeUndefined();
+  // -- Inner field tests --
+
+  it('should set the correct inner field type', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.type).toBe('dbx-searchable-chip');
   });
 
-  it('should set readonly when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), readonly: true });
-    expect(field.readonly).toBe(true);
+  it('should set the key on the inner field', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.key).toBe('tags');
   });
 
-  it('should map description to props.hint', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), description: 'Add tags' });
-    expect(field.props?.hint).toBe('Add tags');
+  it('should set required on the inner field when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), required: true }));
+    expect(inner.required).toBe(true);
   });
 
-  it('should not set hint when description is not provided', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.props?.hint).toBeUndefined();
+  it('should not set required on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.required).toBeUndefined();
   });
 
-  it('should propagate search through props', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.props?.search).toBe(stubSearch);
+  it('should set readonly on the inner field when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), readonly: true }));
+    expect(inner.readonly).toBe(true);
   });
 
-  it('should propagate displayForValue through props', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.props?.displayForValue).toBe(stubDisplayForValue);
+  it('should propagate search through inner field props', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.search).toBe(stubSearch);
   });
 
-  it('should propagate allowStringValues through props when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), allowStringValues: true });
-    expect(field.props?.allowStringValues).toBe(true);
+  it('should propagate displayForValue through inner field props', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.displayForValue).toBe(stubDisplayForValue);
   });
 
-  it('should not set allowStringValues when not provided', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.props?.allowStringValues).toBeUndefined();
+  it('should propagate allowStringValues through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), allowStringValues: true }));
+    expect(inner.props?.allowStringValues).toBe(true);
   });
 
-  it('should propagate searchOnEmptyText through props when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), searchOnEmptyText: true });
-    expect(field.props?.searchOnEmptyText).toBe(true);
+  it('should not set allowStringValues on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.allowStringValues).toBeUndefined();
   });
 
-  it('should not set searchOnEmptyText when not provided', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.props?.searchOnEmptyText).toBeUndefined();
+  it('should propagate searchOnEmptyText through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), searchOnEmptyText: true }));
+    expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 
-  it('should propagate multiSelect through props when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), multiSelect: false });
-    expect(field.props?.multiSelect).toBe(false);
+  it('should not set searchOnEmptyText on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.searchOnEmptyText).toBeUndefined();
   });
 
-  it('should not set multiSelect when not provided', () => {
-    const field = forgeSearchableChipField(minimalConfig());
-    expect(field.props?.multiSelect).toBeUndefined();
+  it('should propagate multiSelect through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), multiSelect: false }));
+    expect(inner.props?.multiSelect).toBe(false);
   });
 
-  it('should propagate asArrayValue through props when provided', () => {
-    const field = forgeSearchableChipField({ ...minimalConfig(), asArrayValue: false });
-    expect(field.props?.asArrayValue).toBe(false);
+  it('should not set multiSelect on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.multiSelect).toBeUndefined();
+  });
+
+  it('should propagate asArrayValue through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), asArrayValue: false }));
+    expect(inner.props?.asArrayValue).toBe(false);
+  });
+
+  it('should propagate textInputValidator through inner field props when provided', () => {
+    const validator = () => null;
+    const inner = getInnerField(forgeSearchableChipField({ ...minimalConfig(), textInputValidator: validator } as Parameters<typeof forgeSearchableChipField>[0]));
+    expect(inner.props?.textInputValidator).toBe(validator);
+  });
+
+  it('should not set textInputValidator on the inner field when not provided', () => {
+    const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
+    expect(inner.props?.textInputValidator).toBeUndefined();
   });
 });
 
@@ -213,53 +256,62 @@ describe('forgeSearchableStringChipField()', () => {
     } as Parameters<typeof forgeSearchableStringChipField>[0];
   }
 
-  it('should set the correct type', () => {
-    const field = forgeSearchableStringChipField(minimalConfig());
-    expect(field.type).toBe('dbx-searchable-chip');
+  // -- Wrapper-level tests --
+
+  it('should set the wrapper type to dbx-forge-form-field', () => {
+    const wrapper = forgeSearchableStringChipField(minimalConfig());
+    expect(wrapper.type).toBe('dbx-forge-form-field');
   });
 
-  it('should set the key', () => {
-    const field = forgeSearchableStringChipField(minimalConfig());
-    expect(field.key).toBe('keywords');
+  it('should set the label on the wrapper when provided', () => {
+    const wrapper = forgeSearchableStringChipField({ ...minimalConfig(), label: 'Keywords' });
+    expect(wrapper.label).toBe('Keywords');
   });
 
-  it('should set the label when provided', () => {
-    const field = forgeSearchableStringChipField({ ...minimalConfig(), label: 'Keywords' });
-    expect(field.label).toBe('Keywords');
+  it('should default wrapper label to empty string when not provided', () => {
+    const wrapper = forgeSearchableStringChipField(minimalConfig());
+    expect(wrapper.label).toBe('');
   });
 
-  it('should default label to empty string when not provided', () => {
-    const field = forgeSearchableStringChipField(minimalConfig());
-    expect(field.label).toBe('');
+  it('should map description to wrapper props.hint', () => {
+    const wrapper = forgeSearchableStringChipField({ ...minimalConfig(), description: 'Enter keywords' });
+    expect(wrapper.props?.hint).toBe('Enter keywords');
   });
 
-  it('should always set allowStringValues to true', () => {
-    const field = forgeSearchableStringChipField(minimalConfig());
-    expect(field.props?.allowStringValues).toBe(true);
+  // -- Inner field tests --
+
+  it('should set the correct inner field type', () => {
+    const inner = getInnerField(forgeSearchableStringChipField(minimalConfig()));
+    expect(inner.type).toBe('dbx-searchable-chip');
   });
 
-  it('should set required when provided', () => {
-    const field = forgeSearchableStringChipField({ ...minimalConfig(), required: true });
-    expect(field.required).toBe(true);
+  it('should set the key on the inner field', () => {
+    const inner = getInnerField(forgeSearchableStringChipField(minimalConfig()));
+    expect(inner.key).toBe('keywords');
   });
 
-  it('should map description to props.hint', () => {
-    const field = forgeSearchableStringChipField({ ...minimalConfig(), description: 'Enter keywords' });
-    expect(field.props?.hint).toBe('Enter keywords');
+  it('should always set allowStringValues to true on the inner field', () => {
+    const inner = getInnerField(forgeSearchableStringChipField(minimalConfig()));
+    expect(inner.props?.allowStringValues).toBe(true);
   });
 
-  it('should propagate search through props', () => {
-    const field = forgeSearchableStringChipField(minimalConfig());
-    expect(field.props?.search).toBe(stubSearch);
+  it('should set required on the inner field when provided', () => {
+    const inner = getInnerField(forgeSearchableStringChipField({ ...minimalConfig(), required: true }));
+    expect(inner.required).toBe(true);
   });
 
-  it('should propagate displayForValue through props', () => {
-    const field = forgeSearchableStringChipField(minimalConfig());
-    expect(field.props?.displayForValue).toBe(stubDisplayForValue);
+  it('should propagate search through inner field props', () => {
+    const inner = getInnerField(forgeSearchableStringChipField(minimalConfig()));
+    expect(inner.props?.search).toBe(stubSearch);
   });
 
-  it('should propagate searchOnEmptyText through props when provided', () => {
-    const field = forgeSearchableStringChipField({ ...minimalConfig(), searchOnEmptyText: true });
-    expect(field.props?.searchOnEmptyText).toBe(true);
+  it('should propagate displayForValue through inner field props', () => {
+    const inner = getInnerField(forgeSearchableStringChipField(minimalConfig()));
+    expect(inner.props?.displayForValue).toBe(stubDisplayForValue);
+  });
+
+  it('should propagate searchOnEmptyText through inner field props when provided', () => {
+    const inner = getInnerField(forgeSearchableStringChipField({ ...minimalConfig(), searchOnEmptyText: true }));
+    expect(inner.props?.searchOnEmptyText).toBe(true);
   });
 });

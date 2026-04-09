@@ -53,46 +53,7 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
  */
 @Component({
   selector: 'dbx-forge-source-select-field',
-  template: `
-    <div class="dbx-source-select-field">
-      @if (labelSignal()) {
-        <span class="dbx-label">{{ labelSignal() }}</span>
-      }
-      <div class="dbx-source-select-field-content">
-        <mat-select class="dbx-source-select-field-select" [formControl]="selectCtrl" [multiple]="multipleSignal()" [panelClass]="selectPanelClassSignal()" (openedChange)="onSelectOpenedChange($event)">
-          @if (filterableSignal()) {
-            <div class="dbx-source-select-filter-container">
-              <input #filterInput class="dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
-            </div>
-          }
-          @for (value of filteredNonGroupedValuesSignal(); track value.value) {
-            <mat-option [value]="value.value">
-              {{ value.label }}
-            </mat-option>
-          }
-          @for (optionGroup of filteredGroupedOptionsSignal(); track optionGroup.label) {
-            <mat-optgroup [label]="optionGroup.label">
-              @for (value of optionGroup.values; track value.value) {
-                <mat-option [value]="value.value">
-                  {{ value.label }}
-                </mat-option>
-              }
-            </mat-optgroup>
-          }
-        </mat-select>
-        @if (showOpenSourceButtonSignal()) {
-          <dbx-button-spacer></dbx-button-spacer>
-          <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" class="dbx-source-select-field-button">
-            <dbx-button #button dbxActionButton [fab]="true" [iconOnly]="true" [icon]="selectButtonIconSignal()"></dbx-button>
-          </dbx-action>
-        }
-      </div>
-      <dbx-loading class="dbx-source-select-field-loading" [linear]="true" [context]="context"></dbx-loading>
-      @if (hintSignal()) {
-        <div class="dbx-form-description">{{ hintSignal() }}</div>
-      }
-    </div>
-  `,
+  templateUrl: './sourceselect.field.component.html',
   imports: [MatSelect, MatOption, MatOptgroup, FormsModule, ReactiveFormsModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxActionModule, DbxLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
@@ -317,8 +278,12 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
 
   // Sync field value to _valuesSubject
   private readonly _syncFieldValueEffect = effect(() => {
-    const f = this.field();
-    const fieldValue = f ? ((f as any)?.value?.() as Maybe<T | T[]>) : undefined;
+    const fieldGetter = this.field();
+    if (!fieldGetter) return;
+
+    // FieldTree is a signal — call it to get the field state, then read .value()
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
     const values = fieldValue != null ? convertMaybeToArray(fieldValue as T | T[]) : [];
     this._valuesSubject.next(values);
   });
@@ -451,16 +416,12 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   }
 
   private _setFieldValue(value: Maybe<T | T[]>): void {
-    const f = this.field();
-    if (!f) return;
+    const fieldGetter = this.field();
+    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
-    if (typeof (f as any).setValue === 'function') {
-      (f as any).setValue(value);
-    } else if (typeof (f as any).value === 'function') {
-      const sig = (f as any).value;
-      if (sig.set) {
-        sig.set(value);
-      }
+    const fieldState = (fieldGetter as any)();
+    if (fieldState?.value?.set) {
+      fieldState.value.set(value);
     }
   }
 
@@ -490,10 +451,10 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
           return metaLoader(needsMeta.map((x) => x[1])).pipe(
             first(),
             map((metaResults) => {
-              const metaResultsMapping: SourceSelectValue<T, M>[] = metaResults.map((meta) => ({ meta, value: valueReader(meta) }));
+              const metaResultsMapping: SourceSelectValue<T, M>[] = metaResults.filter((meta) => meta != null).map((meta) => ({ meta, value: valueReader(meta) }));
               const valueIndexHashMap = new Map(metaResultsMapping.map((x) => [x.value, x]));
               metaResultsMapping.forEach((x) => metaMap.set(x.value, x));
-              return mappingResult.map((x) => x[2] ?? valueIndexHashMap.get(x[1])) as SourceSelectValue<T, M>[];
+              return mappingResult.map((x) => x[2] ?? valueIndexHashMap.get(x[1])).filter((x) => x != null) as SourceSelectValue<T, M>[];
             })
           );
         }

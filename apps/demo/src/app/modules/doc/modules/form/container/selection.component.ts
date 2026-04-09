@@ -291,6 +291,13 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         options: VALUE_SELECTION_VALUES
       }),
       forgeValueSelectionField({
+        key: 'selectOneWithClear',
+        label: 'Select One With Clear',
+        description: 'This is a simple selection field with a custom clear value added via the addClearOption.',
+        addClearOption: '>> Custom Clear Me <<',
+        options: VALUE_SELECTION_VALUES
+      }),
+      forgeValueSelectionField({
         key: 'selectMultiple',
         label: 'Select Multiple',
         description: 'This is a simple selection field for picking an array of values.',
@@ -300,7 +307,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       forgeValueSelectionField({
         key: 'selectWithObservable',
         label: 'Select With Observable Data Source',
-        description: 'This select source uses an observable for values.',
+        description: 'This select source uses static values. Note: ng-forge SelectField does not support Observable options.',
         options: VALUE_SELECTION_VALUES
       })
     ]
@@ -352,6 +359,40 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) });
           return of(sources);
         }
+      }) as any,
+      forgeSourceSelectField({
+        key: 'selectManyWithSourceButton',
+        label: 'Select With Source Button',
+        multiple: true,
+        description: 'This source demonstrates the source selection button. The button can be configured to return both options to select immediately or options to add to the list.',
+        selectButtonIcon: 'search',
+        valueReader: (x: any) => x.value,
+        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+        loadSources: () => {
+          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+          return of(sources);
+        },
+        openSource: ({ origin }) => {
+          console.log('origin: ', origin);
+          return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
+        }
+      }) as any,
+      forgeSourceSelectField({
+        key: 'selectManyFilterable',
+        label: 'Select Many (Filterable)',
+        multiple: true,
+        description: 'This source demonstrates the type-to-filter feature (enabled by default). Open the dropdown and start typing to filter options by label.',
+        valueReader: (x: any) => x.value,
+        metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+        displayForValue: (input) => of(input.map((y: any) => ({ ...y, label: String(y.meta.label) }))),
+        loadSources: () => {
+          const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+          sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+          sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) });
+          return of(sources);
+        }
       }) as any
     ]
   };
@@ -391,6 +432,33 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         filterValues: filterPickableItemFieldValuesByLabel,
         loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
         displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableChipField({
+        key: 'staticLabeledValuesExample',
+        label: 'pickableValueFieldValuesConfigForStaticLabeledValues() Example Usage',
+        filterLabel: 'Filter',
+        ...pickableValueFieldValuesConfigForStaticLabeledValues(
+          range(50)
+            .map((x) => String(x))
+            .map((value) => ({ label: value.toUpperCase(), value }))
+        )
+      }) as any,
+      forgePickableChipField({
+        key: 'stringItemChipsWithFilterDelay',
+        label: 'String Item Chips With Filter With Delay',
+        filterLabel: 'Filter',
+        description: 'You can filter these items by their label.',
+        filterValues: (a, b) => filterPickableItemFieldValuesByLabel(a, b).pipe(delay(300)),
+        loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgePickableChipField({
+        key: 'stringItemChipsWithSelectAll',
+        label: 'Chips With Select All Button',
+        description: 'This chip field has a "Select All" toggle button to select or deselect all items at once.',
+        showSelectAllButton: true,
+        loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
       }) as any
     ]
   };
@@ -421,6 +489,15 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         displayForValue: DISPLAY_FOR_STRING_VALUE,
         multiSelect: false,
         asArrayValue: true
+      }) as any,
+      forgePickableListField({
+        key: 'stringItemListWithFilter',
+        label: 'String Item List',
+        filterLabel: 'Filter',
+        description: 'You can filter these items by their label.',
+        filterValues: filterPickableItemFieldValuesByLabel,
+        loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
       }) as any
     ]
   };
@@ -453,6 +530,44 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         searchOnEmptyText: true,
         search: makeSearchForStringValue(this.searchFn$),
         displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableChipField({
+        key: 'pickOne',
+        label: 'Pick a Single Value',
+        description: 'Can only pick one value at a time. Saved as a single value.',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        multiSelect: false,
+        asArrayValue: false,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableChipField({
+        key: 'nonEmptySearch',
+        label: 'Search Non-Empty Strings',
+        description: 'This input does not search empty string value.',
+        allowStringValues: false,
+        searchOnEmptyText: false,
+        search: makeSearchForStringValue(this.searchFn$),
+        displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableChipField({
+        key: 'customView',
+        label: 'Search Non-Empty Strings',
+        description: 'This input has custom display configuration.',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
+      }) as any,
+      forgeSearchableStringChipField({
+        key: 'validatedUrls',
+        label: 'URL Chips With Validation',
+        description: 'Type a URL (e.g. https://example.com) and press enter. Invalid URLs are rejected with an inline error. Port numbers like http://localhost:8080 are allowed.',
+        searchOnEmptyText: false,
+        textInputValidator: isWebsiteUrlValidator({ requirePrefix: true, allowPorts: true }),
+        search: () => of([]),
+        displayForValue: (values) => of(values.map((v) => ({ ...v, label: v.value })))
       }) as any
     ]
   };
@@ -487,6 +602,38 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         searchOnEmptyText: false,
         search: makeSearchForStringValue(this.searchFn$),
         displayForValue: DISPLAY_FOR_STRING_VALUE
+      }) as any,
+      forgeSearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+        key: 'models',
+        label: 'Search And Pick A Model',
+        description: 'Search for models using a string and the default display presentation.',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(0),
+        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE
+      }) as any,
+      forgeSearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+        key: 'customDisplay',
+        label: 'Search And Pick A Model (Custom Display)',
+        description: 'Search for models using a string and custom display presentation set on the field.',
+        placeholder: 'Type to search (3 characters minimum)',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE,
+        display: {
+          componentClass: DocFormExamplePrimarySearchableFieldDisplayComponent
+        }
+      }) as any,
+      forgeSearchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
+        key: 'customDisplayItems',
+        label: 'Search And Pick A Model (Custom Display)',
+        description: 'Search for models using a string and custom display presentation set per item.',
+        placeholder: 'Type to search (3 characters minimum)',
+        allowStringValues: false,
+        searchOnEmptyText: true,
+        search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+        displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
       }) as any
     ]
   };
@@ -553,7 +700,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     pickableItemChipField({
-      key: 'stringItemChips',
+      key: 'stringItemChipsReadonly',
       label: 'Read Only String Item Chips',
       description: 'This is read only.',
       readonly: true,
@@ -579,15 +726,6 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     pickableItemChipField({
-      key: 'stringItemChipsWithFilter',
-      label: 'String Item Chips With Filter',
-      filterLabel: 'Filter',
-      description: 'You can filter these items by their label.',
-      filterValues: filterPickableItemFieldValuesByLabel,
-      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
-      displayForValue: DISPLAY_FOR_STRING_VALUE
-    }),
-    pickableItemChipField({
       key: 'staticLabeledValuesExample',
       label: 'pickableValueFieldValuesConfigForStaticLabeledValues() Example Usage',
       filterLabel: 'Filter',
@@ -598,7 +736,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       )
     }),
     pickableItemChipField({
-      key: 'stringItemChipsWithFilter',
+      key: 'stringItemChipsWithFilterDelay',
       label: 'String Item Chips With Filter With Delay',
       filterLabel: 'Filter',
       description: 'You can filter these items by their label.',
@@ -625,7 +763,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     pickableItemListField<DocFormExampleSelectionValueId>({
-      key: 'stringItemList',
+      key: 'stringItemListReadonly',
       label: 'Read Only String Item List',
       readonly: true,
       description: 'This is read only.',
@@ -662,7 +800,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     searchableStringChipField({
-      key: 'typeAndPickChips',
+      key: 'typeAndPickChipsReadonly',
       label: 'Read Only Text Field',
       description: 'This input is read-only.',
       readonly: true,
@@ -730,7 +868,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     searchableTextField({
-      key: 'strings',
+      key: 'stringsReadonly',
       label: 'Read-only Text Field',
       description: 'View is read only.',
       readonly: true,

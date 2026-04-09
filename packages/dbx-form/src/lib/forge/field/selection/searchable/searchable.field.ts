@@ -1,7 +1,8 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
+import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, type ForgeSearchableChipFieldProps, type ForgeSearchableChipFieldDef } from './searchable.field.component';
 
 // MARK: Field Type Definitions
@@ -34,6 +35,7 @@ export const DBX_SEARCHABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgeSearchable
 export interface ForgeSearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends ForgeSearchableTextFieldProps<T, M, H> {
   readonly key: string;
   readonly label?: string;
+  readonly placeholder?: string;
   readonly required?: boolean;
   readonly readonly?: boolean;
   readonly description?: string;
@@ -55,23 +57,29 @@ export interface ForgeSearchableTextFieldConfig<T = unknown, M = unknown, H exte
  * });
  * ```
  */
-export function forgeSearchableTextField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: ForgeSearchableTextFieldConfig<T, M, H>): ForgeSearchableTextFieldDef<T, M, H> {
-  const { key, label, required, readonly: isReadonly, description, ...searchProps } = config;
+export function forgeSearchableTextField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: ForgeSearchableTextFieldConfig<T, M, H>): ForgeFormFieldWrapperFieldDef<ForgeSearchableTextFieldDef<T, M, H>> {
+  const { key, label, placeholder, required, readonly: isReadonly, description, ...searchProps } = config;
 
-  return forgeField(
+  const innerField = forgeField(
     filterFromPOJO({
       key,
       type: 'dbx-searchable-text' as const,
-      label: label ?? '',
+      label: '',
+      placeholder,
       value: undefined as unknown as T,
       required,
       readonly: isReadonly,
       props: filterFromPOJO({
-        ...searchProps,
-        hint: description
+        ...searchProps
       }) as ForgeSearchableTextFieldProps<T, M, H>
     }) as ForgeSearchableTextFieldDef<T, M, H>
   );
+
+  return forgeFormFieldWrapper<ForgeSearchableTextFieldDef<T, M, H>>({
+    label: label ?? '',
+    hint: description,
+    fields: [innerField as unknown as FieldDef<unknown>]
+  });
 }
 
 // MARK: Searchable Chip Field
@@ -81,6 +89,7 @@ export function forgeSearchableTextField<T = unknown, M = unknown, H extends Pri
 export interface ForgeSearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends ForgeSearchableChipFieldProps<T, M, H> {
   readonly key: string;
   readonly label?: string;
+  readonly placeholder?: string;
   readonly required?: boolean;
   readonly readonly?: boolean;
   readonly description?: string;
@@ -103,23 +112,29 @@ export interface ForgeSearchableChipFieldConfig<T = unknown, M = unknown, H exte
  * });
  * ```
  */
-export function forgeSearchableChipField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: ForgeSearchableChipFieldConfig<T, M, H>): ForgeSearchableChipFieldDef<T, M, H> {
-  const { key, label, required, readonly: isReadonly, description, ...chipProps } = config;
+export function forgeSearchableChipField<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: ForgeSearchableChipFieldConfig<T, M, H>): ForgeFormFieldWrapperFieldDef<ForgeSearchableChipFieldDef<T, M, H>> {
+  const { key, label, placeholder, required, readonly: isReadonly, description, ...chipProps } = config;
 
-  return forgeField(
+  const innerField = forgeField(
     filterFromPOJO({
       key,
       type: 'dbx-searchable-chip' as const,
-      label: label ?? '',
+      label: '',
+      placeholder,
       value: undefined as unknown as T | T[],
       required,
       readonly: isReadonly,
       props: filterFromPOJO({
-        ...chipProps,
-        hint: description
+        ...chipProps
       }) as ForgeSearchableChipFieldProps<T, M, H>
     }) as ForgeSearchableChipFieldDef<T, M, H>
   );
+
+  return forgeFormFieldWrapper<ForgeSearchableChipFieldDef<T, M, H>>({
+    label: label ?? '',
+    hint: description,
+    fields: [innerField as unknown as FieldDef<unknown>]
+  });
 }
 
 /**
@@ -128,7 +143,7 @@ export function forgeSearchableChipField<T = unknown, M = unknown, H extends Pri
  * @param config - String-specific searchable chip field configuration (omits allowStringValues)
  * @returns A validated {@link ForgeSearchableChipFieldDef}
  */
-export function forgeSearchableStringChipField<M = unknown>(config: Omit<ForgeSearchableChipFieldConfig<string, M>, 'allowStringValues'>): ForgeSearchableChipFieldDef<string, M> {
+export function forgeSearchableStringChipField<M = unknown>(config: Omit<ForgeSearchableChipFieldConfig<string, M>, 'allowStringValues'>): ForgeFormFieldWrapperFieldDef<ForgeSearchableChipFieldDef<string, M>> {
   return forgeSearchableChipField({
     ...config,
     allowStringValues: true

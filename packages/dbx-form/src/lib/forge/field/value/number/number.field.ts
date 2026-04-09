@@ -2,7 +2,7 @@ import type { FieldDef } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { forgeField } from '../../field';
-import { forgeFormFieldWrapper } from '../../wrapper/formfield/formfield.field';
+import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 
 // MARK: Number Field
 /**
@@ -108,7 +108,7 @@ export interface ForgeNumberSliderFieldConfig extends ForgeNumberFieldConfig {
  * const field = forgeNumberSliderField({ key: 'rating', label: 'Rating', min: 0, max: 10, step: 1 });
  * ```
  */
-export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): FieldDef<unknown> {
+export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): ForgeFormFieldWrapperFieldDef<MatSliderField> {
   const { key, label, required, readonly: isReadonly, description, min, max, step, defaultValue, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval } = config;
 
   let tickIntervalFromSteps: number | undefined;
@@ -143,7 +143,7 @@ export function forgeNumberSliderField(config: ForgeNumberSliderFieldConfig): Fi
     }) as MatSliderField
   );
 
-  return forgeFormFieldWrapper({
+  return forgeFormFieldWrapper<MatSliderField>({
     label: label ?? '',
     hint: description,
     fields: [sliderField as unknown as FieldDef<unknown>]

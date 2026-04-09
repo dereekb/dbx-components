@@ -1,6 +1,7 @@
 import type { MatSelectField, MatSelectProps } from '@ng-forge/dynamic-forms-material';
 import type { FieldOption } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
+import type { Observable } from 'rxjs';
 import { forgeField } from '../field';
 
 /**
@@ -14,8 +15,11 @@ export interface ForgeValueSelectionFieldConfig<T = unknown> {
   readonly description?: string;
   /**
    * Options to select from. Accepts any object with label and value properties.
+   *
+   * NOTE: ng-forge SelectField only supports static arrays. If an Observable is provided,
+   * it is not supported and will be ignored — pass a static array instead.
    */
-  readonly options: readonly { label: string; value: T }[];
+  readonly options: readonly { label: string; value: T }[] | Observable<readonly { label: string; value: T }[]>;
   /**
    * Allow selecting multiple values and return an array.
    */
@@ -24,6 +28,13 @@ export interface ForgeValueSelectionFieldConfig<T = unknown> {
    * Default selected value.
    */
   readonly defaultValue?: T;
+  /**
+   * When true or a string, adds a clear/reset option at the top of the options list.
+   * If a string is provided, it is used as the clear option label.
+   *
+   * @default false
+   */
+  readonly addClearOption?: boolean | string;
 }
 
 /**
@@ -42,12 +53,28 @@ export interface ForgeValueSelectionFieldConfig<T = unknown> {
  * ```
  */
 export function forgeValueSelectionField<T = unknown>(config: ForgeValueSelectionFieldConfig<T>): MatSelectField<T> {
-  const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue } = config;
+  const { key, label, required, readonly: isReadonly, description, options, multiple, defaultValue, addClearOption } = config;
 
   const props: Partial<MatSelectProps> = filterFromPOJO({
     hint: description,
     multiple
   });
+
+  // Build options array, prepending a clear option if configured
+  let resolvedOptions: readonly { label: string; value: T }[];
+
+  if (Array.isArray(options)) {
+    resolvedOptions = options;
+  } else {
+    // Observable options are not supported by ng-forge SelectField — fall back to empty array.
+    // The formly variant supports Observable options; forge does not.
+    resolvedOptions = [];
+  }
+
+  if (addClearOption) {
+    const clearLabel = typeof addClearOption === 'string' ? addClearOption : '-- Clear --';
+    resolvedOptions = [{ label: clearLabel, value: null as unknown as T }, ...resolvedOptions];
+  }
 
   return forgeField(
     filterFromPOJO({
@@ -57,7 +84,7 @@ export function forgeValueSelectionField<T = unknown>(config: ForgeValueSelectio
       value: defaultValue,
       required,
       readonly: isReadonly,
-      options: options as FieldOption<T>[],
+      options: resolvedOptions as FieldOption<T>[],
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatSelectField<T>
   );

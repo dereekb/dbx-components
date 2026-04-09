@@ -1,7 +1,8 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
+import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { type ForgeSourceSelectFieldProps, type ForgeSourceSelectFieldDef } from './sourceselect.field.component';
 
 // MARK: Field Type Definition
@@ -45,21 +46,26 @@ export interface ForgeSourceSelectFieldConfig<T extends PrimativeKey = Primative
  * });
  * ```
  */
-export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: ForgeSourceSelectFieldConfig<T, M>): ForgeSourceSelectFieldDef<T, M> {
+export function forgeSourceSelectField<T extends PrimativeKey = PrimativeKey, M = unknown>(config: ForgeSourceSelectFieldConfig<T, M>): ForgeFormFieldWrapperFieldDef<ForgeSourceSelectFieldDef<T, M>> {
   const { key, label, required, readonly: isReadonly, description, ...selectProps } = config;
 
-  return forgeField(
+  const innerField = forgeField(
     filterFromPOJO({
       key,
       type: 'dbx-source-select' as const,
-      label: label ?? '',
+      label: '',
       value: undefined as unknown as T | T[],
       required,
       readonly: isReadonly,
       props: filterFromPOJO({
-        ...selectProps,
-        hint: description
+        ...selectProps
       }) as ForgeSourceSelectFieldProps<T, M>
     }) as ForgeSourceSelectFieldDef<T, M>
   );
+
+  return forgeFormFieldWrapper<ForgeSourceSelectFieldDef<T, M>>({
+    label: label ?? '',
+    hint: description,
+    fields: [innerField as unknown as FieldDef<unknown>]
+  });
 }

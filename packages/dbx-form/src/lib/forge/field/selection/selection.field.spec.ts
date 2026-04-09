@@ -74,4 +74,38 @@ describe('forgeValueSelectionField()', () => {
     expect(field.value).toBe(1);
     expect(field.options).toEqual(numOptions);
   });
+
+  describe('addClearOption', () => {
+    it('should prepend a clear option with default label when true', () => {
+      const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: true });
+      expect(field.options).toHaveLength(testOptions.length + 1);
+      expect(field.options[0].label).toBe('-- Clear --');
+      expect(field.options[0].value).toBeNull();
+    });
+
+    it('should prepend a clear option with custom label when string', () => {
+      const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: '>> Reset <<' });
+      expect(field.options).toHaveLength(testOptions.length + 1);
+      expect(field.options[0].label).toBe('>> Reset <<');
+      expect(field.options[0].value).toBeNull();
+    });
+
+    it('should not prepend a clear option when false or omitted', () => {
+      const field = forgeValueSelectionField({ key: 'color', options: testOptions });
+      expect(field.options).toHaveLength(testOptions.length);
+    });
+
+    it('should preserve original options after the clear option', () => {
+      const field = forgeValueSelectionField({ key: 'color', options: testOptions, addClearOption: true });
+      expect(field.options.slice(1)).toEqual(testOptions);
+    });
+  });
+
+  describe('observable options', () => {
+    it('should fall back to empty array when options is an Observable', () => {
+      const { of } = require('rxjs');
+      const field = forgeValueSelectionField({ key: 'color', options: of(testOptions) });
+      expect(field.options).toEqual([]);
+    });
+  });
 });

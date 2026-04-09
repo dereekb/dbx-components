@@ -25,8 +25,14 @@ export interface ForgeFormFieldWrapperProps extends ForgeWrapperFieldProps {
 
 /**
  * Forge field definition for a form-field wrapper.
+ *
+ * The phantom generic `TInner` carries the type of the wrapped inner field(s)
+ * through the type system without affecting the runtime structure. This lets
+ * factory functions like `forgeSearchableTextField` return a typed wrapper
+ * (e.g. `ForgeFormFieldWrapperFieldDef<ForgeSearchableTextFieldDef<T,M,H>>`)
+ * instead of an opaque `FieldDef<unknown>`.
  */
-export interface ForgeFormFieldWrapperFieldDef extends BaseValueField<ForgeFormFieldWrapperProps, Record<string, unknown>> {
+export interface ForgeFormFieldWrapperFieldDef<TInner extends FieldDef<any> = FieldDef<any>> extends BaseValueField<ForgeFormFieldWrapperProps, Record<string, unknown>> {
   readonly type: typeof FORGE_FORM_FIELD_WRAPPER_TYPE_NAME;
 }
 
@@ -88,7 +94,7 @@ let _forgeFormFieldWrapperCounter = 0;
  * });
  * ```
  */
-export function forgeFormFieldWrapper(config: ForgeFormFieldWrapperConfig): ForgeFormFieldWrapperFieldDef {
+export function forgeFormFieldWrapper<TInner extends FieldDef<any> = FieldDef<any>>(config: ForgeFormFieldWrapperConfig): ForgeFormFieldWrapperFieldDef<TInner> {
   const { label, hint, fields, key } = config;
 
   return forgeField(

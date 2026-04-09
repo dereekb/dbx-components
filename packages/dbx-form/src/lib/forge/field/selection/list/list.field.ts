@@ -1,8 +1,9 @@
 import { type PrimativeKey, filterFromPOJO } from '@dereekb/util';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms';
+import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { type AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 import { forgeField } from '../../field';
+import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import { type ForgeListSelectionFieldProps, type ForgeListSelectionFieldDef } from './list.field.component';
 
 // MARK: Field Type Definition
@@ -46,21 +47,26 @@ export interface ForgeListSelectionFieldConfig<T = unknown, C extends AbstractDb
  * });
  * ```
  */
-export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: ForgeListSelectionFieldConfig<T, C, K>): ForgeListSelectionFieldDef<T, C, K> {
+export function forgeListSelectionField<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey>(config: ForgeListSelectionFieldConfig<T, C, K>): ForgeFormFieldWrapperFieldDef<ForgeListSelectionFieldDef<T, C, K>> {
   const { key, label, required, readonly: isReadonly, description, ...listProps } = config;
 
-  return forgeField(
+  const innerField = forgeField(
     filterFromPOJO({
       key,
       type: 'dbx-list-selection' as const,
-      label: label ?? '',
+      label: '',
       value: undefined as unknown as K[],
       required,
       readonly: isReadonly,
       props: filterFromPOJO({
-        ...listProps,
-        hint: description
+        ...listProps
       }) as ForgeListSelectionFieldProps<T, C, K>
     }) as ForgeListSelectionFieldDef<T, C, K>
   );
+
+  return forgeFormFieldWrapper<ForgeListSelectionFieldDef<T, C, K>>({
+    label: label ?? '',
+    hint: description,
+    fields: [innerField as unknown as FieldDef<unknown>]
+  });
 }

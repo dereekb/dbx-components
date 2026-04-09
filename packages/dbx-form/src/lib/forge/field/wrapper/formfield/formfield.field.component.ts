@@ -47,10 +47,12 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
       :host {
         display: block;
         width: 100%;
+        margin-bottom: 16px;
       }
 
       .dbx-forge-form-field-wrapper {
         position: relative;
+        margin-top: 8px;
       }
 
       /* --- Notched outline --- */
@@ -128,13 +130,14 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
       /* --- Content area --- */
       .dbx-forge-form-field-content {
         position: relative;
-        padding: 8px 16px 0;
+        padding: var(--mat-form-field-container-vertical-padding, 16px) 16px 8px;
       }
 
       /* --- Subscript area --- */
-      /* Reuses Material's .mat-mdc-form-field-subscript-wrapper, .mat-mdc-form-field-error-wrapper,
-         .mat-mdc-form-field-hint-wrapper, and .mat-mdc-form-field-bottom-align classes for
-         consistent typography, spacing, color, and error/hint transition animation. */
+      .mat-mdc-form-field-subscript-wrapper {
+        padding: 0 16px;
+        box-sizing: border-box;
+      }
     `
   ],
   providers: provideDbxForgeWrapperFieldDirective(ForgeFormFieldWrapperComponent),

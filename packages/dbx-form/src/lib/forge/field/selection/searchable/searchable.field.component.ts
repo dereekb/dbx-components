@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, type OnDestroy, type OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl, type ValidatorFn } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipsModule, type MatChipInputEvent } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -82,6 +82,11 @@ export interface ForgeSearchableTextFieldProps<T = unknown, M = unknown, H exten
    * Hint text shown below the field.
    */
   readonly hint?: string;
+  /**
+   * Custom input validators applied to the text input control.
+   * When set, the input is validated before a string value can be added as a chip.
+   */
+  readonly textInputValidator?: ValidatorFn | ValidatorFn[];
 }
 
 /**
@@ -234,8 +239,9 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
 
   // Value from the FieldTree
   readonly fieldValueSignal = computed(() => {
-    const f = this.field();
-    return (f as any)?.value?.() as Maybe<T>;
+    const fieldGetter = this.field();
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    return fieldState?.value?.() as Maybe<T>;
   });
 
   readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = new BehaviorSubject<T[]>([]).pipe(
@@ -275,7 +281,7 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
 
   private readonly _syncFieldValueEffect = effect(() => {
     const fieldValue = this.fieldValueSignal();
-    const values = fieldValue != null ? [fieldValue] : [];
+    const values = fieldValue != null && fieldValue !== '' ? [fieldValue] : [];
     this._valuesSubject.next(values);
   });
 
@@ -321,17 +327,12 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
   }
 
   private _setFieldValue(value: Maybe<T>): void {
-    const f = this.field();
+    const fieldGetter = this.field();
+    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
-    if (f && typeof (f as any).setValue === 'function') {
-      (f as any).setValue(value);
-    } else if (f && typeof (f as any).value === 'function') {
-      // Signal-based FieldTree
-      const sig = (f as any).value;
-
-      if (sig.set) {
-        sig.set(value);
-      }
+    const fieldState = (fieldGetter as any)();
+    if (fieldState?.value?.set) {
+      fieldState.value.set(value);
     }
   }
 
@@ -435,6 +436,9 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
           }
         </mat-autocomplete>
       </mat-form-field>
+      @if (inputCtrl.touched && inputErrorMessage) {
+        <span class="dbx-chip-input-error">{{ inputErrorMessage }}</span>
+      }
       @if (hintSignal()) {
         <div class="dbx-form-description">{{ hintSignal() }}</div>
       }
@@ -526,11 +530,35 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   readonly searchResultsSignal = toSignal(this.searchResults$, { initialValue: [] as ConfiguredSearchableValueFieldDisplayValue<T, M>[] });
 
   private readonly _syncFieldValueEffect = effect(() => {
-    const f = this.field();
-    const fieldValue = f ? ((f as any)?.value?.() as Maybe<T | T[]>) : undefined;
-    const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>) : [];
+    const fieldGetter = this.field();
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
+    const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>).filter((v) => v != null && v !== '') : [];
     this._valuesSubject.next(values);
   });
+
+  /**
+   * Returns the first validation error message from the input control, if any.
+   */
+  get inputErrorMessage(): string | undefined {
+    const errors = this.inputCtrl.errors;
+
+    if (errors) {
+      for (const key of Object.keys(errors)) {
+        const error = errors[key];
+
+        if (typeof error === 'string') {
+          return error;
+        } else if (error?.message) {
+          return error.message;
+        }
+      }
+
+      return 'Invalid input';
+    }
+
+    return undefined;
+  }
 
   private _currentProps(): Maybe<ForgeSearchableChipFieldProps<T, M, H>> {
     return this.props();
@@ -541,6 +569,10 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
 
     if (p?.refreshDisplayValues$) {
       this._clearDisplayHashMapSub.subscription = p.refreshDisplayValues$.subscribe(() => this._displayHashMap.next(new Map()));
+    }
+
+    if (p?.textInputValidator) {
+      this.inputCtrl.setValidators(p.textInputValidator);
     }
 
     // Handle blur: add text as value if allowed
@@ -630,6 +662,15 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
     text = (text || '').trim();
 
     if (text) {
+      this.inputCtrl.setValue(text);
+    }
+
+    if (!this.inputCtrl.valid) {
+      this.inputCtrl.markAsTouched();
+      return;
+    }
+
+    if (text) {
       const convertFn = this.props()?.convertStringValue;
       const value = convertFn ? convertFn(text) : (text as unknown as T);
       this._addValue(value);
@@ -662,11 +703,8 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   }
 
   private _setFieldValue(values: T[]): void {
-    const f = this.field();
-
-    if (!f) {
-      return;
-    }
+    const fieldGetter = this.field();
+    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
     let newValue: T | T[] = values;
 
@@ -674,14 +712,9 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
       newValue = values[0] as T;
     }
 
-    if (typeof (f as any).setValue === 'function') {
-      (f as any).setValue(newValue);
-    } else if (typeof (f as any).value === 'function') {
-      const sig = (f as any).value;
-
-      if (sig.set) {
-        sig.set(newValue);
-      }
+    const fieldState = (fieldGetter as any)();
+    if (fieldState?.value?.set) {
+      fieldState.value.set(newValue);
     }
   }
 

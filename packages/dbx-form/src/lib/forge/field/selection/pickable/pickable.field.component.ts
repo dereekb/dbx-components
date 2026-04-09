@@ -10,7 +10,7 @@ import { type DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereek
 import { SubscriptionObject, type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
 import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
@@ -89,8 +89,8 @@ interface PickableDisplayValueWithHash<T, M = unknown, H extends PrimativeKey = 
         </div>
       }
       <div class="dbx-pickable-item-field-chips">
-        <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!readonlySignal()">
-          @if (showSelectAllButtonSignal() && multiSelectSignal()) {
+        <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!readonlySignal()" [disabled]="readonlySignal()">
+          @if (showSelectAllButtonSignal() && multiSelectSignal() && !readonlySignal()) {
             <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
               <span class="dbx-chip-label">All</span>
             </mat-chip-option>
@@ -148,7 +148,11 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
 
   readonly hintSignal = computed(() => this.props()?.hint);
   readonly multiSelectSignal = computed(() => this.props()?.multiSelect ?? true);
-  readonly readonlySignal = computed(() => false);
+  readonly readonlySignal = computed(() => {
+    const fieldGetter = this.field();
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    return fieldState?.readonly?.() ?? false;
+  });
   readonly showSelectAllButtonSignal = computed(() => this.props()?.showSelectAllButton ?? false);
   readonly showTextFilterSignal = computed(() => this.props()?.showTextFilter ?? Boolean(this.props()?.filterValues));
   readonly filterLabelSignal = computed(() => this.props()?.filterLabel);
@@ -169,9 +173,8 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
   readonly filterInputValueString$: Observable<Maybe<string>> = this.inputCtrl.valueChanges.pipe(startWith(undefined), debounceTime(200), distinctUntilChanged(), shareReplay(1));
 
   // Load all values and compute display values with hashes
-  readonly loadResultsDisplayValues$: Observable<PickableDisplayValueWithHash<T, M, H>[]> = new BehaviorSubject<void>(undefined).pipe(
-    switchMap(() => {
-      const p = this.props();
+  readonly loadResultsDisplayValues$: Observable<PickableDisplayValueWithHash<T, M, H>[]> = toObservable(this.props).pipe(
+    switchMap((p) => {
       const loadFn = p?.loadValues;
 
       if (!loadFn) {
@@ -267,8 +270,9 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
 
   // Sync field value to _valuesSubject
   private readonly _syncFieldValueEffect = effect(() => {
-    const f = this.field();
-    const fieldValue = f ? ((f as any)?.value?.() as Maybe<T | T[]>) : undefined;
+    const fieldGetter = this.field();
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
     const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>) : [];
     this._valuesSubject.next(values);
   });
@@ -337,8 +341,8 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
   }
 
   private _setFieldValue(values: T[]): void {
-    const f = this.field();
-    if (!f) return;
+    const fieldGetter = this.field();
+    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
     const p = this.props();
     const asArrayValue = p?.asArrayValue ?? true;
@@ -348,13 +352,9 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
       newValue = values[0];
     }
 
-    if (typeof (f as any).setValue === 'function') {
-      (f as any).setValue(newValue);
-    } else if (typeof (f as any).value === 'function') {
-      const sig = (f as any).value;
-      if (sig.set) {
-        sig.set(newValue);
-      }
+    const fieldState = (fieldGetter as any)();
+    if (fieldState?.value?.set) {
+      fieldState.value.set(newValue);
     }
   }
 
@@ -445,7 +445,7 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
       }
       <div class="dbx-pickable-item-field-list">
         <div class="dbx-pickable-item-field-list-content">
-          <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="true">
+          <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!readonlySignal()" [disabled]="readonlySignal()">
             @for (item of itemsSignal(); track item.key) {
               <mat-chip-option (click)="itemClicked(item)" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
                 @if (item.itemValue.icon) {
@@ -499,7 +499,11 @@ export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H exte
 
   readonly hintSignal = computed(() => this.props()?.hint);
   readonly multiSelectSignal = computed(() => this.props()?.multiSelect ?? true);
-  readonly readonlySignal = computed(() => false);
+  readonly readonlySignal = computed(() => {
+    const fieldGetter = this.field();
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    return fieldState?.readonly?.() ?? false;
+  });
   readonly showTextFilterSignal = computed(() => this.props()?.showTextFilter ?? Boolean(this.props()?.filterValues));
   readonly filterLabelSignal = computed(() => this.props()?.filterLabel);
   readonly footerConfigSignal = computed(() => this.props()?.footerConfig);
@@ -517,9 +521,8 @@ export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H exte
 
   readonly filterInputValueString$: Observable<Maybe<string>> = this.inputCtrl.valueChanges.pipe(startWith(undefined), debounceTime(200), distinctUntilChanged(), shareReplay(1));
 
-  readonly loadResultsDisplayValues$: Observable<PickableDisplayValueWithHash<T, M, H>[]> = new BehaviorSubject<void>(undefined).pipe(
-    switchMap(() => {
-      const p = this.props();
+  readonly loadResultsDisplayValues$: Observable<PickableDisplayValueWithHash<T, M, H>[]> = toObservable(this.props).pipe(
+    switchMap((p) => {
       const loadFn = p?.loadValues;
 
       if (!loadFn) {
@@ -606,8 +609,9 @@ export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H exte
   readonly noItemsAvailableSignal = toSignal(this.noItemsAvailable$, { initialValue: false });
 
   private readonly _syncFieldValueEffect = effect(() => {
-    const f = this.field();
-    const fieldValue = f ? ((f as any)?.value?.() as Maybe<T | T[]>) : undefined;
+    const fieldGetter = this.field();
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    const fieldValue = fieldState?.value?.() as Maybe<T | T[]>;
     const values = fieldValue != null ? convertMaybeToArray(fieldValue as ArrayOrValue<T>) : [];
     this._valuesSubject.next(values);
   });
@@ -666,8 +670,8 @@ export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H exte
   }
 
   private _setFieldValue(values: T[]): void {
-    const f = this.field();
-    if (!f) return;
+    const fieldGetter = this.field();
+    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
     const p = this.props();
     const asArrayValue = p?.asArrayValue ?? true;
@@ -677,13 +681,9 @@ export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H exte
       newValue = values[0];
     }
 
-    if (typeof (f as any).setValue === 'function') {
-      (f as any).setValue(newValue);
-    } else if (typeof (f as any).value === 'function') {
-      const sig = (f as any).value;
-      if (sig.set) {
-        sig.set(newValue);
-      }
+    const fieldState = (fieldGetter as any)();
+    if (fieldState?.value?.set) {
+      fieldState.value.set(newValue);
     }
   }
 

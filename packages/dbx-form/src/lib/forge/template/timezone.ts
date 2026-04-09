@@ -2,6 +2,7 @@ import { type TimezoneString } from '@dereekb/util';
 import { type TimezoneInfo } from '@dereekb/date';
 import { timezoneStringSearchFunction, DISPLAY_FOR_TIMEZONE_STRING_VALUE } from '../../shared/template/timezone';
 import { forgeSearchableTextField, type ForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable.field';
+import type { ForgeFormFieldWrapperFieldDef } from '../field/wrapper/formfield/formfield.field';
 import type { ForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
 
 /**
@@ -26,7 +27,7 @@ export interface ForgeTimezoneStringFieldConfig extends Omit<ForgeSearchableText
  * const fieldWithKey = forgeTimezoneStringField({ key: 'tz', label: 'Select Timezone' });
  * ```
  */
-export function forgeTimezoneStringField(config: ForgeTimezoneStringFieldConfig = {}): ForgeSearchableTextFieldDef<TimezoneString, TimezoneInfo> {
+export function forgeTimezoneStringField(config: ForgeTimezoneStringFieldConfig = {}): ForgeFormFieldWrapperFieldDef<ForgeSearchableTextFieldDef<TimezoneString, TimezoneInfo>> {
   return forgeSearchableTextField<TimezoneString, TimezoneInfo>({
     key: 'timezone',
     label: 'Timezone',

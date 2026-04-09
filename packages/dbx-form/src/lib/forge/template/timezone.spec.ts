@@ -1,44 +1,50 @@
 import { describe, it, expect } from 'vitest';
 import { forgeTimezoneStringField } from './timezone';
+import type { ForgeSearchableTextFieldDef } from '../field/selection/searchable/searchable.field.component';
 
 describe('forgeTimezoneStringField()', () => {
-  it('should create a searchable text field with type dbx-searchable-text', () => {
-    const field = forgeTimezoneStringField();
-    expect(field.type).toBe('dbx-searchable-text');
+  function innerField(config?: Parameters<typeof forgeTimezoneStringField>[0]): ForgeSearchableTextFieldDef {
+    const wrapper = forgeTimezoneStringField(config);
+    return wrapper.props!.fields[0] as unknown as ForgeSearchableTextFieldDef;
+  }
+
+  it('should create a wrapper field with type dbx-forge-form-field', () => {
+    const wrapper = forgeTimezoneStringField();
+    expect(wrapper.type).toBe('dbx-forge-form-field');
   });
 
-  it('should default to key "timezone"', () => {
-    const field = forgeTimezoneStringField();
-    expect(field.key).toBe('timezone');
+  it('should contain an inner searchable text field with type dbx-searchable-text', () => {
+    expect(innerField().type).toBe('dbx-searchable-text');
   });
 
-  it('should default to label "Timezone"', () => {
-    const field = forgeTimezoneStringField();
-    expect(field.label).toBe('Timezone');
+  it('should default to key "timezone" on the inner field', () => {
+    expect(innerField().key).toBe('timezone');
+  });
+
+  it('should default to label "Timezone" on the wrapper', () => {
+    const wrapper = forgeTimezoneStringField();
+    expect(wrapper.label).toBe('Timezone');
   });
 
   it('should allow overriding key', () => {
-    const field = forgeTimezoneStringField({ key: 'tz' });
-    expect(field.key).toBe('tz');
+    expect(innerField({ key: 'tz' }).key).toBe('tz');
   });
 
   it('should allow overriding label', () => {
-    const field = forgeTimezoneStringField({ label: 'Select Timezone' });
-    expect(field.label).toBe('Select Timezone');
+    const wrapper = forgeTimezoneStringField({ label: 'Select Timezone' });
+    expect(wrapper.label).toBe('Select Timezone');
   });
 
-  it('should set required when specified', () => {
-    const field = forgeTimezoneStringField({ required: true });
-    expect(field.required).toBe(true);
+  it('should set required on the inner field when specified', () => {
+    expect(innerField({ required: true }).required).toBe(true);
   });
 
-  it('should set readonly when specified', () => {
-    const field = forgeTimezoneStringField({ readonly: true });
-    expect(field.readonly).toBe(true);
+  it('should set readonly on the inner field when specified', () => {
+    expect(innerField({ readonly: true }).readonly).toBe(true);
   });
 
-  it('should configure search and display props', () => {
-    const field = forgeTimezoneStringField();
+  it('should configure search and display props on the inner field', () => {
+    const field = innerField();
     expect(field.props).toBeDefined();
     expect(field.props?.search).toBeDefined();
     expect(field.props?.displayForValue).toBeDefined();

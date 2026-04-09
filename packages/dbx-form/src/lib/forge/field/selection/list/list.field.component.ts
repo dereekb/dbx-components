@@ -150,8 +150,11 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
 
   // Sync field value to _valuesSubject
   private readonly _syncFieldValueEffect = effect(() => {
-    const f = this.field();
-    const fieldValue = f ? ((f as any)?.value?.() as Maybe<K[]>) : undefined;
+    const fieldGetter = this.field();
+    if (!fieldGetter) return;
+
+    const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
+    const fieldValue = fieldState?.value?.() as Maybe<K[]>;
     const values = fieldValue != null ? convertMaybeToArray(fieldValue) : [];
     this._valuesSubject.next(values);
   });
@@ -192,16 +195,12 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   }
 
   private _setFieldValue(values: K[]): void {
-    const f = this.field();
-    if (!f) return;
+    const fieldGetter = this.field();
+    if (!fieldGetter || typeof fieldGetter !== 'function') return;
 
-    if (typeof (f as any).setValue === 'function') {
-      (f as any).setValue(values);
-    } else if (typeof (f as any).value === 'function') {
-      const sig = (f as any).value;
-      if (sig.set) {
-        sig.set(values);
-      }
+    const fieldState = (fieldGetter as any)();
+    if (fieldState?.value?.set) {
+      fieldState.value.set(values);
     }
   }
 }
