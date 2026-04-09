@@ -1,12 +1,15 @@
+@use './pickable/pickable';
 @use './searchable/searchable';
 @use './sourceselect/sourceselect';
 
 @mixin all-selection-core() {
+  @include pickable.core();
   @include searchable.core();
   @include sourceselect.core();
 }
 
 @mixin all-selection-theme($theme-config) {
+  @include pickable.theme($theme-config);
   @include searchable.theme($theme-config);
   @include sourceselect.theme($theme-config);
 }

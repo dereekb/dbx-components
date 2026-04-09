@@ -3,7 +3,7 @@ import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, type ForgeSearchableChipFieldProps, type ForgeSearchableChipFieldDef } from './searchable.field.component';
+import { type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, type ForgeSearchableChipFieldProps, type ForgeSearchableChipFieldDef } from './searchable.field.directive';
 
 // MARK: Field Type Definitions
 /**
@@ -13,7 +13,7 @@ import { type ForgeSearchableTextFieldProps, type ForgeSearchableTextFieldDef, t
  */
 export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<ForgeSearchableTextFieldDef> = {
   name: 'dbx-searchable-text',
-  loadComponent: () => import('./searchable.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
+  loadComponent: () => import('./searchable-text.field.component').then((m) => m.DbxForgeSearchableTextFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -24,7 +24,7 @@ export const DBX_SEARCHABLE_TEXT_FIELD_TYPE: FieldTypeDefinition<ForgeSearchable
  */
 export const DBX_SEARCHABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgeSearchableChipFieldDef> = {
   name: 'dbx-searchable-chip',
-  loadComponent: () => import('./searchable.field.component').then((m) => m.DbxForgeSearchableChipFieldComponent),
+  loadComponent: () => import('./searchable-chip.field.component').then((m) => m.DbxForgeSearchableChipFieldComponent),
   mapper: valueFieldMapper
 };
 

@@ -3,7 +3,7 @@ import type { FieldDef, FieldTypeDefinition } from '@ng-forge/dynamic-forms';
 import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
-import { type ForgePickableFieldProps, type ForgePickableChipFieldDef, type ForgePickableListFieldDef } from './pickable.field.component';
+import { type ForgePickableFieldProps, type ForgePickableChipFieldDef, type ForgePickableListFieldDef } from './pickable.field.directive';
 
 // MARK: Field Type Definitions
 /**
@@ -13,7 +13,7 @@ import { type ForgePickableFieldProps, type ForgePickableChipFieldDef, type Forg
  */
 export const DBX_PICKABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgePickableChipFieldDef> = {
   name: 'dbx-pickable-chip',
-  loadComponent: () => import('./pickable.field.component').then((m) => m.DbxForgePickableChipFieldComponent),
+  loadComponent: () => import('./pickable-chip.field.component').then((m) => m.DbxForgePickableChipFieldComponent),
   mapper: valueFieldMapper
 };
 
@@ -24,7 +24,7 @@ export const DBX_PICKABLE_CHIP_FIELD_TYPE: FieldTypeDefinition<ForgePickableChip
  */
 export const DBX_PICKABLE_LIST_FIELD_TYPE: FieldTypeDefinition<ForgePickableListFieldDef> = {
   name: 'dbx-pickable-list',
-  loadComponent: () => import('./pickable.field.component').then((m) => m.DbxForgePickableListFieldComponent),
+  loadComponent: () => import('./pickable-list.field.component').then((m) => m.DbxForgePickableListFieldComponent),
   mapper: valueFieldMapper
 };
 

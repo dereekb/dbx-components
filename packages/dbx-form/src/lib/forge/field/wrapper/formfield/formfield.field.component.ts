@@ -15,33 +15,7 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
  */
 @Component({
   selector: 'dbx-forge-form-field-wrapper',
-  template: `
-    <div class="dbx-forge-form-field-wrapper" [class.dbx-forge-form-field-wrapper-error]="hasError()">
-      <div class="dbx-forge-form-field-outline">
-        <div class="dbx-forge-form-field-outline-leading"></div>
-        <div class="dbx-forge-form-field-outline-notch" [class.dbx-forge-form-field-outline-notch-empty]="!label()">
-          @if (label(); as labelText) {
-            <span class="dbx-forge-form-field-outline-label">{{ labelText | dynamicText | async }}</span>
-          }
-        </div>
-        <div class="dbx-forge-form-field-outline-trailing"></div>
-      </div>
-      <div class="dbx-forge-form-field-content">
-        <dbx-forge-wrapper-content />
-      </div>
-    </div>
-    <div class="mat-mdc-form-field-subscript-wrapper mat-mdc-form-field-bottom-align">
-      @if (showErrors()) {
-        <div class="mat-mdc-form-field-error-wrapper">
-          <div class="mat-mdc-form-field-error mat-mdc-form-field-bottom-align">{{ firstErrorMessage() }}</div>
-        </div>
-      } @else if (hintSignal(); as hint) {
-        <div class="mat-mdc-form-field-hint-wrapper">
-          <div class="mat-mdc-form-field-hint mat-mdc-form-field-bottom-align">{{ hint }}</div>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './formfield.field.component.html',
   styles: [
     `
       :host {
@@ -114,6 +88,19 @@ import type { ForgeFormFieldWrapperProps } from './formfield.field';
       .dbx-forge-form-field-wrapper:hover .dbx-forge-form-field-outline-notch,
       .dbx-forge-form-field-wrapper:hover .dbx-forge-form-field-outline-trailing {
         border-color: var(--mdc-outlined-text-field-hover-outline-color, var(--mat-sys-on-surface, rgba(0, 0, 0, 0.87)));
+      }
+
+      /* --- Focus state --- */
+      .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-leading,
+      .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-notch,
+      .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-trailing {
+        border-color: var(--mdc-outlined-text-field-focus-outline-color, var(--mat-sys-primary));
+        border-width: 2px;
+      }
+
+      .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-label {
+        color: var(--mdc-outlined-text-field-focus-label-text-color, var(--mat-sys-primary));
+        padding: 0 3px;
       }
 
       /* --- Error state --- */
