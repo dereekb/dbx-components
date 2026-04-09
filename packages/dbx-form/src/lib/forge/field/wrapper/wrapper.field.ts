@@ -1,6 +1,7 @@
-import { computed, Directive, effect, forwardRef, input, signal, untracked, type Provider, type Signal, type Type, type WritableSignal } from '@angular/core';
+import { computed, Directive, effect, forwardRef, inject, input, signal, untracked, type Provider, type Signal, type Type, type WritableSignal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldDef, FieldMeta, FormConfig, ValidationMessages } from '@ng-forge/dynamic-forms';
+import { DbxForgeFormContext } from '../../form/forge.context';
 
 /**
  * Base props interface for forge wrapper fields that contain child field definitions.
@@ -102,6 +103,8 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWra
   readonly defaultValidationMessages = input<ValidationMessages | undefined>();
 
   // MARK: Child Form State
+  private readonly _parentContext = inject(DbxForgeFormContext, { optional: true });
+
   readonly childValueSignal = signal<Record<string, unknown> | undefined>(undefined);
 
   readonly childConfigSignal: Signal<FormConfig> = computed(() => {
@@ -111,7 +114,13 @@ export abstract class AbstractForgeWrapperFieldComponent<TProps extends ForgeWra
       return { fields: [] } as unknown as FormConfig;
     }
 
-    return { fields } as unknown as FormConfig;
+    const parentConfig = this._parentContext?.config;
+
+    return {
+      fields,
+      customFnConfig: parentConfig?.customFnConfig,
+      defaultValidationMessages: parentConfig?.defaultValidationMessages
+    } as unknown as FormConfig;
   });
 
   private _initialized = false;

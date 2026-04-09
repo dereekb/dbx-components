@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, viewChild } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AbstractForgeWrapperFieldComponent, provideDbxForgeWrapperFieldDirective } from '../wrapper.field';
 import { ForgeWrapperContentComponent } from '../wrapper.content.component';
@@ -9,8 +9,8 @@ import type { ForgeWorkingWrapperFieldProps } from './working.wrapper.field';
  * indicator shown during async validation.
  *
  * This is the forge equivalent of formly's `DbxFormWorkingWrapperComponent`.
- * Monitors the field tree's pending signal, which aggregates pending state
- * from all child fields.
+ * Monitors the child form's pending signal (via {@link ForgeWrapperContentComponent})
+ * to detect when async validators are running.
  */
 @Component({
   selector: 'dbx-forge-working-wrapper-field',
@@ -22,11 +22,6 @@ import type { ForgeWorkingWrapperFieldProps } from './working.wrapper.field';
       }
     </div>
   `,
-  styles: `
-    .dbx-forge-working-bar {
-      margin-top: 4px;
-    }
-  `,
   providers: provideDbxForgeWrapperFieldDirective(ForgeWorkingWrapperFieldComponent),
   imports: [ForgeWrapperContentComponent, MatProgressBarModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,8 +31,9 @@ import type { ForgeWorkingWrapperFieldProps } from './working.wrapper.field';
   }
 })
 export class ForgeWorkingWrapperFieldComponent extends AbstractForgeWrapperFieldComponent<ForgeWorkingWrapperFieldProps> {
+  private readonly _content = viewChild(ForgeWrapperContentComponent);
+
   readonly showLoadingSignal = computed((): boolean => {
-    const fieldState = this.field()();
-    return fieldState.pending?.() ?? false;
+    return this._content()?.pending() ?? false;
   });
 }

@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, type Signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, type OnInit, type Signal, viewChild } from '@angular/core';
 import { DynamicForm } from '@ng-forge/dynamic-forms';
 import type { ValidationError } from '@angular/forms/signals';
 import { ForgeWrapperFieldDirective } from './wrapper.field';
+import { DbxForgeFormContext } from '../../form/forge.context';
 
 /**
  * Reusable component that renders a nested ng-forge `DynamicForm` for wrapper fields.
@@ -31,8 +32,11 @@ import { ForgeWrapperFieldDirective } from './wrapper.field';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class ForgeWrapperContentComponent {
+export class ForgeWrapperContentComponent implements OnInit {
   readonly wrapper = inject(ForgeWrapperFieldDirective);
+
+  private readonly _context = inject(DbxForgeFormContext, { optional: true });
+  private readonly _destroyRef = inject(DestroyRef);
 
   /**
    * Reference to the child DynamicForm instance.
@@ -57,4 +61,16 @@ export class ForgeWrapperContentComponent {
    * Whether the child form is currently valid.
    */
   readonly valid: Signal<boolean> = computed(() => this.dynamicForm()?.valid() ?? true);
+
+  /**
+   * Whether the child form has any pending async validators.
+   */
+  readonly pending: Signal<boolean> = computed(() => this.dynamicForm()?.form()?.()?.pending?.() ?? false);
+
+  ngOnInit(): void {
+    if (this._context) {
+      const unregister = this._context.registerWrapperValidity(this.valid);
+      this._destroyRef.onDestroy(unregister);
+    }
+  }
 }

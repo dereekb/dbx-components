@@ -22,9 +22,9 @@ import {
   forgeToggleWrapper,
   forgeInfoFieldWrapper,
   forgeStyleWrapper,
-  forgeWorkingFieldWrapper,
   forgeFormFieldWrapper,
   forgeNameField,
+  forgeTextIsAvailableField,
   forgeNumberField,
   forgeNumberSliderField,
   formlyNumberSliderField,
@@ -268,13 +268,30 @@ export class DocFormWrapperComponent {
     })
   ];
 
-  readonly forgeWorkingFieldConfig: FormConfig = {
-    fields: [
-      forgeWorkingFieldWrapper({
-        fields: [forgeNameField({ key: 'username', label: 'Username', description: 'Working wrapper around a text field.' })]
-      })
-    ]
-  };
+  readonly forgeWorkingFieldConfig: FormConfig = (() => {
+    const available = forgeTextIsAvailableField({
+      key: 'username',
+      label: 'Username',
+      description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
+      checkValueIsAvailable: (value: string) => {
+        return new Observable<boolean>((subscriber) => {
+          const timer = setTimeout(() => {
+            subscriber.next(value !== 'taken');
+            subscriber.complete();
+          }, 2000);
+
+          return () => clearTimeout(timer);
+        });
+      },
+      isNotAvailableErrorMessage: 'This username is already taken.'
+    });
+
+    return {
+      fields: [available.field],
+      customFnConfig: { asyncValidators: available.asyncValidators },
+      defaultValidationMessages: available.validationMessages
+    };
+  })();
 
   // Form-field wrapper demos
   readonly formFieldWrapperFields: FormlyFieldConfig[] = [
