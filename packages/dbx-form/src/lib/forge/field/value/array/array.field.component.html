@@ -2,8 +2,10 @@
   <div cdkDropList [cdkDropListDisabled]="disableRearrangeSignal()" (cdkDropListDropped)="drop($event)">
     @for (item of itemsSignal(); track item.trackId; let i = $index) {
       <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
-        <ng-template cdkDragPlaceholder><div class="dbx-form-repeat-array-drag-placeholder"></div></ng-template>
-        <div class="dbx-form-repeat-array-bar">
+        <ng-template cdkDragPlaceholder>
+          <div class="dbx-form-repeat-array-drag-placeholder"></div>
+        </ng-template>
+        <div class="dbx-form-repeat-array-bar dbx-flex-bar">
           @if (!disableRearrangeSignal()) {
             <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" aria-label="Drag to reorder">
               <mat-icon>drag_handle</mat-icon>

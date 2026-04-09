@@ -79,6 +79,33 @@ describe('forgeTextField()', () => {
     const field = forgeTextField({ key: 'name' });
     expect(field.label).toBe('');
   });
+
+  describe('validationMessages', () => {
+    it('should include validationMessages on the field definition', () => {
+      const field = forgeTextField({ key: 'name', label: 'Name' });
+      expect(field.validationMessages).toBeDefined();
+    });
+
+    it('should include a required validation message', () => {
+      const field = forgeTextField({ key: 'name', required: true });
+      expect(field.validationMessages?.required).toBeDefined();
+    });
+
+    it('should include a minLength validation message', () => {
+      const field = forgeTextField({ key: 'name', minLength: 4 });
+      expect(field.validationMessages?.minLength).toBeDefined();
+    });
+
+    it('should include a maxLength validation message', () => {
+      const field = forgeTextField({ key: 'name', maxLength: 15 });
+      expect(field.validationMessages?.maxLength).toBeDefined();
+    });
+
+    it('should include a pattern validation message', () => {
+      const field = forgeTextField({ key: 'name', pattern: '^[A-Z]+$' });
+      expect(field.validationMessages?.pattern).toBeDefined();
+    });
+  });
 });
 
 describe('forgeTextAreaField()', () => {
@@ -148,5 +175,22 @@ describe('forgeTextAreaField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeTextAreaField({ key: 'bio' });
     expect(field.label).toBe('');
+  });
+
+  describe('validationMessages', () => {
+    it('should include validationMessages on the field definition', () => {
+      const field = forgeTextAreaField({ key: 'bio', label: 'Bio' });
+      expect(field.validationMessages).toBeDefined();
+    });
+
+    it('should include a minLength validation message', () => {
+      const field = forgeTextAreaField({ key: 'bio', minLength: 10 });
+      expect(field.validationMessages?.minLength).toBeDefined();
+    });
+
+    it('should include a maxLength validation message', () => {
+      const field = forgeTextAreaField({ key: 'bio', maxLength: 500 });
+      expect(field.validationMessages?.maxLength).toBeDefined();
+    });
   });
 });

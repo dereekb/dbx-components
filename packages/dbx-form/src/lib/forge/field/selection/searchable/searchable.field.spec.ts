@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { of } from 'rxjs';
+import { firstValueFrom, map, of, take } from 'rxjs';
+import { FormControl } from '@angular/forms';
 import { forgeSearchableTextField, forgeSearchableChipField, forgeSearchableStringChipField } from './searchable.field';
 import type { ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
 import type { FieldDef } from '@ng-forge/dynamic-forms';
@@ -243,6 +244,37 @@ describe('forgeSearchableChipField()', () => {
   it('should not set textInputValidator on the inner field when not provided', () => {
     const inner = getInnerField(forgeSearchableChipField(minimalConfig()));
     expect(inner.props?.textInputValidator).toBeUndefined();
+  });
+});
+
+// MARK: inputValue$ coercion
+describe('inputValue$ non-string coercion', () => {
+  it('should coerce a non-string FormControl value to an empty string', async () => {
+    // Regression: mat-autocomplete sets the FormControl value to the selected
+    // option object (not a string). The inputValue$ pipeline must coerce
+    // non-string values to '' so the search function always receives a string.
+    const inputCtrl = new FormControl<string>('');
+
+    const inputValue$ = inputCtrl.valueChanges.pipe(map((x: unknown) => (typeof x === 'string' ? x : '')));
+
+    // Push a non-string value (simulates mat-autocomplete selection)
+    const valuePromise = firstValueFrom(inputValue$.pipe(take(1)));
+    inputCtrl.setValue({ value: 'America/Chicago', label: 'America/Chicago' } as any);
+    const result = await valuePromise;
+
+    expect(result).toBe('');
+  });
+
+  it('should pass through a normal string value', async () => {
+    const inputCtrl = new FormControl<string>('');
+
+    const inputValue$ = inputCtrl.valueChanges.pipe(map((x: unknown) => (typeof x === 'string' ? x : '')));
+
+    const valuePromise = firstValueFrom(inputValue$.pipe(take(1)));
+    inputCtrl.setValue('America');
+    const result = await valuePromise;
+
+    expect(result).toBe('America');
   });
 });
 

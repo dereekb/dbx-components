@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { forgeNumberField, forgeNumberSliderField, forgeDollarAmountField } from './number.field';
+import { forgeNumberField, forgeNumberSliderField, forgeDollarAmountField, FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY } from './number.field';
 import { FORGE_FORM_FIELD_WRAPPER_TYPE_NAME, type ForgeFormFieldWrapperProps } from '../../wrapper/formfield/formfield.field';
 
 describe('forgeNumberField()', () => {
@@ -62,6 +62,63 @@ describe('forgeNumberField()', () => {
   it('should provide empty label when not specified', () => {
     const field = forgeNumberField({ key: 'qty' });
     expect(field.label).toBe('');
+  });
+
+  describe('validationMessages', () => {
+    it('should include validationMessages on the field definition', () => {
+      const field = forgeNumberField({ key: 'qty', label: 'Qty' });
+      expect(field.validationMessages).toBeDefined();
+    });
+
+    it('should include a min validation message', () => {
+      const field = forgeNumberField({ key: 'qty', min: 0 });
+      expect(field.validationMessages?.min).toBeDefined();
+    });
+
+    it('should include a max validation message', () => {
+      const field = forgeNumberField({ key: 'qty', max: 100 });
+      expect(field.validationMessages?.max).toBeDefined();
+    });
+
+    it('should include a required validation message', () => {
+      const field = forgeNumberField({ key: 'qty', required: true });
+      expect(field.validationMessages?.required).toBeDefined();
+    });
+  });
+
+  describe('step and enforceStep', () => {
+    it('should set meta.step when step is provided', () => {
+      const field = forgeNumberField({ key: 'qty', step: 5 });
+      expect((field as any).meta?.step).toBe(5);
+    });
+
+    it('should not set meta when step is not provided', () => {
+      const field = forgeNumberField({ key: 'qty' });
+      expect((field as any).meta).toBeUndefined();
+    });
+
+    it('should add a custom isDivisibleBy validator when enforceStep is true', () => {
+      const field = forgeNumberField({ key: 'qty', step: 5, enforceStep: true });
+      const validators = (field as any).validators;
+      expect(validators).toBeDefined();
+      expect(validators.length).toBe(1);
+      expect(validators[0].kind).toBe(FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY);
+    });
+
+    it('should add isDivisibleBy validation message when enforceStep is true', () => {
+      const field = forgeNumberField({ key: 'qty', step: 5, enforceStep: true });
+      expect(field.validationMessages?.[FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY]).toBeDefined();
+    });
+
+    it('should not add a validator when enforceStep is false', () => {
+      const field = forgeNumberField({ key: 'qty', step: 5 });
+      expect((field as any).validators).toBeUndefined();
+    });
+
+    it('should not add a validator when step is not provided even if enforceStep is true', () => {
+      const field = forgeNumberField({ key: 'qty', enforceStep: true });
+      expect((field as any).validators).toBeUndefined();
+    });
   });
 });
 

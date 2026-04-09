@@ -1,10 +1,16 @@
-import type { FieldDef } from '@ng-forge/dynamic-forms';
+import type { CustomValidatorConfig, FieldDef, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps, MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
 import { filterFromPOJO, DOLLAR_AMOUNT_PRECISION, type TransformNumberFunctionConfigRef } from '@dereekb/util';
 import { forgeField } from '../../field';
 import { forgeFormFieldWrapper, type ForgeFormFieldWrapperFieldDef } from '../../wrapper/formfield/formfield.field';
+import { forgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Number Field
+/**
+ * Validation error kind used by the `enforceStep` divisibility validator.
+ */
+export const FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY = 'isDivisibleBy';
+
 /**
  * Numeric constraint configuration for forge number fields.
  */
@@ -15,6 +21,11 @@ export interface ForgeNumberFieldNumberConfig {
    * Step increment for the input.
    */
   readonly step?: number;
+  /**
+   * When true, validates that the value is divisible by `step`.
+   * Requires `step` to be set.
+   */
+  readonly enforceStep?: boolean;
 }
 
 /**
@@ -35,6 +46,9 @@ export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Pa
 /**
  * Creates a forge field definition for a numeric input.
  *
+ * When `step` is provided, sets the HTML `step` attribute on the input via `meta`.
+ * When both `step` and `enforceStep` are set, adds a custom divisibility validator.
+ *
  * @param config - Number field configuration
  * @returns A validated {@link MatInputField} with input type `'number'`
  *
@@ -44,7 +58,7 @@ export interface ForgeNumberFieldConfig extends ForgeNumberFieldNumberConfig, Pa
  * ```
  */
 export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField {
-  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, defaultValue } = config;
+  const { key, label, placeholder, required, readonly: isReadonly, description, min, max, step, enforceStep, defaultValue } = config;
 
   const props: Partial<MatInputProps> = filterFromPOJO({
     type: 'number' as const,
@@ -54,6 +68,27 @@ export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField 
     max,
     step
   });
+
+  const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+  let validators: CustomValidatorConfig[] | undefined;
+  let meta: FieldMeta | undefined;
+
+  // Apply the HTML step attribute to the <input> element via meta
+  if (step != null) {
+    meta = { step };
+  }
+
+  // Add a divisibility validator when enforceStep is enabled
+  if (step && enforceStep) {
+    validators = [
+      {
+        type: 'custom',
+        expression: `fieldValue == null || fieldValue % ${step} === 0`,
+        kind: FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY
+      }
+    ];
+    validationMessages[FORGE_IS_DIVISIBLE_BY_VALIDATION_KEY] = `Number must be divisible by ${step}.`;
+  }
 
   return forgeField(
     filterFromPOJO({
@@ -65,6 +100,9 @@ export function forgeNumberField(config: ForgeNumberFieldConfig): MatInputField 
       readonly: isReadonly,
       min,
       max,
+      validators,
+      validationMessages,
+      meta,
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatInputField
   );

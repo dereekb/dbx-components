@@ -1,7 +1,9 @@
 import type { MatInputField, MatInputProps, MatTextareaField, MatTextareaProps } from '@ng-forge/dynamic-forms-material';
+import type { ValidationMessages } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO, transformStringFunction, mapMaybeFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import type { FieldValueParser, FieldConfigParsersRef } from '../../../../field';
 import { forgeField } from '../../field';
+import { forgeDefaultValidationMessages } from '../../../validation';
 
 // MARK: Text Field
 /**
@@ -96,6 +98,8 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
     hint: description
   });
 
+  const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+
   return forgeField(
     filterFromPOJO({
       key,
@@ -108,6 +112,7 @@ export function forgeTextField(config: ForgeTextFieldConfig): MatInputField {
       minLength,
       maxLength,
       pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
+      validationMessages,
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatInputField
   );
@@ -150,6 +155,8 @@ export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextare
     rows
   });
 
+  const validationMessages: ValidationMessages = forgeDefaultValidationMessages();
+
   return forgeField(
     filterFromPOJO({
       key,
@@ -162,6 +169,7 @@ export function forgeTextAreaField(config: ForgeTextAreaFieldConfig): MatTextare
       minLength,
       maxLength,
       pattern: pattern != null ? (typeof pattern === 'string' ? pattern : pattern.source) : undefined,
+      validationMessages,
       props: Object.keys(props).length > 0 ? props : undefined
     }) as MatTextareaField
   );

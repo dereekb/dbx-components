@@ -141,7 +141,7 @@ export class DocFormValueComponent {
     fields: [
       forgeNumberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
       forgeNumberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
-      forgeNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5 }),
+      forgeNumberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
       forgeDollarAmountField({ key: 'dollars', label: 'forgeDollarAmountField()', description: 'Dollar amount field.' })
     ]
   };

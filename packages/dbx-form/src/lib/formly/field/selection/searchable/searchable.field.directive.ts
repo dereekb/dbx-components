@@ -130,7 +130,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(
     startWith(this.inputCtrl.value),
-    map((x) => x || '')
+    map((x) => (typeof x === 'string' ? x : ''))
   );
 
   readonly inputValueString$: Observable<string> = this.inputValue$.pipe(debounceTime(200), distinctUntilChanged());
